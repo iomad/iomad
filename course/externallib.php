@@ -1463,6 +1463,9 @@ class core_course_external extends external_api {
         // The parent cats need to be checked by the algo first.
         usort($categories, "core_course_external::compare_categories_by_path");
 
+        // Iomad - Filter out unwanted categories.
+        $categories = iomad::iomad_filter_categories( $categories );
+
         foreach ($categories as $category) {
 
             // Check if the category is a child of an excluded category, if yes exclude it too (excluded => do not return).

@@ -1219,6 +1219,14 @@ class core_course_renderer extends plugin_renderer_base {
      */
     protected function coursecat_courses(coursecat_helper $chelper, $courses, $totalcount = null) {
         global $CFG;
+
+        // IOMAD - check if we can see this course.
+        foreach ($courses as $course) {
+            if (!iomad::iomad_check_course($course)) {
+                unset($courses[$course->id]);
+            }
+        }
+
         if ($totalcount === null) {
             $totalcount = count($courses);
         }
@@ -1353,6 +1361,15 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         foreach ($subcategories as $subcategory) {
+
+            // IOMAD:
+            // do not display this category IF the category is attached to a company AND 
+            // the user belongs to a different company.
+            // Otherwise, go ahead and display
+            if (!iomad::iomad_check_category($subcategory)) {
+                continue;
+            }
+
             $content .= $this->coursecat_category($chelper, $subcategory, $depth + 1);
         }
 

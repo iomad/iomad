@@ -1936,6 +1936,12 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         // Now build the array of strings to return, mind $separator and $excludeid.
         $names = array();
         foreach ($thislist as $id) {
+            
+            // IOMAD - Check if category is OK to see.
+            if (!iomad::iomad_check_categoryid($id)) {
+                continue;
+            }
+
             $path = preg_split('|/|', $baselist[$id]['path'], -1, PREG_SPLIT_NO_EMPTY);
             if (!$excludeid || !in_array($excludeid, $path)) {
                 $namechunks = array();

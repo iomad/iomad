@@ -1382,6 +1382,27 @@ class global_navigation extends navigation_node {
 
         // Check if we need to show categories.
         if ($this->show_categories()) {
+            // IOMAD - If not logged in, don't show any courses in the navigation.
+            if (!isloggedin()) {
+                return array();
+            }
+            if (!empty($USER->profile['company'])) {
+                $company = company::get_company_byuserid($USER->id);
+                if (!empty($CFG->iomadglobalcourses)) {
+                    $sharedsql = " AND ( c.id in (select courseid from {company_course} where companyid = $company->id) or c.id in (select courseid from {iomad_courses} where shared=1)
+                                   or c.id in ( select courseid from {company_shared_courses} where companyid = $company->id)) ";
+                } else {
+                    $sharedsql = " AND c.id in (select courseid from {company_course} where companyid = $company->id) ";
+                }
+            } else {
+                if (!empty($CFG->iomadglobalcourses)) {
+                    $sharedsql = " AND c.id in (select courseid from {iomad_courses} where shared=1) ";
+                } else {
+                    $sharedsql = "";
+                }
+
+            }
+
             // Hmmm we need to show categories... this is going to be painful.
             // We now need to fetch up to $limit courses for each category to
             // be displayed.
@@ -1398,15 +1419,18 @@ class global_navigation extends navigation_node {
                 $categorywhere = '';
                 $categoryparams = array();
             }
-
             // First up we are going to get the categories that we are going to
             // need so that we can determine how best to load the courses from them.
+            // IOMAD - Add $sharedsql after $categorywhere to hide other company
+            // categories.
             $sql = "SELECT cc.id, COUNT(c.id) AS coursecount
                         FROM {course_categories} cc
                     LEFT JOIN {course} c ON c.category = cc.id
                             {$categorywhere}
+                            {$sharedsql}
                     GROUP BY cc.id";
             $categories = $DB->get_recordset_sql($sql, $categoryparams);
+
             $fullfetch = array();
             $partfetch = array();
             foreach ($categories as $category) {
@@ -1607,12 +1631,18 @@ class global_navigation extends navigation_node {
             $basecategorysql = ($showbasecategories)?' OR cc.depth = 1':'';
             $sqlwhere .= " AND (cc.id {$select} OR cc.parent {$select}{$basecategorysql})";
         }
-
         $categoriesrs = $DB->get_recordset_sql("$sqlselect $sqlwhere $sqlorder", $params);
         $categories = array();
+
         foreach ($categoriesrs as $category) {
             // Preload the context.. we'll need it when adding the category in order
             // to format the category name.
+
+            // IOMAD - Check if we can see this category.
+            if (!iomad::iomad_check_category($category)) {
+                continue;
+            }
+
             context_helper::preload_from_record($category);
             if (array_key_exists($category->id, $this->addedcategories)) {
                 // Do nothing, its already been added.
@@ -2631,6 +2661,12 @@ class global_navigation extends navigation_node {
         // Append the chosen sortorder.
         $sortorder = $sortorder . ',' . $CFG->navsortmycoursessort . ' ASC';
         $courses = enrol_get_my_courses(null, $sortorder);
+
+        // IOMAD : deal with courses which we have a license for but not enrolled on yet
+        if (!empty($CFG->iomadlicenses)) {
+            iomad::iomad_add_license_courses($courses);
+        }
+
         if (count($courses) && $this->show_my_categories()) {
             // OK Actually we are loading categories. We only want to load categories that have a parent of 0.
             // In order to make sure we load everything required we must first find the categories that are not
@@ -2749,8 +2785,10 @@ class global_navigation_for_ajax extends global_navigation {
             case self::TYPE_SECTION :
                 $sql = 'SELECT c.*, cs.section AS sectionnumber
                         FROM {course} c
+                        ' . iomad::join_company_course("c") . '
                         LEFT JOIN {course_sections} cs ON cs.course = c.id
-                        WHERE cs.id = ?';
+                        WHERE cs.id = ?'; 
+echo "SQL = <pre>$sql</pre></br>";
                 $course = $DB->get_record_sql($sql, array($this->instanceid), MUST_EXIST);
                 require_course_login($course, true, null, false, true);
                 $this->page->set_context(context_course::instance($course->id));
