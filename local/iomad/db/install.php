@@ -356,7 +356,7 @@ function xmldb_local_iomad_install() {
     set_config('enablecompletion', 1);
 
     // set the default blocks in courses
-    $defblocks = ':iomad_link,iomad_company_selector,iomad_online_users,completionstatus,iomad_course_list';
+    $defblocks = ':iomad_link,iomad_company_selector,iomad_online_users,completionstatus';
     set_config('defaultblocks_topics', $defblocks);
     set_config('defaultblocks_weeks', $defblocks);
 
