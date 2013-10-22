@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 const RESET_SEQUENCE_NEVER = 'never';
 const RESET_SEQUENCE_DAILY = 'daily';
@@ -12,13 +26,13 @@ function padleft($value, $n) {
 function iomad_settings_serialnumber($serialnumberrecord) {
     $matches = array();
     $prefix = $serialnumberrecord->prefix;
-    if (preg_match_all('/\{SEQNO:(\d+)\}/i', $prefix, &$matches)) {
-        foreach($matches[1] as $match) {
+    if (preg_match_all('/\{SEQNO:(\d+)\}/i', $prefix, $matches)) {
+        foreach ($matches[1] as $match) {
             $seqno = padleft($serialnumberrecord->sequenceno, $match);
             $prefix = preg_replace('/\{SEQNO[^\}]*\}/i', $seqno, $prefix);
         }
     }
-    
+
     return $prefix;
 }
 
@@ -34,16 +48,17 @@ function iomad_settings_attempt_serialnumber_insert($serialobj) {
     try {
         $bool = $DB->insert_record('certificate_serialnumber', $serialobj);
     } catch (Exception $e) {
+        // Need to do something.
     }
     return $bool;
 }
 
-// Create serial number or retrieve if one already exists for the issues certificate
+// Create serial number or retrieve if one already exists for the issues certificate.
 function iomad_settings_create_serial_number($certificate, $certrecord, $course, $certdate) {
     global $DB;
 
     if (!$serialobj = $DB->get_record('certificate_serialnumber', array('issued_certificate' => $certrecord->id), '*')) {
-        $prefix = iomad_settings_replacement($certificate->serialnumberformat,$course, '', $certdate);
+        $prefix = iomad_settings_replacement($certificate->serialnumberformat, $course, '', $certdate);
 
         $serialobj = new stdClass;
         $serialobj->certificateid = $certrecord->certificateid;
@@ -57,15 +72,16 @@ function iomad_settings_create_serial_number($certificate, $certrecord, $course,
         }
         $serialobj->sequenceno = iomad_settings_next_serial_number($serialobj->certificateid, $serialobj->sequence);
 
-        // there is a unique index on prefix and sequenceno that will prevent inserts if the prefix/sequenceno combo already exists
+        // There is a unique index on prefix and sequenceno that will prevent inserts if the prefix/sequenceno combo already exists.
         while (!iomad_settings_attempt_serialnumber_insert($serialobj)) {
-            // check that serial number already exists in database and the insert didn't fail for some other reason
-            if ($DB->get_record('certificate_serialnumber', array('prefix' => $prefix, 'sequenceno' => $serialobj->sequenceno), 'id')) {
-                // somebody moved the goal posts, try again
+            // Check that serial number already exists in database and the insert didn't fail for some other reason.
+            if ($DB->get_record('certificate_serialnumber', array('prefix' => $prefix,
+                                                                  'sequenceno' => $serialobj->sequenceno), 'id')) {
+                // Somebody moved the goal posts, try again.
                 $serialobj->sequenceno = iomad_settings_next_serial_number($serialobj->certificateid, $serialobj->sequence);
                 $serialobj->timecreated = time();
             } else {
-                // this shouldn't happen
+                // This shouldn't happen.
                 print_error("Certificate Serial Number couldn't be created");
             }
         }
@@ -76,11 +92,13 @@ function iomad_settings_create_serial_number($certificate, $certrecord, $course,
 
 function iomad_settings_next_serial_number($certificateid, $sequence) {
     global $DB;
-    
-    // find the last serialnumber created in the same sequence
-    $lastserial = $DB->get_records_select('certificate_serialnumber', "certificateid = $certificateid AND sequence >= $sequence ORDER BY timecreated desc LIMIT 0,1");
 
-    // get the record out of the array (or set to null if no record returned)
+    // Find the last serialnumber created in the same sequence.
+    $lastserial = $DB->get_records_select('certificate_serialnumber', "certificateid = $certificateid
+                                                                       AND sequence >= $sequence
+                                                                       ORDER BY timecreated desc LIMIT 0,1");
+
+    // Get the record out of the array (or set to null if no record returned).
     if (count($lastserial) > 0) {
         $keys = (array_keys($lastserial));
         $lastserial = $lastserial[$keys[0]];
@@ -96,26 +114,27 @@ function format_date_with_iomad_settings_format($format, $date) {
     $tformat = preg_replace('/MM/i', '%m', $tformat);
     $tformat = preg_replace('/YYYY/i', '%Y', $tformat);
     $tformat = preg_replace('/YY/i', '%y', $tformat);
-    
+
     return strftime($tformat, $date ? $date : time());
 }
 
 function iomad_settings_replacement($customtext, $course, $serialnumber, $certdate) {
-    // {SN} = serial number
+    // Where {SN} = serial number.
     $customtext = str_replace("{SN}", $serialnumber, $customtext);
-    
-    // {EC} = establishment code
+
+    // Where {EC} = establishment code.
     $customtext = str_replace("{EC}", iomad_settings_establishment_code(), $customtext);
-    
-    // {CC} = course code
+
+    // Where {CC} = course code.
     $coursecode = padleft(isset($course->idnumber) && $course->idnumber != "" ? $course->idnumber : $course->id, 4);
     $customtext = str_replace("{CC}", $coursecode, $customtext);
 
-    // {CD:???} = completion date
+    // Where {CD:???} = completion date.
     $matches = array();
-    // match {CD:YMD} (YMD = date format, can be anything except end brace '}', but format_date_with_iomad_settings_format determines what really is used.
-    if (preg_match_all('/\{CD:([^\}]+)\}/i', $customtext, &$matches)) {
-        foreach($matches[1] as $match) {
+    // Match {CD:YMD} (YMD = date format, can be anything except end brace '}', but
+    // format_date_with_iomad_settings_format determines what really is used.
+    if (preg_match_all('/\{CD:([^\}]+)\}/i', $customtext, $matches)) {
+        foreach ($matches[1] as $match) {
             $formatteddate = format_date_with_iomad_settings_format($match, $certdate);
             $customtext = preg_replace('/\{CD:' . $match . '\}/i', $formatteddate, $customtext);
         }
