@@ -19,28 +19,28 @@ require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once('lib.php');
 
-// params
+// Params.
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $userid = required_param('userid', PARAM_INT);
 $page = optional_param('page', 0, PARAM_INT);
 $dodownload = optional_param('dodownload', 0, PARAM_INT);
 
-// Check permissions
+// Check permissions.
 require_login($SITE);
-$context=get_context_instance(CONTEXT_SYSTEM);
+$context = get_context_instance(CONTEXT_SYSTEM);
 require_capability('local/report_completion:view', $context);
 
-$linktext=get_string('user_detail_title', 'local_report_users');
-// set the url
+$linktext = get_string('user_detail_title', 'local_report_users');
+// Set the url.
 $linkurl = new moodle_url('/local/report_users/index.php');
-//build the nav bar
+// Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
-// Print the page header
+// Print the page header.
 $blockpage = new blockpage($PAGE, $OUTPUT, 'report_users', 'local', 'report_users_title');
 $blockpage->setup();
 
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT
+require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 
 $baseurl = new moodle_url(basename(__FILE__));
 $returnurl = $baseurl;
@@ -48,14 +48,14 @@ if (empty($dodownload)) {
     $blockpage->display_header();
 }
 
-// get this list of courses the user is a member of
+// Get this list of courses the user is a member of.
 $usercourses = enrol_get_users_courses($userid, true, null, 'visible DESC, sortorder ASC');
 
-// Get the Users details
-$userinfo = $DB->get_record('user', array('id'=>$userid));
+// Get the Users details.
+$userinfo = $DB->get_record('user', array('id' => $userid));
 
-//  check if there is a certificate module
-if ($certmodule = $DB->get_record('modules', array('name'=>'certificate'))) {
+// Check if there is a certificate module.
+if ($certmodule = $DB->get_record('modules', array('name' => 'certificate'))) {
     $hascertificate = true;
     require_once($CFG->dirroot.'/mod/certificate/lib.php');
 } else {
@@ -63,7 +63,7 @@ if ($certmodule = $DB->get_record('modules', array('name'=>'certificate'))) {
 }
 
 if (!empty($dodownload)) {
-    //  Set up the Excel workbook
+    // Set up the Excel workbook.
     header("Content-Type: application/download\n");
     header("Content-Disposition: attachment; filename=\"userreport.csv\"");
     header("Expires: 0");
@@ -76,14 +76,14 @@ if (empty($dodownload)) {
           $userinfo->firstname." ".
           $userinfo->lastname. " (".$userinfo->email.")    </h2>";
     if (!empty($courseid)) {
-        // Navigation and header
-        echo $OUTPUT->single_button(new moodle_url('userdisplay.php', array('courseid'=>$courseid,
-                                                                            'userid'=>$userid,
-                                                                            'dodownload'=>'1')),
+        // Navigation and header.
+        echo $OUTPUT->single_button(new moodle_url('userdisplay.php', array('courseid' => $courseid,
+                                                                            'userid' => $userid,
+                                                                            'dodownload' => '1')),
                                     get_string("downloadcsv", 'local_report_completion'));
     }
 }
-// table for results
+// Table for results.
 $compusertable = new html_table();
 $compusertable->head = array(get_string('course', 'local_report_completion'),
                              get_string('status', 'local_report_completion'),
@@ -102,35 +102,35 @@ foreach ($usercourses as $usercourse) {
     if ($usercompletion[$usercourse->id] = userrep::get_completion($userid, $usercourse->id) ) {
         $usercourseid = $usercourse->id;
 
-        // get the completion summary
-        $completionsummary = $DB->get_record('course_completions', array('userid'=>$userid,
-                                                                         'course'=>$usercourseid));
+        // Get the completion summary.
+        $completionsummary = $DB->get_record('course_completions', array('userid' => $userid,
+                                                                         'course' => $usercourseid));
         $coursestring = $usercompletion[$usercourse->id]->data[$usercourseid]->coursename.
                         "</br><a href='".
                         new moodle_url("/local/report_users/userdisplay.php",
-                                        array('userid'=>$userid,
-                                              'courseid'=>$usercourseid)).
+                                        array('userid' => $userid,
+                                              'courseid' => $usercourseid)).
                          "'>(".get_string('usercoursedetails', 'local_report_users').
                          ")</a> <a href='".
                          new moodle_url("/local/report_completion/index.php",
-                                          array('courseid'=>$usercourseid)).
+                                          array('courseid' => $usercourseid)).
                          "'>(".get_string('coursedetails', 'local_report_users').
                          ")</a>";
         if (!empty($usercompletion[$usercourse->id]->data[$usercourseid]->completion->status)) {
             $userstat = $usercompletion[$usercourse->id]->data[$usercourseid]->completion->status;
-            $statusstring =  get_string($userstat, 'local_report_users');
+            $statusstring = get_string($userstat, 'local_report_users');
         } else {
             $statusstring = get_string('notstarted', 'local_report_users');
         }
 
-        // Get the score for the course
+        // Get the score for the course.
         if (!empty($usercompletion[$usercourseid]->data[$usercourseid]->completion->result)) {
             $resultstring = $usercompletion[$usercourseid]->data[$usercourseid]->completion->result.
                             "%";
         } else {
             $resultstring = "0%";
         }
-        //  Set the strings
+        // Set the strings.
         if (!empty($completionsummary->timestarted)) {
             $starttime = date('d M Y', $completionsummary->timestarted);
         } else {
@@ -147,18 +147,18 @@ foreach ($usercourses as $usercourse) {
             $completetime = "";
         }
 
-        // deal with the certificate info
+        // Deal with the certificate info.
         if ($hascertificate) {
             if ($certificateinfo = $DB->get_record('certificate',
-                                                    array('course'=> $usercourseid))) {
-                // check if user has completed the course - if so, show the certificate.
+                                                    array('course' => $usercourseid))) {
+                // Check if user has completed the course - if so, show the certificate.
                 $compstat = $usercompletion[$usercourseid]->data[$usercourseid]->completion->status;
                 if ($compstat == 'completed' ) {
-                    // get the course module.
+                    // Get the course module.
                     $certcminfo = $DB->get_record('course_modules',
-                                                   array('course'=>$usercourseid,
-                                                         'instance'=>$certificateinfo->id,
-                                                         'module'=>$certmodule->id));
+                                                   array('course' => $usercourseid,
+                                                         'instance' => $certificateinfo->id,
+                                                         'module' => $certmodule->id));
                     $certstring = "<a href='".$CFG->wwwroot."/mod/certificate/view.php?id=".
                                   $certcminfo->id."&action=get&userid=".$userid."&sesskey=".
                                   sesskey()."'>".get_string('downloadcert', 'local_report_users').
@@ -194,12 +194,12 @@ if (!empty($courseid)) {
     if (empty($dodownload)) {
         echo "<h3>".$usercompletion[$courseid]->data[$courseid]->coursename.
              " (<a href='".
-             new moodle_url('/local/report_completion/index.php', array('courseid'=>$courseid)).
+             new moodle_url('/local/report_completion/index.php', array('courseid' => $courseid)).
              "'> ".get_string('viewfullcourse', 'local_report_users')."</a>)</h3>";
     } else {
         echo '"'.$usercompletion[$courseid]->data[$courseid]->coursename."\"\n";
     }
-    // show some extra details
+    // Show some extra details.
     foreach ($usercompletion[$courseid]->criteria as $criteria) {
         if ($criteria->module == "quiz") {
             require_once($CFG->dirroot . '/mod/quiz/locallib.php');
@@ -212,7 +212,7 @@ if (!empty($courseid)) {
                                                     WHERE cm.instance = qa.quiz
                                                     AND qa.userid=$userid
                                                     AND cm.id=".$criteria->moduleinstance)) {
-                // get the last attempt
+                // Get the last attempt.
                 $attemptid = array_pop($attemptids);
                 $attemptobj = quiz_attempt::create($attemptid->id);
                 $questionids = $attemptobj->get_question_ids($page);
@@ -231,8 +231,8 @@ if (!empty($courseid)) {
         }
         if ($criteria->module == "scorm" ) {
             $instanceinfo = $DB->get_record('course_modules',
-                                             array('id'=>$criteria->moduleinstance));
-            $scorminfo = $DB->get_record('scorm', array('id'=>$instanceinfo->instance));
+                                             array('id' => $criteria->moduleinstance));
+            $scorminfo = $DB->get_record('scorm', array('id' => $instanceinfo->instance));
             $sql = "SELECT element, value, timemodified, attempt from {scorm_scoes_track}
                     WHERE userid = $userid AND scormid = ". $instanceinfo->instance ."
                     AND attempt = (SELECT MAX(attempt) from {scorm_scoes_track}
@@ -241,7 +241,7 @@ if (!empty($courseid)) {
             $numattempts = 0;
             if ($scormattempt = $DB->get_records_sql($sql)) {
                 foreach ($scormattempt as $data) {
-                    // recrod the number of Moodle attemps
+                    // Recrod the number of Moodle attemps.
                     if (empty($scormdata->numattempts)) {
                         $scormdata->numattempts = $data->attempt;
                     }
@@ -268,7 +268,7 @@ if (!empty($courseid)) {
                     } else if (strpos($data->element, "correct_responses")) {
                         continue;
                     } else {
-                        // check we have interaction_ and not interaction.
+                        // Check we have interaction_ and not interaction.
                         if (strpos($data->element, 'interactions_')) {
                             list($cmi, $elementraw, $target) = explode('.', $data->element);
                             list($element, $number) = explode('_', $elementraw);

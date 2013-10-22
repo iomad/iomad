@@ -15,31 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 class userrep {
-    // find completion data. $courseid=0 means all courses
-    // for that company
+    // Find completion data. $courseid=0 means all courses
+    // for that company.
     public static function get_completion( $userid, $courseid ) {
         global $DB;
 
-        // going to build an array for the data
+        // Going to build an array for the data.
         $data = array();
 
-        // count the three statii for the graph
+        // Count the three statii for the graph.
         $notstarted = 0;
         $inprogress = 0;
         $completed = 0;
 
-        // get completion data for course
-        // get course object
-        if (!$course = $DB->get_record('course', array('id'=>$courseid))) {
+        // Get completion data for course.
+        // Get course object.
+        if (!$course = $DB->get_record('course', array('id' => $courseid))) {
             error( 'unable to find course record' );
         }
         $datum = null;
         $datum->coursename = $course->fullname;
 
-        // instantiate completion info thingy
+        // Instantiate completion info thingy.
         $info = new completion_info( $course );
 
-        // get gradebook details
+        // Get gradebook details.
         $gbsql = "select gg.finalgrade as result from {grade_grades} gg, {grade_items} gi
                   WHERE gi.courseid=$courseid AND gi.itemtype='course' AND gg.userid=$userid
                   AND gi.id=gg.itemid";
@@ -48,8 +48,8 @@ class userrep {
             $gradeinfo->result = null;
         }
 
-        // if completion is not enabled on the course
-        // there's no point carrying on
+        // If completion is not enabled on the course
+        // there's no point carrying on.
         if (!$info->is_enabled()) {
             $datum->enabled = false;
             $data[ $courseid ] = $datum;
@@ -58,29 +58,29 @@ class userrep {
             $datum->enabled = true;
         }
 
-        // get criteria for coursed
-        // this is an array of tracked activities (only tracked ones)
+        // Get criteria for coursed.
+        // This is an array of tracked activities (only tracked ones).
         $criteria = $info->get_criteria();
 
-        // number of tracked activities to complete
-        $tracked_count = count( $criteria );
-        $datum->tracked_count = $tracked_count;
+        // Number of tracked activities to complete.
+        $trackedcount = count( $criteria );
+        $datum->trackedcount = $trackedcount;
 
-        // get data for all users in course
-        // this is an array of users in the course. It contains a 'progress'
-        // array showing completed *tracked* activities
+        // Get data for all users in course.
+        // This is an array of users in the course. It contains a 'progress'
+        // array showing completed *tracked* activities.
         $progress = $info->get_progress_all();
 
-        // iterate over users to get info
+        // Iterate over users to get info.
         if (isset($progress[$userid])) {
             $user = $progress[$userid];
 
             $u = null;
 
-            // find user's completion info for this course
+            // Find user's completion info for this course.
             if ($completioninfo = $DB->get_record( 'course_completions',
-                                                    array('userid'=>$user->id,
-                                                          'course'=>$courseid))) {
+                                                    array('userid' => $user->id,
+                                                          'course' => $courseid))) {
                 $u->timeenrolled = $completioninfo->timeenrolled;
                 if (!empty($completioninfo->timestarted)) {
                     $u->timestarted = $completioninfo->timestarted;
@@ -109,14 +109,14 @@ class userrep {
             }
         } else {
             $u->completed_count = 0;
-            $u->completed_percent='--';
+            $u->completed_percent = '--';
             $u->completed_progress = 'notstarted';
         }
         $u->result = round($gradeinfo->result, 0);
         $datum->completion = $u;
         $data[ $courseid ] = $datum;
 
-        // make return object
+        // Make return object.
         $returnobj = null;
         $returnobj->data = $data;
         $returnobj->criteria = $criteria;
