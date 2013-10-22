@@ -37,7 +37,7 @@ class block_iomad_reports extends block_base {
 
         // Title.
         $this->content = new stdClass();
-        $this->content->text .= '<h3>'.get_string('pluginname', 'block_iomad_reports')."</h3>\n";
+        $this->content->text = '<h3>'.get_string('pluginname', 'block_iomad_reports')."</h3>\n";
 
         // Get all local/report_*.
         $reports = $this->getreportpaths();
