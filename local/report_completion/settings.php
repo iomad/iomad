@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,4 +25,6 @@
 defined('MOODLE_INTERNAL') || die;
 
 $url = new moodle_url( '/local/report_completion/index.php' );
-$ADMIN->add( 'PerficoReports', new admin_externalpage( 'repcoursecompletion', get_string('repcoursecompletion','local_report_completion'), $url, 'local/report_completion:view'));
+$ADMIN->add( 'PerficoReports', new admin_externalpage('repcoursecompletion',
+                                                       get_string('repcoursecompletion',
+                                                       'local_report_completion'), $url, 'local/report_completion:view'));
