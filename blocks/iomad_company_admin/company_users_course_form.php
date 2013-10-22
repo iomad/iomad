@@ -86,6 +86,7 @@ class company_users_course_form extends moodleform {
 
     public function definition() {
         $this->_form->addElement('hidden', 'companyid', $this->selectedcompany);
+        $this->_form->setType('companyid', PARAM_INT);
     }
 
     public function definition_after_data() {
