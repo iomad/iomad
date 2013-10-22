@@ -247,12 +247,12 @@ class company_courses_form extends moodleform {
     }
 
     private function unenroll_all($id) {
-        global $DB;
+        global $DB, $PAGE;
         // Unenroll everybody from given course.
 
         // Get list of enrollments.
         $course = $DB->get_record('course', array('id'=>$id));
-        $courseenrolment = new course_enrolment_manager($course);
+        $courseenrolment = new course_enrolment_manager($PAGE, $course);
         $userlist = $courseenrolment->get_users('', 'ASC', 0, 0);
         foreach ($userlist as $user) {
             $ues = $courseenrolment->get_user_enrolments($user->id);

@@ -48,12 +48,12 @@ abstract class company_user_selector_base extends user_selector_base {
     }
 
     protected function get_course_user_ids() {
-        global $DB;
+        global $DB, $PAGE;
         if (!isset( $this->courseid) ) {
             return array();
         } else {
             $course = $DB->get_record('course', array('id'=>$this->courseid));
-            $course_enrolment_manager = new course_enrolment_manager($course);
+            $course_enrolment_manager = new course_enrolment_manager($PAGE, $course);
 
             $users = $course_enrolment_manager->get_users('lastname', $sort='ASC', $page=0, $perpage=0);
 
