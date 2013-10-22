@@ -16,69 +16,69 @@
 
 class attendancerep{
 
-    // check the user and the companyid are allowed
+    // Check the user and the companyid are allowed.
     public function confirm_user_company( $user, $companyid ) {
         global $DB;
 
-        // companyid is defined?
-        if ($companyid==0) {
+        // Companyid is defined?
+        if ($companyid == 0) {
             return true;
         }
 
-        // user must either be in the companymanager table for THIS company
-        // or not at all
-        if ($companies = $DB->get_records('companymanager', array('userid'=>$user->id))) {
+        // User must either be in the companymanager table for THIS company
+        // or not at all.
+        if ($companies = $DB->get_records('companymanager', array('userid' => $user->id))) {
             foreach ($companies as $company) {
                 if ($company->companyid == $companyid) {
                     return true;
                 }
             }
 
-            // if we get this far then there's a problem
+            // If we get this far then there's a problem.
             return false;
         }
 
-        // not in table, so that's fine
+        // Not in table, so that's fine.
         return true;
     }
 
-    // create the select list of courses
+    // Create the select list of courses.
     static public function courseselectlist($companyid=0) {
         global $DB;
         global $SITE;
 
-        // "empty" array
-        $course_select = array();
+        // Create "empty" array.
+        $courseselect = array();
 
-        // if the companyid=0 then there's no courses
-        if ($companyid==0) {
-            return $course_select;
+        // If the companyid=0 then there's no courses.
+        if ($companyid == 0) {
+            return $courseselect;
         }
 
-        // get courses for given company
-        if (!$companycourses = $DB->get_records('company_course', array('companyid'=>$companyid),
+        // Get courses for given company.
+        if (!$companycourses = $DB->get_records('company_course', array('companyid' => $companyid),
                                                                         null, 'courseid')) {
-            return $course_select;
+            return $courseselect;
         } else {
             $companyselect = " course in (".implode(',', array_keys($companycourses)).")";
         }
 
-        if (!$classmodinfo = $DB->get_record('modules', array('name'=>'courseclassroom'))) {
-            return $course_select;
+        if (!$classmodinfo = $DB->get_record('modules', array('name' => 'courseclassroom'))) {
+            return $courseselect;
         }
         if (!$courses = $DB->get_records_sql("SELECT DISTINCT course FROM {course_modules}
                                               WHERE module=$classmodinfo->id AND $companyselect")) {
-            return $course_select;
+            return $courseselect;
         }
-        // get the course names and put them in the list
+        // Get the course names and put them in the list.
         foreach ($courses as $course) {
             if ($course->course == $SITE->id) {
                 continue;
             }
-            $coursefull = $DB->get_record('course', array('id'=>$course->course));
-            $course_select[$coursefull->id] = $coursefull->fullname;
+            $coursefull = $DB->get_record('course', array('id' => $course->course));
+            $courseselect[$coursefull->id] = $coursefull->fullname;
         }
-        return $course_select;
+        return $courseselect;
     }
 
 }
