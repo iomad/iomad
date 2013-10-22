@@ -1,9 +1,23 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 class companyrep{
 
-    // get the jsmodule setup thingy
-    function getJsModule() {
+    // Get the jsmodule setup thingy.
+    public function getjsmodule() {
         $jsmodule = array(
             'name'     => 'local_report_completion',
             'fullpath' => '/local/report_completion/module.js',
@@ -14,35 +28,35 @@ class companyrep{
         return $jsmodule;
     }
 
-    // create the select list of companies
-    // if the user is in the company managers table then the list is restricted
+    // Create the select list of companies.
+    // If the user is in the company managers table then the list is restricted.
     public static function companylist( $user ) {
         global $DB;
 
-        // "empty" array
+        // Create "empty" array.
         $companylist = array();
 
-        // get the companies they manage
-        $managed_companies = array();
-        if ($managers = $DB->get_records_sql("SELECT * from {company_users} WHERE 
+        // Get the companies they manage.
+        $managedcompanies = array();
+        if ($managers = $DB->get_records_sql("SELECT * from {company_users} WHERE
                                               userid = :userid
-                                              AND managertype != 0", array('userid'=>$user->id))) {
+                                              AND managertype != 0", array('userid' => $user->id))) {
             foreach ($managers as $manager) {
-                $managed_companies[] = $manager->companyid;
+                $managedcompanies[] = $manager->companyid;
             }
         }
 
-        // get companies information
+        // Get companies information.
         if (!$companies = $DB->get_records('company')) {
-            return $company_select;
+            return $companylist;
         }
 
-        // ...and finally build the list
+        // And finally build the list.
         foreach ($companies as $company) {
 
-            // if managers found then only allow selected companies
-            if (!empty($managed_companies)) {
-                if (!in_array($company->id,$managed_companies)) {
+            // If managers found then only allow selected companies.
+            if (!empty($managedcompanies)) {
+                if (!in_array($company->id, $managedcompanies)) {
                     continue;
                 }
             }
@@ -52,18 +66,18 @@ class companyrep{
         return $companylist;
     }
 
-    // append the company managers to companies
+    // Append the company managers to companies.
     public static function addmanagers( &$companies ) {
         global $DB;
 
-        // iterate over companies adding their managers
+        // Iterate over companies adding their managers.
         foreach ($companies as $company) {
             $managers = array();
-            if ($companymanagers = $DB->get_records_sql("SELECT * from {company_users} WHERE 
+            if ($companymanagers = $DB->get_records_sql("SELECT * from {company_users} WHERE
                                                   companyid = :companyid
-                                                  AND managertype != 0", array('companyid'=>$company->id))) {
+                                                  AND managertype != 0", array('companyid' => $company->id))) {
                 foreach ($companymanagers as $companymanager) {
-                    if ($user = $DB->get_record( 'user',array('id'=>$companymanager->userid))) {
+                    if ($user = $DB->get_record( 'user', array('id' => $companymanager->userid))) {
                         $managers[$user->id] = $user;
                     }
                 }
@@ -72,16 +86,16 @@ class companyrep{
         }
     }
 
-    // append the company users to companies
+    // Append the company users to companies.
     public static function addusers( &$companies ) {
         global $DB;
 
-        // iterate over companies adding their managers
+        // Iterate over companies adding their managers.
         foreach ($companies as $company) {
             $users = array();
-            if ($companyusers = $DB->get_records('company_users', array('companyid'=>$company->id))) {
+            if ($companyusers = $DB->get_records('company_users', array('companyid' => $company->id))) {
                 foreach ($companyusers as $companyuser) {
-                    if($user = $DB->get_record( 'user',array('id'=>$companyuser->userid))) {
+                    if ($user = $DB->get_record( 'user', array('id' => $companyuser->userid))) {
                         $users[$user->id] = $user;
                     }
                 }
@@ -90,16 +104,16 @@ class companyrep{
         }
     }
 
-    // append the company courses to companies
+    // Append the company courses to companies.
     public static function addcourses( &$companies ) {
         global $DB;
 
-        // iterate over companies adding their managers
+        // Iterate over companies adding their managers.
         foreach ($companies as $company) {
             $courses = array();
-            if ($companycourses = $DB->get_records( 'company_course',array('companyid'=>$company->id))) {
+            if ($companycourses = $DB->get_records( 'company_course', array('companyid' => $company->id))) {
                 foreach ($companycourses as $companycourse) {
-                    if ($course = $DB->get_record( 'course',array('id'=>$companycourse->courseid))) {
+                    if ($course = $DB->get_record( 'course', array('id' => $companycourse->courseid))) {
                         $courses[$course->id] = $course;
                     }
                 }
@@ -108,8 +122,8 @@ class companyrep{
         }
     }
 
-    // list users
-    function listusers( $users ) {
+    // List users.
+    public static function listusers( $users ) {
         global $CFG;
 
         echo "<ul class=\"iomad_user_list\">\n";
