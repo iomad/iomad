@@ -18,12 +18,12 @@ require_once('lib.php');
 
 function test() {
     echo "<hr /><b>Fake user object</b>";
-    $user = (object) array('firstname' => 'Turner', 'lastname' => 'Derick',
-                           'email' => 'turf@usa.net',
-                           'username' => 'turf', 'newpassword'=>'somenewpassword');
-    $sender = (object) array('firstname'=>'Derick', 'Lastname'=>'Turner');
+    $user = (object) array('firstname' => 'User', 'lastname' => 'Test',
+                           'email' => 'testuser@somewhere.com',
+                           'username' => 'testuser', 'newpassword' => 'somenewpassword');
+    $sender = (object) array('firstname' => 'Test', 'Lastname' => 'User');
     echo EmailTemplate::send('user_create', array('user' => $user, 'course' => 2,
-                             'sender'=>$sender));
+                             'sender' => $sender));
 
     echo EmailTemplate::send('user_added_to_course', array('course' => 2),
       array(array('user' => 3), array('user' => 56), array('user' => $user)));
@@ -36,7 +36,7 @@ function test() {
 
     echo "<hr/><b>Email all users in a department</b>";
     echo EmailTemplate::send_to_all_users_in_department(3, 'user_added_to_course',
-                                                        array('course' =>2)); */
+                                                        array('course' => 2));
 }
 
 test();

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->version  = 2012092600;   // The (date) version of this plugin
-$plugin->requires = 2010021900;   // Requires this Moodle version
+$plugin->version  = 2012092600;   // The (date) version of this plugin.
+$plugin->requires = 2010021900;   // Requires this Moodle version.
 
-// Minimum number of seconds between executions of the cron function
+// Minimum number of seconds between executions of the cron function.
 $plugin->cron = 300;

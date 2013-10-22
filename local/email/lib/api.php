@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__) . '/../config.php');
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
@@ -15,7 +29,7 @@ class EmailTemplate {
     protected $sender = null;
     protected $headers = null;
     protected $approveuser = null;
-    
+
     /**
      * Send an email to (a) specified user(s)
      *
@@ -27,8 +41,8 @@ class EmailTemplate {
      *                           individual emails. This could for instance
      *                           be used to send emails to multiple users
      *                           send($tname,
-     *                                array('course'=>1),
-     *                                array(array('user'=>1),array('user'=>2),array('user'=>3))
+     *                                array('course' =>1 ),
+     *                                array(array('user' => 1),array('user' => 2),array('user' => 3))
      *                           )
      * @return bool if no $loopoptions where specified:
      *              Returns true if mail was sent OK and false if there was an error
@@ -36,22 +50,22 @@ class EmailTemplate {
      *              returns number of successes (ie. count of $loopoptions)
      *              or if there was an error, those $loopoptions for which there was an error
      */
-    public static function send($templatename, $options = array(), $loopoptions = array())
-    {
+    public static function send($templatename, $options = array(), $loopoptions = array()) {
         if (count($loopoptions)) {
             $results = array();
-            foreach($loopoptions as $loptions) {
+            foreach ($loopoptions as $loptions) {
                 $combinedoptions = array_merge($options, $loptions);
                 $ok = false;
                 try {
                     $ok = self::send($templatename, $combinedoptions);
-                } catch (Exception $e){ 
+                } catch (Exception $e) {
+                    // Something to go here.
                 }
                 if (!$ok) {
                     $results[] = $loptions;
                 }
             }
-            
+
             if (count($results)) {
                 return $results;
             } else {
@@ -62,7 +76,7 @@ class EmailTemplate {
             return $emailtemplate->queue_for_cron();
         }
     }
-    
+
     /**
      * Send an email to all users in a department (and it's subdepartments)
      *
@@ -72,10 +86,10 @@ class EmailTemplate {
      *                             in the mdl_email_template table
      * @param array $options array of options to pass into each email
      * @return bool Returns true if mail was sent OK and false if there was an error
-     */    
+     */
     public static function send_to_all_users_in_department($departmentid, $templatename, $options = array()) {
         global $DB;
-        
+
         $users = company::get_recursive_department_users($departmentid);
         $useroptions = array_map('self::getuseroption', $users);
         $result = self::send($templatename, $options, $useroptions);
@@ -87,21 +101,21 @@ class EmailTemplate {
     }
 
     private static function getuseroption($userrefobject) {
-        return array('user'=> $userrefobject->userid);
+        return array('user' => $userrefobject->userid);
     }
 
     public function __construct($templatename, $options = array()) {
         global $USER, $SESSION, $COURSE;
 
-        $user = array_key_exists('user',$options) ? $options['user'] : null;
-        $course = array_key_exists('course',$options) ? $options['course'] : null;
-        $this->invoice = array_key_exists('invoice',$options) ? $options['invoice'] : null;
-        $sender = array_key_exists('sender',$options) ? $options['sender'] : null;
-        $approveuser = array_key_exists('approveuser',$options) ? $options['approveuser'] : null;
-        $this->classroom = array_key_exists('classroom',$options) ? $options['classroom'] : null;
-        $this->license = array_key_exists('license',$options) ? $options['license'] : null;
-        $this->headers = array_key_exists('headers',$options) ? $options['headers'] : null;
-        
+        $user = array_key_exists('user', $options) ? $options['user'] : null;
+        $course = array_key_exists('course', $options) ? $options['course'] : null;
+        $this->invoice = array_key_exists('invoice', $options) ? $options['invoice'] : null;
+        $sender = array_key_exists('sender', $options) ? $options['sender'] : null;
+        $approveuser = array_key_exists('approveuser', $options) ? $options['approveuser'] : null;
+        $this->classroom = array_key_exists('classroom', $options) ? $options['classroom'] : null;
+        $this->license = array_key_exists('license', $options) ? $options['license'] : null;
+        $this->headers = array_key_exists('headers', $options) ? $options['headers'] : null;
+
         if (!isset($user)) {
             $user =& $USER;
         }
@@ -110,23 +124,23 @@ class EmailTemplate {
         }
         if (!isset($sender)) {
             if ($USER->id == 0) {
-                // we are being run from cron.
+                // We are being run from cron.
                 $sender =& self::get_sender($user);
             } else {
-                // not been defined explicitly, use the current user.
+                // Not been defined explicitly, use the current user.
                 $sender = $USER;
             }
         }
 
-        // set the sender to the default site one if use real sender is not true
+        // Set the sender to the default site one if use real sender is not true.
         if (empty($CFG->iomad_email_senderisreal)) {
             $sender = generate_email_supportuser();
         }
-        
+
         $this->user = $this->get_user($user);
         $this->approveuser = $this->get_user($approveuser);
-        
-        // check if we are being passed a password and add it if so
+
+        // Check if we are being passed a password and add it if so.
         if (isset($user->newpassword)) {
             $this->user->newpassword = $user->newpassword;
         }
@@ -136,22 +150,22 @@ class EmailTemplate {
         if (!isset($this->user->email)) {
             print_error("No user was specified or the specified user has no email to send $templatename to.");
         }
-        
+
         if (isset($this->user->id) && !isset($this->user->profile)) {
             profile_load_custom_fields($this->user);
         }
-        // check if we are an admin with a company set
+        // Check if we are an admin with a company set.
         if (!empty($SESSION->currenteditingcompany)) {
             $this->company = new company($SESSION->currenteditingcompany);
-        // otherwise use the creating users company
-        } else {        
-            $this->company = $DB->get_record_sql("SELECT * FROM {company} 
+            // Otherwise use the creating users company.
+        } else {
+            $this->company = $DB->get_record_sql("SELECT * FROM {company}
                                                   WHERE id = (
                                                    SELECT companyid FROM {company_user}
                                                    WHERE userid = :userid
-                                                  )", array('userid'=>$USER->id));
+                                                  )", array('userid' => $USER->id));
         }
-        
+
         $this->course = $this->get_course($course);
 
         $this->templatename = $templatename;
@@ -161,14 +175,14 @@ class EmailTemplate {
     public function subject() {
         return $this->fill($this->template->subject);
     }
-    
+
     public function body() {
         return $this->fill($this->template->body);
     }
-    
+
     public function queue_for_cron() {
         global $DB;
-        
+
         if (isset($this->user->id)) {
             $email = new stdClass;
             $email->templatename = $this->templatename;
@@ -192,18 +206,18 @@ class EmailTemplate {
             if ($this->headers) {
                 $email->headers = $this->headers;
             }
-            
+
             return $DB->insert_record('email', $email);
         } else {
-            // can't queue it for cron, attempt to send it immediately
+            // Can't queue it for cron, attempt to send it immediately.
             return $this->email_to_user();
         }
     }
-    
+
     static public function send_to_user($email) {
         global $USER;
 
-        // check if the user to be sent to is valid
+        // Check if the user to be sent to is valid.
         if ($user = self::get_user($email->userid)) {
             if (isset($email->senderid)) {
                 $supportuser = self::get_user($email->senderid);
@@ -217,7 +231,7 @@ class EmailTemplate {
             return email_to_user($user, $supportuser, $email->subject, $email->body);
         }
     }
-    
+
     public function email_to_user() {
         global $USER;
 
@@ -232,22 +246,15 @@ class EmailTemplate {
                 $supportuser->customheaders = unserialize($email->headers);
                 email_to_user($USER, $supportuser, $email->subject, $email->body);
         }
-            
-
-/*
-        echo "<br />email from <i>" . $supportuser->email . "</i> to <i>" . $this->user->email . "</i><hr />";
-        echo "<b>$subject</b><br/>";
-        echo "<pre>$body</pre>";
-*/
 
         return email_to_user($this->user, $supportuser, $subject, $body);
     }
-    
+
     private function get_user($user) {
         global $DB;
 
-        if ($user) {        
-            // if $user is an integer, it is a user id, get the object from database
+        if ($user) {
+            // If $user is an integer, it is a user id, get the object from database.
             if (is_int($user) || is_string($user)) {
                 if ($user = $DB->get_record('user', array('id' => $user), '*')) {
                     return $user;
@@ -278,27 +285,29 @@ class EmailTemplate {
         global $DB;
 
         if ($course) {
-            // if $course is an integer, it is a course id, get the object from database
+            // If $course is an integer, it is a course id, get the object from database.
             if (is_int($course) || is_string($course)) {
                 if (!$course = $DB->get_record('course', array('id' => $course), '*', MUST_EXIST)) {
                     print_error('Course ID was incorrect');
                 }
             }
-            
-            if ($course)
+
+            if ($course) {
                 return $course;
+            }
         }
     }
-    
+
     private function get_template($templatename) {
         global $DB, $email;
-    
+
         if (isset($this->company->id)) {
             $companyid = $this->company->id;
         }
-    
-        // try to get it out of the database, otherwise get it from config file
-        if (!isset($companyid) || !$template = $DB->get_record('email_template', array('name' => $templatename, 'companyid' => $companyid), '*')) {
+
+        // Try to get it out of the database, otherwise get it from config file.
+        if (!isset($companyid) || !$template = $DB->get_record('email_template', array('name' => $templatename,
+                                                                                       'companyid' => $companyid), '*')) {
             if (isset($email[$templatename])) {
                 $template = (object) $email[$templatename];
             } else {
@@ -308,38 +317,45 @@ class EmailTemplate {
 
         return $template;
     }
-    
-    function fill($templatestring) {
-        $aMethods = EmailVars::vars();
 
-        $vars = new EmailVars($this->company,$this->user,$this->course,$this->invoice,$this->classroom, $this->license, $this->sender, $this->approveuser);
+    public function fill($templatestring) {
+        $amethods = EmailVars::vars();
 
-        foreach($aMethods as $funcname) {
+        $vars = new EmailVars($this->company,
+                              $this->user,
+                              $this->course,
+                              $this->invoice,
+                              $this->classroom,
+                              $this->license,
+                              $this->sender,
+                              $this->approveuser);
+
+        foreach ($amethods as $funcname) {
             $replacement = "{" . $funcname . "}";
-            
+
             if (stripos($templatestring, $replacement) !== false) {
                 $val = $vars->$funcname;
-                
+
                 $templatestring = str_replace($replacement, $val, $templatestring);
             }
         }
-        
+
         return $templatestring;
     }
-    
-    private function get_sender($user)  {
-        
-        // Get the user's company
+
+    private function get_sender($user) {
+
+        // Get the user's company.
         if ($usercompany = company::get_company_byuserid($user->id)) {
-            // is there a default contact userid?
+            // Is there a default contact userid?
             if (isset($usercompany->defaultcontactid)) {
                 $returnid = $usercompany->defaultcontactid;
             } else {
-                // use the default support email account
+                // Use the default support email account.
                 $returnid = generate_email_supportuser();
             }
         } else {
-            // no company use default support user
+            // No company use default support user.
             $returnid = generate_email_supportuser();
         }
         return $returnid;

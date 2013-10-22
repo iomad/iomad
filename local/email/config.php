@@ -18,7 +18,7 @@ unset($email);
 global $email;
 $email = array();
 
-// add emails with subject and body strings from lang/??/local_email.php
+// Add emails with subject and body strings from lang/??/local_email.php.
 $emailarray = array('approval',
                     'advertise_classroom_based_course',
                     'course_classroom_approval',

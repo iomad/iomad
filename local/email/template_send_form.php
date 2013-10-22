@@ -47,15 +47,15 @@ class template_send_form extends moodleform {
         $subhierarchieslist = company::get_all_subdepartments($department->id);
 
         $options = array('context' => $this->context,
-                         'multiselect'=>false,
+                         'multiselect' => false,
                          'companyid' => $this->companyid,
-                         'departmentid'=>$department->id,
-                         'subdepartments'=>$subhierarchieslist,
-                         'parentdepartmentid'=>$department);
+                         'departmentid' => $department->id,
+                         'subdepartments' => $subhierarchieslist,
+                         'parentdepartmentid' => $department);
         $this->currentcourses = new current_company_course_selector('currentcourses', $options);
         $this->currentcourses->set_rows(1);
 
-        parent::moodleform($actionurl);
+        parent::__construct($actionurl);
     }
 
     public function definition() {
@@ -81,7 +81,6 @@ class template_send_form extends moodleform {
 
         $mform->addElement('static', 'subject', get_string('subject', 'local_email'));
         $mform->addElement('static', 'body', get_string('body', 'local_email'));
-
 
         $mform->addElement('header', 'header', get_string('email_data', 'local_email'));
 
@@ -126,7 +125,7 @@ if ($returnurl) {
 }
 $templatelist = new moodle_url('/local/email/template_list.php', $urlparams);
 
-// set the companyid to bypass the company select form if possible
+// Set the companyid to bypass the company select form if possible.
 if (!empty($SESSION->currenteditingcompany)) {
     $companyid = $SESSION->currenteditingcompany;
 } else if (!empty($USER->company)) {
@@ -152,21 +151,21 @@ if ($templateid) {
     }
 }
 
-// Correct the navbar
-// Set the name for the page
-$linktext=get_string('send_emails', 'local_email');
-// set the url
+// Correct the navbar.
+// Set the name for the page.
+$linktext = get_string('send_emails', 'local_email');
+// Set the url.
 $linkurl = new moodle_url('/local/email/template_edit_form.php');
-//build the nav bar
+// Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $blockpage = new blockpage($PAGE, $OUTPUT, 'email', 'local', 'send_emails');
 $blockpage->setup();
 
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT
-// get the form data
+require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
+// Get the form data.
 
-// set up the form
+// Set up the form.
 $mform = new template_send_form($PAGE->url, $context, $companyid, $templateid, $templaterecord);
 $mform->set_data($templaterecord);
 

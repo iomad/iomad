@@ -22,30 +22,30 @@ require_once( 'lib.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
-$confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   //md5 confirmation hash
+$confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', 30, PARAM_INT);        // how many per page
+$perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 
 global $DB, $email;
 
 $block = 'local_email';
 
-// Correct the navbar
-// Set the name for the page
-$linktext=get_string('template_list_title', $block);
-// set the url
+// Correct the navbar.
+// Set the name for the page.
+$linktext = get_string('template_list_title', $block);
+// Set the url.
 $linkurl = new moodle_url('/local/email/template_list.php');
-//build the nav bar
+// Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $blockpage = new blockpage($PAGE, $OUTPUT, 'email', 'local', 'template_list_title');
 $blockpage->setup();
 
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT
+require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 
-// set the companyid to bypass the company select form if possible
+// Set the companyid to bypass the company select form if possible.
 if (!empty($SESSION->currenteditingcompany)) {
     $companyid = $SESSION->currenteditingcompany;
 } else if (!empty($USER->company)) {
@@ -65,17 +65,17 @@ $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $d
 $returnurl = $baseurl;
 
 if ($delete and confirm_sesskey()) {
-    // Delete a selected override template, after confirmation
+    // Delete a selected override template, after confirmation.
 
     require_capability('local/email:delete', $context);
 
-    $template = $DB->get_record('email_template', array('id'=>$delete), '*', MUST_EXIST);
+    $template = $DB->get_record('email_template', array('id' => $delete), '*', MUST_EXIST);
 
     if ($confirm != md5($delete)) {
         echo $OUTPUT->header();
         $name = $template->name;
         echo $OUTPUT->heading(get_string('delete_template', $block), 2, 'headingblock header');
-        $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+        $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $OUTPUT->confirm(get_string('delete_template_checkfull', $block, "'$name'"),
               new moodle_url('template_list.php', $optionsyes), 'template_list.php');
         echo $OUTPUT->footer();
@@ -83,7 +83,7 @@ if ($delete and confirm_sesskey()) {
     } else if (data_submitted()) {
         $transaction = $DB->start_delegated_transaction();
 
-        if ( $DB->delete_records('email_template', array('id'=>$delete)) ) {
+        if ( $DB->delete_records('email_template', array('id' => $delete)) ) {
             $transaction->allow_commit();
             redirect($returnurl);
         } else {
@@ -102,22 +102,22 @@ $blockpage->display_header();
 $company = new company($companyid);
 echo get_string('email_templates_for', $block, $company->get_name() );
 
-//  Check we can actually do anything on this page.
+// Check we can actually do anything on this page.
 require_capability('local/email:list', $context);
 
-// Get the number of templates
+// Get the number of templates.
 $objectcount = $DB->count_records('email_template');
 echo $OUTPUT->paging_bar($objectcount, $page, $perpage, $baseurl);
 
 flush();
 
-// sort the keys of the global $email object, the make sure we have that and the
-// recordset we'll get next in the same order
+// Sort the keys of the global $email object, the make sure we have that and the
+// recordset we'll get next in the same order.
 $configtemplates = array_keys($email);
 sort($configtemplates);
 $ntemplates = count($configtemplates);
 
-// returns true if user is allowed to send emails using a particular template
+// Returns true if user is allowed to send emails using a particular template.
 function allow_sending_to_template($templatename) {
     return in_array($templatename, array('advertise_classroom_based_course'));
 }
@@ -214,7 +214,7 @@ if ($templates = $DB->get_recordset('email_template', array('companyid' => $comp
                             $sendbutton
                             );
 
-        // need to increase the counter to skip the default template
+        // Need to increase the counter to skip the default template.
         $i++;
     }
 
