@@ -62,11 +62,9 @@ if (!$event = $DB->get_record('trainingevent', array('id'=>$id))) {
                     if (!$DB->insert_record('trainingevent_users', array('trainingeventid'=>$id, 'userid'=>$USER->id))) {
                         print_error('error creating attendance record');
                     } else {
-                        if ($CFG->iomademails) {
-                            $course = $DB->get_record('course', array('id'=>$event->course));
-                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                            EmailTemplate::send('user_signed_up_for_event', array('course'=>$course, 'user'=>$USER, 'classroom'=>$location));
-                        }
+                        $course = $DB->get_record('course', array('id'=>$event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        EmailTemplate::send('user_signed_up_for_event', array('course'=>$course, 'user'=>$USER, 'classroom'=>$location));
                     }
                 }
             } else if ('no' == $attending) {
@@ -74,11 +72,9 @@ if (!$event = $DB->get_record('trainingevent', array('id'=>$id))) {
                     if (!$DB->delete_records('trainingevent_users', array('id'=>$attendingrecord->id))) {
                         print_error('error removing attendance record');
                     } else {
-                        if ($CFG->iomademails) {
-                            $course = $DB->get_record('course', array('id'=>$event->course));
-                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                            EmailTemplate::send('user_removed_from_event', array('course'=>$course, 'user'=>$USER, 'classroom'=>$location));
-                        }
+                        $course = $DB->get_record('course', array('id'=>$event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        EmailTemplate::send('user_removed_from_event', array('course'=>$course, 'user'=>$USER, 'classroom'=>$location));
                     }
                 }
             }
@@ -94,24 +90,22 @@ if (!$event = $DB->get_record('trainingevent', array('id'=>$id))) {
                                                                                 'companyid'=>$company->id))) {
                         print_error('error creating attendance record');
                     } else {
-                        if ($CFG->iomademails) {
-                            $course = $DB->get_record('course', array('id'=>$event->course));
-                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                            //  get the list of managers we need to send an email to.
-                            $mymanagers = $company->get_my_managers($USER->id, $event->approvaltype);
-                            foreach ($mymanagers as $mymanager) {
-                                if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
-                                    EmailTemplate::send('course_classroom_approval', array('course'=>$course,
-                                                                                           'user'=>$manageruser,
-                                                                                           'approveuser'=>$USER,
-                                                                                           'classroom'=>$location));
-                                }
+                        $course = $DB->get_record('course', array('id'=>$event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        //  get the list of managers we need to send an email to.
+                        $mymanagers = $company->get_my_managers($USER->id, $event->approvaltype);
+                        foreach ($mymanagers as $mymanager) {
+                            if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
+                                EmailTemplate::send('course_classroom_approval', array('course'=>$course,
+                                                                                       'user'=>$manageruser,
+                                                                                       'approveuser'=>$USER,
+                                                                                       'classroom'=>$location));
                             }
-                            EmailTemplate::send('course_classroom_approval_request', array('course'=>$course,
-                                                                                   'user'=>$USER,
-                                                                                   'classroom'=>$location));
-                        
                         }
+                        EmailTemplate::send('course_classroom_approval_request', array('course'=>$course,
+                                                                               'user'=>$USER,
+                                                                               'classroom'=>$location));
+                        
                     }
                 }
             } else if ( 'no' == $booking) {

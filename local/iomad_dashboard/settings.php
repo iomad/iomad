@@ -49,10 +49,8 @@ $ADMIN->add( 'iomad', new admin_category( 'CourseAdmin',
 $ADMIN->add( 'iomad', new admin_category( 'PerficoReports',
               get_string('iomadreports', 'block_iomad_company_admin')));
 
-if (!empty($CFG->iomadlicenses)) {
-    $ADMIN->add( 'iomad', new admin_category( 'LicenseAdmin',
-                 get_string('licensemanagement', 'block_iomad_company_admin')));
-}
+$ADMIN->add( 'iomad', new admin_category( 'LicenseAdmin',
+             get_string('licensemanagement', 'block_iomad_company_admin')));
 
 if (!empty($CFG->iomad_commerce_enabled)) {
     $ADMIN->add( 'iomad', new admin_category( 'ECommerceAdmin',

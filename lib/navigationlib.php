@@ -1388,19 +1388,10 @@ class global_navigation extends navigation_node {
             }
             if (!empty($USER->profile['company'])) {
                 $company = company::get_company_byuserid($USER->id);
-                if (!empty($CFG->iomadglobalcourses)) {
-                    $sharedsql = " AND ( c.id in (select courseid from {company_course} where companyid = $company->id) or c.id in (select courseid from {iomad_courses} where shared=1)
-                                   or c.id in ( select courseid from {company_shared_courses} where companyid = $company->id)) ";
-                } else {
-                    $sharedsql = " AND c.id in (select courseid from {company_course} where companyid = $company->id) ";
-                }
+                $sharedsql = " AND ( c.id in (select courseid from {company_course} where companyid = $company->id) or c.id in (select courseid from {iomad_courses} where shared=1)
+                               or c.id in ( select courseid from {company_shared_courses} where companyid = $company->id)) ";
             } else {
-                if (!empty($CFG->iomadglobalcourses)) {
-                    $sharedsql = " AND c.id in (select courseid from {iomad_courses} where shared=1) ";
-                } else {
-                    $sharedsql = "";
-                }
-
+                $sharedsql = " AND c.id in (select courseid from {iomad_courses} where shared=1) ";
             }
 
             // Hmmm we need to show categories... this is going to be painful.
@@ -2663,9 +2654,7 @@ class global_navigation extends navigation_node {
         $courses = enrol_get_my_courses(null, $sortorder);
 
         // IOMAD : deal with courses which we have a license for but not enrolled on yet
-        if (!empty($CFG->iomadlicenses)) {
-            iomad::iomad_add_license_courses($courses);
-        }
+        iomad::iomad_add_license_courses($courses);
 
         if (count($courses) && $this->show_my_categories()) {
             // OK Actually we are loading categories. We only want to load categories that have a parent of 0.

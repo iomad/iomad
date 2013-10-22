@@ -261,11 +261,9 @@ class company_course_users_form extends moodleform {
                     if ($allow) {
                         company_user::enrol($adduser, array($this->course->id),
                                                             $this->selectedcompany);
-                        if ($CFG->iomademails) {
-                            EmailTemplate::send('user_added_to_course',
-                                                 array('course'=>$this->course,
-                                                       'user'=>$adduser));
-                        }
+                        EmailTemplate::send('user_added_to_course',
+                                             array('course'=>$this->course,
+                                                   'user'=>$adduser));
                     }
                 }
 

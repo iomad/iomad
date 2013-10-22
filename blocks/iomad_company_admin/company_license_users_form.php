@@ -160,9 +160,7 @@ class company_license_users_form extends moodleform {
 
         $this->create_user_selectors();
         // Get the courses to send to if emails are configured.
-        if ($CFG->iomademails) {
-            $courses = company::get_courses_by_license($this->license->id);
-        }
+        $courses = company::get_courses_by_license($this->license->id);
 
         // Process incoming allocations.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -189,16 +187,14 @@ class company_license_users_form extends moodleform {
                     }
 
                     // Create an email event.
-                    if ($CFG->iomademails) {
-                        foreach ($courses as $course) {
-                            $license = new stdclass();
-                            $license->length = $licenserecord['validlength'];
-                            $license->valid = date('d M Y', $licenserecord['expirydate']);
-                            EmailTemplate::send('license_allocated', array('course'=>$course,
-                                                                           'user'=>$adduser,
-                                                                           'license'=>$license));
+                    foreach ($courses as $course) {
+                        $license = new stdclass();
+                        $license->length = $licenserecord['validlength'];
+                        $license->valid = date('d M Y', $licenserecord['expirydate']);
+                        EmailTemplate::send('license_allocated', array('course'=>$course,
+                                                                       'user'=>$adduser,
+                                                                       'license'=>$license));
                         }
-                    }
                 }
 
                 // Set the used amount for the license.
@@ -226,10 +222,8 @@ class company_license_users_form extends moodleform {
                         }
                     }
                     // Create an email event.
-                    if ($CFG->iomademails) {
-                        foreach ($courses as $course) {
-                            EmailTemplate::send('license_removed', array('course'=>$course, 'user'=>$removeuser));
-                        }
+                    foreach ($courses as $course) {
+                        EmailTemplate::send('license_removed', array('course'=>$course, 'user'=>$removeuser));
                     }
                 }
 

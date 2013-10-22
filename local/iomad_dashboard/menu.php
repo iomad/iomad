@@ -182,8 +182,7 @@ class iomad_admin_menu {
                 'cap' => 'block/iomad_company_admin:classrooms',
                 'icon' => 'locations',
             ));
-        if (!empty($CFG->iomadlicenses)) {
-            $returnarray['manageiomadlicenses'] = array(
+        $returnarray['manageiomadlicenses'] = array(
                 'category' => 'LicenseAdmin',
                 'tab' => 4,
                 'name' => get_string('managelicenses', 'block_iomad_company_admin'),
@@ -191,7 +190,7 @@ class iomad_admin_menu {
                 'cap' => 'block/iomad_company_admin:edit_licenses',
                 'icon' => 'courses',
             );
-            $returnarray['licenseusers'] = array(
+        $returnarray['licenseusers'] = array(
                 'category' => 'LicenseAdmin',
                 'tab' => 4,
                 'name' => get_string('licenseusers', 'block_iomad_company_admin'),
@@ -199,18 +198,15 @@ class iomad_admin_menu {
                 'cap' => 'block/iomad_company_admin:allocate_licenses',
                 'icon' => 'users',
             );
-        }
 
-        if (!empty($CFG->iomademails)) {
-            $returnarray['EmailTemplates'] = array(
-                'category' => 'CompanyAdmin',
-                'tab' => 1,
-                'name' => get_string('blocktitle', 'local_email'),
-                'url' => '/local/email/template_list.php',
-                'cap' => 'local/email:list',
-                'icon' => 'emails'
-            );
-        }
+        $returnarray['EmailTemplates'] = array(
+            'category' => 'CompanyAdmin',
+            'tab' => 1,
+            'name' => get_string('blocktitle', 'local_email'),
+            'url' => '/local/email/template_list.php',
+            'cap' => 'local/email:list',
+            'icon' => 'emails'
+        );
 
         if (!empty($CFG->iomad_commerce_enabled)) {
             $returnarray['ShopSettings_list'] = array(

@@ -99,20 +99,17 @@ class company_user {
 
         // passwords will be created and sent out on cron
         if ($createpassword) {
-            if (!isset($CFG->iomademails)) {
-                set_user_preference('create_password', 1, $user->id);
+            set_user_preference('create_password', 1, $user->id);
+            $user->newpassword = generate_password();
+            $course->id = 103;  // FAQ Course
+            if (!empty($CFG->iomad_email_senderisreal)) {
+                EmailTemplate::send('user_create', array('user'=>$user, 'sender'=>$USER));
             } else {
-                $user->newpassword = generate_password();
-                $course->id = 103;  // FAQ Course
-                if (!empty($CFG->iomad_email_senderisreal)) {
-                    EmailTemplate::send('user_create', array('user'=>$user, 'sender'=>$USER));
-                } else {
-                    EmailTemplate::send('user_create',
-                                         array('user'=>$user,
-                                               'headers'=>serialize(array("To:". $user->email.", ".$USER->email))));
-                }
-                $sendemail = false;
+                EmailTemplate::send('user_create',
+                                     array('user'=>$user,
+                                           'headers'=>serialize(array("To:". $user->email.", ".$USER->email))));
             }
+            $sendemail = false;
 
         }
         if ($forcepasswordchange) {
@@ -120,12 +117,8 @@ class company_user {
         }
 
         if ($createpassword) {
-            if (!isset($CFG->iomademails)) {
-                self::generate_temporary_password($user, $sendemail);
-            } else {
-                $DB->set_field('user', 'password', hash_internal_user_password($user->newpassword),
-                                array('id'=>$user->id));
-            }
+            $DB->set_field('user', 'password', hash_internal_user_password($user->newpassword),
+                            array('id'=>$user->id));
         }
 
         if ($storetemppassword) {
@@ -287,18 +280,14 @@ class company_user {
         unset_user_preference('create_password', $user);
 
         if ( $sendemail ) {
-            if (isset($CFG->iomademails)) {
-                $user->newpassword = $temppassword;
-                $course->id = 103;  // FAQ Course
-                if (!empty($CFG->iomad_email_senderisreal)) {
-                    EmailTemplate::send('user_create', array('user'=>$user, 'sender'=>$USER));
-                } else {
-                    EmailTemplate::send('user_create',
-                                         array('user'=>$user,
-                                         'headers'=>serialize(array("To:". $user->email.", ".$USER->email))));
-                }
+            $user->newpassword = $temppassword;
+            $course->id = 103;  // FAQ Course
+            if (!empty($CFG->iomad_email_senderisreal)) {
+                EmailTemplate::send('user_create', array('user'=>$user, 'sender'=>$USER));
             } else {
-                set_user_preference('iomad_send_password', '1', $user);
+                EmailTemplate::send('user_create',
+                                     array('user'=>$user,
+                                     'headers'=>serialize(array("To:". $user->email.", ".$USER->email))));
             }
         } else {
             unset_user_preference('iomad_send_password', $user);

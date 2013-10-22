@@ -90,52 +90,46 @@ class iomad {
 
     public static function iomad_add_license_courses(&$mycourses) {
         global $DB, $CFG, $USER;
-        if (!empty($CFG->iomadlicenses)) {
-            // get the list of courses the user has a valid license for but not already enroled in
-            if ($licensecourses = $DB->get_records_sql("SELECT * FROM {course} c
-                                                        WHERE c.id IN (
-                                                         SELECT clc.courseid
-                                                         FROM {companylicense_courses} clc
-                                                         RIGHT JOIN {companylicense_users} clu
-                                                         ON (clc.licenseid = clu.licenseid)
-                                                         WHERE clu.userid = :userid
-                                                         AND clu.isusing = 0
-                                                        )", array('userid' => $USER->id))) {
-                $mycourses = $mycourses + $licensecourses;
+        // get the list of courses the user has a valid license for but not already enroled in
+        if ($licensecourses = $DB->get_records_sql("SELECT * FROM {course} c
+                                                    WHERE c.id IN (
+                                                     SELECT clc.courseid
+                                                     FROM {companylicense_courses} clc
+                                                     RIGHT JOIN {companylicense_users} clu
+                                                     ON (clc.licenseid = clu.licenseid)
+                                                     WHERE clu.userid = :userid
+                                                     AND clu.isusing = 0
+                                                    )", array('userid' => $USER->id))) {
+            $mycourses = $mycourses + $licensecourses;
             }
-        }
         return;
     }
 
     public static function iomad_add_shared_courses(&$courses) {
         global $DB, $CFG, $USER;
 
-        if (!empty($CFG->iomadglobalcourses)) {
-            if (!empty($USER->profile['company'])) {
-                $company = company::get_company_byuserid($USER->id);
-                $sharedcourses = $DB->get_records_sql('SELECT * FROM {course} c
-                                                       WHERE c.id IN (
-                                                        SELECT courseid FROM {iomad_courses}
-                                                        WHERE shared=1
-                                                        AND licensed = 0
-                                                       ) OR c.id IN (
-                                                        SELECT pc.courseid FROM
-                                                        {iomad_courses} pc
-                                                        JOIN {company_shared_courses} csc
-                                                        ON
-                                                        csc.courseid=pc.courseid
-                                                        AND csc.companyid = :companyid
-                                                        AND pc.licensed = 0
-                                                       )', array('companyid'=>$company->id));
-            } else {
-                $sharedcourses = $DB->get_records_sql('SELECT * from {course} c
-                                                       WHERE c.id IN (
-                                                        SELECT courseid FROM {iomad_courses}
-                                                        WHERE shared=1
-                                                       )');
-            }
+        if (!empty($USER->profile['company'])) {
+            $company = company::get_company_byuserid($USER->id);
+            $sharedcourses = $DB->get_records_sql('SELECT * FROM {course} c
+                                                   WHERE c.id IN (
+                                                    SELECT courseid FROM {iomad_courses}
+                                                    WHERE shared=1
+                                                    AND licensed = 0
+                                                   ) OR c.id IN (
+                                                    SELECT pc.courseid FROM
+                                                    {iomad_courses} pc
+                                                    JOIN {company_shared_courses} csc
+                                                    ON
+                                                    csc.courseid=pc.courseid
+                                                    AND csc.companyid = :companyid
+                                                    AND pc.licensed = 0
+                                                   )', array('companyid'=>$company->id));
         } else {
-            $sharedcourses = array();
+            $sharedcourses = $DB->get_records_sql('SELECT * from {course} c
+                                                   WHERE c.id IN (
+                                                    SELECT courseid FROM {iomad_courses}
+                                                    WHERE shared=1
+                                                   )');
         }
         if (!empty($sharedcourses) && !empty($courses)) {
             foreach ($courses as $course) {

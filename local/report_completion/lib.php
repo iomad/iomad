@@ -102,21 +102,14 @@ class comprep{
         // get list of course ids
         $courseids = array();
         if ($courseid==0) {
-            if (!empty($CFG->iomadglobalcourses)) {
-            	if (!$courses = $DB->get_records_sql("SELECT c.id AS courseid FROM {course} c 
-            	                                     WHERE c.id in ( SELECT courseid FROM {companycourse} WHERE companyid = $companyid ) 
+            if (!$courses = $DB->get_records_sql("SELECT c.id AS courseid FROM {course} c 
+                                                      WHERE c.id in ( SELECT courseid FROM {companycourse} WHERE companyid = $companyid ) 
             	                                     OR c.id in ( SELECT pc.courseid FROM {iomad_courses} pc INNER JOIN {company_shared_courses} csc 
             	                                     ON pc.courseid=csc.courseid where pc.shared=2 AND csc.companyid = $companyid )
             	                                     OR c.id in ( SELECT pc.courseid FROM {iomad_courses} pc WHERE pc.shared=1)")) {
                     // no courses for company, so exit
                     return false;
                 }
-            } else {
-        	    if (!$courses = $DB->get_records('companycourse',array('companyid'=>$companyid))) {
-                    // no courses for company, so exit
-                    return false;
-                }
-            }
             foreach ($courses as $course) {
                 $courseids[] = $course->courseid;
             }

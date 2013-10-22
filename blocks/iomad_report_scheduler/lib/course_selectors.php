@@ -55,14 +55,10 @@ class current_company_course_selector extends company_course_selector_base {
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
         // Check for global courses option is on and find them if so
-        if (!empty($CFG->iomadglobalcourses)) {
-            $globalcoursesql = " FROM {course} c WHERE c.id !='1' AND c.id not in (SELECT cc.courseid from {companycourse} cc ) 
-                                 AND $wherecondition ";
+        $globalcoursesql = " FROM {course} c WHERE c.id !='1' AND c.id not in (SELECT cc.courseid from {companycourse} cc ) 
+                             AND $wherecondition ";
 
-            $globalcourses = $DB->get_records_sql($fields . $globalcoursesql . $order, $params);
-        } else {
-            $globalcourses = array();
-        }
+        $globalcourses = $DB->get_records_sql($fields . $globalcoursesql . $order, $params);
 
         if (empty($availablecourses) && empty($globalcourses)) {
             return array();

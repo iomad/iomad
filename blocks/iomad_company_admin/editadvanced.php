@@ -187,9 +187,7 @@ if ($usernew = $userform->get_data()) {
                 if (!$authplugin->user_update_password($usernew, $usernew->newpassword)) {
                     print_error('cannotupdatepasswordonextauth', '', '', $usernew->auth);
                 } else {
-                    if ($CFG->iomademails) {
-                        EmailTemplate::send('password_update', array('user'=>$usernew));
-                    }
+                    EmailTemplate::send('password_update', array('user'=>$usernew));
                 }
             }
         }
