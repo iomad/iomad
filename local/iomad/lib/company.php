@@ -17,14 +17,14 @@
 class company {
     public $id = 0;
 
-    // These are the fields that will be retrieved by
+    // These are the fields that will be retrieved by.
     public $cssfields = array('bgcolor_header', 'bgcolor_content');
 
     public function __construct($companyid) {
         $this->id = $companyid;
     }
 
-    // factory method to return an instance of this class
+    // Factory method to return an instance of this class.
     public static function by_shortname($shortname) {
         global $DB;
 
@@ -51,7 +51,7 @@ class company {
 
     public function get_managertypes() {
 
-        $returnarray = array('0'=> get_string('user', 'block_iomad_company_admin'));
+        $returnarray = array('0' => get_string('user', 'block_iomad_company_admin'));
         $systemcontext = get_context_instance(CONTEXT_SYSTEM);
         if (has_capability('block/iomad_company_admin:assign_company_manager', $systemcontext)) {
             $returnarray['1'] = get_string('companymanager', 'block_iomad_company_admin');
@@ -76,8 +76,8 @@ class company {
         $files = $fs->get_area_files($context->id, 'theme_iomad', 'logo', $this->id,
                                      "sortorder, itemid, filepath, filename", false);
 
-        // there should be only one file, but we'll still use a foreach as
-        // the array indexes are based on the hash, just return the first one
+        // There should be only one file, but we'll still use a foreach as
+        // the array indexes are based on the hash, just return the first one.
         foreach ($files as $f) {
             return $f->get_filename();
         }
@@ -102,7 +102,7 @@ class company {
 
     public static function get_companyname_byid($companyid) {
         global $DB;
-        $company = $DB->get_record('company', array('id'=>$companyid));
+        $company = $DB->get_record('company', array('id' => $companyid));
         return $company->name;
     }
 
@@ -132,51 +132,51 @@ class company {
 
     public function add_course($course, $departmentid=0, $own=false) {
         global $DB;
-        
+
         if ($departmentid != 0 ) {
-            // adding to a specified department
+            // Adding to a specified department.
             $companydepartment = $departmentid;
         } else {
-            // put course in default company department
+            // Put course in default company department.
             $companydepartmentnode = self::get_company_parentnode($this->id);
             $companydepartment = $companydepartmentnode->id;
         }
-        if (!$DB->record_exists('company_course', array('companyid'=>$this->id,
-                                                       'courseid'=>$course->id))) {
-            $DB->insert_record('company_course', array('companyid'=>$this->id,
-                                                      'courseid'=>$course->id,
-                                                      'departmentid'=>$companydepartment));
+        if (!$DB->record_exists('company_course', array('companyid' => $this->id,
+                                                       'courseid' => $course->id))) {
+            $DB->insert_record('company_course', array('companyid' => $this->id,
+                                                      'courseid' => $course->id,
+                                                      'departmentid' => $companydepartment));
         }
 
-        // set up defaults for course management
-        if (!$DB->get_record('iomad_courses', array('courseid'=>$course->id))) {
-            $DB->insert_record('iomad_courses', array('courseid'=>$course->id,
-                                                         'licensed'=>0,
-                                                         'shared'=>0));
+        // Set up defaults for course management.
+        if (!$DB->get_record('iomad_courses', array('courseid' => $course->id))) {
+            $DB->insert_record('iomad_courses', array('courseid' => $course->id,
+                                                         'licensed' => 0,
+                                                         'shared' => 0));
         }
-        // set up manager roles
+        // Set up manager roles.
         if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                      WHERE companyid = :companyid
-                                                     AND managertype != 0", array('companyid'=>$this->id))) {
+                                                     AND managertype != 0", array('companyid' => $this->id))) {
             $companycoursenoneditorrole = $DB->get_record('role',
-                                               array('shortname'=>'companycoursenoneditor'));
+                                               array('shortname' => 'companycoursenoneditor'));
             $companycourseeditorrole = $DB->get_record('role',
-                                                        array('shortname'=>'companycourseeditor'));
+                                                        array('shortname' => 'companycourseeditor'));
             foreach ($companymanagers as $companymanager) {
-                if ($user = $DB->get_record('user', array('id'=>$companymanager->userid,
-                                                          'deleted'=>0)) ) {
-                    if ($DB->record_exists('course', array('id'=>$course->id))) {
+                if ($user = $DB->get_record('user', array('id' => $companymanager->userid,
+                                                          'deleted' => 0)) ) {
+                    if ($DB->record_exists('course', array('id' => $course->id))) {
                         if (!$own) {
-                            // not created by a company manager
+                            // Not created by a company manager.
                             company_user::enrol($user, array($course->id), $this->id,
                                                 $companycoursenoneditorrole->id);
                         } else {
                             if ($companymanager->managertype == 2) {
-                                // assign the department manager course access role
+                                // Assign the department manager course access role.
                                 company_user::enrol($user, array($course->id), $this->id,
                                                     $companycoursenoneditorrole->id);
                             } else {
-                                // assign the company manager course access role
+                                // Assign the company manager course access role.
                                 company_user::enrol($user, array($course->id), $this->id,
                                                     $companycourseeditorrole->id);
                             }
@@ -185,12 +185,12 @@ class company {
                 }
             }
         }
-        if ($own && $departmentid==0) {
-            // add it to the list of company created courses
-            if (!$DB->record_exists('company_created_courses', array('companyid'=>$this->id,
-                                                                     'courseid'=>$course->id))) {
-                $DB->insert_record('company_created_courses', array('companyid'=>$this->id,
-                                                                    'courseid'=>$course->id));
+        if ($own && $departmentid == 0) {
+            // Add it to the list of company created courses.
+            if (!$DB->record_exists('company_created_courses', array('companyid' => $this->id,
+                                                                     'courseid' => $course->id))) {
+                $DB->insert_record('company_created_courses', array('companyid' => $this->id,
+                                                                    'courseid' => $course->id));
             }
         }
     }
@@ -198,22 +198,22 @@ class company {
     public static function remove_course($course, $companyid, $departmentid=0) {
         global $DB;
         if ($departmentid == 0) {
-            // deal with the company departments
-            $companydepartments = $DB->get_records('department', array ('company'=>$companyid));
-            // check if it was a company created course and remove if it was
+            // Deal with the company departments.
+            $companydepartments = $DB->get_records('department', array ('company' => $companyid));
+            // Check if it was a company created course and remove if it was.
             if ($companycourse = $DB->get_record('company_created_courses',
-                                                 array('companyid'=>$companyid,
-                                                       'courseid'=>$course->id))) {
-                $DB->delete_records('company_created_courses', array('id'=>$companycourse->id));
+                                                 array('companyid' => $companyid,
+                                                       'courseid' => $course->id))) {
+                $DB->delete_records('company_created_courses', array('id' => $companycourse->id));
             }
-            // check if its an unshared course in iomad
-            if ($DB->get_record('iomad_courses', array('courseid'=>$course->id, 'shared'=>0))) {
-                $DB->delete_records('iomad_courses', array('courseid'=>$course->id, 'shared'=>0));
+            // Check if its an unshared course in iomad.
+            if ($DB->get_record('iomad_courses', array('courseid' => $course->id, 'shared' => 0))) {
+                $DB->delete_records('iomad_courses', array('courseid' => $course->id, 'shared' => 0));
             }
-            $DB->delete_records('company_course', array('companyid'=>$companyid,
-                                                       'courseid'=>$course->id));
+            $DB->delete_records('company_course', array('companyid' => $companyid,
+                                                       'courseid' => $course->id));
         } else {
-            // put course in default company department
+            // Put course in default company department.
             $companydepartment = self::get_company_parentnode($companyid);
             self::assign_course_to_department($companydepartment->id, $course->id, $companyid);
         }
@@ -233,8 +233,8 @@ class company {
     public function get_user_ids() {
         global $DB;
 
-                // by default wherecondition retrieves all users except the
-                // deleted, not confirmed and guest
+                // By default wherecondition retrieves all users except the
+                // deleted, not confirmed and guest.
         $params['companyid'] = $this->id;
         $params['companyidforjoin'] = $this->id;
 
@@ -260,33 +260,33 @@ class company {
         $userrecord['managertype'] = 0;
         $userrecord['companyid'] = $this->id;
 
-        // moving a user
+        // Moving a user.
         if (!$DB->insert_record('company_users', $userrecord)) {
             print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
         }
         return true;
     }
 
-    // Department functions
+    // Department functions.
 
     public static function initialise_departments($companyid) {
         global $DB;
-        $company = $DB->get_record('company', array('id'=>$companyid));
-        $parentnode=array();
+        $company = $DB->get_record('company', array('id' => $companyid));
+        $parentnode = array();
         $parentnode['shortname'] = $company->shortname;
         $parentnode['name'] = $company->name;
         $parentnode['company'] = $company->id;
         $parentnode['parent'] = 0;
-        $parentnodeid=$DB->insert_record('department', $parentnode);
-        // get the company user's ids
-        if ($userids = $DB->get_records('company_users', array('companyid'=>$companyid))) {
+        $parentnodeid = $DB->insert_record('department', $parentnode);
+        // Get the company user's ids.
+        if ($userids = $DB->get_records('company_users', array('companyid' => $companyid))) {
             foreach ($userids as $userid) {
                 $userid->departmentid = $parentnodeid;
                 $DB->update_record('company_users', $userid);
             }
         }
-        // get the company courses
-        if ($companycourses = $DB->get_records('company_course', array('companyid'=>$company->id))) {
+        // Get the company courses.
+        if ($companycourses = $DB->get_records('company_course', array('companyid' => $company->id))) {
             foreach ($companycourses as $companycourse) {
                 $companycourse->departmentid = $parentnodeid;
                 $DB->update_record('company_course', $companycourse);
@@ -296,7 +296,7 @@ class company {
 
     public static function check_valid_department($departmentid) {
         global $DB;
-        if ($DB->get_record('department', array('id'=>$departmentid))) {
+        if ($DB->get_record('department', array('id' => $departmentid))) {
             return true;
         } else {
             return false;
@@ -306,25 +306,25 @@ class company {
     public static function get_userlevel($user) {
 
         global $DB;
-        $userdepartment = $DB->get_record('company_users', array('userid'=>$user->id));
-        $userlevel = $DB->get_record('department', array('id'=>$userdepartment->departmentid));
+        $userdepartment = $DB->get_record('company_users', array('userid' => $user->id));
+        $userlevel = $DB->get_record('department', array('id' => $userdepartment->departmentid));
         return $userlevel;
     }
 
     public static function get_departmentbyid($departmentid) {
         global $DB;
-        return $DB->get_record('department', array('id'=>$departmentid));
+        return $DB->get_record('department', array('id' => $departmentid));
     }
 
     public static function get_subdepartments($parent) {
         global $DB;
 
         $returnarray = $parent;
-        // check to see if its the top node
+        // Check to see if its the top node.
         if (isset($parent->id)) {
-            if ($children = $DB->get_records('department', array('parent'=>$parent->id))) {
+            if ($children = $DB->get_records('department', array('parent' => $parent->id))) {
                 foreach ($children as $child) {
-                    $returnarray->children[]=self::get_subdepartments($child);
+                    $returnarray->children[] = self::get_subdepartments($child);
                 }
             }
         }
@@ -333,7 +333,7 @@ class company {
     }
 
     public static function get_subdepartments_list($parent) {
-        $subdepartmentstree=self::get_subdepartments($parent);
+        $subdepartmentstree = self::get_subdepartments($parent);
         $subdepartmentslist = self::get_department_list($subdepartmentstree);
         $returnlist = self::array_flatten($subdepartmentslist);
         unset($returnlist[$parent->id]);
@@ -342,24 +342,24 @@ class company {
 
     public static function get_department_list( $tree, $path='' ) {
 
-        $flat_list = array();
+        $flatlist = array();
         if (isset($tree->id)) {
-            $flat_list[$tree->id] = $path . '/' . $tree->name;
+            $flatlist[$tree->id] = $path . '/' . $tree->name;
         }
 
         if (!empty($tree->children)) {
             foreach ($tree->children as $child) {
-                $flat_list[$child->id] = self::get_department_list($child, $path.'/'.$tree->name);
+                $flatlist[$child->id] = self::get_department_list($child, $path.'/'.$tree->name);
             }
         }
 
-        return $flat_list;
+        return $flatlist;
     }
 
     public static function get_company_parentnode($companyid) {
         global $DB;
-        if (!$parentnode = $DB->get_record('department', array('company'=>$companyid,
-                                                               'parent'=>'0'))) {
+        if (!$parentnode = $DB->get_record('department', array('company' => $companyid,
+                                                               'parent' => '0'))) {
             return false;
         }
         return $parentnode;
@@ -367,8 +367,8 @@ class company {
 
     public static function get_department_parentnode($departmentid) {
         global $DB;
-        if ($department = $DB->get_record('department', array('id'=>$departmentid))) {
-            $parent = $DB->get_record('department', array('id'=>$department->parent));
+        if ($department = $DB->get_record('department', array('id' => $departmentid))) {
+            $parent = $DB->get_record('department', array('id' => $department->parent));
             return $parent;
         } else {
             print_error(get_string('errorgettingparentnode', 'block_iomad_company_admin'));
@@ -377,18 +377,18 @@ class company {
 
     public static function get_top_department($departmentid) {
         global $DB;
-        $department = $DB->get_record('department', array('id'=>$departmentid));
+        $department = $DB->get_record('department', array('id' => $departmentid));
         $parentnode = self::get_company_parentnode($department->company);
         return $parentnode->id;
     }
 
     public static function get_all_departments($company) {
 
-        $parent_list=array();
+        $parentlist = array();
         $parentnode = self::get_company_parentnode($company);
-        $parent_list[$parentnode->id] = array($parentnode->id=>'/'.$parentnode->name);
+        $parentlist[$parentnode->id] = array($parentnode->id => '/'.$parentnode->name);
         $departmenttree = self::get_subdepartments($parentnode);
-        $departmentlist = self::array_flatten($parent_list +
+        $departmentlist = self::array_flatten($parentlist +
                                               self::get_department_list($departmenttree));
         return $departmentlist;
     }
@@ -402,7 +402,7 @@ class company {
             if (is_array($value)) {
                 self::array_flatten($value, $result);
             } else {
-                $result[$key]=$value;
+                $result[$key] = $value;
             }
         }
         if ($r) {
@@ -413,10 +413,10 @@ class company {
     public static function get_all_subdepartments($parentnodeid) {
 
         $parentnode = self::get_departmentbyid($parentnodeid);
-        $parent_list=array();
-        $parent_list[$parentnode->id] = $parentnode->name;
+        $parentlist = array();
+        $parentlist[$parentnode->id] = $parentnode->name;
         $departmenttree = self::get_subdepartments($parentnode);
-        $departmentlist = self::array_flatten($parent_list +
+        $departmentlist = self::array_flatten($parentlist +
                                               self::get_department_list($departmenttree));
         return $departmentlist;
     }
@@ -436,7 +436,7 @@ class company {
     public static function get_department_users($departmentid) {
         global $DB;
         if ($departmentusers = $DB->get_records('company_users',
-                                                 array('departmentid'=>$departmentid))) {
+                                                 array('departmentid' => $departmentid))) {
             return $departmentusers;
         } else {
             return array();
@@ -449,9 +449,9 @@ class company {
         $userrecord = array();
         $userrecord['departmentid'] = $departmentid;
         $userrecord['userid'] = $userid;
-        // moving a user
-        if ($currentuser = $DB->get_record('company_users', array('userid'=>$userid))) {
-            $currentuser->departmentid=$departmentid;
+        // Moving a user.
+        if ($currentuser = $DB->get_record('company_users', array('userid' => $userid))) {
+            $currentuser->departmentid = $departmentid;
             if (!$DB->update_record('company_users', $currentuser)) {
                 print_error(get_string('cantupdatedepartmentusersdb', 'block_iomad_company_admin'));
             }
@@ -474,12 +474,12 @@ class company {
         $newdepartment['shortname'] = $shortname;
 
         if (isset($newdepartment['id'])) {
-            // we are editing a current department
+            // We are editing a current department.
             if (!$DB->update_record('department', $newdepartment)) {
                 print_error(get_string('cantupdatedepartmentdb', 'block_iomad_company_admin'));
             }
         } else {
-            // adding a new department
+            // Adding a new department.
             if (!$DB->insert_record('department', $newdepartment)) {
                 print_error(get_string('cantinsertdepartmentdb', 'block_iomad_company_admin'));
             }
@@ -489,23 +489,23 @@ class company {
 
     public static function delete_department($departmentid) {
         global $DB;
-        if (!$DB->delete_records('department', array('id'=>$departmentid))) {
+        if (!$DB->delete_records('department', array('id' => $departmentid))) {
             print_error(get_string('cantdeletedepartmentdb', 'blocks_iomad_company_admin'));
         }
         return true;
     }
 
     public static function delete_department_recursive($departmentid, $targetdepartment=0) {
-        // get all the users from here and below
+        // Get all the users from here and below.
         $userlist = self::get_recursive_department_users($departmentid);
         $departmentlist = self::get_all_subdepartments($departmentid);
         if ($targetdepartment == 0) {
-            // moving users to the parent node of the current department
+            // Moving users to the parent node of the current department.
             $parentnode = self::get_department_parentnode($departmentid);
             $targetdepartment = $parentnode->id;
         }
         foreach ($userlist as $user) {
-            //  move the users
+            //  Move the users.
             self::assign_user_to_department($targetdepartment, $user->id);
         }
         foreach ($departmentlist as $id => $value) {
@@ -522,18 +522,18 @@ class company {
                                     get_context_instance(CONTEXT_SYSTEM))) {
             return false;
         } else {
-            //get the list of departments at and below the user assignment
+            // Get the list of departments at and below the user assignment.
             $userhierarchylevel = self::get_userlevel($USER);
             $subhierarchytree = self::get_all_subdepartments($userhierarchylevel);
             $subhieracrhieslist = self::get_department_list($subhierarchytree);
             if (isset($subhieracrhieslist[$departmentid])) {
-                // current department is a child of the users assignment
+                // Current department is a child of the users assignment.
                 return true;
             } else {
                 return false;
             }
         }
-        // we shouldn't get this far, return a default no
+        // We shouldn't get this far, return a default no.
         return false;
     }
 
@@ -546,21 +546,21 @@ class company {
             $departmentcourses = self::get_department_courses($id);
             $courselist = $courselist + $departmentcourses;
         }
-        // get the top level courses
+        // Get the top level courses.
         $companydepartment = self::get_top_department($departmentid);
         if ($companydepartment != $departmentid ) {
             $topdepartmentcourses = self::get_department_courses($companydepartment);
             $courselist = $courselist + $topdepartmentcourses;
         }
-        //  Get the shared courses
-        $sharedcourses = $DB->get_records('iomad_courses', array('shared'=>1));
+        //  Get the shared courses.
+        $sharedcourses = $DB->get_records('iomad_courses', array('shared' => 1));
         return $courselist + $sharedcourses;
     }
 
     public static function get_department_courses($departmentid) {
         global $DB;
         if ($departmentcourses = $DB->get_records('company_course',
-                                                   array('departmentid'=>$departmentid))) {
+                                                   array('departmentid' => $departmentid))) {
             return $departmentcourses;
         } else {
             return array();
@@ -570,18 +570,18 @@ class company {
     public static function assign_course_to_department($departmentid, $courseid, $companyid) {
         global $DB;
 
-        // moving a course
-        // get all the department assignments which may exist taking
+        // Moving a course.
+        // Get all the department assignments which may exist taking
         // shared courses into consideration.
         if ($currentcourses = $DB->get_records('company_course',
-                                                array('courseid'=>$courseid))) {
+                                                array('courseid' => $courseid))) {
             $foundcourse = false;
             foreach ($currentcourses as $currentcourse) {
-                // check if the found record belongs to the current company
-                if ($DB->get_record('department', array('company'=>$companyid,
-                                                        'id'=>$departmentid))) {
+                // Check if the found record belongs to the current company.
+                if ($DB->get_record('department', array('company' => $companyid,
+                                                        'id' => $departmentid))) {
                     $foundcourse = true;
-                    //  Update it
+                    //  Update it.
                     $currentcourse->departmentid = $departmentid;
                     if (!$DB->update_record('company_course', $currentcourse)) {
                         print_error(get_string('cantupdatedepartmentcoursesdb',
@@ -591,7 +591,7 @@ class company {
                 }
             }
             if (!$foundcourse) {
-                // assigning a shared course to a new company
+                // Assigning a shared course to a new company.
                 $courserecord = array();
                 $courserecord['departmentid'] = $departmentid;
                 $courserecord['courseid'] = $courseid;
@@ -602,7 +602,7 @@ class company {
                 }
             }
         } else {
-            // assigning a new course to a company
+            // Assigning a new course to a company.
             $courserecord = array();
             $courserecord['departmentid'] = $departmentid;
             $courserecord['courseid'] = $courseid;
@@ -625,11 +625,11 @@ class company {
         }
     }
 
-    // Licenses stuff
+    // Licenses stuff.
 
     public static function get_recursive_departments_licenses($departmentid) {
 
-        // get all the courses for this department down
+        // Get all the courses for this department down.
         $courses = self::get_recursive_department_courses($departmentid);
         $licenselist = array();
         foreach ($courses as $course) {
@@ -641,7 +641,7 @@ class company {
 
     public static function get_course_licenses($courseid) {
         global $DB;
-        if ($licenses = $DB->get_records('companylicense_courses', array('courseid'=>$courseid),
+        if ($licenses = $DB->get_records('companylicense_courses', array('courseid' => $courseid),
                                                                           null, 'licenseid')) {
             return $licenses;
         } else {
@@ -651,7 +651,7 @@ class company {
 
     public static function get_courses_by_license($licenseid) {
         global $DB;
-        if ($courseids = $DB->get_records('companylicense_courses', array('licenseid'=>$licenseid),
+        if ($courseids = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid),
                                                                            null, 'courseid')) {
             $sql = "SELECT id, fullname FROM {course} WHERE id IN (".
                       implode(',', array_keys($courseids)).
@@ -666,13 +666,13 @@ class company {
         }
     }
 
-    // Shared course stuff
+    // Shared course stuff.
 
     public static function create_company_course_group($companyid, $courseid) {
         global $CFG, $DB;
         require_once($CFG->dirroot.'/group/lib.php');
 
-        // creates a company group within a shared course
+        // Creates a company group within a shared course.
         $company = $DB->get_record('company', array('id' => $companyid));
         $data = new object();
         $data->timecreated  = time();
@@ -681,16 +681,16 @@ class company {
         $data->description = "Course group for ".$company->name;
         $data->courseid = $courseid;
 
-        // create the group record
+        // Create the group record.
         $groupid = groups_create_group($data);
 
-        // create the pivot table entry
+        // Create the pivot table entry.
         $grouppivot = array();
         $grouppivot['companyid'] = $companyid;
         $grouppivot['courseid'] = $courseid;
         $grouppivot['groupid'] = $groupid;
 
-        // write the data to the DB
+        // Write the data to the DB.
         if (!$DB->insert_record('company_course_groups', $grouppivot)) {
             print_error(get_string('cantcreatecompanycoursegroup', 'block_iomad_company_admin'));
         }
@@ -699,28 +699,28 @@ class company {
 
     public static function get_company_groupname($companyid, $courseid) {
         global $DB;
-        // gets the company course groupname
-        if (!$companygroup=$DB->get_record('company_course_groups', array('companyid'=>$companyid,
-                                                                          'courseid'=>$courseid))) {
-       	    // not got one, create a default
+        // Gets the company course groupname.
+        if (!$companygroup = $DB->get_record('company_course_groups', array('companyid' => $companyid,
+                                                                          'courseid' => $courseid))) {
+            // Not got one, create a default.
             $companygroup->groupid = self::create_company_course_group($companyid, $courseid);
         }
-        // get the group information
-        $groupinfo = $DB->get_record('groups', array('id'=>$companygroup->groupid));
+        // Get the group information.
+        $groupinfo = $DB->get_record('groups', array('id' => $companygroup->groupid));
         return $groupinfo->name;
     }
 
     public static function get_company_group($companyid, $courseid) {
         global $DB;
-        // gets the company course groupname
-        if (!$companygroup=$DB->get_record('company_course_groups', array('companyid'=>$companyid,
-                                                                          'courseid'=>$courseid))) {
-       	    // not got one, create a default
-       	    $companygroup = new stdclass();
+        // Gets the company course groupname.
+        if (!$companygroup = $DB->get_record('company_course_groups', array('companyid' => $companyid,
+                                                                          'courseid' => $courseid))) {
+            // Not got one, create a default.
+            $companygroup = new stdclass();
             $companygroup->id = self::create_company_course_group($companyid, $courseid);
         }
-        // get the group information
-        $groupinfo = $DB->get_record('groups', array('id'=>$companygroup->id));
+        // Get the group information.
+        $groupinfo = $DB->get_record('groups', array('id' => $companygroup->id));
         return $groupinfo;
     }
 
@@ -728,16 +728,16 @@ class company {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/group/lib.php');
 
-        // adds a user to a shared course
-        // get the group id
-        if (!$groupinfo = $DB->get_record('company_course_groups', array('companyid'=>$companyid,
-                                                                         'courseid'=>$courseid))) {
+        // Adds a user to a shared course.
+        // Get the group id.
+        if (!$groupinfo = $DB->get_record('company_course_groups', array('companyid' => $companyid,
+                                                                         'courseid' => $courseid))) {
             $groupid = self::create_company_course_group($companyid, $courseid);
         } else {
             $groupid = $groupinfo->groupid;
         }
 
-        //  add the user to the group
+        // Add the user to the group.
         groups_add_member($groupid, $userid);
     }
 
@@ -745,32 +745,32 @@ class company {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/group/lib.php');
 
-        // removes a user from a shared course
-        // get the group id
-        if (!$groupinfo = $DB->get_record('company_course_groups', array('companyid'=>$companyid,
-                                                                         'courseid'=>$courseid))) {
-            return;  // dont need to remove them.
+        // Removes a user from a shared course.
+        // Get the group id.
+        if (!$groupinfo = $DB->get_record('company_course_groups', array('companyid' => $companyid,
+                                                                         'courseid' => $courseid))) {
+            return;  // Dont need to remove them.
         } else {
             $groupid = $groupinfo->groupid;
         }
 
-        //  add the user to the group
+        // Add the user to the group.
         groups_remove_member($groupid, $userid);
     }
 
     public static function delete_company_course_group($companyid, $course, $oktounenroll=false) {
         global $DB;
-        // removes a company group within a shared course
-        // get the group
+        // Removes a company group within a shared course.
+        // Get the group.
         if ($group = self::get_company_group($companyid, $course->id)) {
-            // check there are no members of the group unless oktounenroll
-            if (!$DB->get_records('company_course_groups', array('groupid'=>$group->id)) ||
+            // Check there are no members of the group unless oktounenroll.
+            if (!$DB->get_records('company_course_groups', array('groupid' => $group->id)) ||
                 $oktounenroll) {
-                // delete the group
-                $DB->delete_records('groups', array('id'=>$group->id));
-                $DB->delete_records('company_course_groups', array('companyid'=>$companyid,
-                                                                   'groupid'=>$group->id,
-                                                                   'courseid'=>$course->id));
+                // Delete the group.
+                $DB->delete_records('groups', array('id' => $group->id));
+                $DB->delete_records('company_course_groups', array('companyid' => $companyid,
+                                                                   'groupid' => $group->id,
+                                                                   'courseid' => $course->id));
                 self::remove_course($course, $companyid);
                 return true;
             } else {
@@ -781,21 +781,21 @@ class company {
 
     public static function company_users_to_company_course_group($companyid, $courseid) {
         global $DB, $CFG;
-        // adds all the users to a company group within a shared course
+        // Adds all the users to a company group within a shared course.
 
         require_once($CFG->dirroot.'/group/lib.php');
 
-        // get the group
+        // Get the group.
         if (!$groupid = self::get_company_group($companyid, $courseid)) {
             $groupid = self::create_company_course_group($companyid, $courseid);
         }
-        // this is used for a course which is becoming shared.
-        //  all all current course enrolled users to this company group
+        // This is used for a course which is becoming shared.
+        //  All current course enrolled users to this company group.
         if ($users = $DB->get_records_sql("SELECT userid FROM {user_enrolments}
                                            WHERE enrolid IN (
                                            SELECT id FROM {enrol} WHERE courseid = $courseid)")) {
             foreach ($users as $user) {
-                if ($DB->get_record('user', array('id'=>$user->userid))) {
+                if ($DB->get_record('user', array('id' => $user->userid))) {
                     groups_add_member($groupid, $user->userid);
                 }
             }
@@ -806,11 +806,11 @@ class company {
         global $DB;
 
         $timenow = time();
-        // get the company users
+        // Get the company users.
         $companydepartment = self::get_company_parentnode($companyid);
         $companyusers = self::get_recursive_department_users($companydepartment->id);
         if ($group = self::get_company_group($companyid, $courseid)) {
-            // end all enrolments now.
+            // End all enrolments now..
             if ($users = $DB->get_records_sql("SELECT * FROM {user_enrolments}
                                                WHERE enrolid IN (
                                                 SELECT id FROM {enrol}
@@ -825,7 +825,7 @@ class company {
             }
             $DB->delete_records('company_course_groups', array('groupid', $group));
         }
-        $DB->delete_records('company_shared_courses', array('courseid'=>$courseid,
-                                                            'companyid'=>$companyid));
+        $DB->delete_records('company_shared_courses', array('courseid' => $courseid,
+                                                            'companyid' => $companyid));
     }
 }
