@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// define array structure that will provide all the info and links
-// for the company admin block and navigation
+// Define array structure that will provide all the info and links
+// for the company admin block and navigation.
 
 class iomad_admin_menu {
 

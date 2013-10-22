@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once( 'menu.php' );
 
-// set up the $USER->company variable if its not already done
+// Set up the $USER->company variable if its not already done.
 if (empty($USER->company) && !empty($USER)) {
     require_once($CFG->dirroot."/local/iomad/lib/iomad.php");
     iomad::load_company();
@@ -55,9 +55,9 @@ $ADMIN->add( 'iomad', new admin_category( 'LicenseAdmin',
 $ADMIN->add( 'iomad', new admin_category( 'ECommerceAdmin',
              get_string('blocktitle', 'block_iomad_commerce')));
 
-// get all the links from the iomad_admin_menu
-$admin_menu = new iomad_admin_menu();
-$menus = $admin_menu->getmenu();
+// Get all the links from the iomad_admin_menu.
+$adminmenu = new iomad_admin_menu();
+$menus = $adminmenu->getmenu();
 foreach ($menus as $tag => $menu) {
     if (substr($menu['url'], 0, 1) == '/') {
         $url = new moodle_url( $menu['url'] );

@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// this script is run after the dashboard has been installed
+// This script is run after the dashboard has been installed.
 
 function xmldb_local_iomad_dashboard_uninstall() {
 
     global $DB;
 
-    // remove blocks to the dashboard
-    // (yes, I know this isn't really what this is for!!)
+    // Remove blocks to the dashboard
+    // yes, I know this isn't really what this is for!!
     $systemcontext = get_context_instance(CONTEXT_SYSTEM);
     $contextid = $systemcontext->id;
     $instances = $DB->get_recordset('block_instances',
