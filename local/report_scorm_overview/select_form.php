@@ -21,12 +21,12 @@ class completion_select_form extends moodleform {
     public function definition() {
         global $CFG;
 
-        // get custom data
+        // Get custom data.
         $customdata = $this->_customdata;
         $courses = $customdata->courses;
         $participants = $customdata->participants;
 
-        // add the form elements
+        // Add the form elements.
         $mform =& $this->_form;
         $mform->addElement('header', 'iomadreportselect',
                             get_string('reportselect', 'local_report_completion'));
@@ -40,7 +40,7 @@ class completion_select_form extends moodleform {
         $mform->setDefault('participant', $customdata->selected_participant);
     }
 
-    /// perform some extra moodle validation
+    // Perform some extra moodle validation.
     public function validation($data, $files) {
         global $DB, $CFG;
 
