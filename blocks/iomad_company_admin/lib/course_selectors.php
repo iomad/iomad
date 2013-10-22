@@ -381,7 +381,7 @@ class potential_company_course_selector extends company_course_selector_base {
         // Deal with shared courses.  Cannot be added to a company in this manner.
         $sharedsql = "";
       	if ($this->shared) {  // show the shared courses
-       		$sharedsql .= " AND c.id NOT IN (SELECT courseid FROM {iomad_courses}
+       		$sharedsql .= " AND c.id NOT IN (SELECT courseid FROM {iomad_coursesiteids}
                                              WHERE shared=0 ) ";
        	} else if ($this->partialshared) { // 
        		$sharedsql .= " AND c.id NOT IN (SELECT courseid FROM {iomad_courses}
@@ -397,12 +397,13 @@ class potential_company_course_selector extends company_course_selector_base {
         $distinctcountfields = 'SELECT COUNT(DISTINCT c.id) ';
 
         $sqldistinct = " FROM {course} c
-                        WHERE $wherecondition 
+                        WHERE $wherecondition
+                        AND c.id != :siteid
                         $departmentcondition $sharedsql";
 
         $sql = " FROM {course} c
                 WHERE $wherecondition
-                      AND c.id <> :siteid
+                      AND c.id != :siteid
                        $sharedsql";
 
         $order = ' ORDER BY c.fullname ASC';
@@ -499,12 +500,13 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
                         {company_course} cc
                         WHERE $wherecondition
                         AND cc.courseid = c.id
+                        AND c.id != :siteid
                         $licensesql
                         $departmentselect";
 
         $sql = " FROM {course} c
                 WHERE $wherecondition
-                      AND c.id <> :siteid
+                      AND c.id != :siteid
                       AND NOT EXISTS (SELECT NULL FROM {company_course} WHERE courseid = c.id)";
 
         $order = ' ORDER BY c.fullname ASC';
