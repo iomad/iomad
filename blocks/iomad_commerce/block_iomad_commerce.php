@@ -37,14 +37,12 @@ class block_iomad_commerce extends block_base {
             return $this->content;
         }
 
-        if (!isset($CFG->iomad_commerce_enabled) || $CFG->iomad_commerce_enabled) {
-            $this->content = new stdClass;
-            $this->content->text = '<a href="' . new moodle_url('/blocks/iomad_commerce/shop.php') .
-                                   '">' . get_string('shop_title', 'block_iomad_commerce') . '</a>';
+        $this->content = new stdClass;
+        $this->content->text = '<a href="' . new moodle_url('/blocks/iomad_commerce/shop.php') .
+                               '">' . get_string('shop_title', 'block_iomad_commerce') . '</a>';
 
-            $this->content->text .= get_basket_info();
-            $this->content->footer = '';
-        }
+        $this->content->text .= get_basket_info();
+        $this->content->footer = '';
 
         return $this->content;
     }

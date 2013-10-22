@@ -208,24 +208,22 @@ class iomad_admin_menu {
             'icon' => 'emails'
         );
 
-        if (!empty($CFG->iomad_commerce_enabled)) {
-            $returnarray['ShopSettings_list'] = array(
-                'category' => 'ECommerceAdmin',
-                'tab' => 5,
-                'name' => get_string('courses', 'block_iomad_commerce'),
-                'url' => '/blocks/iomad_commerce/courselist.php',
-                'cap' => 'block/iomad_commerce:admin_view',
-                'icon' => 'courses'
-            );
-            $returnarray['Orders'] = array(
-                'category' => 'ECommerceAdmin',
-                'tab' => 5,
-                'name' => get_string('orders', 'block_iomad_commerce'),
-                'url' => '/blocks/iomad_commerce/orderlist.php',
-                'cap' => 'block/iomad_commerce:admin_view',
-                'icon' => 'money'
-            );
-        }
+        $returnarray['ShopSettings_list'] = array(
+            'category' => 'ECommerceAdmin',
+            'tab' => 5,
+            'name' => get_string('courses', 'block_iomad_commerce'),
+            'url' => '/blocks/iomad_commerce/courselist.php',
+            'cap' => 'block/iomad_commerce:admin_view',
+            'icon' => 'courses'
+        );
+        $returnarray['Orders'] = array(
+            'category' => 'ECommerceAdmin',
+            'tab' => 5,
+            'name' => get_string('orders', 'block_iomad_commerce'),
+            'url' => '/blocks/iomad_commerce/orderlist.php',
+            'cap' => 'block/iomad_commerce:admin_view',
+            'icon' => 'money'
+        );
         return $returnarray;
     }
 

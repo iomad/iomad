@@ -29,11 +29,6 @@ if ($ADMIN->fulltree) {
     $dir = dirname(__FILE__);
     require_once($dir .'/lib.php');
 
-    $settings->add(new admin_setting_configcheckbox('iomad_commerce_enabled',
-                                    get_string('commerce_enabled','block_iomad_commerce', get_string('pluginname', 'block_iomad_commerce')),
-                                    '',
-                                    0));
-    
     $settings->add(new admin_setting_configtext('commerce_admin_firstname',
                                             get_string('commerce_admin_firstname','block_iomad_commerce'),
                                             get_string('commerce_admin_firstname_help','block_iomad_commerce'),

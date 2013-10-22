@@ -21,10 +21,7 @@ const INVOICESTATUS_UNPAID = 'u';
 const INVOICESTATUS_PAID = 'p';
 
 function require_commerce_enabled() {
-    global $CFG;
-    if (!isset($CFG->iomad_commerce_enabled) || !$CFG->iomad_commerce_enabled) {
-        redirect(new moodle_url('/'));
-    }
+    return;
 }
 
 function get_lowest_price_text($course_shopsetting_with_lowest_block_price) {

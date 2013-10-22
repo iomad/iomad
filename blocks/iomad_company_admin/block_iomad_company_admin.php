@@ -67,8 +67,7 @@ class block_iomad_company_admin extends block_base {
         $tabs[2] = get_string('usermanagement', 'block_iomad_company_admin');
         $tabs[3] = get_string('coursemanagement', 'block_iomad_company_admin');
         $tabs[4] = get_string('licensemanagement', 'block_iomad_company_admin');
-        if (!empty($CFG->iomad_commerce_enabled) &&
-             has_capability('block/iomad_commerce:admin_view', $context)) {
+        if (has_capability('block/iomad_commerce:admin_view', $context)) {
             $tabs[5] = get_string('blocktitle', 'block_iomad_commerce');
         }
         $tabhtml = $this->gettabs($tabs, $selectedtab);

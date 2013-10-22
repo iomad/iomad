@@ -52,10 +52,8 @@ $ADMIN->add( 'iomad', new admin_category( 'PerficoReports',
 $ADMIN->add( 'iomad', new admin_category( 'LicenseAdmin',
              get_string('licensemanagement', 'block_iomad_company_admin')));
 
-if (!empty($CFG->iomad_commerce_enabled)) {
-    $ADMIN->add( 'iomad', new admin_category( 'ECommerceAdmin',
-                 get_string('blocktitle', 'block_iomad_commerce')));
-}
+$ADMIN->add( 'iomad', new admin_category( 'ECommerceAdmin',
+             get_string('blocktitle', 'block_iomad_commerce')));
 
 // get all the links from the iomad_admin_menu
 $admin_menu = new iomad_admin_menu();
