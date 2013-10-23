@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -29,18 +28,18 @@ require('../../config.php');
 require_once('edit_form.php');
 
 $courseid   = required_param('courseid', PARAM_INT);
-$instanceid = optional_param('id', 0, PARAM_INT); // instanceid
+$instanceid = optional_param('id', 0, PARAM_INT); // Instanceid.
 
-$course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 $context = get_context_instance(CONTEXT_COURSE, $course->id, MUST_EXIST);
 
 require_login($course);
 require_capability('enrol/license:config', $context);
 
-$PAGE->set_url('/enrol/license/edit.php', array('courseid'=>$course->id, 'id'=>$instanceid));
+$PAGE->set_url('/enrol/license/edit.php', array('courseid' => $course->id, 'id' => $instanceid));
 $PAGE->set_pagelayout('admin');
 
-$return = new moodle_url('/enrol/instances.php', array('id'=>$course->id));
+$return = new moodle_url('/enrol/instances.php', array('id' => $course->id));
 if (!enrol_is_enabled('license')) {
     redirect($return);
 }
@@ -48,17 +47,19 @@ if (!enrol_is_enabled('license')) {
 $plugin = enrol_get_plugin('license');
 
 if ($instanceid) {
-    $instance = $DB->get_record('enrol', array('courseid'=>$course->id, 'enrol'=>'license', 'id'=>$instanceid), '*', MUST_EXIST);
+    $instance = $DB->get_record('enrol', array('courseid' => $course->id,
+                                               'enrol' => 'license',
+                                               'id' => $instanceid), '*', MUST_EXIST);
 } else {
     require_capability('moodle/course:enrolconfig', $context);
-    // no instance yet, we have to add new instance
-    navigation_node::override_active_url(new moodle_url('/enrol/instances.php', array('id'=>$course->id)));
+    // No instance yet, we have to add new instance.
+    navigation_node::override_active_url(new moodle_url('/enrol/instances.php', array('id' => $course->id)));
     $instance = new stdClass();
     $instance->id       = null;
     $instance->courseid = $course->id;
 }
 
-$mform = new enrol_license_edit_form(NULL, array($instance, $plugin, $context));
+$mform = new enrol_license_edit_form(null, array($instance, $plugin, $context));
 
 if ($mform->is_cancelled()) {
     redirect($return);
@@ -67,7 +68,7 @@ if ($mform->is_cancelled()) {
     if ($instance->id) {
         $instance->status         = $data->status;
         $instance->name           = $data->name;
-        $instance->password       = NULL;
+        $instance->password       = null;
         $instance->customint1     = 0;
         $instance->customint2     = $data->customint2;
         $instance->customint3     = 0;
@@ -81,9 +82,18 @@ if ($mform->is_cancelled()) {
         $DB->update_record('enrol', $instance);
 
     } else {
-        $fields = array('status'=>$data->status, 'name'=>$data->name, 'password'=>NULL, 'customint1'=>0, 'customint2'=>$data->customint2,
-                        'customint3'=>0, 'customint4'=>$data->customint4, 'customtext1'=>$data->customtext1,
-                        'roleid'=>$data->roleid, 'enrolperiod'=>0, 'enrolstartdate'=>0, 'enrolenddate'=>0);
+        $fields = array('status' => $data->status,
+                        'name' => $data->name,
+                        'password' => null,
+                        'customint1' => 0,
+                        'customint2' => $data->customint2,
+                        'customint3' => 0,
+                        'customint4' => $data->customint4,
+                        'customtext1' => $data->customtext1,
+                        'roleid' => $data->roleid,
+                        'enrolperiod' => 0,
+                        'enrolstartdate' => 0,
+                        'enrolenddate' => 0);
         $plugin->add_instance($course, $fields);
     }
 

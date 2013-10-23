@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -31,7 +30,7 @@ $string['enrolenddate'] = 'End date';
 $string['enrolenddaterror'] = 'Enrolment end date cannot be earlier than start date';
 $string['enrolme'] = 'Click here to start this course';
 $string['enrolperiod'] = 'Enrolment period';
-$string['enrolperiod_desc'] = 'Default length of the enrolment period (in seconds).'; //TODO: fixme
+$string['enrolperiod_desc'] = 'Default length of the enrolment period (in seconds).'; // TODO: fixme!
 $string['enrolstartdate'] = 'Start date';
 $string['groupkey'] = 'Use group enrolment keys';
 $string['groupkey_desc'] = 'Use group enrolment keys by default.';

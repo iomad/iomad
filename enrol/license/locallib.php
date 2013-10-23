@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -41,8 +40,6 @@ class enrol_license_enrol_form extends moodleform {
             $heading = $plugin->get_instance_name($instance);
             $mform->addElement('header', 'licenseheader', $heading);
             $mform->addElement('passwordunmask', 'enrolpassword', get_string('password', 'enrol_license'));
-        } else {
-            // nothing?
         }
 
         $this->add_action_buttons(false, get_string('enrolme', 'enrol_license'));
@@ -65,7 +62,7 @@ class enrol_license_enrol_form extends moodleform {
         if ($instance->password) {
             if ($data['enrolpassword'] !== $instance->password) {
                 if ($instance->customint1) {
-                    $groups = $DB->get_records('groups', array('courseid'=>$instance->courseid), 'id ASC', 'id, enrolmentkey');
+                    $groups = $DB->get_records('groups', array('courseid' => $instance->courseid), 'id ASC', 'id, enrolmentkey');
                     $found = false;
                     foreach ($groups as $group) {
                         if (empty($group->enrolmentkey)) {
@@ -77,7 +74,7 @@ class enrol_license_enrol_form extends moodleform {
                         }
                     }
                     if (!$found) {
-                        // we can not hint because there are probably multiple passwords
+                        // We can not hint because there are probably multiple passwords.
                         $errors['enrolpassword'] = get_string('passwordinvalid', 'enrol_license');
                     }
 

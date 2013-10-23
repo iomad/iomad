@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,25 +27,27 @@ defined('MOODLE_INTERNAL') || die();
 function xmldb_enrol_license_install() {
     global $CFG, $DB;
 
-    // migrate welcome message
+    // Migrate welcome message.
     if (isset($CFG->sendcoursewelcomemessage)) {
-        set_config('sendcoursewelcomemessage', $CFG->sendcoursewelcomemessage, 'enrol_license'); // new course default
-        $DB->set_field('enrol', 'customint4', $CFG->sendcoursewelcomemessage, array('enrol'=>'license')); // each instance has different setting now
+        // New course default.
+        set_config('sendcoursewelcomemessage', $CFG->sendcoursewelcomemessage, 'enrol_license');
+        // Each instance has different setting now.
+        $DB->set_field('enrol', 'customint4', $CFG->sendcoursewelcomemessage, array('enrol' => 'license'));
         unset_config('sendcoursewelcomemessage');
     }
 
-    // migrate long-time-no-see feature settings
+    // Migrate long-time-no-see feature settings.
     if (isset($CFG->longtimenosee)) {
         $nosee = $CFG->longtimenosee * 3600 * 24;
         set_config('longtimenosee', $nosee, 'enrol_license');
-        $DB->set_field('enrol', 'customint2', $nosee, array('enrol'=>'license'));
+        $DB->set_field('enrol', 'customint2', $nosee, array('enrol' => 'license'));
         unset_config('longtimenosee');
     }
 
-    // enable by default on the site
+    // Enable by default on the site.
     $enabledenrols = explode(',', $CFG->enrol_plugins_enabled);
-    if (!in_array('license',$enabledenrols)) {
-        $enabledenrols[]='license';
+    if (!in_array('license', $enabledenrols)) {
+        $enabledenrols[] = 'license';
         set_config('enrol_plugins_enabled', implode(',', $enabledenrols));
     }
 }

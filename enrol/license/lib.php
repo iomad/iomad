@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -73,7 +72,7 @@ class enrol_license_plugin extends enrol_plugin {
         global $DB;
 
         if (empty($instance->name)) {
-            if (!empty($instance->roleid) and $role = $DB->get_record('role', array('id'=>$instance->roleid))) {
+            if (!empty($instance->roleid) and $role = $DB->get_record('role', array('id' => $instance->roleid))) {
                 $role = ' (' . role_get_name($role, get_context_instance(CONTEXT_COURSE, $instance->courseid)) . ')';
             } else {
                 $role = '';
@@ -86,17 +85,17 @@ class enrol_license_plugin extends enrol_plugin {
     }
 
     public function roles_protected() {
-        // users may tweak the roles later
+        // Users may tweak the roles later.
         return false;
     }
 
     public function allow_unenrol(stdClass $instance) {
-        // users with unenrol cap may unenrol other users manually manually
+        // Users with unenrol cap may unenrol other users manually manually.
         return true;
     }
 
     public function allow_manage(stdClass $instance) {
-        // users with manage cap may tweak period and status
+        // Users with manage cap may tweak period and status.
         return true;
     }
 
@@ -117,7 +116,8 @@ class enrol_license_plugin extends enrol_plugin {
 
         $context = get_context_instance(CONTEXT_COURSE, $instance->courseid);
         if (has_capability('enrol/license:config', $context)) {
-            $managelink = new moodle_url('/enrol/license/edit.php', array('courseid'=>$instance->courseid, 'id'=>$instance->id));
+            $managelink = new moodle_url('/enrol/license/edit.php', array('courseid' => $instance->courseid,
+                                                                          'id' => $instance->id));
             $instancesnode->add($this->get_instance_name($instance), $managelink, navigation_node::TYPE_SETTING);
         }
     }
@@ -138,8 +138,11 @@ class enrol_license_plugin extends enrol_plugin {
         $icons = array();
 
         if (has_capability('enrol/license:config', $context)) {
-            $editlink = new moodle_url("/enrol/license/edit.php", array('courseid'=>$instance->courseid, 'id'=>$instance->id));
-            $icons[] = $OUTPUT->action_icon($editlink, new pix_icon('i/edit', get_string('edit'), 'core', array('class'=>'icon')));
+            $editlink = new moodle_url("/enrol/license/edit.php", array('courseid' => $instance->courseid, 'id' => $instance->id));
+            $icons[] = $OUTPUT->action_icon($editlink,
+                                            new pix_icon('i/edit', get_string('edit'),
+                                            'core',
+                                            array('class' => 'icon')));
         }
 
         return $icons;
@@ -154,10 +157,10 @@ class enrol_license_plugin extends enrol_plugin {
         $context = get_context_instance(CONTEXT_COURSE, $courseid, MUST_EXIST);
 
         if (!has_capability('moodle/course:enrolconfig', $context) or !has_capability('enrol/manual:config', $context)) {
-            return NULL;
+            return null;
         }
-        // multiple instances supported - different roles with different password
-        return new moodle_url('/enrol/license/edit.php', array('courseid'=>$courseid));
+        // Multiple instances supported - different roles with different password.
+        return new moodle_url('/enrol/license/edit.php', array('courseid' => $courseid));
     }
 
     /**
@@ -171,71 +174,76 @@ class enrol_license_plugin extends enrol_plugin {
         global $CFG, $OUTPUT, $SESSION, $USER, $DB;
 
         if (isguestuser()) {
-            // can not enrol guest!!
+            // Can not enrol guest!!
             return null;
         }
-        if ($DB->record_exists('user_enrolments', array('userid'=>$USER->id, 'enrolid'=>$instance->id))) {
-            //TODO: maybe we should tell them they are already enrolled, but can not access the course
-echo "HERE </br>";
+        if ($DB->record_exists('user_enrolments', array('userid' => $USER->id, 'enrolid' => $instance->id))) {
+            // TODO: maybe we should tell them they are already enrolled, but can not access the course.
             return null;
         }
 
         if ($instance->enrolstartdate != 0 and $instance->enrolstartdate > time()) {
-            //TODO: inform that we can not enrol yet
+            // TODO: inform that we can not enrol yet.
             return null;
         }
 
         if ($instance->enrolenddate != 0 and $instance->enrolenddate < time()) {
-            //TODO: inform that enrolment is not possible any more
+            // TODO: inform that enrolment is not possible any more.
             return null;
         }
 
         if ($instance->customint3 > 0) {
-            // max enrol limit specified
-            $count = $DB->count_records('user_enrolments', array('enrolid'=>$instance->id));
+            // Max enrol limit specified.
+            $count = $DB->count_records('user_enrolments', array('enrolid' => $instance->id));
             if ($count >= $instance->customint3) {
-                // bad luck, no more license enrolments here
+                // Bad luck, no more license enrolments here.
                 return $OUTPUT->notification(get_string('maxenrolledreached', 'enrol_license'));
             }
         }
 
-        //Get the license information
-        $SQL = "SELECT * from {companylicense} cl, {companylicense_users} clu
+        // Get the license information.
+        $sql = "SELECT * from {companylicense} cl, {companylicense_users} clu
                 WHERE clu.userid = ".$USER->id ."
                 AND clu.licenseid = cl.id
                 AND clu.isusing = 0";
-        if (!$license = $DB->get_record_sql($SQL)) {
-            return $OUTPUT->notification(get_string('nolicenseinformationfound','enrol_license'));
+        if (!$license = $DB->get_record_sql($sql)) {
+            return $OUTPUT->notification(get_string('nolicenseinformationfound', 'enrol_license'));
         }
 
         if (time() > $license->expirydate) {
-            return $OUTPUT->notification(get_string('licensenolongervalid','enrol_license'));
+            return $OUTPUT->notification(get_string('licensenolongervalid', 'enrol_license'));
         }
 
         require_once("$CFG->dirroot/enrol/license/locallib.php");
         require_once("$CFG->dirroot/group/lib.php");
 
-        $form = new enrol_license_enrol_form(NULL, $instance);
+        $form = new enrol_license_enrol_form(null, $instance);
         $instanceid = optional_param('instance', 0, PARAM_INT);
 
         if ($instance->id == $instanceid) {
             if ($data = $form->get_data()) {
                 $enrol = enrol_get_plugin('license');
 
-                // Enrol the user in the course
+                // Enrol the user in the course.
                 $timestart = time();
-                // set the timeend to be time start + the valid length for the license in days.
+                // Set the timeend to be time start + the valid length for the license in days.
                 $timeend = $timestart + ($license->validlength * 24 * 60 * 60 );
 
                 $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
-                add_to_log($instance->courseid, 'course', 'enrol', '../enrol/users.php?id='.$instance->courseid, $instance->courseid); //there should be userid somewhere!
 
-                // Update the userlicense record to mark it as in use
-                $userlicense = (array) $DB->get_record('companylicense_users', array('id'=>$license->id));
+                // There should be userid somewhere!
+                add_to_log($instance->courseid,
+                           'course',
+                           'enrol',
+                           '../enrol/users.php?id='.$instance->courseid,
+                           $instance->courseid);
+
+                // Update the userlicense record to mark it as in use.
+                $userlicense = (array) $DB->get_record('companylicense_users', array('id' => $license->id));
                 $userlicense['isusing'] = 1;
-                $DB->update_record('companylicense_users',$userlicense);
+                $DB->update_record('companylicense_users', $userlicense);
 
-                // send welcome
+                // Send welcome.
                 if ($instance->customint4) {
                     $this->email_welcome_message($instance, $USER);
                 }
@@ -280,7 +288,7 @@ echo "HERE </br>";
     protected function email_welcome_message($instance, $user) {
         global $CFG, $DB;
 
-        $course = $DB->get_record('course', array('id'=>$instance->courseid), '*', MUST_EXIST);
+        $course = $DB->get_record('course', array('id' => $instance->courseid), '*', MUST_EXIST);
 
         $a = new stdClass();
         $a->coursename = format_string($course->fullname);
@@ -299,7 +307,7 @@ echo "HERE </br>";
         $context = get_context_instance(CONTEXT_COURSE, $course->id);
         $rusers = array();
         if (!empty($CFG->coursecontact)) {
-            $croles = explode(',', $CFG->coursecontact);
+            $croles = explode(', ', $CFG->coursecontact);
             $rusers = get_role_users($croles, $context, true, '', 'r.sortorder ASC, u.lastname ASC');
         }
         if ($rusers) {
@@ -308,7 +316,7 @@ echo "HERE </br>";
             $contact = get_admin();
         }
 
-        //directly emailing welcome message rather than using messaging
+        // Directly emailing welcome message rather than using messaging.
         email_to_user($user, $contact, $subject, $message);
     }
 
@@ -327,85 +335,100 @@ echo "HERE </br>";
 
         $now = time();
 
-        //note: the logic of license enrolment guarantees that user logged in at least once (=== u.lastaccess set)
-        //      and that user accessed course at least once too (=== user_lastaccess record exists)
+        // Note: the logic of license enrolment guarantees that user logged in at least once (=== u.lastaccess set)
+        //      and that user accessed course at least once too (=== user_lastaccess record exists).
 
-        // first deal with users that did not log in for a really long time
+        // First deal with users that did not log in for a really long time.
         $sql = "SELECT e.*, ue.userid
                   FROM {user_enrolments} ue
                   JOIN {enrol} e ON (e.id = ue.enrolid AND e.enrol = 'license' AND e.customint2 > 0)
                   JOIN {user} u ON u.id = ue.userid
                  WHERE :now - u.lastaccess > e.customint2";
-        $rs = $DB->get_recordset_sql($sql, array('now'=>$now));
+        $rs = $DB->get_recordset_sql($sql, array('now' => $now));
         foreach ($rs as $instance) {
             $userid = $instance->userid;
             unset($instance->userid);
             $plugin->unenrol_user($instance, $userid);
-            mtrace("unenrolling user $userid from course $instance->courseid as they have did not log in for $instance->customint2 days");
+            mtrace("unenrolling user $userid from course ".
+                   $instance->courseid.
+                   " as they have did not log in for ".
+                   $instance->customint2." days");
         }
         $rs->close();
 
-        // now unenrol from course user did not visit for a long time
+        // Now unenrol from course user did not visit for a long time.
         $sql = "SELECT e.*, ue.userid
                   FROM {user_enrolments} ue
                   JOIN {enrol} e ON (e.id = ue.enrolid AND e.enrol = 'license' AND e.customint2 > 0)
                   JOIN {user_lastaccess} ul ON (ul.userid = ue.userid AND ul.courseid = e.courseid)
                  WHERE :now - ul.timeaccess > e.customint2";
-        $rs = $DB->get_recordset_sql($sql, array('now'=>$now));
+        $rs = $DB->get_recordset_sql($sql, array('now' => $now));
         foreach ($rs as $instance) {
             $userid = $instance->userid;
             unset($instance->userid);
             $plugin->unenrol_user($instance, $userid);
-            mtrace("unenrolling user $userid from course $instance->courseid as they have did not access course for $instance->customint2 days");
+            mtrace("unenrolling user $userid from course ".
+                   $instance->courseid.
+                   " as they have did not access course for ".
+                   $instance->customint2." days");
         }
         $rs->close();
 
         flush();
 
-        //  Deal with users who are past enrolment time/ completed the course
+        // Deal with users who are past enrolment time/ completed the course.
         $runtime = time();
-        if ($userids = $DB->get_records_sql("SELECT ue.id, ue.userid, ue.enrolid, e.courseid from mdl_user_enrolments ue, mdl_enrol e
-                                             where e.enrol='license' and e.id = ue.enrolid and ue.timeend < :time",array('time'=>$runtime))) {
-            foreach ($userids as $user ) {
+        if ($userids = $DB->get_records_sql("SELECT ue.id, ue.userid, ue.enrolid, e.courseid
+                                             FROM mdl_user_enrolments ue, mdl_enrol e
+                                             WHERE e.enrol='license'
+                                             AND e.id = ue.enrolid
+                                             AND ue.timeend < :time",
+                                             array('time' => $runtime))) {
+            foreach ($userids as $user) {
                 mtrace("dealing with user $user->userid");
-                // get the license details
-                $license = (array) $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing, lu.timecompleted, lu.score, lu.result
-                                                FROM {companylicense_users} lu, {companylicense_courses} lc
-                                                WHERE lu.userid = :userid AND lc.courseid = :courseid
-                                                AND lu.licenseid = lc.licenseid AND lu.timecompleted IS NULL",
-                                                array('userid'=>$user->userid, 'courseid'=>$user->courseid));
+                // Get the license details.
+                $license = (array) $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing,
+                                                        lu.timecompleted, lu.score, lu.result
+                                                        FROM {companylicense_users} lu, {companylicense_courses} lc
+                                                        WHERE lu.userid = :userid AND lc.courseid = :courseid
+                                                        AND lu.licenseid = lc.licenseid AND lu.timecompleted IS NULL",
+                                                        array('userid' => $user->userid, 'courseid' => $user->courseid));
 
-                // get the grade item details
-                if ($gradeitems = $DB->get_records_sql("SELECT gg.id, gg.finalgrade, gg.feedback, gi.itemtype from {grade_grades} gg, {grade_items} gi
+                // Get the grade item details.
+                if ($gradeitems = $DB->get_records_sql("SELECT gg.id, gg.finalgrade, gg.feedback, gi.itemtype
+                                                        FROM {grade_grades} gg, {grade_items} gi
                                                         WHERE gg.userid = :userid AND gi.courseid = :courseid
                                                         AND gg.itemid = gi.id",
-                                                        array('userid'=>$user->userid, 'enrolid'=>$user->enrolid, 'courseid'=>$user->courseid))) {
-                    // delete the grade items
+                                                        array('userid' => $user->userid,
+                                                              'enrolid' => $user->enrolid,
+                                                              'courseid' => $user->courseid))) {
+                    // Delete the grade items.
                     mtrace("removing grade items from course $user->courseid");
                     foreach ($gradeitems as $gradeitem) {
                         if ($gradeitem->itemtype == 'course' ) {
                             $license['score'] = $gradeitem->finalgrade;
                             $license['result'] = $gradeitem->feedback;
                         }
-                        $DB->delete_records('grade_grades', array('id'=>$gradeitem->id));
+                        $DB->delete_records('grade_grades', array('id' => $gradeitem->id));
                     }
 
-                    // delete any completion data
-                    $completion = $DB->get_record('course_completions',array('userid'=>$user->userid, 'course'=>$user->courseid));
+                    // Delete any completion data.
+                    $completion = $DB->get_record('course_completions', array('userid' => $user->userid,
+                                                                              'course' => $user->courseid));
                     if (!empty($completion->timecompleted)) {
-                        $license['timecompleted']=$completion->timecompleted;
+                        $license['timecompleted'] = $completion->timecompleted;
                     } else {
-                        $license['timecompleted']=$runtime;
+                        $license['timecompleted'] = $runtime;
                     }
-                    // update the user license information
+                    // Update the user license information.
                     mtrace("updating license ".$license['id']." for user ".$user->userid);
-                    $DB->update_record('companylicense_users',$license);
-                    // delete the completion information
+                    $DB->update_record('companylicense_users', $license);
+                    // Delete the completion information.
                     mtrace("removing course completion for user $user->userid on $user->courseid");
-                    $DB->delete_records('course_completions',array('id'=>$completion->id));
-                    // delete the enrolment
+                    $DB->delete_records('course_completions', array('id' => $completion->id));
+                    // Delete the enrolment.
                     mtrace("removing enrolment for user ".$user->userid." from ".$user->courseid);
-                    $DB->delete_records('user_enrolments',array('id'=>$user->id));
+                    $DB->delete_records('user_enrolments', array('id' => $user->id));
                 }
             }
         }
@@ -420,8 +443,12 @@ echo "HERE </br>";
  */
 function enrol_license_supports($feature) {
     switch($feature) {
-        case ENROL_RESTORE_TYPE: return ENROL_RESTORE_EXACT;
+        case ENROL_RESTORE_TYPE: {
+            return ENROL_RESTORE_EXACT;
+        }
 
-        default: return null;
+        default: {
+            return null;
+        }
     }
 }

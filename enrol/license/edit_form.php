@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -31,7 +30,7 @@ require_once($CFG->libdir.'/formslib.php');
 
 class enrol_license_edit_form extends moodleform {
 
-    function definition() {
+    public function definition() {
         $mform = $this->_form;
 
         list($instance, $plugin, $context) = $this->_customdata;
@@ -46,18 +45,6 @@ class enrol_license_edit_form extends moodleform {
         $mform->addHelpButton('status', 'status', 'enrol_license');
         $mform->setDefault('status', $plugin->get_config('status'));
 
-        /*$mform->addElement('passwordunmask', 'password', get_string('password', 'enrol_license'));
-        $mform->addHelpButton('password', 'password', 'enrol_license');
-        if (empty($instance->id) and $plugin->get_config('requirepassword')) {
-            $mform->addRule('password', get_string('required'), 'required', null, 'client');
-        }
-
-        $options = array(1 => get_string('yes'),
-                         0 => get_string('no'));
-        $mform->addElement('select', 'customint1', get_string('groupkey', 'enrol_license'), $options);
-        $mform->addHelpButton('customint1', 'groupkey', 'enrol_license');
-        $mform->setDefault('customint1', $plugin->get_config('groupkey')); */
-
         if ($instance->id) {
             $roles = get_default_enrol_roles($context, $instance->roleid);
         } else {
@@ -65,15 +52,6 @@ class enrol_license_edit_form extends moodleform {
         }
         $mform->addElement('select', 'roleid', get_string('role', 'enrol_license'), $roles);
         $mform->setDefault('roleid', $plugin->get_config('roleid'));
-
-       /* $mform->addElement('duration', 'enrolperiod', get_string('enrolperiod', 'enrol_license'), array('optional' => true, 'defaultunit' => 86400));
-        $mform->setDefault('enrolperiod', $plugin->get_config('enrolperiod'));
-
-        $mform->addElement('date_selector', 'enrolstartdate', get_string('enrolstartdate', 'enrol_license'), array('optional' => true));
-        $mform->setDefault('enrolstartdate', 0);
-
-        $mform->addElement('date_selector', 'enrolenddate', get_string('enrolenddate', 'enrol_license'), array('optional' => true));
-        $mform->setDefault('enrolenddate', 0); */
 
         $options = array(0 => get_string('never'),
                  1800 * 3600 * 24 => get_string('numdays', '', 1800),
@@ -92,16 +70,12 @@ class enrol_license_edit_form extends moodleform {
         $mform->setDefault('customint2', $plugin->get_config('longtimenosee'));
         $mform->addHelpButton('customint2', 'longtimenosee', 'enrol_license');
 
-        /* $mform->addElement('text', 'customint3', get_string('maxenrolled', 'enrol_license'));
-        $mform->setDefault('customint3', $plugin->get_config('maxenrolled'));
-        $mform->addHelpButton('customint3', 'maxenrolled', 'enrol_license');
-        $mform->setType('customint3', PARAM_INT); */
-
         $mform->addElement('advcheckbox', 'customint4', get_string('sendcoursewelcomemessage', 'enrol_license'));
         $mform->setDefault('customint4', $plugin->get_config('sendcoursewelcomemessage'));
         $mform->addHelpButton('customint4', 'sendcoursewelcomemessage', 'enrol_license');
 
-        $mform->addElement('textarea', 'customtext1', get_string('customwelcomemessage', 'enrol_license'), array('cols'=>'60', 'rows'=>'8'));
+        $mform->addElement('textarea', 'customtext1', get_string('customwelcomemessage', 'enrol_license'),
+                           array('cols' => '60', 'rows' => '8'));
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -113,7 +87,7 @@ class enrol_license_edit_form extends moodleform {
         $this->set_data($instance);
     }
 
-    function validation($data, $files) {
+    public function validation($data, $files) {
         global $DB, $CFG;
         $errors = parent::validation($data, $files);
 
@@ -138,7 +112,7 @@ class enrol_license_edit_form extends moodleform {
             if ($require and trim($data['password']) === '') {
                 $errors['password'] = get_string('required');
             } else if ($policy) {
-                $errmsg = '';//prevent eclipse warning
+                $errmsg = ''; // Prevent eclipse warning.
                 if (!check_password_policy($data['password'], $errmsg)) {
                     $errors['password'] = $errmsg;
                 }
