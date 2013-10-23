@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');
@@ -30,7 +44,8 @@ function company_css() {
  *
  * [[logo]] gets replaced with the full url to the company logo
  * [[company:$property]] gets replaced with the property of the $USER->company object
- *     available properties are: id, shortname, name, logo_filename + the fields in company->cssfields, currently  bgcolor_header and bgcolor_content
+ *     available properties are: id, shortname, name, logo_filename + the fields in company->cssfields,
+ *     currently  bgcolor_header and bgcolor_content
  *
  */
 function iomad_process_company_css($css, $theme) {
@@ -39,13 +54,18 @@ function iomad_process_company_css($css, $theme) {
     company_user::load_company();
 
     if (isset($USER->company)) {
-        // prepare logo fullpath
+        // Prepare logo fullpath.
         $context = get_context_instance(CONTEXT_SYSTEM);
-        $logo = file_rewrite_pluginfile_urls('@@PLUGINFILE@@/[[company:logo_filename]]', 'pluginfile.php', $context->id, 'theme_iomad', 'logo', $USER->company->id);
+        $logo = file_rewrite_pluginfile_urls('@@PLUGINFILE@@/[[company:logo_filename]]',
+                                             'pluginfile.php',
+                                             $context->id,
+                                             'theme_iomad',
+                                             'logo',
+                                             $USER->company->id);
         $css = preg_replace("/\[\[logo\]\]/", $logo, $css);
 
-        // replace company properties
-        foreach($USER->company as $key => $value) {
+        // Replace company properties.
+        foreach ($USER->company as $key => $value) {
             if (isset($value)) {
                 $css = preg_replace("/\[\[company:$key\]\]/", $value, $css);
             }
@@ -58,7 +78,7 @@ function iomad_process_company_css($css, $theme) {
 
 }
 
-// prepend the additionalhtmlhead with the company css sheet
+// Prepend the additionalhtmlhead with the company css sheet.
 if (!empty($CFG->additionalhtmlhead)) {
     $CFG->additionalhtmlhead = company_css() . "\n".$CFG->additionalhtmlhead;
 }
