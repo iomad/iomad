@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -34,31 +33,31 @@ function xmldb_block_iomad_approve_access_upgrade($oldversion) {
 
     if ($oldversion < 2013061100) {
 
-        // Define field companyid to be added to block_iomad_approve_access
+        // Define field companyid to be added to block_iomad_approve_access.
         $table = new xmldb_table('block_iomad_approve_access');
         $field = new xmldb_field('companyid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'userid');
 
-        // Conditionally launch add field companyid
+        // Conditionally launch add field companyid.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // iomad_approve_access savepoint reached
+        // Iomad_approve_access savepoint reached.
         upgrade_block_savepoint(true, 2013061100, 'iomad_approve_access');
     }
 
     if ($oldversion < 2013071000) {
 
-        // Define field activityid to be added to block_iomad_approve_access
+        // Define field activityid to be added to block_iomad_approve_access.
         $table = new xmldb_table('block_iomad_approve_access');
         $field = new xmldb_field('activityid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'courseid');
 
-        // Conditionally launch add field activityid
+        // Conditionally launch add field activityid.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // iomad_approve_access savepoint reached
+        // Iomad_approve_access savepoint reached.
         upgrade_block_savepoint(true, 2013071000, 'iomad_approve_access');
     }
 

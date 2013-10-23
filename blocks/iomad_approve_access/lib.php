@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,7 +22,6 @@
 
 function approve_enrol_has_users() {
     global $CFG, $DB, $USER, $SESSION;
-    
     require_once($CFG->dirroot.'/local/perficio/lib/company.php');
     require_once($CFG->dirroot.'/local/perficio/lib/user.php');
 
@@ -36,12 +34,12 @@ function approve_enrol_has_users() {
         return false;
     }
 
-    // check if we can have users of my type.
+    // Check if we can have users of my type.
     if (is_siteadmin($USER->id)) {
         $approvaltype = 'both';
     } else {
-        // what type of manager am I?
-        if ($manager = $DB->get_record('companymanager', array('userid'=>$USER->id))) {
+        // What type of manager am I?
+        if ($manager = $DB->get_record('companymanager', array('userid' => $USER->id))) {
             if (!empty($manager->departmentmanager)) {
                 $approvaltype = 'manager';
             } else {
@@ -58,18 +56,19 @@ function approve_enrol_has_users() {
                                   WHERE companyid = :companyid
                                   AND manager_ok = 0
                                   AND userid != :myuserid
-                                  AND userid IN ($myuserids)", 
-                                  array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                  AND userid IN ($myuserids)",
+                                  array('companyid' => $companyid, 'myuserid' => $USER->id))) {
             return true;
         }
-    }    
+    }
     if ($approvaltype == 'both' || $approvaltype == 'company') {
-        if ($DB->get_records('block_iomad_approve_access', array('companyid'=>$companyid, 'tm_ok'=>'0 AND userid != '.$USER->id))) {
+        if ($DB->get_records('block_iomad_approve_access',
+                             array('companyid' => $companyid, 'tm_ok' => '0 AND userid != '.$USER->id))) {
             return true;
         }
-    }    
+    }
 
-    // hasn't returned yet, return false as default.
+    // Hasn't returned yet, return false as default.
     return false;
 }
 
@@ -88,12 +87,12 @@ function approve_enroll_get_my_users() {
         return false;
     }
 
-    // check if we can have users of my type.
+    // Check if we can have users of my type.
     if (is_siteadmin($USER->id)) {
         $approvaltype = 'both';
     } else {
-        // what type of manager am I?
-        if ($manager = $DB->get_record('companymanager', array('userid'=>$USER->id))) {
+        // What type of manager am I?
+        if ($manager = $DB->get_record('companymanager', array('userid' => $USER->id))) {
             if (!empty($manager->departmentmanager)) {
                 $approvaltype = 'manager';
             } else {
@@ -108,31 +107,29 @@ function approve_enroll_get_my_users() {
     $myuserids = company::get_my_users_list($companyid);
     if (!empty($myuserids)) {
         if ($approvaltype == 'manager') {
-            //  need to deal with departments here.
-            if ($userarray = $DB->get_records('block_iomad_approve_access', array('companyid'=>$companyid,
-                                              'manager_ok'=>'0 AND userid != '.$USER->id.' AND userid IN ('.$myuserids.')'))) {
-                return $userarray;
-            }
-        }    
-    
-        if ($approvaltype == 'company') {
-            if ($userarray = $DB->get_records('block_iomad_approve_access', array('companyid'=>$companyid,
-                                              'tm_ok'=>'0 AND userid != '.$USER->id.' AND userid IN ('.$myuserids.')'))) {
+            //  Need to deal with departments here.
+            if ($userarray = $DB->get_records('block_iomad_approve_access', array('companyid' => $companyid,
+                                              'manager_ok' => '0 AND userid != '.$USER->id.' AND userid IN ('.$myuserids.')'))) {
                 return $userarray;
             }
         }
-    
+        if ($approvaltype == 'company') {
+            if ($userarray = $DB->get_records('block_iomad_approve_access', array('companyid' => $companyid,
+                                              'tm_ok' => '0 AND userid != '.$USER->id.' AND userid IN ('.$myuserids.')'))) {
+                return $userarray;
+            }
+        }
         if ($approvaltype == 'both') {
             if ($userarray = $DB->get_records_sql("SELECT * FROM {block_iomad_approve_access}
                                                    WHERE companyid=:companyid
                                                    AND (tm_ok = 0 OR manager_ok = 0)
                                                    AND userid != :myuserid
                                                    AND userid IN ($myuserids)",
-                                                   array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                                   array('companyid' => $companyid, 'myuserid' => $USER->id))) {
                 return $userarray;
             }
         }
     }
 
-    return array();    
+    return array();
 }

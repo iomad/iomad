@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -24,7 +23,7 @@
  */
 
 class block_iomad_approve_access extends block_base {
-    public function init()	{
+    public function init() {
         $this->title = get_string('approveusers', 'block_iomad_approve_access' );
     }
 
@@ -32,10 +31,9 @@ class block_iomad_approve_access extends block_base {
         return true;
     }
 
-    function has_config() {
+    public function has_config() {
         return false;
     }
-       
     public function get_content() {
         global $DB;
 
