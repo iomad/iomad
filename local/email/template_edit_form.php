@@ -39,7 +39,7 @@ class template_edit_form extends moodleform {
         $this->templateid = $templateid;
         $this->templaterecord = $templaterecord;
         $this->companyid = $companyid;
-        parent::moodleform($actionurl);
+        parent::__construct($actionurl);
     }
 
     public function definition() {
@@ -92,7 +92,7 @@ class template_edit_form extends moodleform {
         global $PAGE;
         $PAGE->requires->js('/local/email/module.js');
 
-        $submitlabel = null; // Default
+        $submitlabel = null; // Default.
         if ($this->isadding) {
             $submitlabel = get_string('save_to_override_default_template', 'local_email');
             $mform->addElement('hidden', 'createnew', 1);
@@ -129,7 +129,7 @@ if ($returnurl) {
 }
 $templatelist = new moodle_url('/local/email/template_list.php', $urlparams);
 
-// set the companyid to bypass the company select form if possible
+// Set the companyid to bypass the company select form if possible.
 if (!empty($SESSION->currenteditingcompany)) {
     $companyid = $SESSION->currenteditingcompany;
 } else if (!empty($USER->company)) {
@@ -165,22 +165,22 @@ if (!$new) {
     require_capability('local/email:add', $context);
 }
 
-// Correct the navbar
-// Set the name for the page
-$linktext=get_string('edit_template', 'local_email');
-// set the url
+// Correct the navbar.
+// Set the name for the page.
+$linktext = get_string('edit_template', 'local_email');
+// Set the url.
 $linkurl = new moodle_url('/local/email/template_edit_form.php');
-//build the nav bar
+// Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $blockpage = new blockpage($PAGE, $OUTPUT, 'email', 'local',
                            ($isadding ? 'addnewtemplate' : 'editatemplate'));
 $blockpage->setup();
 
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT
-// get the form data
+require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
+// Get the form data.
 
-// set up the form
+// Set up the form.
 $mform = new template_edit_form($PAGE->url, $isadding, $companyid, $templateid, $templaterecord);
 $templaterecord->body_editor = $templaterecord->body;
 $mform->set_data($templaterecord);

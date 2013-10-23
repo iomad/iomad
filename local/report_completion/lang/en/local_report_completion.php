@@ -1,10 +1,24 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $string['companies'] = 'Companies';
 $string['completed'] = 'Completed';
 $string['course'] = 'Course';
 $string['report_completion:view'] = 'View course iomad progress report';
-$string['completiondate']='Completion date';
+$string['completiondate'] = 'Completion date';
 $string['completionnotenabled'] = 'Completion tracking is not enabled for this course (no report data available)';
 $string['iomad_completion:view'] = 'iomad completion report';
 $string['error'] = 'Error finding custom profile field for company';
@@ -15,12 +29,12 @@ $string['notstarted'] = 'Not started';
 $string['nousers'] = 'No users in this course';
 $string['participant'] = 'Participant';
 $string['percentage'] = 'Percent Complete';
-$string['pluginname']='Completion report by course';
-$string['repcoursecompletion']='Completion report by course';
+$string['pluginname'] = 'Completion report by course';
+$string['repcoursecompletion'] = 'Completion report by course';
 $string['remaining'] = 'Remaining';
 $string['reportselect'] = 'Report filter';
 $string['select'] = '--select--';
-$string['status'] ='Status';
+$string['status'] = 'Status';
 $string['trackedcount'] = 'Number of tracked resources/activities: ';
 $string['userrecordnotfound'] = 'The user record was not found';
 $string['coursename'] = 'Course name';

@@ -57,39 +57,39 @@ defined('MOODLE_INTERNAL') || die();
 function xmldb_local_iomad_settings_upgrade($oldversion) {
     global $CFG, $DB;
 
-    $result = TRUE;
+    $result = true;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2011110201) {
 
-        // Define fields to be added to certificate
+        // Define fields to be added to certificate.
         $table = new xmldb_table('certificate');
-        
+
         $field = new xmldb_field('serialnumberformat', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'timemodified');
-        // Conditionally launch add field
+        // Conditionally launch add field.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         $field = new xmldb_field('reset_sequence', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null, 'serialnumberformat');
-        // Conditionally launch add field
+        // Conditionally launch add field.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         $field = new xmldb_field('customtext2', XMLDB_TYPE_TEXT, 'small', null, null, null, null, 'reset_sequence');
-        // Conditionally launch add field
+        // Conditionally launch add field.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
         $field = new xmldb_field('customtext3', XMLDB_TYPE_TEXT, 'small', null, null, null, null, 'customtext2');
-        // Conditionally launch add field
+        // Conditionally launch add field.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // iomad savepoint reached
+        // Iomad savepoint reached.
         upgrade_block_savepoint(true, 2011110201, 'iomad_settings');
 
     }
@@ -97,7 +97,8 @@ function xmldb_local_iomad_settings_upgrade($oldversion) {
     if ($oldversion < 2011110300) {
         $table = new xmldb_table('certificate_serialnumber');
 
-        $index = new xmldb_index('certificate_year_sequenceno_unique', XMLDB_INDEX_UNIQUE, array('certificateid', 'year', 'sequenceno'));
+        $index = new xmldb_index('certificate_year_sequenceno_unique', XMLDB_INDEX_UNIQUE,
+                                  array('certificateid', 'year', 'sequenceno'));
         if ($dbman->index_exists($table, $index)) {
             $dbman->drop_index($table, $index);
         }
@@ -106,14 +107,15 @@ function xmldb_local_iomad_settings_upgrade($oldversion) {
             $field = new xmldb_field('year', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'timecreated');
             $dbman->rename_field($table, $field, 'sequence');
         }
-        
+
         $field = new xmldb_field('sequence', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'timecreated');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
-        } else { 
+        } else {
             $dbman->change_field_precision($table, $field);
         }
-        $index = new xmldb_index('certificate_sequence_sequenceno_unique', XMLDB_INDEX_UNIQUE, array('certificateid', 'sequence', 'sequenceno'));
+        $index = new xmldb_index('certificate_sequence_sequenceno_unique', XMLDB_INDEX_UNIQUE,
+                                  array('certificateid', 'sequence', 'sequenceno'));
     }
 
     return $result;

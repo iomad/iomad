@@ -62,10 +62,10 @@ function xmldb_local_email_upgrade($oldversion) {
 
     if ($oldversion < 2011111400) {
 
-        // Define table email to be created
+        // Define table email to be created.
         $table = new xmldb_table('email');
 
-        // Adding fields to table email
+        // Adding fields to table email.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL,
                            XMLDB_SEQUENCE, null);
         $table->add_field('templatename', XMLDB_TYPE_CHAR, '100', null, null, null, null);
@@ -84,47 +84,47 @@ function xmldb_local_email_upgrade($oldversion) {
         $table->add_field('classroomid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED,
                            null, null, null);
 
-        // Adding keys to table email
+        // Adding keys to table email.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
 
-        // Conditionally launch create table for email
+        // Conditionally launch create table for email.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
-        // email savepoint reached
+        // Email savepoint reached.
         upgrade_plugin_savepoint(true, 2011111400, 'local', 'email');
     }
 
     if ($oldversion < 2012011300) {
 
-        // Define field senderid to be added to email
+        // Define field senderid to be added to email.
         $table = new xmldb_table('email');
         $field = new xmldb_field('senderid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED,
                                   null, null, null, 'classroomid');
 
-        // Conditionally launch add field senderid
+        // Conditionally launch add field senderid.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // email savepoint reached
+        // Email savepoint reached.
         upgrade_plugin_savepoint(true, 2012011300, 'local', 'email');
     }
 
     if ($oldversion < 2012092600) {
 
-        // Define field headers to be added to email
+        // Define field headers to be added to email.
         $table = new xmldb_table('email');
         $field = new xmldb_field('headers', XMLDB_TYPE_TEXT, 'big',
                                   null, null, null, null, 'senderid');
 
-        // Conditionally launch add field headers
+        // Conditionally launch add field headers.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // email savepoint reached
+        // Email savepoint reached.
         upgrade_plugin_savepoint(true, 2012092600, 'local', 'email');
     }
 

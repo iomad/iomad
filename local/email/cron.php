@@ -19,15 +19,15 @@ require_once('lib.php');
 
 global $DB;
 
-// delete emails older than 6 months to prevent the email table from clogging up the database
-$halfyearagoish = time() - 6*30*24*60*60;
+// Delete emails older than 6 months to prevent the email table from clogging up the database.
+$halfyearagoish = time() - 6 * 30 * 24 * 60 * 60;
 $DB->delete_records_select('email', "modifiedtime < $halfyearagoish");
 
-// send emails
+// Send emails.
 if ($emails = $DB->get_records('email', array('sent' => null), null, '*')) {
     foreach ($emails as $email) {
         EmailTemplate::send_to_user($email);
-        // adding a sleep to ensure there is no processing confusion.
+        // Adding a sleep to ensure there is no processing confusion.
         sleep(1);
 
         $email->modifiedtime = $email->sent = time();

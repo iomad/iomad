@@ -14,22 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// this script is run after the dashboard has been installed
+// This script is run after the dashboard has been installed.
 
 function xmldb_local_iomad_install() {
     global $CFG, $DB;
 
     $systemcontext = get_context_instance(CONTEXT_SYSTEM);
 
-    // create new Company Manager role
-    if (!$companymanager = $DB->get_record( 'role', array( 'shortname'=>'companymanager') )) {
+    // Create new Company Manager role.
+    if (!$companymanager = $DB->get_record( 'role', array( 'shortname' => 'companymanager') )) {
         $companymanagerid = create_role( 'Company Manager', 'companymanager',
         '(Iomad) Manages individual companies - can upload users etc.');
     } else {
         $companymanagerid = $companymanager->id;
     }
 
-    // if not done already, allow assignment at system context
+    // If not done already, allow assignment at system context.
     $levels = get_role_contextlevels( $companymanagerid );
     if (empty($levels)) {
         $level = new stdClass;
@@ -38,9 +38,9 @@ function xmldb_local_iomad_install() {
         $DB->insert_record( 'role_context_levels', $level );
     }
 
-    // create new Company Department Manager role
+    // Create new Company Department Manager role.
     if (!$companydepartmentmanager = $DB->get_record('role',
-                                     array( 'shortname'=>'companydepartmentmanager'))) {
+                                     array( 'shortname' => 'companydepartmentmanager'))) {
         $companydepartmentmanagerid = create_role('Company Department Manager',
         'companydepartmentmanager',
         'Iomad Manages departments within companies - can upload users etc.');
@@ -48,7 +48,7 @@ function xmldb_local_iomad_install() {
         $companydepartmentmanagerid = $companydepartmentmanager->id;
     }
 
-    // if not done already, allow assignment at system context
+    // If not done already, allow assignment at system context.
     $levels = get_role_contextlevels( $companydepartmentmanagerid );
     if (empty($levels)) {
         $level = new stdclass;
@@ -57,16 +57,16 @@ function xmldb_local_iomad_install() {
         $DB->insert_record( 'role_context_levels', $level );
     }
 
-    // create new Client Administrator role
+    // Create new Client Administrator role.
     if (!$clientadministrator = $DB->get_record('role',
-                                                 array('shortname'=>'clientadministrator'))) {
+                                                 array('shortname' => 'clientadministrator'))) {
         $clientadministratorid = create_role( 'Client Administrator', 'clientadministrator',
         '(Iomad) Manages site - can create new companies and add managers etc.');
     } else {
         $clientadministratorid = $clientadministrator->id;
     }
 
-    // if not done already, allow assignment at system context
+    // If not done already, allow assignment at system context.
     $levels = get_role_contextlevels( $clientadministratorid );
     if (empty($levels)) {
         $level = new stdclass();
@@ -75,16 +75,16 @@ function xmldb_local_iomad_install() {
         $DB->insert_record( 'role_context_levels', $level );
     }
 
-    // create new Client Course Editor role
+    // Create new Client Course Editor role.
     if (!$companycourseeditor = $DB->get_record('role',
-                                                 array('shortname'=>'companycourseeditor'))) {
+                                                 array('shortname' => 'companycourseeditor'))) {
         $companycourseeditorid = create_role( 'Client Course Editor', 'companycourseeditor',
         'Iomad Client Course Editor - can edit course content; add, delete, modify etc..');
     } else {
         $companycourseeditorid = $companycourseeditor->id;
     }
 
-    // if not done already, allow assignment at system context
+    // If not done already, allow assignment at system context.
     $levels = get_role_contextlevels( $companycourseeditorid );
     if (empty($levels)) {
         $level = new stdclass;
@@ -93,16 +93,16 @@ function xmldb_local_iomad_install() {
         $DB->insert_record( 'role_context_levels', $level );
     }
 
-    // create new Client Course Access role
+    // Create new Client Course Access role.
     if (!$companycoursenoneditor = $DB->get_record('role',
-                                                   array('shortname'=>'companycoursenoneditor'))) {
+                                                   array('shortname' => 'companycoursenoneditor'))) {
         $companycoursenoneditorid = create_role('Client Course Access', 'companycoursenoneditor',
         'Iomad Client Course Access - similar to the non-editing teacher role for client admin');
     } else {
         $companycoursenoneditorid = $companycoursenoneditor->id;
     }
 
-    // if not done already, allow assignment at system context
+    // If not done already, allow assignment at system context.
     $levels = get_role_contextlevels($clientadministratorid);
     if (empty($levels)) {
         $level = null;
@@ -111,7 +111,7 @@ function xmldb_local_iomad_install() {
         $DB->insert_record( 'role_context_levels', $level );
     }
 
-    // add capabilities to above
+    // Add capabilities to above.
     $clientadministratorcaps = array(
         'local/iomad_dashboard:view',
         'block/iomad_company_admin:assign_company_manager',
@@ -320,19 +320,19 @@ function xmldb_local_iomad_install() {
     }
 
     foreach ($companycourseeditorcaps as $rolecapability) {
-        //assign_capability will update rather than insert if capability exists
+        // Assign_capability will update rather than insert if capability exists.
         assign_capability($rolecapability, CAP_ALLOW, $companycourseeditorid,
                           $systemcontext->id);
     }
 
     foreach ($companycoursenoneditorcaps as $rolecapability) {
-        //assign_capability will update rather than insert if capability exists
+        // Assign_capability will update rather than insert if capability exists.
         assign_capability($rolecapability, CAP_ALLOW, $companycoursenoneditorid,
                           $systemcontext->id);
     }
 
-    // create custom user field for company (if not already existing)
-    if (!$DB->get_record('user_info_field', array('shortname'=>'company'))) {
+    // Create custom user field for company (if not already existing).
+    if (!$DB->get_record('user_info_field', array('shortname' => 'company'))) {
         $field = new stdClass;
         $field->shortname = 'company';
         $field->name = 'Company';
@@ -348,14 +348,14 @@ function xmldb_local_iomad_install() {
         $DB->insert_record('user_info_field', $field);
     }
 
-    // even worse - change the theme
+    // Even worse - change the theme.
     $theme = theme_config::load('iomad');
     set_config('theme', $theme->name);
 
-    // enable completion tracking
+    // Enable completion tracking.
     set_config('enablecompletion', 1);
 
-    // set the default blocks in courses
+    // Set the default blocks in courses.
     $defblocks = ':iomad_link,iomad_company_selector,iomad_online_users,completionstatus';
     set_config('defaultblocks_topics', $defblocks);
     set_config('defaultblocks_weeks', $defblocks);

@@ -21,7 +21,7 @@ class iomad {
     public static function is_company_user () {
         global $USER, $DB;
 
-        if ($usercompany = $DB->get_record('company_users', array('userid'=>$USER->id))) {
+        if ($usercompany = $DB->get_record('company_users', array('userid' => $USER->id))) {
             return $usercompany->companyid;
         } else {
             return false;
@@ -90,7 +90,7 @@ class iomad {
 
     public static function iomad_add_license_courses(&$mycourses) {
         global $DB, $CFG, $USER;
-        // get the list of courses the user has a valid license for but not already enroled in
+        // Get the list of courses the user has a valid license for but not already enroled in.
         if ($licensecourses = $DB->get_records_sql("SELECT * FROM {course} c
                                                     WHERE c.id IN (
                                                      SELECT clc.courseid
@@ -101,7 +101,7 @@ class iomad {
                                                      AND clu.isusing = 0
                                                     )", array('userid' => $USER->id))) {
             $mycourses = $mycourses + $licensecourses;
-            }
+        }
         return;
     }
 
@@ -123,7 +123,7 @@ class iomad {
                                                     csc.courseid=pc.courseid
                                                     AND csc.companyid = :companyid
                                                     AND pc.licensed = 0
-                                                   )', array('companyid'=>$company->id));
+                                                   )', array('companyid' => $company->id));
         } else {
             $sharedcourses = $DB->get_records_sql('SELECT * from {course} c
                                                    WHERE c.id IN (
@@ -156,10 +156,10 @@ class iomad {
         $eldcategories = array();
         foreach ($categories as $id => $category) {
 
-            // try to find category in company list
-            if ($company = $DB->get_record( 'company', array('category'=>$id) ) ) {
+            // Try to find category in company list.
+            if ($company = $DB->get_record( 'company', array('category' => $id) ) ) {
 
-                // if this is not the user's company then do not include
+                // If this is not the user's company then do not include.
                 if (!empty( $USER->company )) {
                     if ($USER->company->id == $company->id) {
                         $eldcategories[ $id ] = $category;
@@ -182,16 +182,16 @@ class iomad {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
-        // the basic category tree so just say yes
+        // the basic category tree so just say yes.
         if (during_initial_install() || is_siteadmin($USER->id)) {
             return true;
         }
 
         // Try to find the category in company list.
-        if (!empty($category->id) && $company = $DB->get_record( 'company', array('category'=>$category->id) ) ) {
+        if (!empty($category->id) && $company = $DB->get_record( 'company', array('category' => $category->id) ) ) {
 
             // If this is not the user's company then we return false.
-            if ($DB->get_record('company_users', array('userid'=>$USER->id, 'companyid'=>$company->id))) {
+            if ($DB->get_record('company_users', array('userid' => $USER->id, 'companyid' => $company->id))) {
                 // User is not assigned to this company - hide the category.
                 return true;
             } else {
@@ -206,16 +206,16 @@ class iomad {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
-        // the basic category tree so just say yes
+        // the basic category tree so just say yes.
         if (during_initial_install() || is_siteadmin($USER->id)) {
             return true;
         }
 
         // Try to find the category in company list.
-        if (!empty($categoryid) && $company = $DB->get_record( 'company', array('category'=>$categoryid) ) ) {
+        if (!empty($categoryid) && $company = $DB->get_record( 'company', array('category' => $categoryid) ) ) {
 
             // If this is not the user's company then we return false.
-            if ($DB->get_record('company_users', array('userid'=>$USER->id, 'companyid'=>$company->id))) {
+            if ($DB->get_record('company_users', array('userid' => $USER->id, 'companyid' => $company->id))) {
                 // User is not assigned to this company - hide the category.
                 return true;
             } else {
@@ -235,15 +235,15 @@ class iomad {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
-        // the basic category tree so just say yes
+        // the basic category tree so just say yes.
         if (during_initial_install() || is_siteadmin($USER->id)) {
             return true;
         }
 
         // Try to find the category in company list.
-        if (!empty($course->id) && $company = $DB->get_record( 'company_course', array('courseid'=>$course->id) ) ) {
+        if (!empty($course->id) && $company = $DB->get_record( 'company_course', array('courseid' => $course->id) ) ) {
             // If this is not the user's company then we return false.
-            if ($DB->get_record('company_users', array('userid'=>$USER->id, 'companyid'=>$company->companyid))) {
+            if ($DB->get_record('company_users', array('userid' => $USER->id, 'companyid' => $company->companyid))) {
                 // User is not assigned to this company - hide the category.
                 return true;
             } else {
@@ -254,44 +254,44 @@ class iomad {
         return true;
     }
 
-    static function add_user_filter_form($companyid) {
+    public static function add_user_filter_form($companyid) {
         require_once('userfilterform.php');
-        
-        $mform = new user_filter_form(null, array('companyid'=>$companyid));
-        
+
+        $mform = new user_filter_form(null, array('companyid' => $companyid));
+
         return $mform;
     }
 
-    static function add_user_filter_params(&$params, $companyid) {
+    public static function add_user_filter_params(&$params, $companyid) {
         global $DB, $CFG;
 
         $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
-        $lastname      = optional_param('lastname', '', PARAM_CLEAN);   //md5 confirmation hash
+        $lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
         $email  = optional_param('email', 0, PARAM_CLEAN);
         $sort         = optional_param('sort', 'name', PARAM_ALPHA);
         $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
         $page         = optional_param('page', 0, PARAM_INT);
-        $perpage      = optional_param('perpage', 30, PARAM_INT);        // how many per page
-        $search      = optional_param('search', '', PARAM_CLEAN);// search string
+        $perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page?
+        $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
         $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
-        $compfromraw = optional_param('compfrom', NULL, PARAM_RAW);
-        $comptoraw = optional_param('compto', NULL, PARAM_RAW);
-        
-        // process the params
+        $compfromraw = optional_param('compfrom', null, PARAM_RAW);
+        $comptoraw = optional_param('compto', null, PARAM_RAW);
+
+        // Process the params.
         $paramlist = array('firstname',
                            'lastname',
                            'email',
                            'search',
                            'compfrom',
                            'compto');
-        //  Get the company additional optional user parameter names
+        //  Get the company additional optional user parameter names.
         $fieldnames = array();
         $idlist = array();
         $foundfields = false;
-        
-        if ($companyinfo = $DB->get_record('company',array('id'=>$companyid))) {
-            // Get field names from company category
-            if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$companyinfo->profileid))) {
+
+        if ($companyinfo = $DB->get_record('company', array('id' => $companyid))) {
+            // Get field names from company category.
+            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $companyinfo->profileid))) {
                 foreach ($fields as $field) {
                     $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
                     ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname, null, PARAM_RAW);
@@ -299,7 +299,7 @@ class iomad {
             }
         }
 
-        //  Get the global optional user parameter names
+        //  Get the global optional user parameter names.
         if ($globalfields = $DB->get_records_sql("SELECT * from {user_info_field} WHERE
                                                   categoryid NOT IN (
                                                     SELECT profileid from {company}
@@ -315,28 +315,28 @@ class iomad {
             }
              $fields = $fields + $globalfields;
         }
-        
-        // Deal with the user optional profile search
+
+        // Deal with the user optional profile search.
         if (!empty($fieldnames)) {
             $fieldids = array();
             foreach ($fieldnames as $id => $fieldname) {
                 $paramarray = array();
                 if ($fields[$id]->datatype == "menu" ) {
-                   $paramarray = explode("\n", $fields[$id]->param1);
-                   if (!empty($paramarray[${$fieldname}])) {
-                       ${$fieldname} = $paramarray[${$fieldname}];
-                   }
+                    $paramarray = explode("\n", $fields[$id]->param1);
+                    if (!empty($paramarray[${$fieldname}])) {
+                        ${$fieldname} = $paramarray[${$fieldname}];
+                    }
                 }
                 if (!empty(${$fieldname}) ) {
                     $idlist[0] = "We found no one";
-                    $fieldsql = $DB->sql_compare_text('data')." like '%".${$fieldname}."%' AND fieldid = $id"; 
+                    $fieldsql = $DB->sql_compare_text('data')." like '%".${$fieldname}."%' AND fieldid = $id";
                     if ($idfields = $DB->get_records_sql("SELECT userid from {user_info_data} WHERE $fieldsql")) {
                         $fieldids[] = $idfields;
                     }
                     if (!empty($paramarray)) {
-                        $params[$fieldname]=array_search(${$fieldname}, $paramarray);
+                        $params[$fieldname] = array_search(${$fieldname}, $paramarray);
                     } else {
-                        $params[$fieldname]=${$fieldname};
+                        $params[$fieldname] = ${$fieldname};
                     }
                 }
             }
@@ -346,7 +346,9 @@ class iomad {
                 if (!empty($fieldids)) {
                     foreach ($fieldids as $fieldid) {
                         $idlist = array_intersect_key($idlist, $fieldid);
-                        if (empty($idlist)) { break; }
+                        if (empty($idlist)) {
+                            break;
+                        }
                     }
                 }
             }
@@ -358,95 +360,95 @@ class iomad {
         return $returnobj;
     }
 
-    static function get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid) {
+    public static function get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid) {
         global $DB, $CFG;
-        
+
         $sqlsort = " GROUP BY u.id, cc.timeenrolled, cc.timestarted, cc.timecompleted, d.name, gg.finalgrade";
-        $SQLSEARCH = "u.id != '-1'";
-        $SQLSEARCH .= " AND u.id NOT IN (".$CFG->siteadmins.")";
+        $sqlsearch = "u.id != '-1'";
+        $sqlsearch .= " AND u.id NOT IN (".$CFG->siteadmins.")";
         $returnobj = new stdclass();
 
-        // deal with search strings.
+        // Deal with search strings.
         $searchparams = array();
         if (!empty($idlist)) {
-            $SQLSEARCH .= " AND u.id IN (".implode(',',array_keys($idlist)).") ";
+            $sqlsearch .= " AND u.id IN (".implode(',', array_keys($idlist)).") ";
         }
         if (!empty($params['firstname'])) {
-            $SQLSEARCH .= " AND u.firstname LIKE :firstname ";
-            $searchparams['firstname']='%'.$params['firstname'].'%';
+            $sqlsearch .= " AND u.firstname LIKE :firstname ";
+            $searchparams['firstname'] = '%'.$params['firstname'].'%';
         }
-            
+
         if (!empty($params['lastname'])) {
-            $SQLSEARCH .= " AND u.lastname LIKE :lastname ";
-            $searchparams['lastname']='%'.$params['lastname'].'%';
+            $sqlsearch .= " AND u.lastname LIKE :lastname ";
+            $searchparams['lastname'] = '%'.$params['lastname'].'%';
         }
-            
+
         if (!empty($params['email'])) {
-            $SQLSEARCH .= " AND u.email LIKE :email ";
-            $searchparams['email']='%'.$params['email'].'%';
+            $sqlsearch .= " AND u.email LIKE :email ";
+            $searchparams['email'] = '%'.$params['email'].'%';
         }
-        
+
         if (!empty($params['compfrom'])) {
-            if ($compfromids = $DB->get_records_sql("SELECT userid FROM {course_completions} 
+            if ($compfromids = $DB->get_records_sql("SELECT userid FROM {course_completions}
                                                      WHERE course = :courseid AND timecompleted < :compfrom
                                                      AND timecompleted IS NOT NULL", $params)) {
-                $SQLSEARCH .= " AND u.id NOT IN (".implode(',',array_keys($compfromids)).") ";
+                $sqlsearch .= " AND u.id NOT IN (".implode(',', array_keys($compfromids)).") ";
             }
         }
 
         if (!empty($params['compto'])) {
-            if ($comptoids = $DB->get_records_sql("SELECT userid FROM {course_completions} 
+            if ($comptoids = $DB->get_records_sql("SELECT userid FROM {course_completions}
                                                    WHERE course = :courseid AND timecompleted > :compto", $params)) {
-                $SQLSEARCH .= " AND u.id NOT IN (".implode(',',array_keys($comptoids)).") ";
+                $sqlsearch .= " AND u.id NOT IN (".implode(',', array_keys($comptoids)).") ";
             }
         }
 
         // Deal with how we sort the data.
         switch($sort) {
             case "firstname":
-            $sqlsort .= " ORDER BY u.firstname $dir ";
+                $sqlsort .= " ORDER BY u.firstname $dir ";
             break;
             case "lastname":
-            $sqlsort .= " ORDER BY u.lastname $dir ";
+                $sqlsort .= " ORDER BY u.lastname $dir ";
             break;
             case "email":
-            $sqlsort .= " ORDER BY u.email $dir ";
+                $sqlsort .= " ORDER BY u.email $dir ";
             break;
             case "timeenrolled":
-            $sqlsort .= " ORDER BY cc.timeenrolled $dir ";
+                $sqlsort .= " ORDER BY cc.timeenrolled $dir ";
             break;
             case "timestarted":
-            $sqlsort .= " ORDER BY cc.timestarted $dir ";
+                $sqlsort .= " ORDER BY cc.timestarted $dir ";
             break;
             case "timecompleted":
-            $sqlsort .= " ORDER BY cc.timecompleted $dir ";
+                $sqlsort .= " ORDER BY cc.timecompleted $dir ";
             break;
             case "department":
-            $sqlsort .= " ORDER BY d.name $dir ";
+                $sqlsort .= " ORDER BY d.name $dir ";
             break;
             case "vantage":
-            $sqlsort .= " ORDER BY uid.data $dir ";
+                $sqlsort .= " ORDER BY uid.data $dir ";
             break;
             case "finalscore":
-            $sqlsort .= " ORDER BY gg.finalgrade $dir ";
+                $sqlsort .= " ORDER BY gg.finalgrade $dir ";
             break;
         }
 
-        $returnobj->sqlsearch = $SQLSEARCH;
+        $returnobj->sqlsearch = $sqlsearch;
         $returnobj->sqlsort = $sqlsort;
         $returnobj->searchparams = $searchparams;
         $returnobj->departmentid = $departmentid;
         return $returnobj;
     }
 
-    static function get_course_summary_info($departmentid, $courseid=0) {
+    public static function get_course_summary_info($departmentid, $courseid=0) {
         global $DB;
 
-        // create a temporary table to hold the userids.
+        // Create a temporary table to hold the userids.
         $temptablename = 'tmp_csum_users_'.time();
         $dbman = $DB->get_manager();
 
-        /// Define table user to be created
+        // Define table user to be created.
         $table = new xmldb_table($temptablename);
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null);
@@ -454,7 +456,7 @@ class iomad {
 
         $dbman->create_temp_table($table);
 
-        // populate it.
+        // Populate it.
         $alldepartments = company::get_all_subdepartments($departmentid);
         if (count($alldepartments) > 0 ) {
             $tempcreatesql = "INSERT INTO {".$temptablename."} (userid) SELECT userid from {company_users}
@@ -464,7 +466,7 @@ class iomad {
         }
         $DB->execute($tempcreatesql);
 
-        // all or one course?
+        // All or one course?
         $courses = array();
         if (!empty($courseid)) {
             $courses[$courseid] = new stdclass();
@@ -473,7 +475,7 @@ class iomad {
             $courses = company::get_recursive_department_courses($departmentid);
         }
 
-        // process them!
+        // Process them!
         $returnarr = array();
         foreach ($courses as $course) {
             $courseobj = new stdclass();
@@ -481,24 +483,24 @@ class iomad {
             $courseobj->numenrolled = $DB->count_records_sql("SELECT COUNT(cc.id) FROM {course_completions} cc
                                                    JOIN {".$temptablename."} tt ON (cc.userid = tt.userid)
                                                    WHERE
-                                                   cc.course = :course", array('course'=>$course->courseid));
+                                                   cc.course = :course", array('course' => $course->courseid));
             $courseobj->numnotstarted = $DB->count_records_sql("SELECT COUNT(cc.id) FROM {course_completions} cc
                                                    JOIN {".$temptablename."} tt ON (cc.userid = tt.userid)
                                                    WHERE
                                                    cc.course = :course AND
-                                                   cc.timestarted = 0", array('course'=>$course->courseid));
+                                                   cc.timestarted = 0", array('course' => $course->courseid));
             $courseobj->numstarted = $DB->count_records_sql("SELECT COUNT(cc.id) FROM {course_completions} cc
                                                    JOIN {".$temptablename."} tt ON (cc.userid = tt.userid)
                                                    WHERE
                                                    cc.course = :course AND
-                                                   cc.timestarted != 0", array('course'=>$course->courseid));
+                                                   cc.timestarted != 0", array('course' => $course->courseid));
             $courseobj->numcompleted = $DB->count_records_sql("SELECT COUNT(cc.id) FROM {course_completions} cc
                                                    JOIN {".$temptablename."} tt ON (cc.userid = tt.userid)
                                                    WHERE
                                                    cc.course = :course AND
-                                                   cc.timecompleted IS NOT NULL", array('course'=>$course->courseid));
+                                                   cc.timecompleted IS NOT NULL", array('course' => $course->courseid));
 
-            if (!$courseobj->coursename = $DB->get_field('course', 'fullname', array('id'=>$course->courseid))) {
+            if (!$courseobj->coursename = $DB->get_field('course', 'fullname', array('id' => $course->courseid))) {
                 continue;
             }
             $returnarr[$course->courseid] = $courseobj;
@@ -506,16 +508,16 @@ class iomad {
         return $returnarr;
     }
 
-    static function get_user_course_completion_data($searchinfo, $courseid, $page=0, $perpage=0) {
+    public static function get_user_course_completion_data($searchinfo, $courseid, $page=0, $perpage=0) {
         global $DB;
-        
+
         $completiondata = new stdclass();
-        
-        // create a temporary table to hold the userids.
+
+        // Create a temporary table to hold the userids.
         $temptablename = 'tmp_ccomp_users_'.time();
         $dbman = $DB->get_manager();
 
-        /// Define table user to be created
+        // Define table user to be created.
         $table = new xmldb_table($temptablename);
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null);
@@ -523,7 +525,7 @@ class iomad {
 
         $dbman->create_temp_table($table);
 
-        // populate it.
+        // Populate it.
         $alldepartments = company::get_all_subdepartments($searchinfo->departmentid);
         if (count($alldepartments) > 0 ) {
             $tempcreatesql = "INSERT INTO {".$temptablename."} (userid) SELECT userid from {company_users}
@@ -533,8 +535,8 @@ class iomad {
         }
         $DB->execute($tempcreatesql);
 
-        // get the user details
-        if ($vantagefield = $DB->get_record('user_info_field', array('shortname'=>'VANTAGE'))) {
+        // Get the user details.
+        if ($vantagefield = $DB->get_record('user_info_field', array('shortname' => 'VANTAGE'))) {
             $countsql = "SELECT COUNT(u.id) ";
             $selectsql = "SELECT u.id,
                     u.firstname AS firstname,
@@ -546,13 +548,15 @@ class iomad {
                     d.name as department,
                     gg.finalgrade as result,
                     uid.data as vantage ";
-            $fromsql = " FROM {user} u, {course_completions} cc, {department} d, {company_users} du, {user_info_data} uid, {".$temptablename."} tt
-                    LEFT JOIN {grade_grades} gg ON ( gg.itemid = (SELECT id FROM {grade_items} WHERE courseid = $courseid AND itemtype='course'))
-    
+            $fromsql = " FROM {user} u, {course_completions} cc, {department} d, {company_users} du,
+                         {user_info_data} uid, {".$temptablename."} tt
+                         LEFT JOIN {grade_grades} gg ON ( gg.itemid = (
+                           SELECT id FROM {grade_items} WHERE courseid = $courseid AND itemtype='course'))
+
                     WHERE $searchinfo->sqlsearch
                     AND tt.userid = u.id
                     AND cc.course = :courseid
-                    AND u.id = cc.userid 
+                    AND u.id = cc.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
                     AND gg.userid = u.id
@@ -571,12 +575,13 @@ class iomad {
                     d.name as department,
                     gg.finalgrade as result ";
             $fromsql = " FROM {user} u, {course_completions} cc, {department} d, {company_users} du, {".$temptablename."} tt
-                    LEFT JOIN {grade_grades} gg ON ( gg.itemid = (SELECT id FROM {grade_items} WHERE courseid = $courseid AND itemtype='course'))
-    
+                         LEFT JOIN {grade_grades} gg ON ( gg.itemid = (
+                           SELECT id FROM {grade_items} WHERE courseid = $courseid AND itemtype='course'))
+
                     WHERE $searchinfo->sqlsearch
                     AND tt.userid = u.id
                     AND cc.course = :courseid
-                    AND u.id = cc.userid 
+                    AND u.id = cc.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
                     AND gg.userid = u.id

@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// this cannot call Moodle's config.php
-// which makes things interesting
+// This cannot call Moodle's config.php
+// which makes things interesting.
 
 require_once('lib.php' );
 
-// get the data
+// Get the data.
 $data = new stdClass;
 $data->notstarted = $_GET['notstarted'];
 $data->inprogress = $_GET['inprogress'];

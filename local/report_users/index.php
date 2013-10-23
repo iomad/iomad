@@ -16,22 +16,22 @@
 
 require_once('../../config.php');
 require_once( dirname('__FILE__').'/lib.php');
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE
+require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
-$lastname      = optional_param('lastname', '', PARAM_CLEAN);   //md5 confirmation hash
+$lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
 $email  = optional_param('email', 0, PARAM_CLEAN);
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-// how many per page
+// How many per page.
 $perpage      = optional_param('perpage', 30, PARAM_INT);
-// id of user to tweak mnet ACL (requires $access)
+// Id of user to tweak mnet ACL (requires $access).
 $acl          = optional_param('acl', '0', PARAM_INT);
-$search      = optional_param('search', '', PARAM_CLEAN);// search string
+$search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
 
 $params = array();
@@ -68,25 +68,25 @@ if ($departmentid) {
 $systemcontext = get_context_instance(CONTEXT_SYSTEM);
 
 
-// Correct the navbar
-// Set the name for the page
-$linktext=get_string('report_users_title', 'local_report_users');
+// Correct the navbar.
+// Set the name for the page.
+$linktext = get_string('report_users_title', 'local_report_users');
 
-// set the url
+// Set the url.
 $linkurl = new moodle_url('/local/report_users/index.php');
 
-//build the nav bar
+// Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
-// Print the page header
+// Print the page header.
 $blockpage = new blockpage($PAGE, $OUTPUT, 'report_users', 'local', 'report_users_title');
 $blockpage->setup();
 
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT
+require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 
 $blockpage->display_header();
 
-// set the companyid to bypass the company select form if possible
+// Set the companyid to bypass the company select form if possible.
 if (!empty($SESSION->currenteditingcompany)) {
     $companyid = $SESSION->currenteditingcompany;
 } else if (!empty($USER->company)) {
@@ -99,16 +99,16 @@ if (!empty($SESSION->currenteditingcompany)) {
 }
 
 
-// get the associated department id
+// Get the associated department id.
 $company = new company($companyid);
 $parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
-//  Get the company additional optional user parameter names
+// Get the company additional optional user parameter names.
 $fieldnames = array();
 if ($category = company::get_category($companyid)) {
-    // Get field names from company category
-    if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->id))) {
+    // Get field names from company category.
+    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
         foreach ($fields as $field) {
             $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
             ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.
@@ -117,7 +117,7 @@ if ($category = company::get_category($companyid)) {
     }
 }
 
-// Deal with the user optional profile search
+// Deal with the user optional profile search.
 $urlparams = $params;
 $idlist = array();
 $foundfields = false;
@@ -140,14 +140,14 @@ if (!empty($fieldnames)) {
                 $fieldids[] = $idfields;
             }
             if (!empty($paramarray)) {
-                $params[$fieldname]=array_search(${$fieldname}, $paramarray);
-                $urlparams[$fieldname]=array_search(${$fieldname}, $paramarray);
+                $params[$fieldname] = array_search(${$fieldname}, $paramarray);
+                $urlparams[$fieldname] = array_search(${$fieldname}, $paramarray);
             } else {
                 if (!is_array(${$fieldname})) {
-                    $params[$fieldname]=${$fieldname};
-                    $urlparams[$fieldname]=${$fieldname};
+                    $params[$fieldname] = ${$fieldname};
+                    $urlparams[$fieldname] = ${$fieldname};
                 } else {
-                    $params[$fieldname]=${$fieldname};
+                    $params[$fieldname] = ${$fieldname};
                     $urlparams[$fieldname] = serialize(${$fieldname});
                 }
             }
@@ -180,26 +180,26 @@ if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
 
-// get the appropriate list of departments
+// Get the appropriate list of departments.
 $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_iomad_company_admin');
 $select->formid = 'choosedepartment';
-echo html_writer::tag('div', $OUTPUT->render($select), array('id'=>'iomad_department_selector'));
+echo html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_department_selector'));
 $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select),
-                                    array('id'=>'iomad_company_selector'));
+                                    array('id' => 'iomad_company_selector'));
 if (!(has_capability('block/iomad_company_admin:editusers', $systemcontext)
     or has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
     print_error('nopermissions', 'error', '', 'edit/delete users');
 }
 
 // Set up the filter form.
-$mform = new iomad_user_filter_form(null, array('companyid'=>$companyid));
-$mform->set_data(array('departmentid'=>$departmentid));
+$mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
+$mform->set_data(array('departmentid' => $departmentid));
 $mform->set_data($params);
 
 
-// Display the user filter form
+// Display the user filter form.
 $mform->display();
 
 $stredit   = get_string('edit');
@@ -216,7 +216,7 @@ if (empty($CFG->loginhttps)) {
 $returnurl = $CFG->wwwroot."/local/report_users/index.php";
 
 
-// Carry on with the user listing
+// Carry on with the user listing.
 
 $columns = array("firstname", "lastname", "department", "email", "city", "country", "lastaccess");
 
@@ -246,22 +246,22 @@ if ($sort == "name") {
     $sort = "firstname";
 }
 
-// get all or company users depending on capability
+// Get all or company users depending on capability.
 
 $dbsort = "";
-//  Check if has capability edit all users
+// Check if has capability edit all users.
 if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
-    // check we havent looked and discounted everyone
+    // Check we havent looked and discounted everyone.
     if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
-        // make sure we dont display site admins
-        // Set default search to something which cant happen
+        // Make sure we dont display site admins.
+        // Set default search to something which cant happen.
         $sqlsearch = "userid!='-1'";
         $siteadmins = explode(" ", $CFG->siteadmins);
         foreach ($siteadmins as $siteadmin) {
             $sqlsearch .= " AND userid!='$siteadmin'";
         }
 
-        // get department users
+        // Get department users.
         $departmentusers = company::get_recursive_department_users($departmentid);
         if ( count($departmentusers) > 0 ) {
             $departmentids = "";
@@ -277,24 +277,24 @@ if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
             $sqlsearch = "1 = 0";
         }
 
-        // deal with search strings.
+        // Deal with search strings..
         $searchparams = array();
         if (!empty($idlist)) {
             $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
         }
         if (!empty($params['firstname'])) {
             $sqlsearch .= " AND firstname like :firstname ";
-            $searchparams['firstname']='%'.$params['firstname'].'%';
+            $searchparams['firstname'] = '%'.$params['firstname'].'%';
         }
 
         if (!empty($params['lastname'])) {
             $sqlsearch .= " AND lastname like :lastname ";
-            $searchparams['lastname']='%'.$params['lastname'].'%';
+            $searchparams['lastname'] = '%'.$params['lastname'].'%';
         }
 
         if (!empty($params['email'])) {
             $sqlsearch .= " AND email like :email ";
-            $searchparams['email']='%'.$params['email'].'%';
+            $searchparams['email'] = '%'.$params['email'].'%';
         }
 
         switch($sort) {
@@ -313,18 +313,18 @@ if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
             break;
         }
 
-        // Get the user records
+        // Get the user records.
         $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
     } else {
         $userrecords = array();
     }
 
 } else if (has_capability('block/iomad_company_admin:editusers', $systemcontext)) {
-    // check if has role edit company users
+    // Check if has role edit company users.
 
-    // check we havent looked and discounted everyone
+    // Check we havent looked and discounted everyone.
     if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
-        // Get users company association
+        // Get users company association.
         $departmentusers = company::get_recursive_department_users($departmentid);
         if ( count($departmentusers) > 0 ) {
             $departmentids = "";
@@ -339,24 +339,24 @@ if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
         } else {
             $sqlsearch = "1 = 0";
         }
-        // deal with search strings.
+        // Deal with search strings.
         $searchparams = array();
         if (!empty($idlist)) {
             $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
         }
         if (!empty($params['firstname'])) {
             $sqlsearch .= " AND firstname like :firstname ";
-            $searchparams['firstname']='%'.$params['firstname'].'%';
+            $searchparams['firstname'] = '%'.$params['firstname'].'%';
         }
 
         if (!empty($params['lastname'])) {
             $sqlsearch .= " AND lastname like :lastname ";
-            $searchparams['lastname']='%'.$params['lastname'].'%';
+            $searchparams['lastname'] = '%'.$params['lastname'].'%';
         }
 
         if (!empty($params['email'])) {
             $sqlsearch .= " AND email like :email ";
-            $searchparams['email']='%'.$params['email'].'%';
+            $searchparams['email'] = '%'.$params['email'].'%';
         }
 
         switch($sort) {
@@ -386,7 +386,7 @@ if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
         $userrecords = array();
     }
 }
-$userlist="";
+$userlist = "";
 if (!empty($userrecords)) {
     $userlist = " u.id in (". implode(',', array_values($userrecords)).") ";
 }
@@ -404,9 +404,9 @@ if (!empty($userlist)) {
                                    FROM {user} u, {department} d, {company_users} cu
                                    WHERE u.deleted <> 1 AND $userlist
                                    AND cu.userid = u.id AND cu.departmentid = d.id
-                                   $dbsort", array(), $page*$perpage, $perpage);
+                                   $dbsort", array(), $page * $perpage, $perpage);
 } else {
-    $users=array();
+    $users = array();
 }
 $usercount = count($userrecords);
 
@@ -435,7 +435,7 @@ if (!$users) {
             $users[$key]->country = $countries[$user->country];
         }
     }
-    if ($sort == "country") {  // Need to resort by full country name, not code
+    if ($sort == "country") {  // Need to resort by full country name, not code.
         foreach ($users as $user) {
             $susers[$user->id] = $user->country;
         }
@@ -447,7 +447,7 @@ if (!$users) {
     }
 
     $mainadmin = get_admin();
-    // set the initial parameters for the table header links.
+    // Set the initial parameters for the table header links.
     $linkparams = $urlparams;
 
     $override = new object();
@@ -457,87 +457,87 @@ if (!$users) {
     if (($CFG->fullnamedisplay == 'firstname lastname') or
         ($CFG->fullnamedisplay == 'firstname') or
         ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'firstname lastname' )) {
-        // work out for name sorting/direction and links
-        // set the defaults
-        $linkparams['dir']='ASC';
-        $linkparams['sort']='firstname';
+        // Work out for name sorting/direction and links.
+        // Set the defaults.
+        $linkparams['dir'] = 'ASC';
+        $linkparams['sort'] = 'firstname';
         $firstnameurl = new moodle_url('index.php', $linkparams);
-        $linkparams['sort']='lastname';
+        $linkparams['sort'] = 'lastname';
         $lastnameurl = new moodle_url('index.php', $linkparams);
-        $linkparams['sort']='department';
+        $linkparams['sort'] = 'department';
         $departmenturl = new moodle_url('index.php', $linkparams);
-        $linkparams['sort']='email';
+        $linkparams['sort'] = 'email';
         $emailurl = new moodle_url('index.php', $linkparams);
-        $linkparams['sort']='lastaccess';
+        $linkparams['sort'] = 'lastaccess';
         $accessurl = new moodle_url('index.php', $linkparams);
-        $linkparams['sort']='city';
+        $linkparams['sort'] = 'city';
         $cityurl = new moodle_url('index.php', $linkparams);
-        $linkparams['sort']='country';
+        $linkparams['sort'] = 'country';
         $countryurl = new moodle_url('index.php', $linkparams);
 
-        // set the options if there is alread a sort
+        // Set the options if there is alread a sort.
         if (!empty($params['sort'])) {
             if ($params['sort'] == 'firstname') {
                 $linkparams['sort'] = 'firstname';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $firstnameurl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $firstnameurl = new moodle_url('index.php', $linkparams);
                 }
             } else if ($params['sort'] == 'lastname') {
                 $linkparams['sort'] = 'lastname';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $lastnameurl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $lastnameurl = new moodle_url('index.php', $linkparams);
                 }
             } else if ($params['sort'] == 'department') {
                 $linkparams['sort'] = 'department';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $departmenturl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $emailurl = new moodle_url('index.php', $linkparams);
                 }
             } else if ($params['sort'] == 'email') {
                 $linkparams['sort'] = 'email';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $emailurl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $emailurl = new moodle_url('index.php', $linkparams);
                 }
             } else if ($params['sort'] == 'lastaccess') {
                 $linkparams['sort'] = 'lastaccess';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $accessurl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $accessurl = new moodle_url('index.php', $linkparams);
                 }
             } else if ($params['sort'] == 'country') {
                 $linkparams['sort'] = 'country';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $countryurl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $countryurl = new moodle_url('index.php', $linkparams);
                 }
             } else if ($params['sort'] == 'city') {
                 $linkparams['sort'] = 'city';
                 if ($params['dir'] == 'ASC') {
-                    $linkparams['dir']='DESC';
+                    $linkparams['dir'] = 'DESC';
                     $cityurl = new moodle_url('index.php', $linkparams);
                 } else {
-                    $linkparams['dir']='ASC';
+                    $linkparams['dir'] = 'ASC';
                     $cityurl = new moodle_url('index.php', $linkparams);
                 }
             }
@@ -559,7 +559,7 @@ if (!$users) {
     $table->width = "95%";
     foreach ($users as $user) {
         if ($user->username == 'guest') {
-            continue; // do not dispaly dummy new user and guest here
+            continue; // Do not dispaly dummy new user and guest here.
         }
 
 

@@ -21,18 +21,18 @@ require_once('select_form.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once('lib.php');
 
-//  deal with the params
+// Deal with the params.
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $participant = optional_param('participant', 0, PARAM_INT);
 $dodownload = optional_param('dodownload', 0, PARAM_INT);
 $departmentid = optional_param('departmentid', 0, PARAM_INT);
 
-// Check permissions
+// Check permissions.
 require_login($SITE);
-$context=get_context_instance(CONTEXT_SYSTEM);
+$context = get_context_instance(CONTEXT_SYSTEM);
 require_capability('local/report_attendance:view', $context);
 
-// set the companyid to bypass the company select form if possible
+// Set the companyid to bypass the company select form if possible.
 if (!empty($SESSION->currenteditingcompany)) {
     $companyid = $SESSION->currenteditingcompany;
 } else if (!empty($USER->company)) {
@@ -45,7 +45,7 @@ if (!empty($SESSION->currenteditingcompany)) {
                             'Please select a company from the dropdown first');
 }
 
-// get the associated department id
+// Get the associated department id.
 $company = new company($companyid);
 $parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
@@ -62,40 +62,34 @@ if ($departmentid == 0 ) {
 }
 
 
-// url stuff
+// Url stuff.
 $url = new moodle_url('/local/report_attendance/index.php');
 $dashboardurl = new moodle_url('/local/iomad_dashboard/index.php');
 
-//page stuff:
+// Page stuff:.
 $strcompletion = get_string('pluginname', 'local_report_attendance');
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('report');
 $PAGE->set_title($strcompletion);
 $PAGE->set_heading($SITE->fullname);
 $PAGE->requires->css("/local/report_attendance/styles.css");
-//$PAGE->navbar->add(get_string('pluginname', 'local_report_attendance'), $url );
-// set the url
+// Set the url.
 company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
 
-/*// TODO: Make sure current user is allowed to view the selected company
-if (!attendancerep::confirm_user_company( $USER, $companyid )) {
-    print_error( 'You do not have access to this company' );
-}*/
-
-// create data for form
+// Create data for form.
 $customdata = null;
 $options = array();
-$options['dodownload']=1;
+$options['dodownload'] = 1;
 if (!empty($courseid)) {
     $options['courseid'] = $courseid;
 }
 
-// only print the header if we are not downloading.
+// Only print the header if we are not downloading.
 if (empty($dodownload)) {
     echo $OUTPUT->header();
 }
 
-//  Get the courses which have the classroom module in them
+// Get the courses which have the classroom module in them.
 $courses = attendancerep::courseselectlist($companyid);
 $courseselect = new single_select($url, 'courseid', $courses, $courseid);
 $courseselect->label = get_string('course');
@@ -103,10 +97,10 @@ $courseselect->formid = 'choosecourse';
 if (empty($dodownload)) {
     echo html_writer::tag('div',
                            $OUTPUT->render($courseselect),
-                           array('id'=>'iomad_course_selector'));
+                           array('id' => 'iomad_course_selector'));
 }
 
-// get the department users who are on the course
+// Get the department users who are on the course.
 $allowedusers = company::get_recursive_department_users($departmentid);
 $allowedlist = "";
 foreach ($allowedusers as $alloweduser) {
@@ -119,12 +113,12 @@ foreach ($allowedusers as $alloweduser) {
 
 if (!empty($courseid)) {
     if (empty($dodownload)) {
-        // get the events from this course and display them as a table
-        $events = $DB->get_records('courseclassroom', array('course'=>$courseid));
+        // Get the events from this course and display them as a table.
+        $events = $DB->get_records('courseclassroom', array('course' => $courseid));
         foreach ($events as $event) {
             $eventtable = new html_table();
-            $location = $DB->get_record('classroom', array('id'=>$event->classroomid));
-            $eventtable->align=array('left', 'left');
+            $location = $DB->get_record('classroom', array('id' => $event->classroomid));
+            $eventtable->align = array('left', 'left');
             $eventtable->width = '50%';
             echo "<h2>".get_string('event', 'local_report_attendance'). " " .$event->name."</h2>";
             foreach ($location as $key => $value) {
@@ -149,7 +143,7 @@ if (!empty($courseid)) {
                                                WHERE courseclassroomid='.$event->id.'
                                                AND userid IN ('.$allowedlist.')')) {
                 foreach ($users as $user) {
-                    $fulluserdata = $DB->get_record('user', array('id'=>$user->id));
+                    $fulluserdata = $DB->get_record('user', array('id' => $user->id));
                     $fulluserdata->department = company_user::get_department_name($user->id);
                     $fullusername = $fulluserdata->firstname.' '.$fulluserdata->lastname;
                     $attendancetable->data[] = array($fullusername,
@@ -159,17 +153,17 @@ if (!empty($courseid)) {
             }
             echo "<h3>".get_string('attendance', 'local_report_attendance')."</h3>";
             echo $OUTPUT->single_button(new moodle_url('index.php',
-                                            array('courseid'=>$courseid,
-                                                  'dodownload'=>$event->id)),
+                                            array('courseid' => $courseid,
+                                                  'dodownload' => $event->id)),
                                             get_string("downloadcsv", 'local_report_attendance'));
             echo html_writer::table($attendancetable);
         }
     } else {
-        if (!$event = $DB->get_record('courseclassroom', array('id'=>$dodownload))) {
+        if (!$event = $DB->get_record('courseclassroom', array('id' => $dodownload))) {
             die;
         }
-        $location = $DB->get_record('classroom', array('id'=>$event->classroomid));
-        // output everything to a file
+        $location = $DB->get_record('classroom', array('id' => $event->classroomid));
+        // Output everything to a file.
         header("Content-Type: application/download\n");
         header("Content-Disposition: attachment; filename=\"".$event->name.".csv\"");
         header("Expires: 0");
@@ -183,7 +177,7 @@ if (!empty($courseid)) {
                                            WHERE courseclassroomid='.$event->id.'
                                            AND userid IN ('.$allowedlist.')')) {
             foreach ($users as $user) {
-                $fulluserdata = $DB->get_record('user', array('id'=>$user->id));
+                $fulluserdata = $DB->get_record('user', array('id' => $user->id));
                 $fulluserdata->department = company_user::get_department_name($user->id);
                 $fullname = "$fulluserdata->firstname $fulluserdata->lastname";
                 echo "\"$fullname\", \"$fulluserdata->department\", \"$fulluserdata->email\"\n";

@@ -43,7 +43,7 @@ $string['send_emails'] = 'Send e-mails';
 $string['subject'] = 'Subject';
 $string['template_list_title'] = 'Email Templates';
 
-/**  Email templates */
+/* Email templates */
 $string['approval_subject'] = 'New course approval';
 $string['approval_body'] = 'You have been asked to approve access to course {Course_FullName} for {User_FirstName} {User_LastName}.
 please log onto {Site_FullName} ({LinkURL}) to approve or deny this request.';
@@ -61,7 +61,7 @@ Time : {Classroom_Time}
 Location : {Classroom_Name}
 Address : {Classroom_Address}
           {Classroom_City} {Classroom_Postcode}
-          
+
 please log onto {Site_FullName} ({SiteURL}) to approve or deny this request.';
 
 $string['course_classroom_approved_subject'] = 'Face to face training event approved';
@@ -80,7 +80,7 @@ Time : {Classroom_Time}
 Location : {Classroom_Name}
 Address : {Classroom_Address}
           {Classroom_City} {Classroom_Postcode}
-          
+
 You will be notified once your manager has approved or denied access.';
 
 $string['courseclassroom_approved_subject'] = 'You have been approved access to {Course_FullName}';
@@ -102,20 +102,20 @@ $string['invoice_ordercomplete_admin_subject'] = 'E-commerce order (invoice {Inv
 $string['invoice_ordercomplete_admin_body'] = 'Dear e-commerce admin
                The following order has just been submitted by {Invoice_FirstName} {Invoice_LastName} of {Invoice_Company}.
                An invoice has been sent to them via email.
-               
+
                {Invoice_Itemized}';
 
 $string['advertise_classroom_based_course_subject'] = 'Course {Course_FullName}';
 $string['advertise_classroom_based_course_body'] = 'This to let you know about the following classroom based course:
     {Course_FullName}
-    
+
     It will be in {Classroom_Name}, which is at
     {Classroom_Address}
     {Classroom_City} {Classroom_Postcode}
     {Classroom_Country}
-    
+
     and has a capacity of {Classroom_Capacity}.
-    
+
     Please click on {CourseURL} to find out more about this course and book on this event
 ';
 $string['user_signed_up_for_event_subject'] = 'Attendance Notice {Course_FullName}';
@@ -127,8 +127,8 @@ Time : {Classroom_Time}
 Location : {Classroom_Name}
 Address : {Classroom_Address}
           {Classroom_City} {Classroom_Postcode}
-          
-Please ensure you have completed an pre-course tasks required before attendance'; 
+
+Please ensure you have completed an pre-course tasks required before attendance';
 $string['user_removed_from_event_subject'] = 'Cancellation Notice {Course_FullName}';
 $string['user_removed_from_event_body'] = 'Dear {User_FirstName},
 
@@ -146,7 +146,7 @@ Once you have entered the course you will have access to it for {License_Length}
 $string['license_removed_subject'] = 'Access to course {Course_FullName} removed';
 $string['license_removed_body'] = 'Your access to course {Course_FullName} has been revoked.  If you feel this is in error, please contact your training manager';
 $string['password_update_subject'] = 'Password change notification for {User_FirstName}';
-$string['password_update_body'] = 'Your password has been updated by the administrative staff.  Your new password is 
+$string['password_update_body'] = 'Your password has been updated by the administrative staff.  Your new password is
 
 {User_Newpassword}
 

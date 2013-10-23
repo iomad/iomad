@@ -40,21 +40,21 @@ class blockpage {
 
     public function get_relative_url( $urlparams=null) {
         $relpath = $_SERVER['REQUEST_URI'];
-        // create list of any parameters
-        $paramlist="";
+        // Create list of any parameters.
+        $paramlist = "";
         if (!empty($urlparams)) {
-            $paramlist="?";
+            $paramlist = "?";
             foreach ($urlparams as $parameter => $value) {
                 $paramlist .= $parameter .'='. $value ."&";
             }
         }
-        // check $this->blocktype and make sure it works for block/blocks
+        // Check $this->blocktype and make sure it works for block/blocks.
         if ($this->blocktype == "block" ) {
             $myblockdir = 'blocks';
         } else {
             $myblockdir = $this->blocktype;
         }
-        // strip the querystring of the URL and anything before /blocks/
+        // Strip the querystring of the URL and anything before /blocks/.
         return preg_replace( "/^.*?\/". $myblockdir ."\/" . $this->blockname . "\//", "/" .
                               $myblockdir . "/" . $this->blockname . "/",
                               preg_replace("/\?.*$/", "", $relpath)) . $paramlist;
@@ -63,10 +63,10 @@ class blockpage {
     public function setup($urlparams=null) {
         global $USER;
 
-        // all iomad_company_admin pages require login
-        require_login(null, false); // Adds to $PAGE, creates $OUTPUT
+        // All iomad_company_admin pages require login.
+        require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 
-        // make sure a company user can not retrieve pages for other companies
+        // Make sure a company user can not retrieve pages for other companies.
         $companyid = optional_param('companyid', 0, PARAM_INTEGER);
         if ($companyid && !company_user::can_see_company($companyid)) {
             throw new Exception(self::get_string('notallowedtoaccessothercompaniesdata'));
@@ -102,31 +102,31 @@ class blockpage {
     public function add_to_settings_navigation() {
         global $USER, $DB;
 
-        // Create a new section in the settings menu
+        // Create a new section in the settings menu.
         $blocknode = $this->page->settingsnav->add(self::get_string('dashboard'),
                       "/local/iomad_dashboard/index.php");
 
-        // Force any existing settings menu section to be closed (by not forcing them to be open...)
+        // Force any existing settings menu section to be closed (by not forcing them to be open...).
         foreach ($this->page->settingsnav->children as $child) {
-            $child->forceopen=false;
+            $child->forceopen = false;
         }
 
-        // Make sure the dashboard menu set *is* open
+        // Make sure the dashboard menu set *is* open.
         $blocknode->forceopen = true;
 
         // Set the current pages relative url as the active url, so that the navigationlib will
-        // automatically highlight it in the menu
+        // automatically highlight it in the menu.
         $this->page->settingsnav->override_active_url(new moodle_url($this->get_relative_url()));
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-        // Get menu structure from database
+        // Get menu structure from database.
         $menuinfo = $DB->get_records('iomad_modules');
 
-        // Define the menu tree structure
+        // Define the menu tree structure.
         $pages = array();
 
         foreach ($menuinfo as $menuitem) {
-            // Fix URL as block type held in blocks directory
+            // Fix URL as block type held in blocks directory.
             if ($menuitem->module_type == 'block') {
                 $menuurl = '/blocks/'.$menuitem->module_name.'/'.$menuitem->menu_link;
             } else {
@@ -143,7 +143,7 @@ class blockpage {
         $this->add_tree_to_settings_navigation($blocknode, $pages, $context);
     }
 
-    // Loop over the children and add them to the parentnode if the user is allowed to use that page
+    // Loop over the children and add them to the parentnode if the user is allowed to use that page.
     public function add_tree_to_settings_navigation( $parentnode, $children, $context ) {
         foreach ($children as $child) {
 

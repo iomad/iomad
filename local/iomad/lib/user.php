@@ -79,35 +79,35 @@ class company_user {
         $passwordentered = isset($user->newpassword) && !empty($user->newpassword);
         $createpassword = !$passwordentered;
         $forcepasswordchange = $user->preference_auth_forcepasswordchange;
-        // store temp password unless password was entered and it's not going to be send by
-        // email nor is it going to be forced to change
+        // Store temp password unless password was entered and it's not going to be send by
+        // email nor is it going to be forced to change.
         $storetemppassword = !( $passwordentered && !$sendemail && !$forcepasswordchange );
 
         if ($passwordentered) {
-            $user->password = $user->newpassword;   // don't hash it, user_create_user will do that
+            $user->password = $user->newpassword;   // Don't hash it, user_create_user will do that.
         } else {
             $user->password = '';
         }
 
         $user->confirmed = 1;
         $user->mnethostid = 1;
-        $user->maildisplay = 0; // hide email addresses by default.
+        $user->maildisplay = 0; // Hide email addresses by default.
 
-        // create user record and return id
+        // Create user record and return id.
         $id = user_create_user($user);
         $user->id = $id;
 
-        // passwords will be created and sent out on cron
+        // Passwords will be created and sent out on cron.
         if ($createpassword) {
             set_user_preference('create_password', 1, $user->id);
             $user->newpassword = generate_password();
-            $course->id = 103;  // FAQ Course
+            $course->id = 103;  // FAQ Course.
             if (!empty($CFG->iomad_email_senderisreal)) {
-                EmailTemplate::send('user_create', array('user'=>$user, 'sender'=>$USER));
+                EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER));
             } else {
                 EmailTemplate::send('user_create',
-                                     array('user'=>$user,
-                                           'headers'=>serialize(array("To:". $user->email.", ".$USER->email))));
+                                     array('user' => $user,
+                                           'headers' => serialize(array("To:". $user->email.", ".$USER->email))));
             }
             $sendemail = false;
 
@@ -118,29 +118,29 @@ class company_user {
 
         if ($createpassword) {
             $DB->set_field('user', 'password', hash_internal_user_password($user->newpassword),
-                            array('id'=>$user->id));
+                            array('id' => $user->id));
         }
 
         if ($storetemppassword) {
-            // store password as temporary password, sendemail if necessary
+            // Store password as temporary password, sendemail if necessary.
             self::store_temporary_password($user, $sendemail, $user->newpassword);
         }
 
-        // attach user to company
-        // do we have a department?
+        // Attach user to company.
+        // Do we have a department?
         if (empty($data->departmentid)) {
-            $departmentinfo = $DB->get_record('department', array('company'=>$company->id, 'parent'=>0));
+            $departmentinfo = $DB->get_record('department', array('company' => $company->id, 'parent' => 0));
             $data->departmentid = $departmentinfo->id;
         }
-        // deal with unset variable.
+        // Deal with unset variable.
         if (empty($data->managertype)) {
-            $data->managertype=0;
+            $data->managertype = 0;
         }
         // Create the user association.
-        $DB->insert_record('company_users', array('userid'=>$user->id,
-                                                  'companyid'=>$company->id,
-                                                  'managertype'=>$data->managertype,
-                                                  'departmentid'=>$data->departmentid));
+        $DB->insert_record('company_users', array('userid' => $user->id,
+                                                  'companyid' => $company->id,
+                                                  'managertype' => $data->managertype,
+                                                  'departmentid' => $data->departmentid));
 
         if ( isset($data->selectedcourses) ) {
             self::enrol($user, array_keys($data->selectedcourses));
@@ -155,16 +155,16 @@ class company_user {
      * @param array $courseids
      * @return void
      */
-    public static function enrol($user, $courseids, $companyid=null, $rid=0) {
+    public static function enrol($user, $courseids, $companyid=null, $rid = 0) {
         global $DB;
-        // this function consists of code copied from uploaduser.php
+        // This function consists of code copied from uploaduser.php.
 
         $today = time();
         $today = make_timestamp(date('Y', $today), date('m', $today), date('d', $today), 0, 0, 0);
 
-        $manualcache  = array(); // cache of used manual enrol plugins in each course
+        $manualcache  = array(); // Cache of used manual enrol plugins in each course.
 
-        // we use only manual enrol plugin here, if it is disabled no enrol is done
+        // We use only manual enrol plugin here, if it is disabled no enrol is done.
         if (enrol_is_enabled('manual')) {
             $manual = enrol_get_plugin('manual');
         } else {
@@ -172,11 +172,11 @@ class company_user {
         }
 
         foreach ($courseids as $courseid) {
-            // check if course is shared
-            if (!$DB->get_record('iomad_courses', array('courseid'=>$courseid, 'shared'=>0))) {
-                $shared=true;
+            // Check if course is shared.
+            if (!$DB->get_record('iomad_courses', array('courseid' => $courseid, 'shared' => 0))) {
+                $shared = true;
             } else {
-                $shared=false;
+                $shared = false;
             }
             if (!isset($manualcache[$courseid])) {
                 if ($instances = enrol_get_instances($courseid, false)) {
@@ -186,13 +186,13 @@ class company_user {
                 }
             }
 
-            // set it to the default course roleid.
+            // Set it to the default course roleid.
             if (empty($rid)) {
                 $rid = $manualcache[$courseid]->roleid;
             }
 
             if ($rid) {
-                // find duration
+                // Find duration.
                 $timeend = 0;
                 $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today,
                                     $timeend, ENROL_USER_ACTIVE);
@@ -210,19 +210,19 @@ class company_user {
         global $DB, $PAGE;
 
         foreach ($courseids as $courseid) {
-            if (!$DB->get_record('iomad_courses', array('courseid'=>$courseid, 'shared'=>0))) {
-                $shared=true;
+            if (!$DB->get_record('iomad_courses', array('courseid' => $courseid, 'shared' => 0))) {
+                $shared = true;
             } else {
-                $shared=false;
+                $shared = false;
             }
-            $course = $DB->get_record('course', array('id'=>$courseid));
-            $course_enrolment_manager = new course_enrolment_manager($PAGE, $course);
+            $course = $DB->get_record('course', array('id' => $courseid));
+            $courseenrolmentmanager = new course_enrolment_manager($PAGE, $course);
 
-            $ues = $course_enrolment_manager->get_user_enrolments($user->id);
+            $ues = $courseenrolmentmanager->get_user_enrolments($user->id);
 
             foreach ($ues as $ue) {
                 if ( $ue->enrolmentinstance->courseid == $courseid ) {
-                    $course_enrolment_manager->unenrol_user($ue);
+                    $courseenrolmentmanager->unenrol_user($ue);
                     if ($shared) {
                         if (!empty($companyid)) {
                             company::remove_user_from_shared_course($courseid,
@@ -235,25 +235,25 @@ class company_user {
         }
     }
 
-    // generate a username based on the email address of the user
+    // Generate a username based on the email address of the user.
     public static function generate_username( $email ) {
         global $DB;
 
-        // first strip the domain name of the email address
-        $base_username = preg_replace( "/@.*/", "", $email );
-        $base_username = clean_param($base_username, PARAM_USERNAME);
-        $username = $base_username;
+        // First strip the domain name of the email address.
+        $baseusername = preg_replace( "/@.*/", "", $email );
+        $baseusername = clean_param($baseusername, PARAM_USERNAME);
+        $username = $baseusername;
 
-        // if the username already exists, try adding a random number
-        // $variant to protect against infinite loop
+        // If the username already exists, try adding a random number
+        // $variant to protect against infinite loop.
         $variant = $DB->count_records('user');
-        while ($variant-- && $DB->record_exists('user', array('username'=>$username))) {
-            $username = $base_username . rand(10, 99);
+        while ($variant-- && $DB->record_exists('user', array('username' => $username))) {
+            $username = $baseusername . rand(10, 99);
         }
 
         if ($variant == 0 ) {
-            // trying to make a sensible random username doesn't appear to work,
-            // use the entire email address
+            // Trying to make a sensible random username doesn't appear to work,
+            // use the entire email address.
             $username = clean_param($email, PARAM_USERNAME);
         }
 
@@ -269,7 +269,7 @@ class company_user {
         if ( get_user_preferences('create_password', false, $user) ) {
             $newpassword = generate_password();
             $DB->set_field('user', 'password', hash_internal_user_password($newpassword),
-                            array('id'=>$user->id));
+                            array('id' => $user->id));
             self::store_temporary_password($user, $sendemail, $newpassword);
         }
     }
@@ -281,13 +281,13 @@ class company_user {
 
         if ( $sendemail ) {
             $user->newpassword = $temppassword;
-            $course->id = 103;  // FAQ Course
+            $course->id = 103;  // FAQ Course.
             if (!empty($CFG->iomad_email_senderisreal)) {
-                EmailTemplate::send('user_create', array('user'=>$user, 'sender'=>$USER));
+                EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER));
             } else {
                 EmailTemplate::send('user_create',
-                                     array('user'=>$user,
-                                     'headers'=>serialize(array("To:". $user->email.", ".$USER->email))));
+                                     array('user' => $user,
+                                     'headers' => serialize(array("To:". $user->email.", ".$USER->email))));
             }
         } else {
             unset_user_preference('iomad_send_password', $user);
@@ -327,12 +327,12 @@ class company_user {
             return true;
         }
 
-        // if companyid was passed in, retrieve the company object
+        // If companyid was passed in, retrieve the company object.
         if ( is_integer($company) ) {
             $company = new company($company);
         }
 
-        // if company object, retrieve the shortname, otherwise assume the shortname was passed in
+        // If company object, retrieve the shortname, otherwise assume the shortname was passed in.
         if ( is_object($company) ) {
             if ( isset($company->shortname) ) {
                 $shortname = $company->shortname;
@@ -368,13 +368,13 @@ class company_user {
         iomad::load_company();
     }
 
-    // when the shortname of a company is changed,
+    // When the shortname of a company is changed,
     // all users that reference the company using the shortname need
-    // to have these references updated
+    // to have these references updated.
     public static function update_company_reference($oldshortname, $newshortname) {
         global $DB, $USER;
 
-        // no longer required as not using the profile any more.
+        // No longer required as not using the profile any more.
         /*if (isset($newshortname) && $newshortname != "" && isset($oldshortname)
             && $oldshortname != "") {
             $sql = "UPDATE {user_info_data}
@@ -389,7 +389,7 @@ class company_user {
         }*/
     }
 
-    // Returns the department name the user is assigned to
+    // Returns the department name the user is assigned to.
     public static function get_department_name($userid) {
         global $DB;
         if (!$userdepartment = $DB->get_field_sql("SELECT d.name
@@ -399,7 +399,7 @@ class company_user {
                                                    d.id = cu.departmentid
                                                    AND
                                                    cu.userid = :userid",
-                                                   array('userid'=>$userid))) {
+                                                   array('userid' => $userid))) {
             $userdepartment = "";
         }
         return $userdepartment;
@@ -434,7 +434,7 @@ class iomad_user_filter_form extends moodleform {
                                              WHERE c.id = '.$this->_customdata['companyid'].'
                                              AND c.profileid=uic.id')) {
             // Get fields from company category.
-            if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->id))) {
+            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
