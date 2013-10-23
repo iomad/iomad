@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -35,15 +34,15 @@ define("COURSECLASSROOM_MAX_NAME_LENGTH", 50);
  * @return string
  */
 function get_trainingevent_name($trainingevent) {
-    
-    $name = strip_tags(format_string($trainingevent->intro,true));
+
+    $name = strip_tags(format_string($trainingevent->intro, true));
     if (textlib::strlen($name) > COURSECLASSROOM_MAX_NAME_LENGTH) {
         $name = textlib::substr($name, 0, COURSECLASSROOM_MAX_NAME_LENGTH)."...";
     }
 
     if (empty($name)) {
-        // arbitrary name
-        $name = get_string('modulename','trainingevent');
+        // Arbitrary name.
+        $name = get_string('modulename', 'trainingevent');
     }
 
     return $name;
@@ -63,8 +62,15 @@ function trainingevent_add_instance($trainingevent) {
 
     $trainingevent->name = get_trainingevent_name($trainingevent);
     $trainingevent->timemodified = time();
-    $trainingevent->id =  $DB->insert_record("trainingevent", $trainingevent);
-    grade_update('mod/trainingevent', $trainingevent->course, 'mod', 'trainingevent', $trainingevent->id, 0, NULL, array('itemname'=>$trainingevent->name));
+    $trainingevent->id = $DB->insert_record("trainingevent", $trainingevent);
+    grade_update('mod/trainingevent',
+                 $trainingevent->course,
+                 'mod',
+                 'trainingevent',
+                 $trainingevent->id,
+                 0,
+                 null,
+                 array('itemname' => $trainingevent->name));
     return $trainingevent->id;
 }
 
@@ -80,14 +86,21 @@ function trainingevent_add_instance($trainingevent) {
 function trainingevent_update_instance($trainingevent) {
     global $DB, $CFG;
 
-    if (!function_exists('grade_update')) { //workaround for buggy PHP versions
+    if (!function_exists('grade_update')) { // Workaround for buggy PHP versions.
         require_once($CFG->libdir.'/gradelib.php');
     }
     $trainingevent->name = get_trainingevent_name($trainingevent);
     $trainingevent->timemodified = time();
     $trainingevent->id = $trainingevent->instance;
-    
-    grade_update('mod/trainingevent', $trainingevent->course, 'mod', 'trainingevent', $trainingevent->id, 0, NULL, array('itemname'=>$trainingevent->name));
+
+    grade_update('mod/trainingevent',
+                  $trainingevent->course,
+                  'mod',
+                  'trainingevent',
+                  $trainingevent->id,
+                  0,
+                  null,
+                  array('itemname' => $trainingevent->name));
 
     return $DB->update_record("trainingevent", $trainingevent);
 }
@@ -104,19 +117,26 @@ function trainingevent_update_instance($trainingevent) {
 function trainingevent_delete_instance($id) {
     global $DB, $CFG;
 
-    if (!function_exists('grade_update')) { //workaround for buggy PHP versions
+    if (!function_exists('grade_update')) { // Workaround for buggy PHP versions.
         require_once($CFG->libdir.'/gradelib.php');
     }
-    if (! $trainingevent = $DB->get_record("trainingevent", array("id"=>$id))) {
+    if (! $trainingevent = $DB->get_record("trainingevent", array("id" => $id))) {
         return false;
     }
 
     $result = true;
 
-    if (! $DB->delete_records("trainingevent", array("id"=>$trainingevent->id))) {
+    if (! $DB->delete_records("trainingevent", array("id" => $trainingevent->id))) {
         $result = false;
     } else {
-        grade_update('mod/trainingevent', $trainingevent->course, 'mod', 'trainingevent', $trainingevent->id, 0, NULL, array('deleted'=>1));
+        grade_update('mod/trainingevent',
+                      $trainingevent->course,
+                      'mod',
+                      'trainingevent',
+                      $trainingevent->id,
+                      0,
+                      null,
+                      array('deleted' => 1));
     }
 
     return $result;
@@ -146,28 +166,29 @@ function trainingevent_get_participants($trainingeventid) {
 function trainingevent_get_coursemodule_info($coursemodule) {
     global $DB, $CFG;
 
-    if ($trainingevent = $DB->get_record('trainingevent', array('id'=>$coursemodule->instance), '*')) {
+    if ($trainingevent = $DB->get_record('trainingevent', array('id' => $coursemodule->instance), '*')) {
         if (empty($trainingevent->name)) {
-            // trainingevent name missing, fix it
+            // Trainingevent name missing, fix it.
             $trainingevent->name = "trainingevent{$trainingevent->id}";
-            $DB->set_field('trainingevent', 'name', $trainingevent->name, array('id'=>$trainingevent->id));
+            $DB->set_field('trainingevent', 'name', $trainingevent->name, array('id' => $trainingevent->id));
         }
         $info = new cached_cm_info();
 
-        // no filtering here because this info is cached and filtered later
+        // No filtering here because this info is cached and filtered later.
 
         if ($trainingevent->classroomid) {
             $extra = "";
             if ($classroom = $DB->get_record('classroom', array('id' => $trainingevent->classroomid), '*')) {
-                $extra .= get_string('location','trainingevent') . ": " . $classroom->name . " - ";
+                $extra .= get_string('location', 'trainingevent') . ": " . $classroom->name . " - ";
             }
         }
         $dateformat = "d F Y, g:ia";
-        
-        $extra .= get_string('startdatetime','trainingevent') . ": " . date($dateformat,$trainingevent->startdatetime);
-        $extra .= "<a href='$CFG->wwwroot/mod/trainingevent/manageclass.php?id=$trainingevent->id'>".get_string('details','trainingevent')."</a></br>";
-        
-        // sneakily prepend the extra info to the intro value (only for the remainder of this function)
+
+        $extra .= get_string('startdatetime', 'trainingevent') . ": " . date($dateformat, $trainingevent->startdatetime);
+        $extra .= "<a href='$CFG->wwwroot/mod/trainingevent/manageclass.php?id=$trainingevent->id'>".
+                   get_string('details', 'trainingevent')."</a></br>";
+
+        // Sneakily prepend the extra info to the intro value (only for the remainder of this function).
         $trainingevent->intro = "<div>" . $extra . "</div>";
 
         $info->content = format_module_intro('trainingevent', $trainingevent, $coursemodule->id, false);
@@ -227,19 +248,43 @@ function trainingevent_get_extra_capabilities() {
  */
 function trainingevent_supports($feature) {
     switch($feature) {
-        case FEATURE_IDNUMBER:                return false;
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_GRADE_HAS_GRADE:         return true;
-        case FEATURE_GRADE_OUTCOMES:          return false;
-        case FEATURE_MOD_ARCHETYPE:           return MOD_ARCHETYPE_RESOURCE;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_NO_VIEW_LINK:            return true;
+        case FEATURE_IDNUMBER: {
+            return false;
+        }
+        case FEATURE_GROUPS: {
+            return true;
+        }
+        case FEATURE_GROUPINGS: {
+            return true;
+        }
+        case FEATURE_GROUPMEMBERSONLY: {
+            return true;
+        }
+        case FEATURE_MOD_INTRO: {
+            return true;
+        }
+        case FEATURE_COMPLETION_TRACKS_VIEWS: {
+            return true;
+        }
+        case FEATURE_GRADE_HAS_GRADE: {
+            return true;
+        }
+        case FEATURE_GRADE_OUTCOMES: {
+            return false;
+        }
+        case FEATURE_MOD_ARCHETYPE: {
+            return MOD_ARCHETYPE_RESOURCE;
+        }
+        case FEATURE_BACKUP_MOODLE2: {
+            return true;
+        }
+        case FEATURE_NO_VIEW_LINK: {
+            return true;
+        }
 
-        default: return null;
+        default: {
+            return null;
+        }
     }
 }
 
