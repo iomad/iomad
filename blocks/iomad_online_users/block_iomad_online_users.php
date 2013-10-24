@@ -58,7 +58,7 @@ class block_iomad_online_users extends block_base {
         if (isset($CFG->block_iomad_online_users_timetosee)) {
             $timetoshowusers = $CFG->block_iomad_online_users_timetosee * 60;
         }
-        $timefrom = 100 * floor((time()-$timetoshowusers) / 100); // Round to nearest 100 seconds for better query cache.
+        $timefrom = 100 * floor((time() - $timetoshowusers) / 100); // Round to nearest 100 seconds for better query cache.
         $now = time();
 
         // Calculate if we are in separate groups.
@@ -133,7 +133,7 @@ class block_iomad_online_users extends block_base {
                   GROUP BY $userfields
                   ORDER BY lastaccess DESC";
 
-           $csql = "SELECT COUNT(u.id)
+            $csql = "SELECT COUNT(u.id)
                       FROM {user_lastaccess} ul $groupmembers, {user} u
                       JOIN ($esqljoin) euj ON euj.id = u.id
                      WHERE ul.timeaccess > :timefrom
@@ -147,7 +147,7 @@ class block_iomad_online_users extends block_base {
         }
 
         // Calculate minutes.
-        $minutes  = floor($timetoshowusers/60);
+        $minutes  = floor($timetoshowusers / 60);
 
         // Verify if we can see the list of users, if not just print number of users.
         if (!has_capability('block/online_users:viewlist', $this->page->context)) {
@@ -195,11 +195,11 @@ class block_iomad_online_users extends block_base {
                 $timeago = format_time(time() - $user->lastaccess); // Bruno to calculate correctly on frontpage.
 
                 if (isguestuser($user)) {
-                    $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, array('size'=>16));
+                    $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, array('size' => 16));
                     $this->content->text .= get_string('guestuser').'</div>';
 
                 } else {
-                    $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, array('size'=>16));
+                    $this->content->text .= '<div class="user">'.$OUTPUT->user_picture($user, array('size' => 16));
                     $this->content->text .= '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.
                                              $this->page->course->id.'" title="'.$timeago.'">'.$user->fullname.'</a></div>';
                 }

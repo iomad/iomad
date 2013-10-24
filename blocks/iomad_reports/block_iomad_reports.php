@@ -78,7 +78,7 @@ class block_iomad_reports extends block_base {
                 continue;
             }
             $dirname = $item->getFilename();
-            if (stripos($dirname, 'report_')===0) {
+            if (stripos($dirname, 'report_') === 0) {
                 $reports[] = $dirname;
             }
         }
