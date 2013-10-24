@@ -31,7 +31,7 @@ global $DB;
 
 // Correct the navbar .
 // Set the name for the page.
-$linktext=get_string('course_list_title', 'block_iomad_commerce');
+$linktext = get_string('course_list_title', 'block_iomad_commerce');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/courselist.php');
 // Build the nav bar.
@@ -50,14 +50,14 @@ if ($delete and confirm_sesskey()) {              // Delete a selected course fr
 
     require_capability('block/iomad_commerce:delete_course', $context);
 
-    $invoiceableitem = $DB->get_record('course_shopsettings', array('id'=>$delete), '*', MUST_EXIST);
+    $invoiceableitem = $DB->get_record('course_shopsettings', array('id' => $delete), '*', MUST_EXIST);
 
     if ($confirm != md5($delete)) {
         echo $OUTPUT->header();
-        $course = $DB->get_record('course', array('id'=>$invoiceableitem->courseid), 'fullname', MUST_EXIST);
+        $course = $DB->get_record('course', array('id' => $invoiceableitem->courseid), 'fullname', MUST_EXIST);
         $name = $course->fullname;
         echo $OUTPUT->heading(get_string('deletecourse', 'block_iomad_commerce'), 2, 'headingblock header');
-        $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+        $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $OUTPUT->confirm(get_string('coursedeletecheckfull', 'block_iomad_commerce', "'$name'"),
                               new moodle_url('courselist.php', $optionsyes), 'courselist.php');
         echo $OUTPUT->footer();
@@ -65,7 +65,7 @@ if ($delete and confirm_sesskey()) {              // Delete a selected course fr
     } else if (data_submitted()) {
         $transaction = $DB->start_delegated_transaction();
 
-        if ($DB->delete_records('course_shopsettings', array('id'=>$delete))) {
+        if ($DB->delete_records('course_shopsettings', array('id' => $delete))) {
             $transaction->allow_commit();
             redirect($returnurl);
         } else {

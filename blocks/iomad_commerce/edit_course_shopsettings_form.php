@@ -47,10 +47,10 @@ class course_edit_form extends moodleform {
 
         if ($isadding) {
             $options = array('context' => $this->context,
-                             'multiselect'=>false,
+                             'multiselect' => false,
                              'selectedid' => $shopsettingsid,
-                             'searchanywhere'=>true,
-                             'file'=>'/blocks/iomad_commerce/lib/course_selectors.php');
+                             'searchanywhere' => true,
+                             'file' => '/blocks/iomad_commerce/lib/course_selectors.php');
             $this->currentcourses = new nonshopcourse_selector('currentcourses', $options);
             $this->currentcourses->set_rows(1);
         }
@@ -182,7 +182,7 @@ class course_edit_form extends moodleform {
             /******** tags **************/
             $mform->addElement('header', 'header', get_string('categorization', 'block_iomad_commerce'));
 
-            $mform->addElement('textarea', 'tags', get_string('tags', 'block_iomad_commerce'), array('rows'=>5, 'cols'=>60));
+            $mform->addElement('textarea', 'tags', get_string('tags', 'block_iomad_commerce'), array('rows' => 5, 'cols' => 60));
             $mform->addHelpButton('tags', 'tags', 'block_iomad_commerce');
             $mform->setType('tags', PARAM_NOTAGS);
 
@@ -317,7 +317,8 @@ if (!$new) {
     $course->fullname = $course->fullname." ($course->shortname))";
 
     if (!$_POST || !array_key_exists('block_start_1', $_POST)) {
-        $priceblocks = $DB->get_records('course_shopblockprice', array('courseid'=>$shopsettings->courseid), 'price_bracket_start');
+        $priceblocks = $DB->get_records('course_shopblockprice',
+                                         array('courseid' => $shopsettings->courseid), 'price_bracket_start');
     }
 
     $shopsettings->tags = get_course_tags($course->id);
@@ -361,7 +362,7 @@ if (array_key_exists('blockPrices', $_POST)) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('course_list_title', 'block_iomad_commerce');
+$linktext = get_string('course_list_title', 'block_iomad_commerce');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/courselist.php');
 // Build the nav bar.
@@ -380,7 +381,7 @@ $blockpage->setup($urlparams);
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 
 /* next line copied from /course/edit.php */
-$editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'maxbytes'=>$CFG->maxbytes, 'trusttext'=>false, 'noclean'=>true);
+$editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'maxbytes' => $CFG->maxbytes, 'trusttext' => false, 'noclean' => true);
 
 $mform = new course_edit_form($PAGE->url, $isadding, $shopsettingsid, $course, $priceblocks, $editoroptions);
 $mform->set_data($shopsettings);

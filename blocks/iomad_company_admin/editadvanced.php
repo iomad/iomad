@@ -45,7 +45,7 @@ $systemcontext = get_context_instance(CONTEXT_SYSTEM);
 
 // Correct the navbar .
 // Set the name for the page.
-$linktext=get_string('company_edit_advanced_title', 'block_iomad_company_admin');
+$linktext = get_string('company_edit_advanced_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = $url;
 // Build the nav bar.
@@ -77,7 +77,7 @@ if ($id == -1) {
 } else {
     // Editing existing user.
     require_capability('block/iomad_company_admin:editusers', $systemcontext);
-    if (!$user = $DB->get_record('user', array('id'=>$id))) {
+    if (!$user = $DB->get_record('user', array('id' => $id))) {
         print_error('invaliduserid');
     }
 }
@@ -128,17 +128,17 @@ if ($user->id !== -1) {
 
 } else {
     $usercontext = null;
-    // This is a new user, we don't want to add files here
+    // This is a new user, we don't want to add files here.
     $editoroptions = array(
-        'maxfiles'=>0,
-        'maxbytes'=>0,
-        'trusttext'=>false,
-        'forcehttps'=>false,
+        'maxfiles' => 0,
+        'maxbytes' => 0,
+        'trusttext' => false,
+        'forcehttps' => false,
         'context' => $coursecontext
     );
 }
 // Create form.
-$userform = new user_editadvanced_form(null, array('editoroptions'=>$editoroptions, 'companyid'=>$companyid, 'userid'=>$id));
+$userform = new user_editadvanced_form(null, array('editoroptions' => $editoroptions, 'companyid' => $companyid, 'userid' => $id));
 $userform->set_data($user);
 
 if ($usernew = $userform->get_data()) {
@@ -187,7 +187,7 @@ if ($usernew = $userform->get_data()) {
                 if (!$authplugin->user_update_password($usernew, $usernew->newpassword)) {
                     print_error('cannotupdatepasswordonextauth', '', '', $usernew->auth);
                 } else {
-                    EmailTemplate::send('password_update', array('user'=>$usernew));
+                    EmailTemplate::send('password_update', array('user' => $usernew));
                 }
             }
         }
@@ -219,7 +219,7 @@ if ($usernew = $userform->get_data()) {
     profile_save_data($usernew);
 
     // Reload from db.
-    $usernew = $DB->get_record('user', array('id'=>$usernew->id));
+    $usernew = $DB->get_record('user', array('id' => $usernew->id));
 
     // Trigger events.
     if ($usercreated) {
@@ -284,10 +284,10 @@ if ($user->id == -1 or ($user->id != $USER->id)) {
     $link = null;
     if (has_capability('moodle/course:viewparticipants', $systemcontext) ||
         has_capability('moodle/site:viewparticipants', $systemcontext)) {
-        $link = new moodle_url("/user/index.php", array('id'=>$course->id));
+        $link = new moodle_url("/user/index.php", array('id' => $course->id));
     }
     $PAGE->navbar->add($strparticipants, $link);
-    $link = new moodle_url('/user/view.php', array('id'=>$user->id, 'course'=>$course->id));
+    $link = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $course->id));
     $PAGE->navbar->add($userfullname, $link);
     $PAGE->navbar->add($streditmyprofile);
 

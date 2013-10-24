@@ -54,12 +54,12 @@ class user_edit_form extends company_moodleform {
         $this->userdepartment = $userhierarchylevel;
 
         $options = array('context' => $this->context,
-                         'multiselect'=>true,
+                         'multiselect' => true,
                          'companyid' => $this->selectedcompany,
-                         'departmentid'=>$departmentid,
-                         'subdepartments'=>$this->subhierarchieslist,
-                         'parentdepartmentid'=>$parentlevel,
-                         'license'=>false);
+                         'departmentid' => $departmentid,
+                         'subdepartments' => $this->subhierarchieslist,
+                         'parentdepartmentid' => $parentlevel,
+                         'license' => false);
         $this->currentcourses = new potential_subdepartment_course_selector('currentcourses', $options);
         $this->currentcourses->set_rows(20);
         $this->context = get_context_instance(CONTEXT_COURSECAT, $CFG->defaultrequestcategory);
@@ -168,10 +168,10 @@ class user_edit_form extends company_moodleform {
             }
         }
         // Get company category.
-        if ($companyinfo = $DB->get_record('company', array('id'=>$this->selectedcompany))) {
+        if ($companyinfo = $DB->get_record('company', array('id' => $this->selectedcompany))) {
 
             // Get fields from company category.
-            if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$companyinfo->profileid))) {
+            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $companyinfo->profileid))) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
@@ -225,7 +225,7 @@ class user_edit_form extends company_moodleform {
         $usernew = (object)$usernew;
 
         // Validate email.
-        if ($DB->record_exists('user', array('email'=>$usernew->email, 'mnethostid'=>$CFG->mnet_localhost_id))) {
+        if ($DB->record_exists('user', array('email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id))) {
             $errors['email'] = get_string('emailexists');
         }
 
@@ -268,7 +268,7 @@ $companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('createuser', 'block_iomad_company_admin');
+$linktext = get_string('createuser', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_user_create_form.php');
 // Build the nav bar.
@@ -318,17 +318,17 @@ if ($companyform->is_cancelled() || $mform->is_cancelled()) {
     // Check if we are assigning a different role to the user.
     if (!empty($data->managertype)) {
         $systemcontext = get_context_instance(CONTEXT_SYSTEM);
-        $companycourseeditorrole = $DB->get_record('role', array('shortname'=>'companycourseeditor'));
-        $companycoursenoneditorrole = $DB->get_record('role', array('shortname'=>'companycoursenoneditor'));
+        $companycourseeditorrole = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
+        $companycoursenoneditorrole = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
         if ($data->managertype == 2) {
             // Assign the department manager role.
-            $departmentmanagerrole = $DB->get_record('role', array('shortname'=>'companydepartmentmanager'));
+            $departmentmanagerrole = $DB->get_record('role', array('shortname' => 'companydepartmentmanager'));
             // Give them the manager role.
             role_assign($departmentmanagerrole->id, $userid, $systemcontext->id);
             //  Assign appropriate roles to company courses.
-            if ($companycourses = $DB->get_records('company_course', array('companyid'=>$companyid))) {
+            if ($companycourses = $DB->get_records('company_course', array('companyid' => $companyid))) {
                 foreach ($companycourses as $companycourse) {
-                    if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                    if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                         company_user::enrol($user,
                                             array($companycourse->courseid),
                                             $companycourse->companyid,
@@ -338,15 +338,15 @@ if ($companyform->is_cancelled() || $mform->is_cancelled()) {
             }
         } else if ($data->managertype == 1) {
             // Assign the user as a company manager.
-            $companymanagerrole = $DB->get_record('role', array('shortname'=>'companymanager'));
+            $companymanagerrole = $DB->get_record('role', array('shortname' => 'companymanager'));
             // Give them the manager role.
             role_assign($companymanagerrole->id, $userid, $systemcontext->id);
-            if ($companycourses = $DB->get_records('company_course', array('companyid'=>$companyid))) {
+            if ($companycourses = $DB->get_records('company_course', array('companyid' => $companyid))) {
                 foreach ($companycourses as $companycourse) {
-                    if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                    if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                         // If its a company created course then assign the editor role to the user.
-                        if ($DB->record_exists('company_created_courses', array ('companyid'=>$companyid,
-                                                                                 'courseid'=>$companycourse->courseid))) {
+                        if ($DB->record_exists('company_created_courses', array ('companyid' => $companyid,
+                                                                                 'courseid' => $companycourse->courseid))) {
                             company_user::enrol($user,
                                                  array($companycourse->courseid),
                                                  $companycourse->companyid,
@@ -374,7 +374,7 @@ if ($companyform->is_cancelled() || $mform->is_cancelled()) {
 
     // Enrol the user on the courses.
     if (!empty($createcourses)) {
-        $userdata = $DB->get_record('user', array('id'=>$userid));
+        $userdata = $DB->get_record('user', array('id' => $userid));
         company_user::enrol($userdata, $createcourses);
     }
     redirect($linkurl."?createdok=1");

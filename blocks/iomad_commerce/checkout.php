@@ -62,7 +62,7 @@ class checkout_form extends moodleform {
         $mform->setType('postcode', PARAM_NOTAGS);
 
         $choices = get_string_manager()->get_list_of_countries();
-        $choices= array(''=>get_string('selectacountry').'...') + $choices;
+        $choices = array('' => get_string('selectacountry').'...') + $choices;
         $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
         $mform->addRule('country', $strrequired, 'required', null, 'client');
 
@@ -95,7 +95,7 @@ global $DB;
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('course_shop_title', 'block_iomad_commerce');
+$linktext = get_string('course_shop_title', 'block_iomad_commerce');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/shop.php');
 // Build the nav bar.

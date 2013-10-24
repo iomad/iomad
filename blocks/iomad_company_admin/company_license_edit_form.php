@@ -54,13 +54,13 @@ class company_license_form extends company_moodleform {
         }
 
         $options = array('context' => $this->context,
-                         'multiselect'=>true,
+                         'multiselect' => true,
                          'companyid' => $this->selectedcompany,
-                         'departmentid'=>$departmentid,
-                         'subdepartments'=>$this->subhierarchieslist,
-                         'parentdepartmentid'=>$parentlevel,
-                         'selected'=>$this->selectedcourses,
-                         'license'=>true);
+                         'departmentid' => $departmentid,
+                         'subdepartments' => $this->subhierarchieslist,
+                         'parentdepartmentid' => $parentlevel,
+                         'selected' => $this->selectedcourses,
+                         'license' => true);
         $this->currentcourses = new all_department_course_selector('currentcourselicense', $options);
 
         parent::moodleform($actionurl);
@@ -156,7 +156,7 @@ if ($courseid) {
 
 // Correct the navbar .
 // Set the name for the page.
-$linktext=get_string('managelicenses', 'block_iomad_company_admin');
+$linktext = get_string('managelicenses', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_license_edit_form.php');
 // Build the nav bar.
@@ -193,12 +193,12 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
     if ( $data = $mform->get_data() ) {
         global $DB;
         $licensedata = array();
-        $licensedata['name']=$data->licensename;
-        $licensedata['allocation']=$data->licenseallocation;
-        $licensedata['expirydate']=$data->licenseexpires;
-        $licensedata['companyid']=$data->companyid;
-        $licensedata['validlength']=$data->licenseduration;
-        if ($currlicensedata = $DB->get_record('companylicense', array('id'=>$licenseid))) {
+        $licensedata['name'] = $data->licensename;
+        $licensedata['allocation'] = $data->licenseallocation;
+        $licensedata['expirydate'] = $data->licenseexpires;
+        $licensedata['companyid'] = $data->companyid;
+        $licensedata['validlength'] = $data->licenseduration;
+        if ($currlicensedata = $DB->get_record('companylicense', array('id' => $licenseid))) {
             $new = false;
             // Already in the table update it.
             $licensedata['id'] = $currlicensedata->id;
@@ -208,16 +208,16 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         } else {
             $new = true;
             // New license being created.
-            $licensedata['used']=0;
+            $licensedata['used'] = 0;
             $licenseid = $DB->insert_record('companylicense', $licensedata);
         }
         // Deal with course allocations if there are any.
         // Clear down all of them initially.
-        $DB->delete_records('companylicense_courses', array('licenseid'=>$licenseid));
+        $DB->delete_records('companylicense_courses', array('licenseid' => $licenseid));
         if (!empty($data->selectedcourses)) {
             // Add the course license allocations.
             foreach ($data->selectedcourses as $selectedcourse) {
-                $DB->insert_record('companylicense_courses', array('licenseid'=>$licenseid, 'courseid'=>$selectedcourse->id));
+                $DB->insert_record('companylicense_courses', array('licenseid' => $licenseid, 'courseid' => $selectedcourse->id));
             }
         }
         redirect(new moodle_url('/blocks/iomad_company_admin/company_license_list.php'));
@@ -225,16 +225,16 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
     }
     // Check if we are editing a current license.
     if (!empty($licenseid)) {
-        $license = $DB->get_record('companylicense', array('id'=>$licenseid));
+        $license = $DB->get_record('companylicense', array('id' => $licenseid));
         $formlicense = array();
-        $formlicense['licensename']=$license->name;
-        $formlicense['licenseallocation']=$license->allocation;
-        $formlicense['licenseexpires']=$license->expirydate;
-        $formlicense['companyid']=$license->companyid;
-        $formlicense['licenseduration']=$license->validlength;
+        $formlicense['licensename'] = $license->name;
+        $formlicense['licenseallocation'] = $license->allocation;
+        $formlicense['licenseexpires'] = $license->expirydate;
+        $formlicense['companyid'] = $license->companyid;
+        $formlicense['licenseduration'] = $license->validlength;
         // Get courses license is applied to.
-        $courselicense = $DB->get_records('companylicense_courses', array('licenseid'=>$licenseid), null, 'courseid');
-        $formlicense['currentcourselicense']=$courselicense;
+        $courselicense = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid), null, 'courseid');
+        $formlicense['currentcourselicense'] = $courselicense;
         $mform = new company_license_form($PAGE->url, $context, $companyid, $departmentid, $licenseid, $courselicense);
         $mform->set_data($formlicense);
     }

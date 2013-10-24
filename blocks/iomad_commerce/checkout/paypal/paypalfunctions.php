@@ -37,9 +37,9 @@ $sandboxflag = ($CFG->paypal_usesandbox ? true : false);
 //  Replace <API_PASSWORD> with your API Password.
 //  Replace <API_SIGNATURE> with your Signature.
 
-$api_username= $CFG->paypal_api_username;
-$api_password= $CFG->paypal_api_password;
-$api_signature= $CFG->paypal_api_signature;
+$api_username = $CFG->paypal_api_username;
+$api_password = $CFG->paypal_api_password;
+$api_signature = $CFG->paypal_api_signature;
 
 
 // BN Code is only applicable for partners.
@@ -51,7 +51,7 @@ $sbncode = "PP-ECWizard";
      This is the URL that the buyer is first sent to do authorize payment with their paypal account
      change the URL depending if you are testing on the sandbox or the live PayPal site.
 
- For the sandbox, the URL is       https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=
+ For the sandbox, the URL is       https://www.sandbox.paypal.com/webscr&cmd =_express-checkout&token=
  For the live site, the URL is        https://www.paypal.com/webscr&cmd=_express-checkout&token=
 */
 
@@ -64,7 +64,7 @@ if ($sandboxflag == true) {
 }
 
 $use_proxy = false;
-$version="64";
+$version = "64";
 
 if (session_id() == "") {
     session_start();
@@ -90,7 +90,7 @@ if (session_id() == "") {
 function callshortcutexpresscheckout($paymentamount, $currencycodetype, $paymenttype, $returnurl, $cancelurl, $details=null) {
     // Construct the parameter string that describes the SetExpressCheckout API call in the shortcut implementation.
 
-    $nvpstr="&PAYMENTREQUEST_0_AMT=". $paymentamount;
+    $nvpstr = "&PAYMENTREQUEST_0_AMT=". $paymentamount;
     $nvpstr = $nvpstr . "&PAYMENTREQUEST_0_PAYMENTACTION=" . $paymenttype;
     $nvpstr = $nvpstr . "&RETURNURL=" . $returnurl;
     $nvpstr = $nvpstr . "&CANCELURL=" . $cancelurl;
@@ -113,11 +113,11 @@ function callshortcutexpresscheckout($paymentamount, $currencycodetype, $payment
     //  Make the API call to PayPal.
     //  If the API call succeded, then redirect the buyer to PayPal to begin to authorize payment.
     //  If an error occured, show the resulting errors.
-    $resarray=hash_call("SetExpressCheckout", $nvpstr);
+    $resarray = hash_call("SetExpressCheckout", $nvpstr);
     $ack = strtoupper($resarray["ACK"]);
-    if ($ack=="SUCCESS" || $ack=="SUCCESSWITHWARNING") {
+    if ($ack == "SUCCESS" || $ack == "SUCCESSWITHWARNING") {
         $token = urldecode($resarray["TOKEN"]);
-        $_SESSION['TOKEN']=$token;
+        $_SESSION['TOKEN'] = $token;
     }
 
     return $resarray;
@@ -142,11 +142,11 @@ function callshortcutexpresscheckout($paymentamount, $currencycodetype, $payment
 */
 function callmarkexpresscheckout($paymentamount, $currencycodetype, $paymenttype, $returnurl,
                                   $cancelurl, $shiptoname, $shiptostreet, $shiptocity, $shiptostate,
-                                  $shiptocountrycode, $shiptozip, $shiptostreet2, $phonenum, $details=null
+                                  $shiptocountrycode, $shiptozip, $shiptostreet2, $phonenum, $details = null
                                ) {
     // Construct the parameter string that describes the SetExpressCheckout API call in the shortcut implementation.
 
-    $nvpstr="&PAYMENTREQUEST_0_AMT=". $paymentamount;
+    $nvpstr ="&PAYMENTREQUEST_0_AMT=". $paymentamount;
     $nvpstr = $nvpstr . "&PAYMENTREQUEST_0_PAYMENTACTION=" . $paymenttype;
     $nvpstr = $nvpstr . "&RETURNURL=" . $returnurl;
     $nvpstr = $nvpstr . "&CANCELURL=" . $cancelurl;
@@ -178,11 +178,11 @@ function callmarkexpresscheckout($paymentamount, $currencycodetype, $paymenttype
     //  Make the API call to PayPal.
     //  If the API call succeded, then redirect the buyer to PayPal to begin to authorize payment.
     //  If an error occured, show the resulting errors.
-    $resarray=hash_call("SetExpressCheckout", $nvpstr);
+    $resarray = hash_call("SetExpressCheckout", $nvpstr);
     $ack = strtoupper($resarray["ACK"]);
-    if ($ack=="SUCCESS" || $ack=="SUCCESSWITHWARNING") {
+    if ($ack == "SUCCESS" || $ack == "SUCCESSWITHWARNING") {
         $token = urldecode($resarray["TOKEN"]);
-        $_SESSION['TOKEN']=$token;
+        $_SESSION['TOKEN'] = $token;
     }
 
     return $resarray;
@@ -206,14 +206,14 @@ function getshippingdetails($token) {
 
     //  Build a second API request to PayPal, using the token as the
     //   ID to get the details on the payment authorization.
-    $nvpstr="&TOKEN=" . $token;
+    $nvpstr = "&TOKEN=" . $token;
 
     //  Make the API call and store the results in an array.
     //     If the call was a success, show the authorization details, and provide
     //      an action to complete the payment.
-    $resarray=hash_call("getexpresscheckoutdetails", $nvpstr);
+    $resarray = hash_call("getexpresscheckoutdetails", $nvpstr);
     $ack = strtoupper($resarray["ACK"]);
-    if ($ack == "SUCCESS" || $ack=="SUCCESSWITHWARNING") {
+    if ($ack == "SUCCESS" || $ack == "SUCCESSWITHWARNING") {
         $_SESSION['payer_id'] =    $resarray['PAYERID'];
     }
     return $resarray;
@@ -245,12 +245,12 @@ function confirmpayment($finalpaymentamt) {
                '&PAYERID=' . $payerid .
                '&PAYMENTREQUEST_0_PAYMENTACTION=' . $paymenttype .
                '&PAYMENTREQUEST_0_AMT=' . $finalpaymentamt;
-    $nvpstr .= '&PAYMENTREQUEST_0_CURRENCYCODE=' . $currencycodetype . '&IPADDRESS=' . $servername;
+    $nvpstr . = '&PAYMENTREQUEST_0_CURRENCYCODE=' . $currencycodetype . '&IPADDRESS=' . $servername;
 
      /* Make the call to PayPal to finalize payment
         If an error occured, show the resulting errors.
         */
-    $resarray=hash_call("doexpresscheckoutpayment", $nvpstr);
+    $resarray = hash_call("doexpresscheckoutpayment", $nvpstr);
 
     /* Display the API response back to the browser.
        If the response from PayPal was a success, display the response parameters'
@@ -304,7 +304,7 @@ function directpayment($paymenttype, $paymentamount, $creditcardtype, $creditcar
     $nvpstr = $nvpstr . "&COUNTRYCODE=" . $countrycode;
     $nvpstr = $nvpstr . "&IPADDRESS=" . $_SERVER['REMOTE_ADDR'];
 
-    $resarray=hash_call("Dodirectpayment", $nvpstr);
+    $resarray = hash_call("Dodirectpayment", $nvpstr);
 
     return $resarray;
 }
@@ -342,7 +342,7 @@ function hash_call($methodname, $nvpstr) {
     }
 
     // NVPRequest for submitting to server.
-    $nvpreq="METHOD=" . urlencode($methodname) .
+    $nvpreq = "METHOD=" . urlencode($methodname) .
             "&VERSION=" . urlencode($version) .
             "&PWD=" . urlencode($api_password) .
             "&USER=" . urlencode($api_username) .
@@ -357,14 +357,14 @@ function hash_call($methodname, $nvpstr) {
     $response = curl_exec($ch);
 
     // Convrting NVPResponse to an Associative Array.
-    $nvpresarray=deformatnvp($response);
-    $nvpreqarray=deformatnvp($nvpreq);
-    $_SESSION['nvpreqarray']=$nvpreqarray;
+    $nvpresarray = deformatnvp($response);
+    $nvpreqarray = deformatnvp($nvpreq);
+    $_SESSION['nvpreqarray'] = $nvpreqarray;
 
     if (curl_errno($ch)) {
         // Moving to display page to display curl errors.
-          $_SESSION['curl_error_no']=curl_errno($ch);
-          $_SESSION['curl_error_msg']=curl_error($ch);
+          $_SESSION['curl_error_no'] = curl_errno($ch);
+          $_SESSION['curl_error_msg'] = curl_error($ch);
 
           // Execute the Error handling module to display errors.
     } else {
@@ -395,21 +395,21 @@ function redirecttopaypal ($token) {
 * @nvparray is Associative Array.
 */
 function deformatnvp($nvpstr) {
-    $intial=0;
+    $intial = 0;
      $nvparray = array();
 
     while (strlen($nvpstr)) {
         // Postion of Key.
-        $keypos= strpos($nvpstr, '=');
+        $keypos = strpos($nvpstr, '=');
         // Position of value.
         $valuepos = strpos($nvpstr, '&') ? strpos($nvpstr, '&'): strlen($nvpstr);
 
         /* Getting the Key and Value values and storing in a Associative Array. */
-        $keyval=substr($nvpstr, $intial, $keypos);
-        $valval=substr($nvpstr, $keypos+1, $valuepos-$keypos-1);
+        $keyval = substr($nvpstr, $intial, $keypos);
+        $valval = substr($nvpstr, $keypos + 1, $valuepos-$keypos - 1);
         // Decoding the respose.
-        $nvparray[urldecode($keyval)] =urldecode($valval);
-        $nvpstr=substr($nvpstr, $valuepos+1, strlen($nvpstr));
+        $nvparray[urldecode($keyval)] = urldecode($valval);
+        $nvpstr = substr($nvpstr, $valuepos + 1, strlen($nvpstr));
     }
     return $nvparray;
 }

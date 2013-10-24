@@ -25,7 +25,7 @@ global $DB;
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('course_shop_title', 'block_iomad_commerce');
+$linktext = get_string('course_shop_title', 'block_iomad_commerce');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/shop.php');
 

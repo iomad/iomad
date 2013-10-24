@@ -73,14 +73,14 @@ class department_display_form extends company_moodleform {
         $subdepartments = company::get_subdepartments($department);
 
         // Create the sub department checkboxes html.
-        $subdepartmenthtml="";
+        $subdepartmenthtml = "";
 
         if (!empty($subdepartmentslist)) {
-            $subdepartmenthtml="<p>".get_string('subdepartments', 'block_iomad_company_admin').
+            $subdepartmenthtml = "<p>".get_string('subdepartments', 'block_iomad_company_admin').
                                "</p>";
             foreach ($subdepartmentslist as $key => $value) {
 
-                $subdepartmenthtml .= '<input type="checkbox" name="departmentids[]" value="'.
+                $subdepartmenthtml .= '<input type = "checkbox" name = "departmentids[]" value="'.
                                        $key.'" /> '.$value.'</br>';
             }
         }
@@ -149,8 +149,6 @@ class department_edit_form extends company_moodleform {
         $mform->setType('departmentid', PARAM_INT);
         $mform->addElement('hidden', 'action', $this->action);
         $mform->setType('action', PARAM_INT);
-
-
         $mform->addElement('select', 'deptid',
                             get_string('department', 'block_iomad_company_admin'),
                             $departmentslist);
@@ -158,7 +156,7 @@ class department_edit_form extends company_moodleform {
 
         $mform->addElement('text', 'fullname',
                             get_string('fullnamedepartment', 'block_iomad_company_admin'),
-                            'maxlength="254" size="50"');
+                            'maxlength = "254" size = "50"');
         $mform->addHelpButton('fullname', 'fullnamedepartment', 'block_iomad_company_admin');
         $mform->addRule('fullname',
                         get_string('missingfullnamedepartment', 'block_iomad_company_admin'),
@@ -167,7 +165,7 @@ class department_edit_form extends company_moodleform {
 
         $mform->addElement('text', 'shortname',
                             get_string('shortnamedepartment', 'block_iomad_company_admin'),
-                            'maxlength="100" size="20"');
+                            'maxlength = "100" size = "20"');
         $mform->addHelpButton('shortname', 'shortnamedepartment', 'block_iomad_company_admin');
         $mform->addRule('shortname',
                          get_string('missingshortnamedepartment', 'block_iomad_company_admin'),
@@ -207,7 +205,7 @@ if ($returnurl) {
 }
 $companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
 
-$linktext=get_string('editdepartment', 'block_iomad_company_admin');
+$linktext = get_string('editdepartment', 'block_iomad_company_admin');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_department_create_form.php');
@@ -246,7 +244,7 @@ if ($mform->is_cancelled()) {
             $chosenid = 0;
         }
         $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $chosenid);
-        $editform->set_data(array('deptid'=>$chosenid));
+        $editform->set_data(array('deptid' => $chosenid));
         $blockpage->display_header();
         $editform->display();
         echo $OUTPUT->footer();
@@ -276,12 +274,12 @@ if ($mform->is_cancelled()) {
         // Editing an existing department.
         if (!empty($deleteids)) {
             $department = array_shift($deleteids);
-            $departmentrecord = $DB->get_record('department', array('id'=>$department));
+            $departmentrecord = $DB->get_record('department', array('id' => $department));
             $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, 0, 1);
-            $editform->set_data(array('departmentid'=>$departmentrecord->id,
-                                      'fullname'=>$departmentrecord->name,
-                                      'shortname'=>$departmentrecord->shortname,
-                                      'chosenid'=>$departmentid));
+            $editform->set_data(array('departmentid' => $departmentrecord->id,
+                                      'fullname' => $departmentrecord->name,
+                                      'shortname' => $departmentrecord->shortname,
+                                      'chosenid' => $departmentid));
             $blockpage->display_header();
 
             $editform->display();

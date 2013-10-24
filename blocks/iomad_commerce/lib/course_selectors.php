@@ -1,6 +1,20 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// Require_once(dirname(__FILE__) . '/../../../local/iomad/lib/blockpage.php').
 
-//require_once(dirname(__FILE__) . '/../../../local/iomad/lib/blockpage.php');
 require_once(dirname(__FILE__) . '/../../../local/course_selector/lib.php');
 
 /**
@@ -22,21 +36,20 @@ class nonshopcourse_selector extends course_selector_base {
      */
     public function find_courses($search) {
         global $DB;
-        //by default wherecondition retrieves all courses except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
 
         $fields      = 'SELECT ' . $this->required_fields_sql('c').',c.shortname';
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {course} c
-                WHERE 
+                WHERE
                     (
                         (SELECT id FROM {course_shopsettings} css WHERE css.courseid = c.id AND css.id = $this->selectedid)
                         OR
                         NOT EXISTS (SELECT css.id FROM {course_shopsettings} css WHERE css.courseid = c.id )
                     )
                     AND c.id!=1 AND $wherecondition";
-                  
         $order = ' ORDER BY c.sortorder, c.fullname ASC';
 
         if (!$this->is_validating()) {
@@ -47,9 +60,8 @@ class nonshopcourse_selector extends course_selector_base {
         }
 
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
-        
-        // add the shortname to the course identifier
-        foreach ($availablecourses as $key=>$availablecourse ) {
+        // Add the shortname to the course identifier.
+        foreach ($availablecourses as $key => $availablecourse) {
                 $availablecourses[$key]->fullname = $availablecourse->fullname.' ('.$availablecourse->shortname.')';
         }
 

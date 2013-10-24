@@ -53,7 +53,7 @@ class company_users_course_form extends moodleform {
             $this->departmentid = $departmentid;
         }
         $this->userid = $userid;
-        $this->user = $DB->get_record('user', array('id'=>$this->userid));
+        $this->user = $DB->get_record('user', array('id' => $this->userid));
 
         parent::__construct($actionurl);
     }
@@ -68,10 +68,10 @@ class company_users_course_form extends moodleform {
             $options = array('context' => $this->context,
                              'companyid' => $this->selectedcompany,
                              'user' => $this->user,
-                             'departmentid'=>$this->departmentid,
-                             'subdepartments'=>$this->subhierarchieslist,
-                             'parentdepartmentid'=>$this->parentlevel,
-                             'shared'=>true);
+                             'departmentid' => $this->departmentid,
+                             'subdepartments' => $this->subhierarchieslist,
+                             'parentdepartmentid' => $this->parentlevel,
+                             'shared' => true);
             if (! $this->potentialcourses) {
                 $this->potentialcourses = new potential_user_course_selector('potentialusercourses', $options);
             }
@@ -157,7 +157,7 @@ class company_users_course_form extends moodleform {
 
                     if ($allow) {
                         company_user::enrol($this->user, array($addcourse->id));
-                        EmailTemplate::send('user_added_to_course', array('course'=>$addcourse, 'user'=>$this->user));
+                        EmailTemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user));
                     }
                 }
 
@@ -203,7 +203,7 @@ if ($userid) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('edit_users_title', 'block_iomad_company_admin');
+$linktext = get_string('edit_users_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/editusers.php');
 // Build the nav bar.

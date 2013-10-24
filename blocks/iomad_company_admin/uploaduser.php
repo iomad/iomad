@@ -30,18 +30,18 @@ $previewrows = optional_param('previewrows', 10, PARAM_INT);
 $readcount   = optional_param('readcount', 0, PARAM_INT);
 $uploadtype  = optional_param('uutype', 0, PARAM_INT);
 
-$montharray = array('jan'=>'01',
-                    'feb'=>'02',
-                    'mar'=>03,
-                    'apr'=>04,
-                    'may'=>'05',
-                    'jun'=>'06',
-                    'jul'=>'07',
-                    'aug'=>'08',
-                    'sep'=>09,
-                    'oct'=>'10',
-                    'nov'=>'11',
-                    'dec'=>'12');
+$montharray = array('jan' => '01',
+                    'feb' => '02',
+                    'mar' => 03,
+                    'apr' => 04,
+                    'may' => '05',
+                    'jun' => '06',
+                    'jul' => '07',
+                    'aug' => '08',
+                    'sep' => 09,
+                    'oct' => '10',
+                    'nov' => '11',
+                    'dec' => '12');
 
 // Set the companyid to bypass the company select form if possible.
 if (!empty($SESSION->currenteditingcompany)) {
@@ -78,7 +78,7 @@ require_capability('block/iomad_company_admin:user_upload', get_context_instance
 
 // Correct the navbar .
 // Set the name for the page.
-$linktext=get_string('user_upload_title', 'block_iomad_company_admin');
+$linktext = get_string('user_upload_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/uploaduser.php');
 // Build the nav bar.
@@ -128,7 +128,7 @@ $today = time();
 $today = make_timestamp(date('Y', $today), date('m', $today), date('d', $today), 0, 0, 0);
 
 // Array of all valid fields for validation.
-$std_fields = array('id', 'firstname', 'lastname', 'username', 'email',
+$stdfields = array('id', 'firstname', 'lastname', 'username', 'email',
         'city', 'country', 'lang', 'auth', 'timezone', 'mailformat',
         'maildisplay', 'maildigest', 'htmleditor', 'ajax', 'autosubscribe',
         'mnethostid', 'institution', 'department', 'idnumber', 'skype',
@@ -136,13 +136,13 @@ $std_fields = array('id', 'firstname', 'lastname', 'username', 'email',
         'url', 'description', 'descriptionformat', 'oldusername', 'deleted',
         'password', 'temppassword');
 
-$prf_fields = array();
+$prffields = array();
 
-if ($prof_fields = $DB->get_records('user_info_field')) {
-    foreach ($prof_fields as $prof_field) {
-        $prf_fields[] = 'profile_field_'.$prof_field->shortname;
+if ($proffields = $DB->get_records('user_info_field')) {
+    foreach ($proffields as $proffield) {
+        $prffields[] = 'profile_field_'.$proffield->shortname;
     }
-    unset($prof_fields);
+    unset($proffields);
 }
 if (empty($iid)) {
     $mform = new admin_uploaduser_form1();
@@ -185,13 +185,13 @@ if (!$columns = $cir->get_columns()) {
 }
 $mform = new admin_uploaduser_form2(null, $columns);
 // Get initial date from form1.
-$mform->set_data(array('iid'=>$iid,
-                       'previewrows'=>$previewrows,
-                       'readcount'=>$readcount,
-                       'uutypelabel'=>$choices[$uploadtype],
-                       'uutype'=>$uploadtype,
-                       'companyid'=>$companyid,
-                       'profile_field_company'=>$USER->profile["company"]));
+$mform->set_data(array('iid' => $iid,
+                       'previewrows' => $previewrows,
+                       'readcount' => $readcount,
+                       'uutypelabel' => $choices[$uploadtype],
+                       'uutype' => $uploadtype,
+                       'companyid' => $companyid,
+                       'profile_field_company' => $USER->profile["company"]));
 
 // If a file has been uploaded, then process it.
 if ($formdata = $mform->is_cancelled()) {
@@ -280,7 +280,7 @@ if ($formdata = $mform->is_cancelled()) {
 
         if (empty($user->username) && !empty($user->email)) {
             // No username given, try to find an existing user via the email address.
-            if ($perfexistinguser = $DB->get_record('user', array('email'=>$user->email, 'mnethostid'=>$user->mnethostid))) {
+            if ($perfexistinguser = $DB->get_record('user', array('email' => $user->email, 'mnethostid' => $user->mnethostid))) {
                 $user->username = $perfexistinguser->username;
             } else {
                 // No existing user matches, generate a new username.
@@ -340,7 +340,7 @@ if ($formdata = $mform->is_cancelled()) {
             continue;
         }
 
-        if ($existinguser = $DB->get_record('user', array('username'=>$user->username, 'mnethostid'=>$user->mnethostid))) {
+        if ($existinguser = $DB->get_record('user', array('username' => $user->username, 'mnethostid' => $user->mnethostid))) {
             $upt->track('id', $existinguser->id, 'normal', false);
         }
 
@@ -354,7 +354,7 @@ if ($formdata = $mform->is_cancelled()) {
         }
 
         // Add default values for remaining fields.
-        foreach ($std_fields as $field) {
+        foreach ($stdfields as $field) {
             if (isset($user->$field)) {
                 continue;
             }
@@ -364,7 +364,7 @@ if ($formdata = $mform->is_cancelled()) {
                 $user->$field = process_template($formdata->$field, $user);
             }
         }
-        foreach ($prf_fields as $field) {
+        foreach ($prffields as $field) {
             if (isset($user->$field)) {
                 if (preg_match('/(?P<day>\d{2})-(?P<month>[a-zA-Z]{3})-(?P<year>\d{4})/', $user->$field, $datearray)) {
                     $month = $montharray[$datearray[2]];
@@ -430,14 +430,14 @@ if ($formdata = $mform->is_cancelled()) {
                 continue;
             }
 
-            if ($olduser = $DB->get_record('user', array('username'=>$oldusername, 'mnethostid'=>$user->mnethostid))) {
+            if ($olduser = $DB->get_record('user', array('username' => $oldusername, 'mnethostid' => $user->mnethostid))) {
                 $upt->track('id', $olduser->id, 'normal', false);
                 if (is_siteadmin($olduser->id)) {
                     $upt->track('status', $strusernotrenamedadmin, 'error');
                     $renameerrors++;
                     continue;
                 }
-                $DB->set_field('user', 'username', $user->username, array('id'=>$olduser->id));
+                $DB->set_field('user', 'username', $user->username, array('id' => $olduser->id));
                 $upt->track('username', '', 'normal', false); // Clear previous.
                 $upt->track('username', $oldusername.'-->'.$user->username, 'info');
                 $upt->track('status', $struserrenamed);
@@ -513,7 +513,7 @@ if ($formdata = $mform->is_cancelled()) {
                 if ($updatetype == 1) {
                     $allowed = $columns;
                 } else if ($updatetype == 2 or $updatetype == 3) {
-                    $allowed = array_merge($std_fields, $prf_fields);
+                    $allowed = array_merge($stdfields, $prffields);
                 }
                 foreach ($allowed as $column) {
                     $temppasswordhandler = '';
@@ -521,14 +521,14 @@ if ($formdata = $mform->is_cancelled()) {
                         continue;
                     }
                     if ((property_exists($existinguser, $column) and property_exists($user, $column))
-                         or in_array($column, $prf_fields)) {
+                         or in_array($column, $prffields)) {
                         if ($updatetype == 3 && $existinguser->$column !== '') {
                             // Missing == non-empty only!
                             continue;
                         }
                         if ($existinguser->$column !== $user->$column) {
                             if ($column == 'email') {
-                                if ($DB->record_exists('user', array('email'=>$user->email))) {
+                                if ($DB->record_exists('user', array('email' => $user->email))) {
                                     if ($noemailduplicates) {
                                         $upt->track('email', $stremailduplicate, 'error');
                                         $upt->track('status', $strusernotupdated, 'error');
@@ -684,7 +684,7 @@ if ($formdata = $mform->is_cancelled()) {
                 }
             }
 
-            if ($DB->record_exists('user', array('email'=>$user->email))) {
+            if ($DB->record_exists('user', array('email' => $user->email))) {
                 if ($noemailduplicates) {
                     $upt->track('email', $stremailduplicate, 'error');
                     $upt->track('status', $strusernotaddederror, 'error');
@@ -765,7 +765,7 @@ if ($formdata = $mform->is_cancelled()) {
             }
             $shortname = $user->{'course'.$i};
             if (!array_key_exists($shortname, $ccache)) {
-                if (!$course = $DB->get_record('course', array('shortname'=>$shortname), 'id, shortname')) {
+                if (!$course = $DB->get_record('course', array('shortname' => $shortname), 'id, shortname')) {
                     $upt->track('enrolments', get_string('unknowncourse', 'error', $shortname), 'error');
                     continue;
                 }
@@ -948,7 +948,7 @@ while ($fields = $cir->next()) {
     }
 
     if ((!isset($rowcols['profile_field_company']) || empty($rowcols['profile_field_company']))
-        && !company_user::is_company_user() && $companyid==0) {
+        && !company_user::is_company_user() && $companyid == 0) {
         $errormsg['profile_field_company'] = get_string('profile_field_company_not_set', 'block_iomad_company_admin');
     }
     if (isset($rowcols['profile_field_company']) && !company_user::can_see_company($rowcols['profile_field_company'])) {
@@ -962,7 +962,7 @@ while ($fields = $cir->next()) {
 
     if ((!isset($rowcols['username']) || empty($rowcols['username'])) && isset($rowcols['email']) && !empty($rowcols['email'])) {
         // No username given, try to find an existing user via the email address.
-        if ($perfexistinguser = $DB->get_record('user', array('email'=>$rowcols['email']))) {
+        if ($perfexistinguser = $DB->get_record('user', array('email' => $rowcols['email']))) {
             $rowcols['username'] = $perfexistinguser->username;
         } else {
             // No existing user matches, generate a new username.
@@ -970,8 +970,8 @@ while ($fields = $cir->next()) {
         }
     }
 
-    $usernameexist = $DB->record_exists('user', array('username'=>$rowcols['username']));
-    $emailexist    = $DB->record_exists('user', array('email'=>$rowcols['email']));
+    $usernameexist = $DB->record_exists('user', array('username' => $rowcols['username']));
+    $emailexist    = $DB->record_exists('user', array('email' => $rowcols['email']));
     $cleanusername = clean_param($rowcols['username'], PARAM_USERNAME);
     $validusername = strcmp($rowcols['username'], $cleanusername);
     $validemail = validate_email($rowcols['email']);
@@ -1030,7 +1030,7 @@ while ($fields = $cir->next()) {
         case UU_ADD_UPDATE:
             $oldusernameexist = '';
             if (isset($rowcols['oldusername'])) {
-                $oldusernameexist = $DB->record_exists('user', array('username'=>$rowcols['oldusername']));
+                $oldusernameexist = $DB->record_exists('user', array('username' => $rowcols['oldusername']));
             }
             if ($usernameexist || $emailexist || $oldusernameexist ) {
                 $rowcols['action'] = 'update';
@@ -1042,7 +1042,7 @@ while ($fields = $cir->next()) {
         case UU_UPDATE:
              $oldusernameexist = '';
             if (isset($rowcols['oldusername'])) {
-                $oldusernameexist = $DB->record_exists('user', array('username'=>$rowcols['oldusername']));
+                $oldusernameexist = $DB->record_exists('user', array('username' => $rowcols['oldusername']));
             }
 
             if ($usernameexist || $emailexist || !empty($oldusernameexist)) {
@@ -1116,10 +1116,10 @@ if (in_array('error', $headings)) {
         }
     }
     $mform = new admin_uploaduser_form3();
-    $mform->set_data(array('uutype'=>$uploadtype));
+    $mform->set_data(array('uutype' => $uploadtype));
 } else if (empty($contents)) {
     $mform = new admin_uploaduser_form3();
-    $mform->set_data(array('uutype'=>$uploadtype));
+    $mform->set_data(array('uutype' => $uploadtype));
 } else {
     // Print content.
     foreach ($contents as $content) {
@@ -1149,7 +1149,7 @@ if (in_array('error', $headings)) {
         $countcontent++;
     }
 }
-echo html_writer::tag('div', html_writer::table($table), array('class'=>'flexible-wrap'));
+echo html_writer::tag('div', html_writer::table($table), array('class' => 'flexible-wrap'));
 
 if ($haserror) {
     echo $OUTPUT->container(get_string('useruploadtype', 'moodle', $choices[$uploadtype]), 'block_iomad_company_admin');
@@ -1214,7 +1214,7 @@ class uu_progress_tracker {
         if (empty($this->_row) or empty($this->_row['line']['normal'])) {
             $this->_row = array();
             foreach ($this->columns as $col) {
-                $this->_row[$col] = array('normal'=>'', 'info'=>'', 'warning'=>'', 'error'=>'');
+                $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
             }
             return;
         }
@@ -1242,11 +1242,11 @@ class uu_progress_tracker {
         }
         echo '</tr>';
         foreach ($this->columns as $col) {
-            $this->_row[$col] = array('normal'=>'', 'info'=>'', 'warning'=>'', 'error'=>'');
+            $this->_row[$col] = array('normal' => '', 'info' => '', 'warning' => '', 'error' => '');
         }
     }
 
-    public function track($col, $msg, $level='normal', $merge=true) {
+    public function track($col, $msg, $level= 'normal', $merge=true) {
         if (empty($this->_row)) {
             $this->flush(); // Init arrays.
         }
@@ -1256,7 +1256,7 @@ class uu_progress_tracker {
         }
         if ($merge) {
             if ($this->_row[$col][$level] != '') {
-                $this->_row[$col][$level] .='<br />';
+                $this->_row[$col][$level] .= '<br />';
             }
             $this->_row[$col][$level] .= s($msg);
         } else {
@@ -1274,7 +1274,7 @@ class uu_progress_tracker {
  * Converts column names to lowercase too.
  */
 function validate_user_upload_columns(&$columns) {
-    global $std_fields, $prf_fields;
+    global $stdfields, $prffields;
 
     if (count($columns) < 2) {
         return get_string('csvfewcolumns', 'error');
@@ -1283,7 +1283,7 @@ function validate_user_upload_columns(&$columns) {
     $processed = array();
     foreach ($columns as $key => $unused) {
         $field = $columns[$key];
-        if (!in_array($field, $std_fields) && !in_array($field, $prf_fields) &&
+        if (!in_array($field, $stdfields) && !in_array($field, $prffields) &&
             !preg_match('/^course\d+$/', $field) && !preg_match('/^group\d+$/', $field) &&
             !preg_match('/^type\d+$/', $field) && !preg_match('/^role\d+$/', $field) &&
             !preg_match('/^enrolperiod\d+$/', $field)) {
@@ -1310,10 +1310,10 @@ function increment_username($username, $mnethostid) {
     if (!preg_match_all('/(.*?)([0-9]+)$/', $username, $matches)) {
         $username = $username.'2';
     } else {
-        $username = $matches[1][0].($matches[2][0]+1);
+        $username = $matches[1][0].($matches[2][0] + 1);
     }
 
-    if ($DB->record_exists('user', array('username'=>$username, 'mnethostid'=>$mnethostid))) {
+    if ($DB->record_exists('user', array('username' => $username, 'mnethostid' => $mnethostid))) {
         return increment_username($username, $mnethostid);
     } else {
         return $username;

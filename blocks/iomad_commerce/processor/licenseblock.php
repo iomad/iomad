@@ -1,10 +1,24 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once('processor.php');
 require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
 
 class licenseblock extends processor {
-    // update the invoice item with the latest license block settings
+    // Update the invoice item with the latest license block settings.
     function oncheckout($invoiceitem) {
         global $DB;
 
@@ -19,45 +33,40 @@ class licenseblock extends processor {
             }
         }
     }
-    
     function onordercomplete($invoiceitem, $invoice) {
         global $DB;
-        
         $transaction = $DB->start_delegated_transaction();
-        
-        // get name for company license
+        // Get name for company license.
         $company = company::get_company_byuserid($invoice->userid);
         $course = $DB->get_record('course', array('id' => $invoiceitem->invoiceableitemid), 'id, shortname', MUST_EXIST);
         $licensename = $company->shortname . " [" . $course->shortname . "] " . date("Y-m-d");
-        
-        $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE name LIKE '" . (str_replace("'","\'",$licensename)) . "%'");
+        $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE name LIKE '" .
+                                        (str_replace("'", "\'", $licensename)) . "%'");
         if ($count) {
             $licensename .= ' (' . ($count + 1) . ')';
         }
 
-        // create mdl_companylicense record
+        // Create mdl_companylicense record.
         $companylicense = new stdClass;
         $companylicense->name = $licensename;
         $companylicense->allocation = $invoiceitem->license_allocation;
         $companylicense->validlength = $invoiceitem->license_validlength;
         if (!empty($invoiceitem->license_shelflife)) {
-            $companylicense->expirydate = ($invoiceitem->license_shelflife * 86400) + time() ;    // 86400 = 24*60*60 = number of seconds in a day
+            $companylicense->expirydate = ($invoiceitem->license_shelflife * 86400) + time();
+            // 86400 = 24*60*60 = number of seconds in a day.
         } else {
             $companylicense->expirydate = 0;
         }
         $companylicense->companyid = $company->id;
         $companylicenseid = $DB->insert_record('companylicense', $companylicense);
-        
-        // create mdl_companylicense_courses record for the course
+        // Create mdl_companylicense_courses record for the course.
         $clc = new stdClass;
         $clc->licenseid = $companylicenseid;
         $clc->courseid = $course->id;
         $DB->insert_record('companylicense_courses', $clc);
-        
-        // mark the invoice item as processed
+        // Mark the invoice item as processed.
         $invoiceitem->processed = 1;
         $DB->update_record('invoiceitem', $invoiceitem);
-        
         $transaction->allow_commit();
     }
 }

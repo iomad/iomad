@@ -113,7 +113,7 @@ require_capability('block/iomad_commerce:admin_view', $context);
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('orders', 'block_iomad_commerce');
+$linktext = get_string('orders', 'block_iomad_commerce');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/orderlist.php');
 // Build the nav bar.

@@ -122,9 +122,9 @@ class paypal extends payment_provider {
                                              $details);
 
         $ack = strtoupper($resarray["ACK"]);
-        if ($ack=="SUCCESS" || $ack=="SUCCESSWITHWARNING") {
+        if ($ack == "SUCCESS" || $ack == "SUCCESSWITHWARNING") {
                 $token = urldecode($resarray["TOKEN"]);
-                $_SESSION['reshash']=$token;
+                $_SESSION['reshash'] = $token;
                 RedirectToPayPal ($token);
         } else {
                 // Display a user friendly Error on the page using any of the following error information returned by PayPal.
@@ -246,7 +246,7 @@ class paypal extends payment_provider {
         '------------------------------------
         */
 
-        $finalpaymentamount =  $_SESSION["Payment_Amount"];
+        $finalpaymentamount = $_SESSION["Payment_Amount"];
 
         /*
         '------------------------------------

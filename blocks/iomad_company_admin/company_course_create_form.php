@@ -73,7 +73,7 @@ class course_edit_form extends moodleform {
         $mform->setType('summary_editor', PARAM_RAW);
 
         // Add action buttons.
-        $buttonarray=array();
+        $buttonarray = array();
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton',
                             get_string('createcourse', 'block_iomad_company_admin'));
         $buttonarray[] = &$mform->createElement('submit', 'submitandviewbutton',
@@ -106,7 +106,7 @@ class course_edit_form extends moodleform {
         global $DB, $CFG;
 
         $errors = parent::validation($data, $files);
-        if ($foundcourses = $DB->get_records('course', array('shortname'=>$data['shortname']))) {
+        if ($foundcourses = $DB->get_records('course', array('shortname' => $data['shortname']))) {
             if (!empty($data['id'])) {
                 unset($foundcourses[$data['id']]);
             }
@@ -115,7 +115,7 @@ class course_edit_form extends moodleform {
                     $foundcoursenames[] = $foundcourse->fullname;
                 }
                 $foundcoursenamestring = implode(',', $foundcoursenames);
-                $errors['shortname']= get_string('shortnametaken', '', $foundcoursenamestring);
+                $errors['shortname'] = get_string('shortnametaken', '', $foundcoursenamestring);
             }
         }
 
@@ -141,7 +141,7 @@ $companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('createcourse', 'block_iomad_company_admin');
+$linktext = get_string('createcourse', 'block_iomad_company_admin');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_course_create_form.php');
@@ -166,10 +166,10 @@ if (!empty($SESSION->currenteditingcompany)) {
 
 
 /* next line copied from /course/edit.php */
-$editoroptions = array('maxfiles'=>EDITOR_UNLIMITED_FILES,
-                       'maxbytes'=>$CFG->maxbytes,
-                       'trusttext'=>false,
-                       'noclean'=>true);
+$editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
+                       'maxbytes' => $CFG->maxbytes,
+                       'trusttext' => false,
+                       'noclean' => true);
 
 $mform = new course_edit_form($PAGE->url, $companyid, $editoroptions);
 
@@ -181,7 +181,7 @@ if ($mform->is_cancelled()) {
     $data->userid = $USER->id;
 
     // Merge data with course defaults.
-    $company = $DB->get_record('company', array('id'=>$companyid));
+    $company = $DB->get_record('company', array('id' => $companyid));
     if (!empty($company->category)) {
         $data->category = $company->category;
     } else {
@@ -203,7 +203,7 @@ if ($mform->is_cancelled()) {
     // If licensed course, turn off all enrolments apart from license enrolment as
     // default  Moving this to a separate page.
     if ($data->selfenrol) {
-        if ($instances = $DB->get_records('enrol', array('courseid'=>$course->id))) {
+        if ($instances = $DB->get_records('enrol', array('courseid' => $course->id))) {
             foreach ($instances as $instance) {
                 $updateinstance = (array) $instance;
                 if ($instance->enrol == 'self') {
@@ -221,9 +221,9 @@ if ($mform->is_cancelled()) {
     // Associate the company with the course.
     $company = new company($companyid);
     // Check if we are a company manager.
-    if ($DB->get_record('company_users', array('companyid'=>$companyid,
-                                                   'userid'=>$USER->id,
-                                                   'managertype'=>1))) {
+    if ($DB->get_record('company_users', array('companyid' => $companyid,
+                                                   'userid' => $USER->id,
+                                                   'managertype' => 1))) {
         $company->add_course($course, 0, true);
     } else {
         $company->add_course($course);
@@ -231,7 +231,7 @@ if ($mform->is_cancelled()) {
 
     if (isset($data->submitandviewbutton)) {
         // We are going to the course instead.
-        redirect(new moodle_url('/course/view.php', array('id'=>$course->id)));
+        redirect(new moodle_url('/course/view.php', array('id' => $course->id)));
     } else {
         redirect($companylist);
     }

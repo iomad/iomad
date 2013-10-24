@@ -28,7 +28,7 @@ global $DB;
 
 // Correct the navbar .
 // Set the name for the page.
-$linktext=get_string('company_list_title', 'block_iomad_company_admin');
+$linktext = get_string('company_list_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_list.php');
 // Build the nav bar.
@@ -48,33 +48,33 @@ if ($delete and confirm_sesskey()) {              // Delete a selected company, 
 
     require_capability('block/iomad_company_admin:company_delete', $context);
 
-    $company = $DB->get_record('company', array('id'=>$delete), '*', MUST_EXIST);
+    $company = $DB->get_record('company', array('id' => $delete), '*', MUST_EXIST);
 
     if ($confirm != md5($delete)) {
         echo $OUTPUT->header();
         $name = $company->name;
         echo $OUTPUT->heading(get_string('deletecompany', 'block_iomad_company_admin'), 2, 'headingblock header');
-        $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+        $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $OUTPUT->confirm(get_string('companydeletecheckfull', 'block_iomad_company_admin', "'$name'"),
                               new moodle_url('company_list.php', $optionsyes), 'company_list.php');
         echo $OUTPUT->footer();
         die;
     } else if (data_submitted()) {
-        $a2bd_company = new company($delete);
-        $userids = $a2bd_company->get_user_ids();
+        $a2bdcompany = new company($delete);
+        $userids = $a2bdcompany->get_user_ids();
 
         $transaction = $DB->start_delegated_transaction();
 
-        if ($DB->delete_records('company', array('id'=>$delete))) {
+        if ($DB->delete_records('company', array('id' => $delete))) {
 
             // Delete the company profile category.
-            if ($category = $DB->get_record('user_info_category', array('name'=>$company->shortname))) {
+            if ($category = $DB->get_record('user_info_category', array('name' => $company->shortname))) {
                 // Remove the category.
                 profile_delete_category($ccategory->id);
             }
             // Delete company users as well.
             foreach ($userids as $userid) {
-                $user = $DB->get_record('user', array('id'=>$userid, 'deleted'=>0), '*', MUST_EXIST);
+                $user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
                 // Must not allow deleting of admins or self!!!
                 if (is_siteadmin($user)) {
                     throw new moodle_exception('useradminodelete', 'error');

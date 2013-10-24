@@ -40,7 +40,7 @@ class company_edit_form extends company_moodleform {
         global $CFG, $PAGE, $DB;
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-        $mform =& $this->_form;
+        $mform = & $this->_form;
 
         $strrequired = get_string('required');
 
@@ -70,7 +70,7 @@ class company_edit_form extends company_moodleform {
 
         /* copied from user/editlib.php */
         $choices = get_string_manager()->get_list_of_countries();
-        $choices= array(''=>get_string('selectacountry').'...') + $choices;
+        $choices = array('' => get_string('selectacountry').'...') + $choices;
         $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
         $mform->addRule('country', $strrequired, 'required', null, 'client');
         if (!empty($CFG->country)) {
@@ -196,14 +196,14 @@ class company_edit_form extends company_moodleform {
                 $mform->addElement('filepicker', 'companylogo',
                                     get_string('companylogo', 'block_iomad_company_admin'), null,
                                     array('subdirs' => 0,
-                                         'maxbytes' => 150*1024,
+                                         'maxbytes' => 150 * 1024,
                                          'maxfiles' => 1,
                                          'accepted_types' => array('*.jpg', '*.gif', '*.png')));
 
-                $this->add_colour_picker('bgcolor_header', array('selector'=>'.header,.navbar',
-                                                                 'style'=>'background'));
-                $this->add_colour_picker('bgcolor_content', array('selector'=>'.block .content',
-                                                                  'style'=>'background'));
+                $this->add_colour_picker('bgcolor_header', array('selector' => '.header,.navbar',
+                                                                 'style' => 'background'));
+                $this->add_colour_picker('bgcolor_content', array('selector' => '.block .content',
+                                                                  'style' => 'background'));
                 $mform->disabledIf('companylogo', 'theme', 'ne', 'iomad');
                 $mform->disabledIf('id_bgcolor_header', 'usedefaulttheme', 'checked');
                 $mform->disabledIf('id_bgcolor_content', 'usedefaulttheme', 'checked');
@@ -257,7 +257,7 @@ class company_edit_form extends company_moodleform {
 
         $errors = parent::validation($data, $files);
 
-        if ($foundcompanies = $DB->get_records('company', array('name'=>$data['name']))) {
+        if ($foundcompanies = $DB->get_records('company', array('name' => $data['name']))) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -266,12 +266,12 @@ class company_edit_form extends company_moodleform {
                     $foundcompanynames[] = $foundcompany->name;
                 }
                 $foundcompanynamestring = implode(',', $foundcompanynames);
-                $errors['name']= get_string('companynametaken',
+                $errors['name'] = get_string('companynametaken',
                                             'block_iomad_company_admin', $foundcompanynamestring);
             }
         }
 
-        if ($foundcompanies = $DB->get_records('company', array('shortname'=>$data['shortname']))) {
+        if ($foundcompanies = $DB->get_records('company', array('shortname' => $data['shortname']))) {
             if (!empty($this->companyid)) {
                 unset($foundcompanies[$this->companyid]);
             }
@@ -280,7 +280,7 @@ class company_edit_form extends company_moodleform {
                     $foundcompanyshortnames[] = $foundcompany->shortname;
                 }
                 $foundcompanynamestring = implode(',', $foundcompanyshortnames);
-                $errors['shortname']= get_string('companyshortnametaken',
+                $errors['shortname'] = get_string('companyshortnametaken',
                                                  'block_iomad_company_admin',
                                                   $foundcompanynamestring);
             }
@@ -301,9 +301,9 @@ $PAGE->set_context($context);
 // Correct the navbar.
 // Set the name for the page.
 if (!$new) {
-    $linktext=get_string('editcompany', 'block_iomad_company_admin');
+    $linktext = get_string('editcompany', 'block_iomad_company_admin');
 } else {
-    $linktext=get_string('addnewcompany', 'block_iomad_company_admin');
+    $linktext = get_string('addnewcompany', 'block_iomad_company_admin');
 }
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_edit_form.php');
@@ -353,7 +353,7 @@ file_prepare_draft_area($draftitemid,
                         $context->id,
                         'theme_iomad',
                         'logo', $companyid,
-                        array('subdirs' => 0, 'maxbytes' => 15*1024, 'maxfiles' => 1));
+                        array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
 $companyrecord->companylogo = $draftitemid;
 
 // Set up the form.
@@ -370,7 +370,7 @@ if ($mform->is_cancelled()) {
         // Set up a profiles field category for this company.
         $catdata = new object();
         $catdata->sortorder = $DB->count_records('user_info_category') + 1;
-        $catdata->name =$data->shortname;
+        $catdata->name = $data->shortname;
         $data->profileid = $DB->insert_record('user_info_category', $catdata, false);
 
         $companyid = $DB->insert_record('company', $data);
@@ -382,14 +382,14 @@ if ($mform->is_cancelled()) {
         // Set up course category for company.
         $coursecat = new object();
         $coursecat->name = $data->name;
-        $coursecat->sortorder=999;
+        $coursecat->sortorder = 999;
         $coursecat->id = $DB->insert_record('course_categories', $coursecat);
         $coursecat->context = get_context_instance(CONTEXT_COURSECAT, $coursecat->id);
         $categorycontext = $coursecat->context;
         mark_context_dirty($coursecat->context->path);
         $DB->update_record('course_categories', $coursecat);
         fix_course_sortorder();
-        $companydetails = $DB->get_record('company', array('id'=>$companyid));
+        $companydetails = $DB->get_record('company', array('id' => $companyid));
         $companydetails->category = $coursecat->id;
         $DB->update_record('company', $companydetails);
 
@@ -405,11 +405,11 @@ if ($mform->is_cancelled()) {
         if ($shortnamechanged) {
             company_user::update_company_reference($oldshortname, $data->shortname);
             if (!$currcategory = $DB->get_record('user_info_category',
-                                                  array('name'=>$oldshortname))) {
+                                                  array('name' => $oldshortname))) {
                 // No category there for some reason, so we add it.
                 $catdata = new object();
                 $catdata->sortorder = $DB->count_records('user_info_category') + 1;
-                $catdata->name =$data->shortname;
+                $catdata->name = $data->shortname;
                 $DB->insert_record('user_info_category', $catdata, false);
             } else {
                 // Got a record so update it..
@@ -428,7 +428,7 @@ if ($mform->is_cancelled()) {
                                    'theme_iomad',
                                    'logo',
                                    $data->id,
-                                   array('subdirs' => 0, 'maxbytes' => 15*1024, 'maxfiles' => 1));
+                                   array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
     }
     redirect($companylist);
 }

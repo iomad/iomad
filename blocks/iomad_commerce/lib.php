@@ -60,7 +60,7 @@ function get_license_block($courseid, $nlicenses) {
 }
 
 function get_basket_id() {
-    if ($basket=get_basket('id')) {
+    if ($basket = get_basket('id')) {
         return $basket->id;
     }
     return 0;
@@ -80,7 +80,7 @@ function get_basket_total() {
                                         i.id = :basketid
                                        GROUP BY
                                         i.id
-                                    ', array('basketid' => $SESSION->basketid, 'status'=>INVOICESTATUS_BASKET))) {
+                                    ', array('basketid' => $SESSION->basketid, 'status' => INVOICESTATUS_BASKET))) {
         return $basket->total;
     }
     return 0;
@@ -352,7 +352,7 @@ function random_invoice_reference() {
     $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     $refstr = '';
     for ($i = 0; $i < 6; $i++) {
-        $refstr .= $chars[rand(0, strlen($chars)-1)];
+        $refstr .= $chars[rand(0, strlen($chars) -1 )];
     }
     return $refstr;
 }

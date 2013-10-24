@@ -64,7 +64,7 @@ $details = $DB->get_records_sql("SELECT c.fullname, ii.quantity, ii.price
 //  it is included at the top of this file.
 $resarray = calshortcutexpresscheckout ($paymentamount, $currencycodetype, $paymenttype, $returnurl, $cancelurl, $details);
 $ack = strtoupper($resarray["ACK"]);
-if ($ack=="SUCCESS" || $ack=="SUCCESSWITHWARNING") {
+if ($ack == "SUCCESS" || $ack == "SUCCESSWITHWARNING") {
     RedirectToPayPal ($resarray["TOKEN"]);
 } else {
     // Display a user friendly Error on the page using any of the following error information returned by PayPal.
