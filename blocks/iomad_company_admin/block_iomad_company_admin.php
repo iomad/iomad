@@ -75,7 +75,7 @@ class block_iomad_company_admin extends block_base {
         $this->content->text .= $tabhtml;
 
         // Build content for selected tab (from menu array).
-        $adminmenu = new iomadadminmenu();
+        $adminmenu = new iomad_admin_menu();
         $menus = $adminmenu->getmenu();
         $html = '<div class="iomadlink_container clearfix">';
         foreach ($menus as $key => $menu) {

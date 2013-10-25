@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 class block_iomad_report_scheduler extends block_base {
     public function init() {
         $this->title = get_string('pluginname', 'block_iomad_report_scheduler');
