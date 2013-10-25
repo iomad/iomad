@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,29 +25,29 @@
 
 require_once("../../config.php");
 
-$id = optional_param('id',0,PARAM_INT);    // Course Module ID, or
-$l = optional_param('l',0,PARAM_INT);     // Label ID
+$id = optional_param('id', 0, PARAM_INT);    // Course Module ID, or
+$l = optional_param('l', 0, PARAM_INT);     // Label ID.
 
 if ($id) {
-    $PAGE->set_url('/mod/trainingevent/index.php', array('id'=>$id));
+    $PAGE->set_url('/mod/trainingevent/index.php', array('id' => $id));
     if (! $cm = get_coursemodule_from_id('trainingevent', $id)) {
         print_error('invalidcoursemodule');
     }
 
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
+    if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
         print_error('coursemisconf');
     }
 
-    if (! $trainingevent = $DB->get_record("trainingevent", array("id"=>$cm->instance))) {
+    if (! $trainingevent = $DB->get_record("trainingevent", array("id" => $cm->instance))) {
         print_error('invalidcoursemodule');
     }
 
 } else {
-    $PAGE->set_url('/mod/trainingevent/index.php', array('l'=>$l));
-    if (! $trainingevent = $DB->get_record("trainingevent", array("id"=>$l))) {
+    $PAGE->set_url('/mod/trainingevent/index.php', array('l' => $l));
+    if (! $trainingevent = $DB->get_record("trainingevent", array("id" => $l))) {
         print_error('invalidcoursemodule');
     }
-    if (! $course = $DB->get_record("course", array("id"=>$trainingevent->course)) ){
+    if (! $course = $DB->get_record("course", array("id" => $trainingevent->course))) {
         print_error('coursemisconf');
     }
     if (! $cm = get_coursemodule_from_instance("trainingevent", $trainingevent->id, $course->id)) {

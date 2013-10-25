@@ -36,11 +36,11 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
         /** Number of seconds to delay before submitting a query request */
         querydelay : 0.5,
         /** The input element that contains the search term. */
-        searchfield : Y.one('#'+name + '_searchtext'),
+        searchfield : Y.one('#' + name + '_searchtext'),
         /** The clear button. */
         clearbutton : null,
         /** The select element that contains the list of courses. */
-        listbox : Y.one('#'+name),
+        listbox : Y.one('#' + name),
         /** Used to hold the timeout id of the timeout that waits before doing a search. */
         timeoutid : null,
         /** The last string that we searched for, so we can avoid unnecessary repeat searches. */
@@ -54,8 +54,8 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
          */
         init : function() {
             // Hide the search button and replace it with a label.
-            var searchbutton = Y.one('#'+this.name + '_searchbutton');
-            this.searchfield.insert(Y.Node.create('<label for="'+this.name + '_searchtext">'+searchbutton.get('value')+'</label>'), this.searchfield);
+            var searchbutton = Y.one('#' + this.name + '_searchbutton');
+            this.searchfield.insert(Y.Node.create('<label for="' + this.name + '_searchtext">' + searchbutton.get('value') + '</label>'), this.searchfield);
             searchbutton.remove();
 
             // Hook up the event handler for when the search text changes.
@@ -74,10 +74,10 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
             this.selectionempty = this.is_selection_empty();
 
             // Replace the Clear submit button with a clone that is not a submit button.
-            var clearbtn = Y.one('#'+this.name + '_clearbutton');
-            this.clearbutton = Y.Node.create('<input type="button" value="'+clearbtn.get('value')+'" />');
+            var clearbtn = Y.one('#' + this.name + '_clearbutton');
+            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" />');
             clearbtn.replace(Y.Node.getDOMNode(this.clearbutton));
-            this.clearbutton.set('id',+this.name+"_clearbutton");
+            this.clearbutton.set('id', + this.name + "_clearbutton");
             this.clearbutton.on('click', this.handle_clear, this);
 
             this.send_query(false);
@@ -89,7 +89,7 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
         handle_keyup : function(e) {
             //  Trigger an ajax search after a delay.
             this.cancel_timeout();
-            this.timeoutid = setTimeout(function(obj){obj.send_query(false)}, this.querydelay*1000, this);
+            this.timeoutid = setTimeout(function(obj){obj.send_query(false)}, this.querydelay * 1000, this);
 
             // Enable or diable the clear button.
             this.clearbutton.set('disabled', (this.get_search_text() == ''));
@@ -141,7 +141,7 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
 
             Y.io(M.cfg.wwwroot + '/local/course_selector/search.php', {
                 method: 'POST',
-                data: 'selectorid='+hash+'&sesskey='+M.cfg.sesskey+'&search='+value + '&courseselector_searchanywhere=' + this.get_option('searchanywhere'),
+                data: 'selectorid=' + hash + '&sesskey=' + M.cfg.sesskey + '&search=' + value + '&courseselector_searchanywhere=' + this.get_option('searchanywhere'),
                 on: {
                     success:this.handle_response,
                     failure:this.handle_failure
@@ -175,7 +175,9 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
 
             // If we are in developer debug mode, output a link to help debug the failure.
             if (M.cfg.developerdebug) {
-                this.searchfield.insert(Y.Node.create('<a href="'+M.cfg.wwwroot +'/local/course_selector/search.php?selectorid='+hash+'&sesskey='+M.cfg.sesskey+'&search='+this.get_search_text()+'&debug=1">Ajax call failed. Click here to try the search call directly.</a>'));
+                this.searchfield.insert(Y.Node.create('<a href="' + M.cfg.wwwroot + '/local/course_selector/search.php?selectorid=' +
+                                                       hash + '&sesskey=' + M.cfg.sesskey + '&search=' + this.get_search_text() +
+                                                      '&debug=1">Ajax call failed. Click here to try the search call directly.</a>'));
             }
         },
         /**
@@ -231,10 +233,10 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
             var count = 0;
             for (var courseid in courses) {
                 var course = courses[courseid];
-                var option = Y.Node.create('<option value="'+courseid+'">'+course.name+'</option>');
+                var option = Y.Node.create('<option value="' + courseid + '">' + course.name + '</option>');
                 if (course.disabled) {
                     option.set('disabled', true);
-                } else if (selectedcourses===true || selectedcourses[courseid]) {
+                } else if (selectedcourses === true || selectedcourses[courseid]) {
                     option.set('selected', true);
                 } else {
                     option.set('selected', false);
@@ -244,8 +246,8 @@ M.local_course_selector.init_course_selector = function (Y, name, hash, extrafie
             }
 
             if (count > 0) {
-                optgroup.set('label', groupname+' ('+count+')');
-                if (processsingle && count===1 && this.get_option('autoselectunique') && option.get('disabled')) {
+                optgroup.set('label', groupname + ' (' + count + ')');
+                if (processsingle && count === 1 && this.get_option('autoselectunique') && option.get('disabled')) {
                     option.set('selected', true);
                 }
             } else {
@@ -337,7 +339,7 @@ M.local_course_selector.init_course_selector_options_tracker = function(Y) {
             ];
             for (var s in settings) {
                 var setting = settings[s];
-                Y.one('#'+setting+'id').on('click', this.set_user_preference, this, setting);
+                Y.one('#' + setting + 'id').on('click', this.set_user_preference, this, setting);
             }
         },
         /**
@@ -346,7 +348,7 @@ M.local_course_selector.init_course_selector_options_tracker = function(Y) {
          * @param {string} name The name of the preference to set
          */
         set_user_preference : function(e, name) {
-            M.util.set_user_preference(name, Y.one('#'+name+'id').get('checked'));
+            M.util.set_user_preference(name, Y.one('#' + name + 'id').get('checked'));
         }
     };
     // Initialise the options tracker

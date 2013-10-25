@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -36,7 +35,7 @@ class restore_trainingevent_activity_structure_step extends restore_activity_str
         $paths = array();
         $paths[] = new restore_path_element('trainingevent', '/activity/trainingevent');
 
-        // Return the paths wrapped into standard activity structure
+        // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
     }
 
@@ -47,14 +46,14 @@ class restore_trainingevent_activity_structure_step extends restore_activity_str
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
-        // insert the trainingevent record
+        // Insert the trainingevent record.
         $newitemid = $DB->insert_record('trainingevent', $data);
-        // immediately after inserting "activity" record, call this
+        // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
     }
 
     protected function after_execute() {
-        // Add trainingevent related files, no need to match by itemname (just internally handled context)
+        // Add trainingevent related files, no need to match by itemname (just internally handled context).
         $this->add_related_files('mod_trainingevent', 'intro', null);
     }
 

@@ -76,14 +76,14 @@ abstract class course_selector_base {
                 ));
 
 
-    // Public API ==============================================================
+    // Public API.
 
     /**
      * Constructor. Each subclass must have a constructor with this signature.
      *
      * @param string $name the control name/id for use in the HTML.
      * @param array $options other options needed to construct this selector.
-     * You must be able to clone a courseselector by doing 
+     * You must be able to clone a courseselector by doing
      * new get_class($us)($us->get_name(), $us->get_options());
      */
     public function __construct($name, $options = array()) {
@@ -272,7 +272,7 @@ abstract class course_selector_base {
      */
     public function get_rows() {
         return $this->rows;
-    }   
+    }
 
     /**
      * Whether this control will allow selection of many, or just one course.
@@ -307,7 +307,7 @@ abstract class course_selector_base {
         $this->extrafields = $fields;
     }
 
-    // API for sublasses =======================================================
+    // API for sublasses.
 
     /**
      * Search the database for courses matching the $search string, and any other
@@ -356,7 +356,7 @@ abstract class course_selector_base {
         );
     }
 
-    // Inner workings ==========================================================
+    // Inner workings.
 
     /**
      * @return boolean if true, we are validating a list of selected courses,
@@ -377,17 +377,16 @@ abstract class course_selector_base {
         if (!$this->multiselect) {
             $courseids = optional_param($this->name, null, PARAM_INTEGER);
             if (empty($courseids)) {
-               return array();
+                return array();
             } else {
                 $courseids = array($courseids);
             }
         } else {
             $courseids = optional_param_array($this->name, array(), PARAM_INTEGER);
             if (empty($courseids)) {
-               return array();
+                return array();
             }
         }
-        
 
         // If we did, use the find_courses method to validate the ids.
         $this->validatingcourseids = $courseids;
@@ -452,7 +451,6 @@ abstract class course_selector_base {
         // If we have a $search string, put a field LIKE '$search%' condition on each field.
         if ($search) {
             $conditions = array(
-                // $DB->sql_fullname($u . 'firstname', $u . 'lastname'),
                 $conditions[] = $u . 'fullname'
             );
             foreach ($this->extrafields as $field) {
@@ -472,7 +470,7 @@ abstract class course_selector_base {
             $tests[] = '(' . implode(' OR ', $conditions) . ')';
         }
 
-        // Add some additional sensible conditions
+        // Add some additional sensible conditions.
         $tests[] = $u . 'visible = 1';
 
         // If we are being asked to exclude any courses, do that.

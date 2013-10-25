@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -33,10 +32,10 @@ class backup_trainingevent_activity_structure_step extends backup_activity_struc
 
     protected function define_structure() {
 
-        // To know if we are including userinfo
+        // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
 
-        // Define each element separated
+        // Define each element separated.
         $trainingevent = new backup_nested_element('trainingevent', array('id'), array(
             'course', 'name', 'intro', 'introformat', 'timemodified', 'startdatetime', 'enddatetime', 'classroomid'));
         $users = new backup_nested_element('users');
@@ -45,20 +44,20 @@ class backup_trainingevent_activity_structure_step extends backup_activity_struc
         $trainingevent->add_child($users);
         $users->add_child($user);
 
-        // Build the tree
-        // (love this)
+        // Build the tree.
+        // (love this).
 
-        // Define sources
+        // Define sources.
         $trainingevent->set_source_table('trainingevent', array('id' => backup::VAR_ACTIVITYID));
         $trainingevent->set_source_table('trainingevent_users', array('trainingeventid' => backup::VAR_ACTIVITYID));
 
-        // Define id annotations
-        // (none)
+        // Define id annotations.
+        // (none).
 
-        // Define file annotations
-        // (none)
+        // Define file annotations.
+        // (none).
 
-        // Return the root element (trainingevent), wrapped into standard activity structure
+        // Return the root element (trainingevent), wrapped into standard activity structure.
         return $this->prepare_activity_structure($trainingevent);
     }
 }
