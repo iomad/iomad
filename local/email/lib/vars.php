@@ -97,7 +97,7 @@ class EmailVars {
             // Sender information fields .
                         'Sender_FirstName', 'Sender_LastName', 'Sender_Email',
             // Miscellaneouss fields.
-                        'LinkURL'
+                        'LinkURL', 'SiteURL'
         );
 
         // Add all methods of this class that are ok2call to the $result array as well.
@@ -134,6 +134,11 @@ class EmailVars {
 
     function CourseURL() {
         return $this->course->url;
+    }
+
+    function SiteURL() {
+        global $CFG;
+        return $CFG->wwwroot;
     }
 
     function LinkURL() {

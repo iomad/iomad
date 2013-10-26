@@ -51,6 +51,9 @@ please log onto {Site_FullName} ({LinkURL}) to approve or deny this request.';
 $string['approved_subject'] = 'You have been approved access to {Course_FullName}';
 $string['approved_body'] = 'You have been granted access to course {Course_FullName}.  To access this, please click on {CourseURL}.';
 
+$string['course_classroom_denied_subject'] = 'Face to face training event approval denied';
+$string['course_classroom_denied_body'] = 'Your approval request has been rejected for {Course_FullName} at the following event -
+
 $string['expire_subject'] = 'Course expires';
 $string['expire_body'] = 'This is to let you know that your training in {Course_FullName} expires soon.';
 
