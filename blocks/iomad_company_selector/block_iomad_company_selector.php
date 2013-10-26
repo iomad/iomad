@@ -56,12 +56,12 @@ class block_iomad_company_selector extends block_base {
 
         //  Check users session and profile settings to get the current editing company.
         if (!empty($SESSION->currenteditingcompany)) {
-            $selectedcompany=$SESSION->currenteditingcompany;
+            $selectedcompany = $SESSION->currenteditingcompany;
         } else if (!empty($USER->profile->company)) {
-            $usercompany=company::by_shortname($USER->profile->company);
-            $selectedcompany=$usercompany->id;
+            $usercompany = company::by_shortname($USER->profile->company);
+            $selectedcompany = $usercompany->id;
         } else {
-            $selectedcompany="";
+            $selectedcompany = "";
         }
 
         // Get the company name if set.
@@ -72,11 +72,11 @@ class block_iomad_company_selector extends block_base {
         }
 
         // Get a list of companies.
-        $companylist=company::get_companies_select();
+        $companylist = company::get_companies_select();
         $select = new single_select(new moodle_url('/local/iomad_dashboard/index.php'), 'company', $companylist, $selectedcompany);
         $select->label = get_string('selectacompany', 'block_iomad_company_selector');
         $select->formid = 'choosecompany';
-        $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id'=>'iomad_company_selector'));
+        $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_company_selector'));
         $this->content->text = $OUTPUT->container_start('companyselect');
         if (!empty($SESSION->currenteditingcompany)) {
             $this->content->text .= $OUTPUT->heading( get_string('currentcompany', 'block_iomad_company_selector').

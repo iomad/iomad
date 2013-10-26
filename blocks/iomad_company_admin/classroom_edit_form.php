@@ -76,7 +76,7 @@ class classroom_edit_form extends moodleform {
         $mform->setType('postcode', PARAM_NOTAGS);
 
         $choices = get_string_manager()->get_list_of_countries();
-        $choices= array(''=>get_string('selectacountry').'...') + $choices;
+        $choices = array('' => get_string('selectacountry').'...') + $choices;
         $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
         $mform->addRule('country', $strrequired, 'required', null, 'client');
 
@@ -136,7 +136,7 @@ if ($classroomid) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string($title, 'block_iomad_company_admin');
+$linktext = get_string($title, 'block_iomad_company_admin');
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/classroom_edit_form.php');

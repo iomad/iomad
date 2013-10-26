@@ -32,7 +32,7 @@ $block = 'block_iomad_company_admin';
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('classrooms', $block);
+$linktext = get_string('classrooms', $block);
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/classroom_list.php');
 // Build the nav bar.
@@ -71,13 +71,13 @@ if ($delete and confirm_sesskey()) {
 
     require_capability('block/iomad_company_admin:classrooms_delete', $context);
 
-    $classroom = $DB->get_record('classroom', array('id'=>$delete), '*', MUST_EXIST);
+    $classroom = $DB->get_record('classroom', array('id' => $delete), '*', MUST_EXIST);
 
     if ($confirm != md5($delete)) {
         echo $OUTPUT->header();
         $name = $classroom->name;
         echo $OUTPUT->heading(get_string('classroom_delete', $block), 2, 'headingblock header');
-        $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+        $optionsyes = array('delete' => $delete, 'confirm' => md5 ($delete), 'sesskey ' => sesskey());
         echo $OUTPUT->confirm(get_string('classroom_delete_checkfull', $block, "'$name'"),
                                new moodle_url('classroom_list.php', $optionsyes),
                                'classroom_list.php');
@@ -86,7 +86,7 @@ if ($delete and confirm_sesskey()) {
     } else if (data_submitted()) {
         $transaction = $DB->start_delegated_transaction();
 
-        if ( $DB->delete_records('classroom', array('id'=>$delete)) ) {
+        if ( $DB->delete_records('classroom', array('id' => $delete)) ) {
             $transaction->allow_commit();
             redirect($returnurl);
         } else {
@@ -114,7 +114,7 @@ echo $OUTPUT->paging_bar($objectcount, $page, $perpage, $baseurl);
 
 flush();
 
-if ($classrooms = $DB->get_recordset('classroom', array('companyid'=>$companyid),
+if ($classrooms = $DB->get_recordset('classroom', array('companyid' => $companyid),
                                      'name', '*', $page, $perpage)) {
     $stredit   = get_string('edit');
     $strdelete = get_string('delete');

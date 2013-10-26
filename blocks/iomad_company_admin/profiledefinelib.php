@@ -68,8 +68,8 @@ class profile_define_base {
         if (!empty($companyid)) {
             // Being passed a company dont need to have the select.
             // Get to company details.
-            $company = $DB->get_record('company', array('id'=>$companyid), '*', MUST_EXIST);
-            $category = $DB->get_record('user_info_category', array('id'=>$company->profileid));
+            $company = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
+            $category = $DB->get_record('user_info_category', array('id' => $company->profileid));
             $form->addElement('hidden', 'categoryid', $category->id);
         } else {
             $choices = profile_list_categories();
@@ -122,9 +122,9 @@ class profile_define_base {
 
         } else {
             // Fetch field-record from DB  Needs to be munged as hiding the <companyshortname>- from the user.
-            $category=$DB->get_record('user_info_category', array('id'=>$data->categoryid));
+            $category = $DB->get_record('user_info_category', array('id' => $data->categoryid));
             $data->shortname = $category->name.'-'.$data->shortname;
-            $field = $DB->get_record('user_info_field', array('shortname'=>$data->shortname));
+            $field = $DB->get_record('user_info_field', array('shortname' => $data->shortname));
             // Check the shortname is unique.
             if ($field and $field->id <> $data->id) {
                 $err['shortname'] = get_string('profileshortnamenotunique', 'admin');
@@ -169,12 +169,12 @@ class profile_define_base {
 
         $old = false;
         if (!empty($data->id)) {
-            $old = $DB->get_record('user_info_field', array('id'=>(int)$data->id));
+            $old = $DB->get_record('user_info_field', array('id' => (int)$data->id));
         }
 
         // Check to see if the category has changed.
         if (!$old or $old->categoryid != $data->categoryid) {
-            $data->sortorder = $DB->count_records('user_info_field', array('categoryid'=>$data->categoryid)) + 1;
+            $data->sortorder = $DB->count_records('user_info_field', array('categoryid' => $data->categoryid)) + 1;
         }
 
         if (empty($data->id)) {
@@ -222,7 +222,7 @@ function profile_reorder_fields() {
     if ($categories = $DB->get_records('user_info_category')) {
         foreach ($categories as $category) {
             $i = 1;
-            if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->id), 'sortorder ASC')) {
+            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
                 foreach ($fields as $field) {
                     $f = new stdClass();
                     $f->id = $field->id;
@@ -261,7 +261,7 @@ function profile_delete_category($id) {
     global $DB;
 
     // Retrieve the category.
-    if (!$category = $DB->get_record('user_info_category', array('id'=>$id))) {
+    if (!$category = $DB->get_record('user_info_category', array('id' => $id))) {
         print_error('invalidcategoryid');
     }
 
@@ -276,18 +276,18 @@ function profile_delete_category($id) {
     }
 
     // Does the category contain any fields?
-    if ($DB->count_records('user_info_field', array('categoryid'=>$category->id))) {
-        if (array_key_exists($category->sortorder-1, $categories)) {
-            $newcategory = $categories[$category->sortorder-1];
-        } else if (array_key_exists($category->sortorder+1, $categories)) {
-            $newcategory = $categories[$category->sortorder+1];
+    if ($DB->count_records('user_info_field', array('categoryid' => $category->id))) {
+        if (array_key_exists($category->sortorder - 1, $categories)) {
+            $newcategory = $categories[$category->sortorder - 1];
+        } else if (array_key_exists($category->sortorder + 1, $categories)) {
+            $newcategory = $categories[$category->sortorder + 1];
         } else {
             $newcategory = reset($categories); // Get first category if sortorder broken.
         }
 
-        $sortorder = $DB->count_records('user_info_field', array('categoryid'=>$newcategory->id)) + 1;
+        $sortorder = $DB->count_records('user_info_field', array('categoryid' => $newcategory->id)) + 1;
 
-        if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->id), 'sortorder ASC')) {
+        if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
             foreach ($fields as $field) {
                 $f = new stdClass();
                 $f->id = $field->id;
@@ -299,7 +299,7 @@ function profile_delete_category($id) {
     }
 
     // Finally we get to delete the category!
-    $DB->delete_records('user_info_category', array('id'=>$category->id));
+    $DB->delete_records('user_info_category', array('id' => $category->id));
     profile_reorder_categories();
     return true;
 }
@@ -309,12 +309,12 @@ function profile_delete_field($id) {
     global $DB;
 
     // Remove any user data associated with this field.
-    if (!$DB->delete_records('user_info_data', array('fieldid'=>$id))) {
+    if (!$DB->delete_records('user_info_data', array('fieldid' => $id))) {
         print_error('cannotdeletecustomfield');
     }
 
     // Try to remove the record from the database.
-    $DB->delete_records('user_info_field', array('id'=>$id));
+    $DB->delete_records('user_info_field', array('id' => $id));
 
     // Reorder the remaining fields in the same category.
     profile_reorder_fields();
@@ -330,11 +330,11 @@ function profile_move_field($id, $move) {
     global $DB;
 
     // Get the field object.
-    if (!$field = $DB->get_record('user_info_field', array('id'=>$id), 'id, sortorder, categoryid')) {
+    if (!$field = $DB->get_record('user_info_field', array('id' => $id), 'id, sortorder, categoryid')) {
         return false;
     }
     // Count the number of fields in this category.
-    $fieldcount = $DB->count_records('user_info_field', array('categoryid'=>$field->categoryid));
+    $fieldcount = $DB->count_records('user_info_field', array('categoryid' => $field->categoryid));
 
     // Calculate the new sortorder.
     if (($move == 'up') and ($field->sortorder > 1)) {
@@ -346,8 +346,8 @@ function profile_move_field($id, $move) {
     }
 
     // Retrieve the field object that is currently residing in the new position.
-    if ($swapfield = $DB->get_record('user_info_field', array('categoryid'=>$field->categoryid,
-                                                              'sortorder'=>$neworder),
+    if ($swapfield = $DB->get_record('user_info_field', array('categoryid' => $field->categoryid,
+                                                              'sortorder' => $neworder),
                                                               'id, sortorder')) {
 
         // Swap the sortorders.
@@ -371,7 +371,7 @@ function profile_move_field($id, $move) {
 function profile_move_category($id, $move) {
     global $DB;
     // Get the category object.
-    if (!($category = $DB->get_record('user_info_category', array('id'=>$id), 'id, sortorder'))) {
+    if (!($category = $DB->get_record('user_info_category', array('id' => $id), 'id, sortorder'))) {
         return false;
     }
 
@@ -388,7 +388,7 @@ function profile_move_category($id, $move) {
     }
 
     // Retrieve the category object that is currently residing in the new position.
-    if ($swapcategory = $DB->get_record('user_info_category', array('sortorder'=>$neworder), 'id, sortorder')) {
+    if ($swapcategory = $DB->get_record('user_info_category', array('sortorder' => $neworder), 'id, sortorder')) {
 
         // Swap the sortorders.
         $swapcategory->sortorder = $category->sortorder;
@@ -440,7 +440,7 @@ function profile_edit_category($id, $redirect) {
     require_once('index_category_form.php');
     $categoryform = new category_form();
 
-    if ($category = $DB->get_record('user_info_category', array('id'=>$id))) {
+    if ($category = $DB->get_record('user_info_category', array('id' => $id))) {
         $categoryform->set_data($category);
     }
 
@@ -479,7 +479,7 @@ function profile_edit_category($id, $redirect) {
 function profile_edit_field($id, $datatype, $redirect, $companyid) {
     global $CFG, $DB, $OUTPUT, $PAGE;
 
-    if (!$field = $DB->get_record('user_info_field', array('id'=>$id))) {
+    if (!$field = $DB->get_record('user_info_field', array('id' => $id))) {
         $field = new stdClass();
         $field->datatype = $datatype;
         $field->description = '';
@@ -490,7 +490,7 @@ function profile_edit_field($id, $datatype, $redirect, $companyid) {
 
     // Clean and prepare description for the editor.
     $field->description = clean_text($field->description, $field->descriptionformat);
-    $field->description = array('text'=>$field->description, 'format'=>$field->descriptionformat, 'itemid'=>0);
+    $field->description = array('text' => $field->description, 'format' => $field->descriptionformat, 'itemid' => 0);
 
     require_once('company_field_form.php');
     $fieldform = new field_form(null, $field->datatype, $companyid);
@@ -500,15 +500,15 @@ function profile_edit_field($id, $datatype, $redirect, $companyid) {
         foreach ($fieldform->editors() as $editor) {
             if (isset($field->$editor)) {
                 $field->$editor = clean_text($field->$editor, $field->{$editor.'format'});
-                $field->$editor = array('text'=>$field->$editor, 'format'=>$field->{$editor.'format'}, 'itemid'=>0);
+                $field->$editor = array('text' => $field->$editor, 'format' => $field->{$editor.'format'}, 'itemid' => 0);
             }
         }
     }
     // Strip out the company shortname from the field name.
     if (isset($field->categoryid)) {
-        $category=$DB->get_record('user_info_category', array('id'=>$field->categoryid));
+        $category = $DB->get_record('user_info_category', array('id' => $field->categoryid));
         list($companyname, $shortname) = explode('-', $field->shortname);
-        $field->shortname=$shortname;
+        $field->shortname = $shortname;
     }
     $fieldform->set_data($field);
 
@@ -521,7 +521,7 @@ function profile_edit_field($id, $datatype, $redirect, $companyid) {
             $newfield = 'profile_define_'.$datatype;
             $formfield = new $newfield();
             // Get the company shortname.
-            $category=$DB->get_record('user_info_category', array('id'=>$data->categoryid));
+            $category = $DB->get_record('user_info_category', array('id' => $data->categoryid));
             // Collect the description and format back into the proper data structure from the editor.
             // Note: This field will ALWAYS be an editor.
             $data->shortname = $category->name.'-'.$data->shortname;

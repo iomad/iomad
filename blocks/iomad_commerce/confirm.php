@@ -28,7 +28,7 @@ global $DB;
 
 // Correct the navbar .
 // Set the name for the page.
-$linktext=get_string('course_shop_title', 'block_iomad_commerce');
+$linktext = get_string('course_shop_title', 'block_iomad_commerce');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_commerce/shop.php');
 // Build the nav bar.
@@ -50,7 +50,7 @@ echo get_invoice_html($invoice->id);
 
 // Check if the user has a company.
 if (empty($USER->profile['company'])) {
-    if (!$company = $DB->get_record('company', array('name'=>$invoice->company))) {
+    if (!$company = $DB->get_record('company', array('name' => $invoice->company))) {
         $company = new object();
         $company->name = $invoice->company;
         $company->shortname = preg_replace('~\b(\w)|.~', '$1', $company->name);
@@ -78,14 +78,14 @@ if (empty($USER->profile['company'])) {
         // Set up course category for company.
         $coursecat = new object();
         $coursecat->name = $company->name;
-        $coursecat->sortorder=999;
+        $coursecat->sortorder = 999;
         $coursecat->id = $DB->insert_record('course_categories', $coursecat);
         $coursecat->context = get_context_instance(CONTEXT_COURSECAT, $coursecat->id);
         $categorycontext = $coursecat->context;
         mark_context_dirty($coursecat->context->path);
         $DB->update_record('course_categories', $coursecat);
         fix_course_sortorder();
-        $companydetails = $DB->get_record('company', array('id'=>$company->id));
+        $companydetails = $DB->get_record('company', array('id' => $company->id));
         $companydetails->category = $coursecat->id;
         $DB->update_record('company', $companydetails);
     }

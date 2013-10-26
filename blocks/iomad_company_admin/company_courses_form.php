@@ -53,11 +53,11 @@ class company_courses_form extends moodleform {
         }
         $options = array('context' => $this->context,
                          'companyid' => $this->selectedcompany,
-                         'departmentid'=>$departmentid,
-                         'subdepartments'=>$this->subhierarchieslist,
-                         'parentdepartmentid'=>$parentlevel,
-                         'shared'=>false,
-                         'partialshared'=>true);
+                         'departmentid' => $departmentid,
+                         'subdepartments' => $this->subhierarchieslist,
+                         'parentdepartmentid' => $parentlevel,
+                         'shared' => false,
+                         'partialshared' => true);
         $this->potentialcourses = new potential_company_course_selector('potentialcourses',
                                                                          $options);
         $this->currentcourses = new current_company_course_selector('currentcourses', $options);
@@ -204,10 +204,10 @@ class company_courses_form extends moodleform {
                     if ($DB->get_record_sql("SELECT id FROM {iomad_courses}
                                              WHERE courseid=:removecourse
                                              AND shared != 0",
-                                             array('removecourse'=>$removecourse->id))) {
+                                             array('removecourse' => $removecourse->id))) {
                         $DB->delete_records('company_shared_courses',
-                                             array('companyid'=>$company->id,
-                                                   'courseid'=>$removecourse->id));
+                                             array('companyid' => $company->id,
+                                                   'courseid' => $removecourse->id));
                         company::delete_company_course_group($company->id,
                                                              $removecourse,
                                                              $oktounenroll);
@@ -251,7 +251,7 @@ class company_courses_form extends moodleform {
         // Unenroll everybody from given course.
 
         // Get list of enrollments.
-        $course = $DB->get_record('course', array('id'=>$id));
+        $course = $DB->get_record('course', array('id' => $id));
         $courseenrolment = new course_enrolment_manager($PAGE, $course);
         $userlist = $courseenrolment->get_users('', 'ASC', 0, 0);
         foreach ($userlist as $user) {
@@ -278,7 +278,7 @@ if ($returnurl) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('assigncourses', 'block_iomad_company_admin');
+$linktext = get_string('assigncourses', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_courses_form.php');
 // Build the nav bar.

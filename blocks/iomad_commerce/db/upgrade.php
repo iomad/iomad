@@ -76,7 +76,7 @@ function xmldb_block_eldms_commerce_upgrade($oldversion) {
         // Launch change of type for field invoiceableitemtype.
         $dbman->change_field_type($table, $field);
 
-        // iomad_commerce savepoint reached.
+        // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2012012800, 'iomad_commerce');
     }
 
@@ -91,7 +91,7 @@ function xmldb_block_eldms_commerce_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // iomad_commerce savepoint reached.
+        // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2012012801, 'iomad_commerce');
     }
 
@@ -113,7 +113,7 @@ function xmldb_block_eldms_commerce_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // iomad_commerce savepoint reached.
+        // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2012012802, 'iomad_commerce');
     }
     return $result;

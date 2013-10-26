@@ -41,7 +41,7 @@ class invoice extends payment_provider {
             $basket->itemized = get_invoice_html($basketid, 0, 0);
             // Notify shop admin.
             if (isset($CFG->commerce_admin_email)) {
-                if (!$shopadmin = $DB->get_record('user', array('email'=>$CFG->commerce_admin_email))) {
+                if (!$shopadmin = $DB->get_record('user', array('email' => $CFG->commerce_admin_email))) {
                     $shopadmin = new stdClass;
                     $shopadmin->email = $CFG->commerce_admin_email;
                     if (empty($CFG->commerce_admin_firstname)) {
@@ -54,7 +54,7 @@ class invoice extends payment_provider {
                     } else {
                         $shopadmin->lastname = $CFG->commerce_admin_lastname;
                     }
-                    $shopadmin->id=-999;
+                    $shopadmin->id = -999;
                 }
             } else {
                 $shopadmin = new stdClass;
@@ -69,17 +69,17 @@ class invoice extends payment_provider {
                 } else {
                     $shopadmin->lastname = $CFG->commerce_admin_lastname;
                 }
-                $shopadmin->id=-999;
+                $shopadmin->id = -999;
             }
 
-            if ($user = $DB->get_record('user',  array('id'=>$basket->userid))) {
-                EmailTemplate::send('invoice_ordercomplete', array('user' => $user, 'invoice' => $basket, 'sender'=>$shopadmin));
+            if ($user = $DB->get_record('user',  array('id' => $basket->userid))) {
+                EmailTemplate::send('invoice_ordercomplete', array('user' => $user, 'invoice' => $basket, 'sender' => $shopadmin));
 
                 // Notify shop admin.
                 if (isset($CFG->commerce_admin_email)) {
                     EmailTemplate::send('invoice_ordercomplete_admin', array('user' => $shopadmin,
                                                                              'invoice' => $basket,
-                                                                             'sender'=>$shopadmin));
+                                                                             'sender' => $shopadmin));
                 }
 
                 // Set status of invoice to unpaid.

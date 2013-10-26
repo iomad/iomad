@@ -52,10 +52,10 @@ abstract class company_user_selector_base extends user_selector_base {
         if (!isset( $this->courseid) ) {
             return array();
         } else {
-            $course = $DB->get_record('course', array('id'=>$this->courseid));
-            $course_enrolment_manager = new course_enrolment_manager($PAGE, $course);
+            $course = $DB->get_record('course', array('id' => $this->courseid));
+            $courseenrolmentmanager = new courseenrolmentmanager($PAGE, $course);
 
-            $users = $course_enrolment_manager->get_users('lastname', $sort='ASC', $page=0, $perpage=0);
+            $users = $courseenrolmentmanager->get_users('lastname', $sort = 'ASC', $page = 0, $perpage = 0);
 
             // Only return the keys (user ids).
             return array_keys($users);
@@ -271,7 +271,7 @@ class current_company_course_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu 
+	                {user} u INNER JOIN {company_users} cu
 	                ON cu.userid = u.id AND managertype = 0 $departmentsql
                 WHERE $wherecondition
                     AND cu.companyid = :companyid
@@ -409,8 +409,8 @@ class potential_department_user_selector extends user_selector_base {
         if (!isset( $this->departmentid) ) {
             return array();
         } else {
-            if ($users = $DB->get_records('company_users', array('departmentid'=>$this->departmentid,
-                                                                 'managertype'=>$this->roletype), null, 'userid')) {
+            if ($users = $DB->get_records('company_users', array('departmentid' => $this->departmentid,
+                                                                 'managertype' => $this->roletype), null, 'userid')) {
                 // Only return the keys (user ids).
                 return array_keys($users);
             } else {
@@ -535,7 +535,7 @@ class current_department_user_selector extends user_selector_base {
         if (!isset( $this->departmentid) ) {
             return array();
         } else {
-            if ($users = $DB->get_records('company_users', array('departmentid'=>$this->departmentid), null, 'userid')) {
+            if ($users = $DB->get_records('company_users', array('departmentid' => $this->departmentid), null, 'userid')) {
                 // Only return the keys (user ids).
                 return array_values($users);
             } else {
@@ -664,10 +664,10 @@ class potential_license_user_selector extends user_selector_base {
                                       WHERE clc.licenseid=$this->licenseid
                                       AND pc.shared=1")) {
                 // Check if we are a shared course or not.
-                $courses = $DB->get_records('companylicense_courses', array('licenseid'=>$this->licenseid));
+                $courses = $DB->get_records('companylicense_courses', array('licenseid' => $this->licenseid));
                 $shared = false;
                 foreach ($courses as $course) {
-                    if ($DB->get_record_select('iomad_courses', "courseid='".$course->courseid."' AND shared!=0")) {
+                    if ($DB->get_record_select('iomad_courses', "courseid='".$course->courseid."' AND shared!= 0")) {
                         $shared = true;
                     }
                 }
@@ -684,11 +684,11 @@ class potential_license_user_selector extends user_selector_base {
                 if ($shared) {
                     if (has_capability('block/iomad_company_admin:edit_licenses', get_context_instance(CONTEXT_SYSTEM))) {
                         // Need to add the top level department.
-                        $shareddepartment =  company::get_company_parentnode($this->companyid);
-                        $departments = $departments + array($shareddepartment->id=>$shareddepartment->id);
+                        $shareddepartment = company::get_company_parentnode($this->companyid);
+                        $departments = $departments + array($shareddepartment->id => $shareddepartment->id);
                     } else {
                         $shareddepartment = company::get_userlevel($USER);
-                        $departments = $departments + array($shareddepartment->id=>$shareddepartment->id);
+                        $departments = $departments + array($shareddepartment->id => $shareddepartment->id);
                     }
                 }
                 if (!empty($departments)) {
@@ -847,9 +847,9 @@ class current_license_user_selector extends user_selector_base {
             if ($department = $DB->get_record_sql($sql)) {
                 $licenseusers[$id]->email = $user->email." (".$department->shortname.")";
             }
-            if ($licenseinfo = $DB->get_record('companylicense_users', array('userid'=>$id,
-                                                                             'licenseid'=>$this->licenseid,
-                                                                             'timecompleted'=>null))) {
+            if ($licenseinfo = $DB->get_record('companylicense_users', array('userid' => $id,
+                                                                             'licenseid' => $this->licenseid,
+                                                                             'timecompleted' => null))) {
                 if ($licenseinfo->isusing == 1) {
                     $licenseusers[$id]->firstname = '*'.$user->firstname;
                 }

@@ -75,8 +75,8 @@ class block_iomad_company_admin extends block_base {
         $this->content->text .= $tabhtml;
 
         // Build content for selected tab (from menu array).
-        $admin_menu = new iomad_admin_menu();
-        $menus = $admin_menu->getmenu();
+        $adminmenu = new iomad_admin_menu();
+        $menus = $adminmenu->getmenu();
         $html = '<div class="iomadlink_container clearfix">';
         foreach ($menus as $key => $menu) {
 
@@ -158,8 +158,8 @@ class block_iomad_company_admin extends block_base {
     public function cron() {
         global $DB;
 
-        if ($DB->count_records('user_preferences', array('name'=>'iomad_send_password',
-                                                         'value'=>'1'))) {
+        if ($DB->count_records('user_preferences', array('name' => 'iomad_send_password',
+                                                         'value' => '1'))) {
             mtrace('creating passwords for new users');
             $newusers = $DB->get_records_sql("SELECT u.id as id, u.email, u.firstname,
                                                      u.lastname, u.username,

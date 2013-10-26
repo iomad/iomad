@@ -30,7 +30,7 @@ require_capability('block/iomad_company_admin:user_upload', get_context_instance
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('users_download', 'block_iomad_company_admin');
+$linktext = get_string('users_download', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/user_bulk_download.php');
 // Build the nav bar.
@@ -94,7 +94,7 @@ if ($format) {
                                          FROM {user_info_category} uic, {company} c
                                          WHERE c.id = '.$companyid.' AND
                                          c.shortname=uic.name')) {
-        if ($extrafields = $DB->get_records('user_info_field', array('categoryid'=>$category->id))) {
+        if ($extrafields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
             foreach ($extrafields as $n => $v) {
                 $fields['profile_field_'.$v->shortname] = 'profile_field_'.$v->shortname;
             }
@@ -107,7 +107,7 @@ if ($format) {
         $company = new company($companyid);
         $companyshortname = $company->get_shortname();
 
-        $params = array('companyshortname'=>$companyshortname);
+        $params = array('companyshortname' => $companyshortname);
         $companytest = ' AND muid.data = :companyshortname';
     }
 
@@ -150,14 +150,14 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('download', 'admin'));
 
 // Get url of ourselves.
-$url = new moodle_url('/blocks/iomad_company_admin/user_bulk_download.php', array( 'companyid'=>$companyid) );
+$url = new moodle_url('/blocks/iomad_company_admin/user_bulk_download.php', array( 'companyid' => $companyid) );
 
 // Show download options menu.
 echo $OUTPUT->box_start();
 echo '<ul>';
-echo '<li><a href="' . $url->out(true, array('format'=>'csv')) . '">'.get_string('downloadtext').'</a></li>';
-echo '<li><a href="' . $url->out(true, array('format'=>'ods')) . '">'.get_string('downloadods').'</a></li>';
-echo '<li><a href="' . $url->out(true, array('format'=>'xls')) . '">'.get_string('downloadexcel').'</a></li>';
+echo '<li><a href="' . $url->out(true, array('format' => 'csv')) . '">'.get_string('downloadtext').'</a></li>';
+echo '<li><a href="' . $url->out(true, array('format' => 'ods')) . '">'.get_string('downloadods').'</a></li>';
+echo '<li><a href="' . $url->out(true, array('format' => 'xls')) . '">'.get_string('downloadexcel').'</a></li>';
 echo '</ul>';
 echo $OUTPUT->box_end();
 
@@ -190,7 +190,7 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
     foreach ($userids as $userid) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
-        if (!$user = $DB->get_record('user', array('id'=>$userid))) {
+        if (!$user = $DB->get_record('user', array('id' => $userid))) {
             continue;
         }
         $col = 0;
@@ -239,7 +239,7 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
     foreach ($userids as $userid) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
-        if (!$user = $DB->get_record('user', array('id'=>$userid))) {
+        if (!$user = $DB->get_record('user', array('id' => $userid))) {
             continue;
         }
         $col = 0;
@@ -290,7 +290,7 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
         // Stop the script from timing out on large numbers of users.
         set_time_limit(30);
         $row = array();
-        if (!$user = $DB->get_record('user', array('id'=>$userid))) {
+        if (!$user = $DB->get_record('user', array('id' => $userid))) {
             continue;
         }
         profile_load_data($user);

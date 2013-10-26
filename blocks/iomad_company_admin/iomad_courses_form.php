@@ -65,49 +65,49 @@ require_capability('block/iomad_company_admin:managecourses', $systemcontext);
 
 if (!empty($update)) {
     // Need to change something.
-    if (!$coursedetails = (array) $DB->get_record('iomad_courses', array('courseid'=>$courseid))) {
+    if (!$coursedetails = (array) $DB->get_record('iomad_courses', array('courseid' => $courseid))) {
         print_error(get_string('invaliddetails', 'block_iomad_company_admin'));
     } else {
         if ('license' == $update) {
-            $coursedetails['licensed']= $license;
+            $coursedetails['licensed'] = $license;
             $DB->update_record('iomad_courses', $coursedetails);
             if (empty($license)) {
                 // Changing to manual enrolment type only.
-                if ($instances = $DB->get_records('enrol', array('courseid'=>$courseid))) {
+                if ($instances = $DB->get_records('enrol', array('courseid' => $courseid))) {
                     foreach ($instances as $instance) {
                         $updateinstance = (array) $instance;
                         if ($instance->enrol != 'manual') {
                             $updateinstance['status'] = 1;
                         } else {
-                            $updateinstance['status']=0;
+                            $updateinstance['status'] = 0;
                         }
                         $DB->update_record('enrol', $updateinstance);
                     }
                 }
             } else {
                 // Changing to license enrolment type only.
-                if ($instances = $DB->get_records('enrol', array('courseid'=>$courseid))) {
+                if ($instances = $DB->get_records('enrol', array('courseid' => $courseid))) {
                     $gotlicense = false;
                     foreach ($instances as $instance) {
                         $updateinstance = (array) $instance;
                         if ($instance->enrol != 'license') {
                             $updateinstance['status'] = 1;
                         } else {
-                            $updateinstance['status']=0;
+                            $updateinstance['status'] = 0;
                             $gotlicense = true;
                         }
                         $DB->update_record('enrol', $updateinstance);
                     }
                     if (!$gotlicense) {
-                        $courserecord = $DB->get_record('course', array('id'=>$courseid));
+                        $courserecord = $DB->get_record('course', array('id' => $courseid));
                         $plugin = enrol_get_plugin('license');
-                        $plugin->add_instance($courserecord, array('status'=>0,
-                                                                   'name'=>'',
-                                                                   'password'=>null,
-                                                                   'customint1'=>0,
-                                                                   'customint2'=>0,
-                        'customint3'=>0, 'customint4'=>0, 'customtext1'=>'',
-                        'roleid'=>5, 'enrolperiod'=>0, 'enrolstartdate'=>0, 'enrolenddate'=>0));
+                        $plugin->add_instance($courserecord, array('status' => 0,
+                                                                   'name' => '',
+                                                                   'password' => null,
+                                                                   'customint1' => 0,
+                                                                   'customint2' => 0,
+                        'customint3' => 0, 'customint4' => 0, 'customtext1' => '',
+                        'roleid' => 5, 'enrolperiod' => 0, 'enrolstartdate' => 0, 'enrolenddate' => 0));
                     }
                 }
             }
@@ -115,7 +115,7 @@ if (!empty($update)) {
             $previousshared = $coursedetails['shared'];
             // Check if we are sharing a course for the first time.
             if ($previousshared == 0 && $shared != 0) { // Turning sharing on.
-                $courseinfo = $DB->get_record('course', array('id'=>$courseid));
+                $courseinfo = $DB->get_record('course', array('id' => $courseid));
                 // Set the shared options on.
                 $courseinfo->groupmode = 1;
                 $courseinfo->groupmodeforce = 1;
@@ -123,7 +123,7 @@ if (!empty($update)) {
                 $coursedetails['shared'] = $shared;
                 $DB->update_record('iomad_courses', $coursedetails);
                 // Deal with any current enrolments.
-                if ($companycourse = $DB->get_record('company_course', array('courseid'=>$courseid))) {
+                if ($companycourse = $DB->get_record('company_course', array('courseid' => $courseid))) {
                     if ($shared == 2) {
                         $sharingrecord = new object();
                         $sharingrecord->courseid = $courseid;
@@ -133,7 +133,7 @@ if (!empty($update)) {
                     company::company_users_to_company_course_group($companycourse->companyid, $courseid);
                 }
             } else if ($shared == 0 and $previousshared != 0) { // Turning sharing off.
-                $courseinfo = $DB->get_record('course', array('id'=>$courseid));
+                $courseinfo = $DB->get_record('course', array('id' => $courseid));
                 // Set the shared options on.
                 $courseinfo->groupmode = 0;
                 $courseinfo->groupmodeforce = 0;
@@ -141,7 +141,7 @@ if (!empty($update)) {
                 $coursedetails['shared'] = $shared;
                 $DB->update_record('iomad_courses', $coursedetails);
                 // Deal with enrolments.
-                if ($companygroups = $DB->get_records('company_course_groups', array('courseid'=>$courseid))) {
+                if ($companygroups = $DB->get_records('company_course_groups', array('courseid' => $courseid))) {
                     // Got companies using it.
                     $count = 1;
                     // Skip the first company, it was the one who had it before anyone else so is
@@ -157,7 +157,7 @@ if (!empty($update)) {
             } else {  // Changing from open sharing to closed sharing.
                 $coursedetails['shared'] = $shared;
                 $DB->update_record('iomad_courses', $coursedetails);
-                if ($companygroups = $DB->get_records('company_course_groups', array('courseid'=>$courseid))) {
+                if ($companygroups = $DB->get_records('company_course_groups', array('courseid' => $courseid))) {
                     // Got companies using it.
                     foreach ($companygroups as $companygroup) {
                         $sharingrecord = new object();
@@ -219,7 +219,7 @@ ksort($companyids);
 $companyselect = new single_select($linkurl, 'company', $companyids, $company);
 $companyselect->label = get_string('company', 'block_iomad_company_admin');
 $companyselect->formid = 'choosecompany';
-echo html_writer::tag('div', $OUTPUT->render($companyselect), array('id'=>'iomad_company_selector')).'</br>';
+echo html_writer::tag('div', $OUTPUT->render($companyselect), array('id' => 'iomad_company_selector')).'</br>';
 
 // Need a name search in here too.
 
@@ -263,34 +263,34 @@ $table->head = array (get_string('company', 'block_iomad_company_admin'), get_st
                       get_string('warncompletion', 'block_iomad_company_admin'));
 $table->align = array ("left", "center", "center", "center", "center", "center", "center");
 $table->width = "95%";
-$selectbutton = array('0'=>get_string('no'), '1'=>get_string('yes'));
-$sharedselectbutton = array('0'=>get_string('no'),
-                            '1'=>get_string('open',
+$selectbutton = array('0' => get_string('no'), '1' => get_string('yes'));
+$sharedselectbutton = array('0' => get_string('no'),
+                            '1' => get_string('open',
                             'block_iomad_company_admin'),
-                            '2'=>get_string('closed',
+                            '2' => get_string('closed',
                             'block_iomad_company_admin'));
 
 
 foreach ($courses as $course) {
-    if (!$iomaddetails = $DB->get_record('iomad_courses', array('courseid'=>$course->id))) {
-        $iomadrecord = array('courseid'=>$course->id, 'licensed'=>0, 'shared'=>0);
+    if (!$iomaddetails = $DB->get_record('iomad_courses', array('courseid' => $course->id))) {
+        $iomadrecord = array('courseid' => $course->id, 'licensed' => 0, 'shared' => 0);
         $iomadrecord['id'] = $DB->insert_record('iomad_courses', $iomadrecord);
         $iomaddetails = (object) $iomadrecord;
     }
     $linkparams = $params;
     $linkparams['courseid'] = $course->id;
     $linkparams['update'] = 'license';
-    $licenseurl=new moodle_url($baseurl, $linkparams);
+    $licenseurl = new moodle_url($baseurl, $linkparams);
     $licenseselect = new single_select($licenseurl, 'license', $selectbutton, $iomaddetails->licensed);
     $licenseselect->label = '';
     $licenseselect->formid = 'licenseselect'.$course->id;
-    $licenseselectoutput = html_writer::tag('div', $OUTPUT->render($licenseselect), array('id'=>'license_selector'.$course->id));
+    $licenseselectoutput = html_writer::tag('div', $OUTPUT->render($licenseselect), array('id' => 'license_selector'.$course->id));
     $linkparams['update'] = 'shared';
-    $sharedurl=new moodle_url($baseurl, $linkparams);
+    $sharedurl = new moodle_url($baseurl, $linkparams);
     $sharedselect = new single_select($sharedurl, 'shared', $sharedselectbutton, $iomaddetails->shared);
     $sharedselect->label = '';
     $sharedselect->formid = 'sharedselect'.$course->id;
-    $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), array('id'=>'shared_selector'.$course->id));
+    $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), array('id' => 'shared_selector'.$course->id));
     if ($tablecompany = $DB->get_records_sql("select c.shortname from {company} c, {company_course} cc WHERE
                                                       cc.courseid = $course->id and cc.companyid = c.id")) {
         $companyname = "";

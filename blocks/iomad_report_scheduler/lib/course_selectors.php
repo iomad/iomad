@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__) . '/../../../local/iomad/lib/blockpage.php');
 require_once(dirname(__FILE__) . '/../../../local/course_selector/lib.php');
@@ -32,7 +46,7 @@ class current_company_course_selector extends company_course_selector_base {
      */
     public function find_courses($search) {
         global $DB, $CFG;
-        //by default wherecondition retrieves all courses except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
 
@@ -54,8 +68,8 @@ class current_company_course_selector extends company_course_selector_base {
 
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params);
 
-        // Check for global courses option is on and find them if so
-        $globalcoursesql = " FROM {course} c WHERE c.id !='1' AND c.id not in (SELECT cc.courseid from {companycourse} cc ) 
+        // Check for global courses option is on and find them if so.
+        $globalcoursesql = " FROM {course} c WHERE c.id !='1' AND c.id not in (SELECT cc.courseid from {companycourse} cc )
                              AND $wherecondition ";
 
         $globalcourses = $DB->get_records_sql($fields . $globalcoursesql . $order, $params);
@@ -63,8 +77,8 @@ class current_company_course_selector extends company_course_selector_base {
         if (empty($availablecourses) && empty($globalcourses)) {
             return array();
         }
-        
-        // Set up empty return
+
+        // Set up empty return.
         $coursearray = array();
         if (!empty($availablecourses)) {
             if ($search) {
@@ -75,7 +89,7 @@ class current_company_course_selector extends company_course_selector_base {
             $coursearray[$groupname] = $availablecourses;
         }
 
-        // deal with global courses list if available
+        // Deal with global courses list if available.
         if (!empty($globalcourses)) {
             if ($search) {
                 $groupname = get_string('globalcoursesmatching', 'block_iomad_company_admin', $search);
@@ -98,7 +112,7 @@ class potential_company_course_selector extends company_course_selector_base {
      */
     public function find_courses($search) {
         global $DB, $SITE;
-        //by default wherecondition retrieves all courses except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
         $params['siteid'] = $SITE->id;
@@ -147,7 +161,7 @@ class any_course_selector extends course_selector_base {
      */
     public function find_courses($search) {
         global $DB;
-        //by default wherecondition retrieves all courses except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
 
         $fields      = 'SELECT ' . $this->required_fields_sql('c');

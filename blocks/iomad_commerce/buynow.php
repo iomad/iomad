@@ -36,7 +36,7 @@ $context = $PAGE->context;
 
 // Get or create basket.
 if (!empty($SESSION->basketid)) {
-    if (!$basket = $DB->get_record('invoice', array('id' => $SESSION->basketid, 'status'=>INVOICESTATUS_BASKET), '*')) {
+    if (!$basket = $DB->get_record('invoice', array('id' => $SESSION->basketid, 'status' => INVOICESTATUS_BASKET), '*')) {
         $basket = new stdClass;
         $basket->userid = $USER->id;
         $basket->status = INVOICESTATUS_BASKET;

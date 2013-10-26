@@ -107,7 +107,7 @@ class company_users_form extends moodleform {
                         $allow = true;
 
                         if ($allow) {
-                            $user = $DB->get_record('user', array('id'=>$adduser->id));
+                            $user = $DB->get_record('user', array('id' => $adduser->id));
                             // Add user to default company department.
                             $company->assign_user_to_company($adduser->id);
                         }
@@ -124,15 +124,15 @@ class company_users_form extends moodleform {
                 if (!empty($userstounassign)) {
                     foreach ($userstounassign as $removeuser) {
                         // Check if the user was a company manager.
-                        if ($DB->get_records('company_users', array('userid'=>$removeuser->id, 'managertype'=>1))) {
-                            $companymanagerrole = $DB->get_record('role', array('shortname'=>'companymanager'));
+                        if ($DB->get_records('company_users', array('userid' => $removeuser->id, 'managertype' => 1))) {
+                            $companymanagerrole = $DB->get_record('role', array('shortname' => 'companymanager'));
                             role_unassign($companymanagerrole->id, $removeuser->id, $this->context->id);
                         }
-                        if ($DB->get_records('company_users', array('userid'=>$removeuser->id, 'managertype'=>2))) {
-                            $departmentmanagerrole = $DB->get_record('role', array('shortname'=>'departmentmanager'));
+                        if ($DB->get_records('company_users', array('userid' => $removeuser->id, 'managertype' => 2))) {
+                            $departmentmanagerrole = $DB->get_record('role', array('shortname' => 'departmentmanager'));
                             role_unassign($departmentmanagerrole->id, $removeuser->id, $this->context->id);
                         }
-                        $DB->delete_records('company_users', array('userid'=>$removeuser->id));
+                        $DB->delete_records('company_users', array('userid' => $removeuser->id));
 
                     }
 
@@ -159,7 +159,7 @@ if ($returnurl) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('assignusers', 'block_iomad_company_admin');
+$linktext = get_string('assignusers', 'block_iomad_company_admin');
 // Set the url..
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_users_form.php');
 // Build the nav bar.

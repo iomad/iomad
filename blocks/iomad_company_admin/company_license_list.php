@@ -29,7 +29,7 @@ global $DB;
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('company_license_list_title', 'block_iomad_company_admin');
+$linktext = get_string('company_license_list_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_license_list.php');
 // Build the nav bar.
@@ -57,7 +57,7 @@ if (!empty($SESSION->currenteditingcompany)) {
 }
 
 // Get the appropriate company department.
-$companydepartment =  company::get_company_parentnode($companyid);
+$companydepartment = company::get_company_parentnode($companyid);
 if (has_capability('block/iomad_company_admin:edit_licenses', get_context_instance(CONTEXT_SYSTEM))) {
     $departmentid = $companydepartment->id;
 } else {
@@ -69,21 +69,21 @@ if ($delete and confirm_sesskey()) {              // Delete a selected company, 
 
     require_capability('block/iomad_company_admin:edit_licenses', $context);
 
-    $license = $DB->get_record('companylicense', array('id'=>$delete), '*', MUST_EXIST);
+    $license = $DB->get_record('companylicense', array('id' => $delete), '*', MUST_EXIST);
 
     if ($confirm != md5($delete)) {
         echo $OUTPUT->header();
         // TODO SET THE LICENSE NAME.
         $name = $license->name;
         echo $OUTPUT->heading(get_string('deletelicense', 'block_iomad_company_admin'), 2, 'headingblock header');
-        $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+        $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $OUTPUT->confirm(get_string('companydeletelicensecheckfull', 'block_iomad_company_admin', "'$name'"),
                               new moodle_url('company_license_list.php', $optionsyes), 'company_license_list.php');
         echo $OUTPUT->footer();
         die;
     } else if (data_submitted()) {
         // Actually delete license.
-        if (!$DB->delete_records('companylicense', array('id'=>$delete))) {
+        if (!$DB->delete_records('companylicense', array('id' => $delete))) {
             print_error('error while deleting license');
         }
     }
@@ -98,7 +98,7 @@ $company = new company($companyid);
 echo "<h3>".$company->get_name()."</h3>";
 
 // Get the number of companies.
-$objectcount = $DB->count_records('companylicense', array('companyid'=>$companyid));
+$objectcount = $DB->count_records('companylicense', array('companyid' => $companyid));
 echo $OUTPUT->paging_bar($objectcount, $page, $perpage, $baseurl);
 
 flush();
@@ -126,7 +126,7 @@ $table->align = array ("left", "left", "left", "left", "center", "center", "cent
 $table->width = "95%";
 
 if ($departmentid == $companydepartment->id) {
-    $licenses = $DB->get_records('companylicense', array('companyid'=>$companyid));
+    $licenses = $DB->get_records('companylicense', array('companyid' => $companyid));
 
     // Cycle through the results.
     foreach ($licenses as $license) {
@@ -134,21 +134,21 @@ if ($departmentid == $companydepartment->id) {
         if (has_capability('block/iomad_company_admin:edit_licenses', $context)) {
             $deletebutton = "<a href=\"company_license_list.php?delete=$license->id&amp;sesskey=".sesskey()."\">$strdelete</a>";
             $editbutton = "<a href='" . new moodle_url('company_license_edit_form.php',
-                           array("licenseid" => $license->id, 'departmentid'=>$departmentid)) . "'>$stredit</a>";
+                           array("licenseid" => $license->id, 'departmentid' => $departmentid)) . "'>$stredit</a>";
         } else {
             $deletebutton = "";
             $editbutton = "";
         }
-        $licensecourses = $DB->get_records('companylicense_courses', array('licenseid'=>$license->id));
-        $coursestring="";
+        $licensecourses = $DB->get_records('companylicense_courses', array('licenseid' => $license->id));
+        $coursestring = "";
         foreach ($licensecourses as $licensecourse) {
-            $coursename = $DB->get_record('course', array('id'=>$licensecourse->courseid));
+            $coursename = $DB->get_record('course', array('id' => $licensecourse->courseid));
             if (empty($coursestring)) {
                 $coursestring = "<a href='".new moodle_url('/course/view.php',
-                                   array('id'=>$licensecourse->courseid))."'>".$coursename->fullname."</a>";
+                                   array('id' => $licensecourse->courseid))."'>".$coursename->fullname."</a>";
             } else {
                 $coursestring .= ",</br><a href='".new moodle_url('/course/view.php',
-                                   array('id'=>$licensecourse->courseid))."'>".$coursename->fullname."</a>";
+                                   array('id' => $licensecourse->courseid))."'>".$coursename->fullname."</a>";
             }
         }
 
@@ -166,13 +166,13 @@ if ($departmentid == $companydepartment->id) {
     foreach ($licenses as $licenseid) {
 
         // Get the license record.
-        $license = $DB->get_record('companylicense', array('id'=>$licenseid->licenseid));
+        $license = $DB->get_record('companylicense', array('id' => $licenseid->licenseid));
 
         // Set up the edit buttons.
         if (has_capability('block/iomad_company_admin:edit_licenses', $context)) {
             $deletebutton = "<a href=\"company_license_list.php?delete=$license->id&amp;sesskey=".sesskey()."\">$strdelete</a>";
             $editbutton = "<a href='" . new moodle_url('company_license_edit_form.php',
-                                                        array("licenseid" => $license->id, 'departmentid'=>$departmentid)) .
+                                                        array("licenseid" => $license->id, 'departmentid' => $departmentid)) .
                                                         "'>$stredit</a>";
         } else {
             $deletebutton = "";

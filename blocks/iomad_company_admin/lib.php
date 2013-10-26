@@ -39,19 +39,19 @@ abstract class company_moodleform extends moodleform {
             $mform->addElement('hidden', 'companyid', company_user::companyid());
         } else {
             $companies = company::get_companies_rs();
-            $company_options = array('' => get_string('selectacompany', 'block_iomad_company_admin'));
+            $companyoptions = array('' => get_string('selectacompany', 'block_iomad_company_admin'));
             foreach ($companies as $company) {
                 if ( company_user::can_see_company( $company->shortname ) ) {
-                    $company_options[$company->id] = $company->name;
+                    $companyoptions[$company->id] = $company->name;
                 }
             }
             $companies->close();
 
-            if ( count($company_options) == 1 ) {
+            if ( count($companyoptions) == 1 ) {
                 $mform->addElement('html', get_string('nocompanies', 'block_iomad_company_admin'));
                 return false;
             } else {
-                $mform->addElement('select', 'companyid', get_string('company', 'block_iomad_company_admin'), $company_options);
+                $mform->addElement('select', 'companyid', get_string('company', 'block_iomad_company_admin'), $companyoptions);
                 if ($required) {
                     $mform->addRule('companyid', get_string('missingcompany', 'block_iomad_company_admin'),
                                     'required', null, 'client');
@@ -118,18 +118,18 @@ abstract class company_moodleform extends moodleform {
                        <!-- END error -->{element}{preview}</div></div>';
 
         // Variable $colourpicker contains the colour picker bits that are to be displayed above the input box.
-        $colourpicker = html_writer::start_tag('div', array('class'=>'form-colourpicker defaultsnext'));
+        $colourpicker = html_writer::start_tag('div', array('class' => 'form-colourpicker defaultsnext'));
         $colourpicker .= html_writer::tag('div', $OUTPUT->pix_icon('i/loading', get_string('loading', 'admin'),
-                                          'moodle', array('class'=>'loadingicon')),
-                                          array('class'=>'admin_colourpicker clearfix'));
+                                          'moodle', array('class' => 'loadingicon')),
+                                          array('class' => 'admin_colourpicker clearfix'));
 
         // Preview contains the bits that are to be displayed below the input box (may just be a div end tag).
         $preview = '';
         if (!empty($previewconfig)) {
-            $preview .= html_writer::empty_tag('input', array('type'=>'button',
-                                                              'id'=>$id.'_preview',
-                                                              'value'=>get_string('preview'),
-                                                              'class'=>'admin_colourpicker_preview'));
+            $preview .= html_writer::empty_tag('input', array('type' => 'button',
+                                                              'id' => $id.'_preview',
+                                                              'value' => get_string('preview'),
+                                                              'class' => 'admin_colourpicker_preview'));
         }
         $preview .= html_writer::end_tag('div');
 
@@ -172,7 +172,7 @@ class company_select_form extends company_moodleform {
             $mform->addElement('header', 'header', get_string('company', 'block_iomad_company_admin'));
 
             if ($this->add_company_selector()) {
-                
+
                 // Make form auto submit on change of selected company.
                 $formid = $mform->getAttribute("id");
                 $PAGE->requires->js_init_call('M.util.init_select_autosubmit', array($formid, "id_companyid", null));

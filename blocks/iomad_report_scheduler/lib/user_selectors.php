@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__) . '/../../../enrol/locallib.php');
 
@@ -25,18 +39,18 @@ abstract class company_user_selector_base extends user_selector_base {
         $options['file']    = 'blocks/iomad_company_admin/lib.php';
         return $options;
     }
-    
+
     protected function get_course_user_ids() {
         global $DB, $PAGE;
         if ( !isset( $this->courseid ) ) {
             return array();
         } else {
-            $course = $DB->get_record('course', array('id'=>$this->courseid));
-            $course_enrolment_manager = new course_enrolment_manager($PAGE, $course);
-            
-            $users = $course_enrolment_manager->get_users('lastname', $perpage=0);
-            
-            // only return the keys (user ids)
+            $course = $DB->get_record('course', array('id' => $this->courseid));
+            $courseenrolmentmanager = new course_enrolment_manager($PAGE, $course);
+
+            $users = $courseenrolmentmanager->get_users('lastname', $perpage = 0);
+
+            // Only return the keys (user ids).
             return array_keys($users);
         }
     }
@@ -50,7 +64,7 @@ class current_company_managers_user_selector extends company_user_selector_base 
      */
     public function find_users($search) {
         global $DB;
-        //by default wherecondition retrieves all users except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
 
@@ -75,8 +89,6 @@ class current_company_managers_user_selector extends company_user_selector_base 
         if (empty($availableusers)) {
             return array();
         }
-
-
         if ($search) {
             $groupname = get_string('companymanagersmatching', 'block_iomad_company_admin', $search);
         } else {
@@ -96,12 +108,10 @@ class potential_company_managers_user_selector extends company_user_selector_bas
      */
     public function find_users($search) {
         global $DB;
-        //by default wherecondition retrieves all users except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
         $params['companyidforjoin'] = $this->companyid;
-        
-
         $fields      = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
@@ -148,10 +158,10 @@ class current_company_users_user_selector extends company_user_selector_base {
      */
     public function find_users($search) {
         global $DB;
-        //by default wherecondition retrieves all users except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
-        
+
         $fields      = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
@@ -176,8 +186,6 @@ class current_company_users_user_selector extends company_user_selector_base {
         if (empty($availableusers)) {
             return array();
         }
-
-
         if ($search) {
             $groupname = get_string('companyusersmatching', 'block_iomad_company_admin', $search);
         } else {
@@ -197,7 +205,7 @@ class potential_company_users_user_selector extends company_user_selector_base {
      */
     public function find_users($search) {
         global $DB;
-        //by default wherecondition retrieves all users except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
         $params['companyidforjoin'] = $this->companyid;
@@ -252,7 +260,7 @@ class current_company_course_user_selector extends company_user_selector_base {
      */
     public function find_users($search) {
         global $DB;
-        //by default wherecondition retrieves all users except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
 
@@ -291,8 +299,6 @@ class current_company_course_user_selector extends company_user_selector_base {
         if (empty($availableusers)) {
             return array();
         }
-
-
         if ($search) {
             $groupname = get_string('currentlyenrolledusersmatching', 'block_iomad_company_admin', $search);
         } else {
@@ -311,7 +317,7 @@ class potential_company_course_user_selector extends company_user_selector_base 
      */
     public function find_users($search) {
         global $DB;
-        //by default wherecondition retrieves all users except the deleted, not confirmed and guest
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
 
@@ -350,8 +356,6 @@ class potential_company_course_user_selector extends company_user_selector_base 
         if (empty($availableusers)) {
             return array();
         }
-
-
         if ($search) {
             $groupname = get_string('potentialcourseusersmatching', 'block_iomad_company_admin', $search);
         } else {

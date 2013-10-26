@@ -76,7 +76,7 @@ $systemcontext = get_context_instance(CONTEXT_SYSTEM);
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('edit_users_title', 'block_iomad_company_admin');
+$linktext = get_string('edit_users_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/editusers.php');
 // Build the nav bar.
@@ -125,15 +125,15 @@ $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_iomad_company_admin');
 $select->formid = 'choosedepartment';
-echo html_writer::tag('div', $OUTPUT->render($select), array('id'=>'iomad_department_selector'));
-$fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id'=>'iomad_company_selector'));
+echo html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_department_selector'));
+$fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_company_selector'));
 if (!(has_capability('block/iomad_company_admin:editusers', $systemcontext)
     or has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
     print_error('nopermissions', 'error', '', 'edit/delete users');
 }
 // Set up the filter form.
-$mform = new iomad_user_filter_form(null, array('companyid'=>$companyid));
-$mform->set_data(array('departmentid'=>$departmentid));
+$mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
+$mform->set_data(array('departmentid' => $departmentid));
 $mform->set_data($params);
 
 // Display the user filter form.
@@ -146,7 +146,7 @@ $foundfields = false;
 if ($category = $DB->get_record_sql('select uic.id, uic.name from {user_info_category} uic, {company} c where c.id = '.$companyid.'
                                      and c.profileid=uic.id')) {
     // Get field names from company category.
-    if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->id))) {
+    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
         foreach ($fields as $field) {
             $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
             ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname, null, PARAM_RAW);
@@ -203,7 +203,7 @@ if (empty($CFG->loginhttps)) {
 $returnurl = "$CFG->wwwroot/blocks/iomad_company_admin/editusers.php";
 
 if ($confirmuser and confirm_sesskey()) {
-    if (!$user = $DB->get_record('user', array('id'=>$confirmuser))) {
+    if (!$user = $DB->get_record('user', array('id' => $confirmuser))) {
         print_error('nousers');
     }
 
@@ -223,7 +223,7 @@ if ($confirmuser and confirm_sesskey()) {
         print_error('nopermissions', 'error', '', 'delete a user');
     }
 
-    if (!$user = $DB->get_record('user', array('id'=>$delete))) {
+    if (!$user = $DB->get_record('user', array('id' => $delete))) {
         print_error('nousers', 'error');
     }
 
@@ -234,18 +234,18 @@ if ($confirmuser and confirm_sesskey()) {
     if ($confirm != md5($delete)) {
         $fullname = fullname($user, true);
         echo $OUTPUT->heading(get_string('deleteuser', 'block_iomad_company_admin'). " " . $fullname);
-        $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+        $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $OUTPUT->confirm(get_string('deletecheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editusers.php', $optionsyes), 'editusers.php');
         echo $OUTPUT->footer();
         die;
     } else {
         // Actually delete the user.
-        if (!$DB->delete_records('user', array('id'=>$delete))) {
+        if (!$DB->delete_records('user', array('id' => $delete))) {
             print_error('error while deleting user');
         }
         // Remove them from the department lists.
-        $DB->delete_records('company_users', array('userid'=>$delete));
+        $DB->delete_records('company_users', array('userid' => $delete));
     }
 
 } else if ($acl and confirm_sesskey()) {
@@ -253,7 +253,7 @@ if ($confirmuser and confirm_sesskey()) {
         // TODO: this should be under a separate capability.
         print_error('nopermissions', 'error', '', 'modify the NMET access control list');
     }
-    if (!$user = $DB->get_record('user', array('id'=>$acl))) {
+    if (!$user = $DB->get_record('user', array('id' => $acl))) {
         print_error('nousers', 'error');
     }
     if (!is_mnet_remote_user($user)) {
@@ -263,7 +263,8 @@ if ($confirmuser and confirm_sesskey()) {
     if ($accessctrl != 'allow' and $accessctrl != 'deny') {
         print_error('invalidaccessparameter', 'error');
     }
-    $aclrecord = $DB->get_record('mnet_sso_access_control', array('username'=>$user->username, 'mnet_host_id'=>$user->mnethostid));
+    $aclrecord = $DB->get_record('mnet_sso_access_control', array('username' => $user->username, 'mnet_host_id'
+                                  => $user->mnethostid));
     if (empty($aclrecord)) {
         $aclrecord = new object();
         $aclrecord->mnet_host_id = $user->mnethostid;
@@ -303,7 +304,7 @@ foreach ($columns as $column) {
     }
     $params['sort'] = $column;
     $params['dir'] = $columndir;
-    $$column = "<a href=". new moodle_url('editusers.php', $params).">".$string[$column]."</a>$columnicon";
+    $$column = "<a href= ". new moodle_url('editusers.php', $params).">".$string[$column]."</a>$columnicon";
 }
 
 if ($sort == "name") {
@@ -339,23 +340,23 @@ if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
     }
 
     // Deal with search strings.
-    $searchparams= array();
+    $searchparams = array();
     if (!empty($idlist)) {
         $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
     }
     if (!empty($params['firstname'])) {
         $sqlsearch .= " AND firstname like :firstname ";
-        $searchparams['firstname']='%'.$params['firstname'].'%';
+        $searchparams['firstname'] = '%'.$params['firstname'].'%';
     }
 
     if (!empty($params['lastname'])) {
         $sqlsearch .= " AND lastname like :lastname ";
-        $searchparams['lastname']='%'.$params['lastname'].'%';
+        $searchparams['lastname'] = '%'.$params['lastname'].'%';
     }
 
     if (!empty($params['email'])) {
         $sqlsearch .= " AND email like :email ";
-        $searchparams['email']='%'.$params['email'].'%';
+        $searchparams['email'] = '%'.$params['email'].'%';
     }
 
     $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
@@ -378,28 +379,28 @@ if (has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
         $sqlsearch = "1 = 0";
     }
     // Deal with search strings.
-    $searchparams= array();
+    $searchparams = array();
     if (!empty($idlist)) {
         $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
     }
     if (!empty($params['firstname'])) {
         $sqlsearch .= " AND firstname like :firstname ";
-        $searchparams['firstname']='%'.$params['firstname'].'%';
+        $searchparams['firstname'] = '%'.$params['firstname'].'%';
     }
 
     if (!empty($params['lastname'])) {
         $sqlsearch .= " AND lastname like :lastname ";
-        $searchparams['lastname']='%'.$params['lastname'].'%';
+        $searchparams['lastname'] = '%'.$params['lastname'].'%';
     }
 
     if (!empty($params['email'])) {
         $sqlsearch .= " AND email like :email ";
-        $searchparams['email']='%'.$params['email'].'%';
+        $searchparams['email'] = '%'.$params['email'].'%';
     }
 
     $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
 }
-$userlist="";
+$userlist = "";
 
 if (!empty($userrecords)) {
     $userlist = "u.id in (". implode(',', array_values($userrecords)).")";
@@ -407,9 +408,9 @@ if (!empty($userrecords)) {
     $userlist = "1=2";
 }
 if (!empty($userlist)) {
-    $users = iomad_get_users_listing($sort, $dir, $page*$perpage, $perpage, '', '', '', $userlist);
+    $users = iomad_get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist);
 } else {
-    $users=array();
+    $users = array();
 }
 $usercount = count($userrecords);
 
@@ -459,26 +460,26 @@ if (!$users) {
         } else {
             if ((has_capability('block/iomad_company_admin:editusers', $systemcontext)
                  or has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
-                $deletebutton = "<a href=\"editusers.php?delete=$user->id&amp;sesskey=".sesskey()."\">$strdelete</a>";
+                $deletebutton = "<a href=\"editusers.php?delete=$user->id&amp;sesskey= ".sesskey()."\">$strdelete</a>";
             } else {
-                $deletebutton ="";
+                $deletebutton = "";
             }
         }
         if ((has_capability('block/iomad_company_admin:editusers', $systemcontext)
              or has_capability('block/iomad_company_admin:editallusers', $systemcontext))
-             and ($user->id==$USER->id or $user->id != $mainadmin->id) and !is_mnet_remote_user($user)) {
+             and ($user->id == $USER->id or $user->id != $mainadmin->id) and !is_mnet_remote_user($user)) {
             $editbutton = "<a href=\"$securewwwroot/blocks/iomad_company_admin/editadvanced.php?id=$user->id\">$stredit</a>";
         } else {
-            $editbutton ="";
+            $editbutton = "";
         }
 
         if ((has_capability('block/iomad_company_admin:company_course_users', $systemcontext)
              or has_capability('block/iomad_company_admin:editallusers', $systemcontext))
-             and ($user->id==$USER->id or $user->id != $mainadmin->id)
+             and ($user->id == $USER->id or $user->id != $mainadmin->id)
              and !is_mnet_remote_user($user)) {
             $enrolmentbutton = "<a href=\"company_users_course_form.php?userid=$user->id\">$strenrolment</a>";
         } else {
-            $enrolmentbutton ="";
+            $enrolmentbutton = "";
         }
 
         if ($user->lastaccess) {
@@ -513,7 +514,7 @@ if (!empty($table)) {
 echo $OUTPUT->footer();
 
 function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recordsperpage=0,
-                       $search='', $firstinitial='', $lastinitial='', $extraselect='', array $extraparams=null) {
+                       $search='', $firstinitial='', $lastinitial='', $extraselect='', array $extraparams =null) {
     global $DB;
 
     $fullname  = $DB->sql_fullname();

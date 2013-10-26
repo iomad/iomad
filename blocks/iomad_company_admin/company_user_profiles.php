@@ -33,7 +33,7 @@ $strcreatefield     = get_string('profilecreatefield', 'admin');
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('userprofiles', 'block_iomad_company_admin');
+$linktext = get_string('userprofiles', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php');
 // Build the nav bar.
@@ -69,14 +69,14 @@ switch ($action) {
         $id      = required_param('id', PARAM_INT);
         $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
-        $datacount = $DB->count_records('user_info_data', array('fieldid'=>$id));
-        if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount===0) {
+        $datacount = $DB->count_records('user_info_data', array('fieldid' => $id));
+        if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount === 0) {
             profile_delete_field($id);
             redirect($redirect);
         }
 
         // Ask for confirmation.
-        $optionsyes = array ('id'=>$id, 'confirm'=>1, 'action'=>'deletefield', 'sesskey'=>sesskey());
+        $optionsyes = array ('id' => $id, 'confirm' => 1, 'action' => 'deletefield', 'sesskey' => sesskey());
         $strheading = get_string('profiledeletefield', 'admin');
         $PAGE->navbar->add($strheading);
         echo $OUTPUT->header();
@@ -98,7 +98,7 @@ switch ($action) {
         // Normal form.
 }
 
-$urlparams = array('companyid' => $companyid, 'action'=>$action);
+$urlparams = array('companyid' => $companyid, 'action' => $action);
 if (!empty($returnurl)) {
     $urlparams['returnurl'] = $returnurl;
 }
@@ -124,7 +124,7 @@ if ($DB->count_records('user_info_category') == 0) {
 
 // Check if we have a company ID, if so just pull that one back.
 if (!empty($companyid)) {
-    $company = $DB->get_record('company', array('id'=>$companyid), '*', MUST_EXIST);
+    $company = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
 
     // Get the company category.
     $categories = array();
@@ -135,7 +135,7 @@ if (!empty($companyid)) {
     // Check if can view every company profile.
     if (!has_capability('block/iomad_company_admin:allcompany_user_profiles', $context)) {
         // Get the company from the users profile.
-        $categories = $DB->get_records('company', array('id'=>$companyid), 'sortorder ASC', 'profileid');
+        $categories = $DB->get_records('company', array('id' => $companyid), 'sortorder ASC', 'profileid');
     } else {
         // Get all the companies/categories.
         $categories = $DB->get_records_sql("SELECT id AS profileid FROM {user_info_category}");
@@ -150,14 +150,14 @@ foreach ($categories as $category) {
     $table->attributes['class'] = 'generaltable profilefield';
     $table->data = array();
 
-    if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->profileid), 'sortorder ASC')) {
+    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->profileid), 'sortorder ASC')) {
         foreach ($fields as $field) {
             $table->data[] = array(format_string($field->name), profile_field_icons($field));
         }
     }
-    
-    // get the category name
-    $categoryinfo = $DB->get_record('user_info_category', array('id'=>$category->profileid));
+
+    // Get the category name.
+    $categoryinfo = $DB->get_record('user_info_category', array('id' => $category->profileid));
 
     echo $OUTPUT->heading(format_string($categoryinfo->name));
     if (count($table->data)) {
@@ -178,10 +178,10 @@ if (!empty($companyid)) {
     // Need to add the company ID tag to the edit URL.
     $popupurl = $popupurl . '&companyid='.$companyid;
 }
-echo $OUTPUT->single_select($popupurl, 'datatype', $options, '', array(''=>$strcreatefield), 'newfieldform');
+echo $OUTPUT->single_select($popupurl, 'datatype', $options, '', array('' => $strcreatefield), 'newfieldform');
 
 // Add a div with a class so themers can hide, style or reposition the text.
-html_writer::start_tag('div', array('class'=>'adminuseractionhint'));
+html_writer::start_tag('div', array('class' => 'adminuseractionhint'));
 html_writer::end_tag('div');
 
 echo '</div>';
@@ -206,7 +206,7 @@ function profile_category_icons($category) {
     $stredit     = get_string('edit');
 
     $categorycount = $DB->count_records('user_info_category');
-    $fieldcount    = $DB->count_records('user_info_field', array('categoryid'=>$category->id));
+    $fieldcount    = $DB->count_records('user_info_field', array('categoryid' => $category->id));
 
     // Edit!
     $editstr = '<a title="'.$stredit.'" href="company_user_profiles.php?id='.$category->id.
@@ -256,8 +256,8 @@ function profile_field_icons($field) {
     $strmovedown = get_string('movedown');
     $stredit     = get_string('edit');
 
-    $fieldcount = $DB->count_records('user_info_field', array('categoryid'=>$field->categoryid));
-    $datacount  = $DB->count_records('user_info_data', array('fieldid'=>$field->id));
+    $fieldcount = $DB->count_records('user_info_field', array('categoryid' => $field->categoryid));
+    $datacount  = $DB->count_records('user_info_data', array('fieldid' => $field->id));
 
     // Edit!
     $editstr = '<a title="'.$stredit.'" href="company_user_profiles.php?id='.$field->id.

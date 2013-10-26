@@ -52,10 +52,10 @@ class company_managers_form extends moodleform {
         }
         $options = array('context' => $this->context,
                          'companyid' => $this->selectedcompany,
-                         'departmentid'=>$departmentid,
-                         'roletype'=>$this->roletype,
-                         'subdepartments'=>$this->subhierarchieslist,
-                         'parentdepartmentid'=>$parentlevel);
+                         'departmentid' => $departmentid,
+                         'roletype' => $this->roletype,
+                         'subdepartments' => $this->subhierarchieslist,
+                         'parentdepartmentid' => $parentlevel);
         $this->potentialusers = new potential_department_user_selector('potentialmanagers', $options);
         $this->currentusers = new current_department_user_selector('currentmanagers', $options);
 
@@ -126,10 +126,10 @@ class company_managers_form extends moodleform {
     public function process($departmentid, $roletype) {
         global $DB;
 
-        $companymanagerrole = $DB->get_record('role', array('shortname'=>'companymanager'));
-        $departmentmanagerrole = $DB->get_record('role', array('shortname'=>'companydepartmentmanager'));
-        $companycoursenoneditorrole = $DB->get_record('role', array('shortname'=>'companycoursenoneditor'));
-        $companycourseeditorrole = $DB->get_record('role', array('shortname'=>'companycourseeditor'));
+        $companymanagerrole = $DB->get_record('role', array('shortname' => 'companymanager'));
+        $departmentmanagerrole = $DB->get_record('role', array('shortname' => 'companydepartmentmanager'));
+        $companycoursenoneditorrole = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
+        $companycourseeditorrole = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
 
         // Process incoming assignments.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -151,12 +151,12 @@ class company_managers_form extends moodleform {
                                     role_assign($companymanagerrole->id, $adduser->id, $this->context->id);
                                     // Deal with company courses.
                                     if ($companycourses = $DB->get_records('company_course',
-                                                                            array('companyid'=>$this->selectedcompany))) {
+                                                                            array('companyid' => $this->selectedcompany))) {
                                         foreach ($companycourses as $companycourse) {
-                                            if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                                 if ($DB->record_exists('company_created_courses',
-                                                                        array('companyid'=>$companycourse->companyid,
-                                                                              'courseid'=>$companycourse->courseid))) {
+                                                                        array('companyid' => $companycourse->companyid,
+                                                                              'courseid' => $companycourse->courseid))) {
                                                     company_user::enrol($adduser,
                                                                         array($companycourse->courseid),
                                                                         $companycourse->companyid,
@@ -176,29 +176,29 @@ class company_managers_form extends moodleform {
 
                                     // Deal with company courses.
                                     if ($companycourses = $DB->get_records('company_course',
-                                                                            array('companyid'=>$this->selectedcompany))) {
+                                                                            array('companyid' => $this->selectedcompany))) {
                                         foreach ($companycourses as $companycourse) {
-                                            if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                                 company_user::enrol($adduser, array($companycourse->courseid),
                                                                     $companycourse->companyid,
                                                                     $companycoursenoneditorrole->id);
                                             }
                                         }
                                     }
-                               } else if ($roletype == 1 && $userrecord->managertype=2) {
+                                } else if ($roletype == 1 && $userrecord->managertype = 2) {
                                     // Give them the department manager role.
                                     role_unassign($departmentmanagerrole->id, $adduser->id, $this->context->id);
                                     role_assign($companymanagerrole->id, $adduser->id, $this->context->id);
 
                                     // Deal with course permissions.
                                     if ($companycourses = $DB->get_records('company_course',
-                                                                            array('companyid'=>$this->selectedcompany))) {
+                                                                            array('companyid' => $this->selectedcompany))) {
                                         foreach ($companycourses as $companycourse) {
-                                            if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                                 // If its a company created course then assign the editor role to the user.
                                                 if ($DB->record_exists('company_created_courses',
-                                                                        array ('companyid'=>$this->selectedcompany,
-                                                                               'courseid'=>$companycourse->courseid))) {
+                                                                        array ('companyid' => $this->selectedcompany,
+                                                                               'courseid' => $companycourse->courseid))) {
                                                     company_user::unenrol($adduser,
                                                                           array($companycourse->courseid),
                                                                                 $companycourse->companyid);
@@ -214,15 +214,15 @@ class company_managers_form extends moodleform {
                                             }
                                         }
                                     }
-                                } else if ($roletype == 2 && $userrecord->managertype=1) {
+                                } else if ($roletype == 2 && $userrecord->managertype = 1) {
                                     // Give them the department manager role.
                                     role_unassign($companymanagerrole->id, $adduser->id, $this->context->id);
                                     role_assign($departmentmanagerrole->id, $adduser->id, $this->context->id);
                                     // Deal with company course roles.
                                     if ($companycourses = $DB->get_records('company_course',
-                                         array('companyid'=>$this->selectedcompany))) {
+                                         array('companyid' => $this->selectedcompany))) {
                                         foreach ($companycourses as $companycourse) {
-                                            if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                                 company_user::unenrol($adduser, array($companycourse->courseid),
                                                                       $companycourse->companyid);
                                                 company_user::enrol($adduser, array($companycourse->courseid),
@@ -264,9 +264,9 @@ class company_managers_form extends moodleform {
                         role_unassign($companymanagerrole->id, $removeuser->id, $this->context->id);
                         role_unassign($departmentmanagerrole->id, $removeuser->id, $this->context->id);
                         // Remove their capabilities from the company courses.
-                        if ($companycourses = $DB->get_records('company_course', array('companyid'=>$this->selectedcompany))) {
+                        if ($companycourses = $DB->get_records('company_course', array('companyid' => $this->selectedcompany))) {
                             foreach ($companycourses as $companycourse) {
-                                if ($DB->record_exists('course', array('id'=>$companycourse->courseid))) {
+                                if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                     company_user::unenrol($removeuser, array($companycourse->courseid), $companycourse->companyid);
                                 }
                             }
@@ -303,7 +303,7 @@ if ($returnurl) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('assignmanagers', 'block_iomad_company_admin');
+$linktext = get_string('assignmanagers', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_managers_form.php');
 // Build the nav bar.
@@ -331,11 +331,11 @@ $managersform = new company_managers_form($PAGE->url, $context, $companyid, $dep
 
 // Change the department for the form.
 if ($departmentid != 0) {
-    $managersform->set_data(array('deptid'=>$departmentid));
+    $managersform->set_data(array('deptid' => $departmentid));
 }
 // Change the user type of the form.
 if ($roleid != 0) {
-    $managersform->set_data(array('managertype'=>$roleid));
+    $managersform->set_data(array('managertype' => $roleid));
 }
 
 

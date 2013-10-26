@@ -39,7 +39,6 @@
         tr.appendChild(td);
 
         tbody.appendChild(tr);
-        
         .increaseCounter('blockPrices');
     });
 };

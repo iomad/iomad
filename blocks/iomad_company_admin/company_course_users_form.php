@@ -57,12 +57,12 @@ class company_ccu_courses_form extends company_moodleform {
         }
 
         $options = array('context' => $this->context,
-                         'multiselect'=>false,
+                         'multiselect' => false,
                          'companyid' => $this->selectedcompany,
-                         'departmentid'=>$departmentid,
-                         'subdepartments'=>$this->subhierarchieslist,
-                         'parentdepartmentid'=>$parentlevel,
-                         'licenses'=>false, 'shared'=>false);
+                         'departmentid' => $departmentid,
+                         'subdepartments' => $this->subhierarchieslist,
+                         'parentdepartmentid' => $parentlevel,
+                         'licenses' => false, 'shared' => false);
         $this->currentcourses = new current_company_course_selector('currentcourses', $options);
         $this->currentcourses->set_rows(1);
 
@@ -167,9 +167,9 @@ class company_course_users_form extends moodleform {
             $options = array('context' => $this->context,
                              'companyid' => $this->selectedcompany,
                              'courseid' => $this->course->id,
-                             'departmentid'=>$this->departmentid,
-                             'subdepartments'=>$this->subhierarchieslist,
-                             'parentdepartmentid'=>$this->parentlevel);
+                             'departmentid' => $this->departmentid,
+                             'subdepartments' => $this->subhierarchieslist,
+                             'parentdepartmentid' => $this->parentlevel);
             if (! $this->potentialusers) {
                 $this->potentialusers = new potential_company_course_user_selector('potentialcourseusers', $options);
             }
@@ -262,8 +262,8 @@ class company_course_users_form extends moodleform {
                         company_user::enrol($adduser, array($this->course->id),
                                                             $this->selectedcompany);
                         EmailTemplate::send('user_added_to_course',
-                                             array('course'=>$this->course,
-                                                   'user'=>$adduser));
+                                             array('course' => $this->course,
+                                                   'user' => $adduser));
                     }
                 }
 
@@ -310,7 +310,7 @@ if ($courseid) {
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext=get_string('enroluser', 'block_iomad_company_admin');
+$linktext = get_string('enroluser', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/company_course_users_form.php');
 // Build the nav bar.
@@ -343,12 +343,12 @@ $blockpage->display_header();
 
 $ccuparamarray = array();
 if (!empty($departmentid)) {
-    
-    $ccuparamaray['departmentid']=$departmentid;
+
+    $ccuparamaray['departmentid'] = $departmentid;
 }
 
 if (!empty($courseid)) {
-    $ccuparamarray['currentcourses']=$courseid;
+    $ccuparamarray['currentcourses'] = $courseid;
 }
 
 if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
@@ -369,7 +369,7 @@ if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
             echo $usersform->display();
         } else if ($courseid > 0) {
             global $DB;
-            $course = $DB->get_record('course', array('id'=>$courseid));
+            $course = $DB->get_record('course', array('id' => $courseid));
             $usersform->set_course(array($course));
             $usersform->process();
             echo $usersform->display();
