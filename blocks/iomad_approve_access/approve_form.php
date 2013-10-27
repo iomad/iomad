@@ -65,7 +65,11 @@ function definition() {
                 $radioarray[] =& $mform->createElement('radio', 'approve_'.$result->userid.'_'.$result->courseid, '',
                                                        get_string('deny', 'block_iomad_approve_access'), 2);
                 $mform->addGroup($radioarray, 'approve_'.$result->userid.'_'.$result->courseid,
-                                 $user->firstname. ' '. $user->lastname.' : '.$course->fullname,
+                                 $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
+                                 <a href="'.
+                                 new moodle_url('/mod/courseclassroom/manageclass.php',
+                                                array('id' => $result->activityid)).'">'.
+                                 $activity->name.' '.date($dateformat, $activity->startdatetime).'</a>',
                                  array(' '), false);
             {
             $this->add_action_buttons(true, 'submit');

@@ -39,11 +39,13 @@ function approve_enrol_has_users() {
         $approvaltype = 'both';
     } else {
         // What type of manager am I?
-        if ($manager = $DB->get_record('companymanager', array('userid' => $USER->id))) {
-            if (!empty($manager->departmentmanager)) {
+        if ($manager = $DB->get_record('company_users', array('userid' => $USER->id))) {
+            if (!empty($manager->managertype) && $manager->managertype == 1)) {
                 $approvaltype = 'manager';
-            } else {
+            } else if (!empty($manager->managertype) && $manager->managertype == 1)) {
                 $approvaltype = 'company';
+            } else {
+                return false;
             }
         } else {
             return false;
@@ -52,18 +54,28 @@ function approve_enrol_has_users() {
     if ($approvaltype == 'both' || $approvaltype == 'manager') {
         // Get the list of users I am responsible for.
         $myuserids = company::get_my_users_list($companyid);
-        if (!empty($myuserids) && $DB->get_records_sql("SELECT * FROM {block_iomad_approve_access}
-                                  WHERE companyid = :companyid
-                                  AND manager_ok = 0
-                                  AND userid != :myuserid
-                                  AND userid IN ($myuserids)",
-                                  array('companyid' => $companyid, 'myuserid' => $USER->id))) {
+        if (!empty($myuserids) && $DB->get_records_sql("SELECT iaa.* FROM {block_iomad_approve_access} iaa
+                                               RIGHT JOIN {courseclassroom} cc ON cc.id=iaa.activityid
+                                               AND cc.approvaltype in (1,3)
+                                               WHERE iaa.companyid=:companyid AND iaa.manager_ok = 0
+                                               AND iaa.userid != :myuserid
+                                               AND iaa.userid 
+                                               IN ($myuserids)", array('companyid'=>$companyid, 'myuserid'=>$USER->id)) {
             return true;
         }
     }
     if ($approvaltype == 'both' || $approvaltype == 'company') {
-        if ($DB->get_records('block_iomad_approve_access',
-                             array('companyid' => $companyid, 'tm_ok' => '0 AND userid != '.$USER->id))) {
+        if (!empty($myuserids) && $DB->get_records_sql("SELECT iaa.* FROM {block_iomad_approve_access} iaa
+                                  RIGHT JOIN {courseclassroom} cc ON cc.id=iaa.activityid
+                                  WHERE iaa.companyid=:companyid 
+                                  AND iaa.userid != :myuserid
+                                  AND iaa.userid IN ($myuserids)
+                                  AND (
+                                   cc.approvaltype in (2,3)
+                                   AND iaa.tm_ok = 0 )
+                                  OR (
+                                   cc.approvaltype = 1
+                                   AND iaa.manager_ok = 0)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
             return true;
         }
     }
@@ -92,11 +104,13 @@ function approve_enroll_get_my_users() {
         $approvaltype = 'both';
     } else {
         // What type of manager am I?
-        if ($manager = $DB->get_record('companymanager', array('userid' => $USER->id))) {
-            if (!empty($manager->departmentmanager)) {
+        if ($manager = $DB->get_record('company_users', array('userid' => $USER->id))) {
+            if (!empty($manager->managertype) && $manager->managertype == 1)) {
                 $approvaltype = 'manager';
-            } else {
+            } else if (!empty($manager->managertype) && $manager->managertype == 1)) {
                 $approvaltype = 'company';
+            } else {
+                return false;
             }
         } else {
             return false;
@@ -107,29 +121,57 @@ function approve_enroll_get_my_users() {
     $myuserids = company::get_my_users_list($companyid);
     if (!empty($myuserids)) {
         if ($approvaltype == 'manager') {
-            //  Need to deal with departments here.
-            if ($userarray = $DB->get_records('block_iomad_approve_access', array('companyid' => $companyid,
-                                              'manager_ok' => '0 AND userid != '.$USER->id.' AND userid IN ('.$myuserids.')'))) {
+            //  need to deal with departments here.
+            if ($userarray = $DB->get_records_sql("SELECT iaa.* FROM {block_iomad_approce_access} iaa
+                                               RIGHT JOIN {courseclassroom} cc ON cc.id=iaa.activityid
+                                               AND cc.approvaltype in (1,3)
+                                               WHERE iaa.companyid=:companyid AND iaa.manager_ok = 0
+                                               AND iaa.userid != :myuserid
+                                               AND iaa.userid 
+                                               IN ($myuserids)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
                 return $userarray;
             }
-        }
+        }    
+    
         if ($approvaltype == 'company') {
-            if ($userarray = $DB->get_records('block_iomad_approve_access', array('companyid' => $companyid,
-                                              'tm_ok' => '0 AND userid != '.$USER->id.' AND userid IN ('.$myuserids.')'))) {
+            if ($userarray = $DB->get_records_sql("SELECT iaa.* FROM {block_iomad_approce_access} iaa
+                                               RIGHT JOIN {courseclassroom} cc ON cc.id=iaa.activityid
+                                               WHERE iaa.companyid=:companyid 
+                                               AND iaa.userid != :myuserid
+                                               AND iaa.userid IN ($myuserids)
+                                               AND (
+                                                cc.approvaltype in (2,3)
+                                                AND iaa.tm_ok = 0 )
+                                               OR (
+                                                cc.approvaltype = 1
+                                                AND iaa.manager_ok = 0)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
                 return $userarray;
             }
         }
+    
         if ($approvaltype == 'both') {
-            if ($userarray = $DB->get_records_sql("SELECT * FROM {block_iomad_approve_access}
+            if ($userarray = $DB->get_records_sql("SELECT * FROM {block_iomad_approce_access}
                                                    WHERE companyid=:companyid
                                                    AND (tm_ok = 0 OR manager_ok = 0)
                                                    AND userid != :myuserid
                                                    AND userid IN ($myuserids)",
-                                                   array('companyid' => $companyid, 'myuserid' => $USER->id))) {
+                                                   array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
                 return $userarray;
             }
         }
     }
+    }
 
     return array();
+}
+
+function approve_access_register_user($user, $event) {
+    global $DB;
+    
+    $courseclassroomrecord = new stdclass();
+    $courseclassroomrecord->userid = $user->id;
+    $courseclassroomrecord->courseclassroomid = $event->id;
+    if (!$DB->insert_record('courseclassroom_users', $courseclassroomrecord)) {
+        print_error(get_string('updatefailed', 'block_iomad_approve_access'));
+    }
 }

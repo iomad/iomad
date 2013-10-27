@@ -45,8 +45,8 @@ class block_iomad_approve_access extends block_base {
         $this->content = new stdClass;
 
         if (approve_enrol_has_users()) {
-            $this->content->text   = '<a href="blocks/iomad_approve_access/approve.php">'.
-                                      get_string('userstoapprove', 'block_iomad_approve_access').'</a>';
+            $this->content->text   = '<a href="'.new moodle_url('/blocks/iomad_approve_access/approve.php').
+                                      '">'.get_string('userstoapprove', 'block_iomad_approve_access').'</a>';
         } else {
             $this->content->text = get_string('noonetoapprove', 'block_iomad_approve_access');
         }

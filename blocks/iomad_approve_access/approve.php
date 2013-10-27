@@ -72,29 +72,79 @@ if ($approvaltype == 'none') {
 $callform = new approve_form();
 if ($data = $callform->get_data()) {
 
-    foreach ($data as $key => $dataresult) {
+    foreach($data as $key=>$dataresult) {
 
         // Check if we have an approval passed to us.
         if (strpos($key, 'approve_') !== false) {
             $capturedresult = explode("_", $key);
 
-            if ($result = $DB->get_record('block_iomad_approve_access', array('userid' => $capturedresult[1],
-                                                                              'courseid' => $capturedresult[2]))) {
-                $event = $DB->get_record('courseclassroom', array('id' => $result->activityid));
+            if ($result = $DB->get_record('block_iomad_approve_access', array('userid'=>$capturedresult[1],
+                                                                              'activityid'=>$capturedresult[2]))) {
+                $event = $DB->get_record('courseclassroom', array('id'=>$result->activityid));
+                $senddenied = false;
+                        
                 if ($approvaltype == 'both' || $approvaltype == 'manager' ) {
                     if ($dataresult == 1) {
                         $result->manager_ok = 1;
+                        add_to_log($event->id,
+                                   'trainingevent',
+                                   'User '.$result->userid.' department manager approved',
+                                   'blocks/iomad_approve_access/approve.php',
+                                   $event->id,
+                                   $USER->id);
+                        if ($event->approvaltype == 3) {
+                            // Get the company managers for this user.
+                            $usercompany = company::get_company_byuserid($result->userid);
+                            $company = new company($usercompany->id);
+
+                            // Add other details too.
+                            $course = $DB->get_record('course', array('id' => $event->course));
+                            $mymanagers = $company->get_my_managers($result->userid, 1);
+                            $eventuser = $DB->get_record('user', array('id' => $result->userid));
+                            $location = $DB->get_record('classroom',array('id'=>$event->classroomid));
+                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+
+                            // Send the emails.
+                            foreach ($mymanagers as $mymanager) {
+                                if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
+                                    EmailTemplate::send('course_classroom_approval', array('course'=>$course,
+                                                                                           'user'=>$manageruser,
+                                                                                           'approveuser'=>$eventuser,
+                                                                                           'classroom'=>$location));
+                                }
+                            }
+                        }
                     } else {
                         $result->manager_ok = 3;
                         $result->tm_ok = 3;
+                        $senddenied = true;
+                        add_to_log($event->id,
+                                   'trainingevent',
+                                   'User '.$result->userid.' department manager denied',
+                                   'blocks/iomad_approve_access/approve.php',
+                                   $event->id,
+                                   $USER->id);
                     }
                 }
                 if ($approvaltype == 'both' || $approvaltype == 'company') {
                     if ($dataresult == 1) {
                         $result->tm_ok = 1;
+                        add_to_log($event->id,
+                                   'trainingevent',
+                                   'User '.$result->userid.' company manager approved',
+                                   'blocks/iomad_approve_access/approve.php',
+                                   $event->id,
+                                   $USER->id);
                     } else {
                         $result->manager_ok = 3;
                         $result->tm_ok = 3;
+                        $senddenied = true;
+                        add_to_log($event->id,
+                        'trainingevent',
+                        'User '.$result->userid.' company manager ',
+                        'blocks/iomad_approve_access/approve.php',
+                        $event->id,
+                        $USER->id);
                     }
                 }
                 // Do we need to email them?
@@ -106,16 +156,36 @@ if ($data = $callform->get_data()) {
                     $sendemail = true;
                 } else {
                     $sendemail = false;
-                }
-                $DB->update_record('block_iomad_approve_access', $result, $bulk = false);
-                if ($sendemail) {
-                    $location = $DB->get_record('classroom', array('id' => $event->classroomid));
+                } 
+                $DB->update_record('block_iomad_approve_access', $result, $bulk=false);
+                if ($sendemail || $senddenied) {
+                    $location = $DB->get_record('classroom',array('id'=>$event->classroomid));
                     $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                    $approveuser = $DB->get_record('user', array('id' => $result->userid));
-                    $approvecourse = $DB->get_record('course', array('id' => $result->courseid));
-                    EmailTemplate::send('course_classroom_approved', array('course' => $approvecourse,
-                                                                                   'user' => $approveuser,
-                                                                                   'classroom' => $location));
+                    $approveuser = $DB->get_record('user', array('id'=>$result->userid));
+                    $approvecourse = $DB->get_record('course', array('id'=>$result->courseid));
+                    if (!$senddenied) {
+                        EmailTemplate::send('course_classroom_approved', array('course'=>$approvecourse,
+                                                                               'user'=>$approveuser,
+                                                                               'classroom'=>$location));
+                        //  Update the attendance at the event.
+                        approve_access_register_user($approveuser, $event);
+                        add_to_log($event->id,
+                                   'trainingevent',
+                                   'User '.$result->userid.' added to training event',
+                                   'blocks/iomad_approve_access/approve.php',
+                                   $event->id,
+                                   $USER->id);
+                    } else {
+                        EmailTemplate::send('course_classroom_denied', array('course'=>$approvecourse,
+                                                                             'user'=>$approveuser,
+                                                                             'classroom'=>$location));
+                        add_to_log($event->id,
+                                   'trainingevent',
+                                   'User '.$result->userid.' approval denied for training event',
+                                   'blocks/iomad_approve_access/approve.php',
+                                   $event->id,
+                                   $USER->id);
+                    }
                 }
             } else {
                 echo "Update failed";
