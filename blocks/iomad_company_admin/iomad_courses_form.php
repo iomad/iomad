@@ -340,8 +340,9 @@ foreach ($courses as $course) {
                  <input type="text" name="warncompletion" id="id_warncompletion" value="'.$warncompletion.'" />
                  <input type="submit" value="' . get_string('submit') . '" />
                  </form>';
+$courselink = new moodle_url('/course/view.php', array('id'=>$course->id));
     $table->data[] = array ($companyname,
-                            $course->fullname,
+                            "<a href='$courselink'>$course->fullname</a>",
                             $licenseselectoutput,
                             $sharedselectoutput, $formhtml, $expirehtml, $warnhtml);
 }
