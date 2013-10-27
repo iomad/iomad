@@ -83,7 +83,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
             }
         }
         if (!empty($booking)) {
-            if ('yes' == $booking) {
+            if ('yes' == $booking || 'again' == $booking) {
                 if (!$DB->get_record('block_iomad_approve_access', array('activityid' => $id, 'userid' => $USER->id))) {
                     if (!$DB->insert_record('block_iomad_approve_access', array('activityid' => $id,
                                                                                 'userid' => $USER->id,
@@ -108,6 +108,33 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                         EmailTemplate::send('course_classroom_approval_request', array('course' => $course,
                                                                                'user' => $USER,
                                                                                'classroom' => $location));
+                    }
+                } else {
+                    $userbooking->tm_ok = 0;
+                    $userbooking->manager_ok = 0;
+                    $DB->update_record('block_iomad_approve_access', $userbooking);
+                    if ($CFG->perficioemails) {
+                        $course = $DB->get_record('course', array('id'=>$event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        //  get the list of managers we need to send an email to.
+                        if ($event->approvaltype != 2 ) {
+                            $mymanagers = $company->get_my_managers($USER->id, 2);
+                        } else {
+                            $mymanagers = $company->get_my_managers($USER->id, 1);
+                        }
+                        foreach ($mymanagers as $mymanager) {
+                            if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
+                                EmailTemplate::send('course_classroom_approval', array('course'=>$course,
+                                                                                       'user'=>$manageruser,
+                                                                                       'approveuser'=>$USER,
+                                                                                       'classroom'=>$location));
+                            }
+                        }
+                        EmailTemplate::send('course_classroom_approval_request', array('course'=>$course,
+                                                                               'user'=>$USER,
+                                                                               'classroom'=>$location));
+                    
+                    add_to_log($course->id, 'trainingevent', 'User seeking approved access', 'mod/courseclassroom/manageclass.php', $event->id, $USER->id);
                     }
                 }
             } else if ( 'no' == $booking) {

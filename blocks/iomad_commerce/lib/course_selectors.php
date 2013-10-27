@@ -51,6 +51,8 @@ class nonshopcourse_selector extends course_selector_base {
                     )
                     AND c.id!=1 AND $wherecondition";
         $order = ' ORDER BY c.sortorder, c.fullname ASC';
+echo "SQL is <pre>
+$fields $sql $order</pre></br>";
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);

@@ -129,6 +129,7 @@ if ($data = $callform->get_data()) {
                 if ($approvaltype == 'both' || $approvaltype == 'company') {
                     if ($dataresult == 1) {
                         $result->tm_ok = 1;
+                        $result->manager_ok = 1;
                         add_to_log($event->id,
                                    'trainingevent',
                                    'User '.$result->userid.' company manager approved',
