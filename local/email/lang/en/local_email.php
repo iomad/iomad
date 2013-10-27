@@ -54,6 +54,10 @@ $string['approved_body'] = 'You have been granted access to course {Course_FullN
 $string['course_classroom_denied_subject'] = 'Face to face training event approval denied';
 $string['course_classroom_denied_body'] = 'Your approval request has been rejected for {Course_FullName} at the following event -
 
+Time : {Classroom_Time}
+Location : {Classroom_Name}
+Address : {Classroom_Address}
+          {Classroom_City} {Classroom_Postcode}';
 $string['expire_subject'] = 'Course expires';
 $string['expire_body'] = 'This is to let you know that your training in {Course_FullName} expires soon.';
 
