@@ -108,12 +108,15 @@ class course_edit_form extends moodleform {
                                         get_string('single_purchase_price', 'block_iomad_commerce') . ' ' . $this->currency);
             $mform->addRule('single_purchase_price',
                              get_string('decimalnumberonly', 'block_iomad_commerce'), 'numeric');
+            $mform->setType('single_purchase_price', PARAM_TEXT);
 
             $mform->addElement('text', 'single_purchase_validlength',
                                         get_string('single_purchase_validlength', 'block_iomad_commerce'));
+            $mform->setType('single_purchase_validlength', PARAM_TEXT);
 
             $mform->addElement('text', 'single_purchase_shelflife',
                                         get_string('single_purchase_shelflife', 'block_iomad_commerce'));
+            $mform->setType('single_purchase_shelflife', PARAM_TEXT);
 
             /****** license blocks *********/
             $mform->addElement('header', 'header', get_string('licenseblocks', 'block_iomad_commerce'));
