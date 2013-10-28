@@ -64,9 +64,12 @@ class course_edit_form extends moodleform {
         $mform =& $this->_form;
 
         $mform->addElement('hidden', 'shopsettingsid', $this->shopsettingsid);
+        $mform->setType('shopsettingsid', PARAM_INT);
         $mform->addElement('hidden', 'currency', $this->currency);
+        $mform->setType('currency', PARAM_TEXT);
         $mform->addElement('hidden', 'deletedBlockPrices', 0);
-
+        $mform->setType('deletedBlockPrices', PARAM_INT);
+        
         // Adding the elements in the definition_after_data function rather than in the definition function
         // so that when the currentcourses or potentialcourses get changed in the process function, the
         // changes get displayed, rather than the lists as they are before processing.
@@ -155,6 +158,7 @@ class course_edit_form extends moodleform {
                 }
 
                 $mform->addElement('hidden', 'blockPrices', count($this->priceblocks));
+                $mform->setType('blockPrices', PARAM_INT);
 
             } else {
                 $table->data[] = array('<input name="block_start_1" type="text" value="1" size="5" />',
@@ -163,6 +167,7 @@ class course_edit_form extends moodleform {
                                        '<input name="block_shelflife_1" type="text" value="" size="5" />',
                                        '<a href="#" onclick="iomad.removeLicenseBlock(this)">' . $strdelete . '</a>');
                 $mform->addElement('hidden', 'blockPrices', 1);
+                $mform->setType('blockPrices', PARAM_INT);
             }
 
             if (!empty($table)) {
@@ -206,6 +211,7 @@ class course_edit_form extends moodleform {
             if ($this->isadding) {
                 $submitlabel = get_string('add_course_to_shop', 'block_iomad_commerce');
                 $mform->addElement('hidden', 'createnew', 1);
+                $mform->setType('createnew', PARAM_INT);
             }
 
             $this->add_action_buttons(true, $submitlabel);
