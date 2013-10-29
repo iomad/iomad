@@ -1159,7 +1159,7 @@ if ($haserror) {
 } else if (empty($contents)) {
     echo $OUTPUT->container(get_string('uupreprocessedcount', 'block_iomad_company_admin', $countcontent),
                             'block_iomad_company_admin');
-    echo $OUTPUT->container(get_string('uploadfilecontentsnovaliddata'), 'block_iomad_company_admin');
+    echo $OUTPUT->container(get_string('uploadfilecontentsnovaliddata', 'block_iomad_company_admin'));
 } else {
     echo $OUTPUT->container(get_string('uupreprocessedcount', 'block_iomad_company_admin', $countcontent),
                             'block_iomad_company_admin');

@@ -186,6 +186,7 @@ class admin_uploaduser_form2 extends company_moodleform {
 
         $mform->addElement('hidden', 'auth');
         $mform->setDefault('auth', '');
+        $mform->setType('auth', PARAM_TEXT);
 
         $mform->addElement('hidden', 'previewrows');
         $mform->setType('previewrows', PARAM_INT);
