@@ -18,6 +18,12 @@ require_once(dirname(__FILE__) . '/company.php');
 
 class iomad {
 
+    /**
+     * Check to see if a user is associated to a company.
+     *
+     * Returns int or false;
+     *
+     **/
     public static function is_company_user () {
         global $USER, $DB;
 
@@ -28,6 +34,12 @@ class iomad {
         }
     }
 
+    /**
+     * Get a users company id.
+     *
+     * Returns int;
+     *
+     **/
     public static function companyid() {
         global $USER;
 
@@ -38,6 +50,12 @@ class iomad {
         return 0;
     }
 
+    /**
+     * Get a users company shortname.
+     *
+     * Returns text;
+     *
+     **/
     public static function companyshortname() {
         global $USER;
 
@@ -48,6 +66,10 @@ class iomad {
         return "";
     }
 
+    /**
+     * Set up a users company in their profile.
+     *
+     **/
     public static function load_company() {
         global $USER;
 
@@ -67,6 +89,14 @@ class iomad {
         }
     }
 
+    /**
+     * SQL text processing to add a company course table join
+     *
+     * Parameters - $alias = text;
+     *
+     * Returns text;
+     *
+     **/
     public static function join_company_course($alias = "{course}") {
         $companyid = self::companyid();
         if ($companyid > 0) {
@@ -77,6 +107,14 @@ class iomad {
         }
     }
 
+    /**
+     * SQL text processing to add a company user table join
+     *
+     * Parameters - $alias = text;
+     *
+     * Returns text;
+     *
+     **/
     public static function join_company_user($alias = "{user}") {
         if ($companyshortname = self::companyshortname()) {
             return " INNER JOIN {user_info_data} ON {user_info_data}.userid = $alias.id AND
@@ -88,6 +126,12 @@ class iomad {
         }
     }
 
+    /**
+     * Add license courses to the list of my courses
+     *
+     * Parameters - &$mycourses = array();
+     *
+     **/
     public static function iomad_add_license_courses(&$mycourses) {
         global $DB, $CFG, $USER;
         // Get the list of courses the user has a valid license for but not already enroled in.
@@ -105,6 +149,12 @@ class iomad {
         return;
     }
 
+    /**
+     * Add shared courses to the list of courses
+     *
+     * Parameters - &$courses = array();
+     *
+     **/
     public static function iomad_add_shared_courses(&$courses) {
         global $DB, $CFG, $USER;
 
@@ -254,6 +304,13 @@ class iomad {
         return true;
     }
 
+    /**
+     * Sets up a new user filter form.
+     *
+     * Parameters - $companyid = int;
+     *
+     * Returns form;
+     **/
     public static function add_user_filter_form($companyid) {
         require_once('userfilterform.php');
 
@@ -262,6 +319,13 @@ class iomad {
         return $mform;
     }
 
+    /**
+     * Add the parameters which would be passed by the user filter form
+     *
+     * Parameters - &$params = array;
+     *              $companyid = int;
+     *
+     **/
     public static function add_user_filter_params(&$params, $companyid) {
         global $DB, $CFG;
 
@@ -360,6 +424,17 @@ class iomad {
         return $returnobj;
     }
 
+    /**
+     * Get a list of users provided a list of parameters
+     *
+     * Parameters - &$params = array();
+     *              $idlist = array();
+     *              $sort = text;
+     *              $dir = text;
+     *              $departmentid = int;
+     *
+     * Return array();
+     **/
     public static function get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid) {
         global $DB, $CFG;
 
@@ -441,6 +516,14 @@ class iomad {
         return $returnobj;
     }
 
+    /**
+     * Get completion summary info for a course
+     *
+     * Parameters - $departmentid = int;
+     *              $courseid = int;
+     *
+     * Return array();
+     **/
     public static function get_course_summary_info($departmentid, $courseid=0) {
         global $DB;
 
@@ -508,6 +591,16 @@ class iomad {
         return $returnarr;
     }
 
+    /**
+     * Get user completion info for a course
+     *
+     * Parameters - $departmentid = int;
+     *              $courseid = int;
+     *              $page = int;
+     *              $perpade = int;
+     *
+     * Return array();
+     **/
     public static function get_user_course_completion_data($searchinfo, $courseid, $page=0, $perpage=0) {
         global $DB;
 

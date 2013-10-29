@@ -32,8 +32,12 @@ class EmailVars {
 
     protected $blank = "[blank]";
 
-    // Constructor.
-    // This sets/retrieves the objects.
+    /**
+     * Constructor
+     *
+     * Sets up and retrieves the API objects
+     *
+     **/
     public function __construct($company, $user, $course, $invoice, $classroom, $license, $sender, $approveuser) {
         $this->company =& $company;
         $this->user =& $user;
@@ -62,12 +66,24 @@ class EmailVars {
         $this->site = get_site();
     }
 
-    // Function used to check whether it is ok to call certain methods of this class as a substitution var.
+    /**
+     * Check whether it is ok to call certain methods of this class as a substitution var
+     *
+     * Parameters - $methodname = text;
+     *
+     * Returns text.
+     *
+     **/
     private static function ok2call($methodname) {
         return ($methodname != "vars" && $methodname != "__construct" && $methodname != "__get" && $methodname != "ok2call");
     }
 
-    // Returns an array with all the methods that can be called and used for substitution var in email templates.
+    /**
+     * Set up all the methods that can be called and used for substitution var in email templates.
+     *
+     * Returns array();
+     *
+     **/
     public static function vars() {
         $reflection = new ReflectionClass("EmailVars");
         $amethods = $reflection->getMethods();
@@ -113,7 +129,10 @@ class EmailVars {
         return $result;
     }
 
-    // Function called to trap calls to non-existent methods of this class, that can then be routed to the appropriate objects.
+    /**
+     * trap calls to non-existent methods of this class, that can then be routed to the appropriate objects.
+     *
+     **/
     public function __get($name) {
         if (isset($name)) {
             if (array_key_exists($name, $this)) {
@@ -132,15 +151,33 @@ class EmailVars {
         }
     }
 
+    /**
+     * Provide the CourseURL method for templates.
+     *
+     * returns text;
+     *
+     **/
     function CourseURL() {
         return $this->course->url;
     }
 
+    /**
+     * Provide the SiteURL method for templates.
+     *
+     * returns text;
+     *
+     **/
     function SiteURL() {
         global $CFG;
         return $CFG->wwwroot;
     }
 
+    /**
+     * Provide the LinkURL method for templates.
+     *
+     * returns text;
+     *
+     **/
     function LinkURL() {
         return $this->url;
     }

@@ -206,6 +206,13 @@ class company_user {
         }
     }
 
+    /**
+     * Unenrol a user from a courses
+     * @param object $user
+     * @param array $courseids
+     * @param int $companyid
+     * @return void
+     */
     public static function unenrol($user, $courseids, $companyid=null) {
         global $DB, $PAGE;
 
@@ -235,7 +242,11 @@ class company_user {
         }
     }
 
-    // Generate a username based on the email address of the user.
+    /**
+     * Generate a username based on the email address of the user.
+     * @param text $email
+     * @return text
+     */
     public static function generate_username( $email ) {
         global $DB;
 
@@ -262,6 +273,8 @@ class company_user {
 
     /* Creates a temporary password for the user and keeps track of whether to
      * email it to the user or not
+     * @param stdclass $user
+     * @param boolean $sendemail
      */
     public static function generate_temporary_password($user, $sendemail = false) {
         global $DB;
@@ -274,6 +287,11 @@ class company_user {
         }
     }
 
+    /* Store the temporary password for the user
+     * @param stdclass $user
+     * @param boolean $sendemail
+     * @param text $temppassword
+     */
     public static function store_temporary_password($user, $sendemail, $temppassword) {
         global $CFG, $USER;
         set_user_preference('iomad_temporary', self::rc4encrypt($temppassword), $user);
@@ -295,6 +313,8 @@ class company_user {
     }
 
     /* Get the user's temporary password
+     * @param stdclass $user
+     * @return text
      */
     public static function get_temporary_password($user) {
         $pwd = get_user_preferences('iomad_temporary', '', $user);
@@ -304,17 +324,29 @@ class company_user {
         return $pwd;
     }
 
+    /* Encrypt a text string
+     * @param text $data
+     * @return text
+     */
     private function rc4encrypt($data) {
         $password = 'knfgjeingj';
         return endecrypt($password, $data, '');
     }
 
+    /* Decrypt a text string
+     * @param text $data
+     * @return text
+     */
     public function rc4decrypt($data) {
         $password = 'knfgjeingj';
         return endecrypt($password, $data, 'de');
     }
 
-    public static function can_see_company ( $company ) {
+    /* Check to see if a user can see a company
+     * @param stdclass $company
+     * @return boolean
+     */
+    public static function can_see_company( $company ) {
         global $USER;
 
         $context = get_context_instance(CONTEXT_SYSTEM);
@@ -346,24 +378,42 @@ class company_user {
         return $USER->profile["company"] == $shortname;
     }
 
+    /* Check is the user is associated to a company
+     *
+     * @return boolean
+     */
     public static function is_company_user () {
         return iomad::is_company_user();
     }
 
+    /* Get the company id
+     *
+     * @return int
+     */
     public static function companyid() {
         return iomad::companyid();
     }
 
+    /* Get the company shortname
+     *
+     * @return text
+     */
     public static function companyshortname() {
         return iomad::companyshortname();
     }
 
+    /* Regenerate the company profile info
+     *
+     */
     public static function reload_company() {
         global $USER;
         unset($USER->company);
         self::load_company();
     }
 
+    /* Load the company profile info
+     *
+     */
     public static function load_company() {
         iomad::load_company();
     }
@@ -389,7 +439,10 @@ class company_user {
         }*/
     }
 
-    // Returns the department name the user is assigned to.
+    /* Get the department name the user is assigned to.
+     * @param int $userid
+     * @return text
+     */
     public static function get_department_name($userid) {
         global $DB;
         if (!$userdepartment = $DB->get_field_sql("SELECT d.name
@@ -407,7 +460,7 @@ class company_user {
 }
 
 /**
- * Filter form used on the Iomad pages.
+ * User Filter form used on the Iomad pages.
  *
  */
 class iomad_user_filter_form extends moodleform {

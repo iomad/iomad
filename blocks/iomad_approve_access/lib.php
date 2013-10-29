@@ -20,6 +20,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Checks if the current user has any outstanding approvals.
+ *
+ * returns Boolean
+ *
+ **/
 function approve_enrol_has_users() {
     global $CFG, $DB, $USER, $SESSION;
     require_once($CFG->dirroot.'/local/perficio/lib/company.php');
@@ -59,7 +65,7 @@ function approve_enrol_has_users() {
                                                AND cc.approvaltype in (1,3)
                                                WHERE iaa.companyid=:companyid AND iaa.manager_ok = 0
                                                AND iaa.userid != :myuserid
-                                               AND iaa.userid 
+                                               AND iaa.userid
                                                IN ($myuserids)", array('companyid'=>$companyid, 'myuserid'=>$USER->id)) {
             return true;
         }
@@ -67,7 +73,7 @@ function approve_enrol_has_users() {
     if ($approvaltype == 'both' || $approvaltype == 'company') {
         if (!empty($myuserids) && $DB->get_records_sql("SELECT iaa.* FROM {block_iomad_approve_access} iaa
                                   RIGHT JOIN {courseclassroom} cc ON cc.id=iaa.activityid
-                                  WHERE iaa.companyid=:companyid 
+                                  WHERE iaa.companyid=:companyid
                                   AND iaa.userid != :myuserid
                                   AND iaa.userid IN ($myuserids)
                                   AND (
@@ -84,6 +90,12 @@ function approve_enrol_has_users() {
     return false;
 }
 
+/**
+ * Gets the list of outstanding approvals for the current user.
+ *
+ * returns array
+ *
+ **/
 function approve_enroll_get_my_users() {
     global $CFG, $DB, $USER, $SESSION;
 
@@ -127,16 +139,16 @@ function approve_enroll_get_my_users() {
                                                AND cc.approvaltype in (1,3)
                                                WHERE iaa.companyid=:companyid AND iaa.manager_ok = 0
                                                AND iaa.userid != :myuserid
-                                               AND iaa.userid 
+                                               AND iaa.userid
                                                IN ($myuserids)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
                 return $userarray;
             }
-        }    
-    
+        }
+
         if ($approvaltype == 'company') {
             if ($userarray = $DB->get_records_sql("SELECT iaa.* FROM {block_iomad_approce_access} iaa
                                                RIGHT JOIN {courseclassroom} cc ON cc.id=iaa.activityid
-                                               WHERE iaa.companyid=:companyid 
+                                               WHERE iaa.companyid=:companyid
                                                AND iaa.userid != :myuserid
                                                AND iaa.userid IN ($myuserids)
                                                AND (
@@ -148,7 +160,7 @@ function approve_enroll_get_my_users() {
                 return $userarray;
             }
         }
-    
+
         if ($approvaltype == 'both') {
             if ($userarray = $DB->get_records_sql("SELECT * FROM {block_iomad_approce_access}
                                                    WHERE companyid=:companyid
@@ -165,9 +177,17 @@ function approve_enroll_get_my_users() {
     return array();
 }
 
+/**
+ * Assigns an approved user to a training event.
+ *
+ * Inputs-
+ *        $user = stdclass();
+ *        $event = stdclass();
+ *
+ **/
 function approve_access_register_user($user, $event) {
     global $DB;
-    
+
     $courseclassroomrecord = new stdclass();
     $courseclassroomrecord->userid = $user->id;
     $courseclassroomrecord->courseclassroomid = $event->id;

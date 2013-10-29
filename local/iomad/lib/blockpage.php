@@ -26,6 +26,10 @@ class blockpage {
     protected $output = null;
     protected $pagetitle = null;
 
+    /**
+     * Constructor.  Sets up all the class variables
+     *
+     **/
     public function __construct($page, $output, $blockname, $blocktype, $pagetitlestring) {
         $this->page =& $page;
         $this->OUTPUT =& $output;
@@ -34,10 +38,29 @@ class blockpage {
         $this->pagetitle = self::get_string($pagetitlestring);
     }
 
+    /**
+     * performs a language look up for a a specified key.
+     *
+     * Paramters -
+     *             $key = text thing to be looked in $string array.
+     *             $a = text = Any additional text to be added to the get_string() lookup.
+     *
+     * returns text;
+     *
+     **/
     public function get_string($key, $a = null) {
         return get_string($key, $this->blocktype ."_". $this->blockname, $a);
     }
 
+    /**
+     * Creates a URL using the relative URL path.
+     *
+     * Paramters -
+     *             $urlparams = array of parameters and values.
+     *
+     * returns text;
+     *
+     **/
     public function get_relative_url( $urlparams=null) {
         $relpath = $_SERVER['REQUEST_URI'];
         // Create list of any parameters.
@@ -60,6 +83,13 @@ class blockpage {
                               preg_replace("/\?.*$/", "", $relpath)) . $paramlist;
     }
 
+    /**
+     * Sets up the page
+     *
+     * Paramters -
+     *             $urlparams = array().
+     *
+     **/
     public function setup($urlparams=null) {
         global $USER;
 
@@ -99,6 +129,10 @@ class blockpage {
         $this->page->set_heading($blocktitle);
     }
 
+    /**
+     * Adds to the settings navigation menu.
+     *
+     **/
     public function add_to_settings_navigation() {
         global $USER, $DB;
 
@@ -143,7 +177,15 @@ class blockpage {
         $this->add_tree_to_settings_navigation($blocknode, $pages, $context);
     }
 
-    // Loop over the children and add them to the parentnode if the user is allowed to use that page.
+    /**
+     * Adds children to the navigation menus.
+     *
+     * Paramters -
+     *             $parentnode = stdclass();
+     *             $children = array();
+     *             $context = stdclass();
+     *
+     **/
     public function add_tree_to_settings_navigation( $parentnode, $children, $context ) {
         foreach ($children as $child) {
 
@@ -161,6 +203,10 @@ class blockpage {
         }
     }
 
+    /**
+     * Display the page header using the class settings.
+     *
+     **/
     public function display_header() {
 
         echo $this->OUTPUT->header();

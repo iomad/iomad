@@ -100,6 +100,14 @@ class EmailTemplate {
         }
     }
 
+    /**
+     * Gets the users options from the user reference object passed.
+     *
+     * Input $userrefobject = stdclass();
+     *
+     * Returns Array.
+     *
+     **/
     private static function getuseroption($userrefobject) {
         return array('user' => $userrefobject->userid);
     }
@@ -172,14 +180,28 @@ class EmailTemplate {
         $this->template = $this->get_template($templatename);
     }
 
+    /**
+     * Gets the subject for the email template from the language file
+     * and sets a class variable from it.
+     *
+     **/
     public function subject() {
         return $this->fill($this->template->subject);
     }
 
+    /**
+     * Gets the body for the email template from the language file
+     * and sets a class variable from it.
+     *
+     **/
     public function body() {
         return $this->fill($this->template->body);
     }
 
+    /**
+     * Sets up an email to be sent out by the Moodle cron.
+     *
+     **/
     public function queue_for_cron() {
         global $DB;
 
@@ -214,6 +236,12 @@ class EmailTemplate {
         }
     }
 
+    /**
+     * Sends an email to the user it is meant for
+     *
+     * Parameters - $email = stdclass();
+     *
+     **/
     static public function send_to_user($email) {
         global $USER;
 
@@ -232,6 +260,11 @@ class EmailTemplate {
         }
     }
 
+    /**
+     * Class handling of the global email_to_user Moodle function.
+     *
+     *
+     **/
     public function email_to_user() {
         global $USER;
 
@@ -250,6 +283,12 @@ class EmailTemplate {
         return email_to_user($this->user, $supportuser, $subject, $body);
     }
 
+    /**
+     * SGets the user information from the database for the user provided.
+     *
+     * Parameters - $user = stdclass() or int.
+     *
+     **/
     private function get_user($user) {
         global $DB;
 
@@ -281,6 +320,12 @@ class EmailTemplate {
         }
     }
 
+    /**
+     * Gets the course information from the provided course variable
+     *
+     * Parameters - $course = int;
+     *
+     **/
     private function get_course($course) {
         global $DB;
 
@@ -298,6 +343,12 @@ class EmailTemplate {
         }
     }
 
+    /**
+     * Internal function to get the defined template for the email for the company.
+     *
+     * Parameters - $templatename = text
+     *
+     **/
     private function get_template($templatename) {
         global $DB, $email;
 
@@ -318,6 +369,12 @@ class EmailTemplate {
         return $template;
     }
 
+    /**
+     * Sets up the email class vars for the given template
+     *
+     * Parameters - $templatestring = text;
+     *
+     **/
     public function fill($templatestring) {
         $amethods = EmailVars::vars();
 
@@ -343,6 +400,12 @@ class EmailTemplate {
         return $templatestring;
     }
 
+    /**
+     * Gets the user company information for the provided user
+     *
+     * Parameters - $user = stdclass();
+     *
+     **/
     private function get_sender($user) {
 
         // Get the user's company.
