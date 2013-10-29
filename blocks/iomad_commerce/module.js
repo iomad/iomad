@@ -1,13 +1,13 @@
-﻿window. = window. || {};
+﻿window.iomad = window.iomad || {};
 
-.increaseCounter = function(inputname) {
+iomad.increaseCounter = function(inputname) {
     YUI().use('node', function(Y) {
         var counter = Y.one('input[name="' + inputname + '"]');
         counter.set('value', parseInt(counter.get('value')) + 1);
     });
 }
 
-.addLicenseBlock = function(button) {
+iomad.addLicenseBlock = function(button) {
     YUI().use('node', function(Y) {
         var currency = Y.one('input[name="currency"]').get('value');
         var table = Y.one('#licenseblockstable');
@@ -35,26 +35,27 @@
 
         var strdelete = Y.one('#deleteText').get('innerText');
         var td = document.createElement('td');
-        td.innerHTML = '<a href="#" onclick=".removeLicenseBlock(this)">' + strdelete + '</a>';
+        td.innerHTML = '<a href="#" onclick="iomad.removeLicenseBlock(this)">' + strdelete + '</a>';
         tr.appendChild(td);
 
         tbody.appendChild(tr);
-        .increaseCounter('blockPrices');
+        
+        iomad.increaseCounter('blockPrices');
     });
 };
 
-.removeLicenseBlock = function(button) {
+iomad.removeLicenseBlock = function(button) {
     YUI().use('node', function(Y) {
         var node = Y.one(button);
         while (node && node.get("tagName").toUpperCase() != "TR")
             node = node.get("parentNode");
         if (node) node.remove();
 
-        .increaseCounter('deletedBlockPrices');
+        iomad.increaseCounter('deletedBlockPrices');
     });
 };
 
-.onSelectTag = function(select) {
+iomad.onSelectTag = function(select) {
     if (select.selectedIndex > 0) {
         var tag = select.options[select.selectedIndex].value;
         YUI().use('node', function(Y) {
