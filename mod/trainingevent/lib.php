@@ -176,17 +176,17 @@ function trainingevent_get_coursemodule_info($coursemodule) {
 
         // No filtering here because this info is cached and filtered later.
 
+        $extra = "<p>";
         if ($trainingevent->classroomid) {
-            $extra = "";
             if ($classroom = $DB->get_record('classroom', array('id' => $trainingevent->classroomid), '*')) {
-                $extra .= get_string('location', 'trainingevent') . ": " . $classroom->name . " - ";
+                $extra .= get_string('location', 'trainingevent') . ": " . $classroom->name . " </br> ";
             }
         }
         $dateformat = "d F Y, g:ia";
 
         $extra .= get_string('startdatetime', 'trainingevent') . ": " . date($dateformat, $trainingevent->startdatetime);
-        $extra .= "<a href='$CFG->wwwroot/mod/trainingevent/manageclass.php?id=$trainingevent->id'>".
-                   get_string('details', 'trainingevent')."</a></br>";
+        $extra .= "<a href='$CFG->wwwroot/mod/trainingevent/manageclass.php?id=$trainingevent->id'></br>".
+                   get_string('details', 'trainingevent')."</a></br></p>";
 
         // Sneakily prepend the extra info to the intro value (only for the remainder of this function).
         $trainingevent->intro = "<div>" . $extra . "</div>";
@@ -271,9 +271,6 @@ function trainingevent_supports($feature) {
         }
         case FEATURE_GRADE_OUTCOMES: {
             return false;
-        }
-        case FEATURE_MOD_ARCHETYPE: {
-            return MOD_ARCHETYPE_RESOURCE;
         }
         case FEATURE_BACKUP_MOODLE2: {
             return true;

@@ -67,7 +67,8 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         $choices = array(get_string('none', 'trainingevent'),
                         get_string('manager', 'trainingevent'),
                         get_string('companymanager', 'trainingevent'),
-                        get_string('both', 'trainingevent'));
+                        get_string('both', 'trainingevent'),
+                        get_string('enrolonly', 'trainingevent'));
         $mform->addElement('select', 'approvaltype', get_string('approvaltype', 'trainingevent'), $choices);
 
         $this->standard_coursemodule_elements();
@@ -77,7 +78,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
 
     }
 
-    public function validation($data) {
+    public function validation($data, $files) {
         global $DB;
 
         $errors = array();

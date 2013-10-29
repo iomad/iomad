@@ -114,27 +114,32 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                     $userbooking->manager_ok = 0;
                     $DB->update_record('block_iomad_approve_access', $userbooking);
                     if ($CFG->perficioemails) {
-                        $course = $DB->get_record('course', array('id'=>$event->course));
+                        $course = $DB->get_record('course', array('id' => $event->course));
                         $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                        //  get the list of managers we need to send an email to.
+                        // Get the list of managers we need to send an email to.
                         if ($event->approvaltype != 2 ) {
                             $mymanagers = $company->get_my_managers($USER->id, 2);
                         } else {
                             $mymanagers = $company->get_my_managers($USER->id, 1);
                         }
                         foreach ($mymanagers as $mymanager) {
-                            if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
-                                EmailTemplate::send('course_classroom_approval', array('course'=>$course,
-                                                                                       'user'=>$manageruser,
-                                                                                       'approveuser'=>$USER,
-                                                                                       'classroom'=>$location));
+                            if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
+                                EmailTemplate::send('course_classroom_approval', array('course' => $course,
+                                                                                       'user' => $manageruser,
+                                                                                       'approveuser' => $USER,
+                                                                                       'classroom' => $location));
                             }
                         }
-                        EmailTemplate::send('course_classroom_approval_request', array('course'=>$course,
-                                                                               'user'=>$USER,
-                                                                               'classroom'=>$location));
-                    
-                    add_to_log($course->id, 'trainingevent', 'User seeking approved access', 'mod/courseclassroom/manageclass.php', $event->id, $USER->id);
+                        EmailTemplate::send('course_classroom_approval_request', array('course' => $course,
+                                                                               'user' => $USER,
+                                                                               'classroom' => $location));
+
+                        add_to_log($course->id,
+                                   'trainingevent',
+                                   'User seeking approved access',
+                                   'mod/trainingevent/manageclass.php',
+                                   $event->id,
+                                   $USER->id);
                     }
                 }
             } else if ( 'no' == $booking) {
@@ -310,7 +315,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                             echo $OUTPUT->single_button(new moodle_url('/mod/trainingevent/manageclass.php',
                                                         array('id' => $id, 'attending' => 'yes')),
                                                         get_string("attend", 'trainingevent'));
-                        } else {
+                        } else if ($event->approvaltype != 4) {
                             if (!$DB->get_record('block_iomad_approve_access', array('activityid' => $event->id,
                                                                                      'userid' => $USER->id))) {
                                 echo $OUTPUT->single_button(new moodle_url('/mod/trainingevent/manageclass.php',
@@ -326,6 +331,8 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                     echo get_string('eventhaspassed', 'trainingevent');
                                 }
                             }
+                        } else {
+                                echo "<h2>".get_string('enrolledonly', 'trainingevent')."</h2>";
                         }
                     } else {
                         echo get_string('eventhaspassed', 'trainingevent');
