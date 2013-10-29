@@ -80,7 +80,13 @@ if ($delete and confirm_sesskey()) {              // Delete a selected course fr
 }
 
 if ($hide) {
-    $DB->execute('update {course_shopsettings} set enabled = !enabled where id = :hide', array('hide' => $hide));
+    $courserecord = $DB->get_record('course_shopsettings', array('id' => $hide));
+    if ($courserecord->enabled == 0 ) {
+        $courserecord->enabled = 1;
+    } else {
+        $courserecord->enabled = 0;
+    }
+    $DB->update_record('course_shopsettings', $courserecord);
     redirect(new moodle_url($baseurl));
 }
 $blockpage->display_header();
