@@ -137,6 +137,7 @@ function xmldb_local_iomad_install() {
         assign_capability( $cap, CAP_ALLOW, $clientadministratorid, $systemcontext->id);
     }
     $companydepartmentmanagercaps = array('block/iomad_report:view',
+        'local/iomad_dashboard:view',
         'block/iomad_online_users:viewlist',
         'block/iomad_link:view',
         'block/iomad_company_admin:view_licenses',
