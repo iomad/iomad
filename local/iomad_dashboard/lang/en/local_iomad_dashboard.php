@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$string['dashboard:view'] = 'View the Iomad Dashboard';
-$string['name'] = 'Iomad Dashboard';
 $string['blocktitle'] = 'Iomad Dashboard';
-$string['iomad'] = 'Iomad';
 $string['dashboard'] = 'Iomad';
+$string['iomad_dashboard:view'] = 'View the Iomad Dashboard';
+$string['iomad'] = 'Iomad';
+$string['name'] = 'Iomad Dashboard';
 $string['pluginname'] = 'Iomad Dashboard';

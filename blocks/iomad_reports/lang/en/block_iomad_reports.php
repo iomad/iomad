@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$string['iomad_reports:view'] = 'Access to iomad Reports';
-$string['link'] = 'Go to iomad Dashboard';
-$string['pluginname'] = 'iomad Reports';
+$string['iomad_reports:addinstance'] = 'Add a new Iomad Reports block';
+$string['iomad_reports:view'] = 'Access to Iomad Reports';
+$string['link'] = 'Go to Iomad Dashboard';
+$string['pluginname'] = 'Iomad Reports';

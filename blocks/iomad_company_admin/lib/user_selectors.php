@@ -706,6 +706,7 @@ class potential_license_user_selector extends user_selector_base {
     protected function process_license_allocations(&$licenseusers) {
         global $DB;
         foreach ($licenseusers as $id => $user) {
+
             $sql = "SELECT d.shortname FROM {department} d
                     INNER JOIN {company_users} cu ON cu.departmentid = d.id
                     WHERE
@@ -723,7 +724,7 @@ class potential_license_user_selector extends user_selector_base {
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('u').', d.shortname ';
+        $fields      = 'SELECT ' . $this->required_fields_sql('u').', u.email, d.shortname ';
         $countfields = 'SELECT COUNT(1)';
 
         $licenseusers = $this->get_license_user_ids();

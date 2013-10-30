@@ -20,14 +20,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['approvecourse'] = "Approve Course";
-$string['approveusers'] = 'Approve Course to the User';
-$string['approveusers:addinstance'] = 'Add Approve Course Instance';
-$string['approveusers:myaddinstance'] = 'Add Approve Course HTML block to the page';
-$string['approveuserstitle'] = 'Manage access approvals';
+$string['approveusers'] = "Approve access";
+$string['iomad_approve_access'] = 'Approve training events requsts';
+$string['iomad_approve_access:addinstance'] = 'Add Approve Course Instance';
+$string['iomad_approve_access:approve'] = 'Approve requests to access training events';
+$string['iomad_approve_access:myaddinstance'] = 'Add Approve Course HTML block to the page';
+$string['iomad_approve_accesstitle'] = 'Manage access approvals';
 $string['deny'] = 'Decline';
 $string['enrolledcourse'] = "Enrolled Course";
 $string['headerconfig'] = "Some header Config";
+$string['iomad_approve_access:addinstance'] = 'Add a new Iomad appove access block';
 $string['lastname'] = "Last Name";
 $string['managernotyetapproved'] = ' (Department manager has not yet approved)';
 $string['name'] = "Full Name";

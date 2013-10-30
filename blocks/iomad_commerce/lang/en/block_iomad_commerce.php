@@ -59,6 +59,7 @@ $string['deletecourse'] = 'Delete Course from Shop';
 $string['edit_course_shopsettings'] = 'Edit course shop settings';
 $string['edit_invoice'] = 'Edit order';
 $string['iomad_commerce:add_course'] = 'Add a course to the shop';
+$string['iomad_commerce:addinstance'] = 'Add a new Iomad Ecommerce block';
 $string['iomad_commerce:admin_view'] = 'View the Ecommerce admin pages';
 $string['iomad_commerce:buyitnow'] = 'Access to the buy it now button in the shop';
 $string['iomad_commerce:delete_course'] = 'Remove a course from the shop';

@@ -184,6 +184,7 @@ class company_edit_form extends company_moodleform {
                                     $themeselectarray);
             } else {
                 $mform->addElement('hidden', 'theme', $this->companyrecord->theme);
+                $mform->setType('theme', PARAM_TEXT);
             }
 
             // If theme is already set to a real theme, dont show this.

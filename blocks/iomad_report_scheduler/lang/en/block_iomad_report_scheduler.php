@@ -13,5 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-$string['iomad_report_scheduler:view'] = 'View iomad Scheduled Reports';
-$string['pluginname'] = 'iomad - Scheduled Reports';
+
+$string['iomad_report_scheduler:addinstance'] = 'Add a new Iomad Scheduled Reports block';
+$string['iomad_report_scheduler:view'] = 'View Iomad Scheduled Reports';
+$string['pluginname'] = 'Iomad - Scheduled Reports';

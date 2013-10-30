@@ -19,6 +19,7 @@ $string['establishment_code'] = 'Establishment Code';
 $string['establishment_code_help'] = 'What should the admin see in the course list block?';
 $string['customtext2'] = 'Custom Text 2';
 $string['customtext3'] = 'Custom Text 3';
+$string['iomad_settings:addinstance'] = 'Add a new Iomad Settings';
 $string['reset_annually'] = 'Annually';
 $string['reset_daily'] = 'Daily';
 $string['reset_never'] = 'Never';

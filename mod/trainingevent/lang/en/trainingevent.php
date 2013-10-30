@@ -32,6 +32,7 @@ $string['both'] = 'Manager and company manager';
 $string['capacity'] = 'Capacity';
 $string['chosenclassroomunavailable'] = 'The chosen location is already in use';
 $string['companymanager'] = 'Company manager';
+$string['trainingevent:addinstance'] = 'add a training event activity';
 $string['trainingevent:grade'] = 'Allow grading of classroom events';
 $string['trainingevent:invite'] = 'Allow inviting of users to classroom event';
 $string['trainingevent:viewattendees'] = 'View atendees of classroom events';

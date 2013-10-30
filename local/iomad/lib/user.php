@@ -328,7 +328,7 @@ class company_user {
      * @param text $data
      * @return text
      */
-    private function rc4encrypt($data) {
+    private static function rc4encrypt($data) {
         $password = 'knfgjeingj';
         return endecrypt($password, $data, '');
     }
@@ -337,7 +337,7 @@ class company_user {
      * @param text $data
      * @return text
      */
-    public function rc4decrypt($data) {
+    public static function rc4decrypt($data) {
         $password = 'knfgjeingj';
         return endecrypt($password, $data, 'de');
     }
