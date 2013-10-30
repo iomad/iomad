@@ -73,10 +73,9 @@ class iomad {
     public static function load_company() {
         global $USER;
 
-        if (!isset($USER->company)) {
+        if (!isset($USER->company->id)) {
             if (self::is_company_user()) {
-                $company = company::by_shortname($USER->profile["company"]);
-
+                $company = company::by_userid($USER->id);
                 $fields = 'id, shortname, name';
                 $cssfields = implode(',', $company->cssfields);
                 if ($cssfields) {

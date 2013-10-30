@@ -28,17 +28,16 @@ class company {
      * Return an instance of the class using the company shortname
      *
      * Paramters -
-     *             $shortname = text;
+     *             $userid = int;
      *
      * Returns class object.
      *
      **/
-    public static function by_shortname($shortname) {
+    public static function by_userid($userid) {
         global $DB;
 
-        $company = $DB->get_record('company', array('shortname' => $shortname), 'id', MUST_EXIST);
-
-        return new company($company->id);
+        $company = $DB->get_record('company_users', array('userid' => $userid), 'companyid', MUST_EXIST);
+        return new company($company->companyid);
     }
 
     /**
