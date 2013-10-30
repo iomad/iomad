@@ -58,7 +58,7 @@ class block_iomad_company_selector extends block_base {
         if (!empty($SESSION->currenteditingcompany)) {
             $selectedcompany = $SESSION->currenteditingcompany;
         } else if (!empty($USER->profile->company)) {
-            $usercompany = company::by_shortname($USER->profile->company);
+            $usercompany = company::by_userid($USER->id);
             $selectedcompany = $usercompany->id;
         } else {
             $selectedcompany = "";
