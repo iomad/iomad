@@ -110,14 +110,14 @@ class company_license_users_form extends moodleform {
         if ($this->license->expirydate > time()) {
             $mform->addElement('header', 'header', get_string('license_users_for',
                                                               'block_iomad_company_admin',
-                                                              $this->license->name).'('.
-            $this->license->allocation - $this->license->used.' / '.
+                                                              $this->license->name));
+            $mform->addElement('html', '('.($this->license->allocation - $this->license->used).' / '.
             $this->license->allocation.get_string('licensetotal', 'block_iomad_company_admin').')');
         } else {
             $mform->addElement('header', 'header', get_string('license_users_for',
                                                               'block_iomad_company_admin',
-                                                              $this->license->name).' *Expired* ('.
-            $this->license->allocation - $this->license->used.' / '.
+                                                              $this->license->name).' *Expired* ');
+            $mform->addElement('html', '('.($this->license->allocation - $this->license->used).' / '.
             $this->license->allocation.get_string('licensetotal', 'block_iomad_company_admin').')');
         }
         $mform->addElement('html', '<table summary=""
