@@ -715,7 +715,7 @@ if ($formdata = $mform->is_cancelled()) {
 
             // Merge user with company user defaults.
             if ($user->profile_field_company) {
-                $company = company::by_shortname($user->profile_field_company );
+                $company = new company($companyid);
                 $defaults = $company->get_user_defaults();
 
                 $user = (object) array_merge((array) $defaults, (array) $user);
