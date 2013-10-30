@@ -868,9 +868,20 @@ class current_license_user_selector extends user_selector_base {
         $licenseusers = $this->get_license_user_ids();
         $licenseuserids = "";
         if (count($licenseusers) > 0) {
-            $userfilter = " AND id IN (".implode(',', $licenseusers).") ";
+            foreach ($licenseusers as $licenseuser) {
+                if (!empty($licenseuserids)) {
+                    $licenseuserids .= ','.$licenseuser->userid;
+                } else {
+                    $licenseuserids = $licenseuser->userid;
+                }
+            }
+            if ($licenseuserids != ',') {
+                $userfilter = $licenseuserids;
+            } else {
+                $userfilter = "";
+            }
         } else {
-            $userfilter = " AND 1 = 2 ";
+            $userfilter = "";
         }
 
         $fields      = 'SELECT ' . $this->required_fields_sql('');
@@ -879,7 +890,7 @@ class current_license_user_selector extends user_selector_base {
         $sql = " FROM
                  {user}
                  WHERE $wherecondition
-                       $userfilter";
+                     AND id in (".$userfilter.") ";
 
         $order = ' ORDER BY lastname ASC, firstname ASC';
 
