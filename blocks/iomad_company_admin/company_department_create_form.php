@@ -218,17 +218,8 @@ $blockpage->setup($urlparams);
 
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 
-// Set the companyid to bypass the company select form if possible.
-if (!empty($SESSION->currenteditingcompany)) {
-    $companyid = $SESSION->currenteditingcompany;
-} else if (iomad::is_company_user()) {
-    $companyid = company_user::companyid();
-} else if (!has_capability('block/iomad_company_admin:edit_departments', $context)) {
-    print_error('There has been a configuration error, please contact the site administrator');
-} else {
-    redirect(new moodle_url('/local/iomad_dashboard/index.php'),
-                             get_string('pleaseselect', 'block_iomad_company_admin'));
-}
+// Set the companyid
+$companyid = iomad::get_my_companyid($context);
 
 $mform = new department_display_form($PAGE->url, $companyid, $departmentid);
 $editform = new department_edit_form($PAGE->url, $companyid, $departmentid);
