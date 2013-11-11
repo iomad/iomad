@@ -4538,6 +4538,9 @@ function update_internal_user_password($user, $password) {
     if ($passwordchanged || $algorithmchanged) {
         $DB->set_field('user', 'password',  $hashedpassword, array('id'=>$user->id));
         $user->password = $hashedpassword;
+
+        // Trigger user updated event
+        events_trigger('user_updated', $user);
     }
 
     return true;
@@ -5759,6 +5762,11 @@ function setnew_password_and_mail($user, $fasthash = false) {
 
     $hashedpassword = hash_internal_user_password($newpassword, $fasthash);
     $DB->set_field('user', 'password', $hashedpassword, array('id'=>$user->id));
+
+    $user->password = $hashedpassword;
+
+    // Trigger user updated event
+    events_trigger('user_updated', $user);
 
     $a = new stdClass();
     $a->firstname   = fullname($user, true);
@@ -8811,6 +8819,9 @@ function check_php_version($version='5.2.4') {
           $version = round($version, 1);
           // See: http://www.useragentstring.com/pages/Internet%20Explorer/
           if (preg_match("/MSIE ([0-9\.]+)/", $agent, $match)) {
+              $browser = $match[1];
+          // See: http://msdn.microsoft.com/en-us/library/ie/bg182625%28v=vs.85%29.aspx for IE11+ useragent details.
+          } else if (preg_match("/Trident\/[0-9\.]+/", $agent) && preg_match("/rv:([0-9\.]+)/", $agent, $match)) {
               $browser = $match[1];
           } else {
               return false;

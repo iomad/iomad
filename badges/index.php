@@ -82,10 +82,11 @@ if ($type == BADGE_TYPE_SITE) {
     navigation_node::override_active_url(new moodle_url('/badges/index.php', array('type' => BADGE_TYPE_SITE)));
 } else {
     require_login($course);
+    $coursecontext = context_course::instance($course->id);
     $title = get_string('coursebadges', 'badges');
-    $PAGE->set_context(context_course::instance($course->id));
+    $PAGE->set_context($coursecontext);
     $PAGE->set_pagelayout('course');
-    $PAGE->set_heading($course->fullname . ': ' . $hdr);
+    $PAGE->set_heading(format_string($course->fullname, true, array('context' => $coursecontext)) . ': ' . $hdr);
     navigation_node::override_active_url(
         new moodle_url('/badges/index.php', array('type' => BADGE_TYPE_COURSE, 'id' => $course->id))
     );
@@ -124,33 +125,15 @@ if ($delete && has_capability('moodle/badges:deletebadge', $PAGE->context)) {
     }
 }
 
-if ($activate && has_capability('moodle/badges:configuredetails', $PAGE->context)) {
-    $badge = new badge($activate);
-
-    if (!$badge->has_criteria()) {
-        $err = get_string('error:cannotact', 'badges') . get_string('nocriteria', 'badges');
-    } else {
-        if ($badge->is_locked()) {
-            $badge->set_status(BADGE_STATUS_ACTIVE_LOCKED);
-            $msg = get_string('activatesuccess', 'badges');
-        } else {
-            require_sesskey();
-            $badge->set_status(BADGE_STATUS_ACTIVE);
-            $msg = get_string('activatesuccess', 'badges');
-        }
-        $returnurl->param('msg', $msg);
-        redirect($returnurl);
-    }
-} else if ($deactivate && has_capability('moodle/badges:configuredetails', $PAGE->context)) {
+if ($deactivate && has_capability('moodle/badges:configuredetails', $PAGE->context)) {
+    require_sesskey();
     $badge = new badge($deactivate);
     if ($badge->is_locked()) {
         $badge->set_status(BADGE_STATUS_INACTIVE_LOCKED);
-        $msg = get_string('deactivatesuccess', 'badges');
     } else {
-        require_sesskey();
         $badge->set_status(BADGE_STATUS_INACTIVE);
-        $msg = get_string('deactivatesuccess', 'badges');
     }
+    $msg = 'deactivatesuccess';
     $returnurl->param('msg', $msg);
     redirect($returnurl);
 }
@@ -178,7 +161,7 @@ if ($totalcount) {
     }
 
     if ($msg !== '') {
-        echo $OUTPUT->notification($msg, 'notifysuccess');
+        echo $OUTPUT->notification(get_string($msg, 'badges'), 'notifysuccess');
     }
 
     $badges             = new badge_management($records);

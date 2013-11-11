@@ -106,8 +106,8 @@ $PAGE->navbar->add($pagetitle);
 
 $PAGE->set_title($course->shortname.': '.get_string('calendar', 'calendar').': '.$pagetitle);
 $PAGE->set_heading($course->fullname);
+$PAGE->set_pagelayout('standard');
 $PAGE->set_button(calendar_preferences_button($course));
-$PAGE->set_pagelayout('base');
 
 $renderer = $PAGE->get_renderer('core_calendar');
 $calendar->add_sidecalendar_blocks($renderer);
@@ -125,7 +125,7 @@ switch($action) {
             $weekend = intval($CFG->calendar_weekend);
         }
 
-        $authtoken = sha1($USER->id . $USER->password . $CFG->calendar_exportsalt);
+        $authtoken = sha1($USER->id . $DB->get_field('user', 'password', array('id'=>$USER->id)). $CFG->calendar_exportsalt);
         // Let's populate some vars to let "common tasks" be somewhat smart...
         // If today it's weekend, give the "next week" option
         $allownextweek  = $weekend & (1 << $now['wday']);

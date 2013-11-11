@@ -261,10 +261,10 @@ abstract class moodleform {
         $submission = array();
         if ($method == 'post') {
             if (!empty($_POST)) {
-                $submission = $_POST;
+                $submission = $this->_get_post_params();
             }
         } else {
-            $submission = array_merge_recursive($_GET, $_POST); // emulate handling of parameters in xxxx_param()
+            $submission = array_merge_recursive($_GET, $this->_get_post_params()); // Emulate handling of parameters in xxxx_param().
         }
 
         // following trick is needed to enable proper sesskey checks when using GET forms
@@ -281,6 +281,37 @@ abstract class moodleform {
         $this->detectMissingSetType();
 
         $this->_form->updateSubmission($submission, $files);
+    }
+
+    /**
+     * Internal method. Gets all POST variables, bypassing max_input_vars limit if needed.
+     *
+     * @return array All POST variables as an array, in the same format as $_POST.
+     */
+    protected function _get_post_params() {
+        $enctype = $this->_form->getAttribute('enctype');
+        $max = (int)ini_get('max_input_vars');
+
+        if (empty($max) || count($_POST, COUNT_RECURSIVE) < $max || (!empty($enctype) && $enctype == 'multipart/form-data')) {
+            return $_POST;
+        }
+
+        // Large POST request with enctype supported by php://input.
+        // Parse php://input in chunks to bypass max_input_vars limit, which also applies to parse_str().
+        $allvalues = array();
+        $values = array();
+        $str = file_get_contents("php://input");
+        $delim = '&';
+
+        $fun = create_function('$p', 'return implode("'.$delim.'", $p);');
+        $chunks = array_map($fun, array_chunk(explode($delim, $str), $max));
+
+        foreach ($chunks as $chunk) {
+            parse_str($chunk, $values);
+            $allvalues = array_merge_recursive($allvalues, $values);
+        }
+
+        return $allvalues;
     }
 
     /**
@@ -2102,8 +2133,9 @@ class MoodleQuickForm extends HTML_QuickForm_DHTMLRulesTableless {
                         }
                     }
                     //for editor element, [text] is appended to the name.
+                    $fullelementname = $elementName;
                     if ($element->getType() == 'editor') {
-                        $elementName .= '[text]';
+                        $fullelementname .= '[text]';
                         //Add format to rule as moodleform check which format is supported by browser
                         //it is not set anywhere... So small hack to make sure we pass it down to quickform
                         if (is_null($rule['format'])) {
@@ -2111,8 +2143,8 @@ class MoodleQuickForm extends HTML_QuickForm_DHTMLRulesTableless {
                         }
                     }
                     // Fix for bug displaying errors for elements in a group
-                    $test[$elementName][0][] = $registry->getValidationScript($element, $elementName, $rule);
-                    $test[$elementName][1]=$element;
+                    $test[$fullelementname][0][] = $registry->getValidationScript($element, $fullelementname, $rule);
+                    $test[$fullelementname][1]=$element;
                     //end of fix
                 }
             }

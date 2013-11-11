@@ -2369,13 +2369,6 @@ class assignment_base {
                 assignment_reset_gradebook($data->courseid, $this->type);
             }
         }
-
-        /// updating dates - shift may be negative too
-        if ($data->timeshift) {
-            shift_course_mod_dates('assignment', array('timedue', 'timeavailable'), $data->timeshift, $data->courseid);
-            $status[] = array('component'=>$componentstr, 'item'=>get_string('datechanged').': '.$typestr, 'error'=>false);
-        }
-
         return $status;
     }
 
@@ -3888,6 +3881,16 @@ function assignment_reset_userdata($data) {
         $status = array_merge($status, $ass->reset_userdata($data));
     }
 
+    // Updating dates - shift may be negative too.
+    if ($data->timeshift) {
+        shift_course_mod_dates('assignment',
+                                array('timedue', 'timeavailable'),
+                                $data->timeshift,
+                                $data->courseid);
+        $status[] = array('component' => get_string('modulenameplural', 'assignment'),
+                          'item' => get_string('datechanged'),
+                          'error' => false);
+    }
     return $status;
 }
 

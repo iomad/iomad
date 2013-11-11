@@ -239,12 +239,23 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $data->courseid = $this->course->id;
         $data->timeshift = 24*60*60;
         $this->setUser($this->editingteachers[0]);
-        $assign->reset_userdata($data);
+        assign_reset_userdata($data);
         $this->assertEquals(false, $assign->has_submissions_or_grades());
 
         // Reload the instance data.
         $instance = $DB->get_record('assign', array('id'=>$assign->get_instance()->id));
         $this->assertEquals($now + 24*60*60, $instance->duedate);
+
+        // Create another assignment and make sure both get reset.
+        $assignduedate = $instance->duedate;
+        $assign2 = $this->create_instance(array('assignsubmission_onlinetext_enabled' => 1,
+                                               'duedate' => $now));
+        $data->timeshift = 4*24*60*60;
+        assign_reset_userdata($data);
+        $instance = $DB->get_record('assign', array('id' => $assign->get_instance()->id));
+        $this->assertEquals($assignduedate + 4*24*60*60, $instance->duedate);
+        $instance2 = $DB->get_record('assign', array('id' => $assign2->get_instance()->id));
+        $this->assertEquals($now + 4*24*60*60, $instance2->duedate);
     }
 
     public function test_plugin_settings() {
@@ -290,6 +301,43 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
 
         $instance = $DB->get_record('assign', array('id'=>$assign->get_instance()->id));
         $this->assertEquals($now, $instance->duedate);
+    }
+
+    public function test_cannot_submit_empty() {
+        global $PAGE;
+
+        $this->setUser($this->editingteachers[0]);
+        $assign = $this->create_instance(array('submissiondrafts'=>1));
+
+        $PAGE->set_url(new moodle_url('/mod/assign/view.php', array('id' => $assign->get_course_module()->id)));
+
+        // Test you cannot see the submit button for an offline assignment regardless.
+        $this->setUser($this->students[0]);
+        $output = $assign->view_student_summary($this->students[0], true);
+        $this->assertNotContains(get_string('submitassignment', 'assign'), $output, 'Can submit empty offline assignment');
+
+        // Test you cannot see the submit button for an online text assignment with no submission.
+        $this->setUser($this->editingteachers[0]);
+        $instance = $assign->get_instance();
+        $instance->instance = $instance->id;
+        $instance->assignsubmission_onlinetext_enabled = 1;
+
+        $assign->update_instance($instance);
+        $this->setUser($this->students[0]);
+        $output = $assign->view_student_summary($this->students[0], true);
+        $this->assertNotContains(get_string('submitassignment', 'assign'), $output, 'Cannot submit empty onlinetext assignment');
+
+        // Simulate a submission.
+        $submission = $assign->get_user_submission($this->students[0]->id, true);
+        $data = new stdClass();
+        $data->onlinetext_editor = array('itemid'=>file_get_unused_draft_itemid(),
+                                         'text'=>'Submission text',
+                                         'format'=>FORMAT_MOODLE);
+        $plugin = $assign->get_submission_plugin_by_type('onlinetext');
+        $plugin->save($submission, $data);
+        // Test you can see the submit button for an online text assignment with a submission.
+        $output = $assign->view_student_summary($this->students[0], true);
+        $this->assertContains(get_string('submitassignment', 'assign'), $output, 'Can submit non empty onlinetext assignment');
     }
 
     public function test_list_participants() {
@@ -402,16 +450,17 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $data = new stdClass();
         $data->grade = '50.0';
         $assign->testable_apply_grade_to_user($data, $this->students[0]->id, 0);
+        $assign->testable_apply_grade_to_user($data, $this->students[1]->id, 0);
 
         // Now run cron and see that one message was sent.
         $this->preventResetByRollback();
         $sink = $this->redirectMessages();
         cron_setup_user();
-        $this->expectOutputRegex('/Done processing 1 assignment submissions/');
+        $this->expectOutputRegex('/Done processing 2 assignment submissions/');
         assign::cron();
 
         $messages = $sink->get_messages();
-        $this->assertEquals(1, count($messages));
+        $this->assertEquals(2, count($messages));
         $this->assertEquals(1, $messages[0]->notification);
         $this->assertEquals($assign->get_instance()->name, $messages[0]->contexturlname);
     }
@@ -583,6 +632,28 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $this->assertCount(4, $assign->testable_get_graders($this->students[0]->id));
     }
 
+    public function test_group_members_only() {
+        global $CFG;
+
+        $this->setAdminUser();
+        $this->create_extra_users();
+        $CFG->enablegroupmembersonly = true;
+        $grouping = $this->getDataGenerator()->create_grouping(array('courseid' => $this->course->id));
+        groups_assign_grouping($grouping->id, $this->groups[0]->id);
+
+        // Force create an assignment with SEPARATEGROUPS.
+        $instance = $this->getDataGenerator()->create_module('assign', array('course'=>$this->course->id),
+            array('groupmembersonly' => SEPARATEGROUPS, 'groupingid' => $grouping->id));
+
+        $cm = get_coursemodule_from_instance('assign', $instance->id);
+        $context = context_module::instance($cm->id);
+        $assign = new testable_assign($context, $cm, $this->course);
+
+        $this->setUser($this->teachers[0]);
+        $this->assertCount(5, $assign->list_participants(0, true));
+
+    }
+
     public function test_get_uniqueid_for_user() {
         $this->setUser($this->editingteachers[0]);
         $assign = $this->create_instance();
@@ -739,6 +810,49 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
 
         $grades = $assign->get_user_grades_for_gradebook($this->students[0]->id);
         $this->assertEquals(50, (int)$grades[$this->students[0]->id]->rawgrade);
+    }
+
+    public function test_disable_submit_after_cutoff_date() {
+        global $PAGE;
+
+        $this->setUser($this->editingteachers[0]);
+        $now = time();
+        $tomorrow = $now + 24*60*60;
+        $lastweek = $now - 7*24*60*60;
+        $yesterday = $now - 24*60*60;
+
+        $assign = $this->create_instance(array('duedate'=>$yesterday,
+                                               'cutoffdate'=>$tomorrow,
+                                               'assignsubmission_onlinetext_enabled'=>1));
+        $PAGE->set_url(new moodle_url('/mod/assign/view.php', array('id' => $assign->get_course_module()->id)));
+
+        // Student should be able to see an add submission button.
+        $this->setUser($this->students[0]);
+        $output = $assign->view_student_summary($this->students[0], true);
+        $this->assertNotEquals(false, strpos($output, get_string('addsubmission', 'assign')));
+
+        // Add a submission but don't submit now.
+        $submission = $assign->get_user_submission($this->students[0]->id, true);
+        $data = new stdClass();
+        $data->onlinetext_editor = array('itemid'=>file_get_unused_draft_itemid(),
+                                         'text'=>'Submission text',
+                                         'format'=>FORMAT_MOODLE);
+        $plugin = $assign->get_submission_plugin_by_type('onlinetext');
+        $plugin->save($submission, $data);
+
+        // Create another instance with cut-off and due-date already passed.
+        $this->setUser($this->editingteachers[0]);
+        $now = time();
+        $assign = $this->create_instance(array('duedate'=>$lastweek,
+                                               'cutoffdate'=>$yesterday,
+                                               'assignsubmission_onlinetext_enabled'=>1));
+
+        $this->setUser($this->students[0]);
+        $output = $assign->view_student_summary($this->students[0], true);
+        $this->assertNotContains($output, get_string('editsubmission', 'assign'),
+                                 'Should not be able to edit after cutoff date.');
+        $this->assertNotContains($output, get_string('submitassignment', 'assign'),
+                                 'Should not be able to submit after cutoff date.');
     }
 }
 

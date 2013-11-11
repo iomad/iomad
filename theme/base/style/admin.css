@@ -90,6 +90,7 @@
 #page-admin-report-backups-index .backup-skipped,
 #page-admin-report-backups-index .backup-ok {color: #006400;}
 #page-admin-report-backups-index .backup-warning {color: #ff9900;}
+#page-admin-report-backups-index .backup-notyetrun {color: #006400;}
 
 #page-admin-qbehaviours .disabled {color: gray;}
 #page-admin-qbehaviours th {white-space: normal;}
@@ -329,7 +330,7 @@
 /** MNet networking */
 #page-admin-mnet-peers .box.deletedhosts {margin-bottom:1em;font-size:80%;}
 #page-admin-mnet-peers .mform .certdetails {background-color:white;}
-#page-admin-mnet-peers .mform .deletedhostinfo {background-color:#ffd3d9;border 2px solid #eeaaaa;padding:4px;margin-bottom:5px;}
+#page-admin-mnet-peers .mform .deletedhostinfo {background-color:#ffd3d9;border: 2px solid #eeaaaa;padding:4px;margin-bottom:5px;}
 
 #core-cache-plugin-summaries table,
 #core-cache-store-summaries table {width:100%;}

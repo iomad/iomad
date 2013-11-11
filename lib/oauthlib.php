@@ -228,9 +228,7 @@ class oauth_helper {
         //     oauth_token_secret
         $result = $this->parse_result($content);
         if (empty($result['oauth_token'])) {
-            // failed
-            var_dump($result);
-            exit;
+            throw new moodle_exception('Error while requesting an oauth token');
         }
         // build oauth authrize url
         if (!empty($this->oauth_callback)) {
@@ -617,6 +615,39 @@ abstract class oauth2_client extends curl {
         }
 
         return null;
+    }
+
+    /**
+     * Get access token.
+     *
+     * This is just a getter to read the private property.
+     *
+     * @return string
+     */
+    public function get_accesstoken() {
+        return $this->accesstoken;
+    }
+
+    /**
+     * Get the client ID.
+     *
+     * This is just a getter to read the private property.
+     *
+     * @return string
+     */
+    public function get_clientid() {
+        return $this->clientid;
+    }
+
+    /**
+     * Get the client secret.
+     *
+     * This is just a getter to read the private property.
+     *
+     * @return string
+     */
+    public function get_clientsecret() {
+        return $this->clientsecret;
     }
 
     /**

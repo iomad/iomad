@@ -830,6 +830,7 @@ abstract class condition_info_base {
                 $a = new stdclass;
                 // Display the fieldname into current lang.
                 if (is_numeric($field)) {
+                    // Is a custom profile field (will use multilang).
                     $translatedfieldname = $details->fieldname;
                 } else {
                     $translatedfieldname = get_user_field_name($details->fieldname);
@@ -1065,8 +1066,15 @@ abstract class condition_info_base {
                 if (!$this->is_field_condition_met($details->operator, $uservalue, $details->value)) {
                     // Set available to false
                     $available = false;
+                    // Display the fieldname into current lang.
+                    if (is_numeric($field)) {
+                        // Is a custom profile field (will use multilang).
+                        $translatedfieldname = $details->fieldname;
+                    } else {
+                        $translatedfieldname = get_user_field_name($details->fieldname);
+                    }
                     $a = new stdClass();
-                    $a->field = format_string($details->fieldname, true, array('context' => $context));
+                    $a->field = format_string($translatedfieldname, true, array('context' => $context));
                     $a->value = s($details->value);
                     $information .= html_writer::start_tag('li');
                     $information .= get_string('requires_user_field_'.$details->operator, 'condition', $a) . ' ';
@@ -1184,10 +1192,12 @@ abstract class condition_info_base {
     private function get_cached_grade_score($gradeitemid, $grabthelot=false, $userid=0) {
         global $USER, $DB, $SESSION;
         if ($userid==0 || $userid==$USER->id) {
-            // For current user, go via cache in session
-            if (empty($SESSION->gradescorecache) || $SESSION->gradescorecacheuserid!=$USER->id) {
+            // For current user, go via cache in session. Force reset it every 10 minutes.
+            if (empty($SESSION->gradescorecache) || $SESSION->gradescorecacheuserid!=$USER->id
+                    || !isset($SESSION->gradescorecachereset) || $SESSION->gradescorecachereset+600<time()) {
                 $SESSION->gradescorecache = array();
                 $SESSION->gradescorecacheuserid = $USER->id;
+                $SESSION->gradescorecachereset = time();
             }
             if (!array_key_exists($gradeitemid, $SESSION->gradescorecache)) {
                 if ($grabthelot) {

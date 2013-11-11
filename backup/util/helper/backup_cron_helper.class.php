@@ -32,11 +32,11 @@ defined('MOODLE_INTERNAL') || die();
  */
 abstract class backup_cron_automated_helper {
 
-    /** automated backups are active and ready to run */
+    /** Automated backups are active and ready to run */
     const STATE_OK = 0;
-    /** automated backups are disabled and will not be run */
+    /** Automated backups are disabled and will not be run */
     const STATE_DISABLED = 1;
-    /** automated backups are all ready running! */
+    /** Automated backups are all ready running! */
     const STATE_RUNNING = 2;
 
     /** Course automated backup completed successfully */
@@ -49,6 +49,8 @@ abstract class backup_cron_automated_helper {
     const BACKUP_STATUS_SKIPPED = 3;
     /** Course automated backup had warnings */
     const BACKUP_STATUS_WARNING = 4;
+    /** Course automated backup has yet to be run */
+    const BACKUP_STATUS_NOTYETRUN = 5;
 
     /** Run if required by the schedule set in config. Default. **/
     const RUN_ON_SCHEDULE = 0;
@@ -120,12 +122,13 @@ abstract class backup_cron_automated_helper {
 
             $rs = $DB->get_recordset('course');
             foreach ($rs as $course) {
-                $backupcourse = $DB->get_record('backup_courses', array('courseid'=>$course->id));
+                $backupcourse = $DB->get_record('backup_courses', array('courseid' => $course->id));
                 if (!$backupcourse) {
                     $backupcourse = new stdClass;
                     $backupcourse->courseid = $course->id;
-                    $DB->insert_record('backup_courses',$backupcourse);
-                    $backupcourse = $DB->get_record('backup_courses', array('courseid'=>$course->id));
+                    $backupcourse->laststatus = self::BACKUP_STATUS_NOTYETRUN;
+                    $DB->insert_record('backup_courses', $backupcourse);
+                    $backupcourse = $DB->get_record('backup_courses', array('courseid' => $course->id));
                 }
 
                 // The last backup is considered as successful when OK or SKIPPED.
@@ -133,19 +136,23 @@ abstract class backup_cron_automated_helper {
                                             $backupcourse->laststatus == self::BACKUP_STATUS_OK) && (
                                             $backupcourse->laststarttime > 0 && $backupcourse->lastendtime > 0);
 
-                // Skip courses that do not yet need backup.
-                $skipped = !(($backupcourse->nextstarttime > 0 && $backupcourse->nextstarttime < $now) || $rundirective == self::RUN_IMMEDIATELY);
-                $skippedmessage = 'Does not require backup';
+                // Assume that we are not skipping anything.
+                $skipped = false;
+                $skippedmessage = '';
+
+                // Check if we are going to be running the backup now.
+                $shouldrunnow = (($backupcourse->nextstarttime > 0 && $backupcourse->nextstarttime < $now)
+                    || $rundirective == self::RUN_IMMEDIATELY);
 
                 // If config backup_auto_skip_hidden is set to true, skip courses that are not visible.
-                if (!$skipped && $config->backup_auto_skip_hidden) {
+                if ($shouldrunnow && $config->backup_auto_skip_hidden) {
                     $skipped = ($config->backup_auto_skip_hidden && !$course->visible);
                     $skippedmessage = 'Not visible';
                 }
 
                 // If config backup_auto_skip_modif_days is set to true, skip courses
                 // that have not been modified since the number of days defined.
-                if (!$skipped && $lastbackupwassuccessful && $config->backup_auto_skip_modif_days) {
+                if ($shouldrunnow && !$skipped && $lastbackupwassuccessful && $config->backup_auto_skip_modif_days) {
                     $sqlwhere = "course=:courseid AND time>:time AND ".$DB->sql_like('action', ':action', false, true, true);
                     $timenotmodifsincedays = $now - ($config->backup_auto_skip_modif_days * DAYSECS);
                     // Check log if there were any modifications to the course content.
@@ -160,8 +167,9 @@ abstract class backup_cron_automated_helper {
 
                 // If config backup_auto_skip_modif_prev is set to true, skip courses
                 // that have not been modified since previous backup.
-                if (!$skipped && $lastbackupwassuccessful && $config->backup_auto_skip_modif_prev) {
+                if ($shouldrunnow && !$skipped && $lastbackupwassuccessful && $config->backup_auto_skip_modif_prev) {
                     // Check log if there were any modifications to the course content.
+                    $sqlwhere = "course=:courseid AND time>:time AND ".$DB->sql_like('action', ':action', false, true, true);
                     $params = array('courseid' => $course->id,
                                     'time' => $backupcourse->laststarttime,
                                     'action' => '%view%');
@@ -171,16 +179,17 @@ abstract class backup_cron_automated_helper {
                     $skippedmessage = 'Not modified since previous backup';
                 }
 
-                // Skip courses not needed for backup.
-                if ($skipped) {
-                    // Output the next execution time when it has been updated.
-                    if ($backupcourse->nextstarttime != $nextstarttime) {
-                        mtrace('Backup of \'' . $course->fullname . '\' is scheduled on ' . $showtime);
-                    }
+                // Check if the course is not scheduled to run right now.
+                if (!$shouldrunnow) {
+                    $backupcourse->nextstarttime = $nextstarttime;
+                    $DB->update_record('backup_courses', $backupcourse);
+                    mtrace('Skipping ' . $course->fullname . ' (Not scheduled for backup until ' . $showtime . ')');
+                } else if ($skipped) { // Must have been skipped for a reason.
                     $backupcourse->laststatus = self::BACKUP_STATUS_SKIPPED;
                     $backupcourse->nextstarttime = $nextstarttime;
                     $DB->update_record('backup_courses', $backupcourse);
-                    mtrace('Skipping '.$course->fullname.' ('.$skippedmessage.')');
+                    mtrace('Skipping ' . $course->fullname . ' (' . $skippedmessage . ')');
+                    mtrace('Backup of \'' . $course->fullname . '\' is scheduled on ' . $showtime);
                 } else {
                     // Backup every non-skipped courses.
                     mtrace('Backing up '.$course->fullname.'...');
@@ -224,16 +233,17 @@ abstract class backup_cron_automated_helper {
             $count = backup_cron_automated_helper::get_backup_status_array();
             $haserrors = ($count[self::BACKUP_STATUS_ERROR] != 0 || $count[self::BACKUP_STATUS_UNFINISHED] != 0);
 
-            //Build the message text
-            //Summary
-            $message .= get_string('summary')."\n";
+            // Build the message text.
+            // Summary.
+            $message .= get_string('summary') . "\n";
             $message .= "==================================================\n";
-            $message .= "  ".get_string('courses').": ".array_sum($count)."\n";
-            $message .= "  ".get_string('ok').": ".$count[self::BACKUP_STATUS_OK]."\n";
-            $message .= "  ".get_string('skipped').": ".$count[self::BACKUP_STATUS_SKIPPED]."\n";
-            $message .= "  ".get_string('error').": ".$count[self::BACKUP_STATUS_ERROR]."\n";
-            $message .= "  ".get_string('unfinished').": ".$count[self::BACKUP_STATUS_UNFINISHED]."\n";
-            $message .= "  ".get_string('warning').": ".$count[self::BACKUP_STATUS_WARNING]."\n\n";
+            $message .= '  ' . get_string('courses') . '; ' . array_sum($count) . "\n";
+            $message .= '  ' . get_string('ok') . '; ' . $count[self::BACKUP_STATUS_OK] . "\n";
+            $message .= '  ' . get_string('skipped') . '; ' . $count[self::BACKUP_STATUS_SKIPPED] . "\n";
+            $message .= '  ' . get_string('error') . '; ' . $count[self::BACKUP_STATUS_ERROR] . "\n";
+            $message .= '  ' . get_string('unfinished') . '; ' . $count[self::BACKUP_STATUS_UNFINISHED] . "\n";
+            $message .= '  ' . get_string('warning') . '; ' . $count[self::BACKUP_STATUS_WARNING] . "\n";
+            $message .= '  ' . get_string('backupnotyetrun') . '; ' . $count[self::BACKUP_STATUS_NOTYETRUN]."\n\n";
 
             //Reference
             if ($haserrors) {
@@ -296,7 +306,8 @@ abstract class backup_cron_automated_helper {
             self::BACKUP_STATUS_OK => 0,
             self::BACKUP_STATUS_UNFINISHED => 0,
             self::BACKUP_STATUS_SKIPPED => 0,
-            self::BACKUP_STATUS_WARNING => 0
+            self::BACKUP_STATUS_WARNING => 0,
+            self::BACKUP_STATUS_NOTYETRUN => 0
         );
 
         $statuses = $DB->get_records_sql('SELECT DISTINCT bc.laststatus, COUNT(bc.courseid) AS statuscount FROM {backup_courses} bc GROUP BY bc.laststatus');
@@ -372,7 +383,11 @@ abstract class backup_cron_automated_helper {
 
         $outcome = self::BACKUP_STATUS_OK;
         $config = get_config('backup');
-        $bc = new backup_controller(backup::TYPE_1COURSE, $course->id, backup::FORMAT_MOODLE, backup::INTERACTIVE_NO, backup::MODE_AUTOMATED, $userid);
+        $dir = $config->backup_auto_destination;
+        $storage = (int)$config->backup_auto_storage;
+
+        $bc = new backup_controller(backup::TYPE_1COURSE, $course->id, backup::FORMAT_MOODLE, backup::INTERACTIVE_NO,
+                backup::MODE_AUTOMATED, $userid);
 
         try {
 
@@ -394,27 +409,28 @@ abstract class backup_cron_automated_helper {
                 }
             }
 
-            // Set the default filename
+            // Set the default filename.
             $format = $bc->get_format();
             $type = $bc->get_type();
             $id = $bc->get_id();
             $users = $bc->get_plan()->get_setting('users')->get_value();
             $anonymised = $bc->get_plan()->get_setting('anonymize')->get_value();
-            $bc->get_plan()->get_setting('filename')->set_value(backup_plan_dbops::get_default_backup_filename($format, $type, $id, $users, $anonymised));
+            $bc->get_plan()->get_setting('filename')->set_value(backup_plan_dbops::get_default_backup_filename($format, $type,
+                    $id, $users, $anonymised));
 
             $bc->set_status(backup::STATUS_AWAITING);
 
             $bc->execute_plan();
             $results = $bc->get_results();
             $outcome = self::outcome_from_results($results);
-            $file = $results['backup_destination']; // may be empty if file already moved to target location
-            $dir = $config->backup_auto_destination;
-            $storage = (int)$config->backup_auto_storage;
+            $file = $results['backup_destination']; // May be empty if file already moved to target location.
             if (!file_exists($dir) || !is_dir($dir) || !is_writable($dir)) {
                 $dir = null;
             }
-            if ($file && !empty($dir) && $storage !== 0) {
-                $filename = backup_plan_dbops::get_default_backup_filename($format, $type, $course->id, $users, $anonymised, !$config->backup_shortname);
+            // Copy file only if there was no error.
+            if ($file && !empty($dir) && $storage !== 0 && $outcome != self::BACKUP_STATUS_ERROR) {
+                $filename = backup_plan_dbops::get_default_backup_filename($format, $type, $course->id, $users, $anonymised,
+                        !$config->backup_shortname);
                 if (!$file->copy_content_to($dir.'/'.$filename)) {
                     $outcome = self::BACKUP_STATUS_ERROR;
                 }
@@ -428,6 +444,20 @@ abstract class backup_cron_automated_helper {
             $bc->log('Exception: ' . $e->errorcode, backup::LOG_ERROR, $e->a, 1); // Log original exception problem.
             $bc->log('Debug: ' . $e->debuginfo, backup::LOG_DEBUG, null, 1); // Log original debug information.
             $outcome = self::BACKUP_STATUS_ERROR;
+        }
+
+        // Delete the backup file immediately if something went wrong.
+        if ($outcome === self::BACKUP_STATUS_ERROR) {
+
+            // Delete the file from file area if exists.
+            if (!empty($file)) {
+                $file->delete();
+            }
+
+            // Delete file from external storage if exists.
+            if ($storage !== 0 && !empty($filename) && file_exists($dir.'/'.$filename)) {
+                @unlink($dir.'/'.$filename);
+            }
         }
 
         $bc->destroy();
@@ -526,7 +556,7 @@ abstract class backup_cron_automated_helper {
     public static function set_state_running($running = true) {
         if ($running === true) {
             if (self::get_automated_backup_state() === self::STATE_RUNNING) {
-                throw new backup_exception('backup_automated_already_running');
+                throw new backup_helper_exception('backup_automated_already_running');
             }
             set_config('backup_auto_running', '1', 'backup');
         } else {

@@ -557,12 +557,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         if ($rv !== false) {
             return $rv;
         }
-        // We did not find the entry in cache but it also can mean that tree is not built.
-        // The keys 0 and 'countall' must always be present if tree is built.
-        if ($id !== 0 && $id !== 'countall' && $coursecattreecache->has('countall')) {
-            // Tree was built, it means the non-existing $id was requested.
-            return false;
-        }
         // Re-build the tree.
         $sql = "SELECT cc.id, cc.parent, cc.visible
                 FROM {course_categories} cc
@@ -581,6 +575,9 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             } else {
                 // parent not found. This is data consistency error but next fix_course_sortorder() should fix it
                 $all[0][] = $record->id;
+                if (!$record->visible) {
+                    $all['0i'][] = $record->id;
+                }
             }
             $count++;
         }
@@ -601,7 +598,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         if (array_key_exists($id, $all)) {
             return $all[$id];
         }
-        return false;
+        // Requested non-existing category.
+        return array();
     }
 
     /**
@@ -1168,8 +1166,13 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $coursecatcache = cache::make('core', 'coursecat');
         $cntcachekey = 'scnt-'. serialize($search);
         if (($cnt = $coursecatcache->get($cntcachekey)) === false) {
-            self::search_courses($search, $options);
-            $cnt = $coursecatcache->get($cntcachekey);
+            // Cached value not found. Retrieve ALL courses and return their count.
+            unset($options['offset']);
+            unset($options['limit']);
+            unset($options['summary']);
+            unset($options['coursecontacts']);
+            $courses = self::search_courses($search, $options);
+            $cnt = count($courses);
         }
         return $cnt;
     }
@@ -1292,8 +1295,13 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '');
         $coursecatcache = cache::make('core', 'coursecat');
         if (($cnt = $coursecatcache->get($cntcachekey)) === false) {
-            $this->get_courses($options);
-            $cnt = $coursecatcache->get($cntcachekey);
+            // Cached value not found. Retrieve ALL courses and return their count.
+            unset($options['offset']);
+            unset($options['limit']);
+            unset($options['summary']);
+            unset($options['coursecontacts']);
+            $courses = $this->get_courses($options);
+            $cnt = count($courses);
         }
         return $cnt;
     }
@@ -2143,12 +2151,11 @@ class course_in_list implements IteratorAggregate {
     public function has_course_overviewfiles() {
         global $CFG;
         if (empty($CFG->courseoverviewfileslimit)) {
-            return 0;
+            return false;
         }
-        require_once($CFG->libdir. '/filestorage/file_storage.php');
         $fs = get_file_storage();
         $context = context_course::instance($this->id);
-        return $fs->is_area_empty($context->id, 'course', 'overviewfiles');
+        return !$fs->is_area_empty($context->id, 'course', 'overviewfiles');
     }
 
     /**

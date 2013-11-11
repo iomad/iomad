@@ -56,7 +56,7 @@ $string['attls15short'] = 'put myself in their shoes';
 $string['attls16'] = 'One could call my way of analysing things \'putting them on trial\' because I am careful to consider all the evidence.';
 $string['attls16short'] = 'putting on trial';
 $string['attls17'] = 'I value the use of logic and reason over the incorporation of my own concerns when solving problems.';
-$string['attls17short'] = 'i value logic most';
+$string['attls17short'] = 'I value logic most';
 $string['attls18'] = 'I can obtain insight into opinions that differ from mine through empathy.';
 $string['attls18short'] = 'insight from empathy';
 $string['attls19'] = 'When I encounter people whose opinions seem alien to me, I make a deliberate effort to \'extend\' myself into that person, to try to see how they could have those opinions.';
@@ -108,7 +108,7 @@ Thanks very much.';
 $string['collesaname'] = 'COLLES (Actual)';
 $string['collesapintro'] = 'The purpose of this questionnaire is to help us understand how well the online delivery of this unit enabled you to learn. 
 
-Each one of the 24 statements below asks you to compare your <b>preferred</b> (ideal) and <b>actual</b> experience in this unit.
+Each couple of the 24 statements below asks you to compare your <b>preferred</b> (ideal) and <b>actual</b> experience in this unit.
 
 There are no \'right\' or \'wrong\' answers; we are interested only in your opinion. Please be assured that your responses will be treated with a high degree of confidentiality, and will not affect your assessment.
 

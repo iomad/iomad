@@ -37,6 +37,7 @@ class create_and_clean_temp_stuff extends backup_execution_step {
         backup_helper::check_and_create_backup_dir($this->get_backupid());// Create backup temp dir
         backup_helper::clear_backup_dir($this->get_backupid());           // Empty temp dir, just in case
         backup_helper::delete_old_backup_dirs(time() - (4 * 60 * 60));    // Delete > 4 hours temp dirs
+        backup_controller_dbops::drop_backup_ids_temp_table($this->get_backupid()); // Drop ids temp table
         backup_controller_dbops::create_backup_ids_temp_table($this->get_backupid()); // Create ids temp table
     }
 }
@@ -1693,7 +1694,20 @@ class backup_zip_contents extends backup_execution_step {
         $zippacker = get_file_packer('application/zip');
 
         // Zip files
-        $zippacker->archive_to_pathname($files, $zipfile);
+        $result = $zippacker->archive_to_pathname($files, $zipfile, true, $this);
+
+        // Something went wrong.
+        if ($result === false) {
+            @unlink($zipfile);
+            throw new backup_step_exception('error_zip_packing', '', 'An error was encountered while trying to generate backup zip');
+        }
+        // Read to make sure it is a valid backup. Refer MDL-37877 . Delete it, if found not to be valid.
+        try {
+            backup_general_helper::get_backup_information_from_mbz($zipfile);
+        } catch (backup_helper_exception $e) {
+            @unlink($zipfile);
+            throw new backup_step_exception('error_zip_packing', '', $e->debuginfo);
+        }
     }
 }
 

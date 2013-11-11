@@ -93,7 +93,8 @@
 }
 
 #page-admin-report-backups-index .backup-skipped,
-#page-admin-report-backups-index .backup-ok {
+#page-admin-report-backups-index .backup-ok,
+#page-admin-report-backups-index .backup-notyetrun {
     color: @successText;
 }
 
@@ -208,6 +209,7 @@ img.iconsmall {
 #page-admin-index .releasenoteslink,
 #page-admin-index .adminwarning,
 #page-admin-index .maturitywarning,
+#page-admin-index .testsitewarning,
 #page-admin-index .maturityinfo {
     .alert;
     width: 60%;
@@ -215,6 +217,7 @@ img.iconsmall {
     margin: auto;
 }
 #page-admin-index .maturitywarning,
+#page-admin-index .testsitewarning,
 #page-admin-index .adminwarning.maturityinfo.maturity50 {
     .alert-error;
 }

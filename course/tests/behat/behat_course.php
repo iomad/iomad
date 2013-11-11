@@ -219,6 +219,33 @@ class behat_course extends behat_base {
     }
 
     /**
+     * Go to editing section page for specified section number. You need to be in the course page and on editing mode.
+     *
+     * @Given /^I edit the section "(?P<section_number>\d+)"$/
+     * @param int $sectionnumber
+     */
+    public function i_edit_the_section($sectionnumber) {
+        return new Given('I click on "' . get_string('editsummary') . '" "link" in the "#section-' . $sectionnumber . '" "css_element"');
+    }
+
+    /**
+     * Edit specified section and fill the form data with the specified field/value pairs.
+     *
+     * @When /^I edit the section "(?P<section_number>\d+)" and I fill the form with:$/
+     * @param int $sectionnumber The section number
+     * @param TableNode $data The activity field/value data
+     * @return Given[]
+     */
+    public function i_edit_the_section_and_i_fill_the_form_with($sectionnumber, TableNode $data) {
+
+        return array(
+            new Given('I edit the section "' . $sectionnumber . '"'),
+            new Given('I fill the moodle form with:', $data),
+            new Given('I press "' . get_string('savechanges') . '"')
+        );
+    }
+
+    /**
      * Checks if the specified course section hightlighting is turned on. You need to be in the course page on editing mode.
      *
      * @Then /^section "(?P<section_number>\d+)" should be highlighted$/
@@ -775,6 +802,30 @@ class behat_course extends behat_base {
         }
 
         return true;
+    }
+
+    /**
+     * Clicks to expand or collapse a category displayed on the frontpage
+     *
+     * @Given /^I toggle "(?P<categoryname_string>(?:[^"]|\\")*)" category children visibility in frontpage$/
+     * @throws ExpectationException
+     * @param string $categoryname
+     */
+    public function i_toggle_category_children_visibility_in_frontpage($categoryname) {
+
+        $headingtags = array();
+        for ($i = 1; $i <= 6; $i++) {
+            $headingtags[] = 'self::h' . $i;
+        }
+
+        $exception = new ExpectationException('"' . $categoryname . '" category can not be found', $this->getSession());
+        $categoryliteral = $this->getSession()->getSelectorsHandler()->xpathLiteral($categoryname);
+        $xpath = "//div[@class='info']/descendant::*[" . implode(' or ', $headingtags) . "][@class='name'][./descendant::a[.=$categoryliteral]]";
+        $node = $this->find('xpath', $xpath, $exception);
+        $node->click();
+
+        // Smooth expansion.
+        $this->getSession()->wait(1000, false);
     }
 
 }

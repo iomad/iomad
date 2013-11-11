@@ -223,7 +223,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
                 echo '<td align="left" valign="top">';
                 echo '-&nbsp;&nbsp;'.trim($val->answertext).' ('.$val->value.'):</td>';
                 echo '<td align="left" style="width: '.FEEDBACK_MAX_PIX_LENGTH.'">';
-                echo '<img alt="'.$intvalue.'" src="'.$pix.'" height="5" width="'.$pixwidth.'" />';
+                echo '<img class="feedback_bar_image" alt="'.$intvalue.'" src="'.$pix.'" height="5" width="'.$pixwidth.'" />';
                 echo $val->answercount;
                 if ($val->quotient > 0) {
                     echo '&nbsp;('.$quotient.'&nbsp;%)';
@@ -301,6 +301,9 @@ class feedback_item_multichoicerated extends feedback_item_base {
         $requiredmark =  ($item->required == 1) ? $str_required_mark : '';
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.'">';
+        if ($info->subtype == 'd') {
+            echo '<label for="'. $item->typ . '_' . $item->id .'">';
+        }
         echo '('.$item->label.') ';
         echo format_text($item->name.$requiredmark, true, false, false);
         if ($item->dependitem) {
@@ -309,6 +312,9 @@ class feedback_item_multichoicerated extends feedback_item_base {
                 echo '('.$dependitem->label.'-&gt;'.$item->dependvalue.')';
                 echo '</span>';
             }
+        }
+        if ($info->subtype == 'd') {
+            echo '</label>';
         }
         echo '</div>';
 
@@ -350,7 +356,13 @@ class feedback_item_multichoicerated extends feedback_item_base {
 
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.$highlight.'">';
+        if ($info->subtype == 'd') {
+            echo '<label for="'. $item->typ . '_' . $item->id .'">';
             echo format_text($item->name.$requiredmark, true, false, false);
+            echo '</label>';
+        } else {
+            echo format_text($item->name.$requiredmark, true, false, false);
+        }
         echo '</div>';
 
         //print the presentation
