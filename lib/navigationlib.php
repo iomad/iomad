@@ -1386,12 +1386,19 @@ class global_navigation extends navigation_node {
             if (!isloggedin()) {
                 return array();
             }
-            if (!empty($USER->profile['company'])) {
+            if (iomad::is_company_user()) {
                 $company = company::get_company_byuserid($USER->id);
-                $sharedsql = " AND ( c.id in (select courseid from {company_course} where companyid = $company->id) or c.id in (select courseid from {iomad_courses} where shared=1)
-                               or c.id in ( select courseid from {company_shared_courses} where companyid = $company->id)) ";
+                $sharedsql = " AND ( c.id IN (
+                                   SELECT courseid FROM {company_course}
+                                   WHERE companyid = $company->id)
+                               OR c.id IN (
+                                   SELECT courseid FROM {iomad_courses}
+                                   WHERE shared=1)
+                               OR c.id IN (
+                                   SELECT courseid FROM {company_shared_courses}
+                                   WHERE companyid = $company->id)) ";
             } else {
-                $sharedsql = " AND c.id in (select courseid from {iomad_courses} where shared=1) ";
+                $sharedsql = " AND c.id IN (select courseid FROM {iomad_courses} WHERE shared=1) ";
             }
 
             // Hmmm we need to show categories... this is going to be painful.
@@ -1624,11 +1631,9 @@ class global_navigation extends navigation_node {
         }
         $categoriesrs = $DB->get_recordset_sql("$sqlselect $sqlwhere $sqlorder", $params);
         $categories = array();
-
         foreach ($categoriesrs as $category) {
             // Preload the context.. we'll need it when adding the category in order
             // to format the category name.
-
             // IOMAD - Check if we can see this category.
             if (!iomad::iomad_check_category($category)) {
                 continue;
@@ -1648,7 +1653,6 @@ class global_navigation extends navigation_node {
             }
         }
         $categoriesrs->close();
-
         // Now we have an array of categories we need to add them to the navigation.
         while (!empty($categories)) {
             $category = reset($categories);

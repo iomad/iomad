@@ -264,9 +264,9 @@ class iomad {
 
             // If this is not the user's company then we return false.
             if ($DB->get_record('company_users', array('userid' => $USER->id, 'companyid' => $company->id))) {
-                // User is not assigned to this company - hide the category.
                 return true;
             } else {
+                // User is not assigned to this company - hide the category.
                 return false;
             }
         }
