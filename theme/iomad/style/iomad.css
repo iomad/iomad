@@ -63,16 +63,58 @@
   padding-top:0.5em;
   width:100%;
 }
-
-.companycourseuserstable #buttonscell #addcontrols, .companycoursetable #buttonscell #addcontrols, .companymanagertable #buttonscell #addcontrols, .companyusertable #buttonscell #addcontrols {
-  height:13em;
-  margin-top:3em;
+.navbar-text a {
+  color: #f75701;
 }
-
-.companycourseuserstable td, .companycoursetable td, .companymanagertable td, .companyusertable td {
-  padding-bottom:0.2em;
-  padding-left:0.3em;
-  padding-right:0.3em;
-  padding-top:0.2em;
-  vertical-align:top;
+#page-header h1 {
+  font-family: iomad;
+  font-size: 40px;
+  font-weight: normal;
+  color: #f75701;
+}
+#region-main {
+  background-color: #ffffff;
+  padding: 5px 5px 5px 5px;
+  border: 2px solid #A8A8A8;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.0470588) 0 1px 1px inset;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  box-shadow: rgba(0, 0, 0, 0.0470588) 0 1px 1px inset;
+}
+.iomad_block_title {
+  color: #f75701;
+  font-size: 26px;
+  text-transform: uppercase;
+  font-family: iomad;
+  font-weight: normal;
+}
+.block .header .title h2 {
+  color: #f75701;
+  font-size: 26px;
+  text-transform: uppercase;
+  font-family: iomad;
+  font-weight: normal;
+}
+.block .content h3 {
+  color: #f75701;
+  font-size: 26px;
+  text-transform: uppercase;
+  font-family: iomad;
+  font-weight: normal;
+}
+.block {
+  border: 2px solid #a8a8a8;
+  background-color: #ffffff;
+}
+body {
+  background-color: #555555;
+}
+#page-footer a {
+  color: #ffffff;
+}
+#page-footer {
+  color: #f75701;
+  border-top-width: 0px;
 }
