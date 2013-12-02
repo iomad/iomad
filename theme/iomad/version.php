@@ -23,8 +23,5 @@
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->version   = 2013112400;
-$plugin->requires  = 2013110500;
+$plugin->requires  = 2013051400;
 $plugin->component = 'theme_iomad';
-$plugin->dependencies = array(
-    'theme_bootstrapbase'  => 2013110500,
-);
