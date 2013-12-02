@@ -44,6 +44,11 @@ function theme_iomad_process_css($css, $theme) {
     }
     $css = theme_iomad_set_customcss($css, $customcss);
 
+    // deal with webfonts
+    $tag = '[[font:theme|astonish.woff]]';
+    $replacement = $CFG->wwwroot.'/theme/iomad/fonts/astonish.woff';
+    $css = str_replace($tag, $replacement, $css);
+
     return $css;
 }
 
