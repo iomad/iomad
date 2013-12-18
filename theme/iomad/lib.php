@@ -40,9 +40,21 @@ function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $force
     }
     $css = theme_iomad_set_logo($css, $logo);
 
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
-        send_file_not_found();
+    // Set the background image for the logo
+    $logo = $theme->setting_file_url('logo', 'logo');
+    if (empty($logo)) {
+        $logo = $CFG->wwwroot.'/theme/iomad/pix/iomad_logo.png';
     }
+    $css = theme_iomad_set_logo($css, $logo);
+
+    // Set custom CSS.
+    if (!empty($theme->settings->customcss)) {
+        $customcss = $theme->settings->customcss;
+    } else {
+        $customcss = null;
+    }
+
+    $css = theme_iomad_process_company_css($css, $theme);
 
     $css = theme_iomad_process_company_css($css, $theme);
 
@@ -54,8 +66,52 @@ function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $force
     return $css;
 }
 
-function company_css() {
-    return '<link rel="Stylesheet" type="text/css" href="' . new moodle_url("/theme/iomad/company.php") . '" />';
+/**
+ * Adds the logo to CSS.
+ *
+ * @param string $css The CSS.
+ * @param string $logo The URL of the logo.
+ * @return string The parsed CSS
+ */
+function theme_iomad_set_logo($css, $logo) {
+    $tag = '[[setting:logo]]';
+    $replacement = $logo;
+    if (is_null($replacement)) {
+        $replacement = '';
+    }
+
+    $css = str_replace($tag, $replacement, $css);
+
+    return $css;
+}
+
+/**
+ * Serves any files associated with the theme settings.
+ *
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param context $context
+ * @param string $filearea
+ * @param array $args
+ * @param bool $forcedownload
+ * @param array $options
+ * @return bool
+ */
+function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+
+    $fs = get_file_storage();
+    $relativepath = implode('/', $args);
+    $filename = $args[1];
+    $itemid = $args[0];
+    if ($itemid == -1) {
+        $itemid = 0;
+    }
+
+    if (!$file = $fs->get_file($context->id, 'theme_iomad', 'logo', $itemid, '/', $filename) or $file->is_directory()) {
+        send_file_not_found();
+    }
+
+    send_stored_file($file, 0, 0, $forcedownload);
 }
 
 /* iomad_process_css  - Processes iomad specific tags in CSS files
@@ -105,6 +161,11 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
         $return->heading = $output->page_heading();
         $return->heading .= html_writer::link($CFG->wwwroot, '', array('title' => get_string('home'), 'class' => 'clientlogo'));
     }*/
+
+    $return->footnote = '';
+    if (!empty($page->theme->settings->footnote)) {
+        $return->footnote = '<div class="footnote text-center">'.$page->theme->settings->footnote.'</div>';
+    }
 
 }
 
