@@ -18,22 +18,40 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 
-/* this method is called from pluginfile.php when using a url like
- * pluginfile.php/1/theme_iomad/logo/2/logo.gif
- * theme_iomad files are uploaded and stored using the company_edit_form.
+require_once($CFG->dirroot.'/local/iomad/lib/user.php');
+require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+
+/**
+ * Parses CSS before it is cached.
+ *
+ * This function can make alterations and replace patterns within the CSS.
+ *
+ * @param string $css The CSS
+ * @param theme_config $theme The theme config object.
+ * @return string The parsed CSS The parsed CSS.
  */
 function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload) {
     global $USER, $CFG;
 
-    $fs = get_file_storage();
-    $relativepath = implode('/', $args);
-    $fullpath = "/$context->id/theme_iomad/$filearea/$relativepath";
+    // Set the background image for the logo
+    $logo = $theme->setting_file_url('logo', 'logo');
+    if (empty($logo)) {
+        $logo = $CFG->wwwroot.'/theme/iomad/pix/iomad_logo.png';
+    }
+    $css = theme_iomad_set_logo($css, $logo);
 
     if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
         send_file_not_found();
     }
 
-    send_stored_file($file, 0, 0, $forcedownload);
+    $css = theme_iomad_process_company_css($css, $theme);
+
+    // deal with webfonts
+    $tag = '[[font:theme|astonish.woff]]';
+    $replacement = $CFG->wwwroot.'/theme/iomad/fonts/astonish.woff';
+    $css = str_replace($tag, $replacement, $css);
+
+    return $css;
 }
 
 function company_css() {
@@ -48,13 +66,68 @@ function company_css() {
  *     currently  bgcolor_header and bgcolor_content
  *
  */
-function iomad_process_company_css($css, $theme) {
+function theme_iomad_set_customcss($css, $customcss) {
+    $tag = '[[setting:customcss]]';
+    $replacement = $customcss;
+    if (is_null($replacement)) {
+        $replacement = '';
+    }
+
+    $css = str_replace($tag, $replacement, $css);
+
+    return $css;
+}
+
+/**
+ * Returns an object containing HTML for the areas affected by settings.
+ *
+ * @param renderer_base $output Pass in $OUTPUT.
+ * @param moodle_page $page Pass in $PAGE.
+ * @return stdClass An object with the following properties:
+ *      - navbarclass A CSS class to use on the navbar. By default ''.
+ *      - heading HTML to use for the heading. A logo if one is selected or the default heading.
+ *      - footnote HTML to use as a footnote. By default ''.
+ */
+function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $page) {
+    global $CFG;
+    $return = new stdClass;
+
+    $return->navbarclass = '';
+    if (!empty($page->theme->settings->invert)) {
+        $return->navbarclass .= ' navbar-inverse';
+    }
+
+    //if (!empty($page->theme->settings->logo)) {
+        $return->heading = "<div id='sitelogo'>".html_writer::link($CFG->wwwroot, '', array('title' => get_string('home'), 'class' => 'logo'))."</div>";
+        $return->heading .= "<div id='siteheading'>".$output->page_heading()."</div>";
+        $return->heading .= "<div id='clientlogo'>".html_writer::link($CFG->wwwroot, '', array('title' => get_string('home'), 'class' => 'clientlogo'))."</div>";
+    /*} else {
+        $return->heading = $output->page_heading();
+        $return->heading .= html_writer::link($CFG->wwwroot, '', array('title' => get_string('home'), 'class' => 'clientlogo'));
+    }*/
+
+}
+
+// Prepend the additionalhtmlhead with the company css sheet.
+if (!empty($CFG->additionalhtmlhead)) {
+    $CFG->additionalhtmlhead = company_css() . "\n".$CFG->additionalhtmlhead;
+}
+
+/* perficio_process_css  - Processes perficio specific tags in CSS files
+ *
+ * [[logo]] gets replaced with the full url to the company logo
+ * [[company:$property]] gets replaced with the property of the $USER->company object
+ *     available properties are: id, shortname, name, logo_filename + the fields in company->cssfields, currently  bgcolor_header and bgcolor_content
+ *
+ */
+function theme_iomad_process_company_css($css, $theme) {
     global $USER;
 
     company_user::load_company();
 
     if (isset($USER->company)) {
-        // Prepare logo fullpath.
+        // prepare logo fullpath
+        $tag = '[[setting:clientlogo]]';
         $context = get_context_instance(CONTEXT_SYSTEM);
         $logo = file_rewrite_pluginfile_urls('@@PLUGINFILE@@/[[company:logo_filename]]',
                                              'pluginfile.php',
@@ -62,23 +135,16 @@ function iomad_process_company_css($css, $theme) {
                                              'theme_iomad',
                                              'logo',
                                              $USER->company->id);
-        $css = preg_replace("/\[\[logo\]\]/", $logo, $css);
+        $css = str_replace($tag, $logo, $css);
 
-        // Replace company properties.
-        foreach ($USER->company as $key => $value) {
+        // replace company properties
+        foreach($USER->company as $key => $value) {
             if (isset($value)) {
                 $css = preg_replace("/\[\[company:$key\]\]/", $value, $css);
             }
         }
 
-        return $css;
-    } else {
-        return "";
     }
+    return $css;
 
-}
-
-// Prepend the additionalhtmlhead with the company css sheet.
-if (!empty($CFG->additionalhtmlhead)) {
-    $CFG->additionalhtmlhead = company_css() . "\n".$CFG->additionalhtmlhead;
 }
