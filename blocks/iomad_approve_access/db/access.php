@@ -1,4 +1,5 @@
-<?php
+<?php 
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,29 +26,37 @@ defined('MOODLE_INTERNAL') || die();
 $capabilities = array(
     'block/iomad_approve_access:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
+ 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'manager' => CAP_ALLOW
         ),
+ 
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
 
     'block/iomad_approve_access:myaddinstance' => array(
+ 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'manager' => CAP_ALLOW
         ),
+ 
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
+
     'block/iomad_approve_access:approve' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
+ 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'manager' => CAP_ALLOW
         ),
+ 
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
 );  
+?>

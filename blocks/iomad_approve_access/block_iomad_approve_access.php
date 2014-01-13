@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,7 +24,7 @@
  */
 
 class block_iomad_approve_access extends block_base {
-    public function init() {
+    public function init()	{
         $this->title = get_string('approveusers', 'block_iomad_approve_access' );
     }
 
@@ -31,9 +32,10 @@ class block_iomad_approve_access extends block_base {
         return true;
     }
 
-    public function has_config() {
-        return false;
+    function has_config() {
+        return true;
     }
+       
     public function get_content() {
         global $DB;
 
@@ -45,8 +47,8 @@ class block_iomad_approve_access extends block_base {
         $this->content = new stdClass;
 
         if (approve_enrol_has_users()) {
-            $this->content->text   = '<a href="'.new moodle_url('/blocks/iomad_approve_access/approve.php').
-                                      '">'.get_string('userstoapprove', 'block_iomad_approve_access').'</a>';
+            $this->content->text   = '<a href="'.new moodle_url('/blocks/iomad_approve_access/approve.php').'">'.
+                                      get_string('userstoapprove', 'block_iomad_approve_access').'</a>';
         } else {
             $this->content->text = get_string('noonetoapprove', 'block_iomad_approve_access');
         }
