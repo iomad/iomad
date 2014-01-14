@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    Block Approve Enroll
+ * @package    Block Iomad Approve Access
  * @copyright  2011 onwards E-Learn Design Limited
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,10 +26,10 @@ require_once($CFG->libdir.'/formslib.php');
 require_once('approve_form.php');
 require_once($CFG->dirroot."/local/email/lib.php");
 
-// set up PAGE stuff.
+// Set up PAGE stuff.
 require_login();
 
-// can I do this?
+// Can I do this?
 require_capability('block/iomad_approve_access:approve', get_context_instance(CONTEXT_SYSTEM));
 
 $context = get_context_instance(CONTEXT_SYSTEM);
@@ -40,7 +39,7 @@ $PAGE->set_url($baseurl);
 $PAGE->navbar->add(get_string('blocks'));
 $PAGE->set_pagelayout('standard');
 
-// set up some strings.
+// Set up some strings.
 $strmanage = get_string('approveusers', 'block_iomad_approve_access');
 
 $PAGE->set_title($strmanage);
@@ -49,8 +48,8 @@ $PAGE->set_heading($strmanage);
 if (is_siteadmin($USER->id)) {
     $approvaltype = 'both';
 } else {
-    // what type of manager am I?
-    if ($companyuser = $DB->get_record('company_users', array('userid'=>$USER->id))) {
+    // What type of manager am I?
+    if ($companyuser = $DB->get_record('company_users', array('userid' => $USER->id))) {
         if ($companyuser->managertype == 2)) {
             $approvaltype = 'manager';
         } else if ($companyuser->managertype == 1)) {
@@ -69,17 +68,18 @@ if ($approvaltype == 'none') {
     $OUTPUT->footer();
     die;
 }
-// set up the form
+// Set up the form.
 $callform = new approve_form();
 if ($data = $callform->get_data()) {
-    foreach($data as $key=>$dataresult) {
+    foreach ($data as $key => $dataresult) {
 
-        // check if we have an approval passed to us.
+        // Check if we have an approval passed to us.
         if (strpos($key, 'approve_') !== false) {
             $capturedresult = explode("_", $key);
 
-            if ($result = $DB->get_record('block_iomad_approve_access', array('userid'=>$capturedresult[1], 'activityid'=>$capturedresult[2]))) {
-                $event = $DB->get_record('trainingevent', array('id'=>$result->activityid));
+            if ($result = $DB->get_record('block_iomad_approve_access', array('userid' => $capturedresult[1],
+                                                                              'activityid' => $capturedresult[2]))) {
+                $event = $DB->get_record('trainingevent', array('id' => $result->activityid));
                 $senddenied = false;
 
                 // Get the room info.
@@ -105,7 +105,13 @@ if ($data = $callform->get_data()) {
                     if ($dataresult == 1) {
                         $result->manager_ok = 1;
                         $result->tm_ok = 0;
-                        add_to_log($event->course, 'trainingevent', 'Department manager approved', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'Department manager approved',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.
+                                   ' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.
+                                   ' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                         if ($event->approvaltype == 3) {
                             // Get the company managers for this user.
                             $usercompany = company::get_company_byuserid($result->userid);
@@ -115,17 +121,17 @@ if ($data = $callform->get_data()) {
                             $course = $DB->get_record('course', array('id' => $event->course));
                             $mymanagers = $company->get_my_managers($result->userid, 1);
                             $eventuser = $DB->get_record('user', array('id' => $result->userid));
-                            $location = $DB->get_record('classroom',array('id'=>$event->classroomid));
+                            $location = $DB->get_record('classroom', array('id' => $event->classroomid));
                             $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
 
                             // Send the emails.
                             foreach ($mymanagers as $mymanager) {
-                                if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
-                                    EmailTemplate::send('course_classroom_approval', array('course'=>$course,
+                                if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
+                                    EmailTemplate::send('course_classroom_approval', array('course' => $course,
                                                                                            'event' => $event,
-                                                                                           'user'=>$manageruser,
-                                                                                           'approveuser'=>$eventuser,
-                                                                                           'classroom'=>$location));
+                                                                                           'user' => $manageruser,
+                                                                                           'approveuser' => $eventuser,
+                                                                                           'classroom' => $location));
                                 }
                             }
                         }
@@ -133,7 +139,13 @@ if ($data = $callform->get_data()) {
                         $result->manager_ok = 3;
                         $result->tm_ok = 3;
                         $senddenied = true;
-                        add_to_log($event->course, 'trainingevent', 'Department manager denied', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'Department manager denied',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.
+                                   ' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.
+                                   ' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
 
                     }
                 }
@@ -141,7 +153,13 @@ if ($data = $callform->get_data()) {
                     if ($dataresult == 1) {
                         $result->tm_ok = 1;
                         $result->manager_ok = 1;
-                        add_to_log($event->course, 'trainingevent', 'Company manager approved', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'Company manager approved',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.
+                                   ' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.
+                                   ' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
 
                     } else {
                         $result->tm_ok = 3;
@@ -164,11 +182,12 @@ if ($data = $callform->get_data()) {
                             // Add other details too.
                             $course = $DB->get_record('course', array('id' => $event->course));
                             $mymanagers = $company->get_my_managers($result->userid, 2);
-                            if ($DB->get_record('company_users', array('userid' => $result->userid, 'managertype'=>2))) {
+                            if ($DB->get_record('company_users', array('userid' => $result->userid, 'managertype' => 2))) {
                                 // This is a department manager.  Does he have a higher department manager?
                                 $nodeptmanagers = true;
                                 foreach ($mymanagers as $mymanager) {
-                                    if ($DB->get_record('company_users', array('userid' => $mymanager->userid, 'managertype'=>2))) {
+                                    if ($DB->get_record('company_users', array('userid' => $mymanager->userid,
+                                                                               'managertype' => 2))) {
                                         $nodeptmanagers = false;
                                         break;
                                     }
@@ -179,17 +198,17 @@ if ($data = $callform->get_data()) {
                             }
                             if (!empty($mymanagers)) {
                                 $eventuser = $DB->get_record('user', array('id' => $result->userid));
-                                $location = $DB->get_record('classroom',array('id'=>$event->classroomid));
+                                $location = $DB->get_record('classroom', array('id' => $event->classroomid));
                                 $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-    
+
                                 // Send the emails.
                                 foreach ($mymanagers as $mymanager) {
-                                    if ($manageruser = $DB->get_record('user', array('id'=>$mymanager->userid))) {
-                                        EmailTemplate::send('course_classroom_manager_denied', array('course'=>$course,
+                                    if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
+                                        EmailTemplate::send('course_classroom_manager_denied', array('course' => $course,
                                                                                                'event' => $event,
-                                                                                               'user'=>$USER,
-                                                                                               'approveuser'=>$eventuser,
-                                                                                               'classroom'=>$location));
+                                                                                               'user' => $USER,
+                                                                                               'approveuser' => $eventuser,
+                                                                                               'classroom' => $location));
                                     }
                                 }
                             } else {
@@ -197,7 +216,13 @@ if ($data = $callform->get_data()) {
                                 $senddenied = true;
                             }
                         }
-                        add_to_log($event->course, 'trainingevent', 'Company manager denied', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'Company manager denied',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.
+                                   ' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.
+                                   ' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                     }
                 }
                 // Do we need to email them?
@@ -209,27 +234,39 @@ if ($data = $callform->get_data()) {
                     $sendemail = true;
                 } else {
                     $sendemail = false;
-                } 
-                $DB->update_record('block_iomad_approve_access', $result, $bulk=false);
+                }
+                $DB->update_record('block_iomad_approve_access', $result, $bulk = false);
                 if ($sendemail || $senddenied) {
-                    $location = $DB->get_record('classroom',array('id'=>$event->classroomid));
+                    $location = $DB->get_record('classroom', array('id' => $event->classroomid));
                     $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                    $approveuser = $DB->get_record('user', array('id'=>$result->userid));
-                    $approvecourse = $DB->get_record('course', array('id'=>$result->courseid));
+                    $approveuser = $DB->get_record('user', array('id' => $result->userid));
+                    $approvecourse = $DB->get_record('course', array('id' => $result->courseid));
                     if ($sendemail) {
-                        EmailTemplate::send('course_classroom_approved', array('course'=>$approvecourse,
+                        EmailTemplate::send('course_classroom_approved', array('course' => $approvecourse,
                                                                                'event' => $event,
-                                                                                       'user'=>$approveuser,
-                                                                                       'classroom'=>$location));
+                                                                               'user' => $approveuser,
+                                                                               'classroom' => $location));
                         //  Update the attendance at the event.
                         approve_enrol_register_user($approveuser, $event);
-                        add_to_log($event->course, 'trainingevent', 'User added to event', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'User added to event',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.
+                                   ' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.
+                                   ' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                     } else if ($senddenied) {
-                        EmailTemplate::send('course_classroom_denied', array('course'=>$approvecourse,
+                        EmailTemplate::send('course_classroom_denied', array('course' => $approvecourse,
                                                                              'event' => $event,
-                                                                                       'user'=>$approveuser,
-                                                                                       'classroom'=>$location));
-                        add_to_log($event->course, 'trainingevent', 'User denied access', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                                                                             'user' => $approveuser,
+                                                                             'classroom' => $location));
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'User denied access',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.
+                                   ' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.
+                                   ' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                     }
                 }
             } else {
@@ -237,11 +274,11 @@ if ($data = $callform->get_data()) {
             }
         }
     }
-    // send them on their way as the form will have changed.
+    // Send them on their way as the form will have changed.
     redirect(new moodle_url('approve.php'));
 }
 
-// display the form.
+// Display the form.
 $callform->display();
 
 echo $OUTPUT->footer();

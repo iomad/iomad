@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,14 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    Block Approve Enroll
+ * @package    Block Iomad Approve Access
  * @copyright  2011 onwards E-Learn Design Limited
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-function approve_enrol_has_users() {
+/**
+ * Checks if the current user has any outstanding approvals.
+ *
+ * returns Boolean
+ *
+ **/
+ function approve_enrol_has_users() {
     global $CFG, $DB, $USER, $SESSION;
-    
+
     require_once($CFG->dirroot.'/local/perficio/lib/company.php');
     require_once($CFG->dirroot.'/local/perficio/lib/user.php');
 
@@ -36,12 +41,12 @@ function approve_enrol_has_users() {
         return false;
     }
 
-    // check if we can have users of my type.
+    // Check if we can have users of my type.
     if (is_siteadmin($USER->id)) {
         $approvaltype = 'both';
     } else {
-        // what type of manager am I?
-        if ($manageruser = $DB->get_record('company_users', array('userid'=>$USER->id))) {
+        // What type of manager am I?
+        if ($manageruser = $DB->get_record('company_users', array('userid' => $USER->id))) {
             if ($manageruser->managertype == 2) {
                 $approvaltype = 'manager';
             } else if ($manageruser->managertype == 1) {
@@ -59,17 +64,17 @@ function approve_enrol_has_users() {
                                                AND cc.approvaltype in (1,3)
                                                WHERE beae.companyid=:companyid AND beae.manager_ok = 0
                                                AND beae.userid != :myuserid
-                                               AND beae.userid 
-                                               IN ($myuserids)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                               AND beae.userid
+                                               IN ($myuserids)", array('companyid' => $companyid, 'myuserid' => $USER->id))) {
             return true;
         }
-    }    
+    }
     if ($approvaltype == 'both' || $approvaltype == 'company') {
         // Get the list of users I am responsible for.
         $myuserids = company::get_my_users_list($companyid);
         if (!empty($myuserids) && $DB->get_records_sql("SELECT beae.* FROM {block_iomad_approve_access} beae
                                   RIGHT JOIN {trainingevent} cc ON cc.id=beae.activityid
-                                  WHERE beae.companyid=:companyid 
+                                  WHERE beae.companyid=:companyid
                                   AND beae.userid != :myuserid
                                   AND beae.userid IN ($myuserids)
                                   AND (
@@ -77,15 +82,21 @@ function approve_enrol_has_users() {
                                    AND beae.tm_ok = 0 )
                                   OR (
                                    cc.approvaltype = 1
-                                   AND beae.manager_ok = 0)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                   AND beae.manager_ok = 0)", array('companyid' => $companyid, 'myuserid' => $USER->id))) {
             return true;
         }
-    }    
+    }
 
-    // hasn't returned yet, return false as default.
+    // Hasn't returned yet, return false as default.
     return false;
 }
 
+/**
+ * Gets the list of outstanding approvals for the current user.
+ *
+ * returns array
+ *
+ **/
 function approve_enroll_get_my_users() {
     global $CFG, $DB, $USER, $SESSION;
 
@@ -101,12 +112,12 @@ function approve_enroll_get_my_users() {
         return false;
     }
 
-    // check if we can have users of my type.
+    // Check if we can have users of my type.
     if (is_siteadmin($USER->id)) {
         $approvaltype = 'both';
     } else {
-        // what type of manager am I?
-        if ($manageruser = $DB->get_record('company_users', array('userid'=>$USER->id))) {
+        // What type of manager am I?
+        if ($manageruser = $DB->get_record('company_users', array('userid' => $USER->id))) {
             if ($manageruser->managertype == 2) {
                 $approvaltype = 'manager';
             } else if ($manageruser->managertype == 1) {
@@ -121,22 +132,22 @@ function approve_enroll_get_my_users() {
     $myuserids = company::get_my_users_list($companyid);
     if (!empty($myuserids)) {
         if ($approvaltype == 'manager') {
-            //  need to deal with departments here.
+            //  Need to deal with departments here.
             if ($userarray = $DB->get_records_sql("SELECT beae.* FROM {block_iomad_approve_access} beae
                                                RIGHT JOIN {trainingevent} cc ON cc.id=beae.activityid
                                                AND cc.approvaltype in (1,3)
                                                WHERE beae.companyid=:companyid AND beae.manager_ok = 0
                                                AND beae.userid != :myuserid
-                                               AND beae.userid 
-                                               IN ($myuserids)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                               AND beae.userid
+                                               IN ($myuserids)", array('companyid' => $companyid, 'myuserid' => $USER->id))) {
                 return $userarray;
             }
-        }    
-    
+        }
+
         if ($approvaltype == 'company') {
             if ($userarray = $DB->get_records_sql("SELECT beae.* FROM {block_iomad_approve_access} beae
                                                RIGHT JOIN {trainingevent} cc ON cc.id=beae.activityid
-                                               WHERE beae.companyid=:companyid 
+                                               WHERE beae.companyid=:companyid
                                                AND beae.userid != :myuserid
                                                AND beae.userid IN ($myuserids)
                                                AND (
@@ -144,36 +155,44 @@ function approve_enroll_get_my_users() {
                                                 AND beae.tm_ok = 0 )
                                                OR (
                                                 cc.approvaltype = 1
-                                                AND beae.manager_ok = 0)", array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                                AND beae.manager_ok = 0)",
+                                                array('companyid' => $companyid, 'myuserid' => $USER->id))) {
                 return $userarray;
             }
         }
-    
+
         if ($approvaltype == 'both') {
             if ($userarray = $DB->get_records_sql("SELECT * FROM {block_iomad_approve_access}
                                                    WHERE companyid=:companyid
                                                    AND (tm_ok = 0 OR manager_ok = 0)
                                                    AND userid != :myuserid
                                                    AND userid IN ($myuserids)",
-                                                   array('companyid'=>$companyid, 'myuserid'=>$USER->id))) {
+                                                   array('companyid' => $companyid, 'myuserid' => $USER->id))) {
                 return $userarray;
             }
         }
     }
 
-    return array();    
+    return array();
 }
 
+/**
+ * Assigns an approved user to a training event.
+ *
+ * Inputs-
+ *        $user = stdclass();
+ *        $event = stdclass();
+ *
+ **/
 function approve_enrol_register_user($user, $event) {
     global $DB;
-    
+
     $trainingeventrecord = new stdclass();
     $trainingeventrecord->userid = $user->id;
     $trainingeventrecord->trainingeventid = $event->id;
-    if (!$DB->get_record('trainingevent_users', array('userid'=>$user->id, 'trainingeventid'=>$event->id))) {
+    if (!$DB->get_record('trainingevent_users', array('userid' => $user->id, 'trainingeventid' => $event->id))) {
         if (!$DB->insert_record('trainingevent_users', $trainingeventrecord)) {
             print_error(get_string('updatefailed', 'block_iomad_approve_access'));
         }
     }
 }
-    
