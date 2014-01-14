@@ -7,7 +7,7 @@ function xmldb_block_iomad_approve_access_install() {
     
     // only do this when we are not installing for the first time.
     // That is handled elsewhere.
-    if (!empty($USER)) {
+    if (!during_initial_install()) {
         // add this block to the dashboard
         // (yes, I know this isn't really what this is for!!)
         $reportblock = $DB->get_record('block_instances', array('blockname' => 'iomad_reports', 'pagetypepattern' => 'local-dashboard-index'));

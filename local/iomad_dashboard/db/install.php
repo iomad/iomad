@@ -31,6 +31,7 @@ function xmldb_local_iomad_dashboard_install() {
         'side_pre' => array('course_list'),
         'content' => array('iomad_company_selector',
                            'iomad_company_admin',
+                           'iomad_approve_access',
                            'iomad_reports'),
         'side_post' => array('news_items')
         );
