@@ -58,13 +58,13 @@ class approve_form extends moodleform {
                 $course = $DB->get_record("course", array('id'=>$result->courseid), "fullname");
                 
                 // Get the activity info.
-                $activity = $DB->get_record('courseclassroom', array('id'=>$result->activityid));
+                $activity = $DB->get_record('trainingevent', array('id'=>$result->activityid));
 
                 // Get the room info.
                 $roominfo = $DB->get_record('classroom', array('id' => $activity->classroomid));
 
                 // Get the number of current attendees.
-                $numattendees = $DB->count_records('courseclassroom_users', array('courseclassroomid' => $activity->id));
+                $numattendees = $DB->count_records('trainingevent_users', array('trainingeventid' => $activity->id));
 
                 // check the approval status
                 if ($activity->approvaltype == 3 && $result->manager_ok !=1 && !$department) {
@@ -80,7 +80,7 @@ class approve_form extends moodleform {
                     $mform->addGroup($radioarray, 'approve_'.$result->userid.'_'.$result->courseid,
                                      $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
                                      <a href="'.
-                                     new moodle_url('/mod/courseclassroom/manageclass.php', array('id' => $result->activityid)).'">'.
+                                     new moodle_url('/mod/trainingevent/manageclass.php', array('id' => $result->activityid)).'">'.
                                      $activity->name.' '.date($dateformat, $activity->startdatetime).'</a>',
                                      array(' '), false);
                 } else {
@@ -88,7 +88,7 @@ class approve_form extends moodleform {
                     $mform->addGroup($radioarray, '_'.$result->userid.'_'.$result->courseid,
                                      $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
                                      <a href="'.
-                                     new moodle_url('/mod/courseclassroom/manageclass.php', array('id' => $result->activityid)).'">'.
+                                     new moodle_url('/mod/trainingevent/manageclass.php', array('id' => $result->activityid)).'">'.
                                      $activity->name.' '.date($dateformat, $activity->startdatetime).'</a></br><b>'.
                                      get_string('fullybooked', 'block_iomad_approve_access')."</b>",
                                      array(' '), false);

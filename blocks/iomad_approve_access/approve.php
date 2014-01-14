@@ -79,14 +79,14 @@ if ($data = $callform->get_data()) {
             $capturedresult = explode("_", $key);
 
             if ($result = $DB->get_record('block_iomad_approve_access', array('userid'=>$capturedresult[1], 'activityid'=>$capturedresult[2]))) {
-                $event = $DB->get_record('courseclassroom', array('id'=>$result->activityid));
+                $event = $DB->get_record('trainingevent', array('id'=>$result->activityid));
                 $senddenied = false;
 
                 // Get the room info.
                 $roominfo = $DB->get_record('classroom', array('id' => $event->classroomid));
 
                 // Get the number of current attendees.
-                $numattendees = $DB->count_records('courseclassroom_users', array('courseclassroomid' => $event->id));
+                $numattendees = $DB->count_records('trainingevent_users', array('trainingeventid' => $event->id));
 
                 // Is the event full?
                 if ($numattendees >= $roominfo->capacity && $dataresult == 1) {
@@ -97,7 +97,7 @@ if ($data = $callform->get_data()) {
                 $cmidinfo = $DB->get_record_sql("SELECT * FROM {course_modules}
                                                  WHERE instance = :eventid
                                                  AND module = ( SELECT id FROM {modules}
-                                                   WHERE name = 'courseclassroom')", array('eventid' => $event->id));
+                                                   WHERE name = 'trainingevent')", array('eventid' => $event->id));
 
                 $userinfo = $DB->get_record('user', array('id' => $result->userid), 'firstname, lastname');
 
@@ -105,7 +105,7 @@ if ($data = $callform->get_data()) {
                     if ($dataresult == 1) {
                         $result->manager_ok = 1;
                         $result->tm_ok = 0;
-                        add_to_log($event->course, 'courseclassroom', 'Department manager approved', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course, 'trainingevent', 'Department manager approved', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                         if ($event->approvaltype == 3) {
                             // Get the company managers for this user.
                             $usercompany = company::get_company_byuserid($result->userid);
@@ -133,7 +133,7 @@ if ($data = $callform->get_data()) {
                         $result->manager_ok = 3;
                         $result->tm_ok = 3;
                         $senddenied = true;
-                        add_to_log($event->course, 'courseclassroom', 'Department manager denied', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course, 'trainingevent', 'Department manager denied', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
 
                     }
                 }
@@ -141,7 +141,7 @@ if ($data = $callform->get_data()) {
                     if ($dataresult == 1) {
                         $result->tm_ok = 1;
                         $result->manager_ok = 1;
-                        add_to_log($event->course, 'courseclassroom', 'Company manager approved', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course, 'trainingevent', 'Company manager approved', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
 
                     } else {
                         $result->tm_ok = 3;
@@ -197,7 +197,7 @@ if ($data = $callform->get_data()) {
                                 $senddenied = true;
                             }
                         }
-                        add_to_log($event->course, 'courseclassroom', 'Company manager denied', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course, 'trainingevent', 'Company manager denied', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                     }
                 }
                 // Do we need to email them?
@@ -223,13 +223,13 @@ if ($data = $callform->get_data()) {
                                                                                        'classroom'=>$location));
                         //  Update the attendance at the event.
                         approve_enrol_register_user($approveuser, $event);
-                        add_to_log($event->course, 'courseclassroom', 'User added to event', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course, 'trainingevent', 'User added to event', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                     } else if ($senddenied) {
                         EmailTemplate::send('course_classroom_denied', array('course'=>$approvecourse,
                                                                              'event' => $event,
                                                                                        'user'=>$approveuser,
                                                                                        'classroom'=>$location));
-                        add_to_log($event->course, 'courseclassroom', 'User denied access', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
+                        add_to_log($event->course, 'trainingevent', 'User denied access', 'manageclass.php?id='.$event->id, $event->name.' User - '.$userinfo->firstname.' '.$userinfo->lastname.' (id='.$result->userid.') by '. $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')', $cmidinfo->id, $USER->id);
                     }
                 }
             } else {
