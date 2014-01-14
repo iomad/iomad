@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,6 +27,22 @@
 defined('MOODLE_INTERNAL') || die();
 
 $logs = array(
-    array('module' => 'trainingevent', 'action' => 'add', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'update', 'mtable' => 'trainingevent', 'field' => 'name'),
+    array('module'=>'trainingevent', 'action'=>'add', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'update', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User attending', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User removed', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User seeking approved access', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User removed approved access', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User moved to another event', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User added to event', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'User denied access', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'Department manager approved', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'Department manager denied', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'Company manager approved', 'mtable'=>'trainingevent', 'field'=>'name'),
+    array('module'=>'trainingevent', 'action'=>'Company manager denied', 'mtable'=>'trainingevent', 'field'=>'name'),
+    
+    
+    
+    
+    
 );

@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,9 +27,9 @@
 require_once("../../config.php");
 require_once("lib.php");
 
-$id = required_param('id', PARAM_INT);   // Course.
+$id = required_param('id',PARAM_INT);   // course
 
-$PAGE->set_url('/mod/trainingevent/index.php', array('id' => $id));
+$PAGE->set_url('/mod/trainingevent/index.php', array('id'=>$id));
 
 redirect("$CFG->wwwroot/course/view.php?id=$id");
 

@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,6 +26,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$module->version  = 2013071000;  // The current module version (Date: YYYYMMDDXX).
-$module->requires = 2010080300;  // Requires this Moodle version.
-$module->cron     = 0;           // Period for cron to check this module (secs).
+$module->version  = 2013112501;  // The current module version (Date: YYYYMMDDXX)
+$module->requires = 2010080300;  // Requires this Moodle version
+$module->cron     = 0;           // Period for cron to check this module (secs)
+
+
