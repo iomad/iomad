@@ -57,44 +57,43 @@ defined('MOODLE_INTERNAL') || die();
 function xmldb_trainingevent_upgrade($oldversion) {
     global $CFG, $DB;
 
-    $result = TRUE;
+    $result = true;
     $dbman = $DB->get_manager();
 
+    if ($oldversion < 2011111701) {
 
-  if ($oldversion < 2011111701) {
-
-        // Define table trainingevent_users to be created
+        // Define table trainingevent_users to be created.
         $table = new xmldb_table('trainingevent_users');
 
-        // Adding fields to table trainingevent_users
+        // Adding fields to table trainingevent_users.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null);
         $table->add_field('trainingeventid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, null, null, null);
 
-        // Adding keys to table trainingevent_users
+        // Adding keys to table trainingevent_users.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
 
-        // Conditionally launch create table for trainingevent_users
+        // Conditionally launch create table for trainingevent_users.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
-        // label savepoint reached
+        // Label savepoint reached.
         upgrade_mod_savepoint(true, 2011111701, 'trainingevent');
     }
 
     if ($oldversion < 2013071000) {
 
-        // Define field approvaltype to be added to trainingevent
+        // Define field approvaltype to be added to trainingevent.
         $table = new xmldb_table('trainingevent');
         $field = new xmldb_field('approvaltype', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'classroomid');
 
-        // Conditionally launch add field approvaltype
+        // Conditionally launch add field approvaltype.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // trainingevent savepoint reached
+        // Trainingevent savepoint reached.
         upgrade_mod_savepoint(true, 2013071000, 'trainingevent');
     }
 
