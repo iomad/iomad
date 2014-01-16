@@ -182,6 +182,8 @@ $string['expiry_warn_manager_body'] = 'Dear {User_FullName},
 the following users accreditation in {Course_FullName} is due to expire soon :
 
 {Course_ReportText}';
+$string['expire_subject'] = 'Course expires';
+$string['expire_body'] = 'This is to let you know that your training in {Course_FullName} expires soon.';
 $string['expire_manager_subject'] = 'Accreditation expired report for {Course_FullName}';
 $string['expire_manager_body'] = 'Dear {User_FullName},
 the following users accreditation in {Course_FullName} has expired :
