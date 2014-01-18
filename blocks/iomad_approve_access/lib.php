@@ -29,8 +29,8 @@
  function approve_enrol_has_users() {
     global $CFG, $DB, $USER, $SESSION;
 
-    require_once($CFG->dirroot.'/local/perficio/lib/company.php');
-    require_once($CFG->dirroot.'/local/perficio/lib/user.php');
+    require_once($CFG->dirroot.'/local/iomad/lib/company.php');
+    require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 
     // Set the companyid to bypass the company select form if possible.
     if (!empty($SESSION->currenteditingcompany)) {
@@ -100,8 +100,8 @@
 function approve_enroll_get_my_users() {
     global $CFG, $DB, $USER, $SESSION;
 
-    require_once($CFG->dirroot.'/local/perficio/lib/company.php');
-    require_once($CFG->dirroot.'/local/perficio/lib/user.php');
+    require_once($CFG->dirroot.'/local/iomad/lib/company.php');
+    require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 
     // Set the companyid to bypass the company select form if possible.
     if (!empty($SESSION->currenteditingcompany)) {

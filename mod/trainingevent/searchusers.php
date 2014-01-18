@@ -108,8 +108,8 @@ $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_eldms_company_admin');
 $select->formid = 'choosedepartment';
-echo html_writer::tag('div', $OUTPUT->render($select), array('id' => 'perficio_department_selector'));
-$fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'perficio_company_selector'));
+echo html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_department_selector'));
+$fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_company_selector'));
 
 // Set up the filter form..
 $mform = new iomad_user_filter_form(null, array('companyid' => $company->id));

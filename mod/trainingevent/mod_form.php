@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
-require_once($CFG->dirroot.'/local/perficio/lib/user.php');
+require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 
 
 class mod_trainingevent_mod_form extends moodleform_mod {

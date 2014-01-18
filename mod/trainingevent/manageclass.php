@@ -82,14 +82,12 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                     if (!$DB->insert_record('trainingevent_users', array('trainingeventid' => $id, 'userid' => $USER->id))) {
                         print_error('error creating attendance record');
                     } else {
-                        if ($CFG->perficioemails) {
-                            $course = $DB->get_record('course', array('id' => $event->course));
-                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                            EmailTemplate::send('user_signed_up_for_event', array('course' => $course,
+                        $course = $DB->get_record('course', array('id' => $event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        EmailTemplate::send('user_signed_up_for_event', array('course' => $course,
                                                                                   'user' => $USER,
                                                                                   'classroom' => $location,
                                                                                   'event' => $event));
-                        }
                         add_to_log($event->course,
                                    'trainingevent',
                                    'User attending',
@@ -105,14 +103,12 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                     if (!$DB->delete_records('trainingevent_users', array('id' => $attendingrecord->id))) {
                         print_error('error removing attendance record');
                     } else {
-                        if ($CFG->perficioemails) {
-                            $course = $DB->get_record('course', array('id' => $event->course));
-                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                            EmailTemplate::send('user_removed_from_event', array('course' => $course,
+                        $course = $DB->get_record('course', array('id' => $event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        EmailTemplate::send('user_removed_from_event', array('course' => $course,
                                                                                  'user' => $USER,
                                                                                  'classroom' => $location,
                                                                                  'event' => $event));
-                        }
                         add_to_log($event->course,
                                    'trainingevent',
                                    'User removed',
@@ -136,43 +132,6 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                                                                 'companyid' => $company->id))) {
                         print_error('error creating attendance record');
                     } else {
-                        if ($CFG->perficioemails) {
-                            $course = $DB->get_record('course', array('id' => $event->course));
-                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                            // Get the list of managers we need to send an email to.
-                            if ($event->approvaltype != 2 ) {
-                                $mymanagers = $company->get_my_managers($USER->id, 2);
-                            } else {
-                                $mymanagers = $company->get_my_managers($USER->id, 1);
-                            }
-                            foreach ($mymanagers as $mymanager) {
-                                if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                    EmailTemplate::send('course_classroom_approval', array('course' => $course,
-                                                                                           'user' => $manageruser,
-                                                                                           'approveuser' => $USER,
-                                                                                           'event' => $event,
-                                                                                           'classroom' => $location));
-                                }
-                            }
-                            EmailTemplate::send('course_classroom_approval_request', array('course' => $course,
-                                                                                   'user' => $USER,
-                                                                                   'event' => $event,
-                                                                                   'classroom' => $location));
-
-                            add_to_log($event->course,
-                                       'trainingevent',
-                                       'User seeking approved access',
-                                       'manageclass.php?id='.$event->id,
-                                       $event->name .' '.$USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
-                                       $cmidinfo->id,
-                                       $USER->id);
-                        }
-                    }
-                } else {
-                    $userbooking->tm_ok = 0;
-                    $userbooking->manager_ok = 0;
-                    $DB->update_record('block_eldms_approve_enroll', $userbooking);
-                    if ($CFG->perficioemails) {
                         $course = $DB->get_record('course', array('id' => $event->course));
                         $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
                         // Get the list of managers we need to send an email to.
@@ -186,14 +145,14 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                 EmailTemplate::send('course_classroom_approval', array('course' => $course,
                                                                                        'user' => $manageruser,
                                                                                        'approveuser' => $USER,
-                                                                                       'classroom' => $location,
-                                                                                       'event' => $event));
+                                                                                       'event' => $event,
+                                                                                       'classroom' => $location));
                             }
                         }
                         EmailTemplate::send('course_classroom_approval_request', array('course' => $course,
                                                                                'user' => $USER,
-                                                                               'classroom' => $location,
-                                                                               'event' => $event));
+                                                                               'event' => $event,
+                                                                               'classroom' => $location));
 
                         add_to_log($event->course,
                                    'trainingevent',
@@ -203,6 +162,39 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                    $cmidinfo->id,
                                    $USER->id);
                     }
+                } else {
+                    $userbooking->tm_ok = 0;
+                    $userbooking->manager_ok = 0;
+                    $DB->update_record('block_eldms_approve_enroll', $userbooking);
+                    $course = $DB->get_record('course', array('id' => $event->course));
+                    $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                    // Get the list of managers we need to send an email to.
+                    if ($event->approvaltype != 2 ) {
+                        $mymanagers = $company->get_my_managers($USER->id, 2);
+                    } else {
+                        $mymanagers = $company->get_my_managers($USER->id, 1);
+                    }
+                    foreach ($mymanagers as $mymanager) {
+                        if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
+                            EmailTemplate::send('course_classroom_approval', array('course' => $course,
+                                                                                   'user' => $manageruser,
+                                                                                   'approveuser' => $USER,
+                                                                                   'classroom' => $location,
+                                                                                   'event' => $event));
+                        }
+                    }
+                    EmailTemplate::send('course_classroom_approval_request', array('course' => $course,
+                                                                           'user' => $USER,
+                                                                           'classroom' => $location,
+                                                                           'event' => $event));
+
+                    add_to_log($event->course,
+                               'trainingevent',
+                               'User seeking approved access',
+                               'manageclass.php?id='.$event->id,
+                               $event->name .' '.$USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
+                               $cmidinfo->id,
+                               $USER->id);
                 }
             } else if ( 'no' == $booking) {
                 if ($dereq = (array) $DB->get_record('block_eldms_approve_enroll', array('activityid' => $id,
@@ -281,60 +273,56 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                                                                         'companyid' => $company->id))) {
                                 print_error('error creating attendance record');
                             } else {
-                                if ($CFG->perficioemails) {
-                                    $course = $DB->get_record('course', array('id' => $event->course));
-                                    $location->time = date('jS \of F Y \a\t h:i', $chosenevent->startdatetime);
-                                    $user = $DB->get_record('user', array('id' => $userid));
-                                    // Get the list of managers we need to send an email to.
-                                    $mymanagers = $company->get_my_managers($user->id, 1);
-                                    foreach ($mymanagers as $mymanager) {
-                                        if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                            EmailTemplate::send('course_classroom_approval', array('course' => $course,
-                                                                                                   'user' => $manageruser,
-                                                                                                   'approveuser' => $user,
-                                                                                                   'event' => $chosenevent,
-                                                                                                   'classroom' => $location));
-                                        }
-                                    }
-                                    add_to_log($chosenevent->course,
-                                               'trainingevent',
-                                               'Department manager approved',
-                                               'manageclass.php?id='.$event->id,
-                                               $event->name .' User -'.$user->firstname .' '.
-                                               $user->lastname.' (id='.$user->id.') by '.
-                                               $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
-                                               $chosencmidinfo->id,
-                                               $USER->id);
-                                }
-                            }
-                        } else {
-                            $userbooking->tm_ok = 0;
-                            $userbooking->manager_ok = 1;
-                            $DB->update_record('block_eldms_approve_enroll', $userbooking);
-                            if ($CFG->perficioemails) {
                                 $course = $DB->get_record('course', array('id' => $event->course));
-                                $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                                $location->time = date('jS \of F Y \a\t h:i', $chosenevent->startdatetime);
                                 $user = $DB->get_record('user', array('id' => $userid));
                                 // Get the list of managers we need to send an email to.
-                                $mymanagers = $company->get_my_managers($USER->id, 1);
+                                $mymanagers = $company->get_my_managers($user->id, 1);
                                 foreach ($mymanagers as $mymanager) {
                                     if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
                                         EmailTemplate::send('course_classroom_approval', array('course' => $course,
                                                                                                'user' => $manageruser,
                                                                                                'approveuser' => $user,
-                                                                                               'classroom' => $location,
-                                                                                               'event' => $chosenevent));
+                                                                                               'event' => $chosenevent,
+                                                                                               'classroom' => $location));
                                     }
                                 }
                                 add_to_log($chosenevent->course,
                                            'trainingevent',
                                            'Department manager approved',
                                            'manageclass.php?id='.$event->id,
-                                           $event->name .' User -'.$user->firstname .' '.$user->lastname.' (id='.$user->id.') by '.
+                                           $event->name .' User -'.$user->firstname .' '.
+                                           $user->lastname.' (id='.$user->id.') by '.
                                            $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
                                            $chosencmidinfo->id,
                                            $USER->id);
                             }
+                        } else {
+                            $userbooking->tm_ok = 0;
+                            $userbooking->manager_ok = 1;
+                            $DB->update_record('block_eldms_approve_enroll', $userbooking);
+                            $course = $DB->get_record('course', array('id' => $event->course));
+                            $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                            $user = $DB->get_record('user', array('id' => $userid));
+                            // Get the list of managers we need to send an email to.
+                            $mymanagers = $company->get_my_managers($USER->id, 1);
+                            foreach ($mymanagers as $mymanager) {
+                                if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
+                                    EmailTemplate::send('course_classroom_approval', array('course' => $course,
+                                                                                           'user' => $manageruser,
+                                                                                           'approveuser' => $user,
+                                                                                           'classroom' => $location,
+                                                                                           'event' => $chosenevent));
+                                }
+                            }
+                            add_to_log($chosenevent->course,
+                                       'trainingevent',
+                                       'Department manager approved',
+                                       'manageclass.php?id='.$event->id,
+                                       $event->name .' User -'.$user->firstname .' '.$user->lastname.' (id='.$user->id.') by '.
+                                       $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
+                                       $chosencmidinfo->id,
+                                       $USER->id);
                         }
                         // Remove from the current event.
                         $DB->delete_records('trainingevent_users', array('userid' => $userid, 'trainingeventid' => $event->id));
@@ -417,47 +405,18 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                                                                     'companyid' => $company->id))) {
                             print_error('error creating attendance record');
                         } else {
-                            if ($CFG->perficioemails) {
-                                $course = $DB->get_record('course', array('id' => $event->course));
-                                $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
-                                $user = $DB->get_record('user', array('id' => $userid));
-                                // Get the list of managers we need to send an email to.
-                                $mymanagers = $company->get_my_managers($user->id, 1);
-                                foreach ($mymanagers as $mymanager) {
-                                    if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                        EmailTemplate::send('course_classroom_approval', array('course' => $course,
-                                                                                               'user' => $manageruser,
-                                                                                               'approveuser' => $user,
-                                                                                               'event' => $event,
-                                                                                               'classroom' => $location));
-                                    }
-                                }
-                                add_to_log($event->course,
-                                           'trainingevent',
-                                           'Department manager approved',
-                                           'manageclass.php?id='.$event->id,
-                                           $event->name .' User -'.$user->firstname .' '.$user->lastname.' (id='.$user->id.') by '.
-                                           $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
-                                           $cmidinfo->id, $USER->id);
-                            }
-                        }
-                    } else {
-                        $userbooking->tm_ok = 0;
-                        $userbooking->manager_ok = 1;
-                        $DB->update_record('block_eldms_approve_enroll', $userbooking);
-                        if ($CFG->perficioemails) {
                             $course = $DB->get_record('course', array('id' => $event->course));
                             $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
                             $user = $DB->get_record('user', array('id' => $userid));
                             // Get the list of managers we need to send an email to.
-                            $mymanagers = $company->get_my_managers($USER->id, 1);
+                            $mymanagers = $company->get_my_managers($user->id, 1);
                             foreach ($mymanagers as $mymanager) {
                                 if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
                                     EmailTemplate::send('course_classroom_approval', array('course' => $course,
                                                                                            'user' => $manageruser,
                                                                                            'approveuser' => $user,
-                                                                                           'classroom' => $location,
-                                                                                           'event' => $event));
+                                                                                           'event' => $event,
+                                                                                           'classroom' => $location));
                                 }
                             }
                             add_to_log($event->course,
@@ -468,6 +427,31 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                                        $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
                                        $cmidinfo->id, $USER->id);
                         }
+                    } else {
+                        $userbooking->tm_ok = 0;
+                        $userbooking->manager_ok = 1;
+                        $DB->update_record('block_eldms_approve_enroll', $userbooking);
+                        $course = $DB->get_record('course', array('id' => $event->course));
+                        $location->time = date('jS \of F Y \a\t h:i', $event->startdatetime);
+                        $user = $DB->get_record('user', array('id' => $userid));
+                        // Get the list of managers we need to send an email to.
+                        $mymanagers = $company->get_my_managers($USER->id, 1);
+                        foreach ($mymanagers as $mymanager) {
+                            if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
+                                EmailTemplate::send('course_classroom_approval', array('course' => $course,
+                                                                                       'user' => $manageruser,
+                                                                                       'approveuser' => $user,
+                                                                                       'classroom' => $location,
+                                                                                       'event' => $event));
+                            }
+                        }
+                        add_to_log($event->course,
+                                   'trainingevent',
+                                   'Department manager approved',
+                                   'manageclass.php?id='.$event->id,
+                                   $event->name .' User -'.$user->firstname .' '.$user->lastname.' (id='.$user->id.') by '.
+                                   $USER->firstname .' '.$USER->lastname.' (id='.$USER->id.')',
+                                   $cmidinfo->id, $USER->id);
                     }
                 }
             }
@@ -703,7 +687,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                             $select->formid = 'chooseevent'.$user->id;
                             $eventselecthtml = html_writer::tag('div',
                                                                 $OUTPUT->render($select),
-                                                                array('id' => 'perficio_event_selector'));
+                                                                array('id' => 'iomad_event_selector'));
                             $removebutton = $OUTPUT->single_button(new moodle_url('manageclass.php',
                                                                                   array('userid' => $user->id,
                                                                                         'id' => $event->id,
