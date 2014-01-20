@@ -2197,13 +2197,20 @@ class restore_calendarevents_structure_step extends restore_structure_step {
         } else {
             $params['instance'] = 0;
         }
-        $sql = 'SELECT id FROM {event} WHERE name = ? AND courseid = ? AND
-                repeatid = ? AND modulename = ? AND timestart = ? AND timeduration =?
-                AND ' . $DB->sql_compare_text('description', 255) . ' = ' . $DB->sql_compare_text('?', 255);
+        $sql = "SELECT id
+                  FROM {event}
+                 WHERE " . $DB->sql_compare_text('name', 255) . " = " . $DB->sql_compare_text('?', 255) . "
+                   AND courseid = ?
+                   AND repeatid = ?
+                   AND modulename = ?
+                   AND timestart = ?
+                   AND timeduration = ?
+                   AND " . $DB->sql_compare_text('description', 255) . " = " . $DB->sql_compare_text('?', 255);
         $arg = array ($params['name'], $params['courseid'], $params['repeatid'], $params['modulename'], $params['timestart'], $params['timeduration'], $params['description']);
         $result = $DB->record_exists_sql($sql, $arg);
         if (empty($result)) {
             $newitemid = $DB->insert_record('event', $params);
+            $this->set_mapping('event', $oldid, $newitemid);
             $this->set_mapping('event_description', $oldid, $newitemid, $restorefiles);
         }
 

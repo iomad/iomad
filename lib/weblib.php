@@ -1448,6 +1448,25 @@ function format_module_intro($module, $activity, $cmid, $filter=true) {
 }
 
 /**
+ * Removes the usage of Moodle files from a text.
+ *
+ * In some rare cases we need to re-use a text that already has embedded links
+ * to some files hosted within Moodle. But the new area in which we will push
+ * this content does not support files... therefore we need to remove those files.
+ *
+ * @param string $source The text
+ * @return string The stripped text
+ */
+function strip_pluginfile_content($source) {
+    $baseurl = '@@PLUGINFILE@@';
+    // Looking for something like < .* "@@pluginfile@@.*" .* >
+    $pattern = '$<[^<>]+["\']' . $baseurl . '[^"\']*["\'][^<>]*>$';
+    $stripped = preg_replace($pattern, '', $source);
+    // Use purify html to rebalence potentially mismatched tags and generally cleanup.
+    return purify_html($stripped);
+}
+
+/**
  * Legacy function, used for cleaning of old forum and glossary text only.
  *
  * @global object
@@ -1915,14 +1934,14 @@ function send_headers($contenttype, $cacheable = true) {
     }
 
     if ($cacheable) {
-        // Allow caching on "back" (but not on normal clicks)
-        @header('Cache-Control: private, pre-check=0, post-check=0, max-age=0');
+        // Allow caching on "back" (but not on normal clicks).
+        @header('Cache-Control: private, pre-check=0, post-check=0, max-age=0, no-transform');
         @header('Pragma: no-cache');
         @header('Expires: ');
     } else {
-        // Do everything we can to always prevent clients and proxies caching
+        // Do everything we can to always prevent clients and proxies caching.
         @header('Cache-Control: no-store, no-cache, must-revalidate');
-        @header('Cache-Control: post-check=0, pre-check=0', false);
+        @header('Cache-Control: post-check=0, pre-check=0, no-transform', false);
         @header('Pragma: no-cache');
         @header('Expires: Mon, 20 Aug 1969 09:23:00 GMT');
         @header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
@@ -2446,7 +2465,8 @@ function redirect($url, $message='', $delay=-1) {
     // prevent debug errors - make sure context is properly initialised
     if ($PAGE) {
         $PAGE->set_context(null);
-        $PAGE->set_pagelayout('redirect');  // No header and footer needed
+        $PAGE->set_pagelayout('redirect');  // No header and footer needed.
+        $PAGE->set_title(get_string('pageshouldredirect', 'moodle'));
     }
 
     if ($url instanceof moodle_url) {

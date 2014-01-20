@@ -2016,12 +2016,10 @@ class accesslib_testcase extends advanced_testcase {
             $userids = array_slice($userids, 0, 5);
         }
 
-        // Random time!
-        //srand(666);
-        foreach($userids as $userid) { // no guest or deleted
-            // each user gets 0-10 random roles
+        foreach ($userids as $userid) { // No guest or deleted.
+            // Each user gets 0-10 random roles.
             $rcount = rand(0, 10);
-            for($j=0; $j<$rcount; $j++) {
+            for ($j=0; $j<$rcount; $j++) {
                 $roleid = $roles[rand(0, count($roles)-1)];
                 $contextid = $contexts[rand(0, count($contexts)-1)]->id;
                 role_assign($roleid, $userid, $contextid);
@@ -2497,6 +2495,41 @@ class accesslib_testcase extends advanced_testcase {
             $perms2 = array_values($DB->get_records('role_capabilities', array('capability'=>'mod/page:addinstance', 'roleid'=>$role->id), 'contextid, permission', 'contextid, permission'));
         }
         $this->assertEquals($perms1, $perms2);
+    }
+
+    /**
+     * Tests reset_role_capabilities function.
+     */
+    public function test_reset_role_capabilities() {
+        global $DB;
+        $this->resetAfterTest(true);
+        $generator = $this->getDataGenerator();
+
+        // Create test course and user, enrol one in the other.
+        $course = $generator->create_course();
+        $user = $generator->create_user();
+        $roleid = $DB->get_field('role', 'id', array('shortname' => 'student'), MUST_EXIST);
+        $generator->enrol_user($user->id, $course->id, $roleid);
+
+        // Change student role so it DOES have 'mod/forum:addinstance'.
+        $systemcontext = context_system::instance();
+        assign_capability('mod/forum:addinstance', CAP_ALLOW, $roleid, $systemcontext->id);
+
+        // Override course so it does NOT allow students 'mod/forum:viewdiscussion'.
+        $coursecontext = context_course::instance($course->id);
+        assign_capability('mod/forum:viewdiscussion', CAP_PREVENT, $roleid, $coursecontext->id);
+
+        // Check expected capabilities so far.
+        $this->assertTrue(has_capability('mod/forum:addinstance', $coursecontext, $user));
+        $this->assertFalse(has_capability('mod/forum:viewdiscussion', $coursecontext, $user));
+
+        // Oops, allowing student to add forums was a mistake, let's reset the role.
+        reset_role_capabilities($roleid);
+
+        // Check new expected capabilities - role capabilities should have been reset,
+        // while the override at course level should remain.
+        $this->assertFalse(has_capability('mod/forum:addinstance', $coursecontext, $user));
+        $this->assertFalse(has_capability('mod/forum:viewdiscussion', $coursecontext, $user));
     }
 }
 

@@ -261,10 +261,11 @@ abstract class moodleform {
         $submission = array();
         if ($method == 'post') {
             if (!empty($_POST)) {
-                $submission = $this->_get_post_params();
+                $submission = $_POST;
             }
         } else {
-            $submission = array_merge_recursive($_GET, $this->_get_post_params()); // Emulate handling of parameters in xxxx_param().
+            $submission = $_GET;
+            merge_query_params($submission, $_POST); // Emulate handling of parameters in xxxx_param().
         }
 
         // following trick is needed to enable proper sesskey checks when using GET forms
@@ -284,34 +285,12 @@ abstract class moodleform {
     }
 
     /**
-     * Internal method. Gets all POST variables, bypassing max_input_vars limit if needed.
-     *
-     * @return array All POST variables as an array, in the same format as $_POST.
+     * Internal method - should not be used anywhere.
+     * @deprecated since 2.6
+     * @return array $_POST.
      */
     protected function _get_post_params() {
-        $enctype = $this->_form->getAttribute('enctype');
-        $max = (int)ini_get('max_input_vars');
-
-        if (empty($max) || count($_POST, COUNT_RECURSIVE) < $max || (!empty($enctype) && $enctype == 'multipart/form-data')) {
-            return $_POST;
-        }
-
-        // Large POST request with enctype supported by php://input.
-        // Parse php://input in chunks to bypass max_input_vars limit, which also applies to parse_str().
-        $allvalues = array();
-        $values = array();
-        $str = file_get_contents("php://input");
-        $delim = '&';
-
-        $fun = create_function('$p', 'return implode("'.$delim.'", $p);');
-        $chunks = array_map($fun, array_chunk(explode($delim, $str), $max));
-
-        foreach ($chunks as $chunk) {
-            parse_str($chunk, $values);
-            $allvalues = array_merge_recursive($allvalues, $values);
-        }
-
-        return $allvalues;
+        return $_POST;
     }
 
     /**
@@ -1028,13 +1007,16 @@ abstract class moodleform {
      *
      * @param array $elementobjs Array of elements or groups of elements that are to be repeated
      * @param int $repeats no of times to repeat elements initially
-     * @param array $options Array of options to apply to elements. Array keys are element names.
-     *     This is an array of arrays. The second sets of keys are the option types for the elements :
-     *         'default' - default value is value
-     *         'type' - PARAM_* constant is value
-     *         'helpbutton' - helpbutton params array is value
-     *         'disabledif' - last three moodleform::disabledIf()
-     *         params are value as an array
+     * @param array $options a nested array. The first array key is the element name.
+     *    the second array key is the type of option to set, and depend on that option,
+     *    the value takes different forms.
+     *         'default'    - default value to set. Can include '{no}' which is replaced by the repeat number.
+     *         'type'       - PARAM_* type.
+     *         'helpbutton' - array containing the helpbutton params.
+     *         'disabledif' - array containing the disabledIf() arguments after the element name.
+     *         'rule'       - array containing the addRule arguments after the element name.
+     *         'expanded'   - whether this section of the form should be expanded by default. (Name be a header element.)
+     *         'advanced'   - whether this element is hidden by 'Show more ...'.
      * @param string $repeathiddenname name for hidden element storing no of repeats in this form
      * @param string $addfieldsname name for button to add more fields
      * @param int $addfieldsno how many fields to add at a time

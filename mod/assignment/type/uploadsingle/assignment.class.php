@@ -136,7 +136,7 @@ class assignment_uploadsingle extends assignment_base {
         $context = context_module::instance($this->cm->id);
 
         // Get ids of users enrolled in the given course.
-        list($enroledsql, $params) = get_enrolled_sql($context, 'mod/assignment:view', $groupid);
+        list($enroledsql, $params) = get_enrolled_sql($context, 'mod/assignment:submit', $groupid);
         $params['assignmentid'] = $this->cm->instance;
 
         // Get ids of users enrolled in the given course.
@@ -378,7 +378,7 @@ class assignment_uploadsingle extends assignment_base {
                 foreach ($files as $file) {
                     $filename = $file->get_filename();
                     $mimetype = $file->get_mimetype();
-                    $link = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/mod_assignment', 'submission/'.$submission->id.'/'.$filename);
+                    $link = moodle_url::make_pluginfile_url($this->context->id, 'mod_assignment', 'submission', $submission->id, $file->get_filepath(), $filename);
                     $filenode->add($filename, $link, navigation_node::TYPE_SETTING, null, null, new pix_icon(file_file_icon($file), ''));
                 }
             }

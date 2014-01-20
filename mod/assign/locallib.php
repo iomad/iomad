@@ -428,8 +428,8 @@ class assign {
                 // Save changes button.
                 $action = 'grade';
                 if ($this->process_save_grade($mform)) {
-                    $message = get_string('gradingchangessaved', 'assign');
-                    $action = 'savegradingresult';
+                    $action = 'redirect';
+                    $nextpageparams['action'] = 'savegradingresult';
                 }
             } else {
                 // Cancel button.
@@ -465,6 +465,7 @@ class assign {
             redirect($nextpageurl);
             return;
         } else if ($action == 'savegradingresult') {
+            $message = get_string('gradingchangessaved', 'assign');
             $o .= $this->view_savegrading_result($message);
         } else if ($action == 'quickgradingresult') {
             $mform = null;
@@ -785,30 +786,37 @@ class assign {
             $event = new stdClass();
 
             $params = array('modulename'=>'assign', 'instance'=>$instance->id);
-            $event->id = $DB->get_field('event',
-                                        'id',
-                                        $params);
+            $event->id = $DB->get_field('event', 'id', $params);
+            $event->name = $instance->name;
+            $event->timestart = $instance->duedate;
+
+            // Convert the links to pluginfile. It is a bit hacky but at this stage the files
+            // might not have been saved in the module area yet.
+            $intro = $instance->intro;
+            if ($draftid = file_get_submitted_draft_itemid('introeditor')) {
+                $intro = file_rewrite_urls_to_pluginfile($intro, $draftid);
+            }
+
+            // We need to remove the links to files as the calendar is not ready
+            // to support module events with file areas.
+            $intro = strip_pluginfile_content($intro);
+            $event->description = array(
+                'text' => $intro,
+                'format' => $instance->introformat
+            );
 
             if ($event->id) {
-                $event->name        = $instance->name;
-                $event->description = format_module_intro('assign', $instance, $coursemoduleid);
-                $event->timestart   = $instance->duedate;
-
                 $calendarevent = calendar_event::load($event->id);
                 $calendarevent->update($event);
             } else {
-                $event = new stdClass();
-                $event->name        = $instance->name;
-                $event->description = format_module_intro('assign', $instance, $coursemoduleid);
+                unset($event->id);
                 $event->courseid    = $instance->course;
                 $event->groupid     = 0;
                 $event->userid      = 0;
                 $event->modulename  = 'assign';
                 $event->instance    = $instance->id;
                 $event->eventtype   = 'due';
-                $event->timestart   = $instance->duedate;
                 $event->timeduration = 0;
-
                 calendar_event::create($event);
             }
         } else {
@@ -1935,11 +1943,12 @@ class assign {
             return $o;
         }
 
-        $strsectionname  = get_string('sectionname', 'format_'.$course->format);
+        $strsectionname = '';
         $usesections = course_format_uses_sections($course->format);
         $modinfo = get_fast_modinfo($course);
 
         if ($usesections) {
+            $strsectionname = get_string('sectionname', 'format_'.$course->format);
             $sections = $modinfo->get_section_info_all();
         }
         $courseindexsummary = new assign_course_index_summary($usesections, $strsectionname);
@@ -2765,7 +2774,9 @@ class assign {
                                                   $this->get_course_module()->id,
                                                   $this->get_return_action(),
                                                   $this->get_return_params(),
-                                                  true);
+                                                  true,
+                                                  $useridlistid,
+                                                  $rownum);
 
             $o .= $this->get_renderer()->render($history);
         }
@@ -3451,7 +3462,9 @@ class assign {
                                                       $this->get_course_module()->id,
                                                       $this->get_return_action(),
                                                       $this->get_return_params(),
-                                                      false);
+                                                      false,
+                                                      0,
+                                                      0);
 
                 $o .= $this->get_renderer()->render($history);
             }
@@ -3954,7 +3967,7 @@ class assign {
 
         $graders = array();
         if (groups_get_activity_groupmode($this->get_course_module()) == SEPARATEGROUPS) {
-            if ($groups = groups_get_all_groups($this->get_course()->id, $userid)) {
+            if ($groups = groups_get_all_groups($this->get_course()->id, $userid, $this->get_course_module()->groupingid)) {
                 foreach ($groups as $group) {
                     foreach ($potentialgraders as $grader) {
                         if ($grader->id == $userid) {
@@ -4089,6 +4102,7 @@ class assign {
 
         $info = new stdClass();
         if ($blindmarking) {
+            $userfrom = clone($userfrom);
             $info->username = get_string('participant', 'assign') . ' ' . $uniqueidforuser;
             $userfrom->firstname = get_string('participant', 'assign');
             $userfrom->lastname = $uniqueidforuser;

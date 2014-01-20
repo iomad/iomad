@@ -1293,13 +1293,13 @@ function xmldb_main_upgrade($oldversion) {
     }
 
     if ($oldversion < 2012103003.00) {
-        // Fix uuid field in event table to match RFC-2445 UID property
+        // Fix uuid field in event table to match RFC-2445 UID property.
         $table = new xmldb_table('event');
         $field = new xmldb_field('uuid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'visible');
-        if ($dbman->field_exists($table, $field)) {
-            // Changing precision of field uuid on table event to (255)
-            $dbman->change_field_precision($table, $field);
-        }
+        // The column already exists, so make sure there are no nulls (crazy mysql).
+        $DB->set_field_select('event', 'uuid', '', "uuid IS NULL");
+        // Changing precision of field uuid on table event to (255).
+        $dbman->change_field_precision($table, $field);
         // Main savepoint reached
         upgrade_main_savepoint(true, 2012103003.00);
     }
@@ -2266,6 +2266,61 @@ function xmldb_main_upgrade($oldversion) {
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2013051402.12);
     }
+
+    if ($oldversion < 2013051403.02) {
+
+        // Delete notes of deleted courses.
+        $sql = "DELETE FROM {post}
+                 WHERE NOT EXISTS (SELECT {course}.id FROM {course}
+                                    WHERE {course}.id = {post}.courseid)
+                       AND {post}.module = ?";
+        $DB->execute($sql, array('notes'));
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2013051403.02);
+    }
+
+    if ($oldversion < 2013051403.09) {
+        // Purge stored passwords from config_log table, ideally this should be in each plugin
+        // but that would complicate backporting...
+        $items = array(
+            'core/cronremotepassword', 'core/proxypassword', 'core/smtppass', 'core/jabberpassword',
+            'enrol_database/dbpass', 'enrol_ldap/bind_pw', 'url/secretphrase');
+        foreach ($items as $item) {
+            list($plugin, $name) = explode('/', $item);
+            $sqlcomparevalue =  $DB->sql_compare_text('value');
+            $sqlcompareoldvalue = $DB->sql_compare_text('oldvalue');
+            if ($plugin === 'core') {
+                $sql = "UPDATE {config_log}
+                           SET value = :value
+                         WHERE name = :name AND plugin IS NULL AND $sqlcomparevalue <> :empty";
+                $params = array('value' => '********', 'name' => $name, 'empty' => '');
+                $DB->execute($sql, $params);
+
+                $sql = "UPDATE {config_log}
+                           SET oldvalue = :value
+                         WHERE name = :name AND plugin IS NULL AND $sqlcompareoldvalue <> :empty";
+                $params = array('value' => '********', 'name' => $name, 'empty' => '');
+                $DB->execute($sql, $params);
+
+            } else {
+                $sql = "UPDATE {config_log}
+                           SET value = :value
+                         WHERE name = :name AND plugin = :plugin AND $sqlcomparevalue <> :empty";
+                $params = array('value' => '********', 'name' => $name, 'plugin' => $plugin, 'empty' => '');
+                $DB->execute($sql, $params);
+
+                $sql = "UPDATE {config_log}
+                           SET oldvalue = :value
+                         WHERE name = :name AND plugin = :plugin AND  $sqlcompareoldvalue <> :empty";
+                $params = array('value' => '********', 'name' => $name, 'plugin' => $plugin, 'empty' => '');
+                $DB->execute($sql, $params);
+            }
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2013051403.09);
+    }
+
 
     return true;
 }

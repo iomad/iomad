@@ -173,6 +173,9 @@ class tool_behat_testcase extends advanced_testcase {
         // directories values.
         $this->assertContains($CFG->dirroot . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'behat' . DIRECTORY_SEPARATOR . 'features', $contents);
 
+        // If it was empty should be filled by behat_config_manager::get_config_file_contents().
+        $this->assertNotNull($CFG->behat_wwwroot);
+
         // Not quoted strings.
         $this->assertContains('micarro: /me/lo/robaron', $contents);
         $this->assertContains('class: behat_init_context', $contents);
@@ -183,6 +186,8 @@ class tool_behat_testcase extends advanced_testcase {
         // Lists.
         $this->assertContains('- feature1', $contents);
         $this->assertContains('- feature3', $contents);
+
+        unset($CFG->behat_wwwroot);
     }
 
 }

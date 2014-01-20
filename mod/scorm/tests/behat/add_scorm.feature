@@ -1,4 +1,4 @@
-@mod @mod_scorm
+@mod @mod_scorm @_only_local
 Feature: Add scorm activity
   In order to let students access a scorm package
   As a teacher
@@ -35,4 +35,6 @@ Feature: Add scorm activity
     And I follow "Awesome SCORM package"
     And I should see "Normal"
     And I press "Enter"
+    And I wait "5" seconds
     And I should see "Golf Explained"
+    And I follow "Course 1"

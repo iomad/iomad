@@ -890,6 +890,11 @@ class core_renderer extends renderer_base {
                 $performanceinfo = $perf['html'];
             }
         }
+
+        // We always want performance data when running a performance test, even if the user is redirected to another page.
+        if (MDL_PERF_TEST && strpos($footer, $this->unique_performance_info_token) === false) {
+            $footer = $this->unique_performance_info_token . $footer;
+        }
         $footer = str_replace($this->unique_performance_info_token, $performanceinfo, $footer);
 
         $footer = str_replace($this->unique_end_html_token, $this->page->requires->get_end_code(), $footer);
@@ -1241,7 +1246,6 @@ class core_renderer extends renderer_base {
      * @return string the HTML to be output.
      */
     public function blocks_for_region($region) {
-        $region = $this->page->apply_theme_region_manipulations($region);
         $blockcontents = $this->page->blocks->get_content_for_region($region, $this);
         $blocks = $this->page->blocks->get_blocks_for_region($region);
         $lastblock = null;
@@ -1274,7 +1278,12 @@ class core_renderer extends renderer_base {
      */
     public function block_move_target($target, $zones, $previous) {
         if ($previous == null) {
-            $position = get_string('moveblockbefore', 'block', $zones[0]);
+            if (empty($zones)) {
+                // There are no zones, probably because there are no blocks.
+                $position = get_string('moveblockhere', 'block');
+            } else {
+                $position = get_string('moveblockbefore', 'block', $zones[0]);
+            }
         } else {
             $position = get_string('moveblockafter', 'block', $previous);
         }
@@ -3063,8 +3072,8 @@ EOD;
             'data-blockregion' => $displayregion,
             'data-droptarget' => '1'
         );
-        if ($this->page->blocks->region_has_content($region, $this)) {
-            $content = $this->blocks_for_region($region);
+        if ($this->page->blocks->region_has_content($displayregion, $this)) {
+            $content = $this->blocks_for_region($displayregion);
         } else {
             $content = '';
         }
@@ -3350,16 +3359,16 @@ class core_renderer_ajax extends core_renderer {
      */
     public function header() {
         // MDL-39810: IE doesn't support JSON MIME type if version < 8 or when it runs in Compatibility View.
-        $supports_json_contenttype = !check_browser_version('MSIE') ||
+        $supportsjsoncontenttype = !check_browser_version('MSIE') ||
                 (check_browser_version('MSIE', 8) &&
                     !(preg_match("/MSIE 7.0/", $_SERVER['HTTP_USER_AGENT']) && preg_match("/Trident\/([0-9\.]+)/", $_SERVER['HTTP_USER_AGENT'])));
         // unfortunately YUI iframe upload does not support application/json
         if (!empty($_FILES)) {
             @header('Content-type: text/plain; charset=utf-8');
-            if (!$supports_json_contenttype) {
+            if (!$supportsjsoncontenttype) {
                 @header('X-Content-Type-Options: nosniff');
             }
-        } else if (!$supports_json_contenttype) {
+        } else if (!$supportsjsoncontenttype) {
             @header('Content-type: text/plain; charset=utf-8');
             @header('X-Content-Type-Options: nosniff');
         } else {

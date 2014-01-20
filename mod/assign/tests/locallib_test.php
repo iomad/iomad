@@ -274,15 +274,45 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
     public function test_update_calendar() {
         global $DB;
 
-        $now = time();
         $this->setUser($this->editingteachers[0]);
-        $assign = $this->create_instance(array('duedate'=>$now));
+        $userctx = context_user::instance($this->editingteachers[0]->id)->id;
+
+        // Hack to pretend that there was an editor involved. We need both $_POST and $_REQUEST, and a sesskey.
+        $draftid = file_get_unused_draft_itemid();
+        $_REQUEST['introeditor'] = $draftid;
+        $_POST['introeditor'] = $draftid;
+        $_POST['sesskey'] = sesskey();
+
+        // Write links to a draft area.
+        $fakearealink1 = file_rewrite_pluginfile_urls('<a href="@@PLUGINFILE@@/pic.gif">link</a>', 'draftfile.php', $userctx,
+            'user', 'draft', $draftid);
+        $fakearealink2 = file_rewrite_pluginfile_urls('<a href="@@PLUGINFILE@@/pic.gif">new</a>', 'draftfile.php', $userctx,
+            'user', 'draft', $draftid);
+
+        // Create a new assignment with links to a draft area.
+        $now = time();
+        $assign = $this->create_instance(array(
+            'duedate' => $now,
+            'intro' => $fakearealink1,
+            'introformat' => FORMAT_HTML
+        ));
 
         // See if there is an event in the calendar.
         $params = array('modulename'=>'assign', 'instance'=>$assign->get_instance()->id);
-        $id = $DB->get_field('event', 'id', $params);
+        $event = $DB->get_record('event', $params);
+        $this->assertNotEmpty($event);
+        $this->assertSame('link', $event->description);     // The pluginfile links are removed.
 
-        $this->assertEquals(false, empty($id));
+        // Make sure the same works when updating the assignment.
+        $instance = $assign->get_instance();
+        $instance->instance = $instance->id;
+        $instance->intro = $fakearealink2;
+        $instance->introformat = FORMAT_HTML;
+        $assign->update_instance($instance);
+        $params = array('modulename' => 'assign', 'instance' => $assign->get_instance()->id);
+        $event = $DB->get_record('event', $params);
+        $this->assertNotEmpty($event);
+        $this->assertSame('new', $event->description);     // The pluginfile links are removed.
     }
 
     public function test_update_instance() {
@@ -609,27 +639,37 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
     public function test_get_graders() {
         $this->create_extra_users();
         $this->setUser($this->editingteachers[0]);
-        $assign = $this->create_instance();
 
+        // Create an assignment with no groups.
+        $assign = $this->create_instance();
         $this->assertCount(self::DEFAULT_TEACHER_COUNT +
                            self::DEFAULT_EDITING_TEACHER_COUNT +
                            self::EXTRA_TEACHER_COUNT +
                            self::EXTRA_EDITING_TEACHER_COUNT,
                            $assign->testable_get_graders($this->students[0]->id));
 
-        $assign = $this->create_instance();
         // Force create an assignment with SEPARATEGROUPS.
+        $data = new stdClass();
+        $data->courseid = $this->course->id;
+        $data->name = 'Grouping';
+        $groupingid = groups_create_grouping($data);
+        groups_assign_grouping($groupingid, $this->groups[0]->id);
+
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
         $params = array('course'=>$this->course->id);
         $instance = $generator->create_instance($params);
         $cm = get_coursemodule_from_instance('assign', $instance->id);
         set_coursemodule_groupmode($cm->id, SEPARATEGROUPS);
         $cm->groupmode = SEPARATEGROUPS;
+        $cm->groupingid = $groupingid;
         $context = context_module::instance($cm->id);
         $assign = new testable_assign($context, $cm, $this->course);
 
         $this->setUser($this->students[1]);
         $this->assertCount(4, $assign->testable_get_graders($this->students[0]->id));
+        // Note the second student is in a group that is not in the grouping.
+        // This means that we get all graders that are not in a group in the grouping.
+        $this->assertCount(10, $assign->testable_get_graders($this->students[1]->id));
     }
 
     public function test_group_members_only() {
