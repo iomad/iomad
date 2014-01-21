@@ -17,7 +17,7 @@
 /**
  * Cohorts steps definitions.
  *
- * @package    core
+ * @package    core_cohort
  * @category   test
  * @copyright  2013 David Monllaó
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -32,7 +32,7 @@ use Behat\Behat\Context\Step\Given as Given;
 /**
  * Steps definitions for cohort actions.
  *
- * @package    core
+ * @package    core_cohort
  * @category   test
  * @copyright  2013 David Monllaó
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -54,7 +54,7 @@ class behat_cohort extends behat_base {
         $userid = $DB->get_field('user', 'id', array('username' => $username));
 
         $steps = array(
-            new Given('I click on "' . get_string('assign', 'cohort') . '" "link" in the "' . $this->escape($cohortidnumber) . '" table row'),
+            new Given('I click on "' . get_string('assign', 'cohort') . '" "link" in the "' . $this->escape($cohortidnumber) . '" "table_row"'),
             new Given('I select "' . $userid . '" from "' . get_string('potusers', 'cohort') . '"'),
             new Given('I press "' . get_string('add') . '"'),
             new Given('I press "' . get_string('backtocohorts', 'cohort') . '"')

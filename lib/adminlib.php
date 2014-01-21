@@ -1660,9 +1660,19 @@ abstract class admin_setting {
             rebuild_course_cache(0, true);
         }
 
-        add_to_config_log($name, $oldvalue, $value, $this->plugin);
+        $this->add_to_config_log($name, $oldvalue, $value);
 
         return true; // BC only
+    }
+
+    /**
+     * Log config changes if necessary.
+     * @param string $name
+     * @param string $oldvalue
+     * @param string $value
+     */
+    protected function add_to_config_log($name, $oldvalue, $value) {
+        add_to_config_log($name, $oldvalue, $value, $this->plugin);
     }
 
     /**
@@ -2159,6 +2169,22 @@ class admin_setting_configpasswordunmask extends admin_setting_configtext {
      */
     public function __construct($name, $visiblename, $description, $defaultsetting) {
         parent::__construct($name, $visiblename, $description, $defaultsetting, PARAM_RAW, 30);
+    }
+
+    /**
+     * Log config changes if necessary.
+     * @param string $name
+     * @param string $oldvalue
+     * @param string $value
+     */
+    protected function add_to_config_log($name, $oldvalue, $value) {
+        if ($value !== '') {
+            $value = '********';
+        }
+        if ($oldvalue !== '' and $oldvalue !== null) {
+            $oldvalue = '********';
+        }
+        parent::add_to_config_log($name, $oldvalue, $value);
     }
 
     /**
@@ -6741,11 +6767,8 @@ function db_replace($search, $replace) {
 
         if ($columns = $DB->get_columns($table)) {
             $DB->set_debug(true);
-            foreach ($columns as $column => $data) {
-                if (in_array($data->meta_type, array('C', 'X'))) {  // Text stuff only
-                    //TODO: this should be definitively moved to DML driver to do the actual replace, this is not going to work for MSSQL and Oracle...
-                    $DB->execute("UPDATE {".$table."} SET $column = REPLACE($column, ?, ?)", array($search, $replace));
-                }
+            foreach ($columns as $column) {
+                $DB->replace_all_text($table, $column, $search, $replace);
             }
             $DB->set_debug(false);
         }
@@ -6775,6 +6798,8 @@ function db_replace($search, $replace) {
         $function($search, $replace);
         echo $OUTPUT->notification("...finished", 'notifysuccess');
     }
+
+    purge_all_caches();
 
     return true;
 }

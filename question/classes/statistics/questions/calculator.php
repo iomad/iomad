@@ -250,9 +250,8 @@ class calculator {
         global $DB;
 
         $timemodified = time() - self::TIME_TO_CACHE;
-        return $DB->get_field_select('question_statistics', 'timemodified', 'hashcode = ? AND timemodified > ? '.
-                                                          'ORDER BY timemodified DESC LIMIT 1',
-                                     array($qubaids->get_hash_code(), $timemodified));
+        return $DB->get_field_select('question_statistics', 'timemodified', 'hashcode = ? AND timemodified > ?',
+                                     array($qubaids->get_hash_code(), $timemodified), IGNORE_MULTIPLE);
     }
 
     /** @var integer Time after which statistics are automatically recomputed. */
