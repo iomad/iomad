@@ -639,9 +639,9 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $id))) {
                 $departmentid = $userhierarchylevel;
 
                 $allowedusers = company::get_recursive_department_users($departmentid);
-                $allowedlist = "";
+                $allowedlist = '0';
                 foreach ($allowedusers as $alloweduser) {
-                    if (empty($allowedlist)) {
+                    if ($allowedlist == '0') {
                         $allowedlist = $alloweduser->userid;
                     } else {
                         $allowedlist .= ', '.$alloweduser->userid;
