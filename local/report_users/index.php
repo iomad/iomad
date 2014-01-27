@@ -69,10 +69,6 @@ $systemcontext = get_context_instance(CONTEXT_SYSTEM);
 require_login(); // Adds to $PAGE, creates $OUTPUT.
 require_capability('local/report_completion:view', $systemcontext);
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
-
-
 // Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('report_users_title', 'local_report_users');
@@ -86,6 +82,9 @@ company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 // Print the page header.
 $blockpage = new blockpage($PAGE, $OUTPUT, 'report_users', 'local', 'report_users_title');
 $blockpage->setup();
+
+// Set the companyid
+$companyid = iomad::get_my_companyid($systemcontext);
 
 $blockpage->display_header();
 
