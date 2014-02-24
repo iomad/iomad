@@ -134,8 +134,8 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
     $clientlogo = '';
     $companycss = '';
     if ($companyid = iomad::is_company_user()) {
-        $context = get_context_instance(CONTEXT_SYSTEM);
-        if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'logo', 'itemid' => $companyid))) {
+        $context = context_system::instance();
+        if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
             foreach ($files as $file) {
                 if ($file->filename != '.') {
                     $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/logo/$companyid/{$file->filename}";
