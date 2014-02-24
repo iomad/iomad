@@ -132,6 +132,7 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
         $logo = $CFG->wwwroot.'/theme/iomad/pix/iomad_logo.png';
     }
     $clientlogo = '';
+    $companycss = '';
     if ($companyid = iomad::is_company_user()) {
         $context = get_context_instance(CONTEXT_SYSTEM);
         if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'logo', 'itemid' => $companyid))) {
@@ -139,6 +140,14 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
                 if ($file->filename != '.') {
                     $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/logo/$companyid/{$file->filename}";
                 }
+            }
+        }
+        company_user::load_company();
+        $companycss = ".header, .navbar { background: [[company:bgcolor_header]]; }
+                       .block .content { background: [[company:bgcolor_content]]; }";
+        foreach($USER->company as $key => $value) {
+            if (isset($value)) {
+                $companycss = preg_replace("/\[\[company:$key\]\]/", $value, $companycss);
             }
         }
     }
@@ -156,6 +165,25 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
         $return->footnote = '<div class="footnote text-center">'.$page->theme->settings->footnote.'</div>';
     }
 
+    $return->companycss = $companycss;
+
+    return $return;
+}
+
+/**
+ * All theme functions should start with theme_iomad_
+ * @deprecated since 2.5.1
+ */
+function iomad_process_css() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
+}
+
+/**
+ * All theme functions should start with theme_iomad_
+ * @deprecated since 2.5.1
+ */
+function iomad_set_logo() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
 }
 
 // Prepend the additionalhtmlhead with the company css sheet.
