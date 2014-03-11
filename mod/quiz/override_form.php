@@ -27,6 +27,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->dirroot . '/mod/quiz/mod_form.php');
 
 
 /**
@@ -157,10 +158,15 @@ class quiz_override_form extends moodleform {
                 }
 
                 $userchoices = array();
+                $canviewemail = in_array('email', get_extra_user_fields($this->context));
                 foreach ($users as $id => $user) {
                     if (empty($invalidusers[$id]) || (!empty($override) &&
                             $id == $override->userid)) {
-                        $userchoices[$id] = fullname($user) . ', ' . $user->email;
+                        if ($canviewemail) {
+                            $userchoices[$id] = fullname($user) . ', ' . $user->email;
+                        } else {
+                            $userchoices[$id] = fullname($user);
+                        }
                     }
                 }
                 unset($users);
@@ -184,11 +190,11 @@ class quiz_override_form extends moodleform {
 
         // Open and close dates.
         $mform->addElement('date_time_selector', 'timeopen',
-                get_string('quizopen', 'quiz'), array('optional' => true));
+                get_string('quizopen', 'quiz'), mod_quiz_mod_form::$datefieldoptions);
         $mform->setDefault('timeopen', $this->quiz->timeopen);
 
         $mform->addElement('date_time_selector', 'timeclose',
-                get_string('quizclose', 'quiz'), array('optional' => true));
+                get_string('quizclose', 'quiz'), mod_quiz_mod_form::$datefieldoptions);
         $mform->setDefault('timeclose', $this->quiz->timeclose);
 
         // Time limit.

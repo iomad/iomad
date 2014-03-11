@@ -1,4 +1,4 @@
-@core @core_badges @_only_local
+@core @core_badges @_only_local @_file_upload
 Feature: Award badges
   In order to award badges to users for their achievements
   As an admin
@@ -236,6 +236,7 @@ Feature: Award badges
     And I follow "Home"
     And I follow "Course 1"
     And I press "Mark as complete: Test assignment name"
+    And I wait "2" seconds
     And I log out
     And I log in as "admin"
     # We can't wait for cron to happen, so the admin manually triggers it.

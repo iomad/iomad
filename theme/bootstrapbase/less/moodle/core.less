@@ -29,11 +29,7 @@
     width:100%;
 }
 
-.fluid-span (@columns) {
-    width: (@fluidGridColumnWidth * @columns) + (@fluidGridGutterWidth * (@columns - 1));
-    *width: (@fluidGridColumnWidth * @columns) + (@fluidGridGutterWidth * (@columns - 1)) - (.5 / @gridRowWidth * 100 * 1%);
-}
-
+// grid.less implied.
 .empty-region-side-post.used-region-side-pre #region-main.span8 {
     /** increase the span size by 1 **/
     .fluid-span(9);
@@ -118,6 +114,9 @@ a.dimmed_text:visited,
 .green,
 .notifysuccess {
     color: @successText;
+}
+.highlight {
+    background: @infoBackground;
 }
 .reportlink {
     text-align: right;
@@ -524,6 +523,13 @@ a.skip:active {
     margin-bottom: -2000px;
     padding-bottom: 2000px;
 }
+.dir-rtl {
+    .loginbox.twocolumns .loginpanel,
+    .loginbox.twocolumns .signuppanel {
+        float:right;
+    }
+}
+
 .loginbox .potentialidp .smallicon {
     vertical-align: text-bottom;
     margin: 0 .3em;
@@ -1672,6 +1678,12 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .choosercontainer #chooseform .submitbuttons {
     margin: 0.7em 0;
     text-align: center;
+}
+/* Fixed for safari browser on iPhone4S with ios7.*/
+@media (max-height: 639px) {
+    .ios.safari .choosercontainer #chooseform .submitbuttons {
+        padding: 45px 0;
+    }
 }
 .choosercontainer #chooseform .submitbuttons input {
     min-width: 100px;

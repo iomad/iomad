@@ -1196,6 +1196,7 @@ function quiz_get_review_options($quiz, $attempt, $context) {
         $options->marks = question_display_options::MARK_AND_MAX;
         $options->feedback = question_display_options::VISIBLE;
         $options->numpartscorrect = question_display_options::VISIBLE;
+        $options->manualcomment = question_display_options::VISIBLE;
         $options->generalfeedback = question_display_options::VISIBLE;
         $options->rightanswer = question_display_options::VISIBLE;
         $options->overallfeedback = question_display_options::VISIBLE;
@@ -1637,7 +1638,9 @@ function quiz_groups_group_deleted_handler($event) {
               FROM {quiz_overrides} o
               JOIN {quiz} quiz ON quiz.id = o.quiz
          LEFT JOIN {groups} grp ON grp.id = o.groupid
-             WHERE quiz.course = :courseid AND grp.id IS NULL";
+             WHERE quiz.course = :courseid
+               AND o.groupid IS NOT NULL
+               AND grp.id IS NULL";
     $params = array('courseid'=>$event->courseid);
     $records = $DB->get_records_sql_menu($sql, $params);
     if (!$records) {
@@ -1734,6 +1737,7 @@ class mod_quiz_display_options extends question_display_options {
         $options->overallfeedback = self::extract($quiz->reviewoverallfeedback, $when);
 
         $options->numpartscorrect = $options->feedback;
+        $options->manualcomment = $options->feedback;
 
         if ($quiz->questiondecimalpoints != -1) {
             $options->markdp = $quiz->questiondecimalpoints;
