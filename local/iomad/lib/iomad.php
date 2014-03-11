@@ -457,7 +457,7 @@ class iomad {
      *
      * Return array();
      **/
-    public static function get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid) {
+    public static function get_user_sqlsearch($params, $idlist='', $sort, $dir, $departmentid) {
         global $DB, $CFG;
 
         $sqlsort = " GROUP BY u.id, cc.timeenrolled, cc.timestarted, cc.timecompleted, d.name, gg.finalgrade";
@@ -652,7 +652,7 @@ class iomad {
 
         // Get the user details.
         if ($vantagefield = $DB->get_record('user_info_field', array('shortname' => 'VANTAGE'))) {
-            $countsql = "SELECT COUNT(u.id) ";
+            $countsql = "SELECT u.id ";
             $selectsql = "SELECT u.id,
                     u.firstname AS firstname,
                     u.lastname AS lastname,
@@ -670,7 +670,7 @@ class iomad {
 
                     WHERE $searchinfo->sqlsearch
                     AND tt.userid = u.id
-                    AND cc.course = :courseid
+                    AND cc.course = $courseid
                     AND u.id = cc.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
@@ -679,7 +679,7 @@ class iomad {
                     AND uid.fieldid = $vantagefield->id
                     $searchinfo->sqlsort ";
         } else {
-            $countsql = "SELECT COUNT(u.id) ";
+            $countsql = "SELECT u.id ";
             $selectsql = "SELECT u.id,
                     u.firstname AS firstname,
                     u.lastname AS lastname,
@@ -695,7 +695,7 @@ class iomad {
 
                     WHERE $searchinfo->sqlsearch
                     AND tt.userid = u.id
-                    AND cc.course = :courseid
+                    AND cc.course = $courseid
                     AND u.id = cc.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
@@ -706,7 +706,8 @@ class iomad {
 
         $searchinfo->searchparams['courseid'] = $courseid;
         $users = $DB->get_records_sql($selectsql.$fromsql, $searchinfo->searchparams, $page * $perpage, $perpage);
-        $numusers = $DB->count_records_sql($countsql.$fromsql, $searchinfo->searchparams);
+        $countusers = $DB->get_records_sql($countsql.$fromsql, $searchinfo->searchparams);
+        $numusers = count($countusers);
 
         $returnobj = new stdclass();
         $returnobj->users = $users;
