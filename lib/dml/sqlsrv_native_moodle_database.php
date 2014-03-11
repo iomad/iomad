@@ -130,6 +130,11 @@ class sqlsrv_native_moodle_database extends moodle_database {
      * @throws dml_connection_exception if error
      */
     public function connect($dbhost, $dbuser, $dbpass, $dbname, $prefix, array $dboptions=null) {
+        if ($prefix == '' and !$this->external) {
+            // Enforce prefixes for everybody but mysql.
+            throw new dml_exception('prefixcannotbeempty', $this->get_dbfamily());
+        }
+
         $driverstatus = $this->driver_installed();
 
         if ($driverstatus !== true) {
@@ -380,7 +385,7 @@ class sqlsrv_native_moodle_database extends moodle_database {
         if ($result) {
             while ($row = sqlsrv_fetch_array($result)) {
                 $tablename = reset($row);
-                if ($this->prefix !== '') {
+                if ($this->prefix !== false && $this->prefix !== '') {
                     if (strpos($tablename, $this->prefix) !== 0) {
                         continue;
                     }

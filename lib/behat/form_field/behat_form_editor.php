@@ -27,7 +27,7 @@
 
 use Behat\Mink\Element\NodeElement as NodeElement;
 
-require_once(__DIR__ . '/behat_form_field.php');
+require_once(__DIR__ . '/behat_form_textarea.php');
 
 /**
  * Moodle editor field.
@@ -38,7 +38,7 @@ require_once(__DIR__ . '/behat_form_field.php');
  * @copyright 2012 David Monllaó
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class behat_form_editor extends behat_form_field {
+class behat_form_editor extends behat_form_textarea {
 
     /**
      * Sets the value to a field.
@@ -58,6 +58,7 @@ class behat_form_editor extends behat_form_field {
                 if ($editorid = $this->get_editor_id()) {
 
                     // Set the value to the iframe and save it to the textarea.
+                    $value = str_replace('"', '\"', $value);
                     $this->session->executeScript('
                         tinyMCE.get("'.$editorid.'").setContent("' . $value . '");
                         tinyMCE.get("'.$editorid.'").save();

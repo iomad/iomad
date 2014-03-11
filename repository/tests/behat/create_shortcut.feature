@@ -1,10 +1,10 @@
-@core @core_filepicker @repository @repository_user @_only_local
+@core @core_filepicker @repository @repository_user @_only_local @_file_upload
 Feature: Create shortcuts
   In order to automatically synchronize copies of the file with the source
   As a teacher
   I need to be able to pick file as a shortcut
 
-  @javascript
+  @javascript @_bug_phantomjs
   Scenario: Upload a file as a copy and as a shortcut in filemanager
     Given the following "users" exists:
       | username | firstname | lastname | email |

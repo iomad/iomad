@@ -1,10 +1,10 @@
-@core @core_filepicker @_only_local
+@core @core_filepicker @_only_local @_file_upload
 Feature: A selected file can be cancelled
   In order to refine the file manager contents
   As a user
   I need to cancel a selected file
 
-  @javascript
+  @javascript @_bug_phantomjs
   Scenario: Cancel a selected recent file from being added to a folder
     Given the following "courses" exists:
       | fullname | shortname | category |

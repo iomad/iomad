@@ -870,6 +870,24 @@ class question_attempt {
     }
 
     /**
+     * If there is an autosaved step, convert it into a real save, so that it
+     * is preserved.
+     */
+    protected function convert_autosaved_step_to_real_step() {
+        if ($this->autosavedstep === null) {
+            return;
+        }
+
+        $laststep = end($this->steps);
+        if ($laststep !== $this->autosavedstep) {
+            throw new coding_exception('Cannot convert autosaved step to real step, since other steps have been added.');
+        }
+
+        $this->observer->notify_step_modified($this->autosavedstep, $this, key($this->steps));
+        $this->autosavedstep = null;
+    }
+
+    /**
      * Use a strategy to pick a variant.
      * @param question_variant_selection_strategy $variantstrategy a strategy.
      * @return int the selected variant.
@@ -1174,6 +1192,7 @@ class question_attempt {
      * @param int $userid the user to attribute the aciton to. (If not given, use the current user.)
      */
     public function finish($timestamp = null, $userid = null) {
+        $this->convert_autosaved_step_to_real_step();
         $this->process_action(array('-finish' => 1), $timestamp, $userid);
     }
 
@@ -1263,6 +1282,27 @@ class question_attempt {
             }
         }
         return array(null, null);
+    }
+
+    /**
+     * This is used by the manual grading code, particularly in association with
+     * validation. If there is a comment submitted in the request, then use that,
+     * otherwise use the latest comment for this question.
+     * @return number the current mark for this question.
+     * {@link get_fraction()} * {@link get_max_mark()}.
+     */
+    public function get_current_manual_comment() {
+        $comment = $this->get_submitted_var($this->get_behaviour_field_name('comment'), PARAM_RAW);
+        if (is_null($comment)) {
+            return $this->get_manual_comment();
+        } else {
+            $commentformat = $this->get_submitted_var(
+                    $this->get_behaviour_field_name('commentformat'), PARAM_INT);
+            if ($commentformat === null) {
+                $commentformat = FORMAT_HTML;
+            }
+            return array($comment, $commentformat);
+        }
     }
 
     /**

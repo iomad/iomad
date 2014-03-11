@@ -1,10 +1,10 @@
-@core @core_filepicker @_only_local
+@core @core_filepicker @_only_local @_file_upload
 Feature: Overwrite file feature
   In order to update an existing file
   As a user
   I need to pick the file with the same name and select to overwrite
 
-  @javascript
+  @javascript @_bug_phantomjs
   Scenario: Upload a file in filemanager and overwrite it
     Given the following "users" exists:
       | username | firstname | lastname | email |
