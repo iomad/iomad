@@ -52,9 +52,21 @@ class block_iomad_reports extends block_base {
                 $icon = '<img src="'.$imgsrc.'" alt="'.$name.'" /><br />';
 
                 // Report link html.
+                // $this->content->text .= '<div class="iomadlink">';
+                // $this->content->text .= "<a href=\"$url\">" . $icon . $name. "</a>";
+                // $this->content->text .= '</div>';
+
+
+                // Put together link.
+                $this->content->text .= "<a href=\"$url\">";
                 $this->content->text .= '<div class="iomadlink">';
-                $this->content->text .= "<a href=\"$url\">" . $icon . $name. "</a>";
+                $this->content->text .= '<div class="iomadicon"><div class="fa fa-topic fa-bar-chart-o"> </div>';
+                //$this->content->text .= '<div class="fa fa-action '. $iconsmall .'"> </div></div>';
+                $this->content->text .= '<div class="actiondescription">' . $name . "</div>";
                 $this->content->text .= '</div>';
+                $this->content->text .= '</a>';
+                $this->content->text .= '</div>';
+
             }
 
         }
