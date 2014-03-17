@@ -97,18 +97,36 @@ class block_iomad_company_admin extends block_base {
                 $url = new moodle_url('/blocks/iomad_company_admin/'.$menu['url']);
             }
 
-            // Build image url.
+
+            // Get topic image icon
             if (!empty($menu['icon'])) {
-                $imgsrc = $OUTPUT->pix_url($menu['icon'], 'block_iomad_company_admin');
-                $icon = '<img src="'.$imgsrc.'" alt="'.$menu['name'].'" /><br />';
+                $icon = $menu['icon'];
             } else {
                 $icon = '';
             }
 
+            // Get topic action icon
+            if (!empty($menu['iconsmall'])) {
+                $iconsmall = $menu['iconsmall'];
+            } else {
+                $iconsmall = '';
+            }
+
+            // Get Action description
+            if (!empty($menu['name'])) {
+                $action = $menu['name'];
+            } else {
+                $action = '';
+            }
+
             // Put together link.
+            $html .= "<a href=\"$url\">";
             $html .= '<div class="iomadlink">';
-            $html .= "<a href=\"$url\">" . $icon . "</a>";
+            $html .= '<div class="iomadicon"><div class="fa fa-topic '. $icon .'"> </div>';
+            $html .= '<div class="fa fa-action '. $iconsmall .'"> </div></div>';
+            $html .= '<div class="actiondescription">' . $action . "</div>";
             $html .= '</div>';
+            $html .= '</a>';
         }
         $html .= '</div>';
         $this->content->text .= $html;
