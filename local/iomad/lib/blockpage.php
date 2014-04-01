@@ -104,7 +104,7 @@ class blockpage {
 
         $this->page->set_url($this->get_relative_url($urlparams));
         $this->page->set_context(context_system::instance());
-        $this->page->set_pagelayout('admin');
+        $this->page->set_pagelayout('mydashboard');
 
         $blocktitle = self::get_string('blocktitle');
 

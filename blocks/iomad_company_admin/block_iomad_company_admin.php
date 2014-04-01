@@ -57,9 +57,7 @@ class block_iomad_company_admin extends block_base {
 
         // Title.
         $this->content = new stdClass();
-        $this->content->text = '<h3>'.
-                               get_string('managementtitle', 'block_iomad_company_admin').
-                               '</h3>';
+        $this->content->text = $this->company_selector();
 
         // Build tabs.
         $tabs = array();
@@ -226,4 +224,55 @@ class block_iomad_company_admin extends block_base {
 
         return email_to_user($user, $supportuser, $subject, $message);
     }
+
+    public function company_selector() {
+        global $USER, $CFG, $DB, $OUTPUT, $SESSION;
+
+        // Only display if you have the correct capability.
+        if (!has_capability('block/iomad_company_admin:company_add', context_system::instance())) {
+            return;
+        }
+
+        $content = '';
+
+        if (!isloggedin()) {
+            return;
+        }
+
+        //  Check users session and profile settings to get the current editing company.
+        if (!empty($SESSION->currenteditingcompany)) {
+            $selectedcompany = $SESSION->currenteditingcompany;
+        } else if (!empty($USER->profile->company)) {
+            $usercompany = company::by_userid($USER->id);
+            $selectedcompany = $usercompany->id;
+        } else {
+            $selectedcompany = "";
+        }
+
+        // Get the company name if set.
+        if (!empty($selectedcompany)) {
+            $companyname = company::get_companyname_byid($selectedcompany);
+        } else {
+            $companyname = "";
+        }
+
+        // Get a list of companies.
+        $companylist = company::get_companies_select();
+        $select = new single_select(new moodle_url('/local/iomad_dashboard/index.php'), 'company', $companylist, $selectedcompany);
+        $select->label = get_string('selectacompany', 'block_iomad_company_selector');
+        $select->formid = 'choosecompany';
+        $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_company_selector'));
+        $content = $OUTPUT->container_start('companyselect');
+        if (!empty($SESSION->currenteditingcompany)) {
+            //$content .= '<h3>'. get_string('currentcompany', 'block_iomad_company_selector').
+            //                        ' - '.$companyname .'</h3>';
+        } else {
+            $content .= '<label label-warning>'. get_string('nocurrentcompany', 'block_iomad_company_selector').'</label>';
+        }
+        $content .= $fwselectoutput;
+        $content .= $OUTPUT->container_end();
+
+        return $content;
+    }
+
 }
