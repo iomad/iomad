@@ -210,6 +210,6 @@ class blockpage {
     public function display_header() {
 
         echo $this->OUTPUT->header();
-        echo $this->OUTPUT->heading($this->pagetitle, 2, 'headingblock header');
+        //echo $this->OUTPUT->heading($this->pagetitle, 2, 'headingblock header');
     }
 }
