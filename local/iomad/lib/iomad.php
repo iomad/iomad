@@ -25,14 +25,20 @@ class iomad {
      * @param $context - stdclass()
      * @returns int
      */
-    public static function get_my_companyid($context) {
-        global $SESSION;
+    public static function get_my_companyid($context, $required=true) {
+        global $SESSION, $USER;
+
+        // are we logged in?
+        if (empty($USER->id)) {
+            return -1;
+        }
+
         // Set the companyid to bypass the company select form if possible.
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
         } else if (self::is_company_user()) {
-            $companyid = company_user::companyid();
-        } else if (has_capability('block/iomad_company_admin:edit_departments', $context)) {
+            $companyid = self::companyid();
+        } else if (has_capability('block/iomad_company_admin:edit_departments', $context) && $required) {
             redirect(new moodle_url('/local/iomad_dashboard/index.php'),
                                      get_string('pleaseselect', 'block_iomad_company_admin'));
         } else {
