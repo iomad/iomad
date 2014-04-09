@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * 
+ */
 
-$plugin->version  = 2013100300;   // The (date) version of this plugin.
-$plugin->requires = 2010021900;   // Requires this Moodle version.
-$plugin->component = 'block_iomad_commerce';
+class local_iomad_settings extends block_base {
+    public function init() {
+        $this->title = get_string('pluginname', 'local_iomad_settings');
+
+    }
+
+    public function hide_header() {
+        return true;
+    }
+}

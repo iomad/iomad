@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->version  = 2013100300;   // The (date) version of this plugin.
-$plugin->requires = 2010021900;   // Requires this Moodle version.
-$plugin->component = 'block_iomad_commerce';
+if ($hassiteconfig) {
+    $settings = new admin_settingpage('local_iomad_signup', get_string('pluginname', 'local_iomad_signup'));
+    $ADMIN->add('localplugins', $settings);
+
+    $settings->add(new admin_setting_configcheckbox(
+        'local_iomad_signup_enable',
+        get_string('enable', 'local_iomad_signup'),
+        get_string('enable_help', 'local_iomad_signup'),
+        1)
+    );
+}

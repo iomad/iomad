@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->version  = 2013100300;   // The (date) version of this plugin.
-$plugin->requires = 2010021900;   // Requires this Moodle version.
-$plugin->component = 'block_iomad_commerce';
+$handlers = array(
+    'user_created' => array(
+        'handlerfile' => '/local/iomad_signup/lib.php',
+        'handlerfunction' => 'local_iomad_signup_user_created',
+        'schedule' => 'instant',
+        'internal' => 1,
+    ),
+);
