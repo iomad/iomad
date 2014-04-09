@@ -231,7 +231,12 @@ class iomad {
     public static function iomad_filter_categories( $categories ) {
         global $DB, $USER;
 
-        $eldcategories = array();
+        // Check if its the client admin.
+        if (has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
+            return $categories;
+        }
+
+        $iomadcategories = array();
         foreach ($categories as $id => $category) {
 
             // Try to find category in company list.
