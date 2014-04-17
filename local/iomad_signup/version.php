@@ -15,4 +15,4 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $plugin->version  = 2014040600;   // The (date) version of this plugin.
-$plugin->requires = 2013111800;   // Requires this Moodle version.
+$plugin->requires = 2010021900;   // Requires this Moodle version.
