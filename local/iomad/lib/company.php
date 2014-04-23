@@ -420,9 +420,11 @@ class company {
         $userrecord['managertype'] = 0;
         $userrecord['companyid'] = $this->id;
 
-        // Moving a user.
-        if (!$DB->insert_record('company_users', $userrecord)) {
-            print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
+        if (!$DB->get_record('company_users', array('companyid' => $this->id, 'userid' => $userid))) {
+            // Moving a user.
+            if (!$DB->insert_record('company_users', $userrecord)) {
+                print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
+            }
         }
 
         // Deal with the company theme.

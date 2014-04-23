@@ -639,6 +639,22 @@ if ($formdata = $mform->is_cancelled()) {
                     $SESSION->bulk_users[] = $user->id;
                 }
             }
+                        // Merge user with company user defaults.
+            if (!empty($companyid)) {
+                $company = new company($companyid);
+                $defaults = $company->get_user_defaults();
+                $user = (object) array_merge((array) $defaults, (array) $user);
+            }
+              
+            if (!empty($companyid)) {
+                $company = new company($companyid);
+
+                // Add the user to the company
+                $company->assign_user_to_company($user->id);
+
+                // Add the user to the company default hierarchy level.
+                company::assign_user_to_department($formdata->userdepartment, $user->id);
+            }
 
         } else {
             // Save the user to the database.
