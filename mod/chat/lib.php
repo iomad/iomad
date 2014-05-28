@@ -289,12 +289,8 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
             continue;
         }
 
-        if (is_null($modinfo->groups)) {
-            $modinfo->groups = groups_get_user_groups($course->id); // load all my groups and cache it in modinfo
-        }
-
         // verify groups in separate mode
-        if (!$mygroupids = $modinfo->groups[$cm->groupingid]) {
+        if (!$mygroupids = $modinfo->get_groups($cm->groupingid)) {
             continue;
         }
 
@@ -327,7 +323,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
     $strftimerecent = get_string('strftimerecent');
 
     if ($past) {
-        echo $OUTPUT->heading(get_string("pastchats", 'chat').':');
+        echo $OUTPUT->heading(get_string("pastchats", 'chat').':', 3);
 
         foreach ($past as $cm) {
             $link = $CFG->wwwroot.'/mod/chat/view.php?id='.$cm->id;
@@ -338,7 +334,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
     }
 
     if ($current) {
-        echo $OUTPUT->heading(get_string("currentchats", 'chat').':');
+        echo $OUTPUT->heading(get_string("currentchats", 'chat').':', 3);
 
         $oldest = floor((time()-$CFG->chat_old_ping)/10)*10;  // better db caching
 
@@ -349,7 +345,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
 
         $params = array('timeold'=>$timeold, 'timeoldext'=>$timeoldext, 'cmid'=>$cm->id);
 
-        $timeout = "AND (chu.version<>'basic' AND chu.lastping>:timeold) OR (chu.version='basic' AND chu.lastping>:timeoldext)";
+        $timeout = "AND ((chu.version<>'basic' AND chu.lastping>:timeold) OR (chu.version='basic' AND chu.lastping>:timeoldext))";
 
         foreach ($current as $cm) {
             //count users first

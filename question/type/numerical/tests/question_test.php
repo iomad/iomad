@@ -212,8 +212,15 @@ class qtype_numerical_question_test extends advanced_testcase {
                 new question_classified_response(17, '42', 0.0)),
                 $num->classify_response(array('answer' => '42')));
         $this->assertEquals(array(
+                new question_classified_response(17, '0', 0.0)),
+                $num->classify_response(array('answer' => '0')));
+        $this->assertEquals(array(
                 new question_classified_response(13, '3.14', 1.0)),
                 $num->classify_response(array('answer' => '3.14')));
+        // Invalid response.
+        $this->assertEquals(array(
+                new question_classified_response(null, 'abc', 0.0)),
+                $num->classify_response(array('answer' => 'abc')));
         $this->assertEquals(array(
                 question_classified_response::no_response()),
                 $num->classify_response(array('answer' => '')));
@@ -230,6 +237,13 @@ class qtype_numerical_question_test extends advanced_testcase {
         $this->assertEquals(array(
                 new question_classified_response(0, '42', 0.0)),
                 $num->classify_response(array('answer' => '42')));
+        // Invalid response.
+        $this->assertEquals(array(
+                new question_classified_response(null, 'abc', 0.0)),
+                $num->classify_response(array('answer' => 'abc')));
+        $this->assertEquals(array(
+                new question_classified_response(0, '0', 0.0)),
+                $num->classify_response(array('answer' => '0')));
         $this->assertEquals(array(
                 question_classified_response::no_response()),
                 $num->classify_response(array('answer' => '')));
@@ -260,6 +274,10 @@ class qtype_numerical_question_test extends advanced_testcase {
         $this->assertEquals(array(
                 question_classified_response::no_response()),
                 $num->classify_response(array('answer' => '')));
+        // Invalid response.
+        $this->assertEquals(array(
+                new question_classified_response(null, 'abc m', 0.0)),
+                $num->classify_response(array('answer' => 'abc', 'unit' => 'm')));
     }
 
     public function test_classify_response_unit_no_star() {
@@ -279,6 +297,10 @@ class qtype_numerical_question_test extends advanced_testcase {
         $this->assertEquals(array(
                 question_classified_response::no_response()),
                 $num->classify_response(array('answer' => '', 'unit' => '')));
+        // Invalid response.
+        $this->assertEquals(array(
+                new question_classified_response(null, 'abc m', 0.0)),
+                $num->classify_response(array('answer' => 'abc', 'unit' => 'm')));
     }
 
     public function test_classify_response_currency() {
@@ -291,5 +313,9 @@ class qtype_numerical_question_test extends advanced_testcase {
         $this->assertEquals(array(
                 new question_classified_response(13, '1 332', 0.8)),
                 $num->classify_response(array('answer' => '1 332')));
+        // Invalid response.
+        $this->assertEquals(array(
+                new question_classified_response(null, '$abc', 0.0)),
+                $num->classify_response(array('answer' => '$abc')));
     }
 }

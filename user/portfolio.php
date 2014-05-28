@@ -61,7 +61,7 @@ $PAGE->set_url($url);
 $PAGE->set_context(context_user::instance($user->id));
 $PAGE->set_title("$course->fullname: $fullname: $strportfolios");
 $PAGE->set_heading($course->fullname);
-$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('admin');
 
 echo $OUTPUT->header();
 $showroles = 1;
@@ -77,15 +77,11 @@ if (!empty($config)) {
         if (!confirm_sesskey()) {
             print_error('confirmsesskeybad', '', $baseurl);
         }
-        //this branch is where you process validated data.
-        $success = $instance->set_user_config($fromform, $USER->id);
-            //$success = $success && $instance->save();
-        if ($success) {
-            core_plugin_manager::reset_caches();
-            redirect($baseurl, get_string('instancesaved', 'portfolio'), 3);
-        } else {
-            print_error('instancenotsaved', 'portfolio', $baseurl);
-        }
+        // This branch is where you process validated data.
+        $instance->set_user_config($fromform, $USER->id);
+        core_plugin_manager::reset_caches();
+        redirect($baseurl, get_string('instancesaved', 'portfolio'), 3);
+
         exit;
     } else {
         echo $OUTPUT->heading(get_string('configplugin', 'portfolio'));
@@ -126,4 +122,3 @@ if ($display) {
     echo $OUTPUT->box_end();
 }
 echo $OUTPUT->footer();
-

@@ -385,11 +385,11 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
 
     $sqlargs = array();
 
-    //TODO: user user_picture::fields;
-    $sql = " SELECT fk . * , fc . * , u.firstname, u.lastname, u.email, u.picture, u.email
-                                            FROM {feedback_completed} fc
-                                                JOIN {feedback} fk ON fk.id = fc.feedback
-                                                JOIN {user} u ON u.id = fc.userid ";
+    $userfields = user_picture::fields('u', null, 'useridagain');
+    $sql = " SELECT fk . * , fc . * , $userfields
+                FROM {feedback_completed} fc
+                    JOIN {feedback} fk ON fk.id = fc.feedback
+                    JOIN {user} u ON u.id = fc.userid ";
 
     if ($groupid) {
         $sql .= " JOIN {groups_members} gm ON  gm.userid=u.id ";
@@ -423,11 +423,6 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
     $viewfullnames   = has_capability('moodle/site:viewfullnames', $cm_context);
     $groupmode       = groups_get_activity_groupmode($cm, $course);
 
-    if (is_null($modinfo->groups)) {
-        // load all my groups and cache it in modinfo
-        $modinfo->groups = groups_get_user_groups($course->id);
-    }
-
     $aname = format_string($cm->name, true);
     foreach ($feedbackitems as $feedbackitem) {
         if ($feedbackitem->userid != $USER->id) {
@@ -440,7 +435,7 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
                     continue;
                 }
                 $usersgroups = array_keys($usersgroups);
-                $intersect = array_intersect($usersgroups, $modinfo->groups[$cm->id]);
+                $intersect = array_intersect($usersgroups, $modinfo->get_groups($cm->groupingid));
                 if (empty($intersect)) {
                     continue;
                 }
@@ -459,19 +454,7 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
         $tmpactivity->content->feedbackid = $feedbackitem->id;
         $tmpactivity->content->feedbackuserid = $feedbackitem->userid;
 
-        $userfields = explode(',', user_picture::fields());
-        $tmpactivity->user = new stdClass();
-        foreach ($userfields as $userfield) {
-            if ($userfield == 'id') {
-                $tmpactivity->user->{$userfield} = $feedbackitem->userid; // aliased in SQL above
-            } else {
-                if (!empty($feedbackitem->{$userfield})) {
-                    $tmpactivity->user->{$userfield} = $feedbackitem->{$userfield};
-                } else {
-                    $tmpactivity->user->{$userfield} = null;
-                }
-            }
-        }
+        $tmpactivity->user = user_picture::unalias($feedbackitem, null, 'useridagain');
         $tmpactivity->user->fullname = fullname($feedbackitem, $viewfullnames);
 
         $activities[$index++] = $tmpactivity;
@@ -2409,36 +2392,43 @@ function feedback_get_group_values($item,
 
     //if the groupid is given?
     if (intval($groupid) > 0) {
+        $params = array();
         if ($ignore_empty) {
-            $ignore_empty_select = "AND fbv.value != '' AND fbv.value != '0'";
+            $value = $DB->sql_compare_text('fbv.value');
+            $ignore_empty_select = "AND $value != :emptyvalue AND $value != :zerovalue";
+            $params += array('emptyvalue' => '', 'zerovalue' => '0');
         } else {
             $ignore_empty_select = "";
         }
 
         $query = 'SELECT fbv .  *
                     FROM {feedback_value} fbv, {feedback_completed} fbc, {groups_members} gm
-                   WHERE fbv.item = ?
+                   WHERE fbv.item = :itemid
                          AND fbv.completed = fbc.id
                          AND fbc.userid = gm.userid
                          '.$ignore_empty_select.'
-                         AND gm.groupid = ?
+                         AND gm.groupid = :groupid
                 ORDER BY fbc.timemodified';
-        $values = $DB->get_records_sql($query, array($item->id, $groupid));
+        $params += array('itemid' => $item->id, 'groupid' => $groupid);
+        $values = $DB->get_records_sql($query, $params);
 
     } else {
+        $params = array();
         if ($ignore_empty) {
-            $ignore_empty_select = "AND value != '' AND value != '0'";
+            $value = $DB->sql_compare_text('value');
+            $ignore_empty_select = "AND $value != :emptyvalue AND $value != :zerovalue";
+            $params += array('emptyvalue' => '', 'zerovalue' => '0');
         } else {
             $ignore_empty_select = "";
         }
 
         if ($courseid) {
-            $select = "item = ? AND course_id = ? ".$ignore_empty_select;
-            $params = array($item->id, $courseid);
+            $select = "item = :itemid AND course_id = :courseid ".$ignore_empty_select;
+            $params += array('itemid' => $item->id, 'courseid' => $courseid);
             $values = $DB->get_records_select('feedback_value', $select, $params);
         } else {
-            $select = "item = ? ".$ignore_empty_select;
-            $params = array($item->id);
+            $select = "item = :itemid ".$ignore_empty_select;
+            $params += array('itemid' => $item->id);
             $values = $DB->get_records_select('feedback_value', $select, $params);
         }
     }

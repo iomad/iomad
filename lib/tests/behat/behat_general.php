@@ -788,7 +788,25 @@ class behat_general extends behat_base {
     /**
      * Checks the provided element and selector type exists in the current page.
      *
-     * This step is for advanced users, use it if you don't find anything else suitable for what you need.
+     * This method has been introduced in 2.7 and replaces self::should_exists(),
+     * it has been added here to make backports easier and to help 3rd parties working on new
+     * scenarios so they don't need to update their scenarios when they upgrade to 2.7.
+     *
+     * @Then /^"(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" should exist$/
+     *
+     * @param string $element The locator of the specified selector
+     * @param string $selectortype The selector type
+     */
+    public function should_exist($element, $selectortype) {
+        // Forwarding it.
+        $this->should_exists($element, $selectortype);
+    }
+
+    /**
+     * Checks the provided element and selector type exists in the current page. This step will be deprecated in Moodle 2.7 in favour of '"ELEMENT_STRING" "SELECTOR_STRING" should exist'.
+     *
+     * This step is for advanced users, use it if you don't find
+     * anything else suitable for what you need.
      *
      * @Then /^"(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" should exists$/
      * @throws ElementNotFoundException Thrown by behat_base::find
@@ -806,6 +824,25 @@ class behat_general extends behat_base {
 
     /**
      * Checks that the provided element and selector type not exists in the current page.
+     *
+     * This step is for advanced users, use it if you don't find
+     * anything else suitable for what you need.
+     *
+     * This method has been introduced in 2.7 and replaces self::should_not_exists(),
+     * it has been added here to make backports easier and to help 3rd parties working on new
+     * scenarios so they don't need to update their scenarios when they upgrade to 2.7.
+     *
+     * @Then /^"(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" should not exist$/
+     * @param string $element The locator of the specified selector
+     * @param string $selectortype The selector type
+     */
+    public function should_not_exist($element, $selectortype) {
+        // Forwarding it.
+        $this->should_not_exists($element, $selectortype);
+    }
+
+    /**
+     * Checks that the provided element and selector type not exists in the current page. This step will be deprecated in Moodle 2.7 in favour of '"ELEMENT_STRING" "SELECTOR_STRING" should not exist'.
      *
      * This step is for advanced users, use it if you don't find anything else suitable for what you need.
      *
@@ -833,9 +870,9 @@ class behat_general extends behat_base {
                     return $context->getSession()->getPage()->findAll($args['selector'], $args['locator']);
                 },
                 $params,
-                false,
+                self::REDUCED_TIMEOUT,
                 $exception,
-                self::REDUCED_TIMEOUT
+                false
             );
 
             throw new ExpectationException('The "' . $element . '" "' . $selectortype . '" exists in the current page', $this->getSession());
@@ -912,6 +949,54 @@ class behat_general extends behat_base {
         } catch (ElementNotFoundException $e) {
             // It passes.
             return;
+        }
+    }
+
+    /**
+     * Checks whether there is an attribute on the given element that contains the specified text.
+     *
+     * @Then /^the "(?P<attribute_string>[^"]*)" attribute of "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" should contain "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @throws ExpectationException
+     * @param string $attribute Name of attribute
+     * @param string $element The locator of the specified selector
+     * @param string $selectortype The selector type
+     * @param string $text Expected substring
+     */
+    public function the_attribute_of_should_contain($attribute, $element, $selectortype, $text) {
+        // Get the container node (exception if it doesn't exist).
+        $containernode = $this->get_selected_node($selectortype, $element);
+        $value = $containernode->getAttribute($attribute);
+        if ($value == null) {
+            throw new ExpectationException('The attribute "' . $attribute. '" does not exist',
+                    $this->getSession());
+        } else if (strpos($value, $text) === false) {
+            throw new ExpectationException('The attribute "' . $attribute .
+                    '" does not contain "' . $text . '" (actual value: "' . $value . '")',
+                    $this->getSession());
+        }
+    }
+
+    /**
+     * Checks that the attribute on the given element does not contain the specified text.
+     *
+     * @Then /^the "(?P<attribute_string>[^"]*)" attribute of "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" should not contain "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @throws ExpectationException
+     * @param string $attribute Name of attribute
+     * @param string $element The locator of the specified selector
+     * @param string $selectortype The selector type
+     * @param string $text Expected substring
+     */
+    public function the_attribute_of_should_not_contain($attribute, $element, $selectortype, $text) {
+        // Get the container node (exception if it doesn't exist).
+        $containernode = $this->get_selected_node($selectortype, $element);
+        $value = $containernode->getAttribute($attribute);
+        if ($value == null) {
+            throw new ExpectationException('The attribute "' . $attribute. '" does not exist',
+                    $this->getSession());
+        } else if (strpos($value, $text) !== false) {
+            throw new ExpectationException('The attribute "' . $attribute .
+                    '" contains "' . $text . '" (value: "' . $value . '")',
+                    $this->getSession());
         }
     }
 }

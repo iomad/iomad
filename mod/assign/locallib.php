@@ -131,6 +131,9 @@ class assign {
     /** @var array list of suspended user IDs in form of ([id1] => id1) */
     public $susers = null;
 
+    /** @var array cached list of participants for this assignment. The cache key will be group, showactive and the context id */
+    private $participants = array();
+
     /**
      * Constructor for the base assign class.
      *
@@ -1292,22 +1295,26 @@ class assign {
      * @return array List of user records
      */
     public function list_participants($currentgroup, $idsonly) {
-        if ($idsonly) {
-            $users = get_enrolled_users($this->context, 'mod/assign:submit', $currentgroup, 'u.id', null, null, null,
-                    $this->show_only_active_users());
-        } else {
+        $key = $this->context->id . '-' . $currentgroup . '-' . $this->show_only_active_users();
+        if (!isset($this->participants[$key])) {
             $users = get_enrolled_users($this->context, 'mod/assign:submit', $currentgroup, 'u.*', null, null, null,
                     $this->show_only_active_users());
+
+            $cm = $this->get_course_module();
+            $users = groups_filter_users_by_course_module_visible($cm, $users);
+
+            $this->participants[$key] = $users;
         }
 
-        $cm = $this->get_course_module();
-        foreach ($users as $userid => $user) {
-            if (!groups_course_module_visible($cm, $userid)) {
-                unset($users[$userid]);
+        if ($idsonly) {
+            $idslist = array();
+            foreach ($this->participants[$key] as $id => $user) {
+                $idslist[$id] = new stdClass();
+                $idslist[$id]->id = $id;
             }
+            return $idslist;
         }
-
-        return $users;
+        return $this->participants[$key];
     }
 
     /**
@@ -1561,14 +1568,18 @@ class assign {
         $timenow   = time();
 
         // Collect all submissions from the past 24 hours that require mailing.
+        // Submissions are excluded if the assignment is hidden in the gradebook.
         $sql = 'SELECT g.id as gradeid, a.course, a.name, a.blindmarking, a.revealidentities,
                        g.*, g.timemodified as lastmodified
                  FROM {assign} a
                  JOIN {assign_grades} g ON g.assignment = a.id
-                 LEFT JOIN {assign_user_flags} uf ON uf.assignment = a.id AND uf.userid = g.userid
-                WHERE g.timemodified >= :yesterday AND
-                      g.timemodified <= :today AND
-                      uf.mailed = 0';
+            LEFT JOIN {assign_user_flags} uf ON uf.assignment = a.id AND uf.userid = g.userid
+                 JOIN {course_modules} cm ON cm.course = a.course
+                 JOIN {modules} md ON md.id = cm.module
+                 JOIN {grade_items} gri ON gri.iteminstance = a.id AND gri.courseid = a.course AND gri.itemmodule = md.name
+                 WHERE g.timemodified >= :yesterday AND
+                       g.timemodified <= :today AND
+                       uf.mailed = 0 AND gri.hidden = 0';
 
         $params = array('yesterday' => $yesterday, 'today' => $timenow);
         $submissions = $DB->get_records_sql($sql, $params);
@@ -3963,7 +3974,9 @@ class assign {
      * @return bool
      */
     protected function gradebook_item_update($submission=null, $grade=null) {
+        global $CFG;
 
+        require_once($CFG->dirroot.'/mod/assign/lib.php');
         // Do not push grade to gradebook if blind marking is active as
         // the gradebook would reveal the students.
         if ($this->is_blind_marking()) {
@@ -4696,6 +4709,7 @@ class assign {
 
         // Include extension form.
         require_once($CFG->dirroot . '/mod/assign/extensionform.php');
+        require_sesskey();
 
         $batchusers = optional_param('selectedusers', '', PARAM_SEQUENCE);
         $userid = 0;
@@ -4739,6 +4753,7 @@ class assign {
 
         // Need grade permission.
         require_capability('mod/assign:grade', $this->context);
+        require_sesskey();
 
         // Make sure advanced grading is disabled.
         $gradingmanager = get_grading_manager($this->get_context(), 'mod_assign', 'submissions');
@@ -4907,7 +4922,10 @@ class assign {
                 $this->update_user_flags($flags);
             }
             $this->update_grade($grade);
-            $this->notify_grade_modified($grade);
+            // Allow teachers to skip sending notifications.
+            if (optional_param('sendstudentnotifications', true, PARAM_BOOL)) {
+                $this->notify_grade_modified($grade);
+            }
 
             // Save outcomes.
             if ($CFG->enableoutcomes) {
@@ -5029,6 +5047,7 @@ class assign {
 
         // Need submit permission to submit an assignment.
         require_capability('mod/assign:grade', $this->context);
+        require_sesskey();
 
         // Is advanced grading enabled?
         $gradingmanager = get_grading_manager($this->get_context(), 'mod_assign', 'submissions');
@@ -5701,6 +5720,8 @@ class assign {
                 $mform->setDefault('addattempt', 0);
             }
         }
+        $mform->addElement('selectyesno', 'sendstudentnotifications', get_string('sendstudentnotifications', 'assign'));
+        $mform->setDefault('sendstudentnotifications', 1);
 
         $mform->addElement('hidden', 'action', 'submitgrade');
         $mform->setType('action', PARAM_ALPHA);
@@ -6197,7 +6218,11 @@ class assign {
             }
         }
         $this->update_grade($grade);
-        $this->notify_grade_modified($grade);
+        // Note the default if not provided for this option is true (e.g. webservices).
+        // This is for backwards compatibility.
+        if (!isset($formdata->sendstudentnotifications) || $formdata->sendstudentnotifications) {
+            $this->notify_grade_modified($grade);
+        }
 
         $addtolog = $this->add_to_log('grade submission', $this->format_grade_for_log($grade), '', true);
         $params = array(

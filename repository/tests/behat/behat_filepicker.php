@@ -291,7 +291,7 @@ class behat_filepicker extends behat_files {
      * @When /^I add "(?P<filepath_string>(?:[^"]|\\")*)" file from "(?P<repository_string>(?:[^"]|\\")*)" to "(?P<filemanagerelement_string>(?:[^"]|\\")*)" filemanager$/
      * @throws ExpectationException Thrown by behat_base::find
      * @param string $filepath
-     * @parma string $repository
+     * @param string $repository
      * @param string $filemanagerelement
      */
     public function i_add_file_from_repository_to_filemanager($filepath, $repository, $filemanagerelement) {
@@ -304,7 +304,7 @@ class behat_filepicker extends behat_files {
      * @When /^I add and overwrite "(?P<filepath_string>(?:[^"]|\\")*)" file from "(?P<repository_string>(?:[^"]|\\")*)" to "(?P<filemanagerelement_string>(?:[^"]|\\")*)" filemanager$/
      * @throws ExpectationException Thrown by behat_base::find
      * @param string $filepath
-     * @parma string $repository
+     * @param string $repository
      * @param string $filemanagerelement
      */
     public function i_add_and_overwrite_file_from_repository_to_filemanager($filepath, $repository, $filemanagerelement) {
@@ -318,7 +318,7 @@ class behat_filepicker extends behat_files {
      * @When /^I add "(?P<filepath_string>(?:[^"]|\\")*)" file from "(?P<repository_string>(?:[^"]|\\")*)" to "(?P<filemanager_field_string>(?:[^"]|\\")*)" filemanager as:$/
      * @throws ExpectationException Thrown by behat_base::find
      * @param string $filepath
-     * @parma string $repository
+     * @param string $repository
      * @param string $filemanagerelement
      * @param TableNode $data Data to fill the form in Select file dialogue
      */
@@ -332,7 +332,7 @@ class behat_filepicker extends behat_files {
      * @When /^I add and overwrite "(?P<filepath_string>(?:[^"]|\\")*)" file from "(?P<repository_string>(?:[^"]|\\")*)" to "(?P<filemanager_field_string>(?:[^"]|\\")*)" filemanager as:$/
      * @throws ExpectationException Thrown by behat_base::find
      * @param string $filepath
-     * @parma string $repository
+     * @param string $repository
      * @param string $filemanagerelement
      * @param TableNode $data Data to fill the form in Select file dialogue
      */
@@ -346,7 +346,7 @@ class behat_filepicker extends behat_files {
      *
      * @throws ExpectationException Thrown by behat_base::find
      * @param string $filepath
-     * @parma string $repository
+     * @param string $repository
      * @param string $filemanagerelement
      * @param TableNode $data Data to fill the form in Select file dialogue
      * @param false|string $overwriteaction false if we don't expect that file with the same name already exists,
@@ -366,11 +366,8 @@ class behat_filepicker extends behat_files {
 
         // The action depends on the field type.
         foreach ($datahash as $locator => $value) {
-            // Getting the node element pointed by the label.
-            $fieldnode = $this->find_field($locator);
 
-            // Gets the field type from a parent node.
-            $field = behat_field_manager::get_form_field($fieldnode, $this->getSession());
+            $field = behat_field_manager::get_form_field_from_label($locator, $this);
 
             // Delegates to the field class.
             $field->set_value($value);

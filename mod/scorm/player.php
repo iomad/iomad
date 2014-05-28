@@ -66,7 +66,7 @@ if (!empty($id)) {
 // If new attempt is being triggered set normal mode and increment attempt number.
 $attempt = scorm_get_last_attempt($scorm->id, $USER->id);
 
-// Check mode is correct and set mode/attempt (uses pass by reference).
+// Check mode is correct and set/validate mode/attempt/newattempt (uses pass by reference).
 scorm_check_mode($scorm, $newattempt, $attempt, $USER->id, $mode);
 
 $url = new moodle_url('/mod/scorm/player.php', array('scoid'=>$scoid, 'cm'=>$cm->id));
@@ -181,7 +181,9 @@ $PAGE->requires->data_for_js('scormplayerdata', Array('launch' => false,
 $PAGE->requires->js('/mod/scorm/request.js', true);
 $PAGE->requires->js('/lib/cookies.js', true);
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($scorm->name));
+if ($displaymode !== 'popup') {
+    echo $OUTPUT->heading(format_string($scorm->name));
+}
 
 $PAGE->requires->string_for_js('navigation', 'scorm');
 $PAGE->requires->string_for_js('toc', 'scorm');

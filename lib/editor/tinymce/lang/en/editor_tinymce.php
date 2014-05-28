@@ -34,6 +34,7 @@ $string['customtoolbar_desc'] = 'Each line contains a list of comma separated bu
 $string['fontselectlist'] = 'Available fonts list';
 $string['pluginname'] = 'TinyMCE HTML editor';
 $string['settings'] = 'General settings';
+$string['subplugintype_tinymce'] = 'Plugin';
 $string['subplugintype_tinymce_plural'] = 'Plugins';
 
 
@@ -288,7 +289,7 @@ $string['advlist:types'] = 'Types';
 $string['advlist:upper_alpha'] = 'Upper alpha';
 $string['advlist:upper_roman'] = 'Upper roman';
 $string['aria:rich_text_area'] = 'Rich text area';
-$string['autosave:restore_content'] = 'Restore auto-saved content';
+/* $string['autosave:restore_content'] = 'Restore auto-saved content.'; */
 $string['autosave:unload_msg'] = 'The changes you made will be lost if you navigate away from this page.';
 $string['autosave:warning_message'] = 'If you restore the saved content, you will lose all the content that is currently in the editor.
 
@@ -892,3 +893,4 @@ $string['advanced:copy_desc'] = 'Copy';
 $string['advanced:cut_desc'] = 'Cut';
 $string['advanced:paste_desc'] = 'Paste';
 $string['advanced:shortcuts_desc'] = 'Accessibility help';
+$string['autosave:restore_content'] = 'Restore auto-saved content';

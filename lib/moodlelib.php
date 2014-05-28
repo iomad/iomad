@@ -4120,9 +4120,9 @@ function truncate_userinfo(array $info) {
         'icq'         =>  15,
         'phone1'      =>  20,
         'phone2'      =>  20,
-        'institution' =>  40,
-        'department'  =>  30,
-        'address'     =>  70,
+        'institution' => 255,
+        'department'  => 255,
+        'address'     => 255,
         'city'        => 120,
         'country'     =>   2,
         'url'         => 255,
@@ -5768,6 +5768,14 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         $mail->Sender = generate_email_processing_address(0, $modargs);
     } else {
         $mail->Sender = $supportuser->email;
+    }
+
+    if (!empty($CFG->emailonlyfromnoreplyaddress)) {
+        $usetrueaddress = false;
+        if (empty($replyto) && $from->maildisplay) {
+            $replyto = $from->email;
+            $replytoname = fullname($from);
+        }
     }
 
     if (is_string($from)) { // So we can pass whatever we want if there is need.
@@ -7599,7 +7607,18 @@ function moodle_setlocale($locale='') {
         $messages= setlocale (LC_MESSAGES, 0);
     }
     // Set locale to all.
-    setlocale (LC_ALL, $currentlocale);
+    $result = setlocale (LC_ALL, $currentlocale);
+    // If setting of locale fails try the other utf8 or utf-8 variant,
+    // some operating systems support both (Debian), others just one (OSX).
+    if ($result === false) {
+        if (stripos($currentlocale, '.UTF-8') !== false) {
+            $newlocale = str_ireplace('.UTF-8', '.UTF8', $currentlocale);
+            setlocale (LC_ALL, $newlocale);
+        } else if (stripos($currentlocale, '.UTF8') !== false) {
+            $newlocale = str_ireplace('.UTF8', '.UTF-8', $currentlocale);
+            setlocale (LC_ALL, $newlocale);
+        }
+    }
     // Set old values.
     setlocale (LC_MONETARY, $monetary);
     setlocale (LC_NUMERIC, $numeric);

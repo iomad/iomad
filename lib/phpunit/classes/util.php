@@ -34,6 +34,11 @@ require_once(__DIR__.'/../../testing/classes/util.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class phpunit_util extends testing_util {
+    /**
+     * @var int last value of db writes counter, used for db resetting
+     */
+    public static $lastdbwrites = null;
+
     /** @var array An array of original globals, restored after each test */
     protected static $globals = array();
 
@@ -107,8 +112,8 @@ class phpunit_util extends testing_util {
         // Stop any message redirection.
         phpunit_util::stop_event_redirection();
 
-        // Release memory and indirectly call destroy() methods to release resource handles, etc.
-        gc_collect_cycles();
+        // We used to call gc_collect_cycles here to ensure desctructors were called between tests.
+        // This accounted for 25% of the total time running phpunit - so we removed it.
 
         // Show any unhandled debugging messages, the runbare() could already reset it.
         self::display_debugging_messages();
@@ -244,6 +249,27 @@ class phpunit_util extends testing_util {
             $warnings = implode("\n", $warnings);
             trigger_error($warnings, E_USER_WARNING);
         }
+    }
+
+    /**
+     * Reset all database tables to default values.
+     * @static
+     * @return bool true if reset done, false if skipped
+     */
+    public static function reset_database() {
+        global $DB;
+
+        if (!is_null(self::$lastdbwrites) and self::$lastdbwrites == $DB->perf_get_writes()) {
+            return false;
+        }
+
+        if (!parent::reset_database()) {
+            return false;
+        }
+
+        self::$lastdbwrites = $DB->perf_get_writes();
+
+        return true;
     }
 
     /**
@@ -383,6 +409,10 @@ class phpunit_util extends testing_util {
         $options['fullname'] = 'PHPUnit test site';
 
         install_cli_database($options, false);
+
+        // We need to keep the installed dataroot filedir files.
+        // So each time we reset the dataroot before running a test, the default files are still installed.
+        self::save_original_data_files();
 
         // install timezone info
         $timezones = get_records_csv($CFG->libdir.'/timezone.txt', 'timezone');

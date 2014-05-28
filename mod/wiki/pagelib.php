@@ -110,7 +110,10 @@ abstract class page_wiki {
         $PAGE->set_cm($cm);
         $PAGE->set_activity_record($wiki);
         // the search box
-        $PAGE->set_button(wiki_search_form($cm));
+        if (!empty($subwiki->id)) {
+            $search = optional_param('searchstring', null, PARAM_ALPHANUMEXT);
+            $PAGE->set_button(wiki_search_form($cm, $search, $subwiki));
+        }
     }
 
     /**
@@ -828,6 +831,17 @@ class page_wiki_search extends page_wiki {
         global $PAGE, $CFG;
         $PAGE->set_url($CFG->wwwroot . '/mod/wiki/search.php');
     }
+
+    function print_header() {
+        global $PAGE;
+
+        parent::print_header();
+
+        $wiki = $PAGE->activityrecord;
+        $page = (object)array('title' => $wiki->firstpagetitle);
+        $this->wikioutput->wiki_print_subwiki_selector($wiki, $this->subwiki, $page, 'search');
+    }
+
     function print_content() {
         global $PAGE;
 
@@ -1425,14 +1439,11 @@ class page_wiki_map extends page_wiki {
             echo $this->wikioutput->menu_map($this->page->id, $this->view);
             $this->print_index_content();
             break;
-        case 5:
-            echo $this->wikioutput->menu_map($this->page->id, $this->view);
-            $this->print_page_list_content();
-            break;
         case 6:
             echo $this->wikioutput->menu_map($this->page->id, $this->view);
             $this->print_updated_content();
             break;
+        case 5:
         default:
             echo $this->wikioutput->menu_map($this->page->id, $this->view);
             $this->print_page_list_content();
@@ -1834,11 +1845,15 @@ class page_wiki_restoreversion extends page_wiki {
     }
 
     function print_content() {
-        global $CFG, $PAGE;
+        global $PAGE;
 
-        require_capability('mod/wiki:managewiki', $this->modcontext, NULL, true, 'nomanagewikipermission', 'wiki');
+        $wiki = $PAGE->activityrecord;
+        if (wiki_user_can_edit($this->subwiki, $wiki)) {
+            $this->print_restoreversion();
+        } else {
+            echo get_string('cannoteditpage', 'wiki');
+        }
 
-        $this->print_restoreversion();
     }
 
     function set_url() {
@@ -2149,13 +2164,17 @@ class page_wiki_confirmrestore extends page_wiki_save {
         $PAGE->set_url($CFG->wwwroot . '/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
     }
 
+    function print_header() {
+        $this->set_url();
+    }
+
     function print_content() {
         global $CFG, $PAGE;
 
-        require_capability('mod/wiki:managewiki', $this->modcontext, NULL, true, 'nomanagewikipermission', 'wiki');
-
         $version = wiki_get_version($this->version->id);
-        if (wiki_restore_page($this->page, $version->content, $version->userid)) {
+        $wiki = $PAGE->activityrecord;
+        if (wiki_user_can_edit($this->subwiki, $wiki) &&
+                wiki_restore_page($this->page, $version->content, $version->userid)) {
             redirect($CFG->wwwroot . '/mod/wiki/view.php?pageid=' . $this->page->id, get_string('restoring', 'wiki', $version->version), 3);
         } else {
             print_error('restoreerror', 'wiki', $version->version);

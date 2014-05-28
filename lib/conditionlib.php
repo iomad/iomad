@@ -361,6 +361,19 @@ class condition_info_section extends condition_info_base {
     protected function get_context() {
         return context_course::instance($this->item->course);
     }
+
+    public function get_full_information($modinfo=null) {
+        $information = parent::get_full_information($modinfo);
+
+        // Grouping conditions.
+        if ($this->item->groupingid > 0) {
+            $information .= get_string(
+                    'requires_grouping',
+                    'condition', groups_get_grouping_name($this->item->groupingid));
+        }
+
+        return $information;
+    }
 }
 
 
@@ -618,7 +631,7 @@ abstract class condition_info_base {
      * @return array Associative array from user field constants to display name
      */
     public static function get_condition_user_fields($formatoptions = null) {
-        global $DB;
+        global $DB, $CFG;
 
         $userfields = array(
             'firstname' => get_user_field_name('firstname'),
@@ -642,7 +655,19 @@ abstract class condition_info_base {
 
         // Go through the custom profile fields now
         if ($user_info_fields = $DB->get_records('user_info_field')) {
+            require_once($CFG->dirroot . '/user/profile/lib.php');
             foreach ($user_info_fields as $field) {
+                // This logic is the same as used in profile_user_record function
+                // to exclude some field types from being loaded into the $USER
+                // record.
+                require_once($CFG->dirroot . '/user/profile/field/' .
+                        $field->datatype . '/field.class.php');
+                $newfield = 'profile_field_' . $field->datatype;
+                $formfield = new $newfield();
+                if (!$formfield->is_user_object_data()) {
+                    continue;
+                }
+
                 if ($formatoptions) {
                     $userfields[$field->id] = format_string($field->name, true, $formatoptions);
                 } else {
@@ -772,7 +797,6 @@ abstract class condition_info_base {
         $this->require_data();
 
         $information = '';
-
 
         // Completion conditions
         if (count($this->item->conditionscompletion) > 0) {

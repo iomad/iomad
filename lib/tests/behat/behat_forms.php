@@ -84,7 +84,7 @@ class behat_forms extends behat_base {
     }
 
     /**
-     * Fills a moodle form with field/value data.
+     * Fills a moodle form with field/value data. This step will be deprecated in Moodle 2.7 in favour of 'I set the following fields to these values:'.
      *
      * @Given /^I fill the moodle form with:$/
      * @throws ElementNotFoundException Thrown by behat_base::find
@@ -100,11 +100,7 @@ class behat_forms extends behat_base {
         // The action depends on the field type.
         foreach ($datahash as $locator => $value) {
 
-            // Getting the node element pointed by the label.
-            $fieldnode = $this->find_field($locator);
-
-            // Gets the field type from a parent node.
-            $field = behat_field_manager::get_form_field($fieldnode, $this->getSession());
+            $field = behat_field_manager::get_form_field_from_label($locator, $this);
 
             // Delegates to the field class.
             $field->set_value($value);
@@ -193,7 +189,7 @@ class behat_forms extends behat_base {
     }
 
     /**
-     * Fills in form text field with specified id|name|label|value. It works with text-based fields.
+     * Fills in form text field with specified id|name|label|value. It works with text-based fields. This step will be deprecated in Moodle 2.7 in favour of 'I set the field "FIELD_STRING" to "VALUE_STRING"'.
      *
      * @When /^I fill in "(?P<field_string>(?:[^"]|\\")*)" with "(?P<value_string>(?:[^"]|\\")*)"$/
      * @throws ElementNotFoundException Thrown by behat_base::find
@@ -250,7 +246,7 @@ class behat_forms extends behat_base {
     }
 
     /**
-     * Checks that the field matches the specified value. When using multi-select fields use commas to separate selected options.
+     * Checks that the field matches the specified value. When using multi-select fields use commas to separate selected options. This step will be deprecated in Moodle 2.7 in favour of 'the field "FIELD_STRING" matches value "VALUE_STRING"'.
      *
      * @Then /^the "(?P<field_string>(?:[^"]|\\")*)" field should match "(?P<value_string>(?:[^"]|\\")*)" value$/
      * @throws ExpectationException
@@ -260,10 +256,7 @@ class behat_forms extends behat_base {
      */
     public function the_field_should_match_value($locator, $value) {
 
-        $fieldnode = $this->find_field($locator);
-
-        // Get the field.
-        $field = behat_field_manager::get_form_field($fieldnode, $this->getSession());
+        $field = behat_field_manager::get_form_field_from_label($locator, $this);
 
         // Checks if the provided value matches the current field value.
         if (!$field->matches($value)) {
@@ -289,10 +282,8 @@ class behat_forms extends behat_base {
      */
     public function the_field_matches_value($field, $value) {
 
-        $fieldnode = $this->find_field($field);
-
         // Get the field.
-        $formfield = behat_field_manager::get_form_field($fieldnode, $this->getSession());
+        $formfield = behat_field_manager::get_form_field_from_label($field, $this);
 
         // Checks if the provided value matches the current field value.
         if (!$formfield->matches($value)) {
@@ -316,10 +307,8 @@ class behat_forms extends behat_base {
      */
     public function the_field_does_not_match_value($field, $value) {
 
-        $fieldnode = $this->find_field($field);
-
         // Get the field.
-        $formfield = behat_field_manager::get_form_field($fieldnode, $this->getSession());
+        $formfield = behat_field_manager::get_form_field_from_label($field, $this);
 
         // Checks if the provided value matches the current field value.
         if ($formfield->matches($value)) {
@@ -491,11 +480,9 @@ class behat_forms extends behat_base {
      */
     protected function set_field_value($fieldlocator, $value) {
 
-        $node = $this->find_field($fieldlocator);
-
         // We delegate to behat_form_field class, it will
         // guess the type properly as it is a select tag.
-        $field = behat_field_manager::get_form_field($node, $this->getSession());
+        $field = behat_field_manager::get_form_field_from_label($fieldlocator, $this);
         $field->set_value($value);
     }
 
