@@ -49,6 +49,7 @@ class subscription_created extends \core\event\base {
     protected function init() {
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
+        $this->data['objecttable'] = 'forum_subscriptions';
     }
 
     /**
@@ -57,8 +58,8 @@ class subscription_created extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with the id '$this->relateduserid' was subscribed to the forum with the course module id " .
-            "'$this->contextinstanceid'  by the user with the id '$this->userid'.";
+        return "The user with id '$this->userid' subscribed the user with id '$this->relateduserid' to the forum with the " .
+            "course module id '$this->contextinstanceid'.";
     }
 
     /**

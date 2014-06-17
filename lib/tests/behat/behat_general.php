@@ -283,6 +283,18 @@ class behat_general extends behat_base {
     }
 
     /**
+     * Clicks the specified element and confirms the expected dialogue.
+     *
+     * @When /^I click on "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" confirming the dialogue$/
+     * @throws ElementNotFoundException Thrown by behat_base::find
+     * @param string $link
+     */
+    public function i_click_on_confirming_the_dialogue($element, $selectortype) {
+        $this->i_click_on($element, $selectortype);
+        $this->accept_currently_displayed_alert_dialog();
+    }
+
+    /**
      * Click on the element of the specified type which is located inside the second element.
      *
      * @When /^I click on "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" in the "(?P<element_container_string>(?:[^"]|\\")*)" "(?P<text_selector_string>[^"]*)"$/
@@ -810,9 +822,9 @@ class behat_general extends behat_base {
                     return $context->getSession()->getPage()->findAll($args['selector'], $args['locator']);
                 },
                 $params,
-                false,
+                self::REDUCED_TIMEOUT,
                 $exception,
-                self::REDUCED_TIMEOUT
+                false
             );
 
             throw new ExpectationException('The "' . $element . '" "' . $selectortype . '" exists in the current page', $this->getSession());

@@ -27,10 +27,10 @@ require_once("lib.php");
 $confirm = optional_param('confirm', false, PARAM_BOOL);
 
 $PAGE->set_url('/mod/forum/unsubscribeall.php');
-$PAGE->set_context(context_user::instance($USER->id));
 
 // Do not autologin guest. Only proper users can have forum subscriptions.
 require_login(null, false);
+$PAGE->set_context(context_user::instance($USER->id));
 
 $return = $CFG->wwwroot.'/';
 
@@ -50,7 +50,7 @@ if (data_submitted() and $confirm and confirm_sesskey()) {
     $forums = forum_get_optional_subscribed_forums();
 
     foreach($forums as $forum) {
-        forum_unsubscribe($USER->id, $forum->id);
+        forum_unsubscribe($USER->id, $forum->id, context_module::instance($forum->cm));
     }
     $DB->set_field('user', 'autosubscribe', 0, array('id'=>$USER->id));
 

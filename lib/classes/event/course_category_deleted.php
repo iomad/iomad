@@ -71,7 +71,7 @@ class course_category_deleted extends base {
      * @return string
      */
     public function get_description() {
-        return "The category with the id '$this->objectid' was deleted by the user with the id '$this->userid'.";
+        return "The user with id '$this->userid' deleted the course category with id '$this->objectid'.";
     }
 
     /**
@@ -86,7 +86,7 @@ class course_category_deleted extends base {
     /**
      * Returns the legacy event data.
      *
-     * @return coursecat the category that was deleted
+     * @return \coursecat the category that was deleted
      */
     protected function get_legacy_eventdata() {
         return $this->coursecat;

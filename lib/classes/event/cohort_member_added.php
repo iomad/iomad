@@ -61,8 +61,8 @@ class cohort_member_added extends base {
      * @return string
      */
     public function get_description() {
-        return "The user with the id '$this->relateduserid' was added to the cohort with the id '$this->objectid' by the " .
-            "user with the id '$this->userid'.";
+        return "The user with id '$this->userid' added the user with id '$this->relateduserid' to the cohort with " .
+            "id '$this->objectid'.";
     }
 
     /**
@@ -86,7 +86,7 @@ class cohort_member_added extends base {
     /**
      * Return legacy event data.
      *
-     * @return stdClass
+     * @return \stdClass
      */
     protected function get_legacy_eventdata() {
         $data = new \stdClass();

@@ -85,7 +85,7 @@ class course_completed extends base {
      * @return string
      */
     public function get_description() {
-        return "The course with the id '$this->courseid' was completed for the user with the id '$this->relateduserid'.";
+        return "The user with id '$this->relateduserid' completed the course with id '$this->courseid'.";
     }
 
     /**
@@ -124,6 +124,6 @@ class course_completed extends base {
     protected function validate_data() {
         parent::validate_data();
 
-        // TODO: MDL-45319 add validation of relateduserid and other['relateduserid'].
+        // TODO: MDL-45445 add validation of relateduserid and other['relateduserid'].
     }
 }

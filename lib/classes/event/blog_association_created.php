@@ -25,8 +25,6 @@ namespace core\event;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * blog_association_created
- *
  * Class for event to be triggered when a new blog entry is associated with a context.
  *
  * @property-read array $other {
@@ -70,8 +68,8 @@ class blog_association_created extends base {
      * @return string
      */
     public function get_description() {
-        return "The blog entry with the id '{$this->other['blogid']}' was associated with the context '{$this->other['associatetype']}' with " .
-            "the id '{$this->other['associateid']}' by the user with the id '$this->userid'.";
+        return "The user with id '$this->userid' associated the context '{$this->other['associatetype']}' with id " .
+            "'{$this->other['associateid']}' to the blog entry with id '{$this->other['blogid']}'.";
     }
 
     /**

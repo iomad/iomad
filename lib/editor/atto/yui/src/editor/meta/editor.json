@@ -11,7 +11,8 @@
             "yui-throttle",
             "moodle-core-notification-dialogue",
             "moodle-editor_atto-rangy",
-            "handlebars"
+            "handlebars",
+            "timers"
         ]
     },
     "moodle-editor_atto-plugin": {
@@ -22,7 +23,8 @@
             "event",
             "event-outside",
             "handlebars",
-            "event-custom"
+            "event-custom",
+            "timers"
         ]
     },
     "moodle-editor_atto-menu": {

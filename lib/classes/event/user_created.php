@@ -60,7 +60,7 @@ class user_created extends base {
      * @return string
      */
     public function get_description() {
-        return "The user with the id '$this->objectid' was created.";
+        return "The user with id '$this->userid' created the user with id '$this->objectid'.";
     }
 
     /**
@@ -97,5 +97,20 @@ class user_created extends base {
      */
     protected function get_legacy_logdata() {
         return array(SITEID, 'user', 'add', '/view.php?id='.$this->objectid, fullname($this->get_legacy_eventdata()));
+    }
+
+    /**
+     * Custom validation.
+     *
+     * @throws \coding_exception
+     * @return void
+     */
+    protected function validate_data() {
+        parent::validate_data();
+
+        if (!isset($this->relateduserid)) {
+            debugging('The \'relateduserid\' value must be specified in the event.', DEBUG_DEVELOPER);
+            $this->relateduserid = $this->objectid;
+        }
     }
 }

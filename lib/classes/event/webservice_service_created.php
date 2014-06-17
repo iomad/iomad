@@ -47,7 +47,7 @@ class webservice_service_created extends base {
      * @return string
      */
     public function get_description() {
-        return "The web service service $this->objectid has been created by user $this->userid.";
+        return "The user with id '$this->userid' created the web service with id '$this->objectid'.";
     }
 
     /**
