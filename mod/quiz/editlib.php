@@ -76,6 +76,12 @@ function quiz_remove_question($quiz, $questionid) {
     $DB->set_field('quiz', 'questions', $quiz->questions, array('id' => $quiz->id));
     $DB->delete_records('quiz_question_instances',
             array('quiz' => $quiz->instance, 'question' => $questionid));
+
+    $qtype = $DB->get_field('question', 'qtype', array('id' => $questionid));
+    if ($qtype === 'random') {
+        // This function automatically checks if the question is in use, and won't delete if it is.
+        question_delete_question($questionid);
+    }
 }
 
 /**
@@ -197,7 +203,7 @@ function quiz_add_random_questions($quiz, $addonpage, $categoryid, $number,
                         SELECT *
                           FROM {quiz_question_instances}
                          WHERE question = q.id)
-            ORDER BY id", array($category->id, $includesubcategories))) {
+            ORDER BY id", array($category->id, ($includesubcategories ? '1' : '0')))) {
         // Take as many of these as needed.
         while (($existingquestion = array_shift($existingquestions)) && $number > 0) {
             quiz_add_quiz_question($existingquestion->id, $quiz, $addonpage);
@@ -212,7 +218,7 @@ function quiz_add_random_questions($quiz, $addonpage, $categoryid, $number,
     // More random questions are needed, create them.
     for ($i = 0; $i < $number; $i += 1) {
         $form = new stdClass();
-        $form->questiontext = array('text' => $includesubcategories, 'format' => 0);
+        $form->questiontext = array('text' => ($includesubcategories ? '1' : '0'), 'format' => 0);
         $form->category = $category->id . ',' . $category->contextid;
         $form->defaultmark = 1;
         $form->hidden = 1;
@@ -828,7 +834,7 @@ function quiz_print_singlequestion($question, $returnurl, $quiz) {
  * @param object $quiz The quiz in the context of which the question is being displayed
  * @param bool $quiz_qbanktool Indicate to this function if the question bank window open
  */
-function quiz_print_randomquestion(&$question, &$pageurl, &$quiz, $quiz_qbanktool) {
+function quiz_print_randomquestion($question, $pageurl, $quiz, $quiz_qbanktool) {
     global $DB, $OUTPUT;
     echo '<div class="quiz_randomquestion">';
 
@@ -886,8 +892,8 @@ function quiz_print_randomquestion(&$question, &$pageurl, &$quiz, $quiz_qbanktoo
 
         // Then list them.
         echo '<ul>';
-        foreach ($questionstoshow as $question) {
-            echo '<li>' . quiz_question_tostring($question, true) . '</li>';
+        foreach ($questionstoshow as $subquestion) {
+            echo '<li>' . quiz_question_tostring($subquestion, true) . '</li>';
         }
 
         // Finally display the total number.

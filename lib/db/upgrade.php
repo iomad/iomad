@@ -1583,6 +1583,8 @@ function xmldb_main_upgrade($oldversion) {
     }
 
     if ($oldversion < 2013021100.01) {
+        // Make sure there are no bogus nulls in old MySQL tables.
+        $DB->set_field_select('user', 'password', '', "password IS NULL");
 
         // Changing precision of field password on table user to (255).
         $table = new xmldb_table('user');
@@ -2982,6 +2984,13 @@ function xmldb_main_upgrade($oldversion) {
         }
 
         upgrade_main_savepoint(true, 2013111803.01);
+    }
+
+    if ($oldversion < 2013111803.05) {
+        // Fixing possible wrong MIME type for Publisher files.
+        $filetypes = array('%.pub'=>'application/x-mspublisher');
+        upgrade_mimetypes($filetypes);
+        upgrade_main_savepoint(true, 2013111803.05);
     }
 
     return true;

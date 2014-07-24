@@ -189,14 +189,9 @@ class phpunit_util extends testing_util {
         $FULLME = null;
         $ME = null;
         $SCRIPT = null;
-        $SESSION = new stdClass();
-        $_SESSION['SESSION'] =& $SESSION;
 
-        // set fresh new not-logged-in user
-        $user = new stdClass();
-        $user->id = 0;
-        $user->mnethostid = $CFG->mnet_localhost_id;
-        \core\session\manager::set_user($user);
+        // Empty sessison and set fresh new not-logged-in user.
+        \core\session\manager::init_empty_session();
 
         // reset all static caches
         \core\event\manager::phpunit_reset();
@@ -207,6 +202,9 @@ class phpunit_util extends testing_util {
         core_text::reset_caches();
         get_message_processors(false, true);
         filter_manager::reset_caches();
+        // Reset internal users.
+        core_user::reset_internal_users();
+
         //TODO MDL-25290: add more resets here and probably refactor them to new core function
 
         // Reset course and module caches.
