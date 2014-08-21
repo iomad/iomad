@@ -155,6 +155,7 @@ $sql = 'FROM {course_shopsettings} css
                                                   WHERE courseid = c.id ORDER BY price LIMIT 0,1 )
         WHERE css.enabled = 1
         ' . $tagwhere . $searchwhere . '
+        GROUP BY c.fullname
         ORDER BY c.fullname';
 
 // Get the number of companies.
