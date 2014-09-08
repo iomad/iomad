@@ -1067,7 +1067,9 @@ class core_course_management_renderer extends plugin_renderer_base {
         $html = '';
         $totalpages = ceil($totalcourses / $perpage);
         if ($showtotals) {
-            if ($totalpages == 1) {
+            if ($totalpages == 0) {
+                $str = get_string('nocourses');
+            } else if ($totalpages == 1) {
                 $str = get_string('showingacourses', 'moodle', $totalcourses);
             } else {
                 $a = new stdClass;
@@ -1180,27 +1182,69 @@ class core_course_management_renderer extends plugin_renderer_base {
             }
             // Show/Hide.
             if ($course->can_change_visibility()) {
-                if ($course->visible) {
                     $actions[] = $this->output->action_icon(
                         new moodle_url($baseurl, array('action' => 'hidecourse')),
-                        new pix_icon('t/show', get_string('hide')),
+                        new pix_icon('t/hide', get_string('hide')),
                         null,
                         array('data-action' => 'hide', 'class' => 'action-hide')
                     );
-                } else {
                     $actions[] = $this->output->action_icon(
                         new moodle_url($baseurl, array('action' => 'showcourse')),
-                        new pix_icon('t/hide', get_string('show')),
+                        new pix_icon('t/show', get_string('show')),
                         null,
                         array('data-action' => 'show', 'class' => 'action-show')
                     );
-                }
             }
         }
         if (empty($actions)) {
             return '';
         }
         return html_writer::span(join('', $actions), 'course-item-actions item-actions');
+    }
+
+    /**
+     * Renders html to display a course search form
+     *
+     * @param string $value default value to populate the search field
+     * @param string $format display format - 'plain' (default), 'short' or 'navbar'
+     * @return string
+     */
+    public function course_search_form($value = '', $format = 'plain') {
+        static $count = 0;
+        $formid = 'coursesearch';
+        if ((++$count) > 1) {
+            $formid .= $count;
+        }
+
+        switch ($format) {
+            case 'navbar' :
+                $formid = 'coursesearchnavbar';
+                $inputid = 'navsearchbox';
+                $inputsize = 20;
+                break;
+            case 'short' :
+                $inputid = 'shortsearchbox';
+                $inputsize = 12;
+                break;
+            default :
+                $inputid = 'coursesearchbox';
+                $inputsize = 30;
+        }
+
+        $strsearchcourses = get_string("searchcourses");
+        $searchurl = new moodle_url('/course/management.php');
+
+        $output = html_writer::start_tag('form', array('id' => $formid, 'action' => $searchurl, 'method' => 'get'));
+        $output .= html_writer::start_tag('fieldset', array('class' => 'coursesearchbox invisiblefieldset'));
+        $output .= html_writer::tag('label', $strsearchcourses.': ', array('for' => $inputid));
+        $output .= html_writer::empty_tag('input', array('type' => 'text', 'id' => $inputid,
+            'size' => $inputsize, 'name' => 'search', 'value' => s($value)));
+        $output .= html_writer::empty_tag('input', array('type' => 'submit',
+            'value' => get_string('go')));
+        $output .= html_writer::end_tag('fieldset');
+        $output .= html_writer::end_tag('form');
+
+        return $output;
     }
 
     /**
