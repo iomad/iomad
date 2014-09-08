@@ -1401,11 +1401,14 @@ class restore_course_structure_step extends restore_structure_step {
         $data->fullname = $fullname;
         $data->shortname= $shortname;
 
+        // Only allow the idnumber to be set if the user has permission and the idnumber is not already in use by
+        // another course on this site.
         $context = context::instance_by_id($this->task->get_contextid());
-        if (has_capability('moodle/course:changeidnumber', $context, $this->task->get_userid())) {
-            $data->idnumber = '';
+        if (!empty($data->idnumber) && has_capability('moodle/course:changeidnumber', $context, $this->task->get_userid()) &&
+                $this->task->is_samesite() && !$DB->record_exists('course', array('idnumber' => $data->idnumber))) {
+            // Do not reset idnumber.
         } else {
-            unset($data->idnumber);
+            $data->idnumber = '';
         }
 
         // Any empty value for course->hiddensections will lead to 0 (default, show collapsed).
@@ -2537,7 +2540,14 @@ class restore_course_logs_structure_step extends restore_structure_step {
 
         // If we have data, insert it, else something went wrong in the restore_logs_processor
         if ($data) {
-            $DB->insert_record('log', $data);
+            if (empty($data->url)) {
+                $data->url = '';
+            }
+            if (empty($data->info)) {
+                $data->info = '';
+            }
+            add_to_log($data->course, $data->module, $data->action, $data->url, $data->info,
+                $data->cmid, $data->userid);
         }
     }
 }
@@ -2575,7 +2585,14 @@ class restore_activity_logs_structure_step extends restore_course_logs_structure
 
         // If we have data, insert it, else something went wrong in the restore_logs_processor
         if ($data) {
-            $DB->insert_record('log', $data);
+            if (empty($data->url)) {
+                $data->url = '';
+            }
+            if (empty($data->info)) {
+                $data->info = '';
+            }
+            add_to_log($data->course, $data->module, $data->action, $data->url, $data->info,
+                $data->cmid, $data->userid);
         }
     }
 }

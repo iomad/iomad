@@ -286,11 +286,12 @@ function scorm_parse($scorm, $full) {
             }
         } else {
             require_once("$CFG->dirroot/mod/scorm/datamodels/aicclib.php");
-            // AICC
-            if (!scorm_parse_aicc($scorm)) {
+            $result = scorm_parse_aicc($scorm);
+            if (!$result) {
                 $scorm->version = 'ERROR';
+            } else {
+                $scorm->version = 'AICC';
             }
-            $scorm->version = 'AICC';
         }
 
     } else if ($scorm->scormtype === SCORM_TYPE_EXTERNAL and $cfg_scorm->allowtypeexternal) {
@@ -303,11 +304,14 @@ function scorm_parse($scorm, $full) {
 
     } else if ($scorm->scormtype === SCORM_TYPE_AICCURL  and $cfg_scorm->allowtypeexternalaicc) {
         require_once("$CFG->dirroot/mod/scorm/datamodels/aicclib.php");
-        // AICC
-        if (!scorm_parse_aicc($scorm)) {
+        // AICC.
+        $result = scorm_parse_aicc($scorm);
+        if (!$result) {
             $scorm->version = 'ERROR';
+        } else {
+            $scorm->version = 'AICC';
         }
-        $scorm->version = 'AICC';
+
     } else {
         // sorry, disabled type
         return;
@@ -626,8 +630,11 @@ function scorm_get_sco_runtime($scormid, $scoid, $userid, $attempt=1) {
     global $DB;
 
     $timedata = new stdClass();
-    $sql = !empty($scoid) ? "userid=$userid AND scormid=$scormid AND scoid=$scoid AND attempt=$attempt" : "userid=$userid AND scormid=$scormid AND attempt=$attempt";
-    $tracks = $DB->get_records_select('scorm_scoes_track', "$sql ORDER BY timemodified ASC");
+    $params = array('userid' => $userid, 'scormid' => $scormid, 'attempt' => $attempt);
+    if (!empty($scoid)) {
+        $params['scoid'] = $scoid;
+    }
+    $tracks = $DB->get_records('scorm_scoes_track', $params, "timemodified ASC");
     if ($tracks) {
         $tracks = array_values($tracks);
     }
@@ -1792,7 +1799,13 @@ function scorm_get_toc($user, $scorm, $cmid, $toclink=TOCJSLINK, $currentorg='',
     }
 
     if (empty($scoid)) {
-        $result->sco = $scoes['scoes'][0]->children[0];
+        // If this is a normal package with an org sco and child scos get the first child.
+        if (!empty($scoes['scoes'][0]->children)) {
+            $result->sco = $scoes['scoes'][0]->children[0];
+        } else { // This package only has one sco - it may be a simple external AICC package.
+            $result->sco = $scoes['scoes'][0];
+        }
+
     } else {
         $result->sco = scorm_get_sco($scoid);
     }
