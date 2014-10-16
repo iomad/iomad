@@ -97,6 +97,11 @@ if (!$iid) {
         $csvimport = new csv_import_reader($iid, 'grade');
 
         $csvimport->load_csv_content($text, $formdata->encoding, $separator);
+        if ($error = $csvimport->get_error()) {
+            echo $OUTPUT->notification($error);
+            echo $OUTPUT->footer();
+            die();
+        }
 
         // --- get header (field names) ---
         $header = $csvimport->get_columns();

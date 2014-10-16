@@ -671,6 +671,7 @@ class grade_edit_tree_column_aggregation extends grade_edit_tree_column_category
         } else {
             $attributes = array();
             $attributes['id'] = 'aggregation_'.$category->id;
+            $attributes['class'] = 'ignoredirty';
             $aggregation = html_writer::label(get_string('aggregation', 'grades'), 'aggregation_'.$category->id, false, array('class' => 'accesshide'));
             $aggregation .= html_writer::select($options, 'aggregation_'.$category->id, $category->aggregation, null, $attributes);
             $action = new component_action('change', 'update_category_aggregation', array('courseid' => $params['id'], 'category' => $category->id, 'sesskey' => sesskey()));
@@ -1198,7 +1199,7 @@ class grade_edit_tree_column_select extends grade_edit_tree_column {
         if ($params['itemtype'] != 'course' && $params['itemtype'] != 'category') {
             $itemselect = '<label class="accesshide" for="select_'.$params['eid'].'">'.
                 get_string('select', 'grades', $item->itemname).'</label>
-                <input class="itemselect" type="checkbox" name="select_'.$params['eid'].'" id="select_'.$params['eid'].
+                <input class="itemselect ignoredirty" type="checkbox" name="select_'.$params['eid'].'" id="select_'.$params['eid'].
                 '" onchange="toggleCategorySelector();"/>'; // TODO: convert to YUI handler
         }
         //html_writer::table() will wrap the item cell contents in a <TD> so don't do it here

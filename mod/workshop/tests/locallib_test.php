@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/workshop/locallib.php'); // Include the code to test
+require_once(__DIR__ . '/fixtures/testable.php');
 
 
 /**
@@ -40,8 +41,11 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     /** setup testing environment */
     protected function setUp() {
         parent::setUp();
-
-        $this->workshop = new testable_workshop();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $workshop = $this->getDataGenerator()->create_module('workshop', array('course' => $course));
+        $cm = get_coursemodule_from_instance('workshop', $workshop->id, $course->id, false, MUST_EXIST);
+        $this->workshop = new testable_workshop($workshop, $cm, $course);
     }
 
     protected function tearDown() {
@@ -50,6 +54,8 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_aggregate_submission_grades_process_notgraded() {
+        $this->resetAfterTest(true);
+
         // fixture set-up
         $batch = array();   // batch of a submission's assessments
         $batch[] = (object)array('submissionid' => 12, 'submissiongrade' => null, 'weight' => 1, 'grade' => null);
@@ -126,6 +132,8 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_aggregate_submission_grades_process_mean_nochange() {
+        $this->resetAfterTest(true);
+
         // fixture set-up
         $batch = array();   // batch of a submission's assessments
         $batch[] = (object)array('submissionid' => 45, 'submissiongrade' => 19.67750, 'weight' => 1, 'grade' => 56.12000);
@@ -167,6 +175,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_aggregate_grading_grades_process_nograding() {
+        $this->resetAfterTest(true);
         // fixture set-up
         $batch = array();
         $batch[] = (object)array('reviewerid'=>2, 'gradinggrade'=>null, 'gradinggradeover'=>null, 'aggregationid'=>null, 'aggregatedgrade'=>null);
@@ -205,6 +214,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_aggregate_grading_grades_process_single_grade_uptodate() {
+        $this->resetAfterTest(true);
         // fixture set-up
         $batch = array();
         $batch[] = (object)array('reviewerid'=>3, 'gradinggrade'=>90.00000, 'gradinggradeover'=>null, 'aggregationid'=>1, 'aggregatedgrade'=>90.00000);
@@ -297,6 +307,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_percent_to_value() {
+        $this->resetAfterTest(true);
         // fixture setup
         $total = 185;
         $percent = 56.6543;
@@ -307,6 +318,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_percent_to_value_negative() {
+        $this->resetAfterTest(true);
         // fixture setup
         $total = 185;
         $percent = -7.098;
@@ -317,6 +329,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_percent_to_value_over_hundred() {
+        $this->resetAfterTest(true);
         // fixture setup
         $total = 185;
         $percent = 121.08;
@@ -327,6 +340,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_lcm() {
+        $this->resetAfterTest(true);
         // fixture setup + exercise SUT + verify in one step
         $this->assertEquals(workshop::lcm(1,4), 4);
         $this->assertEquals(workshop::lcm(2,4), 4);
@@ -336,6 +350,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_lcm_array() {
+        $this->resetAfterTest(true);
         // fixture setup
         $numbers = array(5,3,15);
         // excersise SUT
@@ -345,6 +360,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
     }
 
     public function test_prepare_example_assessment() {
+        $this->resetAfterTest(true);
         // fixture setup
         $fakerawrecord = (object)array(
             'id'                => 42,
@@ -374,6 +390,7 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
 
     public function test_prepare_example_reference_assessment() {
         global $USER;
+        $this->resetAfterTest(true);
         // fixture setup
         $fakerawrecord = (object)array(
             'id'                => 38,
@@ -399,27 +416,97 @@ class mod_workshop_internal_api_testcase extends advanced_testcase {
         // excersise SUT
         $a = $this->workshop->prepare_example_reference_assessment($fakerawrecord);
     }
-}
 
+    /**
+     * Test the workshop reset feature.
+     */
+    public function test_reset_phase() {
+        $this->resetAfterTest(true);
 
-/**
- * Test subclass that makes all the protected methods we want to test public.
- */
-class testable_workshop extends workshop {
+        $this->workshop->switch_phase(workshop::PHASE_CLOSED);
+        $this->assertEquals(workshop::PHASE_CLOSED, $this->workshop->phase);
 
-    public function __construct() {
-        $this->id       = 16;
-        $this->cm       = new stdclass();
-        $this->course   = new stdclass();
-        $this->context  = new stdclass();
+        $settings = (object)array(
+            'reset_workshop_phase' => 0,
+        );
+        $status = $this->workshop->reset_userdata($settings);
+        $this->assertEquals(workshop::PHASE_CLOSED, $this->workshop->phase);
+
+        $settings = (object)array(
+            'reset_workshop_phase' => 1,
+        );
+        $status = $this->workshop->reset_userdata($settings);
+        $this->assertEquals(workshop::PHASE_SETUP, $this->workshop->phase);
+        foreach ($status as $result) {
+            $this->assertFalse($result['error']);
+        }
     }
 
-    public function aggregate_submission_grades_process(array $assessments) {
-        parent::aggregate_submission_grades_process($assessments);
+    /**
+     * Test deleting assessments related data on workshop reset.
+     */
+    public function test_reset_userdata_assessments() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $student1 = $this->getDataGenerator()->create_user();
+        $student2 = $this->getDataGenerator()->create_user();
+
+        $this->getDataGenerator()->enrol_user($student1->id, $this->workshop->course->id);
+        $this->getDataGenerator()->enrol_user($student2->id, $this->workshop->course->id);
+
+        $workshopgenerator = $this->getDataGenerator()->get_plugin_generator('mod_workshop');
+
+        $subid1 = $workshopgenerator->create_submission($this->workshop->id, $student1->id);
+        $subid2 = $workshopgenerator->create_submission($this->workshop->id, $student2->id);
+
+        $asid1 = $workshopgenerator->create_assessment($subid1, $student2->id);
+        $asid2 = $workshopgenerator->create_assessment($subid2, $student1->id);
+
+        $settings = (object)array(
+            'reset_workshop_assessments' => 1,
+        );
+        $status = $this->workshop->reset_userdata($settings);
+
+        foreach ($status as $result) {
+            $this->assertFalse($result['error']);
+        }
+
+        $this->assertEquals(2, $DB->count_records('workshop_submissions', array('workshopid' => $this->workshop->id)));
+        $this->assertEquals(0, $DB->count_records('workshop_assessments'));
     }
 
-    public function aggregate_grading_grades_process(array $assessments, $timegraded = null) {
-        parent::aggregate_grading_grades_process($assessments, $timegraded);
-    }
+    /**
+     * Test deleting submissions related data on workshop reset.
+     */
+    public function test_reset_userdata_submissions() {
+        global $DB;
+        $this->resetAfterTest(true);
 
+        $student1 = $this->getDataGenerator()->create_user();
+        $student2 = $this->getDataGenerator()->create_user();
+
+        $this->getDataGenerator()->enrol_user($student1->id, $this->workshop->course->id);
+        $this->getDataGenerator()->enrol_user($student2->id, $this->workshop->course->id);
+
+        $workshopgenerator = $this->getDataGenerator()->get_plugin_generator('mod_workshop');
+
+        $subid1 = $workshopgenerator->create_submission($this->workshop->id, $student1->id);
+        $subid2 = $workshopgenerator->create_submission($this->workshop->id, $student2->id);
+
+        $asid1 = $workshopgenerator->create_assessment($subid1, $student2->id);
+        $asid2 = $workshopgenerator->create_assessment($subid2, $student1->id);
+
+        $settings = (object)array(
+            'reset_workshop_submissions' => 1,
+        );
+        $status = $this->workshop->reset_userdata($settings);
+
+        foreach ($status as $result) {
+            $this->assertFalse($result['error']);
+        }
+
+        $this->assertEquals(0, $DB->count_records('workshop_submissions', array('workshopid' => $this->workshop->id)));
+        $this->assertEquals(0, $DB->count_records('workshop_assessments'));
+    }
 }
