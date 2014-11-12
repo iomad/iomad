@@ -564,6 +564,7 @@ class grade_category extends grade_object {
             $grade->finalgrade = null;
 
             if (!is_null($oldfinalgrade)) {
+                $grade->timemodified = time();
                 $grade->update('aggregation');
             }
             return;
@@ -606,6 +607,7 @@ class grade_category extends grade_object {
             $grade->finalgrade = null;
 
             if (!is_null($oldfinalgrade)) {
+                $grade->timemodified = time();
                 $grade->update('aggregation');
             }
             return;
@@ -622,6 +624,7 @@ class grade_category extends grade_object {
 
         // update in db if changed
         if (grade_floats_different($grade->finalgrade, $oldfinalgrade)) {
+            $grade->timemodified = time();
             $grade->update('aggregation');
         }
 
@@ -769,8 +772,10 @@ class grade_category extends grade_object {
                 $sum = 0;
                 foreach ($grade_values as $itemid => $grade_value) {
                     $sum += $grade_value * ($items[$itemid]->grademax - $items[$itemid]->grademin);
-                    $grademin += $items[$itemid]->grademin;
-                    $grademax += $items[$itemid]->grademax;
+                    if ($items[$itemid]->aggregationcoef == 0) {
+                        $grademin += $items[$itemid]->grademin;
+                        $grademax += $items[$itemid]->grademax;
+                    }
                 }
 
                 $agg_grade = $sum / ($grademax - $grademin);
@@ -897,6 +902,7 @@ class grade_category extends grade_object {
 
         // update in db if changed
         if (grade_floats_different($grade->finalgrade, $oldfinalgrade)) {
+            $grade->timemodified = time();
             $grade->update('aggregation');
         }
 

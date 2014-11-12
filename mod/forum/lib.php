@@ -3956,7 +3956,7 @@ function forum_search_form($course, $search='') {
     $output .= '<fieldset class="invisiblefieldset">';
     $output .= $OUTPUT->help_icon('search');
     $output .= '<label class="accesshide" for="search" >'.get_string('search', 'forum').'</label>';
-    $output .= '<input id="search" name="search" type="text" size="18" value="'.s($search, true).'" alt="search" />';
+    $output .= '<input id="search" name="search" type="text" size="18" value="'.s($search, true).'" />';
     $output .= '<label class="accesshide" for="searchforums" >'.get_string('searchforums', 'forum').'</label>';
     $output .= '<input id="searchforums" value="'.get_string('searchforums', 'forum').'" type="submit" />';
     $output .= '<input name="id" type="hidden" value="'.$course->id.'" />';
@@ -4787,7 +4787,6 @@ function forum_get_subscribed_forums($course) {
               FROM {forum} f
                    LEFT JOIN {forum_subscriptions} fs ON (fs.forum = f.id AND fs.userid = ?)
              WHERE f.course = ?
-                   AND f.forcesubscribe <> ".FORUM_DISALLOWSUBSCRIBE."
                    AND (f.forcesubscribe = ".FORUM_FORCESUBSCRIBE." OR fs.id IS NOT NULL)";
     if ($subscribed = $DB->get_records_sql($sql, array($USER->id, $course->id))) {
         foreach ($subscribed as $s) {
@@ -5066,7 +5065,10 @@ function forum_get_tracking_link($forum, $messages=array(), $fakelink=true) {
         // use <noscript> to print button in case javascript is not enabled
         $link .= '<noscript>';
     }
-    $url = new moodle_url('/mod/forum/settracking.php', array('id'=>$forum->id));
+    $url = new moodle_url('/mod/forum/settracking.php', array(
+            'id' => $forum->id,
+            'sesskey' => sesskey(),
+        ));
     $link .= $OUTPUT->single_button($url, $linktext, 'get', array('title'=>$linktitle));
 
     if ($fakelink) {
@@ -6330,57 +6332,58 @@ function forum_tp_mark_posts_read($user, $postids) {
         return $status;
     }
 
-    list($usql, $params) = $DB->get_in_or_equal($postids);
-    $params[] = $user->id;
+    list($usql, $postidparams) = $DB->get_in_or_equal($postids, SQL_PARAMS_NAMED, 'postid');
 
-    $sql = "SELECT id
-              FROM {forum_read}
-             WHERE postid $usql AND userid = ?";
-    if ($existing = $DB->get_records_sql($sql, $params)) {
-        $existing = array_keys($existing);
+    $insertparams = array(
+        'userid1' => $user->id,
+        'userid2' => $user->id,
+        'userid3' => $user->id,
+        'firstread' => $now,
+        'lastread' => $now,
+        'cutoffdate' => $cutoffdate,
+    );
+    $params = array_merge($postidparams, $insertparams);
+
+    if ($CFG->forum_allowforcedreadtracking) {
+        $trackingsql = "AND (f.trackingtype = ".FORUM_TRACKING_FORCED."
+                        OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND tf.id IS NULL))";
     } else {
-        $existing = array();
+        $trackingsql = "AND ((f.trackingtype = ".FORUM_TRACKING_OPTIONAL."  OR f.trackingtype = ".FORUM_TRACKING_FORCED.")
+                            AND tf.id IS NULL)";
     }
 
-    $new = array_diff($postids, $existing);
+    // First insert any new entries.
+    $sql = "INSERT INTO {forum_read} (userid, postid, discussionid, forumid, firstread, lastread)
 
-    if ($new) {
-        list($usql, $new_params) = $DB->get_in_or_equal($new);
-        $params = array($user->id, $now, $now, $user->id);
-        $params = array_merge($params, $new_params);
-        $params[] = $cutoffdate;
+            SELECT :userid1, p.id, p.discussion, d.forum, :firstread, :lastread
+                FROM {forum_posts} p
+                    JOIN {forum_discussions} d       ON d.id = p.discussion
+                    JOIN {forum} f                   ON f.id = d.forum
+                    LEFT JOIN {forum_track_prefs} tf ON (tf.userid = :userid2 AND tf.forumid = f.id)
+                    LEFT JOIN {forum_read} fr        ON (
+                            fr.userid = :userid3
+                        AND fr.postid = p.id
+                        AND fr.discussionid = d.id
+                        AND fr.forumid = f.id
+                    )
+                WHERE p.id $usql
+                    AND p.modified >= :cutoffdate
+                    $trackingsql
+                    AND fr.id IS NULL";
 
-        if ($CFG->forum_allowforcedreadtracking) {
-            $trackingsql = "AND (f.trackingtype = ".FORUM_TRACKING_FORCED."
-                            OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND tf.id IS NULL))";
-        } else {
-            $trackingsql = "AND ((f.trackingtype = ".FORUM_TRACKING_OPTIONAL."  OR f.trackingtype = ".FORUM_TRACKING_FORCED.")
-                                AND tf.id IS NULL)";
-        }
+    $status = $DB->execute($sql, $params) && $status;
 
-        $sql = "INSERT INTO {forum_read} (userid, postid, discussionid, forumid, firstread, lastread)
-
-                SELECT ?, p.id, p.discussion, d.forum, ?, ?
-                  FROM {forum_posts} p
-                       JOIN {forum_discussions} d       ON d.id = p.discussion
-                       JOIN {forum} f                   ON f.id = d.forum
-                       LEFT JOIN {forum_track_prefs} tf ON (tf.userid = ? AND tf.forumid = f.id)
-                 WHERE p.id $usql
-                       AND p.modified >= ?
-                       $trackingsql";
-        $status = $DB->execute($sql, $params) && $status;
-    }
-
-    if ($existing) {
-        list($usql, $new_params) = $DB->get_in_or_equal($existing);
-        $params = array($now, $user->id);
-        $params = array_merge($params, $new_params);
-
-        $sql = "UPDATE {forum_read}
-                   SET lastread = ?
-                 WHERE userid = ? AND postid $usql";
-        $status = $DB->execute($sql, $params) && $status;
-    }
+    // Then update all records.
+    $updateparams = array(
+        'userid' => $user->id,
+        'lastread' => $now,
+    );
+    $params = array_merge($postidparams, $updateparams);
+    $status = $DB->set_field_select('forum_read', 'lastread', $now, '
+                userid      =  :userid
+            AND lastread    <> :lastread
+            AND postid      ' . $usql,
+            $params) && $status;
 
     return $status;
 }
@@ -7805,7 +7808,10 @@ function forum_extend_settings_navigation(settings_navigation $settingsnav, navi
             } else {
                 $linktext = get_string('trackforum', 'forum');
             }
-            $url = new moodle_url('/mod/forum/settracking.php', array('id'=>$forumobject->id));
+            $url = new moodle_url('/mod/forum/settracking.php', array(
+                    'id' => $forumobject->id,
+                    'sesskey' => sesskey(),
+                ));
             $forumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
         }
     }

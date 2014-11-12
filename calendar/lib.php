@@ -318,9 +318,9 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
     }
 
     // Now display all the calendar
-    $daytime = $display->tstart - DAYSECS;
+    $daytime = strtotime('-1 day', $display->tstart);
     for($day = 1; $day <= $display->maxdays; ++$day, ++$dayweek) {
-        $daytime += DAYSECS;
+        $daytime = strtotime('+1 day', $daytime);
         if($dayweek > $display->maxwday) {
             // We need to change week (table row)
             $content .= '</tr><tr>';
@@ -709,19 +709,18 @@ function calendar_get_events($tstart, $tend, $users, $groups, $courses, $withdur
     global $DB;
 
     $whereclause = '';
+    $params = array();
     // Quick test
     if(is_bool($users) && is_bool($groups) && is_bool($courses)) {
         return array();
     }
 
-    if(is_array($users) && !empty($users)) {
+    if ((is_array($users) && !empty($users)) or is_numeric($users)) {
         // Events from a number of users
         if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (userid IN ('.implode(',', $users).') AND courseid = 0 AND groupid = 0)';
-    } else if(is_numeric($users)) {
-        // Events from one user
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (userid = '.$users.' AND courseid = 0 AND groupid = 0)';
+        list($insqlusers, $inparamsusers) = $DB->get_in_or_equal($users, SQL_PARAMS_NAMED);
+        $whereclause .= " (userid $insqlusers AND courseid = 0 AND groupid = 0)";
+        $params = array_merge($params, $inparamsusers);
     } else if($users === true) {
         // Events from ALL users
         if(!empty($whereclause)) $whereclause .= ' OR';
@@ -730,14 +729,12 @@ function calendar_get_events($tstart, $tend, $users, $groups, $courses, $withdur
         // No user at all, do nothing
     }
 
-    if(is_array($groups) && !empty($groups)) {
+    if ((is_array($groups) && !empty($groups)) or is_numeric($groups)) {
         // Events from a number of groups
         if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' groupid IN ('.implode(',', $groups).')';
-    } else if(is_numeric($groups)) {
-        // Events from one group
-        if(!empty($whereclause)) $whereclause .= ' OR ';
-        $whereclause .= ' groupid = '.$groups;
+        list($insqlgroups, $inparamsgroups) = $DB->get_in_or_equal($groups, SQL_PARAMS_NAMED);
+        $whereclause .= " groupid $insqlgroups ";
+        $params = array_merge($params, $inparamsgroups);
     } else if($groups === true) {
         // Events from ALL groups
         if(!empty($whereclause)) $whereclause .= ' OR ';
@@ -745,15 +742,11 @@ function calendar_get_events($tstart, $tend, $users, $groups, $courses, $withdur
     }
     // boolean false (no groups at all): we don't need to do anything
 
-    if(is_array($courses) && !empty($courses)) {
-        if(!empty($whereclause)) {
-            $whereclause .= ' OR';
-        }
-        $whereclause .= ' (groupid = 0 AND courseid IN ('.implode(',', $courses).'))';
-    } else if(is_numeric($courses)) {
-        // One course
+    if ((is_array($courses) && !empty($courses)) or is_numeric($courses)) {
         if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (groupid = 0 AND courseid = '.$courses.')';
+        list($insqlcourses, $inparamscourses) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+        $whereclause .= " (groupid = 0 AND courseid $insqlcourses)";
+        $params = array_merge($params, $inparamscourses);
     } else if ($courses === true) {
         // Events from ALL courses
         if(!empty($whereclause)) $whereclause .= ' OR';
@@ -787,7 +780,7 @@ function calendar_get_events($tstart, $tend, $users, $groups, $courses, $withdur
         $whereclause .= ' AND visible = 1';
     }
 
-    $events = $DB->get_records_select('event', $whereclause, null, 'timestart');
+    $events = $DB->get_records_select('event', $whereclause, $params, 'timestart');
     if ($events === false) {
         $events = array();
     }
@@ -958,8 +951,8 @@ function calendar_top_controls($type, $data) {
         case 'day':
             $days = calendar_get_days();
 
-            $prevtimestamp = $time - DAYSECS;
-            $nexttimestamp = $time + DAYSECS;
+            $prevtimestamp = strtotime('-1 day', $time);
+            $nexttimestamp = strtotime('+1 day', $time);
 
             $prevdate = $calendartype->timestamp_to_date_array($prevtimestamp);
             $nextdate = $calendartype->timestamp_to_date_array($nexttimestamp);
@@ -1705,7 +1698,7 @@ function calendar_format_event_time($event, $now, $linkparams = null, $usecommon
             $timeend = calendar_time_representation($event->timestart + $event->timeduration);
 
             // Set printable representation.
-            if ($now >= $usermidnightstart && $now < ($usermidnightstart + DAYSECS)) {
+            if ($now >= $usermidnightstart && $now < strtotime('+1 day', $usermidnightstart)) {
                 $url = calendar_get_link_href(new moodle_url(CALENDAR_URL . 'view.php', $linkparams), 0, 0, 0, $endtime);
                 $eventtime = $timestart . ' <strong>&raquo;</strong> ' . html_writer::link($url, $dayend) . $timeend;
             } else {
@@ -2752,7 +2745,7 @@ class calendar_information {
      * @return int tomorrow timestamp
      */
     public function timestamp_tomorrow() {
-        return $this->time + DAYSECS;
+        return strtotime('+1 day', $this->time);
     }
     /**
      * Adds the pretend blocks for the calendar
@@ -2901,7 +2894,7 @@ function calendar_add_icalendar_event($event, $courseid, $subscriptionid) {
 
     $eventrecord->timestart = strtotime($event->properties['DTSTART'][0]->value);
     if (empty($event->properties['DTEND'])) {
-        $eventrecord->timeduration = 3600; // one hour if no end time specified
+        $eventrecord->timeduration = 0; // no duration if no end time specified
     } else {
         $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value) - $eventrecord->timestart;
     }
