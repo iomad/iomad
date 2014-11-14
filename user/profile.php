@@ -49,7 +49,14 @@ if (!empty($CFG->forceloginforprofiles)) {
     require_login();
     if (isguestuser()) {
         $SESSION->wantsurl = $PAGE->url->out(false);
-        redirect(get_login_url());
+
+        $PAGE->set_context(context_system::instance());
+        echo $OUTPUT->header();
+        echo $OUTPUT->confirm(get_string('guestcantaccessprofiles', 'error'),
+                              get_login_url(),
+                              $CFG->wwwroot);
+        echo $OUTPUT->footer();
+        die;
     }
 } else if (!empty($CFG->forcelogin)) {
     require_login();
@@ -391,7 +398,7 @@ if (!isset($hiddenfields['mycourses'])) {
                 $courselisting .= ', ';
             }
             $shown++;
-            if (!$showallcourses && $shown == 20) {
+            if (!$showallcourses && $shown == $CFG->navcourselimit) {
                 $url = new moodle_url('/user/profile.php', array('id' => $user->id, 'showallcourses' => 1));
                 $courselisting .= html_writer::link($url, '...', array('title' => get_string('viewmore')));
                 break;
@@ -407,7 +414,7 @@ if (!isset($hiddenfields['firstaccess'])) {
     } else {
         $datestring = get_string("never");
     }
-    echo html_writer::tag('dt', get_string('firstaccess'));
+    echo html_writer::tag('dt', get_string('firstsiteaccess'));
     echo html_writer::tag('dd', $datestring);
 }
 if (!isset($hiddenfields['lastaccess'])) {
@@ -416,7 +423,7 @@ if (!isset($hiddenfields['lastaccess'])) {
     } else {
         $datestring = get_string("never");
     }
-    echo html_writer::tag('dt', get_string('lastaccess'));
+    echo html_writer::tag('dt', get_string('lastsiteaccess'));
     echo html_writer::tag('dd', $datestring);
 }
 

@@ -143,11 +143,12 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $this->assertContains(get_string('overdue', 'assign', format_time(4*24*60*60)), $output);
 
         // Grant an extension.
-        $assign->testable_save_user_extension($this->students[0]->id, time() + 2 * 24 * 60 * 60);
+        $extendedtime = time() + 2 * 24 * 60 * 60;
+        $assign->testable_save_user_extension($this->students[0]->id, $extendedtime);
         $gradingtable = new assign_grading_table($assign, 1, '', 0, true);
         $output = $assign->get_renderer()->render($gradingtable);
         $this->assertContains(get_string('submissionstatus_', 'assign'), $output);
-        $this->assertContains(get_string('userextensiondate', 'assign', userdate(time() + 2*24*60*60)), $output);
+        $this->assertContains(get_string('userextensiondate', 'assign', userdate($extendedtime)), $output);
 
         // Simulate a submission.
         $this->setUser($this->students[0]);
@@ -166,7 +167,7 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $gradingtable = new assign_grading_table($assign, 1, '', 0, true);
         $output = $assign->get_renderer()->render($gradingtable);
         $this->assertContains(get_string('submissionstatus_submitted', 'assign'), $output);
-        $this->assertContains(get_string('userextensiondate', 'assign', userdate(time() + 2*24*60*60)), $output);
+        $this->assertContains(get_string('userextensiondate', 'assign', userdate($extendedtime)), $output);
     }
 
     /**
@@ -506,7 +507,7 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         // Create an assignment with a description that should be hidden.
         $assign = $this->create_instance(array('duedate'=>$now + 160,
                                                'alwaysshowdescription'=>false,
-                                               'allowsubmissionsfromdate'=>$now+3,
+                                               'allowsubmissionsfromdate'=>$now + 60,
                                                'intro'=>'Some text'));
 
         // Get the event from the calendar.
@@ -514,7 +515,11 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $event = $DB->get_record('event', $params);
 
         $this->assertEmpty($event->description);
-        sleep(6);
+
+        // Change the allowsubmissionfromdate to the past - do this directly in the DB
+        // because if we call the assignment update method - it will update the calendar
+        // and we want to test that this works from cron.
+        $DB->set_field('assign', 'allowsubmissionsfromdate', $now - 60, array('id'=>$assign->get_instance()->id));
         // Run cron to update the event in the calendar.
         assign::cron();
         $event = $DB->get_record('event', $params);

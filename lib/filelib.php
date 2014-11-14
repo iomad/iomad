@@ -2273,7 +2273,10 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
 
     if ($forcedownload) {
         header('Content-Disposition: attachment; filename="'.$filename.'"');
-    } else {
+    } else if ($mimetype !== 'application/x-shockwave-flash') {
+        // If this is an swf don't pass content-disposition with filename as this makes the flash player treat the file
+        // as an upload and enforces security that may prevent the file from being loaded.
+
         header('Content-Disposition: inline; filename="'.$filename.'"');
     }
 
@@ -2445,7 +2448,10 @@ function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownloa
 
     if ($forcedownload) {
         header('Content-Disposition: attachment; filename="'.$filename.'"');
-    } else {
+    } else if ($mimetype !== 'application/x-shockwave-flash') {
+        // If this is an swf don't pass content-disposition with filename as this makes the flash player treat the file
+        // as an upload and enforces security that may prevent the file from being loaded.
+
         header('Content-Disposition: inline; filename="'.$filename.'"');
     }
 
@@ -2758,21 +2764,17 @@ function file_modify_html_header($text) {
     global $CFG;
 
     $stylesheetshtml = '';
-/*    foreach ($CFG->stylesheets as $stylesheet) {
+/*
+    foreach ($CFG->stylesheets as $stylesheet) {
         //TODO: MDL-21120
         $stylesheetshtml .= '<link rel="stylesheet" type="text/css" href="'.$stylesheet.'" />'."\n";
-    }*/
-
-    $ufo = '';
-    if (filter_is_enabled('mediaplugin')) {
-        // this script is needed by most media filter plugins.
-        $attributes = array('type'=>'text/javascript', 'src'=>$CFG->httpswwwroot . '/lib/ufo.js');
-        $ufo = html_writer::tag('script', '', $attributes) . "\n";
     }
+*/
+    // TODO The code below is actually a waste of CPU. When MDL-29738 will be implemented it should be re-evaluated too.
 
     preg_match('/\<head\>|\<HEAD\>/', $text, $matches);
     if ($matches) {
-        $replacement = '<head>'.$ufo.$stylesheetshtml;
+        $replacement = '<head>'.$stylesheetshtml;
         $text = preg_replace('/\<head\>|\<HEAD\>/', $replacement, $text, 1);
         return $text;
     }
@@ -2781,7 +2783,7 @@ function file_modify_html_header($text) {
     preg_match('/\<html\>|\<HTML\>/', $text, $matches);
     if ($matches) {
         // replace <html> tag with <html><head>includes</head>
-        $replacement = '<html>'."\n".'<head>'.$ufo.$stylesheetshtml.'</head>';
+        $replacement = '<html>'."\n".'<head>'.$stylesheetshtml.'</head>';
         $text = preg_replace('/\<html\>|\<HTML\>/', $replacement, $text, 1);
         return $text;
     }
@@ -2789,13 +2791,13 @@ function file_modify_html_header($text) {
     // if not, look for <body> tag, and stick <head> before body
     preg_match('/\<body\>|\<BODY\>/', $text, $matches);
     if ($matches) {
-        $replacement = '<head>'.$ufo.$stylesheetshtml.'</head>'."\n".'<body>';
+        $replacement = '<head>'.$stylesheetshtml.'</head>'."\n".'<body>';
         $text = preg_replace('/\<body\>|\<BODY\>/', $replacement, $text, 1);
         return $text;
     }
 
     // if not, just stick a <head> tag at the beginning
-    $text = '<head>'.$ufo.$stylesheetshtml.'</head>'."\n".$text;
+    $text = '<head>'.$stylesheetshtml.'</head>'."\n".$text;
     return $text;
 }
 
@@ -4061,7 +4063,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
             }
 
             \core\session\manager::write_close(); // Unlock session during file serving.
-            send_stored_file($file, 60*60, 0, $forcedownload, array('preview' => $preview));
+            send_stored_file($file, 0, 0, true, array('preview' => $preview));
 
         } else if ($filearea === 'event_description' and $context->contextlevel == CONTEXT_COURSE) {
 

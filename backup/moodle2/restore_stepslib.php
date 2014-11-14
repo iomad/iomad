@@ -564,6 +564,9 @@ class restore_update_availability extends restore_execution_step {
         rebuild_course_cache($this->get_courseid(), true);
         $modinfo = get_fast_modinfo($this->get_courseid());
 
+        // Get the date offset for this restore.
+        $dateoffset = $this->apply_date_offset(1) - 1;
+
         // Update all sections that were restored.
         $params = array('backupid' => $this->get_restoreid(), 'itemname' => 'course_section');
         $rs = $DB->get_recordset('backup_ids_temp', $params, '', 'newitemid');
@@ -586,7 +589,7 @@ class restore_update_availability extends restore_execution_step {
             if (!is_null($section->availability)) {
                 $info = new \core_availability\info_section($section);
                 $info->update_after_restore($this->get_restoreid(),
-                        $this->get_courseid(), $this->get_logger());
+                        $this->get_courseid(), $this->get_logger(), $dateoffset);
             }
         }
         $rs->close();
@@ -606,7 +609,7 @@ class restore_update_availability extends restore_execution_step {
             if (!is_null($cm->availability)) {
                 $info = new \core_availability\info_module($cm);
                 $info->update_after_restore($this->get_restoreid(),
-                        $this->get_courseid(), $this->get_logger());
+                        $this->get_courseid(), $this->get_logger(), $dateoffset);
             }
         }
         $rs->close();
@@ -2114,7 +2117,13 @@ class restore_badges_structure_step extends restore_structure_step {
 
         $data = (object)$data;
         $data->usercreated = $this->get_mappingid('user', $data->usercreated);
+        if (empty($data->usercreated)) {
+            $data->usercreated = $this->task->get_userid();
+        }
         $data->usermodified = $this->get_mappingid('user', $data->usermodified);
+        if (empty($data->usermodified)) {
+            $data->usermodified = $this->task->get_userid();
+        }
 
         // We'll restore the badge image.
         $restorefiles = true;
@@ -2211,6 +2220,12 @@ class restore_badges_structure_step extends restore_structure_step {
                 'issuerrole'  => $role,
                 'datemet'     => $this->apply_date_offset($data->datemet)
             );
+
+            // Skip the manual award if recipient or issuer can not be mapped to.
+            if (empty($award['recipientid']) || empty($award['issuerid'])) {
+                return;
+            }
+
             $DB->insert_record('badge_manual_award', $award);
         }
     }

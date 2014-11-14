@@ -343,6 +343,7 @@ $string['howquestionsbehave_help'] = 'Students can interact with the questions i
 Alternatively, you may wish for students to submit each question as they go along to get immediate feedback, and if they do not get it right immediately, have another try for fewer marks. That would be \'Interactive with multiple tries\' mode.
 
 Those are probably the two most commonly used modes of behaviour. ';
+$string['howquestionsbehave_link'] = 'question/behaviour';
 $string['importfromcoursefiles'] = '... or choose a course file to import.';
 $string['importfromupload'] = 'Select a file to upload ...';
 $string['includesubcategories'] = 'Also show questions from subcategories';
@@ -422,8 +423,10 @@ $string['technicalinfo_help'] = 'This technical information is probably only use
 $string['technicalinfominfraction'] = 'Minimum fraction: {$a}';
 $string['technicalinfomaxfraction'] = 'Maximum fraction: {$a}';
 $string['technicalinfoquestionsummary'] = 'Question summary: {$a}';
+$string['technicalinforesponsesummary'] = 'Response summary: {$a}';
 $string['technicalinforightsummary'] = 'Right answer summary: {$a}';
 $string['technicalinfostate'] = 'Question state: {$a}';
+$string['technicalinfovariant'] = 'Question variant: {$a}';
 $string['unknownbehaviour'] = 'Unknown behaviour: {$a}.';
 $string['unknownorunhandledtype'] = 'Unknown or unhandled question type: {$a}';
 $string['unknownquestion'] = 'Unknown question: {$a}.';

@@ -717,7 +717,7 @@ class assign {
                 $fileareas = array();
                 $plugincomponent = $plugin->get_subtype() . '_' . $plugin->get_type();
                 $fileareas = $plugin->get_file_areas();
-                foreach ($fileareas as $filearea) {
+                foreach ($fileareas as $filearea => $notused) {
                     $fs->delete_area_files($this->context->id, $plugincomponent, $filearea);
                 }
 
@@ -732,7 +732,7 @@ class assign {
                 $fileareas = array();
                 $plugincomponent = $plugin->get_subtype() . '_' . $plugin->get_type();
                 $fileareas = $plugin->get_file_areas();
-                foreach ($fileareas as $filearea) {
+                foreach ($fileareas as $filearea => $notused) {
                     $fs->delete_area_files($this->context->id, $plugincomponent, $filearea);
                 }
 
@@ -759,6 +759,11 @@ class assign {
                 // Remove all grades from gradebook.
                 require_once($CFG->dirroot.'/mod/assign/lib.php');
                 assign_reset_gradebook($data->courseid);
+
+                // Reset revealidentities if both submissions and grades have been reset.
+                if ($this->get_instance()->blindmarking && $this->get_instance()->revealidentities) {
+                    $DB->set_field('assign', 'revealidentities', 0, array('id' => $this->get_instance()->id));
+                }
             }
         }
         // Updating dates - shift may be negative too.
@@ -3064,7 +3069,7 @@ class assign {
 
         $gradingmanager = get_grading_manager($this->get_context(), 'mod_assign', 'submissions');
 
-        $perpage = get_user_preferences('assign_perpage', 10);
+        $perpage = (int) get_user_preferences('assign_perpage', 10);
         $filter = get_user_preferences('assign_filter', '');
         $markerfilter = get_user_preferences('assign_markerfilter', '');
         $workflowfilter = get_user_preferences('assign_workflowfilter', '');
