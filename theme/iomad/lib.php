@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+/**
+ * @package   theme_iomad
+ * @copyright 2013 Howard Miller
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
@@ -30,15 +32,8 @@ require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
  * @param theme_config $theme The theme config object.
  * @return string The parsed CSS The parsed CSS.
  */
-function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload) {
-    global $USER, $CFG;
-
-    // Set the background image for the logo
-    $logo = $theme->setting_file_url('logo', 'logo');
-    if (empty($logo)) {
-        $logo = $CFG->wwwroot.'/theme/iomad/pix/iomad_logo.png';
-    }
-    $css = theme_iomad_set_logo($css, $logo);
+function theme_iomad_process_css($css, $theme) {
+    global $CFG;
 
     // Set custom CSS.
     if (!empty($theme->settings->customcss)) {
@@ -46,8 +41,7 @@ function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $force
     } else {
         $customcss = null;
     }
-
-    $css = theme_iomad_process_company_css($css, $theme);
+    $css = theme_iomad_set_customcss($css, $customcss);
 
     // deal with webfonts
     $tag = '[[font:theme|astonish.woff]]';
@@ -75,24 +69,24 @@ function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $force
     $relativepath = implode('/', $args);
     $filename = $args[1];
     $itemid = $args[0];
-    if ($itemid == -1) {
+    if ($filearea == 'logo') {
         $itemid = 0;
     }
 
-    if (!$file = $fs->get_file($context->id, 'theme_iomad', 'logo', $itemid, '/', $filename) or $file->is_directory()) {
+    if (!$file = $fs->get_file($context->id, 'theme_iomad', $filearea, $itemid, '/', $filename) or $file->is_directory()) {
         send_file_not_found();
     }
 
     send_stored_file($file, 0, 0, $forcedownload);
 }
 
-/* iomad_process_css  - Processes iomad specific tags in CSS files
+
+/**
+ * Adds any custom CSS to the CSS before it is cached.
  *
- * [[logo]] gets replaced with the full url to the company logo
- * [[company:$property]] gets replaced with the property of the $USER->company object
- *     available properties are: id, shortname, name, logo_filename + the fields in company->cssfields,
- *     currently  bgcolor_header and bgcolor_content
- *
+ * @param string $css The original CSS.
+ * @param string $customcss The custom CSS to add.
+ * @return string The CSS which now contains our custom CSS.
  */
 function theme_iomad_set_customcss($css, $customcss) {
     $tag = '[[setting:customcss]]';
@@ -117,7 +111,7 @@ function theme_iomad_set_customcss($css, $customcss) {
  *      - footnote HTML to use as a footnote. By default ''.
  */
 function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $page) {
-    global $CFG;
+    global $CFG, $USER, $DB;
     $return = new stdClass;
 
     $return->navbarclass = '';
@@ -138,7 +132,7 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
         if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
             foreach ($files as $file) {
                 if ($file->filename != '.') {
-                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/logo/$companyid/{$file->filename}";
+                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
                 }
             }
         }
@@ -186,9 +180,12 @@ function iomad_set_logo() {
     throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
 }
 
-// Prepend the additionalhtmlhead with the company css sheet.
-if (!empty($CFG->additionalhtmlhead)) {
-    $CFG->additionalhtmlhead = company_css() . "\n".$CFG->additionalhtmlhead;
+/**
+ * All theme functions should start with theme_iomad_
+ * @deprecated since 2.5.1
+ */
+function iomad_set_customcss() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
 }
 
 /* perficio_process_css  - Processes perficio specific tags in CSS files

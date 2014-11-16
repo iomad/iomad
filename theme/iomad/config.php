@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   theme_iomad
+ * @copyright 2013 Howard Miller
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $THEME->name = 'iomad';
 
 /////////////////////////////////
@@ -143,4 +149,3 @@ $THEME->layouts = array(
         'defaultregion' => 'side-pre'
     ),
 );
-$THEME->enable_dock = true;
