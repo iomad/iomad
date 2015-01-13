@@ -169,7 +169,7 @@
     <licenseversion>2.0+</licenseversion>
   </library>
   <library>
-    <location>yui</location>
+    <location>yuilib</location>
     <name>YUI</name>
     <license>BSD</license>
     <version>3.17.2</version>
@@ -209,13 +209,6 @@
     <license>BSD</license>
     <version>1.10.6</version>
     <licenseversion></licenseversion>
-  </library>
-  <library>
-    <location>form</location>
-    <name>MoodleForms</name>
-    <license>GPL</license>
-    <version></version>
-    <licenseversion>2.0+</licenseversion>
   </library>
   <library>
     <location>html2text.php</location>

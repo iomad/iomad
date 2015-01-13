@@ -547,7 +547,8 @@ class backup_enrolments_structure_step extends backup_structure_step {
 
         $enrol->annotate_ids('role', 'roleid');
 
-        //TODO: let plugins annotate custom fields too and add more children
+        // Add enrol plugin structure.
+        $this->add_plugin_structure('enrol', $enrol, false);
 
         return $enrolments;
     }
@@ -1742,8 +1743,22 @@ class backup_zip_contents extends backup_execution_step implements file_progress
         // Get the zip packer
         $zippacker = get_file_packer('application/vnd.moodle.backup');
 
+        // Track overall progress for the 2 long-running steps (archive to
+        // pathname, get backup information).
+        $reporter = $this->task->get_progress();
+        $reporter->start_progress('backup_zip_contents', 2);
+
         // Zip files
         $result = $zippacker->archive_to_pathname($files, $zipfile, true, $this);
+
+        // If any sub-progress happened, end it.
+        if ($this->startedprogress) {
+            $this->task->get_progress()->end_progress();
+            $this->startedprogress = false;
+        } else {
+            // No progress was reported, manually move it on to the next overall task.
+            $reporter->progress(1);
+        }
 
         // Something went wrong.
         if ($result === false) {
@@ -1752,16 +1767,20 @@ class backup_zip_contents extends backup_execution_step implements file_progress
         }
         // Read to make sure it is a valid backup. Refer MDL-37877 . Delete it, if found not to be valid.
         try {
-            backup_general_helper::get_backup_information_from_mbz($zipfile);
+            backup_general_helper::get_backup_information_from_mbz($zipfile, $this);
         } catch (backup_helper_exception $e) {
             @unlink($zipfile);
             throw new backup_step_exception('error_zip_packing', '', $e->debuginfo);
         }
 
-            // If any progress happened, end it.
+        // If any sub-progress happened, end it.
         if ($this->startedprogress) {
             $this->task->get_progress()->end_progress();
+            $this->startedprogress = false;
+        } else {
+            $reporter->progress(2);
         }
+        $reporter->end_progress();
     }
 
     /**
@@ -1827,6 +1846,47 @@ class backup_activity_grade_items_to_ids extends backup_execution_step {
                 backup_structure_dbops::insert_backup_ids_record($this->get_backupid(), 'grade_item', $item->id);
             }
         }
+    }
+}
+
+
+/**
+ * This step allows enrol plugins to annotate custom fields.
+ *
+ * @package   core_backup
+ * @copyright 2014 University of Wisconsin
+ * @author    Matt Petro
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class backup_enrolments_execution_step extends backup_execution_step {
+
+    /**
+     * Function that will contain all the code to be executed.
+     */
+    protected function define_execution() {
+        global $DB;
+
+        $plugins = enrol_get_plugins(true);
+        $enrols = $DB->get_records('enrol', array(
+                'courseid' => $this->task->get_courseid()));
+
+        // Allow each enrol plugin to add annotations.
+        foreach ($enrols as $enrol) {
+            if (isset($plugins[$enrol->enrol])) {
+                $plugins[$enrol->enrol]->backup_annotate_custom_fields($this, $enrol);
+            }
+        }
+    }
+
+    /**
+     * Annotate a single name/id pair.
+     * This can be called from {@link enrol_plugin::backup_annotate_custom_fields()}.
+     *
+     * @param string $itemname
+     * @param int $itemid
+     */
+    public function annotate_id($itemname, $itemid) {
+        backup_structure_dbops::insert_backup_ids_record($this->get_backupid(), $itemname, $itemid);
     }
 }
 
@@ -1925,13 +1985,22 @@ class backup_annotate_all_question_files extends backup_execution_step {
         $components = backup_qtype_plugin::get_components_and_fileareas();
         // Let's loop
         foreach($rs as $record) {
-            // We don't need to specify filearea nor itemid as far as by
-            // component and context it's enough to annotate the whole bank files
-            // This backups "questiontext", "generalfeedback" and "answerfeedback" fileareas (all them
-            // belonging to the "question" component
-            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', null, null);
-            // Again, it is enough to pick files only by context and component
-            // Do it for qtype specific components
+            // Backup all the file areas the are managed by the core question component.
+            // That is, by the question_type base class. In particular, we don't want
+            // to include files belonging to responses here.
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'questiontext', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'generalfeedback', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'answer', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'answerfeedback', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'hint', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'correctfeedback', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'partiallycorrectfeedback', null);
+            backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, 'question', 'incorrectfeedback', null);
+
+            // For files belonging to question types, we make the leap of faith that
+            // all the files belonging to the question type are part of the question definition,
+            // so we can just backup all the files in bulk, without specifying each
+            // file area name separately.
             foreach ($components as $component => $fileareas) {
                 backup_structure_dbops::annotate_files($this->get_backupid(), $record->contextid, $component, null, null);
             }
@@ -2299,7 +2368,8 @@ class backup_course_completion_structure_step extends backup_structure_step {
         $cc = new backup_nested_element('course_completion');
 
         $criteria = new backup_nested_element('course_completion_criteria', array('id'), array(
-            'course','criteriatype', 'module', 'moduleinstance', 'courseinstanceshortname', 'enrolperiod', 'timeend', 'gradepass', 'role'
+            'course', 'criteriatype', 'module', 'moduleinstance', 'courseinstanceshortname', 'enrolperiod',
+            'timeend', 'gradepass', 'role', 'roleshortname'
         ));
 
         $criteriacompletions = new backup_nested_element('course_completion_crit_completions');
@@ -2322,12 +2392,15 @@ class backup_course_completion_structure_step extends backup_structure_step {
         $cc->add_child($coursecompletions);
         $cc->add_child($aggregatemethod);
 
-        // We need to get the courseinstances shortname rather than an ID for restore
-        $criteria->set_source_sql("SELECT ccc.*, c.shortname AS courseinstanceshortname
-                                   FROM {course_completion_criteria} ccc
-                                   LEFT JOIN {course} c ON c.id = ccc.courseinstance
-                                   WHERE ccc.course = ?", array(backup::VAR_COURSEID));
-
+        // We need some extra data for the restore.
+        // - courseinstances shortname rather than an ID.
+        // - roleshortname in case restoring on a different site.
+        $sourcesql = "SELECT ccc.*, c.shortname AS courseinstanceshortname, r.shortname AS roleshortname
+                        FROM {course_completion_criteria} ccc
+                   LEFT JOIN {course} c ON c.id = ccc.courseinstance
+                   LEFT JOIN {role} r ON r.id = ccc.role
+                       WHERE ccc.course = ?";
+        $criteria->set_source_sql($sourcesql, array(backup::VAR_COURSEID));
 
         $aggregatemethod->set_source_table('course_completion_aggr_methd', array('course' => backup::VAR_COURSEID));
 

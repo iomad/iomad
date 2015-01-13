@@ -557,44 +557,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Returns all categories visible to the current user
-     *
-     * This is a generic function that returns an array of
-     * (category id => coursecat object) sorted by sortorder
-     *
-     * @see coursecat::get_children()
-     *
-     * @return cacheable_object_array array of coursecat objects
-     */
-    public static function get_all_visible() {
-        global $USER;
-        $coursecatcache = cache::make('core', 'coursecat');
-        $ids = $coursecatcache->get('user'. $USER->id);
-        if ($ids === false) {
-            $all = self::get_all_ids();
-            $parentvisible = $all[0];
-            $rv = array();
-            foreach ($all as $id => $children) {
-                if ($id && in_array($id, $parentvisible) &&
-                        ($coursecat = self::get($id, IGNORE_MISSING)) &&
-                        (!$coursecat->parent || isset($rv[$coursecat->parent]))) {
-                    $rv[$id] = $coursecat;
-                    $parentvisible += $children;
-                }
-            }
-            $coursecatcache->set('user'. $USER->id, array_keys($rv));
-        } else {
-            $rv = array();
-            foreach ($ids as $id) {
-                if ($coursecat = self::get($id, IGNORE_MISSING)) {
-                    $rv[$id] = $coursecat;
-                }
-            }
-        }
-        return $rv;
-    }
-
-    /**
      * Returns the complete corresponding record from DB table course_categories
      *
      * Mostly used in deprecated functions
@@ -2170,7 +2132,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 
         // Check if we cached the complete list of user-accessible category names ($baselist) or list of ids
         // with requried cap ($thislist).
-        $basecachekey = 'catlist';
+        $currentlang = current_language();
+        $basecachekey = $currentlang . '_catlist';
         $baselist = $coursecatcache->get($basecachekey);
         $thislist = false;
         $thiscachekey = null;

@@ -17,7 +17,13 @@
 /**
  * Behat basic functions
  *
- * It does not include MOODLE_INTERNAL because is part of the bootstrap
+ * It does not include MOODLE_INTERNAL because is part of the bootstrap.
+ *
+ * This script should not be usually included, neither any of its functions
+ * used, within mooodle code at all. It's for exclusive use of behat and
+ * moodle setup.php. For places requiring a different/special behavior
+ * needing to check if are being run as part of behat tests, use:
+ *     if (defined('BEHAT_SITE_RUNNING')) { ...
  *
  * @package    core
  * @category   test
@@ -155,7 +161,8 @@ function behat_clean_init_config() {
         'wwwroot', 'dataroot', 'dirroot', 'admin', 'directorypermissions', 'filepermissions',
         'umaskpermissions', 'dbtype', 'dblibrary', 'dbhost', 'dbname', 'dbuser', 'dbpass', 'prefix',
         'dboptions', 'proxyhost', 'proxyport', 'proxytype', 'proxyuser', 'proxypassword',
-        'proxybypass', 'theme', 'pathtogs', 'pathtoclam', 'pathtodu', 'aspellpath', 'pathtodot', 'skiplangupgrade'
+        'proxybypass', 'theme', 'pathtogs', 'pathtoclam', 'pathtodu', 'aspellpath', 'pathtodot', 'skiplangupgrade',
+        'altcacheconfigpath'
     ));
 
     // Add extra allowed settings.

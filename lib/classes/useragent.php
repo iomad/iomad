@@ -756,7 +756,7 @@ class core_useragent {
         if ($useragent === false) {
             return false;
         }
-        if (strpos($useragent, 'Linux; U; Android') === false) {
+        if (strpos($useragent, 'Android') === false) {
             return false;
         }
         if (empty($version)) {
@@ -806,6 +806,25 @@ class core_useragent {
             }
         }
         return false;
+    }
+
+    /**
+     * Checks if the user agent is MS Word.
+     * Not perfect, as older versions of Word use standard IE6/7 user agents without any identifying traits.
+     *
+     * @return bool true if user agent could be identified as MS Word.
+     */
+    public static function is_msword() {
+        $useragent = self::get_user_agent_string();
+        if (!preg_match('/(\bWord\b|ms-office|MSOffice|Microsoft Office)/i', $useragent)) {
+            return false;
+        } else if (strpos($useragent, 'Outlook') !== false) {
+            return false;
+        } else if (strpos($useragent, 'Meridio') !== false) {
+            return false;
+        }
+        // It's Office, not Outlook and not Meridio - so it's probably Word, but we can't really be sure in most cases.
+        return true;
     }
 
     /**

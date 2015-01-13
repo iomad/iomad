@@ -62,8 +62,8 @@ if ($csv) {
 
 // Paging
 $start   = optional_param('start', 0, PARAM_INT);
-$sifirst = optional_param('sifirst', 'all', PARAM_ALPHA);
-$silast  = optional_param('silast', 'all', PARAM_ALPHA);
+$sifirst = optional_param('sifirst', 'all', PARAM_NOTAGS);
+$silast  = optional_param('silast', 'all', PARAM_NOTAGS);
 
 // Whether to show extra user identity information
 $extrafields = get_extra_user_fields($context);
@@ -672,8 +672,9 @@ foreach ($progress as $user) {
                     )
                 );
 
-                print '<a href="'.$toggleurl->out().'"><img src="'.$OUTPUT->pix_url('i/completion-manual-'.($is_complete ? 'y' : 'n')).
-                    '" alt="'.$describe.'" class="icon" title="'.get_string('markcomplete', 'completion').'" /></a></td>';
+                print '<a href="'.$toggleurl->out().'" title="'.get_string('clicktomarkusercomplete', 'report_completion').'">' .
+                    '<img src="'.$OUTPUT->pix_url('i/completion-manual-'.($is_complete ? 'y' : 'n')).
+                    '" alt="'.$describe.'" class="icon" /></a></td>';
             } else {
                 print '<img src="'.$OUTPUT->pix_url('i/'.$completionicon).'" alt="'.$describe.'" class="icon" title="'.$fulldescribe.'" /></td>';
             }

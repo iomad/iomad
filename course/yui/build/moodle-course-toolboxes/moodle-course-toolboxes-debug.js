@@ -481,8 +481,10 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
         // Create the confirmation dialogue.
         var confirm = new M.core.confirm({
             question: confirmstring,
-            modal: true
+            modal: true,
+            visible: false
         });
+        confirm.show();
 
         // If it is confirmed.
         confirm.on('complete-yes', function() {
@@ -627,10 +629,17 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
         // If activity is conditionally hidden, then don't toggle.
         if (!dimarea.hasClass(CSS.CONDITIONALHIDDEN)) {
-            // Change the UI.
-            dimarea.toggleClass(toggleclass);
-            // We need to toggle dimming on the description too.
-            activity.all(SELECTOR.CONTENTAFTERLINK).toggleClass(CSS.DIMMEDTEXT);
+            if (action === 'hide') {
+                // Change the UI.
+                dimarea.addClass(toggleclass);
+                // We need to toggle dimming on the description too.
+                activity.all(SELECTOR.CONTENTAFTERLINK).addClass(CSS.DIMMEDTEXT);
+            } else {
+                // Change the UI.
+                dimarea.removeClass(toggleclass);
+                // We need to toggle dimming on the description too.
+                activity.all(SELECTOR.CONTENTAFTERLINK).removeClass(CSS.DIMMEDTEXT);
+            }
         }
         // Toggle availablity info for conditional activities.
         if (availabilityinfo) {
