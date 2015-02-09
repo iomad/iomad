@@ -348,7 +348,7 @@ $draftitemid = file_get_submitted_draft_itemid('companylogo');
 file_prepare_draft_area($draftitemid,
                         $context->id,
                         'theme_iomad',
-                        'logo', $companyid,
+                        'companylogo', $companyid,
                         array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
 $companyrecord->companylogo = $draftitemid;
 
@@ -412,7 +412,7 @@ if ($mform->is_cancelled()) {
         file_save_draft_area_files($data->companylogo,
                                    $context->id,
                                    'theme_iomad',
-                                   'logo',
+                                   'companylogo',
                                    $data->id,
                                    array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
     }
