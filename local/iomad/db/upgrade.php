@@ -990,5 +990,106 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
     }
 
+    if ($oldversion < 2014120400) {
+
+        // Define field licensecourseid to be added to companylicense_users.
+        $table = new xmldb_table('companylicense_users');
+        $field = new xmldb_field('licensecourseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'userid');
+
+        // Conditionally launch add field licensecourseid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2014120400, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2014121900) {
+
+        // Deal with licenseses which have already been allocated.
+        $licenseusers = $DB->get_records('companylicense_users', array('licensecourseid' => 0));
+        foreach ($licenseusers as $licenseuser) {
+            if ($licenseuser->timecompleted != null) {
+                continue;
+            }
+            // Are they using the license?
+            if ($licenseuser->isusing == 1) {
+                // Get the course.
+                $enrolrecords = $DB->get_records_sql("SELECT e.courseid,ue.userid
+                                                    FROM {enrol} e JOIN {user_enrolments} ue
+                                                    ON e.id=ue.enrolid
+                                                    WHERE userid = :userid
+                                                    AND courseid IN
+                                                     (SELECT courseid FROM {companylicense_courses}
+                                                      WHERE licenseid = :licenseid)",
+                                                    array('userid' => $licenseuser->userid,
+                                                          'licenseid' => $licenseuser->licenseid));
+                // Do we have more than one record?
+                if (count($enrolrecords > 1 )) {
+                    foreach ($enrolrecords as $enrolrecord) {
+                        // Check if we already have a record for this course.
+                        if ($DB->get_record('companylicense_users', array('userid' => $licenseuser->userid,
+                                                                          'licenseid' => $licenseuser->licenseid,
+                                                                          'licensecourseid' => $enrolrecord->courseid))) {
+                            continue;
+                        } else {
+                            $licenseuser->licensecourseid = $enrolrecord->courseid;
+                            $DB->update_record('companylicense_users', $licenseuser);
+                        }
+                    }
+                } else {
+                    list($enrolcourseid, $enroluserid) = each($enrolrecords);
+                    $licenseuser->licensecourseid = $enrolcourseid;
+                    $DB->update_record('companylicense_users', $licenseuser);
+                }
+            } else {
+                // Get the courses.
+                $licensecourses = $DB->get_records('companylicense_courses', array('licenseid' => $licenseuser->licenseid));
+                if (count($licensecourses) == 1) {
+                    // Only one course so add it.
+                    $licensecourse = array_pop($licensecourses);
+                    $licenseuser->licensecourseid = $licensecourse->id;
+                    $DB->update_record('companylicense_users', $licenseuser);
+                } else {
+                    //  Dont know which course to assign so we are going to remove the record as its not being used.
+                    $DB->delete_records('companylicense_users', array('id' => $licenseuser->id));
+                }
+            }
+        }
+        //  Update the used counts for each license.
+        $licenses = $DB->get_records('companylicense');
+        foreach ($licenses as $license) {
+            $licensecount = $DB->count_records('companylicense_users', array('licenseid' => $license->id));
+            $license->used = $licensecount;
+            $DB->update_record('companylicense', $license);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2014121900, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2015020800) {
+
+        // Define table company_domains to be created.
+        $table = new xmldb_table('company_domains');
+
+        // Adding fields to table company_domains.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('companyid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('domain', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table company_domains.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for company_domains.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2015020800, 'local', 'iomad');
+    }
+
     return $result;
 }
