@@ -278,6 +278,7 @@ if ($confirmuser and confirm_sesskey()) {
     } else {
         // Actually suspend the user.
         company_user::suspend($user->id);
+        $params['suspend'] = 0;
     }
 
 } else if ($unsuspend and confirm_sesskey()) {
@@ -306,6 +307,7 @@ if ($confirmuser and confirm_sesskey()) {
     } else {
         // Actually unsuspend the user.
         company_user::unsuspend($user->id);
+        $params['suspend'] = 0;
     }
 
 } else if ($acl and confirm_sesskey()) {
