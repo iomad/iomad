@@ -44,7 +44,7 @@ class template_edit_form extends moodleform {
 
     public function definition() {
         global $CFG, $PAGE, $DB;
-        $context = get_context_instance(CONTEXT_SYSTEM);
+        $context = context_system::instance();
 
         $mform =& $this->_form;
 
@@ -119,7 +119,7 @@ $templateid = optional_param('templateid', 0, PARAM_INTEGER);
 $templatename = optional_param('templatename', '', PARAM_NOTAGS);
 $new = optional_param('createnew', 0, PARAM_INTEGER);
 
-$context = get_context_instance(CONTEXT_SYSTEM);
+$context = context_system::instance();
 require_login();
 $PAGE->set_context($context);
 
@@ -134,7 +134,7 @@ if (!empty($SESSION->currenteditingcompany)) {
     $companyid = $SESSION->currenteditingcompany;
 } else if (!empty($USER->company)) {
     $companyid = company_user::companyid();
-} else if (!has_capability('local/email:edit', get_context_instance(CONTEXT_SYSTEM))) {
+} else if (!iomad::has_capability('local/email:edit', context_system::instance())) {
     print_error('There has been a configuration error, please contact the site administrator');
 } else {
     $blockpage->display_header();
@@ -148,13 +148,13 @@ if (!$new) {
     if ($templateid) {
         $templaterecord = $DB->get_record('email_template', array('id' => $templateid),
                                                                   '*', MUST_EXIST);
-        require_capability('local/email:edit', $context);
+        iomad::require_capability('local/email:edit', $context);
     } else {
         $isadding = true;
         $templateid = 0;
         $templaterecord = (object) $email[$templatename];
         $templaterecord->name = $templatename;
-        require_capability('local/email:add', $context);
+        iomad::require_capability('local/email:add', $context);
     }
 } else {
     $isadding = true;
@@ -162,7 +162,7 @@ if (!$new) {
     $templaterecord = (object) $email[$templatename];
     $templaterecord->name = $templatename;
 
-    require_capability('local/email:add', $context);
+    iomad::require_capability('local/email:add', $context);
 }
 
 // Correct the navbar.
