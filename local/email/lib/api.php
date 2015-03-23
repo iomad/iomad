@@ -132,8 +132,8 @@ class EmailTemplate {
         if (!isset($course)) {
             $course =& $COURSE;
         }
-        if (!isset($sender)) {
-            if ($USER->id == 0) {
+        if (!isset($sender) || is_siteadmin($USER->id)) {
+            if ($USER->id == 0 || is_siteadmin($USER->id)) {
                 // We are being run from cron.
                 $sender =& self::get_sender($user);
             } else {
@@ -144,7 +144,7 @@ class EmailTemplate {
 
         // Set the sender to the default site one if use real sender is not true.
         if (empty($CFG->iomad_email_senderisreal)) {
-            $sender = generate_email_supportuser();
+            $sender = core_user::get_support_user();
         }
 
         $this->user = $this->get_user($user);
@@ -250,14 +250,13 @@ class EmailTemplate {
 
         // Check if the user to be sent to is valid.
         if ($user = self::get_user($email->userid)) {
-            if (isset($email->senderid)) {
+            if (isset($email->senderid) && !is_siteadmin($email->senderid) && $email->senderid > 0) {
                 $supportuser = self::get_user($email->senderid);
             } else {
                 $supportuser = self::get_user(self::get_sender($user));
             }
-            if (isset($email->headers)) {
+            if (!empty($email->headers)) {
                 $supportuser->customheaders = unserialize($email->headers);
-                email_to_user($USER, $supportuser, $email->subject, $email->body);
             }
             return email_to_user($user, $supportuser, $email->subject, $email->body);
         }
@@ -280,7 +279,6 @@ class EmailTemplate {
         }
         if (isset($email->headers)) {
                 $supportuser->customheaders = unserialize($email->headers);
-                email_to_user($USER, $supportuser, $email->subject, $email->body);
         }
 
         return email_to_user($this->user, $supportuser, $subject, $body);
@@ -292,7 +290,7 @@ class EmailTemplate {
      * Parameters - $user = stdclass() or int.
      *
      **/
-    private function get_user($user) {
+    private static function get_user($user) {
         global $DB;
 
         if ($user) {
@@ -313,6 +311,8 @@ class EmailTemplate {
                         }
                     } else {
                         if (!empty($user->email) && !empty($user->firstname) && !empty($user->lastname)) {
+                            return $user;
+                        } else if ($user == core_user::get_support_user()) {
                             return $user;
                         } else {
                             return false;
@@ -410,7 +410,7 @@ class EmailTemplate {
      * Parameters - $user = stdclass();
      *
      **/
-    private function get_sender($user) {
+    private static function get_sender($user) {
 
         // Get the user's company.
         if ($usercompany = company::get_company_byuserid($user->id)) {
@@ -419,11 +419,11 @@ class EmailTemplate {
                 $returnid = $usercompany->defaultcontactid;
             } else {
                 // Use the default support email account.
-                $returnid = generate_email_supportuser();
+                $returnid = core_user::get_support_user();
             }
         } else {
             // No company use default support user.
-            $returnid = generate_email_supportuser();
+            $returnid = core_user::get_support_user();
         }
         return $returnid;
     }
