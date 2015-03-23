@@ -1,5 +1,5 @@
 .iomad_company_admin_table {
-   width: 90%;
+   width: 95%;
    margin: auto;
    text-align: center;
    top: 30px;
@@ -13,7 +13,9 @@ div.iomadlink_container {
 
 ul.iomadtab {
     height: 36px;
+	margin-top: 5px;
     padding-left: 10px;
+    margin-right: 20px;
     clear: both;
     border-bottom: 1px solid black;
 }
@@ -32,8 +34,13 @@ ul.iomadtab li.iomadselected {
     background-color: #fff7d7;
 }
 
+ul.iomadtab a:hover {
+	color:#333 !important;
+    text-decoration: underline;
+}
+
 div.iomadlink a:hover {
-    color: #0000ff;
+	color:#0000ff !important;
     text-decoration: none;
 }
 
@@ -43,4 +50,12 @@ div.iomadlink {
     text-align: center;
     float:left;
     position: relative;
+}
+
+div.block_iomad_company_admin  a:hover {
+	color:#0000ff;
+}
+
+#ReportTable  td {
+	vertical-align: middle !important;
 }
