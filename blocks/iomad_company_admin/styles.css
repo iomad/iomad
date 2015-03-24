@@ -40,7 +40,7 @@ ul.iomadtab a:hover {
 }
 
 div.iomadlink a:hover {
-	color:#0000ff !important;
+	color:#fad163 !important;
     text-decoration: none;
 }
 
@@ -53,9 +53,20 @@ div.iomadlink {
 }
 
 div.block_iomad_company_admin  a:hover {
-	color:#0000ff;
+	color:#fad163;
 }
 
 #ReportTable  td {
 	vertical-align: middle !important;
+}
+
+#licenseSelector {
+margin:auto;
+color:#000000;
+text-align: center; 
+background-color:#fad163;
+padding-top: 10px;
+padding-bottom: 15px;
+width: 50%;
+border-radius: 10px;
 }
