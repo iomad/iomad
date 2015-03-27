@@ -434,7 +434,11 @@ if ($mform->is_cancelled()) {
                 $DB->insert_record('company_domains', array('companyid' => $companyid, 'domain' => $domain));
             }
         }
+    } else if ($DB->get_records('company_domains', array('companyid' => $companyid))) {
+        // We have some defined and they have been removed.
+        $DB->delete_records('company_domains', array('companyid' => $companyid));
     }
+
     redirect($companylist);
 }
 
