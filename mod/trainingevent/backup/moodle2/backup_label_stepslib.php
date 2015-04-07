@@ -16,19 +16,19 @@
 
 /**
  * @package    mod
- * @subpackage trainingevent
+ * @subpackage label
  * @copyright  2010 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Define all the backup steps that will be used by the backup_trainingevent_activity_task
+ * Define all the backup steps that will be used by the backup_label_activity_task
  */
 
 /**
- * Define the complete trainingevent structure for backup, with file and id annotations
+ * Define the complete label structure for backup, with file and id annotations
  */
-class backup_trainingevent_activity_structure_step extends backup_activity_structure_step {
+class backup_label_activity_structure_step extends backup_activity_structure_step {
 
     protected function define_structure() {
 
@@ -36,28 +36,22 @@ class backup_trainingevent_activity_structure_step extends backup_activity_struc
         $userinfo = $this->get_setting_value('userinfo');
 
         // Define each element separated.
-        $trainingevent = new backup_nested_element('trainingevent', array('id'), array(
-            'course', 'name', 'intro', 'introformat', 'timemodified', 'startdatetime', 'enddatetime', 'classroomid'));
-        $users = new backup_nested_element('users');
-        $user = new backup_nested_element('trainingevent_users', array('id'), array('userid', 'trainingeventid'));
-
-        $trainingevent->add_child($users);
-        $users->add_child($user);
+        $label = new backup_nested_element('label', array('id'), array(
+            'name', 'intro', 'introformat', 'timemodified'));
 
         // Build the tree.
         // (love this).
 
         // Define sources.
-        $trainingevent->set_source_table('trainingevent', array('id' => backup::VAR_ACTIVITYID));
-        $trainingevent->set_source_table('trainingevent_users', array('trainingeventid' => backup::VAR_ACTIVITYID));
+        $label->set_source_table('label', array('id' => backup::VAR_ACTIVITYID));
 
         // Define id annotations.
         // (none).
 
         // Define file annotations.
-        // (none).
+        $label->annotate_files('mod_label', 'intro', null); // This file area hasn't itemid.
 
-        // Return the root element (trainingevent), wrapped into standard activity structure.
-        return $this->prepare_activity_structure($trainingevent);
+        // Return the root element (label), wrapped into standard activity structure.
+        return $this->prepare_activity_structure($label);
     }
 }

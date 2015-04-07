@@ -57,6 +57,11 @@ class iomad {
     public static function is_company_user () {
         global $USER, $DB, $SESSION;
 
+        if (empty($USER->id)) {
+            // We are installing.  Go no further.
+            return false;
+        }
+
         if (!empty($SESSION->currenteditingcompany)) {
             return $SESSION->currenteditingcompany;
         } else if ($usercompanies = $DB->get_records('company_users', array('userid' => $USER->id))) {
@@ -188,10 +193,8 @@ class iomad {
         // Get the list of courses the user has a valid license for but not already enroled in.
         if ($licensecourses = $DB->get_records_sql("SELECT * FROM {course} c
                                                     WHERE c.id IN (
-                                                     SELECT clc.courseid
-                                                     FROM {companylicense_courses} clc
-                                                     RIGHT JOIN {companylicense_users} clu
-                                                     ON (clc.licenseid = clu.licenseid)
+                                                     SELECT clu.licensecourseid
+                                                     FROM {companylicense_users} clu
                                                      WHERE clu.userid = :userid
                                                      AND clu.isusing = 0
                                                     )", array('userid' => $USER->id))) {

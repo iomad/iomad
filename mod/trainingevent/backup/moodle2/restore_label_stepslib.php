@@ -17,7 +17,7 @@
 /**
  * @package moodlecore
  * @subpackage backup-moodle2
- * @copyright E-Learn Design
+ * @copyright 2010 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,35 +26,35 @@
  */
 
 /**
- * Structure step to restore one trainingevent activity
+ * Structure step to restore one label activity
  */
-class restore_trainingevent_activity_structure_step extends restore_activity_structure_step {
+class restore_label_activity_structure_step extends restore_activity_structure_step {
 
     protected function define_structure() {
 
         $paths = array();
-        $paths[] = new restore_path_element('trainingevent', '/activity/trainingevent');
+        $paths[] = new restore_path_element('label', '/activity/label');
 
         // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
     }
 
-    protected function process_trainingevent($data) {
+    protected function process_label($data) {
         global $DB;
 
         $data = (object)$data;
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
-        // Insert the trainingevent record.
-        $newitemid = $DB->insert_record('trainingevent', $data);
+        // Insert the label record.
+        $newitemid = $DB->insert_record('label', $data);
         // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
     }
 
     protected function after_execute() {
-        // Add trainingevent related files, no need to match by itemname (just internally handled context).
-        $this->add_related_files('mod_trainingevent', 'intro', null);
+        // Add label related files, no need to match by itemname (just internally handled context).
+        $this->add_related_files('mod_label', 'intro', null);
     }
 
 }

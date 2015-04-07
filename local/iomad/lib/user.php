@@ -179,9 +179,9 @@ class company_user {
         // Deal with the company theme.
         $DB->set_field('user', 'theme', '', array('id' => $userid));
 
-        // Delete the user.
-        $user = $DB->get_record('user', array('id' => $userid));
-        delete_user($user);
+	// Delete the user.
+	$user = $DB->get_record('user', array('id' => $userid));
+	delete_user($user);
     }
 
     /**

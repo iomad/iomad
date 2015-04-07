@@ -49,16 +49,7 @@ if (empty($dodownload)) {
 }
 
 // Get this list of courses the user is a member of.
-$enrolcourses = enrol_get_users_courses($userid, true, null, 'visible DESC, sortorder ASC');
-$completioncourses = $DB->get_records_sql("SELECT course as id FROM {course_completions} 
-                                           WHERE userid = :userid", array('userid' => $userid));
-$usercourses = array();
-foreach ($enrolcourses as $enrolcourse) {
-    $usercourses[$enrolcourse->id] = $enrolcourse;
-}
-foreach ($completioncourses as $completioncourse) {
-    $usercourses[$completioncourse->id] = $completioncourse;
-}
+$usercourses = enrol_get_users_courses($userid, true, null, 'visible DESC, sortorder ASC');
 
 // Get the Users details.
 $userinfo = $DB->get_record('user', array('id' => $userid));
