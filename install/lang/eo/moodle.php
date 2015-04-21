@@ -30,13 +30,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['cannotcreatelangdir'] = 'لا يمكن إنشاء مجلد اللغة';
-$string['cannotcreatetempdir'] = 'لا يمكن إنشاء المجلد المؤقت';
-$string['cannotdownloadcomponents'] = 'لم يتم تحميل العناصر';
-$string['cannotdownloadzipfile'] = 'لم يتم تحميل الملف المضغوط';
-$string['cannotfindcomponent'] = 'لم يتم العثور على المكون';
-$string['cannotsavemd5file'] = 'لم يتم حفظ ملف  md5';
-$string['cannotsavezipfile'] = 'لم يتم حفظ الملف المضغوط';
-$string['cannotunzipfile'] = 'لم يتم فك الملف المضغوط';
-$string['componentisuptodate'] = 'العنصر محدث';
-$string['missingrequiredfield'] = 'بعض الحقول المطلوبة مفقودة';
+$string['language'] = 'Lingvo';
+$string['next'] = 'Poste';
+$string['previous'] = 'Antaŭa';
+$string['reload'] = 'Reŝarĝi';
