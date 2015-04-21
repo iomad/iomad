@@ -150,15 +150,32 @@ class assign_grading_table extends table_sql implements renderable {
         $fields .= 'uf.allocatedmarker as allocatedmarker ';
 
         $from = '{user} u
-                         LEFT JOIN {assign_submission} s ON
-                            u.id = s.userid AND
-                            s.assignment = :assignmentid1 AND
-                            s.latest = 1
-                         LEFT JOIN {assign_grades} g ON
-                            u.id = g.userid AND
-                            g.assignment = :assignmentid2 AND
-                            g.attemptnumber = s.attemptnumber
-                         LEFT JOIN {assign_user_flags} uf ON u.id = uf.userid AND uf.assignment = :assignmentid3';
+                         LEFT JOIN {assign_submission} s
+                                ON u.id = s.userid
+                               AND s.assignment = :assignmentid1
+                               AND s.latest = 1
+                         LEFT JOIN {assign_grades} g
+                                ON u.id = g.userid
+                               AND g.assignment = :assignmentid2 ';
+
+        // For group submissions we don't immediately create an entry in the assign_submission table for each user,
+        // instead the userid is set to 0. In this case we use a different query to retrieve the grade for the user.
+        if ($this->assignment->get_instance()->teamsubmission) {
+            $params['assignmentid4'] = (int) $this->assignment->get_instance()->id;
+            $grademaxattempt = 'SELECT mxg.userid, MAX(mxg.attemptnumber) AS maxattempt
+                                  FROM {assign_grades} mxg
+                                 WHERE mxg.assignment = :assignmentid4
+                              GROUP BY mxg.userid';
+            $from .= 'LEFT JOIN (' . $grademaxattempt . ') gmx
+                             ON u.id = gmx.userid
+                            AND g.attemptnumber = gmx.maxattempt ';
+        } else {
+            $from .= 'AND g.attemptnumber = s.attemptnumber ';
+        }
+
+        $from .= 'LEFT JOIN {assign_user_flags} uf
+                         ON u.id = uf.userid
+                        AND uf.assignment = :assignmentid3';
 
         $userparams = array();
         $userindex = 0;
@@ -270,7 +287,7 @@ class assign_grading_table extends table_sql implements renderable {
             $columns[] = 'status';
             $headers[] = get_string('status', 'assign');
         } else if ($this->assignment->get_instance()->markingworkflow) {
-            $columns[] = 'workflowstatus';
+            $columns[] = 'workflowstate';
             $headers[] = get_string('status', 'assign');
         }
 
@@ -875,7 +892,7 @@ class assign_grading_table extends table_sql implements renderable {
         $group = false;
         $submission = false;
         $this->get_group_and_submission($row->id, $group, $submission, -1);
-        if ($group && $submission && $submission->timemodified) {
+        if ($submission && $submission->timemodified && $submission->status != ASSIGN_SUBMISSION_STATUS_NEW) {
             $o = userdate($submission->timemodified);
         } else if ($row->timesubmitted) {
             $o = userdate($row->timesubmitted);
@@ -903,7 +920,7 @@ class assign_grading_table extends table_sql implements renderable {
         $group = false;
         $submission = false;
         $this->get_group_and_submission($row->id, $group, $submission, -1);
-        if ($group && $submission) {
+        if ($submission) {
             $timesubmitted = $submission->timemodified;
             $status = $submission->status;
         } else {

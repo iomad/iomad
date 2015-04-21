@@ -72,6 +72,12 @@ class restore_lesson_activity_structure_step extends restore_activity_structure_
             unset($data->showhighscores);
         }
 
+        // Supply item that maybe missing from previous versions.
+        if (!isset($data->intro)) {
+            $data->intro = '';
+            $data->introformat = FORMAT_HTML;
+        }
+
         // insert the lesson record
         $newitemid = $DB->insert_record('lesson', $data);
         // immediately after inserting "activity" record, call this
@@ -195,7 +201,8 @@ class restore_lesson_activity_structure_step extends restore_activity_structure_
                     'answerid' => $answer->id));
         }
 
-        // Add lesson mediafile, no need to match by itemname (just internally handled context)
+        // Add lesson files, no need to match by itemname (just internally handled context).
+        $this->add_related_files('mod_lesson', 'intro', null);
         $this->add_related_files('mod_lesson', 'mediafile', null);
         // Add lesson page files, by lesson_page itemname
         $this->add_related_files('mod_lesson', 'page_contents', 'lesson_page');
@@ -222,6 +229,23 @@ class restore_lesson_activity_structure_step extends restore_activity_structure_
             }
         }
         $rs->close();
+
+        // Replay the upgrade step 2014111003.
+        // Delete any orphaned lesson_branch record.
+        if ($DB->get_dbfamily() === 'mysql') {
+            $sql = "DELETE {lesson_branch}
+                      FROM {lesson_branch}
+                 LEFT JOIN {lesson_pages}
+                        ON {lesson_branch}.pageid = {lesson_pages}.id
+                     WHERE {lesson_pages}.id IS NULL";
+        } else {
+            $sql = "DELETE FROM {lesson_branch}
+               WHERE NOT EXISTS (
+                         SELECT 'x' FROM {lesson_pages}
+                          WHERE {lesson_branch}.pageid = {lesson_pages}.id)";
+        }
+
+        $DB->execute($sql);
 
         // Re-map the dependency and activitylink information
         // If a depency or activitylink has no mapping in the backup data then it could either be a duplication of a

@@ -273,4 +273,33 @@ class logstore_legacy_store_testcase extends advanced_testcase {
             $this->assertContains($expectedreport, $reports);
         }
     }
+
+    /**
+     * Test that the legacy log cleanup works correctly.
+     */
+    public function test_cleanup_task() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Create some records spread over various days; test multiple iterations in cleanup.
+        $record = (object) array('time' => time());
+        $DB->insert_record('log', $record);
+        $record->time -= 3600 * 24 * 30;
+        $DB->insert_record('log', $record);
+        $record->time -= 3600 * 24 * 30;
+        $DB->insert_record('log', $record);
+        $record->time -= 3600 * 24 * 30;
+        $DB->insert_record('log', $record);
+        $this->assertEquals(4, $DB->count_records('log'));
+
+        // Remove all logs before "today".
+        set_config('loglifetime', 1);
+
+        $this->expectOutputString(" Deleted old legacy log records\n");
+        $clean = new \logstore_legacy\task\cleanup_task();
+        $clean->execute();
+
+        $this->assertEquals(1, $DB->count_records('log'));
+    }
 }

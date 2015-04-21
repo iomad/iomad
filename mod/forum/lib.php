@@ -2491,9 +2491,8 @@ function forum_count_discussion_replies($forumid, $forumsort="", $limit=-1, $pag
                   FROM {forum_posts} p
                        JOIN {forum_discussions} d ON p.discussion = d.id
                  WHERE d.forum = ?
-              GROUP BY p.discussion $groupby
-              $orderby";
-        return $DB->get_records_sql("SELECT * FROM ($sql) sq", array($forumid), $limitfrom, $limitnum);
+              GROUP BY p.discussion $groupby $orderby";
+        return $DB->get_records_sql($sql, array($forumid), $limitfrom, $limitnum);
     }
 }
 
@@ -4096,8 +4095,8 @@ function forum_print_attachments($post, $cm, $type) {
                 $output .= plagiarism_get_links(array('userid' => $post->userid,
                     'file' => $file,
                     'cmid' => $cm->id,
-                    'course' => $post->course,
-                    'forum' => $post->forum));
+                    'course' => $cm->course,
+                    'forum' => $cm->instance));
                 $output .= '<br />';
             }
         }
@@ -7416,7 +7415,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
 
             // Check whether the requested user is enrolled or has access to view the course
             // if they don't we immediately have a problem.
-            if (!can_access_course($course, $user)) {
+            if (!can_access_course($course, $user) && !is_enrolled($coursecontext, $user)) {
                 if ($musthaveaccess) {
                     print_error('notenrolled', 'forum');
                 }

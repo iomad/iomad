@@ -70,9 +70,7 @@ if (!$students->valid()) {
 }
 
 $url = new moodle_url('/mod/lesson/report.php', array('id'=>$id));
-if ($action !== 'reportoverview') {
-    $url->param('action', $action);
-}
+$url->param('action', $action);
 if ($pageid !== null) {
     $url->param('pageid', $pageid);
 }
@@ -468,6 +466,7 @@ if ($action === 'delete') {
         $options = new stdClass;
         $options->noclean = true;
         $options->overflowdiv = true;
+        $options->context = $context;
         $answerpage->contents = format_text($page->contents, $page->contentsformat, $options);
 
         $answerpage->qtype = $qtypes[$page->qtype].$page->option_description_string();
