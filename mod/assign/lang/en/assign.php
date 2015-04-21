@@ -97,7 +97,7 @@ $string['batchoperationreverttodraft'] = 'revert submissions to draft';
 $string['batchsetallocatedmarker'] = 'Set allocated marker for {$a} selected user(s).';
 $string['batchsetmarkingworkflowstateforusers'] = 'Set marking workflow state for {$a} selected user(s).';
 $string['blindmarking'] = 'Blind marking';
-$string['blindmarking_help'] = 'Blind marking hides the identity of students to markers. Blind marking settings will be locked once a submission or grade has been made in relation to this assignment.';
+$string['blindmarking_help'] = 'Blind marking hides the identity of students from markers. Blind marking settings will be locked once a submission or grade has been made in relation to this assignment.';
 $string['changegradewarning'] = 'This assignment has graded submissions and changing the grade will not automatically re-calculate existing submission grades. You must re-grade all existing submissions, if you wish to change the grade.';
 $string['choosegradingaction'] = 'Grading action';
 $string['choosemarker'] = 'Choose...';
@@ -233,7 +233,7 @@ $string['invalidfloatforgrade'] = 'The grade provided could not be understood: {
 $string['lastmodifiedsubmission'] = 'Last modified (submission)';
 $string['lastmodifiedgrade'] = 'Last modified (grade)';
 $string['latesubmissions'] = 'Late submissions';
-$string['latesubmissionsaccepted'] = 'Only student(s) having been granted extension can still submit the assignment';
+$string['latesubmissionsaccepted'] = 'Allowed until the cut-off date';
 $string['locksubmissionforstudent'] = 'Prevent any more submissions for student: (id={$a->id}, fullname={$a->fullname}).';
 $string['locksubmissions'] = 'Lock submissions';
 $string['manageassignfeedbackplugins'] = 'Manage assignment feedback plugins';
@@ -280,7 +280,7 @@ $string['noattempt'] = 'No attempt';
 $string['nofiles'] = 'No files. ';
 $string['nograde'] = 'No grade. ';
 $string['nolatesubmissions'] = 'No late submissions accepted. ';
-$string['nomoresubmissionsaccepted'] = 'No more submissions accepted';
+$string['nomoresubmissionsaccepted'] = 'Only allowed for participants who have been granted an extension';
 $string['noonlinesubmissions'] = 'This assignment does not require you to submit anything online';
 $string['nosavebutnext'] = 'Next';
 $string['nosubmission'] = 'Nothing has been submitted for this assignment';
@@ -318,7 +318,7 @@ $string['requireallteammemberssubmit'] = 'Require all group members submit';
 $string['requireallteammemberssubmit_help'] = 'If enabled, all members of the student group must click the submit button for this assignment before the group submission will be considered as submitted. If disabled, the group submission will be considered as submitted as soon as any member of the student group clicks the submit button.';
 $string['recordid'] = 'Identifier';
 $string['revealidentities'] = 'Reveal student identities';
-$string['revealidentitiesconfirm'] = 'Are you sure you want to reveal student identities for this assignment. This operation cannot be undone. Once the student identities have been revealed, the marks will be released to the gradebook.';
+$string['revealidentitiesconfirm'] = 'Are you sure you want to reveal student identities for this assignment? This operation cannot be undone. Once the student identities have been revealed, the marks will be released to the gradebook.';
 $string['reverttodraftforstudent'] = 'Revert submission to draft for student: (id={$a->id}, fullname={$a->fullname}).';
 $string['reverttodraft'] = 'Revert the submission to draft status.';
 $string['reverttodraftshort'] = 'Revert the submission to draft';
@@ -348,6 +348,7 @@ $string['setmarkerallocationforlog'] = 'Set marking allocation : (id={$a->id}, f
 $string['settings'] = 'Assignment settings';
 $string['showrecentsubmissions'] = 'Show recent submissions';
 $string['status'] = 'Status';
+$string['studentnotificationworkflowstateerror'] = 'Marking workflow state must be \'Released\' to notify students.';
 $string['submissioncopiedtext'] = 'You have made a copy of your previous
 assignment submission for \'{$a->assignment}\'
 

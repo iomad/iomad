@@ -991,7 +991,7 @@ function calendar_filter_controls_element(moodle_url $url, $type) {
         $str = get_string('show'.$typeforhumans.'events', 'calendar');
     }
     $content = html_writer::start_tag('li', array('class' => 'calendar_event'));
-    $content .= html_writer::start_tag('a', array('href' => $url));
+    $content .= html_writer::start_tag('a', array('href' => $url, 'rel' => 'nofollow'));
     $content .= html_writer::tag('span', $icon, array('class' => $class));
     $content .= html_writer::tag('span', $str, array('class' => 'eventname'));
     $content .= html_writer::end_tag('a');
@@ -1888,6 +1888,54 @@ function calendar_add_event_allowed($event) {
         default:
             return has_capability('moodle/calendar:manageentries', $event->context);
     }
+}
+
+/**
+ * Convert region timezone to php supported timezone
+ *
+ * @param string $tz value from ical file
+ * @return string $tz php supported timezone
+ */
+function calendar_normalize_tz($tz) {
+    switch ($tz) {
+        case('CST'):
+        case('Central Time'):
+        case('Central Standard Time'):
+            $tz = 'America/Chicago';
+            break;
+        case('CET'):
+        case('Central European Time'):
+            $tz = 'Europe/Berlin';
+            break;
+        case('EST'):
+        case('Eastern Time'):
+        case('Eastern Standard Time'):
+            $tz = 'America/New_York';
+            break;
+        case('PST'):
+        case('Pacific Time'):
+        case('Pacific Standard Time'):
+            $tz = 'America/Los_Angeles';
+            break;
+        case('China Time'):
+        case('China Standard Time'):
+            $tz = 'Asia/Beijing';
+            break;
+        case('IST'):
+        case('India Time'):
+        case('India Standard Time'):
+            $tz = 'Asia/New_Delhi';
+            break;
+        case('JST');
+        case('Japan Time'):
+        case('Japan Standard Time'):
+            $tz = 'Asia/Tokyo';
+            break;
+        case('Romance Standard Time'):
+            $tz = 'Europe/Brussels';
+            break;
+    }
+    return $tz;
 }
 
 /**
@@ -2896,7 +2944,7 @@ function calendar_add_icalendar_event($event, $courseid, $subscriptionid, $timez
     $name = $event->properties['SUMMARY'][0]->value;
     $name = str_replace('\n', '<br />', $name);
     $name = str_replace('\\', '', $name);
-    $name = preg_replace('/\s+/', ' ', $name);
+    $name = preg_replace('/\s+/u', ' ', $name);
 
     $eventrecord = new stdClass;
     $eventrecord->name = clean_param($name, PARAM_NOTAGS);
@@ -2905,11 +2953,12 @@ function calendar_add_icalendar_event($event, $courseid, $subscriptionid, $timez
         $description = '';
     } else {
         $description = $event->properties['DESCRIPTION'][0]->value;
+        $description = clean_param($description, PARAM_NOTAGS);
         $description = str_replace('\n', '<br />', $description);
         $description = str_replace('\\', '', $description);
-        $description = preg_replace('/\s+/', ' ', $description);
+        $description = preg_replace('/\s+/u', ' ', $description);
     }
-    $eventrecord->description = clean_param($description, PARAM_NOTAGS);
+    $eventrecord->description = $description;
 
     // Probably a repeating event with RRULE etc. TODO: skip for now.
     if (empty($event->properties['DTSTART'][0]->value)) {
@@ -2919,12 +2968,14 @@ function calendar_add_icalendar_event($event, $courseid, $subscriptionid, $timez
     $defaulttz = date_default_timezone_get();
     $tz = isset($event->properties['DTSTART'][0]->parameters['TZID']) ? $event->properties['DTSTART'][0]->parameters['TZID'] :
             $timezone;
+    $tz = calendar_normalize_tz($tz);
     $eventrecord->timestart = strtotime($event->properties['DTSTART'][0]->value . ' ' . $tz);
     if (empty($event->properties['DTEND'])) {
         $eventrecord->timeduration = 0; // no duration if no end time specified
     } else {
         $endtz = isset($event->properties['DTEND'][0]->parameters['TZID']) ? $event->properties['DTEND'][0]->parameters['TZID'] :
                 $timezone;
+        $endtz = calendar_normalize_tz($endtz);
         $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value . ' ' . $endtz) - $eventrecord->timestart;
     }
 
@@ -3065,7 +3116,9 @@ function calendar_import_icalendar_events($ical, $courseid, $subscriptionid = nu
     $updatecount = 0;
 
     // Large calendars take a while...
-    core_php_time_limit::raise(300);
+    if (!CLI_SCRIPT) {
+        core_php_time_limit::raise(300);
+    }
 
     // Mark all events in a subscription with a zero timestamp.
     if (!empty($subscriptionid)) {

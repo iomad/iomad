@@ -349,6 +349,7 @@ class lesson_page_type_multichoice extends lesson_page {
         $answers = $this->get_used_answers();
         $formattextdefoptions = new stdClass;
         $formattextdefoptions->para = false;  //I'll use it widely in this page
+        $formattextdefoptions->context = $answerpage->context;
 
         foreach ($answers as $answer) {
             if ($this->properties->qoption) {
@@ -471,6 +472,9 @@ class lesson_display_answer_form_multichoice_singleanswer extends moodleform {
             $attempt->answerid = null;
         }
 
+        // Disable shortforms.
+        $mform->setDisableShortforms();
+
         $mform->addElement('header', 'pageheader');
 
         $mform->addElement('html', $OUTPUT->container($contents, 'contents'));
@@ -523,6 +527,9 @@ class lesson_display_answer_form_multichoice_multianswer extends moodleform {
 
         $lessonid = $this->_customdata['lessonid'];
         $contents = $this->_customdata['contents'];
+
+        // Disable shortforms.
+        $mform->setDisableShortforms();
 
         $mform->addElement('header', 'pageheader');
 

@@ -211,7 +211,9 @@ abstract class moodleform {
      * @return string form identifier.
      */
     protected function get_form_identifier() {
-        return get_class($this);
+        $class = get_class($this);
+
+        return preg_replace('/[^a-z0-9_]/i', '_', $class);
     }
 
     /**
@@ -2903,7 +2905,7 @@ class MoodleQuickForm_Rule_Required extends HTML_QuickForm_Rule {
         global $CFG;
         if (!empty($CFG->strictformsrequired)) {
             if (!empty($format) && $format == FORMAT_HTML) {
-                return array('', "{jsVar}.replace(/(<[^img|hr|canvas]+>)|&nbsp;|\s+/ig, '') == ''");
+                return array('', "{jsVar}.replace(/(<(?!img|hr|canvas)[^>]*>)|&nbsp;|\s+/ig, '') == ''");
             } else {
                 return array('', "{jsVar}.replace(/^\s+$/g, '') == ''");
             }

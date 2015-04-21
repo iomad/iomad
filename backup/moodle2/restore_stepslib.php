@@ -1386,13 +1386,31 @@ class restore_section_structure_step extends restore_structure_step {
 
     public function process_course_format_options($data) {
         global $DB;
-        $data = (object)$data;
-        $oldid = $data->id;
-        unset($data->id);
-        $data->sectionid = $this->task->get_sectionid();
-        $data->courseid = $this->get_courseid();
-        $newid = $DB->insert_record('course_format_options', $data);
-        $this->set_mapping('course_format_options', $oldid, $newid);
+        static $courseformats = array();
+        $courseid = $this->get_courseid();
+        if (!array_key_exists($courseid, $courseformats)) {
+            // It is safe to have a static cache of course formats because format can not be changed after this point.
+            $courseformats[$courseid] = $DB->get_field('course', 'format', array('id' => $courseid));
+        }
+        $data = (array)$data;
+        if ($courseformats[$courseid] === $data['format']) {
+            // Import section format options only if both courses (the one that was backed up
+            // and the one we are restoring into) have same formats.
+            $params = array(
+                'courseid' => $this->get_courseid(),
+                'sectionid' => $this->task->get_sectionid(),
+                'format' => $data['format'],
+                'name' => $data['name']
+            );
+            if ($record = $DB->get_record('course_format_options', $params, 'id, value')) {
+                // Do not overwrite existing information.
+                $newid = $record->id;
+            } else {
+                $params['value'] = $data['value'];
+                $newid = $DB->insert_record('course_format_options', $params);
+            }
+            $this->set_mapping('course_format_options', $data['id'], $newid);
+        }
     }
 
     protected function after_execute() {
@@ -1780,12 +1798,12 @@ class restore_enrolments_structure_step extends restore_structure_step {
 
     protected function define_structure() {
 
-        $paths = array();
+        $enrol = new restore_path_element('enrol', '/enrolments/enrols/enrol');
+        $enrolment = new restore_path_element('enrolment', '/enrolments/enrols/enrol/user_enrolments/enrolment');
+        // Attach local plugin stucture to enrol element.
+        $this->add_plugin_structure('enrol', $enrol);
 
-        $paths[] = new restore_path_element('enrol', '/enrolments/enrols/enrol');
-        $paths[] = new restore_path_element('enrolment', '/enrolments/enrols/enrol/user_enrolments/enrolment');
-
-        return $paths;
+        return array($enrol, $enrolment);
     }
 
     /**
@@ -2251,15 +2269,17 @@ class restore_calendarevents_structure_step extends restore_structure_step {
     }
 
     public function process_calendarevents($data) {
-        global $DB, $SITE;
+        global $DB, $SITE, $USER;
 
         $data = (object)$data;
         $oldid = $data->id;
         $restorefiles = true; // We'll restore the files
-        // Find the userid and the groupid associated with the event. Return if not found.
+        // Find the userid and the groupid associated with the event.
         $data->userid = $this->get_mappingid('user', $data->userid);
         if ($data->userid === false) {
-            return;
+            // Blank user ID means that we are dealing with module generated events such as quiz starting times.
+            // Use the current user ID for these events.
+            $data->userid = $USER->id;
         }
         if (!empty($data->groupid)) {
             $data->groupid = $this->get_mappingid('group', $data->groupid);
@@ -2416,18 +2436,42 @@ class restore_course_completion_structure_step extends restore_structure_step {
         $data->timeend = $this->apply_date_offset($data->timeend);
 
         // Map the role from the criteria
-        if (!empty($data->role)) {
-            $data->role = $this->get_mappingid('role', $data->role);
-        }
+        if (isset($data->role) && $data->role != '') {
+            // Newer backups should include roleshortname, which makes this much easier.
+            if (!empty($data->roleshortname)) {
+                $roleinstanceid = $DB->get_field('role', 'id', array('shortname' => $data->roleshortname));
+                if (!$roleinstanceid) {
+                    $this->log(
+                        'Could not match the role shortname in course_completion_criteria, so skipping',
+                        backup::LOG_DEBUG
+                    );
+                    return;
+                }
+                $data->role = $roleinstanceid;
+            } else {
+                $data->role = $this->get_mappingid('role', $data->role);
+            }
 
-        $skipcriteria = false;
+            // Check we have an id, otherwise it causes all sorts of bugs.
+            if (!$data->role) {
+                $this->log(
+                    'Could not match role in course_completion_criteria, so skipping',
+                    backup::LOG_DEBUG
+                );
+                return;
+            }
+        }
 
         // If the completion criteria is for a module we need to map the module instance
         // to the new module id.
         if (!empty($data->moduleinstance) && !empty($data->module)) {
             $data->moduleinstance = $this->get_mappingid('course_module', $data->moduleinstance);
             if (empty($data->moduleinstance)) {
-                $skipcriteria = true;
+                $this->log(
+                    'Could not match the module instance in course_completion_criteria, so skipping',
+                    backup::LOG_DEBUG
+                );
+                return;
             }
         } else {
             $data->module = null;
@@ -2438,28 +2482,30 @@ class restore_course_completion_structure_step extends restore_structure_step {
         if (!empty($data->courseinstanceshortname)) {
             $courseinstanceid = $DB->get_field('course', 'id', array('shortname'=>$data->courseinstanceshortname));
             if (!$courseinstanceid) {
-                $skipcriteria = true;
+                $this->log(
+                    'Could not match the course instance in course_completion_criteria, so skipping',
+                    backup::LOG_DEBUG
+                );
+                return;
             }
         } else {
             $courseinstanceid = null;
         }
         $data->courseinstance = $courseinstanceid;
 
-        if (!$skipcriteria) {
-            $params = array(
-                'course'         => $data->course,
-                'criteriatype'   => $data->criteriatype,
-                'enrolperiod'    => $data->enrolperiod,
-                'courseinstance' => $data->courseinstance,
-                'module'         => $data->module,
-                'moduleinstance' => $data->moduleinstance,
-                'timeend'        => $data->timeend,
-                'gradepass'      => $data->gradepass,
-                'role'           => $data->role
-            );
-            $newid = $DB->insert_record('course_completion_criteria', $params);
-            $this->set_mapping('course_completion_criteria', $data->id, $newid);
-        }
+        $params = array(
+            'course'         => $data->course,
+            'criteriatype'   => $data->criteriatype,
+            'enrolperiod'    => $data->enrolperiod,
+            'courseinstance' => $data->courseinstance,
+            'module'         => $data->module,
+            'moduleinstance' => $data->moduleinstance,
+            'timeend'        => $data->timeend,
+            'gradepass'      => $data->gradepass,
+            'role'           => $data->role
+        );
+        $newid = $DB->insert_record('course_completion_criteria', $params);
+        $this->set_mapping('course_completion_criteria', $data->id, $newid);
     }
 
     /**
@@ -2519,7 +2565,21 @@ class restore_course_completion_structure_step extends restore_structure_step {
                 'timecompleted' => $this->apply_date_offset($data->timecompleted),
                 'reaggregate' => $data->reaggregate
             );
-            $DB->insert_record('course_completions', $params);
+
+            $existing = $DB->get_record('course_completions', array(
+                'userid' => $data->userid,
+                'course' => $data->course
+            ));
+
+            // MDL-46651 - If cron writes out a new record before we get to it
+            // then we should replace it with the Truth data from the backup.
+            // This may be obsolete after MDL-48518 is resolved
+            if ($existing) {
+                $params['id'] = $existing->id;
+                $DB->update_record('course_completions', $params);
+            } else {
+                $DB->insert_record('course_completions', $params);
+            }
         }
     }
 
@@ -2637,7 +2697,7 @@ class restore_course_logs_structure_step extends restore_structure_step {
             $manager = get_log_manager();
             if (method_exists($manager, 'legacy_add_to_log')) {
                 $manager->legacy_add_to_log($data->course, $data->module, $data->action, $data->url,
-                    $data->info, $data->cmid, $data->userid);
+                    $data->info, $data->cmid, $data->userid, $data->ip, $data->time);
             }
         }
     }
@@ -2686,7 +2746,7 @@ class restore_activity_logs_structure_step extends restore_course_logs_structure
             $manager = get_log_manager();
             if (method_exists($manager, 'legacy_add_to_log')) {
                 $manager->legacy_add_to_log($data->course, $data->module, $data->action, $data->url,
-                    $data->info, $data->cmid, $data->userid);
+                    $data->info, $data->cmid, $data->userid, $data->ip, $data->time);
             }
         }
     }
@@ -3000,11 +3060,52 @@ class restore_block_instance_structure_step extends restore_structure_step {
         }
 
         if (!$bi->instance_allow_multiple()) {
-            if ($DB->record_exists_sql("SELECT bi.id
-                                          FROM {block_instances} bi
-                                          JOIN {block} b ON b.name = bi.blockname
-                                         WHERE bi.parentcontextid = ?
-                                           AND bi.blockname = ?", array($data->parentcontextid, $data->blockname))) {
+            // The block cannot be added twice, so we will check if the same block is already being
+            // displayed on the same page. For this, rather than mocking a page and using the block_manager
+            // we use a similar query to the one in block_manager::load_blocks(), this will give us
+            // a very good idea of the blocks already displayed in the context.
+            $params =  array(
+                'blockname' => $data->blockname
+            );
+
+            // Context matching test.
+            $context = context::instance_by_id($data->parentcontextid);
+            $contextsql = 'bi.parentcontextid = :contextid';
+            $params['contextid'] = $context->id;
+
+            $parentcontextids = $context->get_parent_context_ids();
+            if ($parentcontextids) {
+                list($parentcontextsql, $parentcontextparams) =
+                        $DB->get_in_or_equal($parentcontextids, SQL_PARAMS_NAMED);
+                $contextsql = "($contextsql OR (bi.showinsubcontexts = 1 AND bi.parentcontextid $parentcontextsql))";
+                $params = array_merge($params, $parentcontextparams);
+            }
+
+            // Page type pattern test.
+            $pagetypepatterns = matching_page_type_patterns_from_pattern($data->pagetypepattern);
+            list($pagetypepatternsql, $pagetypepatternparams) =
+                $DB->get_in_or_equal($pagetypepatterns, SQL_PARAMS_NAMED);
+            $params = array_merge($params, $pagetypepatternparams);
+
+            // Sub page pattern test.
+            $subpagepatternsql = 'bi.subpagepattern IS NULL';
+            if ($data->subpagepattern !== null) {
+                $subpagepatternsql = "($subpagepatternsql OR bi.subpagepattern = :subpagepattern)";
+                $params['subpagepattern'] = $data->subpagepattern;
+            }
+
+            $exists = $DB->record_exists_sql("SELECT bi.id
+                                                FROM {block_instances} bi
+                                                JOIN {block} b ON b.name = bi.blockname
+                                               WHERE bi.blockname = :blockname
+                                                 AND $contextsql
+                                                 AND bi.pagetypepattern $pagetypepatternsql
+                                                 AND $subpagepatternsql", $params);
+            if ($exists) {
+                // There is at least one very similar block visible on the page where we
+                // are trying to restore the block. In these circumstances the block API
+                // would not allow the user to add another instance of the block, so we
+                // apply the same rule here.
                 return false;
             }
         }
@@ -3605,6 +3706,11 @@ class restore_create_categories_and_questions extends restore_structure_step {
 
         $data = (object)$data;
         $newquestion = $this->get_new_parentid('question');
+        $questioncreated = (bool) $this->get_mappingid('question_created', $this->get_old_parentid('question'));
+        if (!$questioncreated) {
+            // This question already exists in the question bank. Nothing for us to do.
+            return;
+        }
 
         if (!empty($CFG->usetags)) { // if enabled in server
             // TODO: This is highly inefficient. Each time we add one tag

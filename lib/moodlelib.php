@@ -1099,7 +1099,7 @@ function clean_param($param, $type) {
             // Remove some nasties.
             $param = preg_replace('~[[:cntrl:]]|[<>`]~u', '', $param);
             // Convert many whitespace chars into one.
-            $param = preg_replace('/\s+/', ' ', $param);
+            $param = preg_replace('/\s+/u', ' ', $param);
             $param = core_text::substr(trim($param), 0, TAG_MAX_LENGTH);
             return $param;
 
@@ -2850,10 +2850,6 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 $modinfo = get_fast_modinfo($course);
                 $cm = $modinfo->get_cm($cm->id);
             }
-            $PAGE->set_cm($cm, $course); // Set's up global $COURSE.
-            $PAGE->set_pagelayout('incourse');
-        } else {
-            $PAGE->set_course($course); // Set's up global $COURSE.
         }
     } else {
         // Do not touch global $COURSE via $PAGE->set_course(),
@@ -2957,6 +2953,13 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
 
     // Do not bother admins with any formalities.
     if (is_siteadmin()) {
+        // Set the global $COURSE.
+        if ($cm) {
+            $PAGE->set_cm($cm, $course);
+            $PAGE->set_pagelayout('incourse');
+        } else if (!empty($courseorid)) {
+            $PAGE->set_course($course);
+        }
         // Set accesstime or the user will appear offline which messes up messaging.
         user_accesstime_log($course->id);
         return;
@@ -3014,6 +3017,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 if ($preventredirect) {
                     throw new require_login_exception('Course is hidden');
                 }
+                $PAGE->set_context(null);
                 // We need to override the navigation URL as the course won't have been added to the navigation and thus
                 // the navigation will mess up when trying to find it.
                 navigation_node::override_active_url(new moodle_url('/'));
@@ -3034,6 +3038,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 if ($preventredirect) {
                     throw new require_login_exception('Invalid course login-as access');
                 }
+                $PAGE->set_context(null);
                 echo $OUTPUT->header();
                 notice(get_string('studentnotallowed', '', fullname($USER, true)), $CFG->wwwroot .'/');
             }
@@ -3133,6 +3138,15 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             }
             redirect($CFG->wwwroot .'/enrol/index.php?id='. $course->id);
         }
+    }
+
+    // Set the global $COURSE.
+    // TODO MDL-49434: setting current course/cm should be after the check $cm->uservisible .
+    if ($cm) {
+        $PAGE->set_cm($cm, $course);
+        $PAGE->set_pagelayout('incourse');
+    } else if (!empty($courseorid)) {
+        $PAGE->set_course($course);
     }
 
     // Check visibility of activity to current user; includes visible flag, groupmembersonly, conditional availability, etc.
@@ -8619,8 +8633,23 @@ function getremoteaddr($default='0.0.0.0') {
     }
     if (!($variablestoskip & GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR)) {
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $hdr = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
-            $address = cleanremoteaddr($hdr[0]);
+            $forwardedaddresses = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
+            $address = $forwardedaddresses[0];
+
+            if (substr_count($address, ":") > 1) {
+                // Remove port and brackets from IPv6.
+                if (preg_match("/\[(.*)\]:/", $address, $matches)) {
+                    $address = $matches[1];
+                }
+            } else {
+                // Remove port from IPv4.
+                if (substr_count($address, ":") == 1) {
+                    $parts = explode(":", $address);
+                    $address = $parts[0];
+                }
+            }
+
+            $address = cleanremoteaddr($address);
             return $address ? $address : $default;
         }
     }

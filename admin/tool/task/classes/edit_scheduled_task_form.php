@@ -92,5 +92,63 @@ class tool_task_edit_scheduled_task_form extends moodleform {
         // Do not use defaults for existing values, the set_data() is the correct way.
         $this->set_data(\core\task\manager::record_from_scheduled_task($task));
     }
+
+    /**
+     * Custom validations.
+     *
+     * @param array $data
+     * @param array $files
+     *
+     * @return array
+     */
+    public function validation($data, $files) {
+        $error = parent::validation($data, $files);
+        $fields = array('minute', 'hour', 'day', 'month', 'dayofweek');
+        foreach ($fields as $field) {
+            if (!self::validate_fields($field, $data[$field])) {
+                $error[$field] = get_string('invaliddata', 'core_error');
+            }
+        }
+        return $error;
+    }
+
+    /**
+     * Helper function that validates the submitted data.
+     *
+     * Explanation of the regex:-
+     *
+     * \A\*\z - matches *
+     * \A[0-5]?[0-9]\z - matches entries like 23
+     * \A\*\/[0-5]?[0-9]\z - matches entries like * / 5
+     * \A[0-5]?[0-9](,[0-5]?[0-9])*\z - matches entries like 1,2,3
+     * \A[0-5]?[0-9]-[0-5]?[0-9]\z - matches entries like 2-10
+     *
+     * @param string $field field to validate
+     * @param string $value value
+     *
+     * @return bool true if validation passes, false other wise.
+     */
+    public static function validate_fields($field, $value) {
+        switch ($field) {
+            case 'minute' :
+            case 'hour' :
+                $regex = "/\A\*\z|\A[0-5]?[0-9]\z|\A\*\/[0-5]?[0-9]\z|\A[0-5]?[0-9](,[0-5]?[0-9])*\z|\A[0-5]?[0-9]-[0-5]?[0-9]\z/";
+                break;
+            case 'day':
+                $regex = "/\A\*\z|\A([1-2]?[0-9]|3[0-1])\z|\A\*\/([1-2]?[0-9]|3[0-1])\z|";
+                $regex .= "\A([1-2]?[0-9]|3[0-1])(,([1-2]?[0-9]|3[0-1]))*\z|\A([1-2]?[0-9]|3[0-1])-([1-2]?[0-9]|3[0-1])\z/";
+                break;
+            case 'month':
+                $regex = "/\A\*\z|\A([0-9]|1[0-2])\z|\A\*\/([0-9]|1[0-2])\z|\A([0-9]|1[0-2])(,([0-9]|1[0-2]))*\z|";
+                $regex .= "\A([0-9]|1[0-2])-([0-9]|1[0-2])\z/";
+                break;
+            case 'dayofweek':
+                $regex = "/\A\*\z|\A[0-6]\z|\A\*\/[0-6]\z|\A[0-6](,[0-6])*\z|\A[0-6]-[0-6]\z/";
+                break;
+            default:
+                return false;
+        }
+        return (bool)preg_match($regex, $value);
+    }
 }
 

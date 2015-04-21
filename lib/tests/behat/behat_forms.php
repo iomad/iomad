@@ -98,6 +98,10 @@ class behat_forms extends behat_base {
      * @return void
      */
     protected function expand_all_fields() {
+        // Expand only if JS mode, else not needed.
+        if (!$this->running_javascript()) {
+            return;
+        }
 
         // We already know that we waited for the DOM and the JS to be loaded, even the editor
         // so, we will use the reduced timeout as it is a common task and we should save time.
@@ -153,6 +157,21 @@ class behat_forms extends behat_base {
      */
     public function i_set_the_field_to($field, $value) {
         $this->set_field_value($field, $value);
+    }
+
+    /**
+     * Sets the specified value to the field with xpath.
+     *
+     * @Given /^I set the field with xpath "(?P<fieldxpath_string>(?:[^"]|\\")*)" to "(?P<field_value_string>(?:[^"]|\\")*)"$/
+     * @throws ElementNotFoundException Thrown by behat_base::find
+     * @param string $field
+     * @param string $value
+     * @return void
+     */
+    public function i_set_the_field_with_xpath_to($fieldxpath, $value) {
+        $fieldNode = $this->find('xpath', $fieldxpath);
+        $field = behat_field_manager::get_form_field($fieldNode, $this->getSession());
+        $field->set_value($value);
     }
 
     /**

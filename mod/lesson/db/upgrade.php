@@ -78,6 +78,43 @@ function xmldb_lesson_upgrade($oldversion) {
     // Moodle v2.7.0 release upgrade line.
     // Put any upgrade step following this.
 
+    // Moodle v2.8.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2014051201) {
+
+        // Changing precision of field grade on table lesson to (10).
+        $table = new xmldb_table('lesson');
+        $field = new xmldb_field('grade', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'conditions');
+
+        // Launch change of precision for field grade.
+        $dbman->change_field_precision($table, $field);
+
+        // Lesson savepoint reached.
+        upgrade_mod_savepoint(true, 2014051201, 'lesson');
+    }
+
+    if ($oldversion < 2014051202) {
+        // Delete any orphaned lesson_branch record.
+        if ($DB->get_dbfamily() === 'mysql') {
+            $sql = "DELETE {lesson_branch}
+                      FROM {lesson_branch}
+                 LEFT JOIN {lesson_pages}
+                        ON {lesson_branch}.pageid = {lesson_pages}.id
+                     WHERE {lesson_pages}.id IS NULL";
+        } else {
+            $sql = "DELETE FROM {lesson_branch}
+               WHERE NOT EXISTS (
+                         SELECT 'x' FROM {lesson_pages}
+                          WHERE {lesson_branch}.pageid = {lesson_pages}.id)";
+        }
+
+        $DB->execute($sql);
+
+        // Lesson savepoint reached.
+        upgrade_mod_savepoint(true, 2014051202, 'lesson');
+    }
+
     return true;
 }
 

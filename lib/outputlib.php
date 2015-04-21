@@ -269,7 +269,7 @@ class theme_config {
     public $rarrow = null;
 
     /**
-     * @var string Accessibility: Right arrow-like character is
+     * @var string Accessibility: Left arrow-like character is
      * used in the breadcrumb trail, course navigation menu
      * (previous/next activity), calendar, and search forum block.
      * If the theme does not set characters, appropriate defaults
@@ -1475,6 +1475,10 @@ class theme_config {
             $lifetime = 0;
         } else {
             $lifetime = 60*60*24*60;
+            // By default, theme files must be cache-able by both browsers and proxies.
+            if (!array_key_exists('cacheability', $options)) {
+                $options['cacheability'] = 'public';
+            }
         }
 
         $fs = get_file_storage();

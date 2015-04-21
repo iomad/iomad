@@ -218,4 +218,41 @@ class logstore_standard_store_testcase extends advanced_testcase {
             $this->assertContains($expectedreport, $reports);
         }
     }
+
+    /**
+     * Test that the standard log cleanup works correctly.
+     */
+    public function test_cleanup_task() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Create some records spread over various days; test multiple iterations in cleanup.
+        $ctx = context_course::instance(1);
+        $record = (object) array(
+            'edulevel' => 0,
+            'contextid' => $ctx->id,
+            'contextlevel' => $ctx->contextlevel,
+            'contextinstanceid' => $ctx->instanceid,
+            'userid' => 1,
+            'timecreated' => time(),
+        );
+        $DB->insert_record('logstore_standard_log', $record);
+        $record->timecreated -= 3600 * 24 * 30;
+        $DB->insert_record('logstore_standard_log', $record);
+        $record->timecreated -= 3600 * 24 * 30;
+        $DB->insert_record('logstore_standard_log', $record);
+        $record->timecreated -= 3600 * 24 * 30;
+        $DB->insert_record('logstore_standard_log', $record);
+        $this->assertEquals(4, $DB->count_records('logstore_standard_log'));
+
+        // Remove all logs before "today".
+        set_config('loglifetime', 1, 'logstore_standard');
+
+        $this->expectOutputString(" Deleted old log records from standard store.\n");
+        $clean = new \logstore_standard\task\cleanup_task();
+        $clean->execute();
+
+        $this->assertEquals(1, $DB->count_records('logstore_standard_log'));
+    }
 }

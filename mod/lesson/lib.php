@@ -198,8 +198,8 @@ function lesson_user_complete($course, $user, $mod, $lesson) {
                 "retry, timeseen")) {
         echo $OUTPUT->box_start();
         $table = new html_table();
-        $table->head = array (get_string("attempt", "lesson"),  get_string("numberofpagesviewed", "lesson"),
-            get_string("numberofcorrectanswers", "lesson"), get_string("time"));
+        $table->head = array (get_string("attempt", "lesson", ""),  get_string("numberofpagesviewed", "lesson", ""),
+            get_string("numberofcorrectanswers", "lesson", ""), get_string("time"));
         $table->width = "100%";
         $table->align = array ("center", "center", "center", "center");
         $table->size = array ("*", "*", "*", "*");
@@ -286,7 +286,7 @@ function lesson_print_overview($courses, &$htmlarray) {
             // Attempt information
             if (has_capability('mod/lesson:manage', context_module::instance($lesson->coursemodule))) {
                 // Number of user attempts
-                $attempts = $DB->count_records('lesson_attempts', array('lessonid'=>$lesson->id));
+                $attempts = $DB->count_records('lesson_grades', array('lessonid' => $lesson->id));
                 $str     .= $OUTPUT->box(get_string('xattempts', 'lesson', $attempts), 'info');
             } else {
                 // Determine if the user has attempted the lesson or not
@@ -460,11 +460,11 @@ function lesson_grade_item_update($lesson, $grades=null) {
         $params = array('itemname'=>$lesson->name);
     }
 
-    if ($lesson->grade > 0) {
+    if (!$lesson->practice and $lesson->grade > 0) {
         $params['gradetype']  = GRADE_TYPE_VALUE;
         $params['grademax']   = $lesson->grade;
         $params['grademin']   = 0;
-    } else if ($lesson->grade < 0) {
+    } else if (!$lesson->practice and $lesson->grade < 0) {
         $params['gradetype']  = GRADE_TYPE_SCALE;
         $params['scaleid']   = -$lesson->grade;
 
@@ -730,6 +730,7 @@ function lesson_reset_userdata($data) {
         $DB->delete_records_select('lesson_high_scores', "lessonid IN ($lessonssql)", $params);
         $DB->delete_records_select('lesson_grades', "lessonid IN ($lessonssql)", $params);
         $DB->delete_records_select('lesson_attempts', "lessonid IN ($lessonssql)", $params);
+        $DB->delete_records_select('lesson_branch', "lessonid IN ($lessonssql)", $params);
 
         // remove all grades from gradebook
         if (empty($data->reset_gradebook_grades)) {
@@ -795,12 +796,14 @@ function lesson_extend_settings_navigation($settings, $lessonnode) {
 
     $canedit = has_capability('mod/lesson:edit', $PAGE->cm->context);
 
-    $url = new moodle_url('/mod/lesson/view.php', array('id'=>$PAGE->cm->id));
-    $lessonnode->add(get_string('preview', 'lesson'), $url);
-
     if ($canedit) {
-        $url = new moodle_url('/mod/lesson/edit.php', array('id'=>$PAGE->cm->id));
-        $lessonnode->add(get_string('edit', 'lesson'), $url);
+        $url = new moodle_url('/mod/lesson/view.php', array('id' => $PAGE->cm->id));
+        $lessonnode->add(get_string('preview', 'lesson'), $url);
+        $editnode = $lessonnode->add(get_string('edit', 'lesson'));
+        $url = new moodle_url('/mod/lesson/edit.php', array('id' => $PAGE->cm->id, 'mode' => 'collapsed'));
+        $editnode->add(get_string('collapsed', 'lesson'), $url);
+        $url = new moodle_url('/mod/lesson/edit.php', array('id' => $PAGE->cm->id, 'mode' => 'full'));
+        $editnode->add(get_string('full', 'lesson'), $url);
     }
 
     if (has_capability('mod/lesson:manage', $PAGE->cm->context)) {

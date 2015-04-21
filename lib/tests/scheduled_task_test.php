@@ -177,6 +177,25 @@ class core_scheduled_task_testcase extends advanced_testcase {
         // We reset this field, because we do not want to compare it.
         $firsttaskrecord->nextruntime = '0';
 
+        // Delete a task to simulate the fact that its new.
+        $secondtask = next($defaulttasks);
+        $DB->delete_records('task_scheduled', array('classname' => '\\' . trim(get_class($secondtask), '\\')));
+        $this->assertFalse(\core\task\manager::get_scheduled_task(get_class($secondtask)));
+
+        // Edit a task to simulate a change in its definition (as if it was not customised).
+        $thirdtask = next($defaulttasks);
+        $thirdtask->set_minute('1');
+        $thirdtask->set_hour('2');
+        $thirdtask->set_month('3');
+        $thirdtask->set_day_of_week('4');
+        $thirdtask->set_day('5');
+        $thirdtaskbefore = \core\task\manager::get_scheduled_task(get_class($thirdtask));
+        $thirdtaskbefore->set_next_run_time(null);      // Ignore this value when comparing.
+        \core\task\manager::configure_scheduled_task($thirdtask);
+        $thirdtask = \core\task\manager::get_scheduled_task(get_class($thirdtask));
+        $thirdtask->set_next_run_time(null);            // Ignore this value when comparing.
+        $this->assertNotEquals($thirdtaskbefore, $thirdtask);
+
         // Now call reset on all the tasks.
         \core\task\manager::reset_scheduled_tasks_for_component('moodle');
 
@@ -191,6 +210,17 @@ class core_scheduled_task_testcase extends advanced_testcase {
 
         // Assert a customised task was not altered by reset.
         $this->assertEquals($firsttaskrecord, $newfirsttaskrecord);
+
+        // Assert that the second task was added back.
+        $secondtaskafter = \core\task\manager::get_scheduled_task(get_class($secondtask));
+        $secondtaskafter->set_next_run_time(null);   // Do not compare the nextruntime.
+        $secondtask->set_next_run_time(null);
+        $this->assertEquals($secondtask, $secondtaskafter);
+
+        // Assert that the third task edits were overridden.
+        $thirdtaskafter = \core\task\manager::get_scheduled_task(get_class($thirdtask));
+        $thirdtaskafter->set_next_run_time(null);
+        $this->assertEquals($thirdtaskbefore, $thirdtaskafter);
 
         // Assert we have the same number of tasks.
         $this->assertEquals($initcount, $finalcount);
@@ -280,5 +310,64 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $task = \core\task\manager::get_next_scheduled_task($now);
         $this->assertDebuggingCalled();
         $this->assertNull($task);
+    }
+
+    /**
+     * Test that the file_temp_cleanup_task removes directories and
+     * files as expected.
+     */
+    public function test_file_temp_cleanup_task() {
+        global $CFG;
+
+        // Create directories.
+        $dir = $CFG->tempdir . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . 'backup01' . DIRECTORY_SEPARATOR . 'courses';
+        mkdir($dir, 0777, true);
+
+        // Create files to be checked and then deleted.
+        $file01 = $dir . DIRECTORY_SEPARATOR . 'sections.xml';
+        file_put_contents($file01, 'test data 001');
+        $file02 = $dir . DIRECTORY_SEPARATOR . 'modules.xml';
+        file_put_contents($file02, 'test data 002');
+        // Change the time modified for the first file, to a time that will be deleted by the task (greater than seven days).
+        touch($file01, time() - (8 * 24 * 3600));
+
+        $task = \core\task\manager::get_scheduled_task('\\core\\task\\file_temp_cleanup_task');
+        $this->assertInstanceOf('\core\task\file_temp_cleanup_task', $task);
+        $task->execute();
+
+        // Scan the directory. Only modules.xml should be left.
+        $filesarray = scandir($dir);
+        $this->assertEquals('modules.xml', $filesarray[2]);
+        $this->assertEquals(3, count($filesarray));
+
+        // Change the time modified on modules.xml.
+        touch($file02, time() - (8 * 24 * 3600));
+        // Change the time modified on the courses directory.
+        touch($CFG->tempdir . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . 'backup01' . DIRECTORY_SEPARATOR .
+                'courses', time() - (8 * 24 * 3600));
+        // Run the scheduled task to remove the file and directory.
+        $task->execute();
+        $filesarray = scandir($CFG->tempdir . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . 'backup01');
+        // There should only be two items in the array, '.' and '..'.
+        $this->assertEquals(2, count($filesarray));
+
+        // Change the time modified on all of the files and directories.
+        $dir = new \RecursiveDirectoryIterator($CFG->tempdir);
+        // Show all child nodes prior to their parent.
+        $iter = new \RecursiveIteratorIterator($dir, \RecursiveIteratorIterator::CHILD_FIRST);
+
+        for ($iter->rewind(); $iter->valid(); $iter->next()) {
+            if ($iter->isDir() && !$iter->isDot()) {
+                $node = $iter->getRealPath();
+                touch($node, time() - (8 * 24 * 3600));
+            }
+        }
+
+        // Run the scheduled task again to remove all of the files and directories.
+        $task->execute();
+        $filesarray = scandir($CFG->tempdir);
+        // All of the files and directories should be deleted.
+        // There should only be two items in the array, '.' and '..'.
+        $this->assertEquals(2, count($filesarray));
     }
 }

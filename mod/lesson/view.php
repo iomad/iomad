@@ -214,12 +214,9 @@ if (empty($pageid)) {
         // in here, user has viewed a branch table
         $lastbranchtable = current($branchtables);
         if (count($allattempts) > 0) {
-            foreach($allattempts as $attempt) {
-                if ($lastbranchtable->timeseen > $attempt->timeseen) {
-                    // branch table was viewed later than the last attempt
-                    $lastpageseen = $lastbranchtable->pageid;
-                }
-                break;
+            if ($lastbranchtable->timeseen > $attempt->timeseen) {
+                // This branch table was viewed more recently than the question page.
+                $lastpageseen = $lastbranchtable->pageid;
             }
         } else {
             // hasnt answered any questions but has viewed a branch table
@@ -353,7 +350,6 @@ if ($pageid != LESSON_EOL) {
         }
     }
 
-    $PAGE->set_url('/mod/lesson/view.php', array('id' => $cm->id, 'pageid' => $page->id));
     $PAGE->set_subpage($page->id);
     $currenttab = 'view';
     $extraeditbuttons = true;
@@ -410,7 +406,6 @@ if ($pageid != LESSON_EOL) {
         echo '<a name="maincontent" id="maincontent" title="' . get_string('anchortitle', 'lesson') . '"></a>';
     }
     echo $lessoncontent;
-    echo $lessonoutput->slideshow_end();
     echo $lessonoutput->progress_bar($lesson);
     echo $lessonoutput->footer();
 
@@ -505,12 +500,6 @@ if ($pageid != LESSON_EOL) {
     }
     $lessoncontent .= $OUTPUT->box_end(); //End of Lesson button to Continue.
 
-    // after all the grade processing, check to see if "Show Grades" is off for the course
-    // if yes, redirect to the course page
-    if (!$course->showgrades) {
-        redirect(new moodle_url('/course/view.php', array('id'=>$course->id)));
-    }
-
     // high scores code
     if ($lesson->highscores && !$canmanage && !$lesson->practice) {
         $lessoncontent .= $OUTPUT->box_start('center');
@@ -576,8 +565,12 @@ if ($pageid != LESSON_EOL) {
     $url = new moodle_url('/course/view.php', array('id'=>$course->id));
     $lessoncontent .= html_writer::link($url, get_string('returnto', 'lesson', format_string($course->fullname, true)), array('class'=>'centerpadded lessonbutton standardbutton'));
 
-    $url = new moodle_url('/grade/index.php', array('id'=>$course->id));
-    $lessoncontent .= html_writer::link($url, get_string('viewgrades', 'lesson'), array('class'=>'centerpadded lessonbutton standardbutton'));
+    if (has_capability('gradereport/user:view', context_course::instance($course->id))
+            && $course->showgrades && $lesson->grade != 0 && !$lesson->practice) {
+        $url = new moodle_url('/grade/index.php', array('id' => $course->id));
+        $lessoncontent .= html_writer::link($url, get_string('viewgrades', 'lesson'),
+            array('class' => 'centerpadded lessonbutton standardbutton'));
+    }
 
     lesson_add_fake_blocks($PAGE, $cm, $lesson, $timer);
     echo $lessonoutput->header($lesson, $cm, $currenttab, $extraeditbuttons, $lessonpageid, get_string("congratulations", "lesson"));
