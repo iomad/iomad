@@ -93,7 +93,8 @@ if (!empty($data) || (!empty($p) && !empty($s))) {
         echo $OUTPUT->box_start('generalbox centerpara boxwidthnormal boxaligncenter');
         echo "<h3>".get_string("thanks").", ". fullname($USER) . "</h3>\n";
         echo "<p>".get_string("confirmed")."</p>\n";
-        echo $OUTPUT->single_button("$CFG->wwwroot/course/", get_string('courses'));
+        // Growdly.com bmbrands bas brands customization hack
+        echo $OUTPUT->single_button("$CFG->wwwroot/mod/page/view.php?id=2682", get_string('courses'));
         echo $OUTPUT->box_end();
         echo $OUTPUT->footer();
         exit;
