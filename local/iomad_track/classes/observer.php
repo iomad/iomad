@@ -16,7 +16,10 @@
 
 namespace local_iomad_track;
 
+// In case we ever want to switch back to ordinary certificates
 define('CERTIFICATE', 'iomadcertificate');
+
+require_once($CFG->dirroot . '/mod/' . CERTIFICATE . '/lib.php');
 
 class observer {
 
@@ -36,7 +39,7 @@ class observer {
     /**
      * See if this certificate already exists
      */
-    private static function find_stored_certificate() {
+    private static function find_stored_certificate($contextid, $certrecordid, $filename, $userid) {
 
         $fs = get_file_storage();
 
@@ -52,7 +55,7 @@ class observer {
             'filepath'  => $filepath,     // any path beginning and ending in /
             'filename'  => $filename,    // any filename
             'mimetype'  => 'application/pdf',    // any filename
-            'userid'    => $USER->id);
+            'userid'    => $userid);
 
         if ($fs->file_exists($contextid, $component, $filearea, $certrecordid, $filepath, $filename)) {
 
@@ -69,6 +72,12 @@ class observer {
 
         // Get course.
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+
+        // Get context
+        $context = context_course::instance($courseid);
+
+        // Get user
+        $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
 
         // Get the certificate activities in given course
         if (!$certificates = self::get_certificatemods($courseid)) {
@@ -89,8 +98,13 @@ class observer {
             }
 
             // Find certificate issue record or create it (in cert lib.php)
+            $certissue_function = CERTIFICATE . '_get_issue';
+            $certisue = $certissue_function($course, $user, $certificate, $cm);
+
+            // Filename
 
             // Find existing stored certificate or create new one
+            find_stored_certificate($context->id, $certissue->id, $filename, $userid);
 
             // Copy to local storage
 
