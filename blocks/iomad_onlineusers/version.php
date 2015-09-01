@@ -14,19 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$capabilities = array(
-
-    'block/iomad_online_users:addinstance' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
-
-    'block/iomad_online_users:viewlist' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    )
-);
-
-
+$plugin->version = 2015073000;
+$plugin->requires  = 2014110400;        // Requires this Moodle version
+$plugin->component = 'block_iomad_onlineusers'; // Full name of the plugin (used for diagnostics)

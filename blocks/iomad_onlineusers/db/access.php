@@ -14,13 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die;
+$capabilities = array(
 
-if ($ADMIN->fulltree) {
-    $settings->add(new admin_setting_configtext('block_iomad_online_users_timetosee',
-                                                get_string('timetosee', 'block_iomad_online_users'),
-                                                get_string('configtimetosee', 'block_iomad_online_users'),
-                                                5,
-                                                PARAM_INT));
-}
+    'block/iomad_onlineusers:addinstance' => array(
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK
+    ),
+
+    'block/iomad_onlineusers:viewlist' => array(
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK
+    )
+);
+
 
