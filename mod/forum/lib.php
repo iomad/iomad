@@ -735,12 +735,16 @@ function forum_cron() {
 
                 $userfrom->customheaders = array (
                     // Headers to make emails easier to track.
-                    'Precedence: Bulk',
                     'List-Id: "'        . $cleanforumname . '" <moodleforum' . $forum->id . '@' . $hostname.'>',
                     'List-Help: '       . $CFG->wwwroot . '/mod/forum/view.php?f=' . $forum->id,
                     'Message-ID: '      . forum_get_email_message_id($post->id, $userto->id, $hostname),
                     'X-Course-Id: '     . $course->id,
-                    'X-Course-Name: '   . format_string($course->fullname, true)
+                    'X-Course-Name: '   . format_string($course->fullname, true),
+
+                    // Headers to help prevent auto-responders.
+                    'Precedence: Bulk',
+                    'X-Auto-Response-Suppress: All',
+                    'Auto-Submitted: auto-generated',
                 );
 
                 if ($post->parent) {
@@ -771,7 +775,7 @@ function forum_cron() {
                 // Send the post now!
                 mtrace('Sending ', '');
 
-                $eventdata = new stdClass();
+                $eventdata = new \core\message\message();
                 $eventdata->component           = 'mod_forum';
                 $eventdata->name                = 'posts';
                 $eventdata->userfrom            = $userfrom;
@@ -782,13 +786,18 @@ function forum_cron() {
                 $eventdata->fullmessagehtml     = $posthtml;
                 $eventdata->notification        = 1;
                 $eventdata->replyto             = $replyaddress;
+                if (!empty($replyaddress)) {
+                    // Add extra text to email messages if they can reply back.
+                    $textfooter = "\n\n" . get_string('replytopostbyemail', 'mod_forum');
+                    $htmlfooter = html_writer::tag('p', get_string('replytopostbyemail', 'mod_forum'));
+                    $additionalcontent = array('fullmessage' => array('footer' => $textfooter),
+                                     'fullmessagehtml' => array('footer' => $htmlfooter));
+                    $eventdata->set_additional_content('email', $additionalcontent);
+                }
 
                 // If forum_replytouser is not set then send mail using the noreplyaddress.
                 if (empty($CFG->forum_replytouser)) {
-                    // Clone userfrom as it is referenced by $users.
-                    $cloneduserfrom = clone($userfrom);
-                    $cloneduserfrom->email = $CFG->noreplyaddress;
-                    $eventdata->userfrom = $cloneduserfrom;
+                    $eventdata->userfrom = core_user::get_noreply_user();
                 }
 
                 $smallmessagestrings = new stdClass();
@@ -842,7 +851,7 @@ function forum_cron() {
 
     cron_setup_user();
 
-    $sitetimezone = $CFG->timezone;
+    $sitetimezone = core_date::get_server_timezone();
 
     // Now see if there are any digest mails waiting to be sent, and if we should send them
 
@@ -1055,7 +1064,12 @@ function forum_cron() {
                             }
                         }
 
-                        $userfrom->customheaders = array ("Precedence: Bulk");
+                        // Headers to help prevent auto-responders.
+                        $userfrom->customheaders = array(
+                                "Precedence: Bulk",
+                                'X-Auto-Response-Suppress: All',
+                                'Auto-Submitted: auto-generated',
+                            );
 
                         $maildigest = forum_get_user_maildigest_bulk($digests, $userto, $forum->id);
                         if ($maildigest == 2) {
@@ -1176,7 +1190,7 @@ function forum_make_mail_text($course, $cm, $forum, $discussion, $post, $userfro
 
     $by = New stdClass;
     $by->name = fullname($userfrom, $viewfullnames);
-    $by->date = userdate($post->modified, "", $userto->timezone);
+    $by->date = userdate($post->modified, "", core_date::get_user_timezone($userto));
 
     $strbynameondate = get_string('bynameondate', 'forum', $by);
 
@@ -1200,7 +1214,7 @@ function forum_make_mail_text($course, $cm, $forum, $discussion, $post, $userfro
 
     $posttext .= "\n";
     $posttext .= $CFG->wwwroot.'/mod/forum/discuss.php?d='.$discussion->id;
-    $posttext .= "\n---------------------------------------------------------------------\n";
+    $posttext .= "\n";
     $posttext .= format_string($post->subject,true);
     if ($bare) {
         $posttext .= " ($CFG->wwwroot/mod/forum/discuss.php?d=$discussion->id#p$post->id)";
@@ -1210,10 +1224,10 @@ function forum_make_mail_text($course, $cm, $forum, $discussion, $post, $userfro
     $posttext .= format_text_email($post->message, $post->messageformat);
     $posttext .= "\n\n";
     $posttext .= forum_print_attachments($post, $cm, "text");
+    $posttext .= "\n---------------------------------------------------------------------\n";
 
     if (!$bare) {
         if ($canreply) {
-            $posttext .= "---------------------------------------------------------------------\n";
             $posttext .= get_string("postmailinfo", "forum", $shortname)."\n";
             $posttext .= "$CFG->wwwroot/mod/forum/post.php?reply=$post->id\n";
         }
@@ -1221,24 +1235,17 @@ function forum_make_mail_text($course, $cm, $forum, $discussion, $post, $userfro
         if ($canunsubscribe) {
             if (\mod_forum\subscriptions::is_subscribed($userto->id, $forum, null, $cm)) {
                 // If subscribed to this forum, offer the unsubscribe link.
-                $posttext .= "\n---------------------------------------------------------------------\n";
                 $posttext .= get_string("unsubscribe", "forum");
                 $posttext .= ": $CFG->wwwroot/mod/forum/subscribe.php?id=$forum->id\n";
             }
             // Always offer the unsubscribe from discussion link.
-            $posttext .= "\n---------------------------------------------------------------------\n";
             $posttext .= get_string("unsubscribediscussion", "forum");
             $posttext .= ": $CFG->wwwroot/mod/forum/subscribe.php?id=$forum->id&d=$discussion->id\n";
         }
     }
 
-    $posttext .= "\n---------------------------------------------------------------------\n";
     $posttext .= get_string("digestmailpost", "forum");
     $posttext .= ": {$CFG->wwwroot}/mod/forum/index.php?id={$forum->course}\n";
-
-    if ($replyaddress) {
-        $posttext .= "\n\n" . get_string('replytopostbyemail', 'mod_forum');
-    }
 
     return $posttext;
 }
@@ -1293,10 +1300,6 @@ function forum_make_mail_html($course, $cm, $forum, $discussion, $post, $userfro
                      format_string($discussion->name,true).'</a></div>';
     }
     $posthtml .= forum_make_mail_post($course, $cm, $forum, $discussion, $post, $userfrom, $userto, false, $canreply, true, false);
-
-    if ($replyaddress) {
-        $posthtml .= html_writer::tag('p', get_string('replytopostbyemail', 'mod_forum'));
-    }
 
     $footerlinks = array();
     if ($canunsubscribe) {
@@ -1945,6 +1948,20 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
         $posts[$p->parent]->children[$pid] =& $posts[$pid];
     }
 
+    // Start with the last child of the first post.
+    $post = &$posts[reset($posts)->id];
+
+    $lastpost = false;
+    while (!$lastpost) {
+        if (!isset($post->children)) {
+            $post->lastpost = true;
+            $lastpost = true;
+        } else {
+             // Go to the last child of this post.
+            $post = &$posts[end($post->children)->id];
+        }
+    }
+
     return $posts;
 }
 
@@ -2143,21 +2160,9 @@ function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=5
 
     if ($lexer->parse($searchstring)) {
         $parsearray = $parser->get_parsed_array();
-    // Experimental feature under 1.8! MDL-8830
-    // Use alternative text searches if defined
-    // This feature only works under mysql until properly implemented for other DBs
-    // Requires manual creation of text index for forum_posts before enabling it:
-    // CREATE FULLTEXT INDEX foru_post_tix ON [prefix]forum_posts (subject, message)
-    // Experimental feature under 1.8! MDL-8830
-        if (!empty($CFG->forum_usetextsearches)) {
-            list($messagesearch, $msparams) = search_generate_text_SQL($parsearray, 'p.message', 'p.subject',
-                                                 'p.userid', 'u.id', 'u.firstname',
-                                                 'u.lastname', 'p.modified', 'd.forum');
-        } else {
-            list($messagesearch, $msparams) = search_generate_SQL($parsearray, 'p.message', 'p.subject',
-                                                 'p.userid', 'u.id', 'u.firstname',
-                                                 'u.lastname', 'p.modified', 'd.forum');
-        }
+        list($messagesearch, $msparams) = search_generate_SQL($parsearray, 'p.message', 'p.subject',
+                                                              'p.userid', 'u.id', 'u.firstname',
+                                                              'u.lastname', 'p.modified', 'd.forum');
         $params = array_merge($params, $msparams);
     }
 
@@ -2482,9 +2487,8 @@ function forum_count_discussion_replies($forumid, $forumsort="", $limit=-1, $pag
                   FROM {forum_posts} p
                        JOIN {forum_discussions} d ON p.discussion = d.id
                  WHERE d.forum = ?
-              GROUP BY p.discussion $groupby
-              $orderby";
-        return $DB->get_records_sql("SELECT * FROM ($sql) sq", array($forumid), $limitfrom, $limitnum);
+              GROUP BY p.discussion $groupby $orderby";
+        return $DB->get_records_sql($sql, array($forumid), $limitfrom, $limitnum);
     }
 }
 
@@ -3060,7 +3064,7 @@ function forum_make_mail_post($course, $cm, $forum, $discussion, $post, $userfro
     $fullname = fullname($userfrom, $viewfullnames);
     $by = new stdClass();
     $by->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userfrom->id.'&amp;course='.$course->id.'">'.$fullname.'</a>';
-    $by->date = userdate($post->modified, '', $userto->timezone);
+    $by->date = userdate($post->modified, '', core_date::get_user_timezone($userto));
     $output .= '<div class="author">'.get_string('bynameondate', 'forum', $by).'</div>';
 
     $output .= '</td></tr>';
@@ -3382,6 +3386,10 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     $topicclass = '';
     if (empty($post->parent)) {
         $topicclass = ' firstpost starter';
+    }
+
+    if (!empty($post->lastpost)) {
+        $forumpostclass .= ' lastpost';
     }
 
     $postbyuser = new stdClass;
@@ -3922,14 +3930,10 @@ function forum_set_return() {
     global $CFG, $SESSION;
 
     if (! isset($SESSION->fromdiscussion)) {
-        if (!empty($_SERVER['HTTP_REFERER'])) {
-            $referer = $_SERVER['HTTP_REFERER'];
-        } else {
-            $referer = "";
-        }
+        $referer = get_local_referer(false);
         // If the referer is NOT a login screen then save it.
         if (! strncasecmp("$CFG->wwwroot/login", $referer, 300)) {
-            $SESSION->fromdiscussion = $_SERVER["HTTP_REFERER"];
+            $SESSION->fromdiscussion = $referer;
         }
     }
 }
@@ -4087,8 +4091,8 @@ function forum_print_attachments($post, $cm, $type) {
                 $output .= plagiarism_get_links(array('userid' => $post->userid,
                     'file' => $file,
                     'cmid' => $cm->id,
-                    'course' => $post->course,
-                    'forum' => $post->forum));
+                    'course' => $cm->course,
+                    'forum' => $cm->instance));
                 $output .= '<br />';
             }
         }
@@ -4711,7 +4715,7 @@ function forum_post_subscription($fromform, $forum, $discussion) {
     $info->discussion = format_string($discussion->name);
     $info->forum = format_string($forum->name);
 
-    if ($fromform->discussionsubscribe) {
+    if (isset($fromform->discussionsubscribe) && $fromform->discussionsubscribe) {
         if ($result = \mod_forum\subscriptions::subscribe_user_to_discussion($USER->id, $discussion)) {
             return html_writer::tag('p', get_string('discussionnowsubscribed', 'forum', $info));
         }
@@ -5130,11 +5134,6 @@ function forum_user_can_see_discussion($forum, $discussion, $context, $user=NULL
         return false;
     }
 
-    if ($forum->type == 'qanda' &&
-            !forum_user_has_posted($forum->id, $discussion->id, $user->id) &&
-            !has_capability('mod/forum:viewqandawithoutposting', $context)) {
-        return false;
-    }
     return true;
 }
 
@@ -6812,16 +6811,20 @@ function forum_reset_userdata($data) {
         $types       = array();
     } else if (!empty($data->reset_forum_types)){
         $removeposts = true;
-        $typesql     = "";
         $types       = array();
+        $sqltypes    = array();
         $forum_types_all = forum_get_forum_types_all();
         foreach ($data->reset_forum_types as $type) {
             if (!array_key_exists($type, $forum_types_all)) {
                 continue;
             }
-            $typesql .= " AND f.type=?";
             $types[] = $forum_types_all[$type];
-            $params[] = $type;
+            $sqltypes[] = $type;
+        }
+        if (!empty($sqltypes)) {
+            list($typesql, $typeparams) = $DB->get_in_or_equal($sqltypes);
+            $typesql = " AND f.type " . $typesql;
+            $params = array_merge($params, $typeparams);
         }
         $typesstr = get_string('resetforums', 'forum').': '.implode(', ', $types);
     }
@@ -7407,7 +7410,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
 
             // Check whether the requested user is enrolled or has access to view the course
             // if they don't we immediately have a problem.
-            if (!can_access_course($course, $user)) {
+            if (!can_access_course($course, $user) && !is_enrolled($coursecontext, $user)) {
                 if ($musthaveaccess) {
                     print_error('notenrolled', 'forum');
                 }
@@ -7755,4 +7758,89 @@ function forum_get_context($forumid, $context = null) {
     }
 
     return $context;
+}
+
+/**
+ * Mark the activity completed (if required) and trigger the course_module_viewed event.
+ *
+ * @param  stdClass $forum   forum object
+ * @param  stdClass $course  course object
+ * @param  stdClass $cm      course module object
+ * @param  stdClass $context context object
+ * @since Moodle 2.9
+ */
+function forum_view($forum, $course, $cm, $context) {
+
+    // Completion.
+    $completion = new completion_info($course);
+    $completion->set_module_viewed($cm);
+
+    // Trigger course_module_viewed event.
+
+    $params = array(
+        'context' => $context,
+        'objectid' => $forum->id
+    );
+
+    $event = \mod_forum\event\course_module_viewed::create($params);
+    $event->add_record_snapshot('course_modules', $cm);
+    $event->add_record_snapshot('course', $course);
+    $event->add_record_snapshot('forum', $forum);
+    $event->trigger();
+}
+
+/**
+ * Trigger the discussion viewed event
+ *
+ * @param  stdClass $modcontext module context object
+ * @param  stdClass $forum      forum object
+ * @param  stdClass $discussion discussion object
+ * @since Moodle 2.9
+ */
+function forum_discussion_view($modcontext, $forum, $discussion) {
+    $params = array(
+        'context' => $modcontext,
+        'objectid' => $discussion->id,
+    );
+
+    $event = \mod_forum\event\discussion_viewed::create($params);
+    $event->add_record_snapshot('forum_discussions', $discussion);
+    $event->add_record_snapshot('forum', $forum);
+    $event->trigger();
+}
+
+/**
+ * Add nodes to myprofile page.
+ *
+ * @param \core_user\output\myprofile\tree $tree Tree object
+ * @param stdClass $user user object
+ * @param bool $iscurrentuser
+ * @param stdClass $course Course object
+ *
+ * @return bool
+ */
+function mod_forum_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
+    if (isguestuser($user)) {
+        // The guest user cannot post, so it is not possible to view any posts.
+        // May as well just bail aggressively here.
+        return false;
+    }
+    $postsurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id));
+    if (!empty($course)) {
+        $postsurl->param('course', $course->id);
+    }
+    $string = get_string('forumposts', 'mod_forum');
+    $node = new core_user\output\myprofile\node('miscellaneous', 'forumposts', $string, null, $postsurl);
+    $tree->add_node($node);
+
+    $discussionssurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id, 'mode' => 'discussions'));
+    if (!empty($course)) {
+        $discussionssurl->param('course', $course->id);
+    }
+    $string = get_string('myprofileotherdis', 'mod_forum');
+    $node = new core_user\output\myprofile\node('miscellaneous', 'forumdiscussions', $string, null,
+        $discussionssurl);
+    $tree->add_node($node);
+
+    return true;
 }

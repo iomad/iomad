@@ -113,7 +113,7 @@ foreach ($rs as $row) {
     if (!array_key_exists($row->groupid, $members[$row->groupingid])) {
         $members[$row->groupingid][$row->groupid] = array();
     }
-    if(isset($user->id)){
+    if (!empty($user->id)) {
         $members[$row->groupingid][$row->groupid][] = $user;
     }
 }
@@ -186,8 +186,8 @@ foreach ($members as $gpgid=>$groupdata) {
         if (empty($jsdescription)) {
             $line[] = $name;
         } else {
-            $line[] = html_writer::tag('span', $name, array('id'=>'group_'.$gpid));
-            $hoverevents['group_'.$gpid] = $jsdescription;
+            $line[] = html_writer::tag('span', $name, array('class' => 'group_hoverdescription', 'data-groupid' => $gpid));
+            $hoverevents[$gpid] = $jsdescription;
         }
         $fullnames = array();
         foreach ($users as $user) {

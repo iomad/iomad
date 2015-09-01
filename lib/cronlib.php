@@ -70,7 +70,11 @@ function cron_run() {
         $predbqueries = $DB->perf_get_queries();
         $pretime      = microtime(1);
         try {
+            get_mailer('buffer');
             $task->execute();
+            if ($DB->is_transaction_started()) {
+                throw new coding_exception("Task left transaction open");
+            }
             if (isset($predbqueries)) {
                 mtrace("... used " . ($DB->perf_get_queries() - $predbqueries) . " dbqueries");
                 mtrace("... used " . (microtime(1) - $pretime) . " seconds");
@@ -89,6 +93,7 @@ function cron_run() {
             mtrace("Scheduled task failed: " . $task->get_name() . "," . $e->getMessage());
             \core\task\manager::scheduled_task_failed($task);
         }
+        get_mailer('close');
         unset($task);
     }
 
@@ -101,7 +106,11 @@ function cron_run() {
         $predbqueries = $DB->perf_get_queries();
         $pretime      = microtime(1);
         try {
+            get_mailer('buffer');
             $task->execute();
+            if ($DB->is_transaction_started()) {
+                throw new coding_exception("Task left transaction open");
+            }
             if (isset($predbqueries)) {
                 mtrace("... used " . ($DB->perf_get_queries() - $predbqueries) . " dbqueries");
                 mtrace("... used " . (microtime(1) - $pretime) . " seconds");
@@ -120,6 +129,7 @@ function cron_run() {
             mtrace("Adhoc task failed: " . get_class($task) . "," . $e->getMessage());
             \core\task\manager::adhoc_task_failed($task);
         }
+        get_mailer('close');
         unset($task);
     }
 

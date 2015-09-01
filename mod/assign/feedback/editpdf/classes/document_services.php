@@ -44,6 +44,8 @@ class document_services {
     const PAGE_IMAGE_FILEAREA = 'pages';
     /** File area for readonly page images */
     const PAGE_IMAGE_READONLY_FILEAREA = 'readonlypages';
+    /** File area for the stamps */
+    const STAMPS_FILEAREA = 'stamps';
     /** Filename for combined pdf */
     const COMBINED_PDF_FILENAME = 'combined.pdf';
 
@@ -191,11 +193,7 @@ class document_services {
         $files = self::list_compatible_submission_files_for_attempt($assignment, $userid, $attemptnumber);
 
         $pdf = new pdf();
-        if (!$files) {
-            // No valid submission files - create an empty pdf.
-            $pdf->AddPage();
-        } else {
-
+        if ($files) {
             // Create a mega joined PDF.
             $compatiblepdfs = array();
             foreach ($files as $file) {
@@ -219,12 +217,11 @@ class document_services {
             if ($pagecount == 0) {
                 // We at least want a single blank page.
                 debugging('TCPDF did not produce a valid pdf:' . $tmpfile . '. Replacing with a blank pdf.', DEBUG_DEVELOPER);
-                $pdf = new pdf();
-                $pdf->AddPage();
                 @unlink($tmpfile);
                 $files = false;
             }
         }
+        $pdf->Close(); // No real need to close this pdf, because it has been saved by combine_pdfs(), but for clarity.
 
         $grade = $assignment->get_user_grade($userid, true, $attemptnumber);
         $record = new \stdClass();
@@ -241,18 +238,20 @@ class document_services {
 
         // Detect corrupt generated pdfs and replace with a blank one.
         if ($files) {
-            $pagecount = $pdf->load_pdf($tmpfile);
+            $verifypdf = new pdf();
+            $pagecount = $verifypdf->load_pdf($tmpfile);
             if ($pagecount <= 0) {
                 $files = false;
             }
+            $verifypdf->Close(); // PDF loaded and never saved/outputted needs to be closed.
         }
 
         if (!$files) {
             // This was a blank pdf.
-            unset($pdf);
-            $pdf = new pdf();
-            $content = $pdf->Output(self::COMBINED_PDF_FILENAME, 'S');
+            $blankpdf = new pdf();
+            $content = $blankpdf->Output(self::COMBINED_PDF_FILENAME, 'S');
             $file = $fs->create_file_from_string($record, $content);
+            $blankpdf->Close(); // No real need to close this pdf, because it has been outputted, but for clarity.
         } else {
             // This was a combined pdf.
             $file = $fs->create_file_from_pathname($record, $tmpfile);
@@ -312,6 +311,7 @@ class document_services {
         // Get the total number of pages.
         $pdf = new pdf();
         $pagecount = $pdf->set_pdf($combined);
+        $pdf->Close(); // PDF loaded and never saved/outputted needs to be closed.
 
         // Delete temporary folders and files.
         @unlink($combined);
@@ -363,6 +363,9 @@ class document_services {
         $record->filepath = '/';
         $fs = \get_file_storage();
 
+        // Remove the existing content of the filearea.
+        $fs->delete_area_files($record->contextid, $record->component, $record->filearea, $record->itemid);
+
         $files = array();
         for ($i = 0; $i < $pagecount; $i++) {
             $image = $pdf->get_image($i);
@@ -370,6 +373,7 @@ class document_services {
             $files[$i] = $fs->create_file_from_pathname($record, $tmpdir . '/' . $image);
             @unlink($tmpdir . '/' . $image);
         }
+        $pdf->Close(); // PDF loaded and never saved/outputted needs to be closed.
 
         @unlink($combined);
         @rmdir($tmpdir);
@@ -421,14 +425,13 @@ class document_services {
         $fs = \get_file_storage();
 
         // If we are after the readonly pages...
-        $copytoreadonly = false;
         if ($readonly) {
             $filearea = self::PAGE_IMAGE_READONLY_FILEAREA;
             if ($fs->is_area_empty($contextid, $component, $filearea, $itemid)) {
-                // We have a problem here, we were supposed to find the files...
-                // let's fallback on the other area, and copy the files to the readonly area.
-                $copytoreadonly = true;
-                $filearea = self::PAGE_IMAGE_FILEAREA;
+                // We have a problem here, we were supposed to find the files.
+                // Attempt to re-generate the pages from the combined images.
+                self::generate_page_images_for_attempt($assignment, $userid, $attemptnumber);
+                self::copy_pages_to_readonly_area($assignment, $grade);
             }
         }
 
@@ -460,10 +463,6 @@ class document_services {
                     $pages[$pagenumber] = $file;
                 }
                 ksort($pages);
-
-                if ($copytoreadonly) {
-                    self::copy_pages_to_readonly_area($assignment, $grade);
-                }
             }
         }
 

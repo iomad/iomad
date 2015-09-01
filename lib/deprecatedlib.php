@@ -31,6 +31,100 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
+ * Convert region timezone to php supported timezone
+ *
+ * @deprecated since Moodle 2.9
+ * @param string $tz value from ical file
+ * @return string $tz php supported timezone
+ */
+function calendar_normalize_tz($tz) {
+    debugging('calendar_normalize_tz() is deprecated, use core_date::normalise_timezone() instead', DEBUG_DEVELOPER);
+    return core_date::normalise_timezone($tz);
+}
+
+/**
+ * Returns a float which represents the user's timezone difference from GMT in hours
+ * Checks various settings and picks the most dominant of those which have a value
+ * @deprecated since Moodle 2.9
+ * @param float|int|string $tz timezone user timezone
+ * @return float
+ */
+function get_user_timezone_offset($tz = 99) {
+    debugging('get_user_timezone_offset() is deprecated, use PHP DateTimeZone instead', DEBUG_DEVELOPER);
+    $tz = core_date::get_user_timezone($tz);
+    $date = new DateTime('now', new DateTimeZone($tz));
+    return ($date->getOffset() - dst_offset_on(time(), $tz)) / (3600.0);
+}
+
+/**
+ * Returns an int which represents the systems's timezone difference from GMT in seconds
+ * @deprecated since Moodle 2.9
+ * @param float|int|string $tz timezone for which offset is required.
+ *        {@link http://docs.moodle.org/dev/Time_API#Timezone}
+ * @return int|bool if found, false is timezone 99 or error
+ */
+function get_timezone_offset($tz) {
+    debugging('get_timezone_offset() is deprecated, use PHP DateTimeZone instead', DEBUG_DEVELOPER);
+    $date = new DateTime('now', new DateTimeZone(core_date::normalise_timezone($tz)));
+    return $date->getOffset() - dst_offset_on(time(), $tz);
+}
+
+/**
+ * Returns a list of timezones in the current language.
+ * @deprecated since Moodle 2.9
+ * @return array
+ */
+function get_list_of_timezones() {
+    debugging('get_list_of_timezones() is deprecated, use core_date::get_list_of_timezones() instead', DEBUG_DEVELOPER);
+    return core_date::get_list_of_timezones();
+}
+
+/**
+ * Previous internal API, it was not supposed to be used anywhere.
+ * @deprecated since Moodle 2.9
+ * @param array $timezones
+ */
+function update_timezone_records($timezones) {
+    debugging('update_timezone_records() is not available any more, use standard PHP date/time code', DEBUG_DEVELOPER);
+}
+
+/**
+ * Previous internal API, it was not supposed to be used anywhere.
+ * @deprecated since Moodle 2.9
+ * @param int $fromyear
+ * @param int $toyear
+ * @param mixed $strtimezone
+ * @return bool
+ */
+function calculate_user_dst_table($fromyear = null, $toyear = null, $strtimezone = null) {
+    debugging('calculate_user_dst_table() is not available any more, use standard PHP date/time code', DEBUG_DEVELOPER);
+    return false;
+}
+
+/**
+ * Previous internal API, it was not supposed to be used anywhere.
+ * @deprecated since Moodle 2.9
+ * @param int|string $year
+ * @param mixed $timezone
+ * @return null
+ */
+function dst_changes_for_year($year, $timezone) {
+    debugging('dst_changes_for_year() is not available any more, use standard PHP date/time code', DEBUG_DEVELOPER);
+    return null;
+}
+
+/**
+ * Previous internal API, it was not supposed to be used anywhere.
+ * @deprecated since Moodle 2.9
+ * @param string $timezonename
+ * @return array
+ */
+function get_timezone_record($timezonename) {
+    debugging('get_timezone_record() is not available any more, use standard PHP date/time code', DEBUG_DEVELOPER);
+    return array();
+}
+
+/**
  * Add an entry to the legacy log table.
  *
  * @deprecated since 2.7 use new events instead
@@ -60,12 +154,9 @@ function add_to_log($courseid, $module, $action, $url='', $info='', $cm=0, $user
  *
  * @deprecated since 2.7 - use new file picker instead
  *
- * @param string $newfilepath
- * @param stdClass $course
- * @param bool $nourl
  */
 function clam_log_upload($newfilepath, $course=null, $nourl=false) {
-    debugging('clam_log_upload() is not supposed to be used any more, use new file picker instead', DEBUG_DEVELOPER);
+    throw new coding_exception('clam_log_upload() can not be used any more, please use file picker instead');
 }
 
 /**
@@ -73,12 +164,9 @@ function clam_log_upload($newfilepath, $course=null, $nourl=false) {
  *
  * @deprecated since 2.7 - use new file picker instead
  *
- * @param string $oldfilepath
- * @param string $newfilepath
- * @param int $userid The user
  */
 function clam_log_infected($oldfilepath='', $newfilepath='', $userid=0) {
-    debugging('clam_log_infected() is not supposed to be used any more, use new file picker instead', DEBUG_DEVELOPER);
+    throw new coding_exception('clam_log_infected() can not be used any more, please use file picker instead');
 }
 
 /**
@@ -86,12 +174,9 @@ function clam_log_infected($oldfilepath='', $newfilepath='', $userid=0) {
  *
  * @deprecated since 2.7 - use new file picker instead
  *
- * @param string $oldpath
- * @param string $newpath
- * @param boolean $update
  */
 function clam_change_log($oldpath, $newpath, $update=true) {
-    debugging('clam_change_log() is not supposed to be used any more, use new file picker instead', DEBUG_DEVELOPER);
+    throw new coding_exception('clam_change_log() can not be used any more, please use file picker instead');
 }
 
 /**
@@ -99,13 +184,32 @@ function clam_change_log($oldpath, $newpath, $update=true) {
  *
  * @deprecated since 2.7 - infected files are now deleted in file picker
  *
- * @param string $file
- * @return boolean
  */
 function clam_replace_infected_file($file) {
-    debugging('clam_change_log() is not supposed to be used any more', DEBUG_DEVELOPER);
-    return false;
+    throw new coding_exception('clam_replace_infected_file() can not be used any more, please use file picker instead');
 }
+
+/**
+ * Deals with an infected file - either moves it to a quarantinedir
+ * (specified in CFG->quarantinedir) or deletes it.
+ *
+ * If moving it fails, it deletes it.
+ *
+ * @deprecated since 2.7
+ */
+function clam_handle_infected_file($file, $userid=0, $basiconly=false) {
+    throw new coding_exception('clam_handle_infected_file() can not be used any more, please use file picker instead');
+}
+
+/**
+ * If $CFG->runclamonupload is set, we scan a given file. (called from {@link preprocess_files()})
+ *
+ * @deprecated since 2.7
+ */
+function clam_scan_moodle_file(&$file, $course) {
+    throw new coding_exception('clam_scan_moodle_file() can not be used any more, please use file picker instead');
+}
+
 
 /**
  * Checks whether the password compatibility library will work with the current
@@ -1377,17 +1481,14 @@ function show_event($event) {
 
 /**
  * Original singleton helper function, please use static methods instead,
- * ex: core_text::convert()
+ * ex: core_text::convert().
  *
- * @deprecated since Moodle 2.2 use core_text::xxxx() instead
- * @see textlib
- * @return textlib instance
+ * @deprecated since Moodle 2.2 use core_text::xxxx() instead.
+ * @see core_text
  */
 function textlib_get_instance() {
-
-    debugging('textlib_get_instance() is deprecated. Please use static calling core_text::functioname() instead.', DEBUG_DEVELOPER);
-
-    return new textlib();
+    throw new coding_exception('textlib_get_instance() can not be used any more, please use '.
+        'core_text::functioname() instead.');
 }
 
 /**
@@ -3250,16 +3351,10 @@ function get_context_instance($contextlevel, $instance = 0, $strictness = IGNORE
  * Get a context instance as an object, from a given context id.
  *
  * @deprecated since Moodle 2.2 MDL-35009 - please do not use this function any more.
- * @todo MDL-34550 This will be deleted in Moodle 2.8
  * @see context::instance_by_id($id)
- * @param int $id context id
- * @param int $strictness IGNORE_MISSING means compatible mode, false returned if record not found, debug message if more found;
- *                        MUST_EXIST means throw exception if no record or multiple records found
- * @return context|bool the context object or false if not found.
  */
 function get_context_instance_by_id($id, $strictness = IGNORE_MISSING) {
-    debugging('get_context_instance_by_id() is deprecated, please use context::instance_by_id($id) instead.', DEBUG_DEVELOPER);
-    return context::instance_by_id($id, $strictness);
+    throw new coding_exception('get_context_instance_by_id() is now removed, please use context::instance_by_id($id) instead.');
 }
 
 /**
@@ -3891,75 +3986,31 @@ function can_use_html_editor() {
 
 
 /**
- * Returns an object with counts of failed login attempts
+ * Returns an object with counts of failed login attempts.
  *
- * Returns information about failed login attempts.  If the current user is
- * an admin, then two numbers are returned:  the number of attempts and the
- * number of accounts.  For non-admins, only the attempts on the given user
- * are shown.
- *
- * @deprecate since Moodle 2.7, use {@link user_count_login_failures()} instead.
- * @global moodle_database $DB
- * @uses CONTEXT_SYSTEM
- * @param string $mode Either 'admin' or 'everybody'
- * @param string $username The username we are searching for
- * @param string $lastlogin The date from which we are searching
- * @return int
+ * @deprecated since Moodle 2.7, use {@link user_count_login_failures()} instead.
  */
 function count_login_failures($mode, $username, $lastlogin) {
-    global $DB;
-
-    debugging('This method has been deprecated. Please use user_count_login_failures() instead.', DEBUG_DEVELOPER);
-
-    $params = array('mode'=>$mode, 'username'=>$username, 'lastlogin'=>$lastlogin);
-    $select = "module='login' AND action='error' AND time > :lastlogin";
-
-    $count = new stdClass();
-
-    if (is_siteadmin()) {
-        if ($count->attempts = $DB->count_records_select('log', $select, $params)) {
-            $count->accounts = $DB->count_records_select('log', $select, $params, 'COUNT(DISTINCT info)');
-            return $count;
-        }
-    } else if ($mode == 'everybody') {
-        if ($count->attempts = $DB->count_records_select('log', "$select AND info = :username", $params)) {
-            return $count;
-        }
-    }
-    return NULL;
+    throw new coding_exception('count_login_failures() can not be used any more, please use user_count_login_failures().');
 }
 
 /**
- * Returns whether ajax is enabled/allowed or not.
- * This function is deprecated and always returns true.
+ * It should no longer be required to work without JavaScript enabled.
  *
- * @param array $unused - not used any more.
- * @return bool
- * @deprecated since 2.7 MDL-33099 - please do not use this function any more.
- * @todo MDL-44088 This will be removed in Moodle 2.9.
+ * @deprecated since 2.7 MDL-33099/MDL-44088 - please do not use this function any more.
  */
 function ajaxenabled(array $browsers = null) {
-    debugging('ajaxenabled() is deprecated - please update your code to assume it returns true.', DEBUG_DEVELOPER);
-    return true;
+    throw new coding_exception('ajaxenabled() can not be used anymore. Update your code to work with JS at all times.');
 }
 
 /**
- * Determine whether a course module is visible within a course,
- * this is different from instance_is_visible() - faster and visibility for user
+ * Determine whether a course module is visible within a course.
  *
- * @global object
- * @global object
- * @uses DEBUG_DEVELOPER
- * @uses CONTEXT_MODULE
- * @param object $cm object
- * @param int $userid empty means current user
- * @return bool Success
- * @deprecated Since Moodle 2.7
+ * @deprecated Since Moodle 2.7 MDL-44070
  */
 function coursemodule_visible_for_user($cm, $userid=0) {
-    debugging('coursemodule_visible_for_user() deprecated since Moodle 2.7. ' .
-            'Replace with \core_availability\info_module::is_user_visible().');
-    return \core_availability\info_module::is_user_visible($cm, $userid, false);
+    throw new coding_exception('coursemodule_visible_for_user() can not be used any more,
+            please use \core_availability\info_module::is_user_visible()');
 }
 
 /**
@@ -4142,4 +4193,161 @@ function enrol_cohort_search_cohorts(course_enrolment_manager $manager, $offset 
         );
     }
     return array('more' => !(bool)$limit, 'offset' => $offset, 'cohorts' => $cohorts);
+}
+
+/**
+ * Is $USER one of the supplied users?
+ *
+ * $user2 will be null if viewing a user's recent conversations
+ *
+ * @deprecated since Moodle 2.9 MDL-49371 - please do not use this function any more.
+ * @todo MDL-49290 This will be deleted in Moodle 3.1.
+ * @param stdClass the first user
+ * @param stdClass the second user or null
+ * @return bool True if the current user is one of either $user1 or $user2
+ */
+function message_current_user_is_involved($user1, $user2) {
+    global $USER;
+
+    debugging('message_current_user_is_involved() is deprecated, please do not use this function.', DEBUG_DEVELOPER);
+
+    if (empty($user1->id) || (!empty($user2) && empty($user2->id))) {
+        throw new coding_exception('Invalid user object detected. Missing id.');
+    }
+
+    if ($user1->id != $USER->id && (empty($user2) || $user2->id != $USER->id)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Print badges on user profile page.
+ *
+ * @deprecated since Moodle 2.9 MDL-45898 - please do not use this function any more.
+ * @param int $userid User ID.
+ * @param int $courseid Course if we need to filter badges (optional).
+ */
+function profile_display_badges($userid, $courseid = 0) {
+    global $CFG, $PAGE, $USER, $SITE;
+    require_once($CFG->dirroot . '/badges/renderer.php');
+
+    debugging('profile_display_badges() is deprecated.', DEBUG_DEVELOPER);
+
+    // Determine context.
+    if (isloggedin()) {
+        $context = context_user::instance($USER->id);
+    } else {
+        $context = context_system::instance();
+    }
+
+    if ($USER->id == $userid || has_capability('moodle/badges:viewotherbadges', $context)) {
+        $records = badges_get_user_badges($userid, $courseid, null, null, null, true);
+        $renderer = new core_badges_renderer($PAGE, '');
+
+        // Print local badges.
+        if ($records) {
+            $left = get_string('localbadgesp', 'badges', format_string($SITE->fullname));
+            $right = $renderer->print_badges_list($records, $userid, true);
+            echo html_writer::tag('dt', $left);
+            echo html_writer::tag('dd', $right);
+        }
+
+        // Print external badges.
+        if ($courseid == 0 && !empty($CFG->badges_allowexternalbackpack)) {
+            $backpack = get_backpack_settings($userid);
+            if (isset($backpack->totalbadges) && $backpack->totalbadges !== 0) {
+                $left = get_string('externalbadgesp', 'badges');
+                $right = $renderer->print_badges_list($backpack->badges, $userid, true, true);
+                echo html_writer::tag('dt', $left);
+                echo html_writer::tag('dd', $right);
+            }
+        }
+    }
+}
+
+/**
+ * Adds user preferences elements to user edit form.
+ *
+ * @deprecated since Moodle 2.9 MDL-45774 - Please do not use this function any more.
+ * @todo MDL-49784 Remove this function in Moodle 3.1
+ * @param stdClass $user
+ * @param moodleform $mform
+ * @param array|null $editoroptions
+ * @param array|null $filemanageroptions
+ */
+function useredit_shared_definition_preferences($user, &$mform, $editoroptions = null, $filemanageroptions = null) {
+    global $CFG;
+
+    debugging('useredit_shared_definition_preferences() is deprecated.', DEBUG_DEVELOPER, backtrace);
+
+    $choices = array();
+    $choices['0'] = get_string('emaildisplayno');
+    $choices['1'] = get_string('emaildisplayyes');
+    $choices['2'] = get_string('emaildisplaycourse');
+    $mform->addElement('select', 'maildisplay', get_string('emaildisplay'), $choices);
+    $mform->setDefault('maildisplay', $CFG->defaultpreference_maildisplay);
+
+    $choices = array();
+    $choices['0'] = get_string('textformat');
+    $choices['1'] = get_string('htmlformat');
+    $mform->addElement('select', 'mailformat', get_string('emailformat'), $choices);
+    $mform->setDefault('mailformat', $CFG->defaultpreference_mailformat);
+
+    if (!empty($CFG->allowusermailcharset)) {
+        $choices = array();
+        $charsets = get_list_of_charsets();
+        if (!empty($CFG->sitemailcharset)) {
+            $choices['0'] = get_string('site').' ('.$CFG->sitemailcharset.')';
+        } else {
+            $choices['0'] = get_string('site').' (UTF-8)';
+        }
+        $choices = array_merge($choices, $charsets);
+        $mform->addElement('select', 'preference_mailcharset', get_string('emailcharset'), $choices);
+    }
+
+    $choices = array();
+    $choices['0'] = get_string('emaildigestoff');
+    $choices['1'] = get_string('emaildigestcomplete');
+    $choices['2'] = get_string('emaildigestsubjects');
+    $mform->addElement('select', 'maildigest', get_string('emaildigest'), $choices);
+    $mform->setDefault('maildigest', $CFG->defaultpreference_maildigest);
+    $mform->addHelpButton('maildigest', 'emaildigest');
+
+    $choices = array();
+    $choices['1'] = get_string('autosubscribeyes');
+    $choices['0'] = get_string('autosubscribeno');
+    $mform->addElement('select', 'autosubscribe', get_string('autosubscribe'), $choices);
+    $mform->setDefault('autosubscribe', $CFG->defaultpreference_autosubscribe);
+
+    if (!empty($CFG->forum_trackreadposts)) {
+        $choices = array();
+        $choices['0'] = get_string('trackforumsno');
+        $choices['1'] = get_string('trackforumsyes');
+        $mform->addElement('select', 'trackforums', get_string('trackforums'), $choices);
+        $mform->setDefault('trackforums', $CFG->defaultpreference_trackforums);
+    }
+
+    $editors = editors_get_enabled();
+    if (count($editors) > 1) {
+        $choices = array('' => get_string('defaulteditor'));
+        $firsteditor = '';
+        foreach (array_keys($editors) as $editor) {
+            if (!$firsteditor) {
+                $firsteditor = $editor;
+            }
+            $choices[$editor] = get_string('pluginname', 'editor_' . $editor);
+        }
+        $mform->addElement('select', 'preference_htmleditor', get_string('textediting'), $choices);
+        $mform->setDefault('preference_htmleditor', '');
+    } else {
+        // Empty string means use the first chosen text editor.
+        $mform->addElement('hidden', 'preference_htmleditor');
+        $mform->setDefault('preference_htmleditor', '');
+        $mform->setType('preference_htmleditor', PARAM_PLUGIN);
+    }
+
+    $mform->addElement('select', 'lang', get_string('preferredlanguage'), get_string_manager()->get_list_of_translations());
+    $mform->setDefault('lang', $CFG->lang);
+
 }

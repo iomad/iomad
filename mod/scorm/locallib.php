@@ -495,13 +495,6 @@ function scorm_insert_track($userid, $scormid, $scoid, $attempt, $element, $valu
                         $track->value = $objectivesatisfiedstatus;
                         $track->timemodified = time();
                         $id = $DB->insert_record('scorm_scoes_track', $track);
-                        ob_start();
-                        $filepath = $CFG->dataroot."\\temp\\tempfile.txt";
-                        $fh = fopen($filepath, "a+");
-                        var_dump($track);
-                        $string = ob_get_clean();
-                        fwrite($fh, $string);
-                        fclose($fh);
                     }
                 }
             }
@@ -850,7 +843,7 @@ function scorm_get_all_attempts($scormid, $userid) {
 function scorm_view_display ($user, $scorm, $action, $cm) {
     global $CFG, $DB, $PAGE, $OUTPUT, $COURSE;
 
-    if ($scorm->scormtype != SCORM_TYPE_LOCAL && $scorm->updatefreq == SCORM_UPDATE_EVERYTIME) {
+    if ($scorm->updatefreq == SCORM_UPDATE_EVERYTIME) {
         scorm_parse($scorm, false);
     }
 
@@ -952,7 +945,7 @@ function scorm_simple_play($scorm, $user, $context, $cmid) {
         return $result;
     }
 
-    if ($scorm->scormtype != SCORM_TYPE_LOCAL && $scorm->updatefreq == SCORM_UPDATE_EVERYTIME) {
+    if ($scorm->updatefreq == SCORM_UPDATE_EVERYTIME) {
         scorm_parse($scorm, false);
     }
     $scoes = $DB->get_records_select('scorm_scoes', 'scorm = ? AND '.
@@ -1099,7 +1092,7 @@ function scorm_reconstitute_array_element($sversion, $userdata, $elementname, $c
             $return .= '    '.$subelement." = new Object();\n";
         }
 
-        $return .= '    '.$element.' = \''.$value."';\n";
+        $return .= '    '.$element.' = '.json_encode($value).";\n";
     }
     if ($countsub > 0) {
         $return .= '    '.$elementname.$scormseperator.$current.'.'.$currentsubelement.'._count = '.$countsub.";\n";
@@ -1302,7 +1295,7 @@ function scorm_get_attempt_count($userid, $scorm, $returnobjects = false, $ignor
  * @return boolean - debugging true/false
  */
 function scorm_debugging($scorm) {
-    global $CFG, $USER;
+    global $USER;
     $cfgscorm = get_config('scorm');
 
     if (!$cfgscorm->allowapidebug) {
@@ -1314,9 +1307,11 @@ function scorm_debugging($scorm) {
     if (!preg_match('/^[\w\s\*\.\?\+\:\_\\\]+$/', $test)) {
         return false;
     }
-    $res = false;
-    eval('$res = preg_match(\'/^'.$test.'/\', $identifier) ? true : false;');
-    return $res;
+
+    if (preg_match('/^'.$test.'/', $identifier)) {
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -1798,14 +1793,8 @@ function scorm_format_toc_for_droplist($scorm, $scoes, $usertracks, $currentorg=
                 }
             }
 
-            if ($sco->prereq) {
-                if ($sco->scormtype == 'sco') {
-                    $tocmenus[$sco->id] = scorm_repeater('&minus;', $level) . '&gt;' . format_string($sco->title);
-                }
-            } else {
-                if ($sco->scormtype == 'sco') {
-                    $tocmenus[$sco->id] = scorm_repeater('&minus;', $level) . '&gt;' . format_string($sco->title);
-                }
+            if ($sco->scormtype == 'sco') {
+                $tocmenus[$sco->id] = scorm_repeater('&minus;', $level) . '&gt;' . format_string($sco->title);
             }
 
             if (!empty($sco->children)) {
@@ -1998,4 +1987,32 @@ function scorm_isset($userdata, $param, $ifempty = '') {
     } else {
         return $ifempty;
     }
+}
+
+/**
+ * Check if the current sco is launchable
+ * If not, find the next launchable sco
+ *
+ * @param stdClass $scorm Scorm object
+ * @param integer $scoid id of scorm_scoes record.
+ * @return integer scoid of correct sco to launch or empty if one cannot be found, which will trigger first sco.
+ */
+function scorm_check_launchable_sco($scorm, $scoid) {
+    global $DB;
+    if ($sco = scorm_get_sco($scoid, SCO_ONLY)) {
+        if ($sco->launch == '') {
+            // This scoid might be a top level org that can't be launched, find the first launchable sco after this sco.
+            $scoes = $DB->get_records_select('scorm_scoes',
+                                             'scorm = ? AND '.$DB->sql_isnotempty('scorm_scoes', 'launch', false, true).
+                                             ' AND id > ?', array($scorm->id, $sco->id), 'sortorder, id', 'id', 0, 1);
+            if (!empty($scoes)) {
+                $sco = reset($scoes); // Get first item from the list.
+                return $sco->id;
+            }
+        } else {
+            return $sco->id;
+        }
+    }
+    // Returning 0 will cause default behaviour which will find the first launchable sco in the package.
+    return 0;
 }

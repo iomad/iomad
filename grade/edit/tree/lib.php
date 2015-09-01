@@ -136,8 +136,11 @@ class grade_edit_tree {
         if (!$is_category_item && ($icon = $this->gtree->get_edit_icon($element, $this->gpr, true))) {
             $actionsmenu->add($icon);
         }
-
-        if ($this->show_calculations && ($icon = $this->gtree->get_calculation_icon($element, $this->gpr, true))) {
+        // MDL-49281 if grade_item already has calculation, it should be editable even if global setting is off.
+        $type = $element['type'];
+        $iscalculated = ($type == 'item' or $type == 'courseitem' or $type == 'categoryitem') && $object->is_calculated();
+        $icon = $this->gtree->get_calculation_icon($element, $this->gpr, true);
+        if ($iscalculated || ($this->show_calculations && $icon)) {
             $actionsmenu->add($icon);
         }
 
@@ -427,11 +430,6 @@ class grade_edit_tree {
             );
 
             $str .= $checkboxlbl . $checkbox . $hiddenlabel . $input;
-
-            if ($item->aggregationcoef > 0) {
-                $str .= ' ' . html_writer::tag('abbr', get_string('aggregationcoefextrasumabbr', 'grades'),
-                        array('title' => get_string('aggregationcoefextrasum', 'grades')));
-            }
         }
 
         return $str;
@@ -750,7 +748,7 @@ class grade_edit_tree_column_range extends grade_edit_tree_column {
 
         // If the parent aggregation is Natural, we should show the number, even for scales, as that value is used...
         // ...in the computation. For text grades, the grademax is not used, so we can still show the no value string.
-        $parent_cat = $item->get_parent_category();
+        $parentcat = $item->get_parent_category();
         if ($item->gradetype == GRADE_TYPE_TEXT) {
             $grademax = ' - ';
         } else if ($item->gradetype == GRADE_TYPE_SCALE) {
@@ -761,7 +759,7 @@ class grade_edit_tree_column_range extends grade_edit_tree_column {
             } else {
                 $scale_items = explode(',', $scale->scale);
             }
-            if ($parent_cat->aggregation == GRADE_AGGREGATE_SUM) {
+            if ($parentcat->aggregation == GRADE_AGGREGATE_SUM) {
                 $grademax = end($scale_items) . ' (' .
                         format_float($item->grademax, $item->get_decimals()) . ')';
             } else {
@@ -769,6 +767,24 @@ class grade_edit_tree_column_range extends grade_edit_tree_column {
             }
         } else {
             $grademax = format_float($item->grademax, $item->get_decimals());
+        }
+
+        $isextracredit = false;
+        if ($item->aggregationcoef > 0) {
+            // For category grade items, we need the grandparent category.
+            // The parent is just category the grade item represents.
+            if ($item->is_category_item()) {
+                $grandparentcat = $parentcat->get_parent_category();
+                if ($grandparentcat->is_extracredit_used()) {
+                    $isextracredit = true;
+                }
+            } else if ($parentcat->is_extracredit_used()) {
+                $isextracredit = true;
+            }
+        }
+        if ($isextracredit) {
+            $grademax .= ' ' . html_writer::tag('abbr', get_string('aggregationcoefextrasumabbr', 'grades'),
+                array('title' => get_string('aggregationcoefextrasum', 'grades')));
         }
 
         $itemcell = parent::get_item_cell($item, $params);

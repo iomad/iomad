@@ -180,7 +180,7 @@ class behat_course extends behat_base {
             // Clicks the selected activity if it exists.
             $activityxpath = "//div[@id='chooseform']/descendant::label" .
                 "/descendant::span[contains(concat(' ', normalize-space(@class), ' '), ' typename ')]" .
-                "[contains(., $activityliteral)]" .
+                "[normalize-space(.)=$activityliteral]" .
                 "/parent::label/child::input";
             $activitynode = $this->find('xpath', $activityxpath);
             $activitynode->doubleClick();
@@ -190,7 +190,7 @@ class behat_course extends behat_base {
 
             // Selecting the option from the select box which contains the option.
             $selectxpath = $sectionxpath . "/descendant::div[contains(concat(' ', normalize-space(@class), ' '), ' section_add_menus ')]" .
-                "/descendant::select[contains(., $activityliteral)]";
+                "/descendant::select[option[normalize-space(.)=$activityliteral]]";
             $selectnode = $this->find('xpath', $selectxpath);
             $selectnode->selectOption($activity);
 
@@ -473,7 +473,9 @@ class behat_course extends behat_base {
 
             // The activity should not be dimmed.
             try {
-                $this->find('css', 'a.dimmed', false, $activitynode);
+                $xpath = "/descendant-or-self::a[contains(concat(' ', normalize-space(@class), ' '), ' dimmed ')] | ".
+                         "/descendant-or-self::div[contains(concat(' ', normalize-space(@class), ' '), ' dimmed_text ')]";
+                $this->find('xpath', $xpath, false, $activitynode);
                 throw new ExpectationException('"' . $activityname . '" is hidden', $this->getSession());
             } catch (ElementNotFoundException $e) {
                 // All ok.
@@ -501,7 +503,9 @@ class behat_course extends behat_base {
 
             // Should be hidden.
             $exception = new ExpectationException('"' . $activityname . '" is not dimmed', $this->getSession());
-            $this->find('css', 'a.dimmed', $exception, $activitynode);
+            $xpath = "/descendant-or-self::a[contains(concat(' ', normalize-space(@class), ' '), ' dimmed ')] | ".
+                     "/descendant-or-self::div[contains(concat(' ', normalize-space(@class), ' '), ' dimmed_text ')]";
+            $this->find('xpath', $xpath, $exception, $activitynode);
 
             // Also 'Show' icon.
             $noshowexception = new ExpectationException('"' . $activityname . '" don\'t have a "' . get_string('show') . '" icon', $this->getSession());

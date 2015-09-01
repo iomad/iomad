@@ -49,8 +49,6 @@ if ($perpage != DEFAULT_PAGE_SIZE) {
 admin_externalpage_setup('managetags', '', $params, '', array('pagelayout' => 'standard'));
 
 $PAGE->set_blocks_editing_capability('moodle/tag:editblocks');
-$PAGE->navbar->add(get_string('tags', 'tag'), new moodle_url('/tag/search.php'));
-$PAGE->navbar->add(get_string('managetags', 'tag'));
 
 echo $OUTPUT->header();
 
@@ -156,10 +154,10 @@ switch($action) {
 }
 
 if ($err_notice) {
-    echo $OUTPUT->notification($err_notice, 'red');
+    echo $OUTPUT->notification($err_notice, 'notifyproblem');
 }
 if ($notice) {
-    echo $OUTPUT->notification($notice, 'green');
+    echo $OUTPUT->notification($notice, 'notifysuccess');
 }
 
 // small form to add an official tag

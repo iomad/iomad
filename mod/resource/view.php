@@ -89,9 +89,16 @@ if ($displaytype == RESOURCELIB_DISPLAY_OPEN || $displaytype == RESOURCELIB_DISP
     // For 'open' and 'download' links, we always redirect to the content - except
     // if the user just chose 'save and display' from the form then that would be
     // confusing
-    if (!isset($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], 'modedit.php') === false) {
+    if (strpos(get_local_referer(false), 'modedit.php') === false) {
         $redirect = true;
     }
+}
+
+// Don't redirect teachers, otherwise they can not access course or module settings.
+if ($redirect && !course_get_format($course)->has_view_page() &&
+        (has_capability('moodle/course:manageactivities', $context) ||
+        has_capability('moodle/course:update', context_course::instance($course->id)))) {
+    $redirect = false;
 }
 
 if ($redirect) {

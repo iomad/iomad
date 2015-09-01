@@ -105,7 +105,7 @@ var AJAXBASE = M.cfg.wwwroot + '/mod/assign/feedback/editpdf/ajax.php',
  * @param Number y
  * @class point
  */
-POINT = function(x, y) {
+var POINT = function(x, y) {
 
     /**
      * X coordinate.
@@ -180,7 +180,7 @@ M.assignfeedback_editpdf.point = POINT;
  * @param int height
  * @class rect
  */
-RECT = function(x, y, width, height) {
+var RECT = function(x, y, width, height) {
 
     /**
      * X coordinate.
@@ -319,7 +319,7 @@ M.assignfeedback_editpdf.rect = RECT;
  * @namespace M.assignfeedback_editpdf
  * @class edit
  */
-EDIT = function() {
+var EDIT = function() {
 
     /**
      * Starting point for the edit.
@@ -424,7 +424,7 @@ M.assignfeedback_editpdf.edit = EDIT;
  * @param M.assignfeedback_editpdf.editor editor
  * @class drawable
  */
-DRAWABLE = function(editor) {
+var DRAWABLE = function(editor) {
 
     /**
      * Reference to M.assignfeedback_editpdf.editor.
@@ -468,6 +468,42 @@ DRAWABLE = function(editor) {
         }
     };
 
+    /**
+     * Update the positions of all absolutely positioned nodes, when the drawing canvas is scrolled
+     * @public
+     * @method scroll_update
+     * @param scrollx int
+     * @param scrolly int
+     */
+    this.scroll_update = function(scrollx, scrolly) {
+        var i, x, y;
+        for (i = 0; i < this.nodes.length; i++) {
+            x = this.nodes[i].getData('x');
+            y = this.nodes[i].getData('y');
+            if (x !== undefined && y !== undefined) {
+                this.nodes[i].setX(parseInt(x, 10) - scrollx);
+                this.nodes[i].setY(parseInt(y, 10) - scrolly);
+            }
+        }
+    };
+
+    /**
+     * Store the initial position of the node, so it can be updated when the drawing canvas is scrolled
+     * @public
+     * @method store_position
+     * @param container
+     * @param x
+     * @param y
+     */
+    this.store_position = function(container, x, y) {
+        var drawingregion, scrollx, scrolly;
+
+        drawingregion = Y.one(SELECTOR.DRAWINGREGION);
+        scrollx = parseInt(drawingregion.get('scrollLeft'), 10);
+        scrolly = parseInt(drawingregion.get('scrollTop'), 10);
+        container.setData('x', x + scrollx);
+        container.setData('y', y + scrolly);
+    };
 };
 
 M.assignfeedback_editpdf = M.assignfeedback_editpdf || {};
@@ -500,7 +536,7 @@ M.assignfeedback_editpdf.drawable = DRAWABLE;
  * @class annotation
  * @constructor
  */
-ANNOTATION = function(config) {
+var ANNOTATION = function(config) {
     ANNOTATION.superclass.constructor.apply(this, [config]);
 };
 
@@ -716,7 +752,8 @@ Y.extend(ANNOTATION, Y.Base, {
      * @param event
      */
     remove : function(e) {
-        var annotations;
+        var annotations,
+            i;
 
         e.preventDefault();
 
@@ -839,7 +876,7 @@ M.assignfeedback_editpdf.annotation = ANNOTATION;
  * @class annotationline
  * @extends M.assignfeedback_editpdf.annotation
  */
-ANNOTATIONLINE = function(config) {
+var ANNOTATIONLINE = function(config) {
     ANNOTATIONLINE.superclass.constructor.apply(this, [config]);
 };
 
@@ -959,7 +996,7 @@ M.assignfeedback_editpdf.annotationline = ANNOTATIONLINE;
  * @class annotationrectangle
  * @extends M.assignfeedback_editpdf.annotation
  */
-ANNOTATIONRECTANGLE = function(config) {
+var ANNOTATIONRECTANGLE = function(config) {
     ANNOTATIONRECTANGLE.superclass.constructor.apply(this, [config]);
 };
 
@@ -975,6 +1012,7 @@ Y.extend(ANNOTATIONRECTANGLE, M.assignfeedback_editpdf.annotation, {
      */
     draw : function() {
         var drawable,
+            bounds,
             shape;
 
         drawable = new M.assignfeedback_editpdf.drawable(this.editor);
@@ -1072,7 +1110,7 @@ M.assignfeedback_editpdf.annotationrectangle = ANNOTATIONRECTANGLE;
  * @class annotationoval
  * @extends M.assignfeedback_editpdf.annotation
  */
-ANNOTATIONOVAL = function(config) {
+var ANNOTATIONOVAL = function(config) {
     ANNOTATIONOVAL.superclass.constructor.apply(this, [config]);
 };
 
@@ -1088,6 +1126,7 @@ Y.extend(ANNOTATIONOVAL, M.assignfeedback_editpdf.annotation, {
      */
     draw : function() {
         var drawable,
+            bounds,
             shape;
 
         drawable = new M.assignfeedback_editpdf.drawable(this.editor);
@@ -1185,7 +1224,7 @@ M.assignfeedback_editpdf.annotationoval = ANNOTATIONOVAL;
  * @class annotationpen
  * @extends M.assignfeedback_editpdf.annotation
  */
-ANNOTATIONPEN = function(config) {
+var ANNOTATIONPEN = function(config) {
     ANNOTATIONPEN.superclass.constructor.apply(this, [config]);
 };
 
@@ -1346,7 +1385,7 @@ M.assignfeedback_editpdf.annotationpen = ANNOTATIONPEN;
  * @extends M.assignfeedback_editpdf.annotation
  * @module moodle-assignfeedback_editpdf-editor
  */
-ANNOTATIONHIGHLIGHT = function(config) {
+var ANNOTATIONHIGHLIGHT = function(config) {
     ANNOTATIONHIGHLIGHT.superclass.constructor.apply(this, [config]);
 };
 
@@ -1498,7 +1537,7 @@ M.assignfeedback_editpdf.annotationhighlight = ANNOTATIONHIGHLIGHT;
  * @class annotationstamp
  * @extends M.assignfeedback_editpdf.annotation
  */
-ANNOTATIONSTAMP = function(config) {
+var ANNOTATIONSTAMP = function(config) {
     ANNOTATIONSTAMP.superclass.constructor.apply(this, [config]);
 };
 
@@ -1533,6 +1572,7 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         drawingregion.append(node);
         node.setX(position.x);
         node.setY(position.y);
+        drawable.store_position(node, position.x, position.y);
 
         // Pass throught the event handlers on the div.
         node.on('gesturemovestart', this.editor.edit_start, null, this.editor);
@@ -1576,6 +1616,7 @@ Y.extend(ANNOTATIONSTAMP, M.assignfeedback_editpdf.annotation, {
         drawingregion.append(node);
         node.setX(position.x);
         node.setY(position.y);
+        drawable.store_position(node, position.x, position.y);
 
         drawable.nodes.push(node);
 
@@ -1711,10 +1752,11 @@ Y.extend(DROPDOWN, M.core.dialogue, {
      * @return void
      */
     show : function() {
-        var button = this.get('buttonNode');
-
-        result = DROPDOWN.superclass.show.call(this);
+        var button = this.get('buttonNode'),
+            result = DROPDOWN.superclass.show.call(this);
         this.align(button, [Y.WidgetPositionAlign.TL, Y.WidgetPositionAlign.BL]);
+
+        return result;
     }
 }, {
     NAME : DROPDOWN_NAME,
@@ -2043,13 +2085,17 @@ Y.extend(COMMENTMENU, M.assignfeedback_editpdf.dropdown, {
         // Build the list of menu items.
         commentlinks = Y.Node.create('<ul role="menu" class="assignfeedback_editpdf_menu"/>');
 
-        link = Y.Node.create('<li><a tabindex="-1" href="#">' + M.util.get_string('addtoquicklist', 'assignfeedback_editpdf') + '</a></li>');
+        link = Y.Node.create('<li><a tabindex="-1" href="#">' +
+               M.util.get_string('addtoquicklist', 'assignfeedback_editpdf') +
+               '</a></li>');
         link.on('click', comment.add_to_quicklist, comment);
         link.on('key', comment.add_to_quicklist, 'enter,space', comment);
 
         commentlinks.append(link);
 
-        link = Y.Node.create('<li><a tabindex="-1" href="#">' + M.util.get_string('deletecomment', 'assignfeedback_editpdf') + '</a></li>');
+        link = Y.Node.create('<li><a tabindex="-1" href="#">' +
+               M.util.get_string('deletecomment', 'assignfeedback_editpdf') +
+               '</a></li>');
         link.on('click', function(e) { e.preventDefault(); this.menu.hide(); this.remove(); }, comment);
         link.on('key', function() { comment.menu.hide(); comment.remove(); }, 'enter,space', comment);
 
@@ -2078,8 +2124,8 @@ Y.extend(COMMENTMENU, M.assignfeedback_editpdf.dropdown, {
      */
     show : function() {
         var commentlinks = this.get('boundingBox').one('ul');
-            commentlinks.all('.quicklist_comment').remove(true),
-            comment = this.get('comment');
+            commentlinks.all('.quicklist_comment').remove(true);
+        var comment = this.get('comment');
 
         comment.deleteme = false; // Cancel the deleting of blank comments.
 
@@ -2333,7 +2379,7 @@ M.assignfeedback_editpdf.commentsearch = COMMENTSEARCH;
  * @param String colour
  * @param String rawtext
  */
-COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
+var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
 
     /**
      * Reference to M.assignfeedback_editpdf.editor.
@@ -2493,6 +2539,7 @@ COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         container.setStyle('position', 'absolute');
         container.setX(position.x);
         container.setY(position.y);
+        drawable.store_position(container, position.x, position.y);
         drawable.nodes.push(container);
         node.set('value', this.rawtext);
         scrollheight = node.get('scrollHeight'),
@@ -2600,6 +2647,7 @@ COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
             windowlocation = this.editor.get_window_coordinates(newlocation);
             node.ancestor().setX(windowlocation.x);
             node.ancestor().setY(windowlocation.y);
+            this.drawable.store_position(node.ancestor(), windowlocation.x, windowlocation.y);
         }, null, this);
 
         this.menu = new M.assignfeedback_editpdf.commentmenu({
@@ -2766,7 +2814,7 @@ M.assignfeedback_editpdf.comment = COMMENT;
  * @namespace M.assignfeedback_editpdf
  * @class quickcomment
  */
-QUICKCOMMENT = function(id, rawtext, width, colour) {
+var QUICKCOMMENT = function(id, rawtext, width, colour) {
 
     /**
      * Quick comment text.
@@ -2830,7 +2878,7 @@ M.assignfeedback_editpdf.quickcomment = QUICKCOMMENT;
  * @namespace M.assignfeedback_editpdf
  * @class quickcommentlist
  */
-QUICKCOMMENTLIST = function(editor) {
+var QUICKCOMMENTLIST = function(editor) {
 
     /**
      * Reference to M.assignfeedback_editpdf.editor.
@@ -3033,7 +3081,7 @@ M.assignfeedback_editpdf.quickcommentlist = QUICKCOMMENTLIST;
  * @constructor
  * @extends Y.Base
  */
-EDITOR = function() {
+var EDITOR = function() {
     EDITOR.superclass.constructor.apply(this, arguments);
 };
 EDITOR.prototype = {
@@ -3296,7 +3344,7 @@ EDITOR.prototype = {
      * @method link_handler
      */
     link_handler : function(e) {
-        var drawingcanvas;
+        var drawingcanvas, drawingregion, resize = true;
         e.preventDefault();
 
         if (!this.dialogue) {
@@ -3318,6 +3366,9 @@ EDITOR.prototype = {
             drawingcanvas = Y.one(SELECTOR.DRAWINGCANVAS);
             this.graphic = new Y.Graphic({render : SELECTOR.DRAWINGCANVAS});
 
+            drawingregion = Y.one(SELECTOR.DRAWINGREGION);
+            drawingregion.on('scroll', this.move_canvas, this);
+
             if (!this.get('readonly')) {
                 drawingcanvas.on('gesturemovestart', this.edit_start, null, this);
                 drawingcanvas.on('gesturemove', this.edit_move, null, this);
@@ -3327,10 +3378,18 @@ EDITOR.prototype = {
             }
 
             this.load_all_pages();
+            drawingcanvas.on('windowresize', this.resize, this);
+
+            resize = false;
         }
         this.dialogue.centerDialogue();
         this.dialogue.show();
-        drawingcanvas.on('windowresize', this.resize, this);
+
+        // Redraw when the dialogue is moved, to ensure the absolute elements are all positioned correctly.
+        this.dialogue.dd.on('drag:end', this.redraw, this);
+        if (resize) {
+            this.resize(); // When re-opening the dialog call redraw, to make sure the size + layout is correct.
+        }
     },
 
     /**
@@ -3714,9 +3773,9 @@ EDITOR.prototype = {
         this.currentedit.end = {x : point.x, y : point.y};
 
         if (this.currentedit.tool === 'select') {
-            x = this.currentedit.end.x;
-            y = this.currentedit.end.y;
-            annotations = this.pages[this.currentpage].annotations;
+            var x = this.currentedit.end.x,
+                y = this.currentedit.end.y,
+                annotations = this.pages[this.currentpage].annotations;
             // Find the first annotation whose bounds encompass the click.
             Y.each(annotations, function(annotation) {
                 if (((x - annotation.x) * (x - annotation.endx)) <= 0 &&
@@ -3843,7 +3902,21 @@ EDITOR.prototype = {
      * @method resize
      */
     resize : function() {
+        var drawingregion, drawregionheight;
+
+        if (!this.dialogue.get('visible')) {
+            return;
+        }
         this.dialogue.centerDialogue();
+
+        // Make sure the dialogue box is not bigger than the max height of the viewport.
+        drawregionheight = Y.one('body').get('winHeight') - 120; // Space for toolbar + titlebar.
+        if (drawregionheight < 100) {
+            drawregionheight = 100;
+        }
+        drawingregion = Y.one(SELECTOR.DRAWINGREGION);
+        drawingregion.setStyle('maxHeight', drawregionheight +'px');
+        this.redraw();
         return true;
     },
 
@@ -3944,6 +4017,9 @@ EDITOR.prototype = {
             page;
 
         page = this.pages[this.currentpage];
+        if (page === undefined) {
+            return; // Can happen if a redraw is triggered by an event, before the page has been selected.
+        }
         while (this.drawables.length > 0) {
             this.drawables.pop().erase();
         }
@@ -3984,11 +4060,13 @@ EDITOR.prototype = {
         page = this.pages[this.currentpage];
         this.loadingicon.hide();
         drawingcanvas.setStyle('backgroundImage', 'url("' + page.url + '")');
+        drawingcanvas.setStyle('width', page.width + 'px');
+        drawingcanvas.setStyle('height', page.height + 'px');
 
         // Update page select.
         Y.one(SELECTOR.PAGESELECT).set('value', this.currentpage);
 
-        this.redraw();
+        this.resize(); // Internally will call 'redraw', after checking the dialogue size.
     },
 
     /**
@@ -4006,7 +4084,7 @@ EDITOR.prototype = {
 
         pageselect = Y.one(SELECTOR.PAGESELECT);
 
-        options = pageselect.all('option');
+        var options = pageselect.all('option');
         if (options.size() <= 1) {
             for (i = 0; i < this.pages.length; i++) {
                 option = Y.Node.create('<option/>');
@@ -4056,9 +4134,24 @@ EDITOR.prototype = {
             this.currentpage = this.pages.length - 1;
         }
         this.change_page();
+    },
+
+    /**
+     * Update any absolutely positioned nodes, within each drawable, when the drawing canvas is scrolled
+     * @protected
+     * @method move_canvas
+     */
+    move_canvas: function() {
+        var drawingregion, x, y, i;
+
+        drawingregion = Y.one(SELECTOR.DRAWINGREGION);
+        x = parseInt(drawingregion.get('scrollLeft'), 10);
+        y = parseInt(drawingregion.get('scrollTop'), 10);
+
+        for (i = 0; i < this.drawables.length; i++) {
+            this.drawables[i].scroll_update(x, y);
+        }
     }
-
-
 
 };
 

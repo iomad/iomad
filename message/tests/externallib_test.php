@@ -290,6 +290,7 @@ class core_message_externallib_testcase extends externallib_advanced_testcase {
         $user_online->lastaccess = time();
         $user_online = self::getDataGenerator()->create_user($user_online);
         $user_blocked = self::getDataGenerator()->create_user();
+        $noreplyuser = core_user::get_user(core_user::NOREPLY_USER);
 
         // Login as user1.
         $this->setUser($user1);
@@ -300,6 +301,7 @@ class core_message_externallib_testcase extends externallib_advanced_testcase {
         $this->send_message($user_stranger, $user1, 'Hello there!');
         $this->send_message($user_stranger, $user1, 'How you goin?');
         $this->send_message($user_stranger, $user1, 'Cya!');
+        $this->send_message($noreplyuser, $user1, 'I am not a real user');
 
         // User_blocked sends a message to user1.
         $this->send_message($user_blocked, $user1, 'Here, have some spam.');
@@ -310,18 +312,29 @@ class core_message_externallib_testcase extends externallib_advanced_testcase {
         $contacts = external_api::clean_returnvalue(core_message_external::get_contacts_returns(), $contacts);
         $this->assertCount(3, $contacts['offline']);
         $this->assertCount(1, $contacts['online']);
-        $this->assertCount(2, $contacts['strangers']);
+        $this->assertCount(3, $contacts['strangers']);
         core_message_external::block_contacts(array($user_blocked->id));
         $contacts = core_message_external::get_contacts();
         $contacts = external_api::clean_returnvalue(core_message_external::get_contacts_returns(), $contacts);
         $this->assertCount(3, $contacts['offline']);
         $this->assertCount(1, $contacts['online']);
-        $this->assertCount(1, $contacts['strangers']);
+        $this->assertCount(2, $contacts['strangers']);
 
         // Checking some of the fields returned.
         $stranger = array_pop($contacts['strangers']);
-        $this->assertEquals($user_stranger->id, $stranger['id']);
-        $this->assertEquals(3, $stranger['unread']);
+
+        $this->assertEquals(core_user::NOREPLY_USER, $stranger['id']);
+        $this->assertEquals(1, $stranger['unread']);
+
+        // Check that deleted users are not returned.
+        delete_user($user_offline1);
+        delete_user($user_stranger);
+        delete_user($user_online);
+        $contacts = core_message_external::get_contacts();
+        $contacts = external_api::clean_returnvalue(core_message_external::get_contacts_returns(), $contacts);
+        $this->assertCount(2, $contacts['offline']);
+        $this->assertCount(0, $contacts['online']);
+        $this->assertCount(1, $contacts['strangers']);
     }
 
     /**
@@ -578,4 +591,110 @@ class core_message_externallib_testcase extends externallib_advanced_testcase {
         }
 
     }
+
+    /**
+     * Test get_blocked_users.
+     */
+    public function test_get_blocked_users() {
+        $this->resetAfterTest(true);
+
+        $user1 = self::getDataGenerator()->create_user();
+        $userstranger = self::getDataGenerator()->create_user();
+        $useroffline1 = self::getDataGenerator()->create_user();
+        $useroffline2 = self::getDataGenerator()->create_user();
+        $userblocked = self::getDataGenerator()->create_user();
+
+        // Login as user1.
+        $this->setUser($user1);
+        $this->assertEquals(array(), core_message_external::create_contacts(
+            array($useroffline1->id, $useroffline2->id)));
+
+        // The userstranger sends a couple of messages to user1.
+        $this->send_message($userstranger, $user1, 'Hello there!');
+        $this->send_message($userstranger, $user1, 'How you goin?');
+
+        // The userblocked sends a message to user1.
+        // Note that this user is not blocked at this point.
+        $this->send_message($userblocked, $user1, 'Here, have some spam.');
+
+        // Retrieve the list of blocked users.
+        $this->setUser($user1);
+        $blockedusers = core_message_external::get_blocked_users($user1->id);
+        $blockedusers = external_api::clean_returnvalue(core_message_external::get_blocked_users_returns(), $blockedusers);
+        $this->assertCount(0, $blockedusers['users']);
+
+        // Block the $userblocked and retrieve again the list.
+        core_message_external::block_contacts(array($userblocked->id));
+        $blockedusers = core_message_external::get_blocked_users($user1->id);
+        $blockedusers = external_api::clean_returnvalue(core_message_external::get_blocked_users_returns(), $blockedusers);
+        $this->assertCount(1, $blockedusers['users']);
+
+        // Remove the $userblocked and check that the list now is empty.
+        delete_user($userblocked);
+        $blockedusers = core_message_external::get_blocked_users($user1->id);
+        $blockedusers = external_api::clean_returnvalue(core_message_external::get_blocked_users_returns(), $blockedusers);
+        $this->assertCount(0, $blockedusers['users']);
+
+    }
+
+    /**
+     * Test mark_message_read.
+     */
+    public function test_mark_message_read() {
+        $this->resetAfterTest(true);
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Login as user1.
+        $this->setUser($user1);
+        $this->assertEquals(array(), core_message_external::create_contacts(
+            array($user2->id, $user3->id)));
+
+        // The user2 sends a couple of messages to user1.
+        $this->send_message($user2, $user1, 'Hello there!');
+        $this->send_message($user2, $user1, 'How you goin?');
+        $this->send_message($user3, $user1, 'How you goin?');
+        $this->send_message($user3, $user2, 'How you goin?');
+
+        // Retrieve all messages sent by user2 (they are currently unread).
+        $lastmessages = message_get_messages($user1->id, $user2->id, 0, false);
+
+        $messageids = array();
+        foreach ($lastmessages as $m) {
+            $messageid = core_message_external::mark_message_read($m->id, time());
+            $messageids[] = external_api::clean_returnvalue(core_message_external::mark_message_read_returns(), $messageid);
+        }
+
+        // Retrieve all messages sent (they are currently read).
+        $lastmessages = message_get_messages($user1->id, $user2->id, 0, true);
+        $this->assertCount(2, $lastmessages);
+        $this->assertArrayHasKey($messageids[0]['messageid'], $lastmessages);
+        $this->assertArrayHasKey($messageids[1]['messageid'], $lastmessages);
+
+        // Retrieve all messages sent by any user (that are currently unread).
+        $lastmessages = message_get_messages($user1->id, 0, 0, false);
+        $this->assertCount(1, $lastmessages);
+
+        // Invalid message ids.
+        try {
+            $messageid = core_message_external::mark_message_read($messageids[0]['messageid'] * 2, time());
+            $this->fail('Exception expected due invalid messageid.');
+        } catch (dml_missing_record_exception $e) {
+            $this->assertEquals('invalidrecord', $e->errorcode);
+        }
+
+        // A message to a different user.
+        $lastmessages = message_get_messages($user2->id, $user3->id, 0, false);
+        $messageid = array_pop($lastmessages)->id;
+        try {
+            $messageid = core_message_external::mark_message_read($messageid, time());
+            $this->fail('Exception expected due invalid messageid.');
+        } catch (invalid_parameter_exception $e) {
+            $this->assertEquals('invalidparameter', $e->errorcode);
+        }
+
+    }
+
 }

@@ -79,6 +79,9 @@ a.dimmed_text:visited,
 a.autolink.glossary:hover {cursor: help;}
 /* Block which is hidden if javascript enabled, prevents flickering, visible when JS from footer used! */
 .collapsibleregioncaption {white-space: nowrap;}
+.pagelayout-mydashboard.jsenabled .collapsibleregioncaption {
+    cursor: pointer;
+}
 .collapsibleregioncaption img {vertical-align: middle;}
 .jsenabled .hiddenifjs {display: none;}
 .visibleifjs {display: none;}
@@ -153,6 +156,17 @@ h6 img.icon,
 h6 img.iconhelp {
     vertical-align: middle;
     padding: 4px;
+}
+
+/** Table caption support */
+table caption {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 42px;
+    text-align: left;
+}
+.dir-rtl table caption {
+    text-align: right;
 }
 
 /** The 1-pixel padding is there to avoid phantom scroll bars on OS X (FF, Safari and Chrome)**/
@@ -461,14 +475,17 @@ a.skip:active {position: static;display: block;}
 .mform .fitem .fitemtitle div {display: inline;}
 .mform .fitem .felement {border-width: 0;width:80%;margin-left:16%;}
 .mform .fitem fieldset.felement {margin-left:15%;padding-left:1%;margin-bottom:0}
+#adminsettings span.error,
 .mform .error,
 .mform .required {color:#A00;}
+#adminsettings span.error,
 .mform span.error {display: inline-block;padding: 4px;margin-bottom: 4px;background-color: #F2DEDE;border: 1px solid #EED3D7;}
 .mform .required .fgroup span label {color:#000;}
 .mform .fdescription.required {color:#A00;text-align:right;}
 .dir-rtl .mform .fdescription.required {text-align:left;}
 .mform .fpassword .unmask {display:inline;margin-left:0.5em;}
 .mform .ftextarea #id_alltext {width: 100%;}
+.mform .fstaticlabel {font-weight:bold;}
 .mform ul.file-list {padding:0;margin:0;list-style:none;}
 .mform label { display: inline-block; }
 .mform .iconhelp { margin-left: 4px; }

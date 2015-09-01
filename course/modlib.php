@@ -191,8 +191,16 @@ function edit_module_post_actions($moduleinfo, $course) {
     // Sync idnumber with grade_item.
     if ($hasgrades && $grade_item = grade_item::fetch(array('itemtype'=>'mod', 'itemmodule'=>$moduleinfo->modulename,
                  'iteminstance'=>$moduleinfo->instance, 'itemnumber'=>0, 'courseid'=>$course->id))) {
+        $gradeupdate = false;
         if ($grade_item->idnumber != $moduleinfo->cmidnumber) {
             $grade_item->idnumber = $moduleinfo->cmidnumber;
+            $gradeupdate = true;
+        }
+        if (isset($moduleinfo->gradepass) && $grade_item->gradepass != $moduleinfo->gradepass) {
+            $grade_item->gradepass = $moduleinfo->gradepass;
+            $gradeupdate = true;
+        }
+        if ($gradeupdate) {
             $grade_item->update();
         }
     }
@@ -217,22 +225,12 @@ function edit_module_post_actions($moduleinfo, $course) {
             }
             $moduleinfo->gradecat = $grade_category->id;
         }
-        $gradecategory = $grade_item->get_parent_category();
+
         foreach ($items as $itemid=>$unused) {
             $items[$itemid]->set_parent($moduleinfo->gradecat);
             if ($itemid == $grade_item->id) {
                 // Use updated grade_item.
                 $grade_item = $items[$itemid];
-            }
-            if (!empty($moduleinfo->add)) {
-                if (grade_category::aggregation_uses_aggregationcoef($gradecategory->aggregation)) {
-                    if ($gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN) {
-                        $grade_item->aggregationcoef = 1;
-                    } else {
-                        $grade_item->aggregationcoef = 0;
-                    }
-                    $grade_item->update();
-                }
             }
         }
     }
@@ -291,17 +289,6 @@ function edit_module_post_actions($moduleinfo, $course) {
 
                 } else if (isset($moduleinfo->gradecat)) {
                     $outcome_item->set_parent($moduleinfo->gradecat);
-                }
-                $gradecategory = $outcome_item->get_parent_category();
-                if ($outcomeexists == false) {
-                    if (grade_category::aggregation_uses_aggregationcoef($gradecategory->aggregation)) {
-                        if ($gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN) {
-                            $outcome_item->aggregationcoef = 1;
-                        } else {
-                            $outcome_item->aggregationcoef = 0;
-                        }
-                        $outcome_item->update();
-                    }
                 }
             }
         }
@@ -483,12 +470,17 @@ function update_moduleinfo($cm, $moduleinfo, $course, $mform = null) {
     }
 
     $completion = new completion_info($course);
-    if ($completion->is_enabled() && !empty($moduleinfo->completionunlocked)) {
-        // Update completion settings.
-        $cm->completion                = $moduleinfo->completion;
-        $cm->completiongradeitemnumber = $moduleinfo->completiongradeitemnumber;
-        $cm->completionview            = $moduleinfo->completionview;
-        $cm->completionexpected        = $moduleinfo->completionexpected;
+    if ($completion->is_enabled()) {
+        // Completion settings that would affect users who have already completed
+        // the activity may be locked; if so, these should not be updated.
+        if (!empty($moduleinfo->completionunlocked)) {
+            $cm->completion = $moduleinfo->completion;
+            $cm->completiongradeitemnumber = $moduleinfo->completiongradeitemnumber;
+            $cm->completionview = $moduleinfo->completionview;
+        }
+        // The expected date does not affect users who have completed the activity,
+        // so it is safe to update it regardless of the lock status.
+        $cm->completionexpected = $moduleinfo->completionexpected;
     }
     if (!empty($CFG->enableavailability)) {
         // This code is used both when submitting the form, which uses a long

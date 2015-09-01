@@ -1560,16 +1560,22 @@ class moodle_page {
             }
         }
 
+        $devicetheme = core_useragent::get_device_type_theme($this->devicetypeinuse);
+
+        // The user is using another device than default, and we have a theme for that, we should use it.
+        $hascustomdevicetheme = core_useragent::DEVICETYPE_DEFAULT != $this->devicetypeinuse && !empty($devicetheme);
+
         foreach ($themeorder as $themetype) {
+
             switch ($themetype) {
                 case 'course':
-                    if (!empty($CFG->allowcoursethemes) && !empty($this->_course->theme) && $this->devicetypeinuse == 'default') {
+                    if (!empty($CFG->allowcoursethemes) && !empty($this->_course->theme) && !$hascustomdevicetheme) {
                         return $this->_course->theme;
                     }
                 break;
 
                 case 'category':
-                    if (!empty($CFG->allowcategorythemes) && $this->devicetypeinuse == 'default') {
+                    if (!empty($CFG->allowcategorythemes) && !$hascustomdevicetheme) {
                         $categories = $this->categories;
                         foreach ($categories as $category) {
                             if (!empty($category->theme)) {
@@ -1586,7 +1592,7 @@ class moodle_page {
                 break;
 
                 case 'user':
-                    if (!empty($CFG->allowuserthemes) && !empty($USER->theme) && $this->devicetypeinuse == 'default') {
+                    if (!empty($CFG->allowuserthemes) && !empty($USER->theme) && !$hascustomdevicetheme) {
                         if ($mnetpeertheme) {
                             return $mnetpeertheme;
                         } else {
@@ -1600,12 +1606,11 @@ class moodle_page {
                         return $mnetpeertheme;
                     }
                     // First try for the device the user is using.
-                    $devicetheme = core_useragent::get_device_type_theme($this->devicetypeinuse);
                     if (!empty($devicetheme)) {
                         return $devicetheme;
                     }
                     // Next try for the default device (as a fallback).
-                    $devicetheme = core_useragent::get_device_type_theme('default');
+                    $devicetheme = core_useragent::get_device_type_theme(core_useragent::DEVICETYPE_DEFAULT);
                     if (!empty($devicetheme)) {
                         return $devicetheme;
                     }
@@ -1828,6 +1833,11 @@ class moodle_page {
      * @throws coding_exception
      */
     protected function ensure_theme_not_set() {
+        // This is explicitly allowed for webservices though which may process many course contexts in a single request.
+        if (WS_SERVER) {
+            return;
+        }
+
         if (!is_null($this->_theme)) {
             throw new coding_exception('The theme has already been set up for this page ready for output. ' .
                     'Therefore, you can no longer change the theme, or anything that might affect what ' .
@@ -1926,5 +1936,41 @@ class moodle_page {
             return $regionwas;
         }
         return $region;
+    }
+
+    /**
+     * Add a report node and a specific report to the navigation.
+     *
+     * @param int $userid The user ID that we are looking to add this report node to.
+     * @param array $nodeinfo Name and url of the final node that we are creating.
+     */
+    public function add_report_nodes($userid, $nodeinfo) {
+        global $USER;
+        // Try to find the specific user node.
+        $newusernode = $this->navigation->find('user' . $userid, null);
+        $reportnode = null;
+        $navigationnodeerror =
+                'Could not find the navigation node requested. Please check that the node you are looking for exists.';
+        if ($userid != $USER->id) {
+            // Check that we have a valid node.
+            if (empty($newusernode)) {
+                // Throw an error if we ever reach here.
+                throw new coding_exception($navigationnodeerror);
+            }
+            // Add 'Reports' to the user node.
+            $reportnode = $newusernode->add(get_string('reports'));
+        } else {
+            // We are looking at our own profile.
+            $myprofilenode = $this->settingsnav->find('myprofile', null);
+            // Check that we do end up with a valid node.
+            if (empty($myprofilenode)) {
+                // Throw an error if we ever reach here.
+                throw new coding_exception($navigationnodeerror);
+            }
+            // Add 'Reports' to our node.
+            $reportnode = $myprofilenode->add(get_string('reports'));
+        }
+        // Finally add the report to the navigation tree.
+        $reportnode->add($nodeinfo['name'], $nodeinfo['url'], navigation_node::TYPE_COURSE);
     }
 }

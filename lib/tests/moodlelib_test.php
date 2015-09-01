@@ -583,12 +583,40 @@ class core_moodlelib_testcase extends advanced_testcase {
 
     public function test_clean_param_localurl() {
         global $CFG;
-        $this->assertSame('', clean_param('http://google.com/', PARAM_LOCALURL));
-        $this->assertSame('', clean_param('http://some.very.long.and.silly.domain/with/a/path/', PARAM_LOCALURL));
-        $this->assertSame(clean_param($CFG->wwwroot, PARAM_LOCALURL), $CFG->wwwroot);
-        $this->assertSame('/just/a/path', clean_param('/just/a/path', PARAM_LOCALURL));
+
+        $this->resetAfterTest();
+
+        // External, invalid.
         $this->assertSame('', clean_param('funny:thing', PARAM_LOCALURL));
+        $this->assertSame('', clean_param('http://google.com/', PARAM_LOCALURL));
+        $this->assertSame('', clean_param('https://google.com/?test=true', PARAM_LOCALURL));
+        $this->assertSame('', clean_param('http://some.very.long.and.silly.domain/with/a/path/', PARAM_LOCALURL));
+
+        // Local absolute.
+        $this->assertSame(clean_param($CFG->wwwroot, PARAM_LOCALURL), $CFG->wwwroot);
+        $this->assertSame($CFG->wwwroot . '/with/something?else=true',
+            clean_param($CFG->wwwroot . '/with/something?else=true', PARAM_LOCALURL));
+
+        // Local relative.
+        $this->assertSame('/just/a/path', clean_param('/just/a/path', PARAM_LOCALURL));
         $this->assertSame('course/view.php?id=3', clean_param('course/view.php?id=3', PARAM_LOCALURL));
+
+        // Local absolute HTTPS.
+        $httpsroot = str_replace('http:', 'https:', $CFG->wwwroot);
+        $CFG->loginhttps = false;
+        $this->assertSame('', clean_param($httpsroot, PARAM_LOCALURL));
+        $this->assertSame('', clean_param($httpsroot . '/with/something?else=true', PARAM_LOCALURL));
+        $CFG->loginhttps = true;
+        $this->assertSame($httpsroot, clean_param($httpsroot, PARAM_LOCALURL));
+        $this->assertSame($httpsroot . '/with/something?else=true',
+            clean_param($httpsroot . '/with/something?else=true', PARAM_LOCALURL));
+
+        // Test open redirects are not possible.
+        $CFG->loginhttps = false;
+        $CFG->wwwroot = 'http://www.example.com';
+        $this->assertSame('', clean_param('http://www.example.com.evil.net/hack.php', PARAM_LOCALURL));
+        $CFG->loginhttps = true;
+        $this->assertSame('', clean_param('https://www.example.com.evil.net/hack.php', PARAM_LOCALURL));
     }
 
     public function test_clean_param_file() {
@@ -934,22 +962,9 @@ class core_moodlelib_testcase extends advanced_testcase {
         global $USER, $CFG, $DB;
         $this->resetAfterTest();
 
-        // Check if forcetimezone is set then save it and set it to use user timezone.
-        $cfgforcetimezone = null;
-        if (isset($CFG->forcetimezone)) {
-            $cfgforcetimezone = $CFG->forcetimezone;
-            $CFG->forcetimezone = 99; // Get user default timezone.
-        }
-
         $this->setAdminUser();
 
-        $userstimezone = $USER->timezone;
         $USER->timezone = 2;// Set the timezone to a known state.
-
-        // The string version of date comes from server locale setting and does
-        // not respect user language, so it is necessary to reset that.
-        $oldlocale = setlocale(LC_TIME, '0');
-        setlocale(LC_TIME, 'en_AU.UTF-8');
 
         $ts = 1261540267; // The time this function was created.
 
@@ -981,15 +996,6 @@ class core_moodlelib_testcase extends advanced_testcase {
         $this->assertSame(356, $yday);
         $this->assertSame('Wednesday', $weekday);
         $this->assertSame('December', $month);
-        // Set the timezone back to what it was.
-        $USER->timezone = $userstimezone;
-
-        // Restore forcetimezone if changed.
-        if (!is_null($cfgforcetimezone)) {
-            $CFG->forcetimezone = $cfgforcetimezone;
-        }
-
-        setlocale(LC_TIME, $oldlocale);
     }
 
     public function test_mark_user_preferences_changed() {
@@ -1356,30 +1362,15 @@ class core_moodlelib_testcase extends advanced_testcase {
             ),
             array(
                 'time' => '1293876000 ',
-                'usertimezone' => '14', // Server time zone.
+                'usertimezone' => '20', // Fallback to server time zone.
                 'timezone' => '99',     // This should show user time.
                 'expectedoutput' => 'Saturday, 1 January 2011, 6:00 PM'
             ),
         );
 
-        // Check if forcetimezone is set then save it and set it to use user timezone.
-        $cfgforcetimezone = null;
-        if (isset($CFG->forcetimezone)) {
-            $cfgforcetimezone = $CFG->forcetimezone;
-            $CFG->forcetimezone = 99; // Get user default timezone.
-        }
-        // Store user default timezone to restore later.
-        $userstimezone = $USER->timezone;
-
-        // The string version of date comes from server locale setting and does
-        // not respect user language, so it is necessary to reset that.
-        $oldlocale = setlocale(LC_TIME, '0');
-        setlocale(LC_TIME, 'en_AU.UTF-8');
-
         // Set default timezone to Australia/Perth, else time calculated
-        // will not match expected values. Before that save system defaults.
-        $systemdefaulttimezone = date_default_timezone_get();
-        date_default_timezone_set('Australia/Perth');
+        // will not match expected values.
+        $this->setTimezone(99, 'Australia/Perth');
 
         foreach ($testvalues as $vals) {
             $USER->timezone = $vals['usertimezone'];
@@ -1390,21 +1381,81 @@ class core_moodlelib_testcase extends advanced_testcase {
             $actualoutput = core_text::strtolower($actualoutput);
 
             $this->assertSame($vals['expectedoutput'], $actualoutput,
-                "Expected: {$vals['expectedoutput']} => Actual: {$actualoutput},
-                Please check if timezones are updated (Site adminstration -> location -> update timezone)");
+                "Expected: {$vals['expectedoutput']} => Actual: {$actualoutput} \ndata: " . var_export($vals, true));
         }
+    }
 
-        // Restore user timezone back to what it was.
-        $USER->timezone = $userstimezone;
+    /**
+     * Make sure the DST changes happen at the right time in Moodle.
+     */
+    public function test_dst_changes() {
+        // DST switching in Prague.
+        // From 2AM to 3AM in 1989.
+        $date = new DateTime('1989-03-26T01:59:00+01:00');
+        $this->assertSame('Sunday, 26 March 1989, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        $date = new DateTime('1989-03-26T02:01:00+01:00');
+        $this->assertSame('Sunday, 26 March 1989, 03:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        // From 3AM to 2AM in 1989 - not the same as the west Europe.
+        $date = new DateTime('1989-09-24T01:59:00+01:00');
+        $this->assertSame('Sunday, 24 September 1989, 02:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        $date = new DateTime('1989-09-24T02:01:00+01:00');
+        $this->assertSame('Sunday, 24 September 1989, 02:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        // From 2AM to 3AM in 2014.
+        $date = new DateTime('2014-03-30T01:59:00+01:00');
+        $this->assertSame('Sunday, 30 March 2014, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        $date = new DateTime('2014-03-30T02:01:00+01:00');
+        $this->assertSame('Sunday, 30 March 2014, 03:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        // From 3AM to 2AM in 2014.
+        $date = new DateTime('2014-10-26T01:59:00+01:00');
+        $this->assertSame('Sunday, 26 October 2014, 02:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        $date = new DateTime('2014-10-26T02:01:00+01:00');
+        $this->assertSame('Sunday, 26 October 2014, 02:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        // From 2AM to 3AM in 2020.
+        $date = new DateTime('2020-03-29T01:59:00+01:00');
+        $this->assertSame('Sunday, 29 March 2020, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        $date = new DateTime('2020-03-29T02:01:00+01:00');
+        $this->assertSame('Sunday, 29 March 2020, 03:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        // From 3AM to 2AM in 2020.
+        $date = new DateTime('2020-10-25T01:59:00+01:00');
+        $this->assertSame('Sunday, 25 October 2020, 02:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
+        $date = new DateTime('2020-10-25T02:01:00+01:00');
+        $this->assertSame('Sunday, 25 October 2020, 02:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Europe/Prague'));
 
-        // Restore forcetimezone.
-        if (!is_null($cfgforcetimezone)) {
-            $CFG->forcetimezone = $cfgforcetimezone;
-        }
+        // DST switching in NZ.
+        // From 3AM to 2AM in 2015.
+        $date = new DateTime('2015-04-05T02:59:00+13:00');
+        $this->assertSame('Sunday, 5 April 2015, 02:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Pacific/Auckland'));
+        $date = new DateTime('2015-04-05T03:01:00+13:00');
+        $this->assertSame('Sunday, 5 April 2015, 02:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Pacific/Auckland'));
+        // From 2AM to 3AM in 2009.
+        $date = new DateTime('2015-09-27T01:59:00+12:00');
+        $this->assertSame('Sunday, 27 September 2015, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Pacific/Auckland'));
+        $date = new DateTime('2015-09-27T02:01:00+12:00');
+        $this->assertSame('Sunday, 27 September 2015, 03:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Pacific/Auckland'));
 
-        // Restore system default values.
-        date_default_timezone_set($systemdefaulttimezone);
-        setlocale(LC_TIME, $oldlocale);
+        // DST switching in Perth.
+        // From 3AM to 2AM in 2009.
+        $date = new DateTime('2008-03-30T01:59:00+08:00');
+        $this->assertSame('Sunday, 30 March 2008, 02:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Australia/Perth'));
+        $date = new DateTime('2008-03-30T02:01:00+08:00');
+        $this->assertSame('Sunday, 30 March 2008, 02:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Australia/Perth'));
+        // From 2AM to 3AM in 2009.
+        $date = new DateTime('2008-10-26T01:59:00+08:00');
+        $this->assertSame('Sunday, 26 October 2008, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Australia/Perth'));
+        $date = new DateTime('2008-10-26T02:01:00+08:00');
+        $this->assertSame('Sunday, 26 October 2008, 03:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'Australia/Perth'));
+
+        // DST switching in US.
+        // From 2AM to 3AM in 2014.
+        $date = new DateTime('2014-03-09T01:59:00-05:00');
+        $this->assertSame('Sunday, 9 March 2014, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'America/New_York'));
+        $date = new DateTime('2014-03-09T02:01:00-05:00');
+        $this->assertSame('Sunday, 9 March 2014, 03:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'America/New_York'));
+        // From 3AM to 2AM in 2014.
+        $date = new DateTime('2014-11-02T01:59:00-04:00');
+        $this->assertSame('Sunday, 2 November 2014, 01:59', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'America/New_York'));
+        $date = new DateTime('2014-11-02T02:01:00-04:00');
+        $this->assertSame('Sunday, 2 November 2014, 01:01', userdate($date->getTimestamp(), '%A, %d %B %Y, %H:%M', 'America/New_York'));
     }
 
     public function test_make_timestamp() {
@@ -1536,25 +1587,9 @@ class core_moodlelib_testcase extends advanced_testcase {
             )
         );
 
-        // Check if forcetimezone is set then save it and set it to use user timezone.
-        $cfgforcetimezone = null;
-        if (isset($CFG->forcetimezone)) {
-            $cfgforcetimezone = $CFG->forcetimezone;
-            $CFG->forcetimezone = 99; // Get user default timezone.
-        }
-
-        // Store user default timezone to restore later.
-        $userstimezone = $USER->timezone;
-
-        // The string version of date comes from server locale setting and does
-        // not respect user language, so it is necessary to reset that.
-        $oldlocale = setlocale(LC_TIME, '0');
-        setlocale(LC_TIME, 'en_AU.UTF-8');
-
         // Set default timezone to Australia/Perth, else time calculated
-        // Will not match expected values. Before that save system defaults.
-        $systemdefaulttimezone = date_default_timezone_get();
-        date_default_timezone_set('Australia/Perth');
+        // will not match expected values.
+        $this->setTimezone(99, 'Australia/Perth');
 
         // Test make_timestamp with all testvals and assert if anything wrong.
         foreach ($testvalues as $vals) {
@@ -1578,18 +1613,6 @@ class core_moodlelib_testcase extends advanced_testcase {
                 "Expected: {$vals['expectedoutput']} => Actual: {$actualoutput},
                 Please check if timezones are updated (Site adminstration -> location -> update timezone)");
         }
-
-        // Restore user timezone back to what it was.
-        $USER->timezone = $userstimezone;
-
-        // Restore forcetimezone.
-        if (!is_null($cfgforcetimezone)) {
-            $CFG->forcetimezone = $cfgforcetimezone;
-        }
-
-        // Restore system default values.
-        date_default_timezone_set($systemdefaulttimezone);
-        setlocale(LC_TIME, $oldlocale);
     }
 
     /**
@@ -1859,6 +1882,10 @@ class core_moodlelib_testcase extends advanced_testcase {
 
         $user = $this->getDataGenerator()->create_user(array('idnumber'=>'abc'));
         $user2 = $this->getDataGenerator()->create_user(array('idnumber'=>'xyz'));
+        $usersharedemail1 = $this->getDataGenerator()->create_user(array('email' => 'sharedemail@example.invalid'));
+        $usersharedemail2 = $this->getDataGenerator()->create_user(array('email' => 'sharedemail@example.invalid'));
+        $useremptyemail1 = $this->getDataGenerator()->create_user(array('email' => ''));
+        $useremptyemail2 = $this->getDataGenerator()->create_user(array('email' => ''));
 
         // Delete user and capture event.
         $sink = $this->redirectEvents();
@@ -1924,6 +1951,30 @@ class core_moodlelib_testcase extends advanced_testcase {
         $result = delete_user($admin);
         $this->assertFalse($result);
 
+        // Simultaneously deleting users with identical email addresses.
+        $result1 = delete_user($usersharedemail1);
+        $result2 = delete_user($usersharedemail2);
+
+        $usersharedemail1after = $DB->get_record('user', array('id' => $usersharedemail1->id));
+        $usersharedemail2after = $DB->get_record('user', array('id' => $usersharedemail2->id));
+        $this->assertTrue($result1);
+        $this->assertTrue($result2);
+        $this->assertStringStartsWith($usersharedemail1->email . '.', $usersharedemail1after->username);
+        $this->assertStringStartsWith($usersharedemail2->email . '.', $usersharedemail2after->username);
+
+        // Simultaneously deleting users without email addresses.
+        $result1 = delete_user($useremptyemail1);
+        $result2 = delete_user($useremptyemail2);
+
+        $useremptyemail1after = $DB->get_record('user', array('id' => $useremptyemail1->id));
+        $useremptyemail2after = $DB->get_record('user', array('id' => $useremptyemail2->id));
+        $this->assertTrue($result1);
+        $this->assertTrue($result2);
+        $this->assertStringStartsWith($useremptyemail1->username . '.' . $useremptyemail1->id . '@unknownemail.invalid.',
+            $useremptyemail1after->username);
+        $this->assertStringStartsWith($useremptyemail2->username . '.' . $useremptyemail2->id . '@unknownemail.invalid.',
+            $useremptyemail2after->username);
+
         $this->resetDebugging();
     }
 
@@ -1956,15 +2007,8 @@ class core_moodlelib_testcase extends advanced_testcase {
     public function test_date_format_string() {
         global $CFG;
 
-        // Forcing locale and timezone.
-        $oldlocale = setlocale(LC_TIME, '0');
-        if ($CFG->ostype == 'WINDOWS') {
-            setlocale(LC_TIME, 'English_Australia.1252');
-        } else {
-            setlocale(LC_TIME, 'en_AU.UTF-8');
-        }
-        $systemdefaulttimezone = date_default_timezone_get();
-        date_default_timezone_set('Australia/Perth');
+        $this->resetAfterTest();
+        $this->setTimezone(99, 'Australia/Perth');
 
         $tests = array(
             array(
@@ -1978,9 +2022,11 @@ class core_moodlelib_testcase extends advanced_testcase {
                 'expected' => 'Saturday, 01 January 2011, 10:00 AM'
             ),
             array(
-                'tz' => -12,
+                // Note: this function expected the timestamp in weird format before,
+                // since 2.9 it uses UTC.
+                'tz' => 'Pacific/Auckland',
                 'str' => '%A, %d %B %Y, %I:%M %p',
-                'expected' => 'Saturday, 01 January 2011, 10:00 AM'
+                'expected' => 'Saturday, 01 January 2011, 11:00 PM'
             ),
             // Following tests pass on Windows only because en lang pack does
             // not contain localewincharset, in real life lang pack maintainers
@@ -2011,10 +2057,6 @@ class core_moodlelib_testcase extends advanced_testcase {
             $str = date_format_string(1293876000, $test['str'], $test['tz']);
             $this->assertSame(core_text::strtolower($test['expected']), core_text::strtolower($str));
         }
-
-        // Restore system default values.
-        date_default_timezone_set($systemdefaulttimezone);
-        setlocale(LC_TIME, $oldlocale);
     }
 
     public function test_get_config() {
@@ -2763,7 +2805,7 @@ class core_moodlelib_testcase extends advanced_testcase {
         $userinfo->authormiddlename = '';
         $userinfo->authorpicture = 23;
         $userinfo->authorimagealt = 'Michael Jordan draining another basket.';
-        $userinfo->authoremail = 'test@testing.net';
+        $userinfo->authoremail = 'test@example.com';
 
 
         // Return an object with user picture information.
@@ -2779,7 +2821,7 @@ class core_moodlelib_testcase extends advanced_testcase {
         $expectedarray->lastnamephonetic = 'カンベッル';
         $expectedarray->middlename = '';
         $expectedarray->alternatename = '';
-        $expectedarray->email = 'test@testing.net';
+        $expectedarray->email = 'test@example.com';
         $expectedarray->picture = 23;
         $expectedarray->imagealt = 'Michael Jordan draining another basket.';
         $this->assertEquals($user, $expectedarray);

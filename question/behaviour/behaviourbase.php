@@ -85,6 +85,16 @@ abstract class question_behaviour {
     }
 
     /**
+     * Whether the current attempt at this question could be completed just by the
+     * student interacting with the question, before $qa->finish() is called.
+     *
+     * @return boolean whether the attempt can finish naturally.
+     */
+    public function can_finish_during_attempt() {
+        return false;
+    }
+
+    /**
      * Cause the question to be renderered. This gets the appropriate behaviour
      * renderer using {@link get_renderer()}, and adjusts the display
      * options using {@link adjust_display_options()} and then calls
@@ -298,7 +308,12 @@ abstract class question_behaviour {
         } else {
             $stepswithsubmit = $this->qa->get_steps_with_submitted_response_iterator();
             if ($whichtries == question_attempt::FIRST_TRY) {
-                return $this->question->classify_response($stepswithsubmit[1]->get_qt_data());
+                $firsttry = $stepswithsubmit[1];
+                if ($firsttry) {
+                    return $this->question->classify_response($firsttry->get_qt_data());
+                } else {
+                    return $this->question->classify_response(array());
+                }
             } else {
                 $classifiedresponses = array();
                 foreach ($stepswithsubmit as $submittedresponseno => $step) {

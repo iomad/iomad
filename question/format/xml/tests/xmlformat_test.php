@@ -29,6 +29,7 @@ global $CFG;
 require_once($CFG->libdir . '/questionlib.php');
 require_once($CFG->dirroot . '/question/format/xml/format.php');
 require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
+require_once($CFG->dirroot . '/tag/lib.php');
 
 
 /**
@@ -109,6 +110,40 @@ class qformat_xml_test extends question_testcase {
         }
 
         return $newvar;
+    }
+
+    public function test_xml_escape_simple_input_not_escaped() {
+        $exporter = new qformat_xml();
+        $string = 'Nothing funny here. Even if we go to a café or to 日本.';
+        $this->assertEquals($string, $exporter->xml_escape($string));
+    }
+
+    public function test_xml_escape_html_wrapped_in_cdata() {
+        $exporter = new qformat_xml();
+        $string = '<p>Nothing <b>funny<b> here. Even if we go to a café or to 日本.</p>';
+        $this->assertEquals('<![CDATA[' . $string . ']]>', $exporter->xml_escape($string));
+    }
+
+    public function test_xml_escape_script_tag_handled_ok() {
+        $exporter = new qformat_xml();
+        $input = '<script><![CDATA[alert(1<2);]]></script>';
+        $expected = '<![CDATA[<script><![CDATA[alert(1<2);]]]]><![CDATA[></script>]]>';
+        $this->assertEquals($expected, $exporter->xml_escape($input));
+
+        // Check that parsing the expected result does give the input again.
+        $parsed = simplexml_load_string('<div>' . $expected . '</div>');
+        $this->assertEquals($input, $parsed->xpath('//div')[0]);
+    }
+
+    public function test_xml_escape_code_that_looks_like_cdata_end_ok() {
+        $exporter = new qformat_xml();
+        $input = "if (x[[0]]>a) print('hah');";
+        $expected = "<![CDATA[if (x[[0]]]]><![CDATA[>a) print('hah');]]>";
+        $this->assertEquals($expected, $exporter->xml_escape($input));
+
+        // Check that parsing the expected result does give the input again.
+        $parsed = simplexml_load_string('<div>' . $expected . '</div>');
+        $this->assertEquals($input, $parsed->xpath('//div')[0]);
     }
 
     public function test_write_hint_basic() {
@@ -268,6 +303,10 @@ END;
     <defaultgrade>0</defaultgrade>
     <penalty>0</penalty>
     <hidden>0</hidden>
+    <tags>
+      <tag><text>tagDescription</text></tag>
+      <tag><text>tagTest</text></tag>
+    </tags>
   </question>';
         $xmldata = xmlize($xml);
 
@@ -283,6 +322,7 @@ END;
         $expectedq->defaultmark = 0;
         $expectedq->length = 0;
         $expectedq->penalty = 0;
+        $expectedq->tags = array('tagDescription', 'tagTest');
 
         $this->assert(new question_check_specified_fields_expectation($expectedq), $q);
     }
@@ -339,6 +379,11 @@ END;
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
     <hidden>0</hidden>
+    <tags>
+      <tag><text>tagEssay</text></tag>
+      <tag><text>tagEssay20</text></tag>
+      <tag><text>tagTest</text></tag>
+    </tags>
   </question>';
         $xmldata = xmlize($xml);
 
@@ -363,6 +408,7 @@ END;
         $expectedq->graderinfo['format'] = FORMAT_MOODLE;
         $expectedq->responsetemplate['text'] = '';
         $expectedq->responsetemplate['format'] = FORMAT_MOODLE;
+        $expectedq->tags = array('tagEssay', 'tagEssay20', 'tagTest');
 
         $this->assert(new question_check_specified_fields_expectation($expectedq), $q);
     }
@@ -392,6 +438,11 @@ END;
     <responsetemplate format="html">
         <text><![CDATA[<p>Here is something <b>really</b> interesting.</p>]]></text>
     </responsetemplate>
+    <tags>
+      <tag><text>tagEssay</text></tag>
+      <tag><text>tagEssay21</text></tag>
+      <tag><text>tagTest</text></tag>
+    </tags>
   </question>';
         $xmldata = xmlize($xml);
 
@@ -416,6 +467,7 @@ END;
         $expectedq->graderinfo['format'] = FORMAT_HTML;
         $expectedq->responsetemplate['text'] = '<p>Here is something <b>really</b> interesting.</p>';
         $expectedq->responsetemplate['format'] = FORMAT_HTML;
+        $expectedq->tags = array('tagEssay', 'tagEssay21', 'tagTest');
 
         $this->assert(new question_check_specified_fields_expectation($expectedq), $q);
     }
@@ -537,6 +589,10 @@ END;
       <shownumcorrect />
       <clearwrong />
     </hint>
+    <tags>
+      <tag><text>tagMatching</text></tag>
+      <tag><text>tagTest</text></tag>
+    </tags>
   </question>';
         $xmldata = xmlize($xml);
 
@@ -573,6 +629,7 @@ END;
         );
         $expectedq->hintshownumcorrect = array(true, true);
         $expectedq->hintclearwrong = array(false, true);
+        $expectedq->tags = array('tagMatching', 'tagTest');
 
         $this->assert(new question_check_specified_fields_expectation($expectedq), $q);
     }
@@ -1309,6 +1366,10 @@ END;
     <hint format="html">
       <text>Hint 2</text>
     </hint>
+    <tags>
+      <tag><text>tagCloze</text></tag>
+      <tag><text>tagTest</text></tag>
+    </tags>
   </question>
 ';
         $xmldata = xmlize($xml);
@@ -1385,6 +1446,7 @@ END;
             1 => $sa,
             2 => $mc,
         );
+        $expectedqa->tags = array('tagCloze', 'tagTest');
 
         $this->assertEquals($expectedqa->hint, $q->hint);
         $this->assertEquals($expectedqa->options->questions[1], $q->options->questions[1]);

@@ -113,6 +113,12 @@ class auth_plugin_cas extends auth_plugin_ldap {
 
         // If the multi-authentication setting is used, check for the param before connecting to CAS.
         if ($this->config->multiauth) {
+
+            // If there is an authentication error, stay on the default authentication page.
+            if (!empty($SESSION->loginerrormsg)) {
+                return;
+            }
+
             $authCAS = optional_param('authCAS', '', PARAM_RAW);
             if ($authCAS == 'NOCAS') {
                 return;
@@ -181,7 +187,7 @@ class auth_plugin_cas extends auth_plugin_ldap {
         }
 
         // If Moodle is configured to use a proxy, phpCAS needs some curl options set.
-        if (!empty($CFG->proxyhost) && !is_proxybypass($this->config->hostname)) {
+        if (!empty($CFG->proxyhost) && !is_proxybypass(phpCAS::getServerLoginURL())) {
             phpCAS::setExtraCurlOption(CURLOPT_PROXY, $CFG->proxyhost);
             if (!empty($CFG->proxyport)) {
                 phpCAS::setExtraCurlOption(CURLOPT_PROXYPORT, $CFG->proxyport);

@@ -1272,12 +1272,7 @@ class sqlsrv_native_moodle_database extends moodle_database {
         for ($n = count($elements) - 1; $n > 0; $n--) {
             array_splice($elements, $n, 0, $separator);
         }
-        $s = implode(' + ', $elements);
-
-        if ($s === '') {
-            return " '' ";
-        }
-        return " $s ";
+        return call_user_func_array(array($this, 'sql_concat'), $elements);
     }
 
     public function sql_isempty($tablename, $fieldname, $nullablefield, $textfield) {
@@ -1324,9 +1319,9 @@ class sqlsrv_native_moodle_database extends moodle_database {
         }
 
         if ($length === false) {
-            return "SUBSTRING($expr, $start, (LEN($expr) - $start + 1))";
+            return "SUBSTRING($expr, " . $this->sql_cast_char2int($start) . ", 2^31-1)";
         } else {
-            return "SUBSTRING($expr, $start, $length)";
+            return "SUBSTRING($expr, " . $this->sql_cast_char2int($start) . ", " . $this->sql_cast_char2int($length) . ")";
         }
     }
 

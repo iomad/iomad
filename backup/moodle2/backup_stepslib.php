@@ -524,7 +524,7 @@ class backup_enrolments_structure_step extends backup_structure_step {
 
         $enrol = new backup_nested_element('enrol', array('id'), array(
             'enrol', 'status', 'name', 'enrolperiod', 'enrolstartdate',
-            'enrolenddate', 'expirynotify', 'expirytreshold', 'notifyall',
+            'enrolenddate', 'expirynotify', 'expirythreshold', 'notifyall',
             'password', 'cost', 'currency', 'roleid',
             'customint1', 'customint2', 'customint3', 'customint4', 'customint5', 'customint6', 'customint7', 'customint8',
             'customchar1', 'customchar2', 'customchar3',
@@ -825,7 +825,7 @@ class backup_badges_structure_step extends backup_structure_step {
 
         $criteria = new backup_nested_element('criteria');
         $criterion = new backup_nested_element('criterion', array('id'), array('badgeid',
-                'criteriatype', 'method'));
+                'criteriatype', 'method', 'description', 'descriptionformat'));
 
         $parameters = new backup_nested_element('parameters');
         $parameter = new backup_nested_element('parameter', array('id'), array('critid',
@@ -939,6 +939,7 @@ class backup_gradebook_structure_step extends backup_structure_step {
     }
 
     protected function define_structure() {
+        global $CFG, $DB;
 
         // are we including user info?
         $userinfo = $this->get_setting_value('users');
@@ -999,6 +1000,13 @@ class backup_gradebook_structure_step extends backup_structure_step {
         $gradebook->add_child($grade_settings);
         $grade_settings->add_child($grade_setting);
 
+        // Add attribute with gradebook calculation freeze date if needed.
+        $gradebookcalculationfreeze = get_config('core', 'gradebook_calculations_freeze_' . $this->get_courseid());
+        if ($gradebookcalculationfreeze) {
+            $gradebook->add_attributes(array('calculations_freeze'));
+            $gradebook->get_attribute('calculations_freeze')->set_value($gradebookcalculationfreeze);
+        }
+
         // Define sources
 
         //Include manual, category and the course grade item
@@ -1023,7 +1031,18 @@ class backup_gradebook_structure_step extends backup_structure_step {
 
         $letter->set_source_table('grade_letters', array('contextid' => backup::VAR_CONTEXTID));
 
-        $grade_setting->set_source_table('grade_settings', array('courseid' => backup::VAR_COURSEID));
+        // Set the grade settings source, forcing the inclusion of minmaxtouse if not present.
+        $settings = array();
+        $rs = $DB->get_recordset('grade_settings', array('courseid' => $this->get_courseid()));
+        foreach ($rs as $record) {
+            $settings[$record->name] = $record;
+        }
+        $rs->close();
+        if (!isset($settings['minmaxtouse'])) {
+            $settings['minmaxtouse'] = (object) array('name' => 'minmaxtouse', 'value' => $CFG->grade_minmaxtouse);
+        }
+        $grade_setting->set_source_array($settings);
+
 
         // Annotations (both as final as far as they are going to be exported in next steps)
         $grade_item->annotate_ids('scalefinal', 'scaleid'); // Straight as scalefinal because it's > 0
@@ -1149,8 +1168,10 @@ class backup_groups_structure_step extends backup_structure_step {
 
     protected function define_structure() {
 
-        // To know if we are including users
-        $users = $this->get_setting_value('users');
+        // To know if we are including users.
+        $userinfo = $this->get_setting_value('users');
+        // To know if we are including groups and groupings.
+        $groupinfo = $this->get_setting_value('groups');
 
         // Define each element separated
 
@@ -1190,26 +1211,28 @@ class backup_groups_structure_step extends backup_structure_step {
 
         // Define sources
 
-        $group->set_source_sql("
-            SELECT g.*
-              FROM {groups} g
-              JOIN {backup_ids_temp} bi ON g.id = bi.itemid
-             WHERE bi.backupid = ?
-               AND bi.itemname = 'groupfinal'", array(backup::VAR_BACKUPID));
+        // This only happens if we are including groups/groupings.
+        if ($groupinfo) {
+            $group->set_source_sql("
+                SELECT g.*
+                  FROM {groups} g
+                  JOIN {backup_ids_temp} bi ON g.id = bi.itemid
+                 WHERE bi.backupid = ?
+                   AND bi.itemname = 'groupfinal'", array(backup::VAR_BACKUPID));
 
-        // This only happens if we are including users
-        if ($users) {
-            $member->set_source_table('groups_members', array('groupid' => backup::VAR_PARENTID));
+            $grouping->set_source_sql("
+                SELECT g.*
+                  FROM {groupings} g
+                  JOIN {backup_ids_temp} bi ON g.id = bi.itemid
+                 WHERE bi.backupid = ?
+                   AND bi.itemname = 'groupingfinal'", array(backup::VAR_BACKUPID));
+            $groupinggroup->set_source_table('groupings_groups', array('groupingid' => backup::VAR_PARENTID));
+
+            // This only happens if we are including users.
+            if ($userinfo) {
+                $member->set_source_table('groups_members', array('groupid' => backup::VAR_PARENTID));
+            }
         }
-
-        $grouping->set_source_sql("
-            SELECT g.*
-              FROM {groupings} g
-              JOIN {backup_ids_temp} bi ON g.id = bi.itemid
-             WHERE bi.backupid = ?
-               AND bi.itemname = 'groupingfinal'", array(backup::VAR_BACKUPID));
-
-        $groupinggroup->set_source_table('groupings_groups', array('groupingid' => backup::VAR_PARENTID));
 
         // Define id annotations (as final)
 
@@ -1241,7 +1264,7 @@ class backup_users_structure_step extends backup_structure_step {
         // To know if we are including role assignments
         $roleassignments = $this->get_setting_value('role_assignments');
 
-        // Define each element separated
+        // Define each element separate.
 
         $users = new backup_nested_element('users');
 
@@ -2423,7 +2446,8 @@ class backup_course_completion_structure_step extends backup_structure_step {
         $cc = new backup_nested_element('course_completion');
 
         $criteria = new backup_nested_element('course_completion_criteria', array('id'), array(
-            'course','criteriatype', 'module', 'moduleinstance', 'courseinstanceshortname', 'enrolperiod', 'timeend', 'gradepass', 'role'
+            'course', 'criteriatype', 'module', 'moduleinstance', 'courseinstanceshortname', 'enrolperiod',
+            'timeend', 'gradepass', 'role', 'roleshortname'
         ));
 
         $criteriacompletions = new backup_nested_element('course_completion_crit_completions');
@@ -2446,12 +2470,15 @@ class backup_course_completion_structure_step extends backup_structure_step {
         $cc->add_child($coursecompletions);
         $cc->add_child($aggregatemethod);
 
-        // We need to get the courseinstances shortname rather than an ID for restore
-        $criteria->set_source_sql("SELECT ccc.*, c.shortname AS courseinstanceshortname
-                                   FROM {course_completion_criteria} ccc
-                                   LEFT JOIN {course} c ON c.id = ccc.courseinstance
-                                   WHERE ccc.course = ?", array(backup::VAR_COURSEID));
-
+        // We need some extra data for the restore.
+        // - courseinstances shortname rather than an ID.
+        // - roleshortname in case restoring on a different site.
+        $sourcesql = "SELECT ccc.*, c.shortname AS courseinstanceshortname, r.shortname AS roleshortname
+                        FROM {course_completion_criteria} ccc
+                   LEFT JOIN {course} c ON c.id = ccc.courseinstance
+                   LEFT JOIN {role} r ON r.id = ccc.role
+                       WHERE ccc.course = ?";
+        $criteria->set_source_sql($sourcesql, array(backup::VAR_COURSEID));
 
         $aggregatemethod->set_source_table('course_completion_aggr_methd', array('course' => backup::VAR_COURSEID));
 

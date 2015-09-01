@@ -27,7 +27,7 @@ class data_field_picture extends data_field_base {
     var $previewwidth  = 50;
     var $previewheight = 50;
 
-    function display_add_field($recordid=0) {
+    function display_add_field($recordid = 0, $formdata = null) {
         global $CFG, $DB, $OUTPUT, $USER, $PAGE;
 
         $file        = false;
@@ -37,7 +37,14 @@ class data_field_picture extends data_field_base {
         $itemid = null;
         $fs = get_file_storage();
 
-        if ($recordid) {
+        if ($formdata) {
+            $fieldname = 'field_' . $this->field->id . '_file';
+            $itemid = $formdata->$fieldname;
+            $fieldname = 'field_' . $this->field->id . '_alttext';
+            if (isset($formdata->$fieldname)) {
+                $alttext = $formdata->$fieldname;
+            }
+        } else if ($recordid) {
             if ($content = $DB->get_record('data_content', array('fieldid'=>$this->field->id, 'recordid'=>$recordid))) {
                 file_prepare_draft_area($itemid, $this->context->id, 'mod_data', 'content', $content->id);
                 if (!empty($content->content)) {
@@ -64,9 +71,17 @@ class data_field_picture extends data_field_base {
         } else {
             $itemid = file_get_unused_draft_itemid();
         }
+        $str = '<div title="' . s($this->field->description) . '">';
+        $str .= '<fieldset><legend><span class="accesshide">'.$this->field->name;
 
-        $str = '<div title="'.s($this->field->description).'">';
-        $str .= '<fieldset><legend><span class="accesshide">'.$this->field->name.'</span></legend>';
+        if ($this->field->required) {
+            $str .= '&nbsp;' . get_string('requiredelement', 'form') . '</span></legend>';
+            $image = html_writer::img($OUTPUT->pix_url('req'), get_string('requiredelement', 'form'),
+                                      array('class' => 'req', 'title' => get_string('requiredelement', 'form')));
+            $str .= html_writer::div($image, 'inline-req');
+        } else {
+            $str .= '</span></legend>';
+        }
         $str .= '<noscript>';
         if ($file) {
             $src = file_encode_url($CFG->wwwroot.'/pluginfile.php/', $this->context->id.'/mod_data/content/'.$content->id.'/'.$file->get_filename());
@@ -90,12 +105,14 @@ class data_field_picture extends data_field_base {
         // Print out file manager.
 
         $output = $PAGE->get_renderer('core', 'files');
+        $str .= '<div class="mod-data-input">';
         $str .= $output->render($fm);
 
         $str .= '<div class="mdl-left">';
         $str .= '<input type="hidden" name="field_'.$this->field->id.'_file" value="'.$itemid.'" />';
         $str .= '<label for="field_'.$this->field->id.'_alttext">'.get_string('alttext','data') .'</label>&nbsp;<input type="text" name="field_'
                 .$this->field->id.'_alttext" id="field_'.$this->field->id.'_alttext" value="'.s($alttext).'" />';
+        $str .= '</div>';
         $str .= '</div>';
 
         $str .= '</fieldset>';
@@ -290,6 +307,24 @@ class data_field_picture extends data_field_base {
     function file_ok($path) {
         return true;
     }
+
+    /**
+     * Custom notempty function
+     *
+     * @param string $value
+     * @param string $name
+     * @return bool
+     */
+    function notemptyfield($value, $name) {
+        global $USER;
+
+        $names = explode('_', $name);
+        if ($names[2] == 'file') {
+            $usercontext = context_user::instance($USER->id);
+            $fs = get_file_storage();
+            $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $value);
+            return count($files) >= 2;
+        }
+        return false;
+    }
 }
-
-
