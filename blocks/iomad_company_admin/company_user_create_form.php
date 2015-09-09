@@ -378,6 +378,41 @@ if ($companyform->is_cancelled() || $mform->is_cancelled()) {
 }
 $blockpage->display_header();
 
+// Check the department is valid.
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    print_error('invaliddepartment', 'block_iomad_company_admin');
+}   
+
+// Check the userid is valid.
+if (!company::check_valid_user($companyid, $userid, $departmentid)) {
+    print_error('invaliduserdepartment', 'block_iomad_company_management');
+}
+
+?>
+<script type="text/javascript">
+Y.on('change', submit_form, '#licenseidselector');
+ function submit_form() {
+     var nValue = Y.one('#licenseidselector').get('value');
+    $.ajax({
+        type: "GET",
+        url: "<?php echo $CFG->wwwroot; ?>/blocks/iomad_company_admin/js/company_user_create_form.ajax.php?licenseid="+nValue,
+        datatype: "HTML",
+        success: function(response){
+            $("#licensecourseselector").html(response);
+        }
+    });
+    $.ajax({
+        type: "GET",
+        url: "<?php echo $CFG->wwwroot; ?>/blocks/iomad_company_admin/js/company_user_create_form-license.ajax.php?licenseid="+nValue,
+        datatype: "HTML",
+        success: function(response){
+            $("#licensedetails").html(response);
+        }
+    });
+ }
+</script>
+<?php
+
 // Display a message if user is created..
 if ($createdok) {
     echo '<h2>'.get_string('usercreated', 'block_iomad_company_admin').'</h2>';

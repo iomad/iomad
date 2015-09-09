@@ -183,6 +183,11 @@ class company_license_users_form extends moodleform {
                     }
                     $allow = true;
 
+                    // Check the userid is valid.
+                    if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
+                        print_error('invaliduserdepartment', 'block_iomad_company_management');
+                    }
+
                     if ($allow) {
                         $count++;
                         $DB->insert_record('companylicense_users',
@@ -217,6 +222,12 @@ class company_license_users_form extends moodleform {
 
             if (!empty($userstounassign)) {
                 foreach ($userstounassign as $removeuser) {
+
+                    // Check the userid is valid.
+                    if (!company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
+                        print_error('invaliduserdepartment', 'block_iomad_company_management');
+                    }
+
                     if ($licensedata = $DB->get_record('companylicense_users',
                                                         array('userid' => $removeuser->id, 'licenseid' => $this->licenseid))) {
                         if (!$licensedata->isusing) {
@@ -273,6 +284,11 @@ $blockpage->setup();
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
 
+//  Check the license is valid for this company.
+if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
+    print_error('invalidcompanylicense', 'block_iomad_company_admin');
+}
+
 $urlparams = array('companyid' => $companyid);
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
@@ -317,6 +333,16 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', conte
 $usersform = new company_license_users_form($PAGE->url, $context, $companyid, $licenseid, $userhierarchylevel);
 
 $blockpage->display_header();
+
+// Check the department is valid.
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    print_error('invaliddepartment', 'block_iomad_company_admin');
+}   
+
+//  Check the license is valid for this company.
+if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
+    print_error('invalidcompanylicense', 'block_iomad_company_admin');
+}
 
 // Display the license selector.
 $select = new single_select($linkurl, 'licenseid', $licenselist, $licenseid);
