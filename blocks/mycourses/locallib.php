@@ -51,16 +51,9 @@ function mycourses_get_my_completion($datefrom = 0) {
                                           AND cc.timecompleted IS NULL
                                           AND cc.timestarted != 0",
                                           array('userid' => $USER->id));
-    $mynotstartedenrolled = $DB->get_records_sql("SELECT cc.id, cc.userid, cc.course as courseid, c.fullname as coursefullname, c.summary as coursesummary
-                                          FROM {course_completions} cc
-                                          JOIN {course} c ON (c.id = cc.course)
-                                          JOIN {user_enrolments} ue ON (ue.userid = cc.userid)
-                                          JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = c.id)
-                                          WHERE cc.userid = :userid
-                                          AND c.visible = 1
-                                          AND cc.timecompleted IS NULL
-                                          AND cc.timestarted = 0",
-                                          array('userid' => $USER->id));
+
+    // We dont care about these.  If you have enrolled then you are started.
+    $mynotstartedenrolled = array();
 
     $mynotstartedlicense = $DB->get_records_sql("SELECT clu.id, clu.userid, clu.licensecourseid as courseid, c.fullname as coursefullname, c.summary as coursesummary
                                           FROM {companylicense_users} clu
