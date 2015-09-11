@@ -1268,6 +1268,10 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                     $courses[$id] = new course_in_list($records[$id]);
                 }
             }
+
+            // IOMAD: strip out courses user shouldn't see.
+            $courses = iomad::iomad_filter_courses($courses);
+
             return $courses;
         }
 
@@ -1324,6 +1328,10 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         foreach ($records as $record) {
             $courses[$record->id] = new course_in_list($record);
         }
+
+        // IOMAD: strip out courses user shouldn't see.
+        $courses = iomad::iomad_filter_courses($courses);
+
         return $courses;
     }
 
