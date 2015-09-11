@@ -112,4 +112,115 @@ class userrep {
 
         return $returnobj;
     }
+
+    /** 
+     * Get users into temporary table
+     */
+    private static function populate_temporary_completion($tempcomptablename, $userid, $courseid=0, $showhistoric=false) {
+        global $DB;
+
+
+        // Create a temporary table to hold the userids.
+        $dbman = $DB->get_manager();
+
+        // Define table user to be created.
+        $table = new xmldb_table($tempcomptablename);
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_field('timeenrolled', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_field('timestarted', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_field('timecompleted', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_field('finalscore', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_field('certsource', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_field('trackid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        $dbman->create_temp_table($table);
+
+        // Populate it.
+        $tempcreatesql = "INSERT INTO {".$tempcomptablename."} (userid, courseid, timeenrolled, timestarted, timecompleted, finalscore, certsource)
+                          SELECT cc.userid, cc.course, cc.timeenrolled, cc.timestarted, cc.timecompleted, gg.finalgrade, 0
+                          FROM {course_completions} cc LEFT JOIN ({grade_grades} gg, {grade_items} gi)
+                          ON (cc.course = gi.courseid
+                          AND gg.userid = cc.userid
+                          AND gg.itemid = gi.id
+                          AND gi.itemtype = 'course')
+                          WHERE cc.userid = :userid ";
+        if (!empty($courseid)) {
+            $tempcreatesql .= " AND cc.course = ".$courseid;
+        }
+        $DB->execute($tempcreatesql, array('userid' => $userid, 'courseid' => $courseid));
+        if ($DB->count_records($tempcomptablename) == 0) {
+            $DB->insert_record($tempcomptablename, array('userid' => $userid,
+                                                         'courseid' => $courseid,
+                                                         'timeenrolled' => 0,
+                                                         'timestarted' => 0,
+                                                         'timecompleted' =>0,
+                                                         'finalscore' => 0,
+                                                         'certsource' => 0));
+        }
+
+        // Are we also adding in historic data?
+        if ($showhistoric) {
+        // Populate it.
+            $tempcreatesql = "INSERT INTO {".$tempcomptablename."} (userid, courseid, timeenrolled, timestarted, timecompleted, finalscore, certsource)
+                              SELECT it.userid, it.courseid, it.timeenrolled, it.timestarted, it.timecompleted, it.finalscore, it.id
+                              FROM {local_iomad_track} it
+                              WHERE it.userid = :userid";
+        if (!empty($courseid)) {
+            $tempcreatesql .= " AND it.courseid = :courseid";
+        }
+            $DB->execute($tempcreatesql, array('userid' => $userid, 'courseid' => $courseid));
+        }
+
+        // deal with NULLs as it breaks the code.
+        $DB->execute("UPDATE {".$tempcomptablename."} SET timecompleted = 0 WHERE timecompleted is NULL");
+
+        return array($dbman, $table);
+    }
+
+
+
+    /**
+     * 'Delete' user from course
+     * @param int userid
+     * @param int courseid
+     */
+    public static function delete_user($userid, $courseid) {
+        global $DB, $CFG;
+
+        // Remove enrolments
+        $plugins = enrol_get_plugins(true);
+        $instances = enrol_get_instances($courseid, true);
+        foreach ($instances as $instance) {
+            $plugin = $plugins[$instance->enrol];
+            $plugin->unenrol_user($instance, $userid);
+        }
+
+        // Remove completions
+        $DB->delete_records('course_completions', array('userid' => $userid, 'course' => $courseid));
+        if ($compitems = $DB->get_records('course_completion_criteria', array('course' => $courseid))) {
+            foreach ($compitems as $compitem) {
+                $DB->delete_records('course_completion_crit_compl', array('userid' => $userid,
+                                                                          'criteriaid' => $compitem->id));
+            }
+        }
+
+        // Remove grades
+        if ($items = $DB->get_records('grade_items', array('courseid' => $courseid))) {
+            foreach ($items as $item) {
+                $DB->delete_records('grade_grades', array('userid' => $userid, 'itemid' => $item->id));
+            }
+        }
+  
+        // Fix company licenses
+        if ($licenses = $DB->get_records('companylicense_users', array('licensecourseid' => $courseid, 'userid' =>$userid))) {
+            foreach ($licenses as $license) {
+                $license->isusing = 0;
+                $DB->update_record('companylicense_users', $license);
+            }
+        }
+
+    }
 }
