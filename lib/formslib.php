@@ -188,6 +188,10 @@ abstract class moodleform {
             $this->_form->hardFreeze();
         }
 
+        // HACK to prevent browsers from automatically inserting the user's password into the wrong fields.
+        $element = $this->_form->addElement('hidden');
+        $element->setType('password');
+
         $this->definition();
 
         $this->_form->addElement('hidden', 'sesskey', null); // automatic sesskey protection
@@ -2229,7 +2233,11 @@ function validate_' . $this->_formName . '_' . $escapedElementName . '(element) 
   ret = validate_' . $this->_formName . '_' . $escapedElementName.'(frm.elements[\''.$elementName.'\']) && ret;
   if (!ret && !first_focus) {
     first_focus = true;
-    document.getElementById(\'id_error_'.$elementName.'\').focus();
+    Y.use(\'moodle-core-event\', function() {
+        Y.Global.fire(M.core.globalEvents.FORM_ERROR, {formid: \''. $this->_attributes['id'] .'\',
+                                                       elementid: \'id_error_'.$elementName.'\'});
+        document.getElementById(\'id_error_'.$elementName.'\').focus();
+    });
   }
 ';
 

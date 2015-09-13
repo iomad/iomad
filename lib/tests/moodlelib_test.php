@@ -583,12 +583,40 @@ class core_moodlelib_testcase extends advanced_testcase {
 
     public function test_clean_param_localurl() {
         global $CFG;
-        $this->assertSame('', clean_param('http://google.com/', PARAM_LOCALURL));
-        $this->assertSame('', clean_param('http://some.very.long.and.silly.domain/with/a/path/', PARAM_LOCALURL));
-        $this->assertSame(clean_param($CFG->wwwroot, PARAM_LOCALURL), $CFG->wwwroot);
-        $this->assertSame('/just/a/path', clean_param('/just/a/path', PARAM_LOCALURL));
+
+        $this->resetAfterTest();
+
+        // External, invalid.
         $this->assertSame('', clean_param('funny:thing', PARAM_LOCALURL));
+        $this->assertSame('', clean_param('http://google.com/', PARAM_LOCALURL));
+        $this->assertSame('', clean_param('https://google.com/?test=true', PARAM_LOCALURL));
+        $this->assertSame('', clean_param('http://some.very.long.and.silly.domain/with/a/path/', PARAM_LOCALURL));
+
+        // Local absolute.
+        $this->assertSame(clean_param($CFG->wwwroot, PARAM_LOCALURL), $CFG->wwwroot);
+        $this->assertSame($CFG->wwwroot . '/with/something?else=true',
+            clean_param($CFG->wwwroot . '/with/something?else=true', PARAM_LOCALURL));
+
+        // Local relative.
+        $this->assertSame('/just/a/path', clean_param('/just/a/path', PARAM_LOCALURL));
         $this->assertSame('course/view.php?id=3', clean_param('course/view.php?id=3', PARAM_LOCALURL));
+
+        // Local absolute HTTPS.
+        $httpsroot = str_replace('http:', 'https:', $CFG->wwwroot);
+        $CFG->loginhttps = false;
+        $this->assertSame('', clean_param($httpsroot, PARAM_LOCALURL));
+        $this->assertSame('', clean_param($httpsroot . '/with/something?else=true', PARAM_LOCALURL));
+        $CFG->loginhttps = true;
+        $this->assertSame($httpsroot, clean_param($httpsroot, PARAM_LOCALURL));
+        $this->assertSame($httpsroot . '/with/something?else=true',
+            clean_param($httpsroot . '/with/something?else=true', PARAM_LOCALURL));
+
+        // Test open redirects are not possible.
+        $CFG->loginhttps = false;
+        $CFG->wwwroot = 'http://www.example.com';
+        $this->assertSame('', clean_param('http://www.example.com.evil.net/hack.php', PARAM_LOCALURL));
+        $CFG->loginhttps = true;
+        $this->assertSame('', clean_param('https://www.example.com.evil.net/hack.php', PARAM_LOCALURL));
     }
 
     public function test_clean_param_file() {
@@ -2724,7 +2752,7 @@ class core_moodlelib_testcase extends advanced_testcase {
         $userinfo->authormiddlename = '';
         $userinfo->authorpicture = 23;
         $userinfo->authorimagealt = 'Michael Jordan draining another basket.';
-        $userinfo->authoremail = 'test@testing.net';
+        $userinfo->authoremail = 'test@example.com';
 
 
         // Return an object with user picture information.
@@ -2740,7 +2768,7 @@ class core_moodlelib_testcase extends advanced_testcase {
         $expectedarray->lastnamephonetic = 'カンベッル';
         $expectedarray->middlename = '';
         $expectedarray->alternatename = '';
-        $expectedarray->email = 'test@testing.net';
+        $expectedarray->email = 'test@example.com';
         $expectedarray->picture = 23;
         $expectedarray->imagealt = 'Michael Jordan draining another basket.';
         $this->assertEquals($user, $expectedarray);
@@ -2824,5 +2852,101 @@ class core_moodlelib_testcase extends advanced_testcase {
 
         $_SERVER['HTTP_X_FORWARDED_FOR'] = $xforwardedfor;
 
+    }
+
+    /*
+     * Test emulation of random_bytes() function.
+     */
+    public function test_random_bytes_emulate() {
+        $result = random_bytes_emulate(10);
+        $this->assertSame(10, strlen($result));
+        $this->assertnotSame($result, random_bytes_emulate(10));
+
+        $result = random_bytes_emulate(21);
+        $this->assertSame(21, strlen($result));
+        $this->assertnotSame($result, random_bytes_emulate(21));
+
+        $result = random_bytes_emulate(666);
+        $this->assertSame(666, strlen($result));
+
+        $this->assertDebuggingNotCalled();
+
+        $result = random_bytes_emulate(0);
+        $this->assertSame('', $result);
+        $this->assertDebuggingCalled();
+
+        $result = random_bytes_emulate(-1);
+        $this->assertSame('', $result);
+        $this->assertDebuggingCalled();
+    }
+
+    /**
+     * Test function for creation of random strings.
+     */
+    public function test_random_string() {
+        $pool = 'a-zA-Z0-9';
+
+        $result = random_string(10);
+        $this->assertSame(10, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+        $this->assertNotSame($result, random_string(10));
+
+        $result = random_string(21);
+        $this->assertSame(21, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+        $this->assertNotSame($result, random_string(21));
+
+        $result = random_string(666);
+        $this->assertSame(666, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+
+        $result = random_string();
+        $this->assertSame(15, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+
+        $this->assertDebuggingNotCalled();
+
+        $result = random_string(0);
+        $this->assertSame('', $result);
+        $this->assertDebuggingCalled();
+
+        $result = random_string(-1);
+        $this->assertSame('', $result);
+        $this->assertDebuggingCalled();
+    }
+
+    /**
+     * Test function for creation of complex random strings.
+     */
+    public function test_complex_random_string() {
+        $pool = preg_quote('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#%^&*()_+-=[];,./<>?:{} ', '/');
+
+        $result = complex_random_string(10);
+        $this->assertSame(10, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+        $this->assertNotSame($result, complex_random_string(10));
+
+        $result = complex_random_string(21);
+        $this->assertSame(21, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+        $this->assertNotSame($result, complex_random_string(21));
+
+        $result = complex_random_string(666);
+        $this->assertSame(666, strlen($result));
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+
+        $result = complex_random_string();
+        $this->assertEquals(28, strlen($result), '', 4); // Expected length is 24 - 32.
+        $this->assertRegExp('/^[' . $pool . ']+$/', $result);
+
+        $this->assertDebuggingNotCalled();
+
+        $result = complex_random_string(0);
+        $this->assertSame('', $result);
+        $this->assertDebuggingCalled();
+
+        $result = complex_random_string(-1);
+        $this->assertSame('', $result);
+        $this->assertDebuggingCalled();
     }
 }

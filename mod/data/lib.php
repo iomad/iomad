@@ -875,7 +875,7 @@ function data_tags_check($dataid, $template) {
     // then we generate strings to replace
     $tagsok = true; // let's be optimistic
     foreach ($fields as $field){
-        $pattern="/\[\[".$field->name."\]\]/i";
+        $pattern="/\[\[" . preg_quote($field->name, '/') . "\]\]/i";
         if (preg_match_all($pattern, $template, $dummy)>1){
             $tagsok = false;
             echo $OUTPUT->notification('[['.$field->name.']] - '.get_string('multipletags','data'));
@@ -1529,6 +1529,53 @@ function data_rating_validate($params) {
     }
 
     return true;
+}
+
+/**
+ * Can the current user see ratings for a given itemid?
+ *
+ * @param array $params submitted data
+ *            contextid => int contextid [required]
+ *            component => The component for this module - should always be mod_data [required]
+ *            ratingarea => object the context in which the rated items exists [required]
+ *            itemid => int the ID of the object being rated [required]
+ *            scaleid => int scale id [optional]
+ * @return bool
+ * @throws coding_exception
+ * @throws rating_exception
+ */
+function mod_data_rating_can_see_item_ratings($params) {
+    global $DB;
+
+    // Check the component is mod_data.
+    if (!isset($params['component']) || $params['component'] != 'mod_data') {
+        throw new rating_exception('invalidcomponent');
+    }
+
+    // Check the ratingarea is entry (the only rating area in data).
+    if (!isset($params['ratingarea']) || $params['ratingarea'] != 'entry') {
+        throw new rating_exception('invalidratingarea');
+    }
+
+    if (!isset($params['itemid'])) {
+        throw new rating_exception('invaliditemid');
+    }
+
+    $datasql = "SELECT d.id as dataid, d.course, r.groupid
+                  FROM {data_records} r
+                  JOIN {data} d ON r.dataid = d.id
+                 WHERE r.id = :itemid";
+    $dataparams = array('itemid' => $params['itemid']);
+    if (!$info = $DB->get_record_sql($datasql, $dataparams)) {
+        // Item doesn't exist
+        throw new rating_exception('invaliditemid');
+    }
+
+    $course = $DB->get_record('course', array('id' => $info->course), '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('data', $info->dataid, $course->id, false, MUST_EXIST);
+
+    // Make sure groups allow this user to see the item they're rating.
+    return groups_group_visible($info->groupid, $course, $cm);
 }
 
 

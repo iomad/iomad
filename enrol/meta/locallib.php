@@ -309,7 +309,7 @@ function enrol_meta_sync($courseid = NULL, $verbose = false) {
             }
         }
 
-        $meta->enrol_user($instance, $ue->userid, $ue->status);
+        $meta->enrol_user($instance, $ue->userid, null, 0, 0, $ue->status);
         if ($verbose) {
             mtrace("  enrolling: $ue->userid ==> $instance->courseid");
         }

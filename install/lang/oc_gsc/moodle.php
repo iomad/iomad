@@ -30,5 +30,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['thisdirection'] = 'ltr';
-$string['thislanguage'] = 'Српски';
+$string['language'] = 'Lenga';
+$string['next'] = 'Seguent';
+$string['previous'] = 'Precedent';
+$string['reload'] = 'Actualizar';

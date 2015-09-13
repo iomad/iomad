@@ -10,8 +10,8 @@ Feature: availability_grade
       | Course 1 | C1        | topics | 1                |
     And the following "users" exist:
       | username | email         |
-      | teacher1 | t@example.org |
-      | student1 | s@example.org |
+      | teacher1 | t@example.com |
+      | student1 | s@example.com |
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
@@ -58,7 +58,21 @@ Feature: availability_grade
     And I set the field "Grade" to "A1"
     And I click on "min" "checkbox" in the ".availability-item" "css_element"
     And I set the field "Minimum grade percentage (inclusive)" to "50"
+    And I click on "max" "checkbox" in the ".availability-item" "css_element"
+    And I set the field "Maximum grade percentage (exclusive)" to "80"
     And I press "Save and return to course"
+
+    # Check if disabling a part of the restriction is get saved.
+    And I open "P3" actions menu
+    And I click on "Edit settings" "link" in the "P3" activity
+    And I expand all fieldsets
+    And I click on "max" "checkbox" in the ".availability-item" "css_element"
+    And I press "Save and return to course"
+    And I open "P3" actions menu
+    And I click on "Edit settings" "link" in the "P3" activity
+    And I expand all fieldsets
+    And the field "Maximum grade percentage (exclusive)" matches value ""
+    And I follow "Course 1"
 
     # Add a Page with a grade condition for 10%.
     And I add a "Page" to section "4"
@@ -101,8 +115,8 @@ Feature: availability_grade
     # Give the assignment 40%.
     And I follow "A1"
     And I follow "View/grade all submissions"
-    # Pick the grade link in the row that has s@example.org in it.
-    And I click on "//a[contains(@href, 'action=grade') and ancestor::tr/td[normalize-space(.) = 's@example.org']]/img" "xpath_element"
+    # Pick the grade link in the row that has s@example.com in it.
+    And I click on "//a[contains(@href, 'action=grade') and ancestor::tr/td[normalize-space(.) = 's@example.com']]/img" "xpath_element"
     And I set the field "Grade out of 100" to "40"
     And I click on "Save changes" "button"
 

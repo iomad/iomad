@@ -530,6 +530,7 @@ function assign_print_overview($courses, &$htmlarray) {
  */
 function assign_print_recent_activity($course, $viewfullnames, $timestart) {
     global $CFG, $USER, $DB, $OUTPUT;
+    require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
     // Do not use log table if possible, it may be huge.
 
@@ -613,7 +614,14 @@ function assign_print_recent_activity($course, $viewfullnames, $timestart) {
 
     foreach ($show as $submission) {
         $cm = $modinfo->get_cm($submission->cmid);
+        $context = context_module::instance($submission->cmid);
+        $assign = new assign($context, $cm, $cm->course);
         $link = $CFG->wwwroot.'/mod/assign/view.php?id='.$cm->id;
+        // Obscure first and last name if blind marking enabled.
+        if ($assign->is_blind_marking()) {
+            $submission->firstname = get_string('participant', 'mod_assign');
+            $submission->lastname = $assign->get_uniqueid_for_user($submission->userid);
+        }
         print_recent_activity_note($submission->timemodified,
                                    $submission,
                                    $cm->name,
