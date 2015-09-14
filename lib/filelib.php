@@ -1589,6 +1589,29 @@ function &get_mimetypes_array() {
 }
 
 /**
+ * Determine a file's MIME type based on the given filename using the function mimeinfo.
+ *
+ * This function retrieves a file's MIME type for a file that will be sent to the user.
+ * This should only be used for file-sending purposes just like in send_stored_file, send_file, and send_temp_file.
+ * Should the file's MIME type cannot be determined by mimeinfo, it will return 'application/octet-stream' as a default
+ * MIME type which should tell the browser "I don't know what type of file this is, so just download it.".
+ *
+ * @param string $filename The file's filename.
+ * @return string The file's MIME type or 'application/octet-stream' if it cannot be determined.
+ */
+function get_mimetype_for_sending($filename = '') {
+    // Guess the file's MIME type using mimeinfo.
+    $mimetype = mimeinfo('type', $filename);
+
+    // Use octet-stream as fallback if MIME type cannot be determined by mimeinfo.
+    if (!$mimetype || $mimetype === 'document/unknown') {
+        $mimetype = 'application/octet-stream';
+    }
+
+    return $mimetype;
+}
+
+/**
  * Obtains information about a filetype based on its extension. Will
  * use a default if no information is present about that particular
  * extension.
@@ -2178,12 +2201,8 @@ function readstring_accel($string, $mimetype, $accelerate) {
 function send_temp_file($path, $filename, $pathisstring=false) {
     global $CFG;
 
-    if (core_useragent::is_firefox()) {
-        // only FF is known to correctly save to disk before opening...
-        $mimetype = mimeinfo('type', $filename);
-    } else {
-        $mimetype = 'application/x-forcedownload';
-    }
+    // Guess the file's MIME type.
+    $mimetype = get_mimetype_for_sending($filename);
 
     // close session - not needed anymore
     \core\session\manager::write_close();
@@ -2266,12 +2285,10 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
 
     \core\session\manager::write_close(); // Unlock session during file serving.
 
-    // Use given MIME type if specified, otherwise guess it using mimeinfo.
-    // IE, Konqueror and Opera open html file directly in browser from web even when directed to save it to disk :-O
-    // only Firefox saves all files locally before opening when content-disposition: attachment stated
-    $isFF         = core_useragent::is_firefox(); // only FF properly tested
-    $mimetype     = ($forcedownload and !$isFF) ? 'application/x-forcedownload' :
-                         ($mimetype ? $mimetype : mimeinfo('type', $filename));
+    // Use given MIME type if specified, otherwise guess it.
+    if (!$mimetype || $mimetype === 'document/unknown') {
+        $mimetype = get_mimetype_for_sending($filename);
+    }
 
     // if user is using IE, urlencode the filename so that multibyte file name will show up correctly on popup
     if (core_useragent::is_ie()) {
@@ -2444,13 +2461,15 @@ function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownloa
 
     \core\session\manager::write_close(); // Unlock session during file serving.
 
-    // Use given MIME type if specified, otherwise guess it using mimeinfo.
-    // IE, Konqueror and Opera open html file directly in browser from web even when directed to save it to disk :-O
-    // only Firefox saves all files locally before opening when content-disposition: attachment stated
     $filename     = is_null($filename) ? $stored_file->get_filename() : $filename;
-    $isFF         = core_useragent::is_firefox(); // only FF properly tested
-    $mimetype     = ($forcedownload and !$isFF) ? 'application/x-forcedownload' :
-                         ($stored_file->get_mimetype() ? $stored_file->get_mimetype() : mimeinfo('type', $filename));
+
+    // Use given MIME type if specified.
+    $mimetype = $stored_file->get_mimetype();
+
+    // Otherwise guess it.
+    if (!$mimetype || $mimetype === 'document/unknown') {
+        $mimetype = get_mimetype_for_sending($filename);
+    }
 
     // if user is using IE, urlencode the filename so that multibyte file name will show up correctly on popup
     if (core_useragent::is_ie()) {
@@ -2874,6 +2893,7 @@ class curl {
 
     /** @var array cURL options */
     private $options;
+
     /** @var string Proxy host */
     private $proxy_host = '';
     /** @var string Proxy auth */
@@ -3194,15 +3214,36 @@ class curl {
         }
 
         $this->setopt($options);
-        // reset before set options
+
+        // Reset before set options.
         curl_setopt($curl, CURLOPT_HEADERFUNCTION, array(&$this,'formatHeader'));
-        // set headers
+
+        // Setting the User-Agent based on options provided.
+        $useragent = '';
+
+        if (!empty($options['CURLOPT_USERAGENT'])) {
+            $useragent = $options['CURLOPT_USERAGENT'];
+        } else if (!empty($this->options['CURLOPT_USERAGENT'])) {
+            $useragent = $this->options['CURLOPT_USERAGENT'];
+        } else {
+            $useragent = 'MoodleBot/1.0';
+        }
+
+        // Set headers.
         if (empty($this->header)) {
             $this->setHeader(array(
-                'User-Agent: MoodleBot/1.0',
+                'User-Agent: ' . $useragent,
                 'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
                 'Connection: keep-alive'
                 ));
+        } else if (!in_array('User-Agent: ' . $useragent, $this->header)) {
+            // Remove old User-Agent if one existed.
+            // We have to partial search since we don't know what the original User-Agent is.
+            if ($match = preg_grep('/User-Agent.*/', $this->header)) {
+                $key = array_keys($match)[0];
+                unset($this->header[$key]);
+            }
+            $this->setHeader(array('User-Agent: ' . $useragent));
         }
         curl_setopt($curl, CURLOPT_HTTPHEADER, $this->header);
 

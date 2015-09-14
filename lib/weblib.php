@@ -238,6 +238,28 @@ function is_https() {
 }
 
 /**
+ * Returns the cleaned local URL of the HTTP_REFERER less the URL query string parameters if required.
+ *
+ * If you need to get an external referer, you can do so by using clean_param($_SERVER['HTTP_REFERER'], PARAM_URL)
+ * and optionally stripquerystring().
+ *
+ * @param bool $stripquery if true, also removes the query part of the url.
+ * @return string The resulting referer or empty string.
+ */
+function get_local_referer($stripquery = true) {
+    if (isset($_SERVER['HTTP_REFERER'])) {
+        $referer = clean_param($_SERVER['HTTP_REFERER'], PARAM_LOCALURL);
+        if ($stripquery) {
+            return strip_querystring($referer);
+        } else {
+            return $referer;
+        }
+    } else {
+        return '';
+    }
+}
+
+/**
  * Class for creating and manipulating urls.
  *
  * It can be used in moodle pages where config.php has been included without any further includes.
@@ -1711,7 +1733,7 @@ function purify_html($text, $options = array()) {
         $config = HTMLPurifier_Config::createDefault();
 
         $config->set('HTML.DefinitionID', 'moodlehtml');
-        $config->set('HTML.DefinitionRev', 2);
+        $config->set('HTML.DefinitionRev', 3);
         $config->set('Cache.SerializerPath', $cachedir);
         $config->set('Cache.SerializerPermissions', $CFG->directorypermissions);
         $config->set('Core.NormalizeNewlines', false);
@@ -1750,6 +1772,9 @@ function purify_html($text, $options = array()) {
             $def->addElement('algebra', 'Inline', 'Inline', array());                   // Algebra syntax, equivalent to @@xx@@.
             $def->addElement('lang', 'Block', 'Flow', array(), array('lang'=>'CDATA')); // Original multilang style - only our hacked lang attribute.
             $def->addAttribute('span', 'xxxlang', 'CDATA');                             // Current very problematic multilang.
+
+            // Use the built-in Ruby module to add annotation support.
+            $def->manager->addModule(new HTMLPurifier_HTMLModule_Ruby());
         }
 
         $purifier = new HTMLPurifier($config);
@@ -3563,4 +3588,14 @@ function get_formatted_help_string($identifier, $component, $ajax = false, $a = 
             html_writer::tag('strong', 'TODO') . ": missing help string [{$identifier}_help, {$component}]");
     }
     return $data;
+}
+
+/**
+ * Renders a hidden password field so that browsers won't incorrectly autofill password fields with the user's password.
+ *
+ * @since 2.8.8
+ * @return string HTML to prevent password autofill
+ */
+function prevent_form_autofill_password() {
+    return '<div class="hide"><input type="password" /></div>';
 }

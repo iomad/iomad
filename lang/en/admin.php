@@ -896,7 +896,7 @@ $string['registermoodleorgli2'] = 'Statistics about your site will be added to t
 $string['registermoodleorgli3'] = 'Your site is also registered with Moodle.net ({$a}), allowing users with the publish courses capability (by default only managers) the option of publishing courses to Moodle.net.';
 $string['registerwithmoodleorg'] = 'Register your site';
 $string['registration'] = 'Registration';
-$string['registration_help'] = 'Registering your site with Moodle.org is recommended in order to receive security alert notifications, to contribute <a href="http://moodle.org/stats">Moodle usage statistics</a> and to be able to share courses on <a href="http://moodle.net/">Moodle.net</a>.';
+$string['registration_help'] = 'It is recommended that you register your site in order to receive security alerts and access to Moodle.net, our course sharing platform.';
 $string['registrationwarning'] = 'Your site is not yet registered.';
 $string['releasenoteslink'] = 'For information about this version of Moodle, please see the online <a target="_blank" href="{$a}">Release Notes</a>';
 $string['rememberusername'] = 'Remember username';
@@ -1063,6 +1063,7 @@ $string['unsettheme'] = 'Unset theme';
 $string['unsupported'] = 'Unsupported';
 $string['unsupporteddbstorageengine'] = 'The database storage engine being used is no longer supported.';
 $string['unsupporteddbtablerowformat'] = 'Your database has tables using Antelope as the file format. You are recommended to convert the tables to the Barracuda file format. See the documentation <a href="https://docs.moodle.org/en/cli">Administration via command line</a> for details of a tool for converting InnoDB tables to Barracuda.';
+$string['unsupportedphpversion7'] = 'PHP version 7 is not supported.';
 $string['unsuspenduser'] = 'Activate user account';
 $string['updateaccounts'] = 'Update existing accounts';
 $string['updatecomponent'] = 'Update component';

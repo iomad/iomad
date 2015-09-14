@@ -44,6 +44,7 @@ $string['addnewuseroverride'] = 'Add user override';
 $string['addpagebreak'] = 'Add page break';
 $string['addpagehere'] = 'Add page here';
 $string['addquestion'] = 'Add question';
+$string['addquestionfrombankatend'] = 'Add from the question bank at the end';
 $string['addquestionfrombanktopage'] = 'Add from the question bank to page {$a}';
 $string['addquestions'] = 'Add questions';
 $string['addquestionstoquiz'] = 'Add questions to current quiz';
@@ -51,6 +52,7 @@ $string['addrandom'] = 'Add {$a} random questions';
 $string['addrandomfromcategory'] = 'Add random questions from category:';
 $string['addrandomquestion'] = 'Add random question';
 $string['addarandomquestion_help'] = 'When a random question is added, it results in a randomly-chosen question from the category being inserted into the quiz. This means that different students are likely to get a different selection of questions, and when a quiz allows multiple attempts then each attempt is likely to contain a new selection of questions.';
+$string['addrandomquestionatend'] = 'Add a random question at the end';
 $string['addrandomquestiontopage'] = 'Add a random question to page {$a}';
 $string['addrandomquestiontoquiz'] = 'Add a random question to quiz {$a}';
 $string['addrandom1'] = '<< Add';
@@ -756,7 +758,7 @@ $string['reviewoptions'] = 'Students may review';
 $string['reviewoptionsheading'] = 'Review options';
 $string['reviewoptionsheading_help'] = 'These options control what information students can see when they review a quiz attempt or look at the quiz reports.
 
-**During the attempt** settings are are only relevant for some behaviours, like \'interactive with multiple tries\', which may display feedback during the attempt.
+**During the attempt** settings are only relevant for some behaviours, like \'interactive with multiple tries\', which may display feedback during the attempt.
 
 **Immediately after the attempt** settings apply for the first two minutes after \'Submit all and finish\' is clicked.
 

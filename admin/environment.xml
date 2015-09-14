@@ -1027,6 +1027,7 @@
       <VENDOR name="oracle" version="10.2" />
     </DATABASE>
     <PHP version="5.4.4" level="required">
+      <RESTRICT function="restrict_php_version_7" message="unsupportedphpversion7" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
@@ -1134,6 +1135,16 @@
           <ON_ERROR message="quizattemptsupgradedmessage" />
         </FEEDBACK>
       </CUSTOM_CHECK>
+      <CUSTOM_CHECK file="lib/upgradelib.php" function="check_slasharguments" level="optional">
+        <FEEDBACK>
+          <ON_CHECK message="slashargumentswarning" />
+        </FEEDBACK>
+      </CUSTOM_CHECK>
+      <CUSTOM_CHECK file="lib/upgradelib.php" function="check_database_tables_row_format" level="optional">
+        <FEEDBACK>
+          <ON_CHECK message="unsupporteddbtablerowformat" />
+        </FEEDBACK>
+      </CUSTOM_CHECK>
     </CUSTOM_CHECKS>
   </MOODLE>
   <MOODLE version="2.8" requires="2.2">
@@ -1150,6 +1161,7 @@
       <VENDOR name="oracle" version="10.2" />
     </DATABASE>
     <PHP version="5.4.4" level="required">
+      <RESTRICT function="restrict_php_version_7" message="unsupportedphpversion7" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
@@ -1283,6 +1295,7 @@
       <VENDOR name="oracle" version="10.2" />
     </DATABASE>
     <PHP version="5.4.4" level="required">
+      <RESTRICT function="restrict_php_version_7" message="unsupportedphpversion7" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>

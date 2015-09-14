@@ -1675,7 +1675,13 @@ class core_course_renderer extends plugin_renderer_base {
         $coursecat = coursecat::get(is_object($category) ? $category->id : $category);
         $site = get_site();
         $output = '';
-        $this->page->set_button($this->course_search_form('', 'navbar'));
+
+        if (can_edit_in_category($coursecat->id)) {
+            // Add 'Manage' button if user has permissions to edit this category.
+            $managebutton = $this->single_button(new moodle_url('/course/management.php',
+                array('categoryid' => $coursecat->id)), get_string('managecourses'), 'get');
+            $this->page->set_button($managebutton);
+        }
         if (!$coursecat->id) {
             if (coursecat::count_all() == 1) {
                 // There exists only one category in the system, do not display link to it

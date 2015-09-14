@@ -238,7 +238,7 @@ function message_get_blocked_users($user1=null, $user2=null) {
                           FROM {message_contacts} mc
                           JOIN {user} u ON u.id = mc.contactid
                           LEFT OUTER JOIN {message} m ON m.useridfrom = mc.contactid AND m.useridto = :user1id1
-                         WHERE mc.userid = :user1id2 AND mc.blocked = 1
+                         WHERE u.deleted = 0 AND mc.userid = :user1id2 AND mc.blocked = 1
                       GROUP BY $userfields
                       ORDER BY u.firstname ASC";
     $rs =  $DB->get_recordset_sql($blockeduserssql, array('user1id1' => $user1->id, 'user1id2' => $user1->id));
@@ -335,7 +335,7 @@ function message_get_contacts($user1=null, $user2=null) {
                      FROM {message_contacts} mc
                      JOIN {user} u ON u.id = mc.contactid
                      LEFT OUTER JOIN {message} m ON m.useridfrom = mc.contactid AND m.useridto = ?
-                    WHERE mc.userid = ? AND mc.blocked = 0
+                    WHERE u.deleted = 0 AND mc.userid = ? AND mc.blocked = 0
                  GROUP BY $userfields
                  ORDER BY u.firstname ASC";
 
@@ -361,7 +361,7 @@ function message_get_contacts($user1=null, $user2=null) {
                       FROM {message} m
                       JOIN {user} u  ON u.id = m.useridfrom
                       LEFT OUTER JOIN {message_contacts} mc ON mc.contactid = m.useridfrom AND mc.userid = m.useridto
-                     WHERE mc.id IS NULL AND m.useridto = ?
+                     WHERE u.deleted = 0 AND mc.id IS NULL AND m.useridto = ?
                   GROUP BY $userfields
                   ORDER BY u.firstname ASC";
 
@@ -936,16 +936,16 @@ function message_format_message_text($message, $forcetexttohtml = false) {
 
     $format = $message->fullmessageformat;
 
-    if ($message->smallmessage !== '') {
+    if (strval($message->smallmessage) !== '') {
         if ($message->notification == 1) {
-            if ($message->fullmessagehtml !== '' or $message->fullmessage !== '') {
+            if (strval($message->fullmessagehtml) !== '' or strval($message->fullmessage) !== '') {
                 $format = FORMAT_PLAIN;
             }
         }
         $messagetext = $message->smallmessage;
 
     } else if ($message->fullmessageformat == FORMAT_HTML) {
-        if ($message->fullmessagehtml !== '') {
+        if (strval($message->fullmessagehtml) !== '') {
             $messagetext = $message->fullmessagehtml;
         } else {
             $messagetext = $message->fullmessage;
@@ -953,7 +953,7 @@ function message_format_message_text($message, $forcetexttohtml = false) {
         }
 
     } else {
-        if ($message->fullmessage !== '') {
+        if (strval($message->fullmessage) !== '') {
             $messagetext = $message->fullmessage;
         } else {
             $messagetext = $message->fullmessagehtml;

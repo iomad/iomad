@@ -4058,6 +4058,16 @@ function xmldb_main_upgrade($oldversion) {
     // Moodle v2.8.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2014111000.00) {
+        // Coming from 2.7 or older, we need to flag the step minmaxgrade to be ignored.
+        set_config('upgrade_minmaxgradestepignored', 1);
+        // Coming from 2.7 or older, we need to flag the step for changing calculated grades to be regraded.
+        set_config('upgrade_calculatedgradeitemsonlyregrade', 1);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2014111000.00);
+    }
+
     if ($oldversion < 2014111002.01) {
 
         // Make sure the private files handler is not set to expire.
@@ -4071,6 +4081,74 @@ function xmldb_main_upgrade($oldversion) {
     if ($oldversion < 2014111005.03) {
         unset_config('crontime', 'registration');
         upgrade_main_savepoint(true, 2014111005.03);
+    }
+
+    if ($oldversion < 2014111006.05) {
+
+        // Sites that were upgrading from 2.7 and older will ignore this step.
+        if (empty($CFG->upgrade_minmaxgradestepignored)) {
+            upgrade_minmaxgrade();
+
+            // Flags this upgrade step as already run to prevent it from running multiple times.
+            set_config('upgrade_minmaxgradestepignored', 1);
+        }
+
+        upgrade_main_savepoint(true, 2014111006.05);
+    }
+
+    if ($oldversion < 2014111006.08) {
+        // MDL-49257. Changed the algorithm of calculating automatic weights of extra credit items.
+
+        // Before the change, in case when grade category (in "Natural" agg. method) had items with
+        // overridden weights, the automatic weight of extra credit items was illogical.
+        // In order to prevent grades changes after the upgrade we need to freeze gradebook calculation
+        // for the affected courses.
+
+        // This script in included in each major version upgrade process so make sure we don't run it twice.
+        if (empty($CFG->upgrade_extracreditweightsstepignored)) {
+            upgrade_extra_credit_weightoverride();
+
+            // To skip running the same script on the upgrade to the next major release.
+            set_config('upgrade_extracreditweightsstepignored', 1);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2014111006.08);
+    }
+
+    if ($oldversion < 2014111006.10) {
+        // MDL-48239. Changed calculated grade items so that the maximum and minimum grade can be set.
+
+        // If the changes are accepted and a regrade is done on the gradebook then some grades may change significantly.
+        // This is here to freeze the gradebook in affected courses.
+
+        // This script is included in each major version upgrade process so make sure we don't run it twice.
+        if (empty($CFG->upgrade_calculatedgradeitemsignored)) {
+            upgrade_calculated_grade_items();
+
+            // To skip running the same script on the upgrade to the next major release.
+            set_config('upgrade_calculatedgradeitemsignored', 1);
+            // This config value is never used again.
+            unset_config('upgrade_calculatedgradeitemsonlyregrade');
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2014111006.10);
+    }
+
+    if ($oldversion < 2014111007.07) {
+
+        // Define field importtype to be added to grade_import_values.
+        $table = new xmldb_table('grade_import_values');
+        $field = new xmldb_field('importonlyfeedback', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'importer');
+
+        // Conditionally launch add field importtype.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2014111007.07);
     }
 
     return true;

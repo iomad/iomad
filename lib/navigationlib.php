@@ -2631,7 +2631,7 @@ class global_navigation extends navigation_node {
         $coursenode->add('frontpageloaded', null, self::TYPE_CUSTOM, null, 'frontpageloaded')->display = false;
 
         //Participants
-        if (has_capability('moodle/course:viewparticipants',  context_system::instance())) {
+        if (has_capability('moodle/site:viewparticipants',  context_system::instance())) {
             $coursenode->add(get_string('participants'), new moodle_url('/user/index.php?id='.$course->id), self::TYPE_CUSTOM, get_string('participants'), 'participants');
         }
 
@@ -4495,7 +4495,7 @@ class settings_navigation extends navigation_node {
         }
 
         // Restore.
-        if (has_capability('moodle/course:create', $catcontext)) {
+        if (has_capability('moodle/restore:restorecourse', $catcontext)) {
             $url = new moodle_url('/backup/restorefile.php', array('contextid' => $catcontext->id));
             $categorynode->add(get_string('restorecourse', 'admin'), $url, self::TYPE_SETTING, null, 'restorecourse', new pix_icon('i/restore', ''));
         }

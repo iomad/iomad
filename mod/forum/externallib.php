@@ -404,6 +404,7 @@ class mod_forum_external extends external_api {
     public static function get_forum_discussion_posts($discussionid, $sortby = "created", $sortdirection = "DESC") {
         global $CFG, $DB, $USER;
 
+        $posts = array();
         $warnings = array();
 
         // Validate the parameter.
@@ -463,9 +464,9 @@ class mod_forum_external extends external_api {
         $forumtracked = forum_tp_is_tracked($forum);
 
         $sort = 'p.' . $sortby . ' ' . $sortdirection;
-        $posts = forum_get_all_discussion_posts($discussion->id, $sort, $forumtracked);
+        $allposts = forum_get_all_discussion_posts($discussion->id, $sort, $forumtracked);
 
-        foreach ($posts as $pid => $post) {
+        foreach ($allposts as $post) {
 
             if (!forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
                 $warning = array();
@@ -480,16 +481,16 @@ class mod_forum_external extends external_api {
             // Function forum_get_all_discussion_posts adds postread field.
             // Note that the value returned can be a boolean or an integer. The WS expects a boolean.
             if (empty($post->postread)) {
-                $posts[$pid]->postread = false;
+                $post->postread = false;
             } else {
-                $posts[$pid]->postread = true;
+                $post->postread = true;
             }
 
-            $posts[$pid]->canreply = $canreply;
-            if (!empty($posts[$pid]->children)) {
-                $posts[$pid]->children = array_keys($posts[$pid]->children);
+            $post->canreply = $canreply;
+            if (!empty($post->children)) {
+                $post->children = array_keys($post->children);
             } else {
-                $posts[$pid]->children = array();
+                $post->children = array();
             }
 
             $user = new stdclass();
@@ -530,7 +531,7 @@ class mod_forum_external extends external_api {
                 }
             }
 
-            $posts[$pid] = (array) $post;
+            $posts[] = $post;
         }
 
         $result = array();
@@ -625,6 +626,7 @@ class mod_forum_external extends external_api {
         require_once($CFG->dirroot . "/mod/forum/lib.php");
 
         $warnings = array();
+        $discussions = array();
 
         $params = self::validate_parameters(self::get_forum_discussions_paginated_parameters(),
             array(
@@ -668,9 +670,9 @@ class mod_forum_external extends external_api {
         require_capability('mod/forum:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'forum');
 
         $sort = 'd.' . $sortby . ' ' . $sortdirection;
-        $discussions = forum_get_discussions($cm, $sort, true, -1, -1, true, $page, $perpage);
+        $alldiscussions = forum_get_discussions($cm, $sort, true, -1, -1, true, $page, $perpage);
 
-        if ($discussions) {
+        if ($alldiscussions) {
             $canviewfullname = has_capability('moodle/site:viewfullnames', $modcontext);
 
             // Get the unreads array, this takes a forum id and returns data for all discussions.
@@ -683,9 +685,13 @@ class mod_forum_external extends external_api {
             // The forum function returns the replies for all the discussions in a given forum.
             $replies = forum_count_discussion_replies($forumid, $sort, -1, $page, $perpage);
 
-            foreach ($discussions as $did => $discussion) {
+            foreach ($alldiscussions as $discussion) {
+
                 // This function checks for qanda forums.
-                if (!forum_user_can_see_discussion($forum, $discussion, $modcontext)) {
+                // Note that the forum_get_discussions returns as id the post id, not the discussion id so we need to do this.
+                $discussionrec = clone $discussion;
+                $discussionrec->id = $discussion->discussion;
+                if (!forum_user_can_see_discussion($forum, $discussionrec, $modcontext)) {
                     $warning = array();
                     // Function forum_get_discussions returns forum_posts ids not forum_discussions ones.
                     $warning['item'] = 'post';
@@ -762,7 +768,7 @@ class mod_forum_external extends external_api {
                     }
                 }
 
-                $discussions[$did] = (array) $discussion;
+                $discussions[] = $discussion;
             }
         }
 
