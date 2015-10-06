@@ -132,7 +132,7 @@ class company_edit_form extends company_moodleform {
             $mform->setType('htmleditor', PARAM_INT);
         }
 
-        $choices = core_date::get_list_of_timezones();
+        $choices = get_list_of_timezones();
         $choices['99'] = get_string('serverlocaltime');
         if ($CFG->forcetimezone != 99) {
             $mform->addElement('static', 'forcedtimezone',
