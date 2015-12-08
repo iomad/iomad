@@ -371,6 +371,12 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', conte
     }
 }
 
+// If the user has not selected a license, and they only have one valid license, select it for them.
+if (empty($licenseid) && count($licenselist) === 1) {
+       reset($licenselist);
+       $licenseid = key($licenselist);
+}
+
 $usersform = new company_license_users_form($PAGE->url, $context, $companyid, $licenseid, $userhierarchylevel, $selectedcourses);
 
 $blockpage->display_header();
