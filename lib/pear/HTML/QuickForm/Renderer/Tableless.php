@@ -118,10 +118,16 @@ class HTML_QuickForm_Renderer_Tableless extends HTML_QuickForm_Renderer_Default
     *
     * @access public
     */
-    function HTML_QuickForm_Renderer_Tableless()
-    {
-        $this->HTML_QuickForm_Renderer_Default();
+    public function __construct() {
+        parent::__construct();
     } // end constructor
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function HTML_QuickForm_Renderer_Tableless() {
+        self::__construct();
+    }
 
    /**
     * Called when visiting a header element
@@ -186,7 +192,7 @@ class HTML_QuickForm_Renderer_Tableless extends HTML_QuickForm_Renderer_Default
             } else {
                 $id = $element->getName();
             }
-            if (!empty($id) and !$element->isFrozen() and !is_a($element, 'MoodleQuickForm_group') and !is_a($element, 'HTML_QuickForm_static')) { // moodle hack
+            if (!empty($id) and !is_a($element, 'MoodleQuickForm_group') and !is_a($element, 'HTML_QuickForm_static')) { // moodle hack
                 $html = str_replace('<label', '<label for="' . $id . '"', $html);
                 $element_html = preg_replace('#name="' . $id . '#',
                                              'id="' . $id . '" name="' . $id . '',

@@ -122,6 +122,12 @@ if (!empty($course)) {
         $course->{'role_'.$alias->roleid} = $alias->name;
     }
 
+    // Populate course tags.
+    if (!empty($CFG->usetags)) {
+        include_once($CFG->dirroot.'/tag/lib.php');
+        $course->tags = tag_get_tags_array('course', $course->id);
+    }
+
 } else {
     // Editor should respect category context if course context is not set.
     $editoroptions['context'] = $catcontext;
@@ -169,7 +175,7 @@ if ($editform->is_cancelled()) {
                 if ($plugin = enrol_get_plugin($instance->enrol)) {
                     if ($plugin->get_manual_enrol_link($instance)) {
                         // We know that the ajax enrol UI will have an option to enrol.
-                        $courseurl = new moodle_url('/enrol/users.php', array('id' => $course->id));
+                        $courseurl = new moodle_url('/enrol/users.php', array('id' => $course->id, 'newcourse' => 1));
                         break;
                     }
                 }

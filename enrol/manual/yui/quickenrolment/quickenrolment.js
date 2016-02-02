@@ -215,12 +215,12 @@ YUI.add('moodle-enrol_manual-quickenrolment', function(Y) {
             var options = this.get(UEP.OPTIONSTARTDATE);
             var index = 0, count = 0;
             for (var i in options) {
-                count++;
                 var option = create('<option value="'+i+'">'+options[i]+'</option>');
                 if (i == defaultvalue) {
                     index = count;
                 }
                 select.append(option);
+                count++;
             }
             select.set('selectedIndex', index);
         },
@@ -261,7 +261,7 @@ YUI.add('moodle-enrol_manual-quickenrolment', function(Y) {
             });
         },
         preSearch : function(e) {
-            this.search(null, false);
+            this.search(e, false);
             /*
             var value = this.get(UEP.SEARCH).get('value');
             if (value.length < 3 || value == this.get(UEP.LASTSEARCH)) {
@@ -291,6 +291,13 @@ YUI.add('moodle-enrol_manual-quickenrolment', function(Y) {
                 y = parseInt(base.get('winHeight'))*0.1;
             }
             base.setXY([x,y]);
+            var zindex = 0;
+            Y.all('.moodle-has-zindex').each(function() {
+                if (parseInt(this.getComputedStyle('zIndex'), 10) > zindex) {
+                    zindex = parseInt(this.getComputedStyle('zIndex'), 10);
+                }
+            });
+            base.setStyle('zIndex', zindex + 1);
 
             if (this.get(UEP.USERS)===null) {
                 this.search(e, false);
@@ -451,13 +458,13 @@ YUI.add('moodle-enrol_manual-quickenrolment', function(Y) {
                     .append(create('<div class="'+CSS.DETAILS+'"></div>')
                         .append(create('<div class="'+CSS.COHORTNAME+'">'+cohort.name+'</div>')))
                     .append(create('<div class="'+CSS.OPTIONS+'"></div>')
-                        .append(create('<input type="button" class="'+CSS.ENROL+'" value="'+'Enrol '+cohort.cnt+' users'+'" />'))) // TODO string
+                        .append(create('<input type="button" class="' + CSS.ENROL + '" value="' + M.util.get_string('enrolxusers', 'enrol', cohort.cnt) + '" />')))
                 );
             }
             this.set(UEP.COHORTCOUNT, count);
             if (!args.append) {
                 //var usersstr = (result.response.totalusers == '1')?M.util.get_string('ajaxoneuserfound', 'enrol'):M.util.get_string('ajaxxusersfound','enrol', result.response.totalusers);
-                var cohortsstr = 'Found '+result.response.totalcohorts+' cohorts'; // TODO
+                var cohortsstr = M.util.get_string('foundxcohorts', 'enrol', result.response.totalcohorts);
                 var content = create('<div class="'+CSS.SEARCHRESULTS+'"></div>')
                     .append(create('<div class="'+CSS.TOTALCOHORTS+'">'+cohortsstr+'</div>'))
                     .append(cohorts);
@@ -608,7 +615,7 @@ YUI.add('moodle-enrol_manual-quickenrolment', function(Y) {
                 value : 0
             },
             defaultStartDate : {
-                value : 2,
+                value : 4,
                 validator : Y.Lang.isNumber
             },
             defaultDuration : {

@@ -38,9 +38,16 @@ class auth_plugin_shibboleth extends auth_plugin_base {
     /**
      * Constructor.
      */
-    function auth_plugin_shibboleth() {
+    public function __construct() {
         $this->authtype = 'shibboleth';
         $this->config = get_config('auth/shibboleth');
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function auth_plugin_shibboleth() {
+        self::__construct();
     }
 
     /**
@@ -143,7 +150,8 @@ class auth_plugin_shibboleth extends auth_plugin_base {
         $configarray = (array) $this->config;
 
         $moodleattributes = array();
-        foreach ($this->userfields as $field) {
+        $userfields = array_merge($this->userfields, $this->get_custom_user_profile_fields());
+        foreach ($userfields as $field) {
             if (isset($configarray["field_map_$field"])) {
                 $moodleattributes[$field] = $configarray["field_map_$field"];
             }
@@ -209,7 +217,8 @@ class auth_plugin_shibboleth extends auth_plugin_base {
             }
 
             // Overwrite redirect in order to send user to Shibboleth logout page and let him return back
-            $redirect = $this->config->logout_handler.'?return='.urlencode($temp_redirect);
+            $redirecturl = new moodle_url($this->config->logout_handler, array('return' => $temp_redirect));
+            $redirect = $redirecturl->out();
         }
     }
 

@@ -146,7 +146,7 @@ M.course_dndupload = {
         styletopunit = styletop.replace(/^\d+/, '');
         styletop = parseInt(styletop.replace(/\D*$/, ''), 10);
 
-        var fadeanim = new Y.Anim({
+        var fadein = new Y.Anim({
             node: '#dndupload-status',
             from: {
                 opacity: 0.0,
@@ -159,11 +159,31 @@ M.course_dndupload = {
             },
             duration: 0.5
         });
-        fadeanim.once('end', function(e) {
-            this.set('reverse', 1);
-            Y.later(3000, this, 'run', null, false);
+
+        var fadeout = new Y.Anim({
+            node: '#dndupload-status',
+            from: {
+                opacity: 1.0,
+                top: styletop.toString() + styletopunit
+            },
+
+            to: {
+                opacity: 0.0,
+                top: (styletop - 30).toString() + styletopunit
+            },
+            duration: 0.5
         });
-        fadeanim.run();
+
+        fadein.run();
+        fadein.on('end', function(e) {
+            Y.later(3000, this, function() {
+                fadeout.run();
+            });
+        });
+
+        fadeout.on('end', function(e) {
+            Y.one('#dndupload-status').remove(true);
+        });
     },
 
     /**
@@ -635,13 +655,14 @@ M.course_dndupload = {
             bodyContent: content,
             width: '350px',
             modal: true,
-            visible: true,
+            visible: false,
             render: true,
             align: {
                 node: null,
                 points: [Y.WidgetPositionAlign.CC, Y.WidgetPositionAlign.CC]
             }
         });
+        panel.show();
         // When the panel is hidden - destroy it and then check for other pending uploads
         panel.after("visibleChange", function(e) {
             if (!panel.get('visible')) {

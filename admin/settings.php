@@ -48,7 +48,6 @@ if ($data = data_submitted() and confirm_sesskey()) {
         $errormsg = get_string('errorwithsettings', 'admin');
         $firsterror = reset($adminroot->errors);
     }
-    $adminroot = admin_get_root(true); //reload tree
     $settingspage = $adminroot->locate($section, true);
 }
 
@@ -78,6 +77,8 @@ if (empty($SITE->fullname)) {
     echo html_writer::input_hidden_params($PAGE->url);
     echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
     echo '<input type="hidden" name="return" value="'.$return.'" />';
+    // HACK to prevent browsers from automatically inserting the user's password into the wrong fields.
+    echo prevent_form_autofill_password();
 
     echo $settingspage->output_html();
 
@@ -120,6 +121,8 @@ if (empty($SITE->fullname)) {
     echo html_writer::input_hidden_params($PAGE->url);
     echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
     echo '<input type="hidden" name="return" value="'.$return.'" />';
+    // HACK to prevent browsers from automatically inserting the user's password into the wrong fields.
+    echo prevent_form_autofill_password();
     echo $OUTPUT->heading($settingspage->visiblename);
 
     echo $settingspage->output_html();

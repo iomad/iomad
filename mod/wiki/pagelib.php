@@ -136,7 +136,7 @@ abstract class page_wiki {
 
         echo $OUTPUT->header();
         $wiki = $PAGE->activityrecord;
-        echo $OUTPUT->heading($wiki->name);
+        echo $OUTPUT->heading(format_string($wiki->name));
 
         echo $this->wikioutput->wiki_info();
 
@@ -381,7 +381,12 @@ class page_wiki_edit extends page_wiki {
     function __construct($wiki, $subwiki, $cm) {
         global $CFG, $PAGE;
         parent::__construct($wiki, $subwiki, $cm);
-        self::$attachmentoptions = array('subdirs' => false, 'maxfiles' => - 1, 'maxbytes' => $CFG->maxbytes, 'accepted_types' => '*');
+        $showfilemanager = false;
+        if (has_capability('mod/wiki:managefiles', context_module::instance($cm->id))) {
+            $showfilemanager = true;
+        }
+        self::$attachmentoptions = array('subdirs' => false, 'maxfiles' => - 1, 'maxbytes' => $CFG->maxbytes,
+                'accepted_types' => '*', 'enable_filemanagement' => $showfilemanager);
         $PAGE->requires->js_init_call('M.mod_wiki.renew_lock', null, true);
     }
 

@@ -72,6 +72,57 @@ class core_externallib_testcase extends advanced_testcase {
         $this->assertSame('aaa', $result['text']);
     }
 
+    public function test_external_format_text() {
+        $settings = external_settings::get_instance();
+
+        $currentraw = $settings->get_raw();
+        $currentfilter = $settings->get_filter();
+
+        $settings->set_raw(true);
+        $settings->set_filter(false);
+        $context = context_system::instance();
+
+        $test = '$$ \pi $$';
+        $testformat = FORMAT_MARKDOWN;
+        $correct = array($test, $testformat);
+        $this->assertSame(external_format_text($test, $testformat, $context->id, 'core', '', 0), $correct);
+
+        $settings->set_raw(false);
+        $settings->set_filter(true);
+
+        $test = '$$ \pi $$';
+        $testformat = FORMAT_MARKDOWN;
+        $correct = array('<span class="nolink"><span class="filter_mathjaxloader_equation"><p>$$ \pi $$</p>
+</span></span>', FORMAT_HTML);
+        $this->assertSame(external_format_text($test, $testformat, $context->id, 'core', '', 0), $correct);
+
+        $settings->set_raw($currentraw);
+        $settings->set_filter($currentfilter);
+    }
+
+    public function test_external_format_string() {
+        $settings = external_settings::get_instance();
+
+        $currentraw = $settings->get_raw();
+        $currentfilter = $settings->get_filter();
+
+        $settings->set_raw(true);
+        $context = context_system::instance();
+
+        $test = '$$ \pi $$ <script>hi</script> <h3>there</h3>';
+        $correct = $test;
+        $this->assertSame(external_format_string($test, $context->id), $correct);
+
+        $settings->set_raw(false);
+
+        $test = '$$ \pi $$<script>hi</script> <h3>there</h3>';
+        $correct = '$$ \pi $$hi there';
+        $this->assertSame(external_format_string($test, $context->id), $correct);
+
+        $settings->set_raw($currentraw);
+        $settings->set_filter($currentfilter);
+    }
+
     /**
      * Test for clean_returnvalue().
      */
@@ -212,6 +263,35 @@ class core_externallib_testcase extends advanced_testcase {
         $course = self::getDataGenerator()->create_course();
         $this->setExpectedException('invalid_parameter_exception');
         test_exernal_api::get_context_wrapper(array('roleid' => 3, 'userid' => $USER->id, 'instanceid' => $course->id));
+    }
+
+    public function all_external_info_provider() {
+        global $DB;
+
+        // We are testing here that all the external function descriptions can be generated without
+        // producing warnings. E.g. misusing optional params will generate a debugging message which
+        // will fail this test.
+        $functions = $DB->get_records('external_functions', array(), 'name');
+        $return = array();
+        foreach ($functions as $f) {
+            $return[$f->name] = array($f);
+        }
+        return $return;
+    }
+
+    /**
+     * @dataProvider all_external_info_provider
+     */
+    public function test_all_external_info($f) {
+        $desc = external_function_info($f);
+        $this->assertNotEmpty($desc->name);
+        $this->assertNotEmpty($desc->classname);
+        $this->assertNotEmpty($desc->methodname);
+        $this->assertEquals($desc->component, clean_param($desc->component, PARAM_COMPONENT));
+        $this->assertInstanceOf('external_function_parameters', $desc->parameters_desc);
+        if ($desc->returns_desc != null) {
+            $this->assertInstanceOf('external_description', $desc->returns_desc);
+        }
     }
 }
 

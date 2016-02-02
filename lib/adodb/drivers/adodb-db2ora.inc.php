@@ -1,6 +1,8 @@
 <?php
 /*
-V5.19  23-Apr-2014  (c) 2000-2014 John Lim (jlim#natsoft.com). All rights reserved.
+@version   v5.20.1  06-Dec-2015
+@copyright (c) 2000-2013 John Lim (jlim#natsoft.com). All rights reserved.
+@copyright (c) 2014      Damien Regad, Mark Newnham and the ADOdb community
   Released under both BSD license and Lesser GPL library license.
   Whenever there is any discrepancy between the two licenses,
   the BSD license will take precedence.
@@ -36,7 +38,7 @@ global $_COLONARR,$_COLONSZ;
 	$_COLONARR = array();
 	$_COLONSZ = sizeof($arr);
 
-	$sql2 = preg_replace("/(:[0-9]+)/e","_colontrack('\\1')",$sql);
+	$sql2 = preg_replace_callback('/(:[0-9]+)/', create_function('$m', 'return _colontrack($m[0]);'), $sql);
 
 	if (empty($_COLONARR)) return array($sql,$arr);
 
@@ -52,13 +54,7 @@ class ADODB_db2oci extends ADODB_db2 {
 	var $sysTimeStamp = 'sysdate';
 	var $sysDate = 'trunc(sysdate)';
 
-	function ADODB_db2oci()
-	{
-		$this->ADODB_db2();
-	}
-
-
-	function _Execute($sql, $inputarr)
+	function _Execute($sql, $inputarr = false)
 	{
 		if ($inputarr) list($sql,$inputarr) = _colonscope($sql, $inputarr);
 		return parent::_Execute($sql, $inputarr);
@@ -70,9 +66,9 @@ class  ADORecordSet_db2oci extends ADORecordSet_odbc {
 
 	var $databaseType = "db2oci";
 
-	function ADORecordSet_db2oci($id,$mode=false)
+	function __construct($id,$mode=false)
 	{
-		return $this->ADORecordSet_db2($id,$mode);
+		return parent::__construct($id,$mode);
 	}
 }
 

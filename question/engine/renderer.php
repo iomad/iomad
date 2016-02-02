@@ -107,18 +107,18 @@ class core_question_renderer extends plugin_renderer_base {
         $output .= html_writer::tag('div',
                 $this->add_part_heading($qtoutput->formulation_heading(),
                     $this->formulation($qa, $behaviouroutput, $qtoutput, $options)),
-                array('class' => 'formulation'));
+                array('class' => 'formulation clearfix'));
         $output .= html_writer::nonempty_tag('div',
                 $this->add_part_heading(get_string('feedback', 'question'),
                     $this->outcome($qa, $behaviouroutput, $qtoutput, $options)),
-                array('class' => 'outcome'));
+                array('class' => 'outcome clearfix'));
         $output .= html_writer::nonempty_tag('div',
                 $this->add_part_heading(get_string('comments', 'question'),
                     $this->manual_comment($qa, $behaviouroutput, $qtoutput, $options)),
-                array('class' => 'comment'));
+                array('class' => 'comment clearfix'));
         $output .= html_writer::nonempty_tag('div',
                 $this->response_history($qa, $behaviouroutput, $qtoutput, $options),
-                array('class' => 'history'));
+                array('class' => 'history clearfix'));
 
         $output .= html_writer::end_tag('div');
         $output .= html_writer::end_tag('div');
@@ -144,6 +144,7 @@ class core_question_renderer extends plugin_renderer_base {
         $output .= $this->number($number);
         $output .= $this->status($qa, $behaviouroutput, $options);
         $output .= $this->mark_summary($qa, $behaviouroutput, $options);
+        $output .= $options->extrainfocontent;
         $output .= $this->question_flag($qa, $options->flags);
         $output .= $this->edit_question_link($qa, $options);
         return $output;
@@ -485,8 +486,10 @@ class core_question_renderer extends plugin_renderer_base {
         }
 
         return html_writer::tag('h4', get_string('responsehistory', 'question'),
-                array('class' => 'responsehistoryheader')) . html_writer::tag('div',
-                html_writer::table($table, true), array('class' => 'responsehistoryheader'));
+                        array('class' => 'responsehistoryheader')) .
+                $options->extrahistorycontent .
+                html_writer::tag('div', html_writer::table($table, true),
+                        array('class' => 'responsehistoryheader'));
     }
 
 }

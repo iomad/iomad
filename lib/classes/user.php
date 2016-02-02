@@ -69,10 +69,10 @@ class core_user {
         // If noreply user then create fake record and return.
         switch ($userid) {
             case self::NOREPLY_USER:
-                return self::get_noreply_user($strictness);
+                return self::get_noreply_user();
                 break;
             case self::SUPPORT_USER:
-                return self::get_support_user($strictness);
+                return self::get_support_user();
                 break;
             default:
                 return $DB->get_record('user', array('id' => $userid), $fields, $strictness);
@@ -236,6 +236,42 @@ class core_user {
             return $DB->record_exists('user', array('id' => $userid));
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Check if the given user is an active user in the site.
+     *
+     * @param  stdClass  $user         user object
+     * @param  boolean $checksuspended whether to check if the user has the account suspended
+     * @param  boolean $checknologin   whether to check if the user uses the nologin auth method
+     * @throws moodle_exception
+     * @since  Moodle 3.0
+     */
+    public static function require_active_user($user, $checksuspended = false, $checknologin = false) {
+
+        if (!self::is_real_user($user->id)) {
+            throw new moodle_exception('invaliduser', 'error');
+        }
+
+        if ($user->deleted) {
+            throw new moodle_exception('userdeleted');
+        }
+
+        if (empty($user->confirmed)) {
+            throw new moodle_exception('usernotconfirmed', 'moodle', '', $user->username);
+        }
+
+        if (isguestuser($user)) {
+            throw new moodle_exception('guestsarenotallowed', 'error');
+        }
+
+        if ($checksuspended and $user->suspended) {
+            throw new moodle_exception('suspended', 'auth');
+        }
+
+        if ($checknologin and $user->auth == 'nologin') {
+            throw new moodle_exception('suspended', 'auth');
         }
     }
 }

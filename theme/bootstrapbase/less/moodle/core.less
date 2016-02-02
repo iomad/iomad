@@ -16,6 +16,7 @@
     display:none;
 }
 
+/** Start Legacy styles. Deprecated since Moodle 2.9. See MDL-48160 for further information. **/
 .content-only #region-main.span9, // Two column layout with no block or all blocks docked.
 .empty-region-side-post #region-bs-main-and-pre.span9, // LTR with no post area.
 .empty-region-side-pre #region-bs-main-and-post.span9, // RTL with no pre area.
@@ -28,25 +29,70 @@
 
 .empty-region-side-pre #region-bs-main-and-pre.span9 #region-main, // LTR with no pre area.
 .jsenabled.docked-region-side-pre #region-bs-main-and-pre.span9 #region-main { // LTR with all pre blocks docked.
-    float:none;
-    width:100%;
-}
-
-.empty-region-side-post.used-region-side-pre, // Post region is empty and pre region is in use.
-.jsenabled.docked-region-side-post.used-region-side-pre { // All post blocks docked and pre region is in use.
-    #region-main.span8 {
-        /** Increase the span size by 1 **/
-        .fluid-span(9);
-    }
-    #block-region-side-pre.span4 {
-        /** Decrease the span size by 1 **/
-        .fluid-span(3);
-    }
+    float: none;
+    width: 100%;
 }
 
 .empty-region-side-pre #region-bs-main-and-post.span9 #region-main.span8, // RTL with no pre area.
 .jsenabled.docked-region-side-pre #region-bs-main-and-post.span9 #region-main.span8 { // RTL with all pre blocks docked.
     float: right;
+}
+/** End Legacy styles **/
+
+
+/* Default Three Columns - All
+------------------------------*/
+
+.content-only {
+    #region-main-box,
+    #region-main {
+        width: 100%;
+    }
+}
+.empty-region-side-pre {
+    &.used-region-side-post {
+        #region-main {
+            width: 100%;
+        }
+    }
+}
+.empty-region-side-post {
+    &.used-region-side-pre {
+        #region-main-box {
+            width: 100%;
+        }
+    }
+}
+.jsenabled {
+    &.docked-region-side-pre {
+        &.empty-region-side-pre {
+            &.used-region-side-post {
+                #region-main {
+                    width: 100%;
+                }
+            }
+        }
+    }
+    &.docked-region-side-post {
+        &.empty-region-side-post {
+            &.used-region-side-pre {
+                #region-main-box {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}
+.empty-region-side-post.used-region-side-pre, // Post region is empty and pre region is in use.
+.jsenabled.docked-region-side-post.used-region-side-pre { // All post blocks docked and pre region is in use.
+    #region-main.span8 {
+    /** Increase the span size by 1 **/
+        .fluid-span(9);
+    }
+    #block-region-side-pre.span4 {
+    /** Decrease the span size by 1 **/
+        .fluid-span(3);
+    }
 }
 
 /** Page layout CSS ends **/
@@ -133,9 +179,13 @@ a.autolink.glossary:hover {
 .collapsibleregioncaption {
     white-space: nowrap;
 }
+.pagelayout-mydashboard.jsenabled .collapsibleregioncaption {
+    cursor: pointer;
+}
 .collapsibleregioncaption img {
     vertical-align: middle;
 }
+
 .jsenabled .hiddenifjs {
     display: none;
 }
@@ -789,71 +839,37 @@ ul#tag-cloud-list li {
     list-style: none;
 }
 span.flagged-tag,
-span.flagged-tag a {
+tr.flagged-tag,
+span.flagged-tag a,
+tr.flagged-tag a {
     color: @errorText;
 }
-table#tag-management-list {
-    text-align: left;
-    width: 100%;
-}
-table#tag-management-list td,
-table#tag-management-list th {
+.tag-management-table td,
+.tag-management-table th {
     vertical-align: middle;
-    text-align: left;
     padding: 4px;
 }
-.tag-management-form {
-    text-align: center;
+.tag-management-table tr td.tageditingon .displaytagname,
+.tag-management-table td .edittagname {
+    display: none;
 }
-#relatedtags-autocomplete-container {
-    margin-left: auto;
-    margin-right: auto;
-    min-height: 4.6em;
-    width: 100%;
-}
-#relatedtags-autocomplete {
+.tag-management-table tr td.tageditingon .edittagname {
+    display: inherit;
     position: relative;
-    display: block;
-    width: 60%;
-    margin-left: auto;
-    margin-right: auto;
 }
-#relatedtags-autocomplete .yui-ac-content {
-    position: absolute;
-    width: 420px;
-    left: 20%;
-    border: 1px solid @dropdownBorder;
-    background: @dropdownBackground;
-    overflow: hidden;
-    z-index: 9050;
+.tag-management-table tr td.tageditingon .edittagname .editinstructions {
+    margin-right: -300px;
+    margin-left: 0;
 }
-#relatedtags-autocomplete .ysearchquery {
-    position: absolute;
-    right: 10px;
-    color: #808080;
-    z-index: 10;
+.tag-management-table tr td .tagnameedit img {
+    opacity: 0.2;
 }
-#relatedtags-autocomplete .yui-ac-shadow {
-    position: absolute;
-    margin: .3em;
-    width: 100%;
-    background: #a0a0a0;
-    z-index: 9049;
+.tag-management-table tr:hover td .tagnameedit img,
+.tag-management-table tr td .tagnameedit:focus img {
+    opacity: 1;
 }
-#relatedtags-autocomplete ul {
-    padding: 0;
-    width: 100%;
-    margin: 0;
-    list-style-type: none;
-}
-#relatedtags-autocomplete li {
-    padding: 0 5px;
-    cursor: default;
-    white-space: nowrap;
-}
-#relatedtags-autocomplete li.yui-ac-highlight{
-    background: @dropdownLinkBackgroundHover;
-    color: @dropdownLinkColorHover;
+.tag-management-table tr:hover td.tageditingon .tagnameedit img {
+    opacity: 0.2;
 }
 h2.tag-heading,
 div#tag-description,
@@ -1171,6 +1187,10 @@ body.tag .managelink {
             }
         }
     }
+}
+
+#page-enrol-users .enrol-users-page-action input {
+    margin-left: 0
 }
 
 /**
@@ -1735,7 +1755,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     left: 20.3em;
     margin: 0;
     padding: 1.6em;
-    background-color: @bodyBackground;
+    background-color: #fff;
     overflow-x: hidden;
     overflow-y: auto;
     line-height: 2em;
@@ -1752,7 +1772,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     display: block;
 }
 .choosercontainer #chooseform .selected {
-    background-color: @bodyBackground;
+    background-color: #fff;
     .box-shadow(0px 0 10px 0 #ccc);
 }
 .section-modchooser-link img.smallicon {
@@ -1847,6 +1867,13 @@ table.collection .description {
     width: 25%;
     text-align: left;
 }
+.dir-rtl table.collection {
+    .name,
+    .criteria,
+    .description  {
+        text-align: right;
+    }
+}
 table.collection .actions {
     width: 11em;
     text-align: center;
@@ -1857,6 +1884,12 @@ a.criteria-action {
     padding: 0px 3px;
     float: right;
 }
+div.criteria-description {
+    padding: 10px 15px;
+    margin: 5px 0px;
+    background: none repeat scroll 0 0 #f9f9f9;
+    border: 1px solid #EEE;
+}
 ul.badges {
     margin: 0;
     list-style: none;
@@ -1864,7 +1897,7 @@ ul.badges {
 .badges li {
     position: relative;
     display: inline-block;
-    padding-bottom: 2em;
+    padding-top: 1em;
     text-align: center;
     vertical-align: top;
     width: 150px;
@@ -2037,6 +2070,71 @@ img#persona_signin {
     margin: 0;
 }
 
+/** Header-bar styles **/
+.page-context-header {
+    // We need to be explicit about the height of the header.
+    @pageHeaderHeight: 140px;
+
+    // Do not remove these rules.
+    overflow: hidden;
+
+    .page-header-image,
+    .page-header-headings {
+        display: block;
+        position: relative;
+    }
+    .page-header-image {
+        margin-bottom: 1em;
+    }
+    .page-header-headings {
+        margin-top: 30px;
+        margin-bottom: 10px;
+
+        h1 {
+            display: block;
+        }
+    }
+
+    .page-header-headings,
+    .header-button-group {
+        position: relative;
+        line-height: 24px;
+        vertical-align: middle;
+    }
+
+    .header-button-group {
+        display: block;
+
+        a {
+            position: relative;
+
+            // Don't touch it unless you know exactly what you are doing.
+            top: -0.4em;
+        }
+    }
+}
+
+.dir-ltr .page-context-header {
+    .page-header-image {
+        float: left;
+        margin-right: 1em;
+    }
+
+    .header-button-group{
+        float: right;
+    }
+}
+
+.dir-rtl .page-context-header {
+    .page-header-image {
+        float: right;
+        margin-left: 1em;
+    }
+    .header-button-group {
+        float: left;
+    }
+}
+
 /** Action menu component styles **/
 .moodle-actionmenu,
 .moodle-actionmenu > ul,
@@ -2048,6 +2146,14 @@ img#persona_signin {
     padding: 0;
     margin: 0;
     list-style-type: none;
+}
+
+.section_action_menu .moodle-actionmenu ul.menubar {
+    margin: 0;
+}
+
+.section_action_menu .moodle-actionmenu ul.menu {
+    margin: 0 10px 10px 0;
 }
 
 .moodle-actionmenu .toggle-display,
@@ -2255,7 +2361,7 @@ body.lockscroll {
 .dir-rtl {
     // Bootstrap sets right margin to 0. Fail.
     // They set left margin to 25px so we will copy that.
-    ul, ol {
+    ul {
         margin-left: 0;
         margin-right: 25px;
     }
@@ -2278,4 +2384,12 @@ dd:after {
 }
 dd:after {
   clear: both;
+}
+
+// Active tabs with links should have a different
+// cursor to indicate they are clickable.
+.nav-tabs > .active > a[href],
+.nav-tabs > .active > a[href]:hover,
+.nav-tabs > .active > a[href]:focus {
+    cursor: pointer;
 }

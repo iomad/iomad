@@ -24,6 +24,8 @@
  */
 
 $string['currentsection'] = 'This week';
+$string['editsection'] = 'Edit week';
+$string['deletesection'] = 'Delete week';
 $string['sectionname'] = 'Week';
 $string['pluginname'] = 'Weekly format';
 $string['section0name'] = 'General';

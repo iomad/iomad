@@ -41,6 +41,12 @@ class sqlsrv_native_moodle_database extends moodle_database {
     protected $last_error_reporting; // To handle SQL*Server-Native driver default verbosity
     protected $temptables; // Control existing temptables (sqlsrv_moodle_temptables object)
     protected $collation;  // current DB collation cache
+    /**
+     * Does the used db version support ANSI way of limiting (2012 and higher)
+     * @var bool
+     */
+    protected $supportsoffsetfetch;
+
     /** @var array list of open recordsets */
     protected $recordsets = array();
 
@@ -115,6 +121,37 @@ class sqlsrv_native_moodle_database extends moodle_database {
      */
     public function get_configuration_help() {
         return get_string('nativesqlsrvhelp', 'install');
+    }
+
+    /**
+     * Diagnose database and tables, this function is used
+     * to verify database and driver settings, db engine types, etc.
+     *
+     * @return string null means everything ok, string means problem found.
+     */
+    public function diagnose() {
+        // Verify the database is running with READ_COMMITTED_SNAPSHOT enabled.
+        // (that's required to get snapshots/row versioning on READ_COMMITED mode).
+        $correctrcsmode = false;
+        $sql = "SELECT is_read_committed_snapshot_on
+                  FROM sys.databases
+                 WHERE name = '{$this->dbname}'";
+        $this->query_start($sql, null, SQL_QUERY_AUX);
+        $result = sqlsrv_query($this->sqlsrv, $sql);
+        $this->query_end($result);
+        if ($result) {
+            if ($row = sqlsrv_fetch_array($result)) {
+                $correctrcsmode = (bool)reset($row);
+            }
+        }
+        $this->free_result($result);
+
+        if (!$correctrcsmode) {
+            return get_string('mssqlrcsmodemissing', 'error');
+        }
+
+        // Arrived here, all right.
+        return null;
     }
 
     /**
@@ -208,6 +245,10 @@ class sqlsrv_native_moodle_database extends moodle_database {
         $this->query_end($result);
 
         $this->free_result($result);
+
+        $serverinfo = $this->get_server_info();
+        // Fetch/offset is supported staring from SQL Server 2012.
+        $this->supportsoffsetfetch = $serverinfo['version'] > '11';
 
         // Connection established and configured, going to instantiate the temptables controller
         $this->temptables = new sqlsrv_native_moodle_temptables($this);
@@ -778,20 +819,37 @@ class sqlsrv_native_moodle_database extends moodle_database {
     public function get_recordset_sql($sql, array $params = null, $limitfrom = 0, $limitnum = 0) {
 
         list($limitfrom, $limitnum) = $this->normalise_limit_from_num($limitfrom, $limitnum);
+        $needscrollable = (bool)$limitfrom; // To determine if we'll need to perform scroll to $limitfrom.
 
         if ($limitfrom or $limitnum) {
-            if ($limitnum >= 1) { // Only apply TOP clause if we have any limitnum (limitfrom offset is handled later)
-                $fetch = $limitfrom + $limitnum;
-                if (PHP_INT_MAX - $limitnum < $limitfrom) { // Check PHP_INT_MAX overflow
-                    $fetch = PHP_INT_MAX;
+            if (!$this->supportsoffsetfetch) {
+                if ($limitnum >= 1) { // Only apply TOP clause if we have any limitnum (limitfrom offset is handled later).
+                    $fetch = $limitfrom + $limitnum;
+                    if (PHP_INT_MAX - $limitnum < $limitfrom) { // Check PHP_INT_MAX overflow.
+                        $fetch = PHP_INT_MAX;
+                    }
+                    $sql = preg_replace('/^([\s(])*SELECT([\s]+(DISTINCT|ALL))?(?!\s*TOP\s*\()/i',
+                                        "\\1SELECT\\2 TOP $fetch", $sql);
                 }
-                $sql = preg_replace('/^([\s(])*SELECT([\s]+(DISTINCT|ALL))?(?!\s*TOP\s*\()/i',
-                                    "\\1SELECT\\2 TOP $fetch", $sql);
+            } else {
+                $needscrollable = false; // Using supported fetch/offset, no need to scroll anymore.
+                $sql = (substr($sql, -1) === ';') ? substr($sql, 0, -1) : $sql;
+                // We need order by to use FETCH/OFFSET.
+                // Ordering by first column shouldn't break anything if there was no order in the first place.
+                if (!strpos(strtoupper($sql), "ORDER BY")) {
+                    $sql .= " ORDER BY 1";
+                }
+
+                $sql .= " OFFSET ".$limitfrom." ROWS ";
+
+                if ($limitnum > 0) {
+                    $sql .= " FETCH NEXT ".$limitnum." ROWS ONLY";
+                }
             }
         }
-        $result = $this->do_query($sql, $params, SQL_QUERY_SELECT, false, (bool)$limitfrom);
+        $result = $this->do_query($sql, $params, SQL_QUERY_SELECT, false, $needscrollable);
 
-        if ($limitfrom) { // Skip $limitfrom records
+        if ($needscrollable) { // Skip $limitfrom records.
             sqlsrv_fetch($result, SQLSRV_SCROLL_ABSOLUTE, $limitfrom - 1);
         }
         return $this->create_recordset($result);
@@ -1272,12 +1330,7 @@ class sqlsrv_native_moodle_database extends moodle_database {
         for ($n = count($elements) - 1; $n > 0; $n--) {
             array_splice($elements, $n, 0, $separator);
         }
-        $s = implode(' + ', $elements);
-
-        if ($s === '') {
-            return " '' ";
-        }
-        return " $s ";
+        return call_user_func_array(array($this, 'sql_concat'), $elements);
     }
 
     public function sql_isempty($tablename, $fieldname, $nullablefield, $textfield) {
@@ -1324,9 +1377,9 @@ class sqlsrv_native_moodle_database extends moodle_database {
         }
 
         if ($length === false) {
-            return "SUBSTRING($expr, $start, (LEN($expr) - $start + 1))";
+            return "SUBSTRING($expr, " . $this->sql_cast_char2int($start) . ", 2^31-1)";
         } else {
-            return "SUBSTRING($expr, $start, $length)";
+            return "SUBSTRING($expr, " . $this->sql_cast_char2int($start) . ", " . $this->sql_cast_char2int($length) . ")";
         }
     }
 

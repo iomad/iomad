@@ -31,7 +31,7 @@ class Moxiecode_Logger {
 	/**
 	 * Constructs a new logger instance.
 	 */
-	function Moxiecode_Logger() {
+	public function __construct() {
 		$this->_path = "";
 		$this->_filename = "{level}.log";
 		$this->setMaxSize("100k");
@@ -39,6 +39,13 @@ class Moxiecode_Logger {
 		$this->_level = MC_LOGGER_DEBUG;
 		$this->_format = "[{time}] [{level}] {message}";
 	}
+
+    /**
+     * Old syntax of class constructor. Deprecated in PHP7.
+     */
+    public function Moxiecode_Logger() {
+        self::__construct();
+    }
 
 	/**
 	 * Sets the current log level, use the MC_LOGGER constants.

@@ -49,7 +49,9 @@ $THEME->sheets = array(
     'question',
     'user',
     'tabs',
-    'filemanager'
+    'filemanager',
+    'templates',
+    'autocomplete'
 );
 
 $THEME->editor_sheets = array('editor');

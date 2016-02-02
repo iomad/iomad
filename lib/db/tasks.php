@@ -125,8 +125,8 @@ $tasks = array(
     array(
         'classname' => 'core\task\create_contexts_task',
         'blocking' => 1,
-        'minute' => '*',
-        'hour' => '*',
+        'minute' => '0',
+        'hour' => '0',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
@@ -159,10 +159,19 @@ $tasks = array(
         'month' => '*'
     ),
     array(
-        'classname' => 'core\task\completion_cron_task',
+        'classname' => 'core\task\completion_regular_task',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ),
+    array(
+        'classname' => 'core\task\completion_daily_task',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => 'R',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
@@ -215,10 +224,10 @@ $tasks = array(
     array(
         'classname' => 'core\task\registration_cron_task',
         'blocking' => 0,
-        'minute' => '0',
-        'hour' => '3',
+        'minute' => 'R',
+        'hour' => 'R',
         'day' => '*',
-        'dayofweek' => '*',
+        'dayofweek' => 'R',
         'month' => '*'
     ),
     array(

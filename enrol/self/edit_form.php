@@ -39,8 +39,10 @@ class enrol_self_edit_form extends moodleform {
 
         $mform->addElement('header', 'header', get_string('pluginname', 'enrol_self'));
 
-        $mform->addElement('text', 'name', get_string('custominstancename', 'enrol'));
+        $nameattribs = array('size' => '20', 'maxlength' => '255');
+        $mform->addElement('text', 'name', get_string('custominstancename', 'enrol'), $nameattribs);
         $mform->setType('name', PARAM_TEXT);
+        $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'server');
 
         $options = array(ENROL_INSTANCE_ENABLED  => get_string('yes'),
                          ENROL_INSTANCE_DISABLED => get_string('no'));
@@ -52,11 +54,13 @@ class enrol_self_edit_form extends moodleform {
         $mform->addHelpButton('customint6', 'newenrols', 'enrol_self');
         $mform->disabledIf('customint6', 'status', 'eq', ENROL_INSTANCE_DISABLED);
 
-        $mform->addElement('passwordunmask', 'password', get_string('password', 'enrol_self'));
+        $passattribs = array('size' => '20', 'maxlength' => '50');
+        $mform->addElement('passwordunmask', 'password', get_string('password', 'enrol_self'), $passattribs);
         $mform->addHelpButton('password', 'password', 'enrol_self');
         if (empty($instance->id) and $plugin->get_config('requirepassword')) {
             $mform->addRule('password', get_string('required'), 'required', null, 'client');
         }
+        $mform->addRule('password', get_string('maximumchars', '', 50), 'maxlength', 50, 'server');
 
         $options = array(1 => get_string('yes'),
                          0 => get_string('no'));
@@ -159,15 +163,17 @@ class enrol_self_edit_form extends moodleform {
         $checkpassword = false;
 
         if ($instance->id) {
-            if ($data['status'] == ENROL_INSTANCE_ENABLED) {
-                if ($instance->password !== $data['password']) {
-                    $checkpassword = true;
-                }
-            }
-        } else {
-            if ($data['status'] == ENROL_INSTANCE_ENABLED) {
+            // Check the password if we are enabling the plugin again.
+            if (($instance->status == ENROL_INSTANCE_DISABLED) && ($data['status'] == ENROL_INSTANCE_ENABLED)) {
                 $checkpassword = true;
             }
+
+            // Check the password if the instance is enabled and the password has changed.
+            if (($data['status'] == ENROL_INSTANCE_ENABLED) && ($instance->password !== $data['password'])) {
+                $checkpassword = true;
+            }
+        } else {
+            $checkpassword = true;
         }
 
         if ($checkpassword) {
@@ -175,8 +181,8 @@ class enrol_self_edit_form extends moodleform {
             $policy  = $plugin->get_config('usepasswordpolicy');
             if ($require and trim($data['password']) === '') {
                 $errors['password'] = get_string('required');
-            } else if ($policy) {
-                $errmsg = '';//prevent eclipse warning
+            } else if (!empty($data['password']) && $policy) {
+                $errmsg = '';
                 if (!check_password_policy($data['password'], $errmsg)) {
                     $errors['password'] = $errmsg;
                 }

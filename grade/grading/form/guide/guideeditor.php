@@ -53,8 +53,15 @@ class moodlequickform_guideeditor extends HTML_QuickForm_input {
      * @param string $elementlabel
      * @param array $attributes
      */
+    public function __construct($elementname=null, $elementlabel=null, $attributes=null) {
+        parent::__construct($elementname, $elementlabel, $attributes);
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
     public function moodlequickform_guideeditor($elementname=null, $elementlabel=null, $attributes=null) {
-        parent::HTML_QuickForm_input($elementname, $elementlabel, $attributes);
+        self::__construct($elementname, $elementlabel, $attributes);
     }
 
     /**
@@ -195,6 +202,10 @@ class moodlequickform_guideeditor extends HTML_QuickForm_input {
             if ($withvalidation && !array_key_exists('delete', $criterion)) {
                 if (!strlen(trim($criterion['shortname']))) {
                     $errors['err_noshortname'] = 1;
+                    $criterion['error_description'] = true;
+                }
+                if (strlen(trim($criterion['shortname'])) > 255) {
+                    $errors['err_shortnametoolong'] = 1;
                     $criterion['error_description'] = true;
                 }
                 if (!strlen(trim($criterion['maxscore']))) {

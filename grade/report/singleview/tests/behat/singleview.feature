@@ -10,11 +10,11 @@ Feature: We can use Single view
       | Course 1 | C1 | 0 |
     And the following "users" exist:
       | username | firstname | lastname | email | idnumber | alternatename |
-      | teacher1 | Teacher | 1 | teacher1@asd.com | t1 | fred |
-      | student1 | Student | 1 | student1@asd.com | s1 | james |
-      | student2 | Student | 2 | student1@asd.com | s2 | holly |
-      | student3 | Student | 3 | student1@asd.com | s3 | anna |
-      | student4 | Student | 4 | student1@asd.com | s4 | zac |
+      | teacher1 | Teacher | 1 | teacher1@example.com | t1 | fred |
+      | student1 | Student | 1 | student1@example.com | s1 | james |
+      | student2 | Student | 2 | student1@example.com | s2 | holly |
+      | student3 | Student | 3 | student1@example.com | s3 | anna |
+      | student4 | Student | 4 | student1@example.com | s4 | zac |
     And the following "scales" exist:
       | name | scale |
       | Test Scale | Disappointing, Good, Very good, Excellent |
@@ -46,7 +46,7 @@ Feature: We can use Single view
       | Test grade item | C1 | Scale |
     And I log in as "teacher1"
     And I follow "Course 1"
-    And I follow "Grades"
+    And I navigate to "Grades" node in "Course administration"
 
   @javascript
   Scenario: I can update grades, add feedback and exclude grades.
@@ -57,36 +57,38 @@ Feature: We can use Single view
         | Grade for Test assignment one | 10.00 |
         | Feedback for Test assignment one | test data |
     And I click on "Exclude for Test assignment four" "checkbox"
-    And I press "Update"
+    And I press "Save"
     Then I should see "Grades were set for 2 items"
     And I press "Continue"
-    And the following should exist in the "generaltable" table:
-        | Test assignment four |
-        | excluded |
-    And the following should exist in the "generaltable" table:
-        | Test assignment one |
-        | 10.00 |
+    And the field "Exclude for Test assignment four" matches value "1"
+    And the field "Grade for Test assignment one" matches value "10.00"
+    And I set the following fields to these values:
+        | Test grade item | 45 |
+    And I press "Save"
+    Then I should see "Grades were set for 1 items"
+    And I press "Continue"
+    And the field "Grade for Test grade item" matches value "45.00"
+    And the field "Grade for Course total" matches value "55.00"
     And I click on "Show grades for Test assignment three" "link"
     And I click on "Override for james (Student) 1" "checkbox"
     And I set the following fields to these values:
         | Grade for james (Student) 1 | 12.05 |
         | Feedback for james (Student) 1 | test data2 |
     And I click on "Exclude for holly (Student) 2" "checkbox"
-    And I press "Update"
+    And I press "Save"
     Then I should see "Grades were set for 2 items"
     And I press "Continue"
-    And the following should exist in the "generaltable" table:
-        | Test assignment three |
-        | 12.05 |
-        | Excluded |
+    And the field "Grade for james (Student) 1" matches value "12.05"
+    And the field "Exclude for holly (Student) 2" matches value "1"
     And I click on "Single view" "link"
     And I click on "new grade item 1" "option"
     And I click on "Very good" "option"
-    And I press "Update"
+    And I press "Save"
     Then I should see "Grades were set for 1 items"
     And I press "Continue"
     And the following should exist in the "generaltable" table:
-        | Grade for james (Student) 1 | "Very good" |
+        | First name (Alternate name) Surname | Grade |
+        | james (Student) 1 | Very good |
 
   Scenario: Single view links work on grade report.
     Given I follow "Single view for Test assignment one"
@@ -102,8 +104,8 @@ Feature: We can use Single view
     When I click on "All grades" "option"
     And I set the field "Insert value" to "1.0"
     And I click on "Perform bulk insert" "checkbox"
-    And I press "Update"
-    Then I should see "Grades were set for 9 items"
+    And I press "Save"
+    Then I should see "Grades were set for 8 items"
 
   Scenario: Navigation works in the Single view.
     Given I follow "Single view for Student 1"

@@ -546,13 +546,21 @@ function tag_get_related_tags($tagid, $type=TAG_RELATED_ALL, $limitnum=10) {
 
     if ( $type == TAG_RELATED_ALL || $type == TAG_RELATED_CORRELATED ) {
         //gets the correlated tags
-        $automatic_related_tags = tag_get_correlated($tagid, $limitnum);
-        if (is_array($automatic_related_tags)) {
-            $related_tags = array_merge($related_tags, $automatic_related_tags);
+        $automatic_related_tags = tag_get_correlated($tagid);
+        $related_tags = array_merge($related_tags, $automatic_related_tags);
+    }
+
+    // Remove duplicated tags (multiple instances of the same tag).
+    $seen = array();
+    foreach ($related_tags as $instance => $tag) {
+        if (isset($seen[$tag->id])) {
+            unset($related_tags[$instance]);
+        } else {
+            $seen[$tag->id] = 1;
         }
     }
 
-    return array_slice(object_array_unique($related_tags), 0 , $limitnum);
+    return array_slice($related_tags, 0 , $limitnum);
 }
 
 /**
@@ -1038,21 +1046,6 @@ function tag_assign($record_type, $record_id, $tagid, $ordering, $userid = 0, $c
 }
 
 /**
- * Function that returns tags that start with some text, for use by the autocomplete feature
- *
- * @package core_tag
- * @access  private
- * @param   string   $text string that the tag names will be matched against
- * @return  mixed    an array of objects, or false if no records were found or an error occured.
- */
-function tag_autocomplete($text) {
-    global $DB;
-    return $DB->get_records_sql("SELECT tg.id, tg.name, tg.rawname
-                                   FROM {tag} tg
-                                  WHERE tg.name LIKE ?", array(core_text::strtolower($text)."%"));
-}
-
-/**
  * Clean up the tag tables, making sure all tagged object still exists.
  *
  * This should normally not be necessary, but in case related tags are not deleted when the tagged record is removed, this should be
@@ -1066,35 +1059,56 @@ function tag_autocomplete($text) {
 function tag_cleanup() {
     global $DB;
 
-    $instances = $DB->get_recordset('tag_instance');
+    // Get ids to delete from instances where the tag has been deleted. This should never happen apparently.
+    $sql = "SELECT ti.id
+              FROM {tag_instance} ti
+         LEFT JOIN {tag} t ON t.id = ti.tagid
+             WHERE t.id IS null";
+    $tagids = $DB->get_records_sql($sql);
+    $tagarray = array();
+    foreach ($tagids as $tagid) {
+        $tagarray[] = $tagid->id;
+    }
 
-    // cleanup tag instances
-    foreach ($instances as $instance) {
-        $delete = false;
+    // Next get ids from instances that have an owner that has been deleted.
+    $sql = "SELECT ti.id
+              FROM {tag_instance} ti, {user} u
+             WHERE ti.itemid = u.id
+               AND ti.itemtype = 'user'
+               AND u.deleted = 1";
+    $tagids = $DB->get_records_sql($sql);
+    foreach ($tagids as $tagid) {
+        $tagarray[] = $tagid->id;
+    }
 
-        if (!$DB->record_exists('tag', array('id'=>$instance->tagid))) {
-            // if the tag has been removed, instance should be deleted.
-            $delete = true;
-        } else {
-            switch ($instance->itemtype) {
-                case 'user': // users are marked as deleted, but not actually deleted
-                    if ($DB->record_exists('user', array('id'=>$instance->itemid, 'deleted'=>1))) {
-                        $delete = true;
-                    }
-                    break;
-                default: // anything else, if the instance is not there, delete.
-                    if (!$DB->record_exists($instance->itemtype, array('id'=>$instance->itemid))) {
-                        $delete = true;
-                    }
-                    break;
-            }
-        }
-        if ($delete) {
-            tag_delete_instance($instance->itemtype, $instance->itemid, $instance->tagid);
-            //debugging('deleting tag_instance #'. $instance->id .', linked to tag id #'. $instance->tagid, DEBUG_DEVELOPER);
+    // Get the other itemtypes.
+    $sql = "SELECT itemtype
+              FROM {tag_instance}
+             WHERE itemtype <> 'user'
+          GROUP BY itemtype";
+    $tagitemtypes = $DB->get_records_sql($sql);
+    foreach ($tagitemtypes as $key => $notused) {
+        $sql = 'SELECT ti.id
+                  FROM {tag_instance} ti
+             LEFT JOIN {' . $key . '} it ON it.id = ti.itemid
+                 WHERE it.id IS null
+                 AND ti.itemtype = \'' . $key . '\'';
+        $tagids = $DB->get_records_sql($sql);
+        foreach ($tagids as $tagid) {
+            $tagarray[] = $tagid->id;
         }
     }
-    $instances->close();
+
+    // Get instances for each of the ids to be deleted.
+    if (count($tagarray) > 0) {
+        list($sqlin, $params) = $DB->get_in_or_equal($tagarray);
+        $sql = "SELECT ti.*, COALESCE(t.name, 'deleted') AS name, COALESCE(t.rawname, 'deleted') AS rawname
+                  FROM {tag_instance} ti
+             LEFT JOIN {tag} t ON t.id = ti.tagid
+                 WHERE ti.id $sqlin";
+        $instances = $DB->get_records_sql($sql, $params);
+        tag_bulk_delete_instances($instances);
+    }
 
     // TODO MDL-31212 this will only clean tags of type 'default'.  This is good as
     // it won't delete 'official' tags, but the day we get more than two
@@ -1114,6 +1128,48 @@ function tag_cleanup() {
         //debugging('deleting unused tag #'. $unused_tag->id,  DEBUG_DEVELOPER);
     }
     $unused_tags->close();
+}
+
+/**
+ * This function will delete numerous tag instances efficiently.
+ * This removes tag instances only. It doesn't check to see if it is the last use of a tag.
+ *
+ * @param array $instances An array of tag instance objects with the addition of the tagname and tagrawname
+ *        (used for recording a delete event).
+ */
+function tag_bulk_delete_instances($instances) {
+    global $DB;
+
+    $instanceids = array();
+    foreach ($instances as $instance) {
+        $instanceids[] = $instance->id;
+    }
+
+    // This is a multi db compatible method of creating the correct sql when using the 'IN' value.
+    // $insql is the sql statement, $params are the id numbers.
+    list($insql, $params) = $DB->get_in_or_equal($instanceids);
+    $sql = 'id ' . $insql;
+    $DB->delete_records_select('tag_instance', $sql, $params);
+
+    // Now go through and record each tag individually with the event system.
+    foreach ($instances as $instance) {
+        // Trigger tag removed event (i.e. The tag instance has been removed).
+        $event = \core\event\tag_removed::create(array(
+            'objectid' => $instance->id,
+            'contextid' => $instance->contextid,
+            'other' => array(
+                'tagid' => $instance->tagid,
+                'tagname' => $instance->name,
+                'tagrawname' => $instance->rawname,
+                'itemid' => $instance->itemid,
+                'itemtype' => $instance->itemtype
+            )
+        ));
+        unset($instance->name);
+        unset($instance->rawname);
+        $event->add_record_snapshot('tag_instance', $instance);
+        $event->trigger();
+    }
 }
 
 /**
@@ -1305,13 +1361,21 @@ function tag_get_name($tagids) {
  * Returns the correlated tags of a tag, retrieved from the tag_correlation table. Make sure cron runs, otherwise the table will be
  * empty and this function won't return anything.
  *
+ * Correlated tags are calculated in cron based on existing tag instances.
+ *
+ * This function will return as many entries as there are existing tag instances,
+ * which means that there will be duplicates for each tag.
+ *
+ * If you need only one record for each correlated tag please call:
+ *      tag_get_related_tags($tag_id, TAG_RELATED_CORRELATED);
+ *
  * @package core_tag
  * @access  private
  * @param   int      $tag_id   is a single tag id
- * @param   int      $limitnum this parameter does not appear to have any function???
+ * @param   int      $notused  this argument is no longer used
  * @return  array    an array of tag objects or an empty if no correlated tags are found
  */
-function tag_get_correlated($tag_id, $limitnum=null) {
+function tag_get_correlated($tag_id, $notused = null) {
     global $DB;
 
     $tag_correlation = $DB->get_record('tag_correlation', array('tagid'=>$tag_id));
@@ -1321,16 +1385,12 @@ function tag_get_correlated($tag_id, $limitnum=null) {
     }
 
     // this is (and has to) return the same fields as the query in tag_get_tags
-    $sql = "SELECT DISTINCT tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag, ti.ordering
+    $sql = "SELECT ti.id AS taginstanceid, tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag, ti.ordering
               FROM {tag} tg
         INNER JOIN {tag_instance} ti ON tg.id = ti.tagid
-             WHERE tg.id IN ({$tag_correlation->correlatedtags})";
-    $result = $DB->get_records_sql($sql);
-    if (!$result) {
-        return array();
-    }
-
-    return $result;
+             WHERE tg.id IN ({$tag_correlation->correlatedtags})
+          ORDER BY ti.ordering ASC";
+    return $DB->get_records_sql($sql);
 }
 
 /**

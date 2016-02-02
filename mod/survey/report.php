@@ -275,10 +275,8 @@
                 if ($question->multi) {
                     echo $OUTPUT->heading($question->text . ':', 4);
 
-                    $subquestions = $DB->get_records_list("survey_questions", "id", explode(',', $question->multi));
-                    $subquestionorder = explode(",", $question->multi);
-                    foreach ($subquestionorder as $key => $val) {
-                        $subquestion = $subquestions[$val];
+                    $subquestions = survey_get_subquestions($question);
+                    foreach ($subquestions as $subquestion) {
                         if ($subquestion->type > 0) {
                             echo "<p class=\"centerpara\">";
                             echo "<a title=\"$strseemoredetail\" href=\"report.php?action=question&amp;id=$id&amp;qid=$subquestion->id\">";
@@ -303,7 +301,7 @@
                         foreach ($aaa as $a) {
                             $contents .= "<tr>";
                             $contents .= '<td class="fullnamecell">'.fullname($a).'</td>';
-                            $contents .= '<td valign="top">'.$a->answer1.'</td>';
+                            $contents .= '<td valign="top">'.s($a->answer1).'</td>';
                             $contents .= "</tr>";
                         }
                     }
@@ -358,7 +356,7 @@
                        $OUTPUT->user_picture($a, array('courseid'=>$course->id)),
                        "<a href=\"report.php?id=$id&amp;action=student&amp;student=$a->userid\">".fullname($a)."</a>",
                        userdate($a->time),
-                       $answer1, $answer2);
+                       s($answer1), s($answer2));
 
             }
         }

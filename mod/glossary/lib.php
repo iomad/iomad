@@ -38,6 +38,17 @@ define("GLOSSARY_IMPORT_VIEW", 5);
 define("GLOSSARY_EXPORT_VIEW", 6);
 define("GLOSSARY_APPROVAL_VIEW", 7);
 
+// Glossary tabs.
+define('GLOSSARY_STANDARD', 'standard');
+define('GLOSSARY_AUTHOR', 'author');
+define('GLOSSARY_CATEGORY', 'category');
+define('GLOSSARY_DATE', 'date');
+
+// Glossary displayformats.
+define('GLOSSARY_CONTINUOUS', 'continuous');
+define('GLOSSARY_DICTIONARY', 'dictionary');
+define('GLOSSARY_FULLWITHOUTAUTHOR', 'fullwithoutauthor');
+
 /// STANDARD FUNCTIONS ///////////////////////////////////////////////////////////
 /**
  * @global object
@@ -736,11 +747,6 @@ function glossary_rating_validate($params) {
         throw new rating_exception('invalidnum');
     }
 
-    if (!$info->approved) {
-        //item isnt approved
-        throw new rating_exception('nopermissiontorate');
-    }
-
     //check the item we're rating was created in the assessable time window
     if (!empty($info->assesstimestart) && !empty($info->assesstimefinish)) {
         if ($info->timecreated < $info->assesstimestart || $info->timecreated > $info->assesstimefinish) {
@@ -911,7 +917,12 @@ function glossary_get_available_formats() {
                     $gf->name = $format;
                     $gf->popupformatname = $format;
                     $gf->visible = 1;
-                    $DB->insert_record("glossary_formats",$gf);
+                    $id = $DB->insert_record('glossary_formats', $gf);
+                    $rec = $DB->get_record('glossary_formats', array('id' => $id));
+                }
+
+                if (empty($rec->showtabs)) {
+                    glossary_set_default_visible_tabs($rec);
                 }
             }
         }
@@ -2267,6 +2278,13 @@ function glossary_generate_export_csv($entries, $aliases, $categories) {
 function glossary_generate_export_file($glossary, $ignored = "", $hook = 0) {
     global $CFG, $DB;
 
+    // Large exports are likely to take their time and memory.
+    core_php_time_limit::raise();
+    raise_memory_limit(MEMORY_EXTRA);
+
+    $cm = get_coursemodule_from_instance('glossary', $glossary->id, $glossary->course);
+    $context = context_module::instance($cm->id);
+
     $co  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 
     $co .= glossary_start_tag("GLOSSARY",0,true);
@@ -2284,6 +2302,7 @@ function glossary_generate_export_file($glossary, $ignored = "", $hook = 0) {
         $co .= glossary_full_tag("DEFAULTAPPROVAL",2,false,$glossary->defaultapproval);
         $co .= glossary_full_tag("GLOBALGLOSSARY",2,false,$glossary->globalglossary);
         $co .= glossary_full_tag("ENTBYPAGE",2,false,$glossary->entbypage);
+        $co .= glossary_xml_export_files('INTROFILES', 2, $context->id, 'intro', 0);
 
         if ( $entries = $DB->get_records("glossary_entries", array("glossaryid"=>$glossary->id))) {
             $co .= glossary_start_tag("ENTRIES",2,true);
@@ -2342,6 +2361,12 @@ function glossary_generate_export_file($glossary, $ignored = "", $hook = 0) {
                         }
                         $co .= glossary_end_tag("CATEGORIES",4,true);
                     }
+
+                    // Export files embedded in entries.
+                    $co .= glossary_xml_export_files('ENTRYFILES', 4, $context->id, 'entry', $entry->id);
+
+                    // Export attachments.
+                    $co .= glossary_xml_export_files('ATTACHMENTFILES', 4, $context->id, 'attachment', $entry->id);
 
                     $co .= glossary_end_tag("ENTRY",3,true);
                 }
@@ -2423,6 +2448,66 @@ function glossary_full_tag($tag,$level=0,$endline=true,$content) {
         $co = preg_replace("/\r\n|\r/", "\n", s($content));
         $et = glossary_end_tag($tag,0,true);
         return $st.$co.$et;
+}
+
+/**
+ * Prepares file area to export as part of XML export
+ *
+ * @param string $tag XML tag to use for the group
+ * @param int $taglevel
+ * @param int $contextid
+ * @param string $filearea
+ * @param int $itemid
+ * @return string
+ */
+function glossary_xml_export_files($tag, $taglevel, $contextid, $filearea, $itemid) {
+    $co = '';
+    $fs = get_file_storage();
+    if ($files = $fs->get_area_files(
+        $contextid, 'mod_glossary', $filearea, $itemid, 'itemid,filepath,filename', false)) {
+        $co .= glossary_start_tag($tag, $taglevel, true);
+        foreach ($files as $file) {
+            $co .= glossary_start_tag('FILE', $taglevel + 1, true);
+            $co .= glossary_full_tag('FILENAME', $taglevel + 2, false, $file->get_filename());
+            $co .= glossary_full_tag('FILEPATH', $taglevel + 2, false, $file->get_filepath());
+            $co .= glossary_full_tag('CONTENTS', $taglevel + 2, false, base64_encode($file->get_content()));
+            $co .= glossary_end_tag('FILE', $taglevel + 1);
+        }
+        $co .= glossary_end_tag($tag, $taglevel);
+    }
+    return $co;
+}
+
+/**
+ * Parses files from XML import and inserts them into file system
+ *
+ * @param array $xmlparent parent element in parsed XML tree
+ * @param string $tag
+ * @param int $contextid
+ * @param string $filearea
+ * @param int $itemid
+ * @return int
+ */
+function glossary_xml_import_files($xmlparent, $tag, $contextid, $filearea, $itemid) {
+    $count = 0;
+    if (isset($xmlparent[$tag][0]['#']['FILE'])) {
+        $fs = get_file_storage();
+        $files = $xmlparent[$tag][0]['#']['FILE'];
+        foreach ($files as $file) {
+            $filerecord = array(
+                'contextid' => $contextid,
+                'component' => 'mod_glossary',
+                'filearea'  => $filearea,
+                'itemid'    => $itemid,
+                'filepath'  => $file['#']['FILEPATH'][0]['#'],
+                'filename'  => $file['#']['FILENAME'][0]['#'],
+            );
+            $content =  $file['#']['CONTENTS'][0]['#'];
+            $fs->create_file_from_string($filerecord, base64_decode($content));
+            $count++;
+        }
+    }
+    return $count;
 }
 
 /**
@@ -2975,11 +3060,33 @@ function glossary_get_completion_state($course,$cm,$userid,$type) {
 }
 
 function glossary_extend_navigation($navigation, $course, $module, $cm) {
-    global $CFG;
-    $navigation->add(get_string('standardview', 'glossary'), new moodle_url('/mod/glossary/view.php', array('id'=>$cm->id, 'mode'=>'letter')));
-    $navigation->add(get_string('categoryview', 'glossary'), new moodle_url('/mod/glossary/view.php', array('id'=>$cm->id, 'mode'=>'cat')));
-    $navigation->add(get_string('dateview', 'glossary'), new moodle_url('/mod/glossary/view.php', array('id'=>$cm->id, 'mode'=>'date')));
-    $navigation->add(get_string('authorview', 'glossary'), new moodle_url('/mod/glossary/view.php', array('id'=>$cm->id, 'mode'=>'author')));
+    global $CFG, $DB;
+
+    $displayformat = $DB->get_record('glossary_formats', array('name' => $module->displayformat));
+    // Get visible tabs for the format and check if the menu needs to be displayed.
+    $showtabs = glossary_get_visible_tabs($displayformat);
+
+    foreach ($showtabs as $showtabkey => $showtabvalue) {
+
+        switch($showtabvalue) {
+            case GLOSSARY_STANDARD :
+                $navigation->add(get_string('standardview', 'glossary'), new moodle_url('/mod/glossary/view.php',
+                        array('id' => $cm->id, 'mode' => 'letter')));
+                break;
+            case GLOSSARY_CATEGORY :
+                $navigation->add(get_string('categoryview', 'glossary'), new moodle_url('/mod/glossary/view.php',
+                        array('id' => $cm->id, 'mode' => 'cat')));
+                break;
+            case GLOSSARY_DATE :
+                $navigation->add(get_string('dateview', 'glossary'), new moodle_url('/mod/glossary/view.php',
+                        array('id' => $cm->id, 'mode' => 'date')));
+                break;
+            case GLOSSARY_AUTHOR :
+                $navigation->add(get_string('authorview', 'glossary'), new moodle_url('/mod/glossary/view.php',
+                        array('id' => $cm->id, 'mode' => 'author')));
+                break;
+        }
+    }
 }
 
 /**
@@ -3124,4 +3231,67 @@ function glossary_page_type_list($pagetype, $parentcontext, $currentcontext) {
         'mod-glossary-view'=>get_string('page-mod-glossary-view', 'glossary'),
         'mod-glossary-edit'=>get_string('page-mod-glossary-edit', 'glossary'));
     return $module_pagetype;
+}
+
+/**
+ * Return list of all glossary tabs.
+ * @throws coding_exception
+ * @return array
+ */
+function glossary_get_all_tabs() {
+
+    return array (
+        GLOSSARY_AUTHOR => get_string('authorview', 'glossary'),
+        GLOSSARY_CATEGORY => get_string('categoryview', 'glossary'),
+        GLOSSARY_DATE => get_string('dateview', 'glossary')
+    );
+}
+
+/**
+ * Set 'showtabs' value for glossary formats
+ * @param stdClass $glossaryformat record from 'glossary_formats' table
+ */
+function glossary_set_default_visible_tabs($glossaryformat) {
+    global $DB;
+
+    switch($glossaryformat->name) {
+        case GLOSSARY_CONTINUOUS:
+            $showtabs = 'standard,category,date';
+            break;
+        case GLOSSARY_DICTIONARY:
+            $showtabs = 'standard';
+            // Special code for upgraded instances that already had categories set up
+            // in this format - enable "category" tab.
+            // In new instances only 'standard' tab will be visible.
+            if ($DB->record_exists_sql("SELECT 1
+                    FROM {glossary} g, {glossary_categories} gc
+                    WHERE g.id = gc.glossaryid and g.displayformat = ?",
+                    array(GLOSSARY_DICTIONARY))) {
+                $showtabs .= ',category';
+            }
+            break;
+        case GLOSSARY_FULLWITHOUTAUTHOR:
+            $showtabs = 'standard,category,date';
+            break;
+        default:
+            $showtabs = 'standard,category,date,author';
+            break;
+    }
+
+    $DB->set_field('glossary_formats', 'showtabs', $showtabs, array('id' => $glossaryformat->id));
+    $glossaryformat->showtabs = $showtabs;
+}
+
+/**
+ * Convert 'showtabs' string to array
+ * @param stdClass $displayformat record from 'glossary_formats' table
+ * @return array
+ */
+function glossary_get_visible_tabs($displayformat) {
+    if (empty($displayformat->showtabs)) {
+        glossary_set_default_visible_tabs($displayformat);
+    }
+    $showtabs = preg_split('/,/', $displayformat->showtabs, -1, PREG_SPLIT_NO_EMPTY);
+
+    return $showtabs;
 }

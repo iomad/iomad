@@ -117,12 +117,19 @@ class EvalMath {
 
     var $allowimplicitmultiplication;
 
-    function EvalMath($allowconstants = false, $allowimplicitmultiplication = false) {
+    public function __construct($allowconstants = false, $allowimplicitmultiplication = false) {
         if ($allowconstants){
             $this->v['pi'] = pi();
             $this->v['e'] = exp(1);
         }
         $this->allowimplicitmultiplication = $allowimplicitmultiplication;
+    }
+
+    /**
+     * Old syntax of class constructor. Deprecated in PHP7.
+     */
+    public function EvalMath($allowconstants = false, $allowimplicitmultiplication = false) {
+        self::__construct($allowconstants, $allowimplicitmultiplication);
     }
 
     function e($expr) {

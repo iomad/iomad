@@ -94,7 +94,7 @@ class core_weblib_testcase extends advanced_testcase {
             format_text_email('<p class="frogs">This is a <strong class=\'fishes\'>test</strong></p>', FORMAT_HTML));
         $this->assertSame('& so is this',
             format_text_email('&amp; so is this', FORMAT_HTML));
-        $this->assertSame('Two bullets: '.core_text::code2utf8(8226).' *',
+        $this->assertSame('Two bullets: ' . core_text::code2utf8(8226) . ' ' . core_text::code2utf8(8226),
             format_text_email('Two bullets: &#x2022; &#8226;', FORMAT_HTML));
         $this->assertSame(core_text::code2utf8(0x7fd2).core_text::code2utf8(0x7fd2),
             format_text_email('&#x7fd2;&#x7FD2;', FORMAT_HTML));
@@ -565,6 +565,21 @@ Anchor + ext. img:<a title="bananas" href="../logo-240x60.gif"></a>
 Ext. anchor + img:<img alt="Moodle" src="https://moodle.org/logo/logo-240x60.gif" />
 EXPECTED;
         $this->assertSame($expected, strip_pluginfile_content($source));
+    }
+
+    public function test_purify_html_ruby() {
+
+        $this->resetAfterTest();
+
+        $ruby =
+            "<p><ruby><rb>京都</rb><rp>(</rp><rt>きょうと</rt><rp>)</rp></ruby>は" .
+            "<ruby><rb>日本</rb><rp>(</rp><rt>にほん</rt><rp>)</rp></ruby>の" .
+            "<ruby><rb>都</rb><rp>(</rp><rt>みやこ</rt><rp>)</rp></ruby>です。</p>";
+        $illegal = '<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>';
+
+        $cleaned = purify_html($ruby . $illegal);
+        $this->assertEquals($ruby, $cleaned);
+
     }
 
 }

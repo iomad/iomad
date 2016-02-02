@@ -7,8 +7,8 @@ Feature: In a lesson activity, students can navigate through a series of pages i
   Background:
     Given the following "users" exist:
       | username | firstname | lastname | email |
-      | teacher1 | Teacher | 1 | teacher1@asd.com |
-      | student1 | Student | 1 | student1@asd.com |
+      | teacher1 | Teacher | 1 | teacher1@example.com |
+      | student1 | Student | 1 | student1@example.com |
     And the following "courses" exist:
       | fullname | shortname | category |
       | Course 1 | C1 | 0 |
@@ -84,8 +84,7 @@ Feature: In a lesson activity, students can navigate through a series of pages i
     And I set the following fields to these values:
       | Your answer | 2 |
     And I press "Submit"
-    And I should see "Correct answer"
-    And I should not see "Incorrect answer"
+    And I should see "Maximum number of attempts reached - Moving to next page"
     And I press "Continue"
     And I should see "Congratulations - end of lesson reached"
     And I should see "Your score is 0 (out of 1)."
@@ -128,6 +127,6 @@ Feature: In a lesson activity, students can navigate through a series of pages i
     And I set the following fields to these values:
       | wrong | 1 |
     And I press "Submit"
-    And I should see "(Maximum number of attempts reached - Moving to next page)"
+    And I should not see "Yes, I'd like to try again"
     And I press "Continue"
     And I should see "Congratulations - end of lesson reached"

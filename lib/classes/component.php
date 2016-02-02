@@ -100,6 +100,9 @@ class core_component {
             $newclassname = self::$classmaprenames[$classname];
             $debugging = "Class '%s' has been renamed for the autoloader and is now deprecated. Please use '%s' instead.";
             debugging(sprintf($debugging, $classname, $newclassname), DEBUG_DEVELOPER);
+            if (PHP_VERSION_ID >= 70000 && preg_match('#\\\null(\\\|$)#', $classname)) {
+                throw new \coding_exception("Cannot alias $classname to $newclassname");
+            }
             class_alias($newclassname, $classname);
             return;
         }
@@ -348,7 +351,8 @@ $cache = '.var_export($cache, true).';
             'cache'       => $CFG->dirroot.'/cache',
             'calendar'    => $CFG->dirroot.'/calendar',
             'cohort'      => $CFG->dirroot.'/cohort',
-            'completion'  => null,
+            'comment'     => $CFG->dirroot.'/comment',
+            'completion'  => $CFG->dirroot.'/completion',
             'countries'   => null,
             'course'      => $CFG->dirroot.'/course',
             'currencies'  => null,
@@ -647,6 +651,13 @@ $cache = '.var_export($cache, true).';
             return;
         }
 
+        if (!is_readable($fulldir)) {
+            // TODO: MDL-51711 We should generate some diagnostic debugging information in this case
+            // because its pretty likely to lead to a missing class error further down the line.
+            // But our early setup code can't handle errors this early at the moment.
+            return;
+        }
+
         $items = new \DirectoryIterator($fulldir);
         foreach ($items as $item) {
             if ($item->isDot()) {
@@ -706,12 +717,12 @@ $cache = '.var_export($cache, true).';
      */
     protected static function load_psr_classes($basedir, $subdir = null) {
         if ($subdir) {
-            $fulldir = implode(DIRECTORY_SEPARATOR, array($basedir, $subdir));
-            $classnameprefix = preg_replace('/\//', '_', $subdir);
+            $fulldir = realpath($basedir . DIRECTORY_SEPARATOR . $subdir);
+            $classnameprefix = preg_replace('#' . preg_quote(DIRECTORY_SEPARATOR) . '#', '_', $subdir);
         } else {
             $fulldir = $basedir;
         }
-        if (!is_dir($fulldir)) {
+        if (!$fulldir || !is_dir($fulldir)) {
             return;
         }
 
@@ -1101,7 +1112,7 @@ $cache = '.var_export($cache, true).';
                 $plugin = new stdClass();
                 $plugin->version = null;
                 $module = $plugin;
-                @include($fullplug.'/version.php');
+                include($fullplug.'/version.php');
                 $versions[$type.'_'.$plug] = $plugin->version;
             }
         }

@@ -61,12 +61,19 @@ class profile_field_base {
      * @param int $fieldid id of the profile from the user_info_field table
      * @param int $userid id of the user for whom we are displaying data
      */
-    public function profile_field_base($fieldid=0, $userid=0) {
+    public function __construct($fieldid=0, $userid=0) {
         global $USER;
 
         $this->set_fieldid($fieldid);
         $this->set_userid($userid);
         $this->load_data();
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function profile_field_base($fieldid=0, $userid=0) {
+        self::__construct($fieldid, $userid);
     }
 
     /**
@@ -210,7 +217,7 @@ class profile_field_base {
      */
     public function edit_field_set_required($mform) {
         global $USER;
-        if ($this->is_required() && ($this->userid == $USER->id)) {
+        if ($this->is_required() && ($this->userid == $USER->id || isguestuser())) {
             $mform->addRule($this->inputname, get_string('required'), 'required', null, 'client');
         }
     }
@@ -621,4 +628,33 @@ function profile_load_custom_fields($user) {
     $user->profile = (array)profile_user_record($user->id);
 }
 
+/**
+ * Trigger a user profile viewed event.
+ *
+ * @param stdClass  $user user  object
+ * @param stdClass  $context  context object (course or user)
+ * @param stdClass  $course course  object
+ * @since Moodle 2.9
+ */
+function profile_view($user, $context, $course = null) {
+
+    $eventdata = array(
+        'objectid' => $user->id,
+        'relateduserid' => $user->id,
+        'context' => $context
+    );
+
+    if (!empty($course)) {
+        $eventdata['courseid'] = $course->id;
+        $eventdata['other'] = array(
+            'courseid' => $course->id,
+            'courseshortname' => $course->shortname,
+            'coursefullname' => $course->fullname
+        );
+    }
+
+    $event = \core\event\user_profile_viewed::create($eventdata);
+    $event->add_record_snapshot('user', $user);
+    $event->trigger();
+}
 

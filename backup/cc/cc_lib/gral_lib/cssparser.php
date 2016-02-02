@@ -18,11 +18,18 @@ class cssparser {
   private $css;
   private $html;
 
-  function cssparser($html = true) {
+  public function __construct($html = true) {
     // Register "destructor"
     core_shutdown_manager::register_function(array(&$this, "finalize"));
     $this->html = ($html != false);
     $this->Clear();
+  }
+
+  /**
+   * Old syntax of class constructor. Deprecated in PHP7.
+   */
+  public function cssparser($html = true) {
+      self::__construct($html);
   }
 
   function finalize() {

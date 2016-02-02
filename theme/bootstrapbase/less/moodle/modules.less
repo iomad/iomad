@@ -193,6 +193,7 @@ select {
     }
 }
 .dir-rtl .navbar .brand {
+    padding: 10px 0 10px 20px;
     float: right;
 }
 
@@ -217,6 +218,12 @@ select {
 .dir-rtl .breadcrumb-button .singlebutton {
     float: right;
     margin-right: 4px;
+    margin-left: 0;
+}
+.dir-rtl .breadcrumb-button .singlebutton div,
+.dir-rtl .breadcrumb-button .singlebutton div input[type="submit"] {
+    margin-right: 5px;
+    margin-left: 0;
 }
 
 .ie .row-fluid .desktop-first-column {
@@ -326,18 +333,25 @@ div#dock {
     .divider {
         overflow: hidden;
         width: 0;
-        height: 40px;
-        border-left: 1px solid #e5e5e5;
-        border-right: 1px solid #fff;
+        height: @navbarHeight;
+        border-left: 1px solid @navbarBackground;
+        border-right: 1px solid @navbarBackgroundHighlight;
     }
 }
-
+.navbar-inverse {
+    .nav {
+        .divider {
+            border-left-color: @navbarInverseBackground;
+            border-right-color: lighten(@navbarInverseBackground, 25%);
+        }
+    }
+}
 .dropdown-menu {
     .divider {
         width: auto;
         height: 1px;
-        border-left: 0px none;
-        border-right: 0px none;
+        border-left: 0 none;
+        border-right: 0 none;
     }
 }
 

@@ -61,7 +61,8 @@ $accessmanager->setup_attempt_page($PAGE);
 
 $options = $attemptobj->get_display_options(true);
 
-// Check permissions.
+// Check permissions - warning there is similar code in reviewquestion.php and
+// quiz_attempt::check_file_access. If you change on, change them all.
 if ($attemptobj->is_own_attempt()) {
     if (!$attemptobj->is_finished()) {
         redirect($attemptobj->attempt_url(null, $page));
@@ -91,7 +92,7 @@ if ($options->flags == question_display_options::EDITABLE && optional_param('sav
 }
 
 // Work out appropriate title and whether blocks should be shown.
-if ($attemptobj->is_preview_user() && $attemptobj->is_own_attempt()) {
+if ($attemptobj->is_own_preview()) {
     $strreviewtitle = get_string('reviewofpreview', 'quiz');
     navigation_node::override_active_url($attemptobj->start_attempt_url());
 
@@ -133,10 +134,10 @@ $summarydata = array();
 if (!$attemptobj->get_quiz()->showuserpicture && $attemptobj->get_userid() != $USER->id) {
     // If showuserpicture is true, the picture is shown elsewhere, so don't repeat it.
     $student = $DB->get_record('user', array('id' => $attemptobj->get_userid()));
-    $usrepicture = new user_picture($student);
-    $usrepicture->courseid = $attemptobj->get_courseid();
+    $userpicture = new user_picture($student);
+    $userpicture->courseid = $attemptobj->get_courseid();
     $summarydata['user'] = array(
-        'title'   => $usrepicture,
+        'title'   => $userpicture,
         'content' => new action_link(new moodle_url('/user/view.php', array(
                                 'id' => $student->id, 'course' => $attemptobj->get_courseid())),
                           fullname($student, true)),

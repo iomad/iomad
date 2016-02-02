@@ -56,6 +56,8 @@ if (empty($tag)) {
 $PAGE->set_url('/tag/index.php', array('id' => $tag->id));
 $PAGE->set_subpage($tag->id);
 $PAGE->set_context($systemcontext);
+$tagnode = $PAGE->navigation->find('tags', null);
+$tagnode->make_active();
 $PAGE->set_pagelayout('standard');
 $PAGE->set_blocks_editing_capability('moodle/tag:editblocks');
 
@@ -71,7 +73,6 @@ if ($PAGE->user_allowed_editing() ) {
     $button = $OUTPUT->edit_button(new moodle_url("$CFG->wwwroot/tag/index.php", array('id' => $tag->id)));
 }
 
-$PAGE->navbar->add(get_string('tags', 'tag'), new moodle_url('/tag/search.php'));
 $PAGE->navbar->add($tagname);
 $PAGE->set_title($title);
 $PAGE->set_heading($COURSE->fullname);
@@ -94,7 +95,6 @@ echo $OUTPUT->heading($tagname, 2);
 tag_print_management_box($tag);
 tag_print_description_box($tag);
 // Check what type of results are avaialable
-require_once($CFG->dirroot.'/tag/coursetagslib.php');
 $courses = $courserenderer->tagged_courses($tag->id);
 
 if (!empty($CFG->enableblogs) && has_capability('moodle/blog:view', $systemcontext)) {
