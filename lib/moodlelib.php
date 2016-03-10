@@ -6148,7 +6148,7 @@ function get_user_max_upload_file_size($context, $sitebytes = 0, $coursebytes = 
     }
 
     if (has_capability('moodle/course:ignorefilesizelimits', $context, $user)) {
-        return USER_CAN_IGNORE_FILE_SIZE_LIMITS;
+        return get_max_upload_file_size(USER_CAN_IGNORE_FILE_SIZE_LIMITS);
     }
 
     return get_max_upload_file_size($sitebytes, $coursebytes, $modulebytes);
@@ -8404,7 +8404,7 @@ function address_in_subnet($addr, $subnetstr) {
  */
 function mtrace($string, $eol="\n", $sleep=0) {
 
-    if (defined('STDOUT') and !PHPUNIT_TEST) {
+    if (defined('STDOUT') && !PHPUNIT_TEST && !defined('BEHAT_TEST')) {
         fwrite(STDOUT, $string.$eol);
     } else {
         echo $string . $eol;

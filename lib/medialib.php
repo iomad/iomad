@@ -494,7 +494,8 @@ class core_media_player_vimeo extends core_media_player_external {
         $output = <<<OET
 <span class="mediaplugin mediaplugin_vimeo">
 <iframe title="$info" src="https://player.vimeo.com/video/$videoid"
-  width="$width" height="$height" frameborder="0"></iframe>
+  width="$width" height="$height" frameborder="0"
+  webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 </span>
 OET;
 
@@ -1176,7 +1177,7 @@ class core_media_player_html5audio extends core_media_player {
         $fallback = core_media_player::PLACEHOLDER;
 
         return <<<OET
-<audio controls="true" $size class="mediaplugin mediaplugin_html5audio" preload="no" title="$title">
+<audio controls="true" $size class="mediaplugin mediaplugin_html5audio" preload="none" title="$title">
 $sources
 $fallback
 </audio>

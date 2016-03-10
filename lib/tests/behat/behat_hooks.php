@@ -375,12 +375,21 @@ class behat_hooks extends behat_base {
      * @AfterStep
      */
     public function after_step(StepEvent $event) {
-        global $CFG;
+        global $CFG, $DB;
 
         // Save the page content if the step failed.
         if (!empty($CFG->behat_faildump_path) &&
                 $event->getResult() === StepEvent::FAILED) {
             $this->take_contentdump($event);
+        }
+
+        // Abort any open transactions to prevent subsequent tests hanging.
+        // This does the same as abort_all_db_transactions(), but doesn't call error_log() as we don't
+        // want to see a message in the behat output.
+        if ($event->hasException()) {
+            if ($DB && $DB->is_transaction_started()) {
+                $DB->force_transaction_rollback();
+            }
         }
     }
 
@@ -393,7 +402,17 @@ class behat_hooks extends behat_base {
      * @AfterScenario @_switch_window
      */
     public function after_scenario_switchwindow(ScenarioEvent $event) {
-        $this->getSession()->restart();
+        for ($count = 0; $count < self::EXTENDED_TIMEOUT; $count) {
+            try {
+                $this->getSession()->restart();
+                break;
+            } catch (DriverException $e) {
+                // Wait for timeout and try again.
+                sleep(self::TIMEOUT);
+            }
+        }
+        // If session is not restarted above then it will try to start session before next scenario
+        // and if that fails then exception will be thrown.
     }
 
     /**

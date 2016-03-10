@@ -64,7 +64,7 @@ class edit_renderer extends \plugin_renderer_base {
         $output .= $this->total_marks($quizobj->get_quiz());
 
         // Show the questions organised into sections and pages.
-        $output .= $this->start_section_list();
+        $output .= $this->start_section_list($structure);
 
         foreach ($structure->get_sections() as $section) {
             $output .= $this->start_section($structure, $section);
@@ -254,10 +254,15 @@ class edit_renderer extends \plugin_renderer_base {
 
     /**
      * Generate the starting container html for the start of a list of sections
+     * @param structure $structure the structure of the quiz being edited.
      * @return string HTML to output.
      */
-    protected function start_section_list() {
-        return html_writer::start_tag('ul', array('class' => 'slots'));
+    protected function start_section_list(structure $structure) {
+        $class = 'slots';
+        if ($structure->get_section_count() == 1) {
+            $class .= ' only-one-section';
+        }
+        return html_writer::start_tag('ul', array('class' => $class));
     }
 
     /**
@@ -698,10 +703,11 @@ class edit_renderer extends \plugin_renderer_base {
      * @param \stdClass $quiz the quiz settings from the database.
      * @param \stdClass $question data from the question and quiz_slots tables.
      * @param bool $label if true, show the preview question label after the icon
+     * @param int $variant which question variant to preview (optional).
      * @return string HTML to output.
      */
-    public function question_preview_icon($quiz, $question, $label = null) {
-        $url = quiz_question_preview_url($quiz, $question);
+    public function question_preview_icon($quiz, $question, $label = null, $variant = null) {
+        $url = quiz_question_preview_url($quiz, $question, $variant);
 
         // Do we want a label?
         $strpreviewlabel = '';
