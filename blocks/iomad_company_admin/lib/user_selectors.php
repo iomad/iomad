@@ -1037,7 +1037,8 @@ class current_license_user_selector extends user_selector_base {
         }
 
         // If we did, use the find_users method to validate the ids.
-        $groupedusers = $this->find_users('');
+        $search = optional_param($this->name . '_searchtext', '', PARAM_CLEAN);
+        $groupedusers = $this->find_users($search);
 
         // Aggregate the resulting list back into a single one.
         $users = array();
