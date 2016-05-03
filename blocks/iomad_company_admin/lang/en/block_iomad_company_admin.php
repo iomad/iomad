@@ -107,6 +107,7 @@ $string['curlicensecoursesmatching'] = 'Current license courses matching \'{$a}\
 $string['currentlyenrolledusers'] = 'Enrolled students';
 $string['currentlyenrolledusersmatching'] = 'Enrolled students matching \'{$a}\'';
 $string['customcss'] = 'Custom company CSS'; 
+$string['customcss_help'] = 'Whatever CSS rules you add to this textarea will be reflected in every page, making for easier customization of this theme.'; 
 $string['dashboard'] = 'Iomad Dashboard';
 $string['deletecheckfull'] = 'Do you really want to delete this user';
 $string['deletecompany'] = 'Delete company';
@@ -306,7 +307,7 @@ $string['suspendcompany'] = 'Suspend company';
 $string['suspendcompanycheck'] = 'Do you really want to suspend this company?';
 $string['suspendcompanycheckfull'] = 'Do you really want to suspend this company?  This will suspend all of the users who are associate to this company but will keep the courses and other company details intact.';
 $string['suspenduser'] = 'Suspend user';
-$string['theoptionsbelow'] = '<p><b>NOTE: The options below will only work with the "Iomad" theme</b></p>';
+$string['theoptionsbelow'] = '<p><b>NOTE: The options below will only work with the "Iomad" theme, "Iomadbootstrap" and their subthemes</b></p>';
 $string['triedtoallocatetoomanylicenses'] = 'You have tried to allocate licenses for more courses than there are available allocations';
 $string['unenrollincapable'] = '<span id="unenrollwarning">NOTE: If "(existing enrolments)" is shown, you do not have the necessary rights to add/remove this courses. Remove existing user enrolments first.</span>';
 $string['unenrollwarning'] = '<span id="unenrollwarning">WARNING: If "(existing enrolments)" is shown you must tick the box beneath to allow add or remove. If you do this, all users will be unenrolled and ALL THEIR DATA (for that course) IS LOST. This cannot be undone</span>';

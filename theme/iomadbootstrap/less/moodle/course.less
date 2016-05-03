@@ -186,7 +186,7 @@
         background-color: @state-info-bg;
     }
     .section-summary {
-        border: 1px solid #ddd;
+        border: 1px solid @gray-lighter;
         margin-top: 5px;
         list-style: none;
         .section-title {
@@ -242,7 +242,7 @@
     }
     ul {
         li.section.main {
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid @gray-lighter;
             margin-top: 0;
             .left,
             .right {
@@ -356,7 +356,8 @@ span.editinstructions {
     color: @state-info-text;
     text-decoration: none;
     z-index: 9999;
-    box-shadow: 2px 2px 5px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 5px 1px @gray-lighter;
+    box-shadow: 2px 2px 5px 1px @gray-lighter;
     border: 1px solid @state-info-border;
 }
 #dndupload-status {
@@ -367,13 +368,14 @@ span.editinstructions {
     left: 50%;
     width: 30em;
     margin-left: -15em;
-    box-shadow: 2px 2px 5px 1px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 2px 2px 5px 1px @text-shadow;
+    box-shadow: 2px 2px 5px 1px @text-shadow;
     .border-top-radius(0);
     z-index: -1; // to slide under navbar;
 }
 .dndupload-preview {
-    color: #909090;
-    border: 1px dashed #909090;
+    color: @gray-light;
+    border: 1px dashed @gray-light;
     list-style: none;
     margin-top: .2em;
     padding: .3em;
@@ -539,7 +541,7 @@ span.editinstructions {
 .course_category_tree {
     .courses {
         & > .paging.paging-morelink:hover {
-            background-color:#eee;
+            background-color:@gray-lighter;
         }
     }
     .category {
@@ -631,7 +633,7 @@ span.editinstructions {
 #page-course-index-category {
     .generalbox.info {
         margin-bottom: 15px;
-        border: 1px dotted #ddd;
+        border: 1px dotted @gray-lighter;
         border-radius: 4px;
         padding: 5px;
     }
@@ -1095,8 +1097,8 @@ span.editinstructions {
         #category-listing > div,
         #course-listing > div,
         #course-detail > div {
-            border:1px solid #e1e1e8;
-            background-color:#fff;
+            border:1px solid @gray-lighter;
+            background-color:@white-hex;
         }
         #course-detail {
             width:100%;
@@ -1120,8 +1122,8 @@ span.editinstructions {
         #category-listing > div,
         #course-listing > div,
         #course-detail > div {
-            border:1px solid #e1e1e8;
-            background-color:#fff;
+            border:1px solid @gray-lighter;
+            background-color:@white-hex;
         }
     }
 }

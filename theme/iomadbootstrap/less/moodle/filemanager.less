@@ -4,7 +4,7 @@
 .file-picker a,
 .filemanager a:hover,
 .file-picker a:hover {
-    color: #555;
+    color: @gray;
     text-decoration: none;
 }
 .filemanager input[type="text"],
@@ -32,32 +32,35 @@
 }
 #filesskin .yui3-panel-content {
     padding-bottom: 20px;
-    background: #f2f2f2;
+    background: @gray-lighter;
     border-radius: 8px;
-    border: 1px solid #fff;
+    border: 1px solid @white-hex;
     display: inline-block;
-    box-shadow: 5px 5px 20px 0 #666;
+    -webkit-box-shadow: inset 5px 5px 20px 0 @gray;
+    box-shadow: 5px 5px 20px 0 @gray;
 }
 #filesskin .yui3-widget-hd {
     border-radius: 10px 10px 0 0;
-    border-bottom: 1px solid #bbb;
+    border-bottom: 1px solid @gray-light;
     padding: 5px;
     text-align: center;
     font-size: 12px;
-    color: #333;
+    color: @gray;
     letter-spacing: 1px;
-    text-shadow: 1px 1px 1px #fff;
-    filter: dropshadow(color=#fff, offx=1, offy=1);
-    #gradient > .vertical (#fff, #ccc);
+    text-shadow: 1px 1px 1px @white-hex;
+    -webkit-filter: dropshadow(color=@white-hex, offx=1, offy=1);
+    filter: dropshadow(color=@white-hex, offx=1, offy=1);
+    #gradient > .vertical (@white-hex, @gray-lighter);
 }
 .fp-panel-button {
-    background: #fff;
+    background: @white-hex;
     padding: 3px 20px 2px 20px;
     text-align: center;
     margin: 10px;
     border-radius: 10px;
     display: inline-block;
-    box-shadow: 2px 2px 3px .1px #999;
+    -webkit-box-shadow: 2px 2px 3px .1px  @gray-light;
+    box-shadow: 2px 2px 3px .1px @gray-light;
 }
 
  .moodle-dialogue-base .filepicker .moodle-dialogue-wrap .moodle-dialogue-bd {
@@ -67,9 +70,9 @@
 // File Picker layout
 #filesskin .file-picker.fp-generallayout {
     width: 859px;
-    background: #fff;
+    background: @white-hex;
     border-radius: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid @gray-lighter;
     position: relative;
 }
 .file-picker .fp-repo-area {
@@ -78,15 +81,15 @@
     display: inline-block;
     float: left;
     height: 490px;
-    border-right: 1px solid #bbb;
+    border-right: 1px solid @gray-light;
 }
 .file-picker .fp-repo-items {
     float: left;
     width: 693px;
 }
 .file-picker .fp-navbar {
-    background: #f2f2f2;
-    border-bottom: 1px solid #bbb;
+    background: @gray-lighter;
+    border-bottom: 1px solid @gray-light;
     min-height: 36px;
 }
 .file-picker .fp-navbar .fp-viewbar {
@@ -124,7 +127,7 @@
     padding: .5em .7em;
 }
 .file-picker .fp-list .fp-repo.active {
-    background: #f2f2f2;
+    background: @gray-lighter;
 }
 .file-picker .fp-list .fp-repo-icon {
     padding: 0 7px 0 5px;
@@ -155,17 +158,17 @@
     height: 27px;
 }
 .fp-toolbar .fp-tb-search input {
-    background: #fff url('[[pix:a/search]]') no-repeat 7px 7px;
+    background: @white-hex url('[[pix:a/search]]') no-repeat 7px 7px;
     padding: 2px 6px 1px 27px;
     width: 200px;
     height: 27px;
-    border: 1px solid #bbb;
+    border: 1px solid @gray-light;
 }
 .fp-viewbar {
     float: right;
     height: 30px;
-    border: 1px solid #ccc;
-    border-bottom: 1px solid #b3b3b3;
+    border: 1px solid @gray-lighter;
+    border-bottom: 1px solid @gray-light;
     border-radius: 4px;
     background: white;
 }
@@ -176,20 +179,20 @@
 .fp-viewbar a {
     width: 30px;
     height: 30px;
-    border-right: 1px solid #ccc;
+    border-right: 1px solid @gray-lighter;
     display: block;
     float:left;
 }
 .fp-viewbar a.checked:hover,
 .fp-viewbar a:hover {
-    background-image: radial-gradient(ellipse at center, #fff 60%,#dfdfdf 100%);
+    background-image: radial-gradient(ellipse at center, @white-hex 60%,@gray-lighter 100%);
     background-color: #ebebeb;
 }
 
 .fp-viewbar a.checked,
 .fp-viewbar a:active {
-    background-image: radial-gradient(ellipse at center, #fff 40%,#dfdfdf 100%);
-    background-color: #dfdfdf;
+    background-image: radial-gradient(ellipse at center, @white-hex 40%,@gray-lighter 100%);
+    background-color: @gray-lighter;
 }
 
 .fp-viewbar a.fp-vb-icons {
@@ -243,19 +246,21 @@
     min-height: 110px;
     line-height: 110px;
     text-align: center;
-    border: 1px solid #fff;
+    border: 1px solid @white-hex;
     display: block;
 }
 .fp-iconview .fp-thumbnail img {
-    border: 1px solid #ddd;
+    border: 1px solid @gray-lighter;
     padding: 3px;
     vertical-align: middle;
-    box-shadow: 1px 1px 2px 0 #ccc;
+    -webkit-box-shadow: inset 1px 1px 2px 0 @gray-lighter;
+    box-shadow: 1px 1px 2px 0 @gray-lighter;
 }
 .fp-iconview .fp-thumbnail:hover {
-    background: #fff;
-    border: 1px solid #ddd;
-    box-shadow: inset 0 0 10px 0px #ccc;
+    background: @white-hex;
+    border: 1px solid @gray-lighter;
+    -webkit-box-shadow: inset 0 0 10px 0 @gray-lighter;
+    box-shadow: inset 0 0 10px 0px @gray-lighter;
 }
 .fp-iconview .fp-filename-field {
     height: 33px;
@@ -268,29 +273,29 @@
     z-index: 1000;
 }
 .fp-iconview .fp-filename-field .fp-filename {
-    background: #fff;
+    background: @white-hex;
     padding-top: 5px;
     padding-bottom: 12px;
     min-width: 112px;
 }
 // Table view (File Picker only)
 .file-picker .yui3-datatable table {
-    border: 0 solid #bbb;
+    border: 0 solid @gray-light;
     width: 100%;
 }
 #filesskin .file-picker .yui3-datatable-header {
-    background: #fff;
-    border-bottom: 1px solid #ccc;
-    border-left: 0 solid #fff;
-    color: #555;
+    background: @white-hex;
+    border-bottom: 1px solid @gray-lighter;
+    border-left: 0 solid @white-hex;
+    color: @gray;
 }
 #filesskin .file-picker .yui3-datatable-odd .yui3-datatable-cell {
-    background-color: #f6f6f6;
-    border-left: 0 solid #f6f6f6;
+    background-color: @gray-lighter;
+    border-left: 0 solid @gray-lighter;
 }
 #filesskin .file-picker .yui3-datatable-even .yui3-datatable-cell {
-    background-color: #fff;
-    border-left: 0 solid #fff;
+    background-color: @white-hex;
+    border-left: 0 solid @white-hex;
 }
 // Tree view (File Manager only)
 
@@ -426,7 +431,7 @@ a.ygtvspacer:hover {
 }
 .file-picker .ygtvfocus,
 .filemanager .ygtvfocus {
-    background-color: #eee;
+    background-color: @gray-lighter;
 }
 .fp-filename-icon {
     margin-top: 10px;
@@ -556,8 +561,8 @@ a.ygtvspacer:hover {
 .fp-select .fp-hr {
     clear: both;
     height: 1px;
-    background-color: #fff;
-    border-bottom: 1px solid #bbb;
+    background-color: @white-hex;
+    border-bottom: 1px solid @gray-light;
     width: auto;
     margin: 10px 0;
 }
@@ -585,12 +590,13 @@ a.ygtvspacer:hover {
     line-height: 110px;
     text-align: center;
     margin: 10px 20px 0 0;
-    background: #fff;
-    border: 1px solid #ddd;
-    box-shadow: inset 0 0 10px 0 #ccc;
+    background: @white-hex;
+    border: 1px solid @gray-lighter;
+    -webkit-box-shadow: inset 0 0 10px 0 @gray-lighter;
+    box-shadow: inset 0 0 10px 0 @gray-lighter;
 }
 .fp-select .fp-thumbnail img {
-    border: 1px solid #ddd;
+    border: 1px solid @gray-lighter;
     padding: 3px;
     vertical-align: middle;
     margin: 10px;
@@ -662,8 +668,8 @@ a.ygtvspacer:hover {
     }
 }
 .filemanager .fp-navbar {
-    background: #f2f2f2;
-    border: 1px solid #bbb;
+    background: @gray-lighter;
+    border: 1px solid @gray-light;
     border-bottom: none;
 }
 .filemanager-toolbar{
@@ -671,7 +677,7 @@ a.ygtvspacer:hover {
     overflow: hidden;
 }
 .fp-pathbar {
-    border-top: 1px solid #bbb;
+    border-top: 1px solid @gray-light;
     padding: 5px 8px 1px;
     min-height: 20px;
 }
@@ -688,8 +694,8 @@ a.ygtvspacer:hover {
 .fp-toolbar .fp-tb-logout,
 .fp-toolbar .fp-tb-refresh
  {
-    border: 1px solid #ccc;
-    border-bottom: 1px solid #b3b3b3;
+    border: 1px solid @gray-lighter;
+    border-bottom: 1px solid @gray-light;
     border-radius: 4px;
     background: white;
     width: 30px;
@@ -697,13 +703,17 @@ a.ygtvspacer:hover {
 }
 
 .fp-toolbar a:hover {
-    background-image: radial-gradient(ellipse at center, #fff 60%,#dfdfdf 100%);
+    background-image: -webkit-radial-gradient(center, ellipse, @white-hex 60%, @gray-lighter 100%);
+    background-image: -o-radial-gradient(center, ellipse, @white-hex 60%, @gray-lighter 100%);
+    background-image: radial-gradient(ellipse at center, @white-hex 60%, @gray-lighter 100%);
     background-color: #ebebeb;
 }
 
 .fp-toolbar a:active {
-    background-image: radial-gradient(ellipse at center, #fff 40%,#dfdfdf 100%);
-    background-color: #dfdfdf;
+    background-image: -webkit-radial-gradient(center, ellipse, @white-hex 40%, @gray-lighter 100%);
+    background-image: -o-radial-gradient(center, ellipse, @white-hex 40%, @gray-lighter 100%);
+    background-image: radial-gradient(ellipse at center, @white-hex 40%, @gray-lighter 100%);
+    background-color: @gray-lighter;
 }
 
 .fp-btn-add a,
@@ -735,10 +745,10 @@ a.ygtvspacer:hover {
 }
 .filepicker-filelist,
 .filemanager-container {
-    background: #fff;
+    background: @white-hex;
     clear: both;
     overflow: auto;
-    border: 1px solid #bbb;
+    border: 1px solid @gray-light;
     min-height: 140px;
     position: relative;
 }
@@ -753,7 +763,7 @@ a.ygtvspacer:hover {
 }
 .fitem.disabled .filepicker-filelist,
 .fitem.disabled .filemanager-container {
-    background-color: #ebebe4;
+    background-color: @gray-lighter;
 }
 .fitem.disabled .fp-btn-choose {
     .text-muted
@@ -793,22 +803,22 @@ a.ygtvspacer:hover {
 }
 // Table view (File Manager only)
 .filemanager .yui3-datatable table {
-    border: 0 solid #bbb;
+    border: 0 solid @gray-light;
     width: 100%;
 }
 .filemanager .yui3-datatable-header {
-    background: #fff!important;
-    border-bottom: 1px solid #ccc!important;
-    border-left: 0 solid #fff!important;
-    color: #555!important;
+    background: @white-hex!important;
+    border-bottom: 1px solid @gray-lighter!important;
+    border-left: 0 solid @white-hex!important;
+    color: @gray!important;
 }
 .filemanager .yui3-datatable-odd .yui3-datatable-cell {
-    background-color: #f6f6f6!important;
-    border-left: 0 solid #f6f6f6;
+    background-color: @gray-lighter!important;
+    border-left: 0 solid @gray-lighter;
 }
 .filemanager .yui3-datatable-even .yui3-datatable-cell {
-    background-color: #fff!important;
-    border-left: 0 solid #fff;
+    background-color: @white-hex!important;
+    border-left: 0 solid @white-hex;
 }
 .filemanager .fp-filename-icon.fp-hasreferences .fp-reficons1{
     background: url('[[pix:theme|fp/link_sm]]') no-repeat 0 0;
@@ -856,32 +866,33 @@ a.ygtvspacer:hover {
     bottom: 10px;
     left: 10px;
     right: 10px;
-    border: 2px dashed #bbb;
+    border: 2px dashed @gray-light;
     padding-top: 85px;
     text-align: center;
 }
 .filepicker-filelist .dndupload-target,
 .filemanager-container .dndupload-target {
-    background: #fff;
+    background: @white-hex;
     position: absolute;
     top: 10px;
     bottom: 10px;
     left: 10px;
     right: 10px;
-    border: 2px dashed #fb7979;
+    border: 2px dashed @dndupload-target-border-color;
     padding-top: 85px;
     text-align: center;
-    box-shadow: 0px 0 0 10px #fff;
+    -webkit-box-shadow: inset 0 0 0 10px @white-hex;
+    box-shadow: 0 0 0 10px @white-hex;
 }
 .filepicker-filelist.dndupload-over .dndupload-target,
 .filemanager-container.dndupload-over .dndupload-target {
-    background: #fff;
+    background: @white-hex;
     position: absolute;
     top: 10px;
     bottom: 10px;
     left: 10px;
     right: 10px;
-    border: 2px dashed #6c8cd3;
+    border: 2px dashed @dndupload-target-border-color-over;
     padding-top: 85px;
     text-align: center;
 }
@@ -1002,8 +1013,8 @@ a.ygtvspacer:hover {
     display: inline;
 }
 .filemanager.fp-select .fp-reflist .fp-value {
-    background: #f9f9f9;
-    border: 1px solid #bbb;
+    background: @gray-light;;
+    border: 1px solid @gray-light;
     padding: 8px 7px;
     margin: 0;
     max-width: 265px;

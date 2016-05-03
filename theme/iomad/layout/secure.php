@@ -62,9 +62,14 @@ echo $OUTPUT->doctype() ?>
         </div>
         <?php echo $OUTPUT->blocks('side-post', 'span3'); ?>
     </div>
-
     <?php echo $OUTPUT->standard_end_of_body_html() ?>
-
+<script type = "text/javascript">
+    //<![CDATA[   
+    <?php if (!empty($PAGE->theme->settings->customjs)) {
+        echo $PAGE->theme->settings->customjs;
+    } ?>
+    //]]>
+</script>
 </div>
 </body>
 </html>

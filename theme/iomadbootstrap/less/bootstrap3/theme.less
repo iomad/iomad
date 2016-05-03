@@ -18,14 +18,16 @@
 .btn-info,
 .btn-warning,
 .btn-danger {
-  text-shadow: 0 -1px 0 rgba(0,0,0,.2);
-  @shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 1px rgba(0,0,0,.075);
+  text-shadow: 0 -1px 0 @text-shadow;
+  @shadow: inset 0 1px 0 @btn-shadow-1, 0 1px 1px @btn-shadow-2;
+  -webkit-box-shadow: @shadow;
   .box-shadow(@shadow);
 
   // Reset the shadow
   &:active,
   &.active {
-    .box-shadow(inset 0 3px 5px rgba(0,0,0,.125));
+    -webkit-box-shadow: inset 0 3px 5px @box-shadow;
+    .box-shadow(inset 0 3px 5px @box-shadow);
   }
 
   .badge {
@@ -69,7 +71,7 @@
 }
 
 // Apply the mixin to the buttons
-.btn-default { .btn-styles(@btn-default-bg); text-shadow: 0 1px 0 #fff; border-color: #ccc; }
+.btn-default { .btn-styles(@btn-default-bg); text-shadow: 0 1px 0 @white-hex; border-color: @btn-default-border; }
 .btn-primary { .btn-styles(@btn-primary-bg); }
 .btn-success { .btn-styles(@btn-success-bg); }
 .btn-info    { .btn-styles(@btn-info-bg); }
@@ -83,7 +85,8 @@
 
 .thumbnail,
 .img-thumbnail {
-  .box-shadow(0 1px 2px rgba(0,0,0,.075));
+  -webkit-box-shadow: 0 1px 2px @carousel-gradient-1;
+  .box-shadow(0 1px 2px @carousel-gradient-1);
 }
 
 
@@ -113,18 +116,20 @@
   #gradient > .vertical(@start-color: lighten(@navbar-default-bg, 10%); @end-color: @navbar-default-bg);
   .reset-filter(); // Remove gradient in IE<10 to fix bug where dropdowns don't get triggered
   border-radius: @navbar-border-radius;
-  @shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 5px rgba(0,0,0,.075);
+  @shadow: inset 0 1px 0 @btn-shadow-1, 0 1px 5px @btn-shadow-2;
+  -webkit-box-shadow: @shadow;
   .box-shadow(@shadow);
 
   .navbar-nav > .open > a,
   .navbar-nav > .active > a {
-    #gradient > .vertical(@start-color: darken(@navbar-default-link-active-bg, 5%); @end-color: darken(@navbar-default-link-active-bg, 2%));
-    .box-shadow(inset 0 3px 9px rgba(0,0,0,.075));
+     #gradient > .vertical(@start-color: darken(@navbar-default-link-active-bg, 5%); @end-color: darken(@navbar-default-link-active-bg, 2%));
+     -webkit-box-shadow: inset 0 3px 9px @btn-shadow-1;
+     .box-shadow(inset 0 3px 9px @btn-shadow-1);
   }
 }
 .navbar-brand,
 .navbar-nav > li > a {
-  text-shadow: 0 1px 0 rgba(255,255,255,.25);
+  text-shadow: 0 1px 0 @text-shadow;
 }
 
 // Inverted navbar
@@ -135,12 +140,13 @@
   .navbar-nav > .open > a,
   .navbar-nav > .active > a {
     #gradient > .vertical(@start-color: @navbar-inverse-link-active-bg; @end-color: lighten(@navbar-inverse-link-active-bg, 2.5%));
-    .box-shadow(inset 0 3px 9px rgba(0,0,0,.25));
+    -webkit-box-shadow: inset 0 3px 9px @box-shadow;
+    .box-shadow(inset 0 3px 9px @box-shadow);
   }
 
   .navbar-brand,
   .navbar-nav > li > a {
-    text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+    text-shadow: 0 -1px 0 @text-shadow;
   }
 }
 
@@ -157,7 +163,7 @@
     &,
     &:hover,
     &:focus {
-      color: #fff;
+      color: @white-hex;
       #gradient > .vertical(@start-color: @dropdown-link-active-bg; @end-color: darken(@dropdown-link-active-bg, 5%));
     }
   }
@@ -170,8 +176,9 @@
 
 // Common styles
 .alert {
-  text-shadow: 0 1px 0 rgba(255,255,255,.2);
-  @shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 1px 2px rgba(0,0,0,.05);
+  text-shadow: 0 1px 0 @text-shadow;
+  @shadow: inset 0 1px 0 @text-shadow, 0 1px 2px @carousel-gradient-1;
+  -webkit-box-shadow: @shadow;
   .box-shadow(@shadow);
 }
 
@@ -222,7 +229,8 @@
 
 .list-group {
   border-radius: @border-radius-base;
-  .box-shadow(0 1px 2px rgba(0,0,0,.075));
+  -webkit-box-shadow: 0 1px 2px @box-shadow;
+  .box-shadow(0 1px 2px @box-shadow);
 }
 .list-group-item.active,
 .list-group-item.active:hover,
@@ -243,7 +251,8 @@
 
 // Common styles
 .panel {
-  .box-shadow(0 1px 2px rgba(0,0,0,.05));
+  -webkit-box-shadow: 0 1px 2px @carousel-gradient-1;
+  .box-shadow(0 1px 2px @carousel-gradient-1);
 }
 
 // Mixin for generating new styles
@@ -267,6 +276,7 @@
 .well {
   #gradient > .vertical(@start-color: darken(@well-bg, 5%); @end-color: @well-bg);
   border-color: darken(@well-bg, 10%);
-  @shadow: inset 0 1px 3px rgba(0,0,0,.05), 0 1px 0 rgba(255,255,255,.1);
+  @shadow: inset 0 1px 3px @well-border, 0 1px 0 @btn-shadow-2;
+  -webkit-box-shadow: @shadow;
   .box-shadow(@shadow);
 }

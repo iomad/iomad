@@ -1,7 +1,7 @@
 // Chat (more!)
 // -------------------------
 .yui-skin-sam .yui-layout.path-mod-chat-gui_ajax {
-    background-color: #fff;
+    background-color: @white-hex;
     .yui-layout-unit div.yui-layout-bd-nohd,
     .yui-layout-unit div.yui-layout-bd-noft,
     .yui-layout-unit div.yui-layout-bd,
@@ -36,16 +36,16 @@
     #chat-userlist {
         padding: 10px 5px;
         #users-list {
-            border-top: 1px solid #ddd;
-            border-bottom: 1px solid #fff;
+            border-top: 1px solid @gray-lighter;
+            border-bottom: 1px solid @white-hex;
             li {
-                border-top: 1px solid #fff;
-                border-bottom: 1px solid #ddd;
+                border-top: 1px solid @white-hex;
+                border-bottom: 1px solid @gray-lighter;
                 padding: 5px 10px;
             }
             img {
                 margin-right: 8px;
-                border: 1px solid #ccc;
+                border: 1px solid @gray-lighter;
                 border-radius: 4px;
                 max-width: none;
             }
@@ -57,22 +57,22 @@
             text-align: center;
             margin: 10px 0;
             font-size: @font-size-small;;
-            color: #777;
+            color: @gray-light;
         }
         .chat-message.course-theme {
-            background-color: #fff;
-            border: 1px dotted #ddd;
+            background-color: @white-hex;
+            border: 1px dotted @gray-lighter;
             border-radius: 4px;
             padding: 4px 10px;
             margin: 10px 0;
             .time {
                 float: right;
                 font-size: 11px;
-                color: #777;
+                color: @gray-light;
             }
         }
         .mdl-chat-my-entry .chat-message.course-theme {
-            background-color:#f6f6f6;
+            background-color: @gray-lighter;
             .user {
                 font-weight: bold;
             }

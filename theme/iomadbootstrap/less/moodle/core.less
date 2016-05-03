@@ -241,10 +241,10 @@ a.autolink.glossary:hover {
 
 .yui-overlay {
     .yui-widget-bd {
-        background-color: #ffee69;
-        border: 1px solid #a6982b;
-        border-top-color: #d4c237;
-        color: #000;
+        background-color: @yui-bg;
+        border: 1px solid @yui-border-color;
+        border-top-color: @yui-border-top-color;
+        color: @gray-base;
         left: 0;
         padding: 2px 5px;
         position: relative;
@@ -558,7 +558,7 @@ a.skip:active {
     padding: 2px;
 }
 .comment-paging .curpage{
-    border: 1px solid #ccc;
+    border: 1px solid @gray-lighter;
 }
 .comment-message .picture {
     width: 20px;
@@ -579,7 +579,7 @@ a.skip:active {
     margin: .3em;
 }
 .comment-delete-confirm {
-    background: #eee;
+    background: @gray-lighter;
     padding: 2px;
     width: 5em;
     text-align: center;
@@ -638,7 +638,7 @@ a.skip:active {
     position: absolute;
 }
 .smartselect .smartselect_mask {
-    background-color: #fff;
+    background-color: @white-hex;
 }
 .smartselect ul  {
     padding: 0;
@@ -655,8 +655,8 @@ a.skip:active {
 }
 .smartselect .smartselect_menu,
 .smartselect .smartselect_submenu {
-    border: 1px solid #000;
-    background-color: #fff;
+    border: 1px solid @gray-base;
+    background-color: @white-hex;
     display: none;
 }
 .smartselect .smartselect_menu.visible,
@@ -668,7 +668,7 @@ a.skip:active {
     padding: 2px 5px;
 }
 .smartselect .smartselect_menu_content ul li a {
-    color: #333;
+    color: @gray-dark;
     text-decoration: none;
 }
 .smartselect .smartselect_menu_content ul li a.selectable {
@@ -716,7 +716,7 @@ a.skip:active {
 }
 
 .corelightbox {
-    background-color: #ccc;
+    background-color: @gray-lighter;
     position: absolute;
     top: 0;
     left: 0;
@@ -834,7 +834,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 }
 /* Moodle Dialogue Settings (moodle-core-dialogue)  */
 .moodle-dialogue-base .moodle-dialogue-lightbox {
-    background-color: #aaa;
+    background-color: @gray-lighter;
 }
 .moodle-dialogue-base .hidden,
 .moodle-dialogue-base .moodle-dialogue-hidden {
@@ -856,6 +856,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .moodle-dialogue-base .moodle-dialogue-fullscreen .closebutton {
     width: 28px;
     height: 16px;
+    -webkit-background-size: 100% 100%;
     background-size: 100%;
 }
 .moodle-dialogue-base .moodle-dialogue {
@@ -864,15 +865,16 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     background: none;
     border: none;
     z-index: 600;
-    outline: #000 dotted 0;
+    outline: @gray-base dotted 0;
 }
 .moodle-dialogue-base .moodle-dialogue-wrap {
     margin-top: -3px;
     margin-left: -3px;
-    background-color: #fff;
-    border: 1px solid #ccc;
+    background-color: @white-hex;
+    border: 1px solid @gray-lighter;
     border-radius: 10px;
-    box-shadow: 5px 5px 20px 0 #666;
+    -webkit-box-shadow: 5px 5px 20px 0 @gray-light;
+    box-shadow: 5px 5px 20px 0 @gray-light;
 }
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd,
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd.yui3-widget-hd {
@@ -881,13 +883,14 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     font-size: 12px;
     font-weight: normal;
     letter-spacing: 1px;
-    color: #333;
+    color: @gray-dark;
     text-align: center;
-    text-shadow: 1px 1px 1px #fff;
+    text-shadow: 1px 1px 1px @white-hex;
     border-radius: 10px 10px 0 0;
-    border-bottom: 1px solid #bbb;
-    background: #ccc;
-    #gradient > .vertical(#fff, #ccc);
+    border-bottom: 1px solid @gray-lighter;
+    background: @gray-lighter;
+    #gradient > .vertical(@white-hex, @gray-lighter);
+    -webkit-filter: 0;
     filter: 0;
 }
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd h1 {
@@ -915,12 +918,12 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .moodle-dialogue-base .moodle-dialogue .moodle-dialogue-bd {
     padding: 1em;
     line-height: 2em;
-    color: #555;
+    color: @gray;
     font-size: 12px;
 }
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-content {
     padding: 0;
-    background: #fff;
+    background: @white-hex;
 }
 
 .moodle-dialogue-base .moodle-dialogue-fullscreen .moodle-dialogue-hd {
@@ -955,13 +958,13 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     font-weight: bold;
 }
 .moodle-dialogue-exception .param-stacktrace label {
-    background-color: #eee;
-    border: 1px solid #ccc;
+    background-color: @gray-lighter;
+    border: 1px solid @gray-lighter;
     border-bottom-width: 0;
 }
 .moodle-dialogue-exception .param-stacktrace pre {
-    border: 1px solid #ccc;
-    background-color: #fff;
+    border: 1px solid @gray-lighter;
+    background-color: @white-hex;
 }
 .moodle-dialogue-exception .param-stacktrace .stacktrace-file {
     color: navy;
@@ -972,15 +975,15 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     font-size: @font-size-small;
 }
 .moodle-dialogue-exception .param-stacktrace .stacktrace-call {
-    color: #333;
+    color: @gray-dark;
     font-size: 90%;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid @gray-lighter;
 }
 .moodle-dialogue-base .moodle-dialogue .moodle-dialogue-content .moodle-dialogue-ft {
     padding: 0;
     margin: 0.7em 1em;
     text-align: right;
-    background-color: #fff;
+    background-color: @white-hex;
     font-size: 12px;
 }
 .moodle-dialogue-confirm .confirmation-message {
@@ -1028,7 +1031,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     height: 100%;
     top: 0;
     left: 0;
-    background-color: white;
+    background-color: @white-hex;
     text-align: center;
     padding: 10% 0;
 }
@@ -1061,7 +1064,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 }
 .chooserdialogue .moodle-dialogue-wrap .moodle-dialogue-bd {
     padding: 0;
-    background: #f2f2f2;
+    background: @gray-light;
     .border-bottom-radius(10px);
 }
 /* Center the submit buttons within the area */
@@ -1076,14 +1079,15 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 /* Various settings for the options area */
 .choosercontainer #chooseform .options {
     position: relative;
-    border-bottom: 1px solid #bbb;
+    border-bottom: 1px solid @gray-lighter;
 }
 /* Only set these options if we're showing the js container */
 .jsenabled .choosercontainer #chooseform .alloptions {
     overflow-x: hidden;
     overflow-y: auto;
     max-width: 20.3em;
-    box-shadow: inset 0 0 30px 0px #ccc;
+    -webkit-box-shadow: 0 0 30px 0 @gray-lighter;
+    box-shadow: inset 0 0 30px 0 @gray-lighter;
 }
 /* Settings for option rows and option subtypes */
 .choosercontainer #chooseform .moduletypetitle,
@@ -1116,7 +1120,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .choosercontainer #chooseform .option label {
     display: block;
     padding: 0.3em 0 0.1em 0;
-    border-bottom: 1px solid #fff;
+    border-bottom: 1px solid @white-hex;
 }
 .choosercontainer #chooseform .nonoption {
     padding-left: 2.7em;
@@ -1154,7 +1158,8 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 }
 .choosercontainer #chooseform .selected {
     background-color: @body-bg;
-    box-shadow: 0px 0 10px 0 #ccc;
+    -webkit-box-shadow: 0 0 10px 0 @gray-lighter;
+    box-shadow: 0px 0 10px 0 @gray-lighter;
 }
 .section-modchooser-link img.smallicon {
     padding: 3px;
@@ -1174,8 +1179,8 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     position: relative;
     margin: 15px 0;
     padding: 1px 19px 14px;
-    background-color: white;
-    border: 1px solid #ddd;
+    background-color: @white-hex;
+    border: 1px solid @gray-lighter;
     border-radius: 4px;
 }
 .formlistingmore {
@@ -1186,9 +1191,9 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     padding: 3px 7px;
     font-size: 12px;
     font-weight: bold;
-    background-color: whiteSmoke;
-    border: 1px solid #ddd;
-    color: #9da0a4;
+    background-color: @whitesmoke;
+    border: 1px solid @gray-lighter;
+    color: @gray-light;
     border-radius: 4px 0 4px 0;
 }
 .formlistingall {
@@ -1199,10 +1204,10 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .formlistingrow {
     cursor: pointer;
     border-bottom: 1px solid;
-    border-color: #e1e1e8;
-    border-left: 1px solid #e1e1e8;
-    border-right: 1px solid #e1e1e8;
-    background-color: #f7f7f9;
+    border-color: @gray-lighter;
+    border-left: 1px solid @gray-lighter;
+    border-right: 1px solid @gray-lighter;
+    background-color: @gray-lighter;
     border-radius: 0 0 4px 4px;
     padding: 6px;
     top: 50%;

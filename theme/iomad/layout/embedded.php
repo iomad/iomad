@@ -31,5 +31,12 @@ echo $OUTPUT->doctype() ?>
     </div>
 </div>
 <?php echo $OUTPUT->standard_end_of_body_html() ?>
+<script type = "text/javascript">
+    //<![CDATA[   
+    <?php if (!empty($PAGE->theme->settings->customjs)) {
+        echo $PAGE->theme->settings->customjs;
+    } ?>
+    //]]>
+</script> 
 </body>
 </html>

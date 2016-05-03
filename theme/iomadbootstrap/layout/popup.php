@@ -36,7 +36,13 @@ echo $OUTPUT->doctype() ?>
     ?>
     </section>
 </div>
-
+<script type = "text/javascript">
+    //<![CDATA[   
+    <?php if (!empty($PAGE->theme->settings->customjs)) {
+        echo $PAGE->theme->settings->customjs;
+    } ?>
+    //]]>
+</script>
 </div>
 </body>
 </html>

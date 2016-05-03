@@ -129,10 +129,14 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
     $companycss = '';
     if ($companyid = iomad::is_company_user()) {
         $context = context_system::instance();
-        if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
+        $companyrecord = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
+        if ($files = $DB->get_records('files', array('contextid' => $context->id, 
+                                                     'component' => 'theme_' . $companyrecord->theme, 
+                                                     'filearea' => 'companylogo', 
+                                                     'itemid' => $companyid))) {  
             foreach ($files as $file) {
                 if ($file->filename != '.') {
-                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
+                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_{$companyrecord->theme}/companylogo/$companyid/{$file->filename}";
                 }
             }
         }
@@ -160,7 +164,15 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
         $return->footnote = '<div class="footnote text-center">'.$page->theme->settings->footnote.'</div>';
     }
 
-    $return->companycss = $companycss;
+    $generalcustomcss = '';
+    if (!empty($page->theme->settings->customcss)) {
+        $generalcustomcss = $page->theme->settings->customcss;
+    }
+    $generalcustomless = '';
+    if (!empty($page->theme->settings->customless)) {
+        $generalcustomless = $page->theme->settings->customless;
+    }
+    $return->companycss = $generalcustomcss . $generalcustomless . $companycss;
 
     return $return;
 }
@@ -212,4 +224,29 @@ function theme_iomad_process_company_css($css, $theme) {
     }
     return $css;
 
+}
+
+/**
+ * Returns extra variables for LESS from customcss field.
+ * 
+ * It injects LESS variables in customcss field from the settings defined
+ * by the user for the theme.
+ *
+ * @param theme_config $theme The theme config object.
+ * @return array of LESS selectors and rules.
+ */
+function theme_iomad_extra_less ($theme) {
+    $variables = '';
+    if (!empty($theme->settings->customless)) {
+        $variables = $theme->settings->customless;
+    }
+    return $variables;
+}
+
+/**
+*   Function to add jQuery and jQuery plugins using Moodle standard way
+*   @param moodle_page $page
+*/
+function theme_iomad_page_init(moodle_page $page) {
+    $page->requires->jquery();
 }

@@ -24,19 +24,37 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$THEME->name = 'iomadbootstrap';
+
+/////////////////////////////////
+// What you need to change in this file when copying it to
+// create a new theme is:
+// -- The name above.
+// -- The name in version.php 
+// -- The lang/en/theme_clean.php
+// 
+// If you want to use less, there are 2 ways:
+// --Installing grunt. Moodle keeps using the .css files on styles.
+//   You will have to uncomment/comment the indicated lines below.
+// --Using Moodle internal compiler. (default) They are compiled directally to the cache. 
+//   With this option, you can use the less settings field without subtheming.
+//   Thanks to Mary Evans
+//////////////////////////////////
+
 $THEME->doctype = 'html5';
 $THEME->yuicssmodules = array();
-$THEME->name = 'iomadbootstrap';
 $THEME->parents = array();
 if ('ltr' === get_string('thisdirection', 'langconfig')) {
-    $THEME->sheets = array('moodle', 'iomad');
+    $THEME->sheets = array('moodle');         // Uncomment if you use grunt or only CSS
+//    $THEME->lessfile = 'moodle';         // Comment if you use grunt or only CSS
 } else {
-    $THEME->sheets = array('moodle-rtl', 'iomad');
+    $THEME->sheets = array('moodle-rtl');     // Uncomment if you use grunt or only CSS
+//    $THEME->lessfile = 'moodle-rtl';     // Comment if you use grunt or only CSS
 }
 $THEME->enable_dock = true;
 $THEME->supportscssoptimisation = false;
-
-$THEME->editor_sheets = array('editor');
+$THEME->extralesscallback = 'theme_iomadbootstrap_extra_less';   // Comment if you use grunt or only CSS
+$THEME->editor_sheets = array('editor');                // Compile with grunt if you modify it. Moodle doen't compile it.
 
 $THEME->plugins_exclude_sheets = array(
     'block' => array(
