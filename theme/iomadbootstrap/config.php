@@ -45,11 +45,11 @@ $THEME->doctype = 'html5';
 $THEME->yuicssmodules = array();
 $THEME->parents = array();
 if ('ltr' === get_string('thisdirection', 'langconfig')) {
-    $THEME->sheets = array('moodle');         // Uncomment if you use grunt or only CSS
-//    $THEME->lessfile = 'moodle';         // Comment if you use grunt or only CSS
+//    $THEME->sheets = array('moodle');         // Uncomment if you use grunt or only CSS
+    $THEME->lessfile = 'moodle';         // Comment if you use grunt or only CSS
 } else {
-    $THEME->sheets = array('moodle-rtl');     // Uncomment if you use grunt or only CSS
-//    $THEME->lessfile = 'moodle-rtl';     // Comment if you use grunt or only CSS
+//    $THEME->sheets = array('moodle-rtl');     // Uncomment if you use grunt or only CSS
+    $THEME->lessfile = 'moodle-rtl';     // Comment if you use grunt or only CSS
 }
 $THEME->enable_dock = true;
 $THEME->supportscssoptimisation = false;
