@@ -229,6 +229,49 @@ class mod_assign_locallib_testcase extends mod_assign_base_testcase {
         $this->assertContains(get_string('submittedlateshort', 'assign', format_time(2*24*60*60 + $difftime)), $output);
     }
 
+    public function test_gradingtable_status_rendering() {
+        global $PAGE;
+
+        // Setup the assignment.
+        $this->create_extra_users();
+        $this->setUser($this->editingteachers[0]);
+        $time = time();
+        $assign = $this->create_instance(array(
+            'assignsubmission_onlinetext_enabled' => 1,
+            'duedate' => $time - 4 * 24 * 60 * 60,
+         ));
+        $PAGE->set_url(new moodle_url('/mod/assign/view.php', array(
+            'id' => $assign->get_course_module()->id,
+            'action' => 'grading',
+        )));
+
+        // Check that the assignment is late.
+        $gradingtable = new assign_grading_table($assign, 1, '', 0, true);
+        $output = $assign->get_renderer()->render($gradingtable);
+        $this->assertContains(get_string('submissionstatus_', 'assign'), $output);
+        $difftime = time() - $time;
+        $this->assertContains(get_string('overdue', 'assign', format_time(4 * 24 * 60 * 60 + $difftime)), $output);
+
+        // Simulate a student viewing the assignment without submitting.
+        $this->setUser($this->students[0]);
+        $submission = $assign->get_user_submission($this->students[0]->id, true);
+        $submission->status = ASSIGN_SUBMISSION_STATUS_NEW;
+        $assign->testable_update_submission($submission, $this->students[0]->id, true, false);
+        $submittedtime = time();
+
+        // Verify output.
+        $this->setUser($this->editingteachers[0]);
+        $gradingtable = new assign_grading_table($assign, 1, '', 0, true);
+        $output = $assign->get_renderer()->render($gradingtable);
+        $difftime = $submittedtime - $time;
+        $this->assertContains(get_string('overdue', 'assign', format_time(4 * 24 * 60 * 60 + $difftime)), $output);
+
+        $document = new DOMDocument();
+        $document->loadHTML($output);
+        $xpath = new DOMXPath($document);
+        $this->assertEquals('', $xpath->evaluate('string(//td[@id="mod_assign_grading_r0_c8"])'));
+    }
+
     /**
      * Check that group submission information is rendered correctly in the
      * grading table.
@@ -2328,6 +2371,49 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $this->assertTrue(in_array($this->students[1]->id, $allgroupmembers));
         $this->assertTrue(in_array($this->extrastudents[0]->id, $allgroupmembers));
         $this->assertTrue(in_array($this->extrastudents[1]->id , $allgroupmembers));
+    }
+
+    /**
+     * Test get plugins file areas
+     */
+    public function test_get_plugins_file_areas() {
+        $this->setUser($this->editingteachers[0]);
+        $assign = $this->create_instance();
+
+        // Test that all the submission and feedback plugins are returning the expected file aras.
+        $usingfilearea = 0;
+        foreach ($assign->get_submission_plugins() as $plugin) {
+            $type = $plugin->get_type();
+            $fileareas = $plugin->get_file_areas();
+
+            if ($type == 'onlinetext') {
+                $this->assertEquals(array('submissions_onlinetext' => 'Online text'), $fileareas);
+                $usingfilearea++;
+            } else if ($type == 'file') {
+                $this->assertEquals(array('submission_files' => 'File submissions'), $fileareas);
+                $usingfilearea++;
+            } else {
+                $this->assertEmpty($fileareas);
+            }
+        }
+        $this->assertEquals(2, $usingfilearea);
+
+        $usingfilearea = 0;
+        foreach ($assign->get_feedback_plugins() as $plugin) {
+            $type = $plugin->get_type();
+            $fileareas = $plugin->get_file_areas();
+
+            if ($type == 'editpdf') {
+                $this->assertEquals(array('download' => 'Annotate PDF'), $fileareas);
+                $usingfilearea++;
+            } else if ($type == 'file') {
+                $this->assertEquals(array('feedback_files' => 'Feedback files'), $fileareas);
+                $usingfilearea++;
+            } else {
+                $this->assertEmpty($fileareas);
+            }
+        }
+        $this->assertEquals(2, $usingfilearea);
     }
 
     /**
