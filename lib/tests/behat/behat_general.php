@@ -1057,13 +1057,15 @@ class behat_general extends behat_base {
      * Change browser window size small: 640x480, medium: 1024x768, large: 2560x1600, custom: widthxheight
      *
      * Example: I change window size to "small" or I change window size to "1024x768"
+     * or I change viewport size to "800x600". The viewport option is useful to guarantee that the
+     * browser window has same viewport size even when you run Behat on multiple operating systems.
      *
      * @throws ExpectationException
-     * @Then /^I change window size to "(small|medium|large|\d+x\d+)"$/
+     * @Then /^I change (window|viewport) size to "(small|medium|large|\d+x\d+)"$/
      * @param string $windowsize size of the window (small|medium|large|wxh).
      */
-    public function i_change_window_size_to($windowsize) {
-        $this->resize_window($windowsize);
+    public function i_change_window_size_to($windowviewport, $windowsize) {
+        $this->resize_window($windowsize, $windowviewport === 'viewport');
     }
 
     /**
@@ -1536,5 +1538,28 @@ class behat_general extends behat_base {
         $node->keyDown($char, $modifier);
         $node->keyPress($char, $modifier);
         $node->keyUp($char, $modifier);
+    }
+
+    /**
+     * Checks if database family used is using one of the specified, else skip. (mysql, postgres, mssql, oracle, etc.)
+     *
+     * @Given /^database family used is one of the following:$/
+     * @param TableNode $databasefamilies list of database.
+     * @return void.
+     * @throws \Moodle\BehatExtension\Exception\SkippedException
+     */
+    public function database_family_used_is_one_of_the_following(TableNode $databasefamilies) {
+        global $DB;
+
+        $dbfamily = $DB->get_dbfamily();
+
+        // Check if used db family is one of the specified ones. If yes then return.
+        foreach ($databasefamilies->getRows() as $dbfamilytocheck) {
+            if ($dbfamilytocheck[0] == $dbfamily) {
+                return;
+            }
+        }
+
+        throw new \Moodle\BehatExtension\Exception\SkippedException();
     }
 }

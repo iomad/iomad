@@ -445,6 +445,8 @@ function file_prepare_draft_area(&$draftitemid, $contextid, $component, $fileare
 
 /**
  * Convert encoded URLs in $text from the @@PLUGINFILE@@/... form to an actual URL.
+ * Passing a new option reverse = true in the $options var will make the function to convert actual URLs in $text to encoded URLs
+ * in the @@PLUGINFILE@@ form.
  *
  * @category files
  * @global stdClass $CFG
@@ -454,7 +456,7 @@ function file_prepare_draft_area(&$draftitemid, $contextid, $component, $fileare
  * @param string $component
  * @param string $filearea helps identify the file area.
  * @param int $itemid helps identify the file area.
- * @param array $options text and file options ('forcehttps'=>false)
+ * @param array $options text and file options ('forcehttps'=>false), use reverse = true to reverse the behaviour of the function.
  * @return string the processed text.
  */
 function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $filearea, $itemid, array $options=null) {
@@ -479,7 +481,11 @@ function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $fil
         $baseurl = str_replace('http://', 'https://', $baseurl);
     }
 
-    return str_replace('@@PLUGINFILE@@/', $baseurl, $text);
+    if (!empty($options['reverse'])) {
+        return str_replace($baseurl, '@@PLUGINFILE@@/', $text);
+    } else {
+        return str_replace('@@PLUGINFILE@@/', $baseurl, $text);
+    }
 }
 
 /**
@@ -2154,7 +2160,6 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
             $options->nocache = true; // temporary workaround for MDL-5136
             $text = $pathisstring ? $path : implode('', file($path));
 
-            $text = file_modify_html_header($text);
             $output = format_text($text, FORMAT_HTML, $options, $COURSE->id);
 
             readstring_accel($output, $mimetype, false);
@@ -2338,7 +2343,6 @@ function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownloa
             $options->noclean = true;
             $options->nocache = true; // temporary workaround for MDL-5136
             $text = $stored_file->get_content();
-            $text = file_modify_html_header($text);
             $output = format_text($text, FORMAT_HTML, $options, $COURSE->id);
 
             readstring_accel($output, $mimetype, false);
@@ -2600,57 +2604,6 @@ function byteserving_send_file($handle, $mimetype, $ranges, $filesize) {
         fclose($handle);
         die;
     }
-}
-
-/**
- * add includes (js and css) into uploaded files
- * before returning them, useful for themes and utf.js includes
- *
- * @global stdClass $CFG
- * @param string $text text to search and replace
- * @return string text with added head includes
- * @todo MDL-21120
- */
-function file_modify_html_header($text) {
-    // first look for <head> tag
-    global $CFG;
-
-    $stylesheetshtml = '';
-/*
-    foreach ($CFG->stylesheets as $stylesheet) {
-        //TODO: MDL-21120
-        $stylesheetshtml .= '<link rel="stylesheet" type="text/css" href="'.$stylesheet.'" />'."\n";
-    }
-*/
-    // TODO The code below is actually a waste of CPU. When MDL-29738 will be implemented it should be re-evaluated too.
-
-    preg_match('/\<head\>|\<HEAD\>/', $text, $matches);
-    if ($matches) {
-        $replacement = '<head>'.$stylesheetshtml;
-        $text = preg_replace('/\<head\>|\<HEAD\>/', $replacement, $text, 1);
-        return $text;
-    }
-
-    // if not, look for <html> tag, and stick <head> right after
-    preg_match('/\<html\>|\<HTML\>/', $text, $matches);
-    if ($matches) {
-        // replace <html> tag with <html><head>includes</head>
-        $replacement = '<html>'."\n".'<head>'.$stylesheetshtml.'</head>';
-        $text = preg_replace('/\<html\>|\<HTML\>/', $replacement, $text, 1);
-        return $text;
-    }
-
-    // if not, look for <body> tag, and stick <head> before body
-    preg_match('/\<body\>|\<BODY\>/', $text, $matches);
-    if ($matches) {
-        $replacement = '<head>'.$stylesheetshtml.'</head>'."\n".'<body>';
-        $text = preg_replace('/\<body\>|\<BODY\>/', $replacement, $text, 1);
-        return $text;
-    }
-
-    // if not, just stick a <head> tag at the beginning
-    $text = '<head>'.$stylesheetshtml.'</head>'."\n".$text;
-    return $text;
 }
 
 /**
@@ -4180,6 +4133,14 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
             if ($CFG->forcelogin) {
                 // no login necessary - unless login forced everywhere
                 require_login();
+            }
+
+            // Check if user can view this category.
+            if (!has_capability('moodle/category:viewhiddencategories', $context)) {
+                $coursecatvisible = $DB->get_field('course_categories', 'visible', array('id' => $context->instanceid));
+                if (!$coursecatvisible) {
+                    send_file_not_found();
+                }
             }
 
             $filename = array_pop($args);

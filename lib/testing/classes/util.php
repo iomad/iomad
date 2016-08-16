@@ -749,7 +749,7 @@ abstract class testing_util {
         if (file_exists(self::get_dataroot() . '/filedir')) {
             $handle = opendir(self::get_dataroot() . '/filedir');
             while (false !== ($item = readdir($handle))) {
-                if (in_array('filedir/' . $item, $childclassname::$datarootskiponreset)) {
+                if (in_array('filedir' . DIRECTORY_SEPARATOR . $item, $childclassname::$datarootskiponreset)) {
                     continue;
                 }
                 if (is_dir(self::get_dataroot()."/filedir/$item")) {
@@ -783,15 +783,23 @@ abstract class testing_util {
         $output = '';
 
         // All developers have to understand English, do not localise!
+        $env = self::get_environment();
 
-        $release = null;
-        require("$CFG->dirroot/version.php");
-
-        $output .= "Moodle $release, $CFG->dbtype";
+        $output .= "Moodle ".$env['moodleversion'];
         if ($hash = self::get_git_hash()) {
             $output .= ", $hash";
         }
         $output .= "\n";
+
+        // Add php version.
+        require_once($CFG->libdir.'/environmentlib.php');
+        $output .= "Php: ". normalize_version($env['phpversion']);
+
+        // Add database type and version.
+        $output .= ", " . $env['dbtype'] . ": " . $env['dbversion'];
+
+        // OS details.
+        $output .= ", OS: " . $env['os'] . "\n";
 
         return $output;
     }
@@ -953,8 +961,10 @@ abstract class testing_util {
         if (!file_exists($jsonfilepath)) {
 
             $listfiles = array();
-            $listfiles['filedir/.'] = 'filedir/.';
-            $listfiles['filedir/..'] = 'filedir/..';
+            $currentdir = 'filedir' . DIRECTORY_SEPARATOR . '.';
+            $parentdir = 'filedir' . DIRECTORY_SEPARATOR . '..';
+            $listfiles[$currentdir] = $currentdir;
+            $listfiles[$parentdir] = $parentdir;
 
             $filedir = self::get_dataroot() . '/filedir';
             if (file_exists($filedir)) {
@@ -974,5 +984,44 @@ abstract class testing_util {
             fwrite($fp, json_encode(array_values($listfiles)));
             fclose($fp);
         }
+    }
+
+    /**
+     * Return list of environment versions on which tests will run.
+     * Environment includes:
+     * - moodleversion
+     * - phpversion
+     * - dbtype
+     * - dbversion
+     * - os
+     *
+     * @return array
+     */
+    public static function get_environment() {
+        global $CFG, $DB;
+
+        $env = array();
+
+        // Add moodle version.
+        $release = null;
+        require("$CFG->dirroot/version.php");
+        $env['moodleversion'] = $release;
+
+        // Add php version.
+        $phpversion = phpversion();
+        $env['phpversion'] = $phpversion;
+
+        // Add database type and version.
+        $dbtype = $CFG->dbtype;
+        $dbinfo = $DB->get_server_info();
+        $dbversion = $dbinfo['version'];
+        $env['dbtype'] = $dbtype;
+        $env['dbversion'] = $dbversion;
+
+        // OS details.
+        $osdetails = php_uname('s') . " " . php_uname('r') . " " . php_uname('m');
+        $env['os'] = $osdetails;
+
+        return $env;
     }
 }

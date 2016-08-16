@@ -80,27 +80,29 @@ function form_init_date_js() {
         $calendar = \core_calendar\type_factory::get_calendar_instance();
         $module   = 'moodle-form-dateselector';
         $function = 'M.form.dateselector.init_date_selectors';
+        $defaulttimezone = date_default_timezone_get();
+
         $config = array(array(
             'firstdayofweek'    => $calendar->get_starting_weekday(),
-            'mon'               => date_format_string(strtotime("Monday"), '%a', 99),
-            'tue'               => date_format_string(strtotime("Tuesday"), '%a', 99),
-            'wed'               => date_format_string(strtotime("Wednesday"), '%a', 99),
-            'thu'               => date_format_string(strtotime("Thursday"), '%a', 99),
-            'fri'               => date_format_string(strtotime("Friday"), '%a', 99),
-            'sat'               => date_format_string(strtotime("Saturday"), '%a', 99),
-            'sun'               => date_format_string(strtotime("Sunday"), '%a', 99),
-            'january'           => date_format_string(strtotime("January 1"), '%B', 99),
-            'february'          => date_format_string(strtotime("February 1"), '%B', 99),
-            'march'             => date_format_string(strtotime("March 1"), '%B', 99),
-            'april'             => date_format_string(strtotime("April 1"), '%B', 99),
-            'may'               => date_format_string(strtotime("May 1"), '%B', 99),
-            'june'              => date_format_string(strtotime("June 1"), '%B', 99),
-            'july'              => date_format_string(strtotime("July 1"), '%B', 99),
-            'august'            => date_format_string(strtotime("August 1"), '%B', 99),
-            'september'         => date_format_string(strtotime("September 1"), '%B', 99),
-            'october'           => date_format_string(strtotime("October 1"), '%B', 99),
-            'november'          => date_format_string(strtotime("November 1"), '%B', 99),
-            'december'          => date_format_string(strtotime("December 1"), '%B', 99)
+            'mon'               => date_format_string(strtotime("Monday"), '%a', $defaulttimezone),
+            'tue'               => date_format_string(strtotime("Tuesday"), '%a', $defaulttimezone),
+            'wed'               => date_format_string(strtotime("Wednesday"), '%a', $defaulttimezone),
+            'thu'               => date_format_string(strtotime("Thursday"), '%a', $defaulttimezone),
+            'fri'               => date_format_string(strtotime("Friday"), '%a', $defaulttimezone),
+            'sat'               => date_format_string(strtotime("Saturday"), '%a', $defaulttimezone),
+            'sun'               => date_format_string(strtotime("Sunday"), '%a', $defaulttimezone),
+            'january'           => date_format_string(strtotime("January 1"), '%B', $defaulttimezone),
+            'february'          => date_format_string(strtotime("February 1"), '%B', $defaulttimezone),
+            'march'             => date_format_string(strtotime("March 1"), '%B', $defaulttimezone),
+            'april'             => date_format_string(strtotime("April 1"), '%B', $defaulttimezone),
+            'may'               => date_format_string(strtotime("May 1"), '%B', $defaulttimezone),
+            'june'              => date_format_string(strtotime("June 1"), '%B', $defaulttimezone),
+            'july'              => date_format_string(strtotime("July 1"), '%B', $defaulttimezone),
+            'august'            => date_format_string(strtotime("August 1"), '%B', $defaulttimezone),
+            'september'         => date_format_string(strtotime("September 1"), '%B', $defaulttimezone),
+            'october'           => date_format_string(strtotime("October 1"), '%B', $defaulttimezone),
+            'november'          => date_format_string(strtotime("November 1"), '%B', $defaulttimezone),
+            'december'          => date_format_string(strtotime("December 1"), '%B', $defaulttimezone)
         ));
         $PAGE->requires->yui_module($module, $function, $config);
         $done = true;
@@ -188,10 +190,6 @@ abstract class moodleform {
         if (!$editable){
             $this->_form->hardFreeze();
         }
-
-        // HACK to prevent browsers from automatically inserting the user's password into the wrong fields.
-        $element = $this->_form->addElement('hidden');
-        $element->setType('password');
 
         $this->definition();
 
@@ -2666,6 +2664,8 @@ class MoodleQuickForm_Renderer extends HTML_QuickForm_Renderer_Tableless{
         $this->_collapseButtons = '';
         $formid = $form->getAttribute('id');
         parent::startForm($form);
+        // HACK to prevent browsers from automatically inserting the user's password into the wrong fields.
+        $this->_hiddenHtml .= prevent_form_autofill_password();
         if ($form->isFrozen()){
             $this->_formTemplate = "\n<div class=\"mform frozen\">\n{content}\n</div>";
         } else {

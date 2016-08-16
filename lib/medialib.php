@@ -1123,8 +1123,8 @@ OET;
                 // is a simplified version, does not take into account old browser
                 // versions or manual plugins.
                 if ($ext === 'ogv' || $ext === 'webm') {
-                    // Formats .ogv and .webm are not supported in IE or Safari.
-                    if (core_useragent::is_ie() || core_useragent::is_safari()) {
+                    // Formats .ogv and .webm are not supported in IE, Edge or Safari.
+                    if (core_useragent::is_ie() || core_useragent::is_edge() || core_useragent::is_safari()) {
                         continue;
                     }
                 } else {
@@ -1195,8 +1195,8 @@ OET;
             $ext = core_media::get_extension($url);
             if (in_array($ext, $extensions)) {
                 if ($ext === 'ogg' || $ext === 'oga') {
-                    // Formats .ogg and .oga are not supported in IE or Safari.
-                    if (core_useragent::is_ie() || core_useragent::is_safari()) {
+                    // Formats .ogg and .oga are not supported in IE, Edge, or Safari.
+                    if (core_useragent::is_ie() || core_useragent::is_edge() || core_useragent::is_safari()) {
                         continue;
                     }
                 } else {

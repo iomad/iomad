@@ -4626,5 +4626,38 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2015111602.07);
     }
 
+    if ($oldversion < 2015111603.01) {
+        // This could take a long time. Unfortunately, no way to know how long, and no way to do progress, so setting for 1 hour.
+        upgrade_set_timeout(3600);
+
+        // Define index userid-itemid (not unique) to be added to grade_grades_history.
+        $table = new xmldb_table('grade_grades_history');
+        $index = new xmldb_index('userid-itemid-timemodified', XMLDB_INDEX_NOTUNIQUE, array('userid', 'itemid', 'timemodified'));
+
+        // Conditionally launch add index userid-itemid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015111603.01);
+    }
+
+    if ($oldversion < 2015111604.07) {
+        // This script is included in each major version upgrade process (3.0, 3.1) so make sure we don't run it twice.
+        if (empty($CFG->upgrade_letterboundarycourses)) {
+            // MDL-45390. If a grade is being displayed with letters and the grade boundaries are not being adhered to properly
+            // then this course will also be frozen.
+            // If the changes are accepted then the display of some grades may change.
+            // This is here to freeze the gradebook in affected courses.
+            upgrade_course_letter_boundary();
+
+            // To skip running the same script on the upgrade to the next major version release.
+            set_config('upgrade_letterboundarycourses', 1);
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015111604.07);
+    }
+
     return true;
 }

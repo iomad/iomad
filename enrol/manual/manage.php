@@ -89,6 +89,9 @@ if ($extendperiod) {
 } else {
     $defaultperiod = $instance->enrolperiod;
 }
+if ($instance->enrolperiod > 0 && !isset($periodmenu[$instance->enrolperiod])) {
+    $periodmenu[$instance->enrolperiod] = format_time($instance->enrolperiod);
+}
 if (empty($extendbase)) {
     if (!$extendbase = get_config('enrol_manual', 'enrolstart')) {
         // Default to now if there is no system setting.
