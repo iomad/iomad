@@ -134,6 +134,7 @@ class report_log_renderable implements renderable {
             $url = new moodle_url($url);
         }
         $this->selectedlogreader = $logreader;
+        $url->param('logreader', $logreader);
 
         // Use site course id, if course is empty.
         if (!empty($course) && is_int($course)) {
@@ -159,17 +160,17 @@ class report_log_renderable implements renderable {
     }
 
     /**
-     * Get a list of enabled sql_select_reader objects/name
+     * Get a list of enabled sql_reader objects/name
      *
      * @param bool $nameonly if true only reader names will be returned.
-     * @return array core\log\sql_select_reader object or name.
+     * @return array core\log\sql_reader object or name.
      */
     public function get_readers($nameonly = false) {
         if (!isset($this->logmanager)) {
             $this->logmanager = get_log_manager();
         }
 
-        $readers = $this->logmanager->get_readers('core\log\sql_select_reader');
+        $readers = $this->logmanager->get_readers('core\log\sql_reader');
         if ($nameonly) {
             foreach ($readers as $pluginname => $reader) {
                 $readers[$pluginname] = $reader->get_name();
@@ -188,7 +189,7 @@ class report_log_renderable implements renderable {
 
         // For site just return site errors option.
         $sitecontext = context_system::instance();
-        if (empty($this->course) && has_capability('report/log:view', $sitecontext)) {
+        if ($this->course->id == SITEID && has_capability('report/log:view', $sitecontext)) {
             $activities["site_errors"] = get_string("siteerrors");
             return $activities;
         }
@@ -281,7 +282,7 @@ class report_log_renderable implements renderable {
                 'r' => get_string('view'),
                 'u' => get_string('update'),
                 'd' => get_string('delete'),
-                '' => get_string('allchanges')
+                'cud' => get_string('allchanges')
                 );
         return $actions;
     }
@@ -486,6 +487,12 @@ class report_log_renderable implements renderable {
      */
     public function download() {
         $filename = 'logs_' . userdate(time(), get_string('backupnameformat', 'langconfig'), 99, false);
+        if ($this->course->id !== SITEID) {
+            $courseshortname = format_string($this->course->shortname, true,
+                    array('context' => context_course::instance($this->course->id)));
+            $filename = clean_filename('logs_' . $courseshortname . '_' . userdate(time(),
+                    get_string('backupnameformat', 'langconfig'), 99, false));
+        }
         $this->tablelog->is_downloading($this->logformat, $filename);
         $this->tablelog->out($this->perpage, false);
     }

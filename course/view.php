@@ -4,11 +4,10 @@
 
     require_once('../config.php');
     require_once('lib.php');
-    require_once($CFG->libdir.'/conditionlib.php');
     require_once($CFG->libdir.'/completionlib.php');
 
     $id          = optional_param('id', 0, PARAM_INT);
-    $name        = optional_param('name', '', PARAM_RAW);
+    $name        = optional_param('name', '', PARAM_TEXT);
     $edit        = optional_param('edit', -1, PARAM_BOOL);
     $hide        = optional_param('hide', 0, PARAM_INT);
     $show        = optional_param('show', 0, PARAM_INT);
@@ -286,12 +285,7 @@
     // Trigger course viewed event.
     // We don't trust $context here. Course format inclusion above executes in the global space. We can't assume
     // anything after that point.
-    $eventdata = array('context' => context_course::instance($course->id));
-    if (!empty($section) && (int)$section == $section) {
-        $eventdata['other'] = array('coursesectionnumber' => $section);
-    }
-    $event = \core\event\course_viewed::create($eventdata);
-    $event->trigger();
+    course_view(context_course::instance($course->id), $section);
 
     // Include course AJAX
     include_course_ajax($course, $modnamesused);
