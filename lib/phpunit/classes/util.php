@@ -104,7 +104,7 @@ class phpunit_util extends testing_util {
         global $DB, $CFG, $USER, $SITE, $COURSE, $PAGE, $OUTPUT, $SESSION;
 
         // Stop any message redirection.
-        phpunit_util::stop_message_redirection();
+        self::stop_message_redirection();
 
         // Stop any message redirection.
         phpunit_util::stop_phpmailer_redirection();
@@ -202,6 +202,7 @@ class phpunit_util extends testing_util {
         core_text::reset_caches();
         get_message_processors(false, true);
         filter_manager::reset_caches();
+        core_user::reset_caches();
 
         // Reset static unit test options.
         if (class_exists('\availability_date\condition', false)) {
@@ -297,7 +298,7 @@ class phpunit_util extends testing_util {
         self::$globals['DB'] = $DB;
 
         // refresh data in all tables, clear caches, etc.
-        phpunit_util::reset_all_data();
+        self::reset_all_data();
     }
 
     /**
@@ -404,7 +405,7 @@ class phpunit_util extends testing_util {
         }
 
         if ($DB->get_tables()) {
-            list($errorcode, $message) = phpunit_util::testing_ready_problem();
+            list($errorcode, $message) = self::testing_ready_problem();
             if ($errorcode) {
                 phpunit_bootstrap_error(PHPUNIT_EXITCODE_REINSTALL, 'Database tables already present, Moodle PHPUnit test environment can not be initialised');
             } else {

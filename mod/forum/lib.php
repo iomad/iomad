@@ -3805,7 +3805,7 @@ function forum_print_discussion_header(&$post, $forum, $group=-1, $datestring=""
                     echo $post->unread;
                     echo '</a>';
                     echo '<a title="'.$strmarkalldread.'" href="'.$CFG->wwwroot.'/mod/forum/markposts.php?f='.
-                         $forum->id.'&amp;d='.$post->discussion.'&amp;mark=read&amp;returnpage=view.php">' .
+                         $forum->id.'&amp;d='.$post->discussion.'&amp;mark=read&amp;returnpage=view.php&amp;sesskey=' . sesskey() . '">' .
                          '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.$strmarkalldread.'" /></a>';
                     echo '</span>';
                 } else {
@@ -3992,7 +3992,7 @@ function forum_set_return() {
 
 /**
  * @global object
- * @param string $default
+ * @param string|\moodle_url $default
  * @return string
  */
 function forum_go_back_to($default) {
@@ -4629,7 +4629,7 @@ function forum_delete_discussion($discussion, $fulldelete, $course, $cm, $forum)
  * @return bool
  */
 function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompletion=false) {
-    global $DB, $CFG;
+    global $DB, $CFG, $USER;
     require_once($CFG->libdir.'/completionlib.php');
 
     $context = context_module::instance($cm->id);
@@ -4682,6 +4682,22 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
                 $completion->update_state($cm, COMPLETION_INCOMPLETE, $post->userid);
             }
         }
+
+        $params = array(
+            'context' => $context,
+            'objectid' => $post->id,
+            'other' => array(
+                'discussionid' => $post->discussion,
+                'forumid' => $forum->id,
+                'forumtype' => $forum->type,
+            )
+        );
+        if ($post->userid !== $USER->id) {
+            $params['relateduserid'] = $post->userid;
+        }
+        $event = \mod_forum\event\post_deleted::create($params);
+        $event->add_record_snapshot('forum_posts', $post);
+        $event->trigger();
 
         return true;
     }
@@ -5470,7 +5486,7 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
                 if ($forumtracked) {
                     echo '<a title="'.get_string('markallread', 'forum').
                          '" href="'.$CFG->wwwroot.'/mod/forum/markposts.php?f='.
-                         $forum->id.'&amp;mark=read&amp;returnpage=view.php">'.
+                         $forum->id.'&amp;mark=read&amp;returnpage=view.php&amp;sesskey=' . sesskey() . '">'.
                          '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.get_string('markallread', 'forum').'" /></a>';
                 }
                 echo '</th>';

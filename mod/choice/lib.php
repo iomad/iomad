@@ -265,6 +265,12 @@ function choice_user_submit_response($formanswer, $choice, $userid, $course, $cm
         $formanswers = array($formanswer);
     }
 
+    $options = $DB->get_records('choice_options', array('choiceid' => $choice->id), '', 'id');
+    foreach ($formanswers as $key => $val) {
+        if (!isset($options[$val])) {
+            print_error('cannotsubmit', 'choice', $continueurl);
+        }
+    }
     // Start lock to prevent synchronous access to the same data
     // before it's updated, if using limits.
     if ($choice->limitanswers) {
@@ -837,4 +843,35 @@ function choice_get_completion_state($course, $cm, $userid, $type) {
 function choice_page_type_list($pagetype, $parentcontext, $currentcontext) {
     $module_pagetype = array('mod-choice-*'=>get_string('page-mod-choice-x', 'choice'));
     return $module_pagetype;
+}
+
+/**
+ * Check if a choice is available for the current user.
+ *
+ * @param  stdClass  $choice            choice record
+ * @return array                       status (available or not and possible warnings)
+ */
+function choice_get_availability_status($choice) {
+    global $DB, $USER;
+    $available = true;
+    $warnings = array();
+
+    if ($choice->timeclose != 0) {
+        $timenow = time();
+
+        if ($choice->timeopen > $timenow) {
+            $available = false;
+            $warnings['notopenyet'] = userdate($choice->timeopen);
+        } else if ($timenow > $choice->timeclose) {
+            $available = false;
+            $warnings['expired'] = userdate($choice->timeclose);
+        }
+    }
+    if (!$choice->allowupdate && $DB->get_records('choice_answers', array('choiceid' => $choice->id, 'userid' => $USER->id))) {
+        $available = false;
+        $warnings['choicesaved'] = '';
+    }
+
+    // Choice is available.
+    return array($available, $warnings);
 }

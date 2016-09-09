@@ -197,7 +197,7 @@ class assign_grading_table extends table_sql implements renderable {
             } else if ($filter == ASSIGN_FILTER_REQUIRE_GRADING) {
                 $where .= ' AND (s.timemodified IS NOT NULL AND
                                  s.status = :submitted AND
-                                 (s.timemodified > g.timemodified OR g.timemodified IS NULL))';
+                                 (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL))';
                 $params['submitted'] = ASSIGN_SUBMISSION_STATUS_SUBMITTED;
 
             } else if (strpos($filter, ASSIGN_FILTER_SINGLE_USER) === 0) {
@@ -406,8 +406,6 @@ class assign_grading_table extends table_sql implements renderable {
         foreach ($extrauserfields as $extrafield) {
              $this->column_class($extrafield, $extrafield);
         }
-        // We require at least one unique column for the sort.
-        $this->sortable(true, 'userid');
         $this->no_sorting('recordid');
         $this->no_sorting('finalgrade');
         $this->no_sorting('userid');
@@ -1362,6 +1360,16 @@ class assign_grading_table extends table_sql implements renderable {
         $context = $this->assignment->get_course_context();
         return has_capability('gradereport/grader:view', $context) &&
                has_capability('moodle/grade:viewall', $context);
+    }
+
+    /**
+     * Always return a valid sort - even if the userid column is missing.
+     * @return array column name => SORT_... constant.
+     */
+    public function get_sort_columns() {
+        $result = parent::get_sort_columns();
+        $result = array_merge($result, array('userid' => SORT_ASC));
+        return $result;
     }
 
     /**

@@ -3969,9 +3969,14 @@ class admin_setting_sitesettext extends admin_setting_configtext {
      * @return mixed true or message string
      */
     public function validate($data) {
+        global $DB, $SITE;
         $cleaned = clean_param($data, PARAM_TEXT);
         if ($cleaned === '') {
             return get_string('required');
+        }
+        if ($this->name ==='shortname' &&
+                $DB->record_exists_sql('SELECT id from {course} WHERE shortname = ? AND id <> ?', array($data, $SITE->id))) {
+            return get_string('shortnametaken', 'error', $data);
         }
         if ("$data" == "$cleaned") { // implicit conversion to string is needed to do exact comparison
             return true;
@@ -4803,6 +4808,8 @@ class admin_setting_special_coursecontact extends admin_setting_pickroles {
         parent::__construct('coursecontact', get_string('coursecontact', 'admin'),
             get_string('coursecontact_desc', 'admin'),
             array('editingteacher'));
+        $this->set_updatedcallback(create_function('',
+                "cache::make('core', 'coursecontacts')->purge();"));
     }
 }
 

@@ -96,7 +96,7 @@ define('BADGE_MESSAGE_MONTHLY', 4);
 /*
  * URL of backpack. Currently only the Open Badges backpack is supported.
  */
-define('BADGE_BACKPACKURL', 'backpack.openbadges.org');
+define('BADGE_BACKPACKURL', 'https://backpack.openbadges.org');
 
 /**
  * Class that represents badge.
@@ -1141,12 +1141,7 @@ function profile_display_badges($userid, $courseid = 0) {
     global $CFG, $PAGE, $USER, $SITE;
     require_once($CFG->dirroot . '/badges/renderer.php');
 
-    // Determine context.
-    if (isloggedin()) {
-        $context = context_user::instance($USER->id);
-    } else {
-        $context = context_system::instance();
-    }
+    $context = context_user::instance($userid);
 
     if ($USER->id == $userid || has_capability('moodle/badges:viewotherbadges', $context)) {
         $records = badges_get_user_badges($userid, $courseid, null, null, null, true);
@@ -1193,7 +1188,7 @@ function badges_check_backpack_accessibility() {
         'HEADER' => 0,
         'CONNECTTIMEOUT' => 2,
     );
-    $location = 'http://' . BADGE_BACKPACKURL . '/baker';
+    $location = BADGE_BACKPACKURL . '/baker';
     $out = $curl->get($location, array('assertion' => $fakeassertion->out(false)), $options);
 
     $data = json_decode($out);
@@ -1261,8 +1256,7 @@ function badges_setup_backpack_js() {
     global $CFG, $PAGE;
     if (!empty($CFG->badges_allowexternalbackpack)) {
         $PAGE->requires->string_for_js('error:backpackproblem', 'badges');
-        $protocol = (is_https()) ? 'https://' : 'http://';
-        $PAGE->requires->js(new moodle_url($protocol . BADGE_BACKPACKURL . '/issuer.js'), true);
+        $PAGE->requires->js(new moodle_url(BADGE_BACKPACKURL . '/issuer.js'), true);
         $PAGE->requires->js('/badges/backpack.js', true);
     }
 }

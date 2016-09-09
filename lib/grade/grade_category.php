@@ -466,7 +466,7 @@ class grade_category extends grade_object {
                      WHERE id $usql";
             $items = $DB->get_records_sql($sql, $params);
             foreach ($items as $id => $item) {
-                $items[$id] = new grade_item($item);
+                $items[$id] = new grade_item($item, false);
             }
         }
 
@@ -501,10 +501,13 @@ class grade_category extends grade_object {
             $grademinoverrides = array();
 
             foreach ($rs as $used) {
-                $grade = new grade_grade($used);
+                $grade = new grade_grade($used, false);
                 if (isset($items[$grade->itemid])) {
                     // Prevent grade item to be fetched from DB.
                     $grade->grade_item =& $items[$grade->itemid];
+                } else if ($grade->itemid == $this->grade_item->id) {
+                    // This grade's grade item is not in $items.
+                    $grade->grade_item =& $this->grade_item;
                 }
                 if ($grade->userid != $prevuser) {
                     $this->aggregate_grades($prevuser,
@@ -790,15 +793,28 @@ class grade_category extends grade_object {
 
         // Reset aggregation to unknown and 0 for all grade items for this user and category.
         $params = array('categoryid' => $this->id, 'userid' => $userid);
-        $itemssql = "SELECT id
-                       FROM {grade_items}
-                      WHERE categoryid = :categoryid";
 
-        $sql = "UPDATE {grade_grades}
-                   SET aggregationstatus = 'unknown',
-                       aggregationweight = 0
-                 WHERE userid = :userid
-                   AND itemid IN ($itemssql)";
+        switch ($DB->get_dbfamily()) {
+            case 'mysql':
+                // Optimize the query for MySQL by using a join rather than a sub-query.
+                $sql = "UPDATE {grade_grades} g
+                          JOIN {grade_items} gi ON (g.itemid = gi.id)
+                           SET g.aggregationstatus = 'unknown',
+                               g.aggregationweight = 0
+                         WHERE g.userid = :userid
+                           AND gi.categoryid = :categoryid";
+                break;
+            default:
+                $itemssql = "SELECT id
+                               FROM {grade_items}
+                              WHERE categoryid = :categoryid";
+
+                $sql = "UPDATE {grade_grades}
+                           SET aggregationstatus = 'unknown',
+                               aggregationweight = 0
+                         WHERE userid = :userid
+                           AND itemid IN ($itemssql)";
+        }
 
         $DB->execute($sql, $params);
 
@@ -882,7 +898,7 @@ class grade_category extends grade_object {
                                                        & $weights = null,
                                                        $grademinoverrides = array(),
                                                        $grademaxoverrides = array()) {
-        $category_item = $this->get_grade_item();
+        $category_item = $this->load_grade_item();
         $grademin = $category_item->grademin;
         $grademax = $category_item->grademax;
 

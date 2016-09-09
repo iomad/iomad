@@ -201,7 +201,7 @@ if (!is_null($subscribe)) {
             }
         }
     }
-    $returnto = forum_go_back_to("index.php?id=$course->id");
+    $returnto = forum_go_back_to(new moodle_url('/mod/forum/index.php', array('id' => $course->id)));
     $shortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
     if ($subscribe) {
         redirect($returnto, get_string('nowallsubscribed', 'forum', $shortname), 1);
@@ -230,7 +230,7 @@ if ($generalforums) {
                 } else if ($unread = forum_tp_count_forum_unread_posts($cm, $course)) {
                         $unreadlink = '<span class="unread"><a href="view.php?f='.$forum->id.'">'.$unread.'</a>';
                     $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                   $forum->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                   $forum->id.'&amp;mark=read&amp;sesskey=' . sesskey() . '"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
                 } else {
                     $unreadlink = '<span class="read">0</span>';
                 }
@@ -368,7 +368,7 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
                     } else if ($unread = forum_tp_count_forum_unread_posts($cm, $course)) {
                         $unreadlink = '<span class="unread"><a href="view.php?f='.$forum->id.'">'.$unread.'</a>';
                         $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                       $forum->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                       $forum->id.'&amp;mark=read&sesskey=' . sesskey() . '"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
                     } else {
                         $unreadlink = '<span class="read">0</span>';
                     }

@@ -308,6 +308,7 @@ class graded_users_iterator {
                     $grades[$grade_item->id] =
                         new grade_grade(array('userid'=>$user->id, 'itemid'=>$grade_item->id), false);
                 }
+                $grades[$grade_item->id]->grade_item = $grade_item;
             }
         }
 
@@ -3120,9 +3121,6 @@ abstract class grade_helper {
                                                     JOIN {user_info_category} c ON f.categoryid=c.id
                                                     WHERE f.shortname $wherefields
                                                     ORDER BY c.sortorder ASC, f.sortorder ASC", $whereparams);
-            if (!is_array($customfields)) {
-                continue;
-            }
 
             foreach ($customfields as $field) {
                 // Make sure we can display this custom field

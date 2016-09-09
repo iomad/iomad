@@ -680,7 +680,7 @@ class grade_item extends grade_object {
         // aggregate the category grade
         } else if ($this->is_category_item() or $this->is_course_item()) {
             // aggregate category grade item
-            $category = $this->get_item_category();
+            $category = $this->load_item_category();
             $category->grade_item =& $this;
             if ($category->generate_grades($userid)) {
                 return true;
@@ -1290,7 +1290,7 @@ class grade_item extends grade_object {
      * @return string name
      */
     public function get_name($fulltotal=false) {
-        if (!empty($this->itemname)) {
+        if (strval($this->itemname) !== '') {
             // MDL-10557
             return format_string($this->itemname);
 

@@ -132,8 +132,9 @@ class core_scheduled_task_testcase extends advanced_testcase {
         // We are testing a difference between $CFG->timezone and the php.ini timezone.
         // GMT+8.
         date_default_timezone_set('Australia/Perth');
-        // GMT-04:30.
-        $CFG->timezone = 'America/Caracas';
+
+        // GMT+04:30.
+        $CFG->timezone = 'Asia/Kabul';
 
         $testclass = new \core\task\scheduled_test_task();
 
@@ -149,9 +150,9 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $userdate = userdate($nexttime);
 
         // Should be displayed in user timezone.
-        // I used http://www.timeanddate.com/worldclock/fixedtime.html?msg=Moodle+Test&iso=20140314T01&p1=58
-        // to verify this time.
-        $this->assertContains('11:15 AM', core_text::strtoupper($userdate));
+        // I used http://www.timeanddate.com/worldclock/fixedtime.html?msg=Moodle+Test&iso=20160502T01&p1=113
+        // setting my location to Kathmandu to verify this time.
+        $this->assertContains('2:15 AM', core_text::strtoupper($userdate));
 
         $CFG->timezone = $currenttimezonecfg;
         date_default_timezone_set($currenttimezonephp);
@@ -475,5 +476,35 @@ class core_scheduled_task_testcase extends advanced_testcase {
         // All of the files and directories should be deleted.
         // There should only be two items in the array, '.' and '..'.
         $this->assertEquals(2, count($filesarray));
+    }
+
+    public function test_all_timezones() {
+        global $CFG;
+
+        $this->resetAfterTest(true);
+
+        $realtimezones = array_intersect(get_list_of_timezones(), DateTimeZone::listIdentifiers());
+        $generatedtimezone = '8.0';
+
+        $testclass = new \core\task\scheduled_test_task();
+        $testclass->set_hour('1');
+        $testclass->set_minute('0');
+
+        $CFG->timezone = $generatedtimezone;
+
+        $this->resetDebugging();
+        $testclass->get_next_scheduled_time();
+        $this->assertEquals(count($this->getDebuggingMessages()), 1);
+
+        $this->resetDebugging();
+
+        if (count($realtimezones) > 0) {
+            $realtimezone = array_keys($realtimezones)[0];
+            $CFG->timezone = $realtimezone;
+
+            $this->resetDebugging();
+            $testclass->get_next_scheduled_time();
+            $this->assertEquals(count($this->getDebuggingMessages()), 0);
+        }
     }
 }

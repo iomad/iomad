@@ -362,18 +362,20 @@ function quiz_delete_attempt($attempt, $quiz) {
     question_engine::delete_questions_usage_by_activity($attempt->uniqueid);
     $DB->delete_records('quiz_attempts', array('id' => $attempt->id));
 
-    // Log the deletion of the attempt.
-    $params = array(
-        'objectid' => $attempt->id,
-        'relateduserid' => $attempt->userid,
-        'context' => context_module::instance($quiz->cmid),
-        'other' => array(
-            'quizid' => $quiz->id
-        )
-    );
-    $event = \mod_quiz\event\attempt_deleted::create($params);
-    $event->add_record_snapshot('quiz_attempts', $attempt);
-    $event->trigger();
+    // Log the deletion of the attempt if not a preview.
+    if (!$attempt->preview) {
+        $params = array(
+            'objectid' => $attempt->id,
+            'relateduserid' => $attempt->userid,
+            'context' => context_module::instance($quiz->cmid),
+            'other' => array(
+                'quizid' => $quiz->id
+            )
+        );
+        $event = \mod_quiz\event\attempt_deleted::create($params);
+        $event->add_record_snapshot('quiz_attempts', $attempt);
+        $event->trigger();
+    }
 
     // Search quiz_attempts for other instances by this user.
     // If none, then delete record for this quiz, this user from quiz_grades
@@ -1483,7 +1485,7 @@ function quiz_send_notification_messages($course, $quiz, $attempt, $context, $cm
     // Check for notifications required.
     $notifyfields = 'u.id, u.username, u.idnumber, u.email, u.emailstop, u.lang, u.timezone, u.mailformat, u.maildisplay, ';
     $notifyfields .= get_all_user_name_fields(true, 'u');
-    $groups = groups_get_all_groups($course->id, $submitter->id);
+    $groups = groups_get_all_groups($course->id, $submitter->id, $cm->groupingid);
     if (is_array($groups) && count($groups) > 0) {
         $groups = array_keys($groups);
     } else if (groups_get_activity_groupmode($cm, $course) != NOGROUPS) {

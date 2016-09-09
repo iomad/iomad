@@ -241,7 +241,7 @@ function user_get_default_fields() {
  * @return array|null
  */
 function user_get_user_details($user, $course = null, array $userfields = array()) {
-    global $USER, $DB, $CFG;
+    global $USER, $DB, $CFG, $PAGE;
     require_once($CFG->dirroot . "/user/profile/lib.php"); // Custom field library.
     require_once($CFG->dirroot . "/lib/filelib.php");      // File handling on description and friends.
 
@@ -307,8 +307,10 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     $userdetails = array();
     $userdetails['id'] = $user->id;
 
-    if (($isadmin or $currentuser) and in_array('username', $userfields)) {
-        $userdetails['username'] = $user->username;
+    if (in_array('username', $userfields)) {
+        if ($currentuser or has_capability('moodle/user:viewalldetails', $context)) {
+            $userdetails['username'] = $user->username;
+        }
     }
     if ($isadmin or $canviewfullnames) {
         if (in_array('firstname', $userfields)) {
@@ -355,12 +357,16 @@ function user_get_user_details($user, $course = null, array $userfields = array(
 
     // Profile image.
     if (in_array('profileimageurl', $userfields)) {
-        $profileimageurl = moodle_url::make_pluginfile_url($usercontext->id, 'user', 'icon', null, '/', 'f1');
-        $userdetails['profileimageurl'] = $profileimageurl->out(false);
+        $userpicture = new user_picture($user);
+        $userpicture->size = 1; // Size f1.
+        $userdetails['profileimageurl'] = $userpicture->get_url($PAGE)->out(false);
     }
     if (in_array('profileimageurlsmall', $userfields)) {
-        $profileimageurlsmall = moodle_url::make_pluginfile_url($usercontext->id, 'user', 'icon', null, '/', 'f2');
-        $userdetails['profileimageurlsmall'] = $profileimageurlsmall->out(false);
+        if (!isset($userpicture)) {
+            $userpicture = new user_picture($user);
+        }
+        $userpicture->size = 0; // Size f2.
+        $userdetails['profileimageurlsmall'] = $userpicture->get_url($PAGE)->out(false);
     }
 
     // Hidden user field.
@@ -460,18 +466,22 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     }
 
     // Departement/Institution/Idnumber are not displayed on any profile, however you can get them from editing profile.
-    if ($isadmin or $currentuser or in_array('idnumber', $showuseridentityfields)) {
-        if (in_array('idnumber', $userfields) && $user->idnumber) {
+    if (in_array('idnumber', $userfields) && $user->idnumber) {
+        if (in_array('idnumber', $showuseridentityfields) or $currentuser or
+                has_capability('moodle/user:viewalldetails', $context)) {
             $userdetails['idnumber'] = $user->idnumber;
         }
     }
-    if ($isadmin or $currentuser or in_array('institution', $showuseridentityfields)) {
-        if (in_array('institution', $userfields) && $user->institution) {
+    if (in_array('institution', $userfields) && $user->institution) {
+        if (in_array('institution', $showuseridentityfields) or $currentuser or
+                has_capability('moodle/user:viewalldetails', $context)) {
             $userdetails['institution'] = $user->institution;
         }
     }
-    if ($isadmin or $currentuser or in_array('department', $showuseridentityfields)) {
-        if (in_array('department', $userfields) && isset($user->department)) { // Isset because it's ok to have department 0.
+    // Isset because it's ok to have department 0.
+    if (in_array('department', $userfields) && isset($user->department)) {
+        if (in_array('department', $showuseridentityfields) or $currentuser or
+                has_capability('moodle/user:viewalldetails', $context)) {
             $userdetails['department'] = $user->department;
         }
     }

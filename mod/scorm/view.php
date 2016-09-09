@@ -90,14 +90,10 @@ if (!empty($scorm->popup)) {
     // Redirect back to the section with one section per page ?
 
     $courseformat = course_get_format($course)->get_course();
-    $sectionid = '';
-    if (isset($courseformat->coursedisplay) && $courseformat->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
-        $sectionid = $cm->sectionnum;
-    }
     if ($courseformat->format == 'singleactivity') {
         $courseurl = $url->out(false, array('preventskip' => '1'));
     } else {
-        $courseurl = course_get_url($course, $sectionid)->out(false);
+        $courseurl = course_get_url($course, $cm->sectionnum)->out(false);
     }
     $PAGE->requires->data_for_js('scormplayerdata', Array('launch' => $launch,
                                                            'currentorg' => $orgidentifier,
@@ -168,19 +164,17 @@ if (empty($launch) && ($scorm->displayattemptstatus == SCORM_DISPLAY_ATTEMPTSTAT
 }
 echo $OUTPUT->box(format_module_intro('scorm', $scorm, $cm->id).$attemptstatus, 'generalbox boxaligncenter boxwidthwide', 'intro');
 
-$scormopen = true;
-$timenow = time();
-if (!empty($scorm->timeopen) && $scorm->timeopen > $timenow) {
-    echo $OUTPUT->box(get_string("notopenyet", "scorm", userdate($scorm->timeopen)), "generalbox boxaligncenter");
-    $scormopen = false;
+// Check if SCORM available.
+list($available, $warnings) = scorm_get_availability_status($scorm);
+if (!$available) {
+    $reason = current(array_keys($warnings));
+    echo $OUTPUT->box(get_string($reason, "scorm", $warnings[$reason]), "generalbox boxaligncenter");
 }
-if (!empty($scorm->timeclose) && $timenow > $scorm->timeclose) {
-    echo $OUTPUT->box(get_string("expired", "scorm", userdate($scorm->timeclose)), "generalbox boxaligncenter");
-    $scormopen = false;
-}
-if ($scormopen && empty($launch)) {
+
+if ($available && empty($launch)) {
     scorm_view_display($USER, $scorm, 'view.php?id='.$cm->id, $cm);
 }
+
 if (!empty($forcejs)) {
     echo $OUTPUT->box(get_string("forcejavascriptmessage", "scorm"), "generalbox boxaligncenter forcejavascriptmessage");
 }
