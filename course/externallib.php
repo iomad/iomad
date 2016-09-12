@@ -195,9 +195,11 @@ class core_course_external extends external_api {
                 $sectionvalues['id'] = $section->id;
                 $sectionvalues['name'] = get_section_name($course, $section);
                 $sectionvalues['visible'] = $section->visible;
+
+                $options = (object) array('noclean' => true);
                 list($sectionvalues['summary'], $sectionvalues['summaryformat']) =
                         external_format_text($section->summary, $section->summaryformat,
-                                $context->id, 'course', 'section', $section->id);
+                                $context->id, 'course', 'section', $section->id, $options);
                 $sectioncontents = array();
 
                 //for each module of the section
@@ -1546,7 +1548,7 @@ class core_course_external extends external_api {
                     }
 
                     if (isset($value)) {
-                        $conditions[$key] = $crit['value'];
+                        $conditions[$key] = $value;
                         $wheres[] = $key . " = :" . $key;
                     }
                 }
@@ -2164,6 +2166,7 @@ class core_course_external extends external_api {
             'perpage'       => $perpage
         );
         $params = self::validate_parameters(self::search_courses_parameters(), $parameters);
+        self::validate_context(context_system::instance());
 
         $allowedcriterianames = array('search', 'modulelist', 'blocklist', 'tagid');
         if (!in_array($params['criterianame'], $allowedcriterianames)) {

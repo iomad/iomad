@@ -1582,7 +1582,7 @@ class core_moodlelib_testcase extends advanced_testcase {
                 'expectedoutput' => '1309485600'
             ),
             array(
-                'usertimezone' => '14', // Server time.
+                'usertimezone' => '-14', // Server time.
                 'year' => '2011',
                 'month' => '7',
                 'day' => '1',
@@ -2929,6 +2929,9 @@ class core_moodlelib_testcase extends advanced_testcase {
 
         $result = random_bytes_emulate(666);
         $this->assertSame(666, strlen($result));
+
+        $result = random_bytes_emulate(40);
+        $this->assertSame(40, strlen($result));
 
         $this->assertDebuggingNotCalled();
 

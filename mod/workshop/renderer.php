@@ -283,12 +283,19 @@ class mod_workshop_renderer extends plugin_renderer_base {
     protected function render_workshop_user_plan(workshop_user_plan $plan) {
         $table = new html_table();
         $table->attributes['class'] = 'userplan';
+        $table->attributes['role'] = 'section';
+        $numberofphases = count($plan->phases);
+        $table->attributes['aria-label'] = get_string('userplanaccessibilitytitle', 'workshop', $numberofphases);
         $table->head = array();
         $table->colclasses = array();
         $row = new html_table_row();
         $row->attributes['class'] = 'phasetasks';
         foreach ($plan->phases as $phasecode => $phase) {
             $title = html_writer::tag('span', $phase->title);
+            if ($phase->active) {
+                $title .= ' ' . html_writer::tag('span', get_string('userplancurrentphase', 'workshop'),
+                    array('class' => 'accesshide'));
+            }
             $actions = '';
             foreach ($phase->actions as $action) {
                 switch ($action->type) {
@@ -877,7 +884,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
             $type       = $file->get_mimetype();
             $image      = $this->output->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', array('class' => 'icon'));
 
-            $linkhtml   = html_writer::link($fileurl, $image) . substr($filepath, 1) . html_writer::link($fileurl, $filename);
+            $linkhtml   = html_writer::link($fileurl, $image . substr($filepath, 1) . $filename);
             $linktxt    = "$filename [$fileurl]";
 
             if ($format == 'html') {

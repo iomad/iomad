@@ -4643,5 +4643,62 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2015111603.01);
     }
 
+    if ($oldversion < 2015111604.07) {
+        // This script is included in each major version upgrade process (3.0, 3.1) so make sure we don't run it twice.
+        if (empty($CFG->upgrade_letterboundarycourses)) {
+            // MDL-45390. If a grade is being displayed with letters and the grade boundaries are not being adhered to properly
+            // then this course will also be frozen.
+            // If the changes are accepted then the display of some grades may change.
+            // This is here to freeze the gradebook in affected courses.
+            upgrade_course_letter_boundary();
+
+            // To skip running the same script on the upgrade to the next major version release.
+            set_config('upgrade_letterboundarycourses', 1);
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015111604.07);
+    }
+
+    if ($oldversion < 2015111605.07) {
+        // Default schedule values.
+        $hour = 0;
+        $minute = 0;
+
+        // Get the old settings.
+        if (isset($CFG->statsruntimestarthour)) {
+            $hour = $CFG->statsruntimestarthour;
+        }
+        if (isset($CFG->statsruntimestartminute)) {
+            $minute = $CFG->statsruntimestartminute;
+        }
+
+        // Retrieve the scheduled task record first.
+        $stattask = $DB->get_record('task_scheduled', array('component' => 'moodle', 'classname' => '\core\task\stats_cron_task'));
+
+        // Don't touch customised scheduling.
+        if ($stattask && !$stattask->customised) {
+
+            $nextruntime = mktime($hour, $minute, 0, date('m'), date('d'), date('Y'));
+            if ($nextruntime < $stattask->lastruntime) {
+                // Add 24 hours to the next run time.
+                $newtime = new DateTime();
+                $newtime->setTimestamp($nextruntime);
+                $newtime->add(new DateInterval('P1D'));
+                $nextruntime = $newtime->getTimestamp();
+            }
+            $stattask->nextruntime = $nextruntime;
+            $stattask->minute = $minute;
+            $stattask->hour = $hour;
+            $stattask->customised = 1;
+            $DB->update_record('task_scheduled', $stattask);
+        }
+        // These settings are no longer used.
+        unset_config('statsruntimestarthour');
+        unset_config('statsruntimestartminute');
+        unset_config('statslastexecution');
+
+        upgrade_main_savepoint(true, 2015111605.07);
+    }
+
     return true;
 }

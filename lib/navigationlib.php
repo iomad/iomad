@@ -2458,9 +2458,7 @@ class global_navigation extends navigation_node {
 
         $coursenode = $parent->add($coursename, $url, self::TYPE_COURSE, $shortname, $course->id);
         $coursenode->hidden = (!$course->visible);
-        // We need to decode &amp;'s here as they will have been added by format_string above and attributes will be encoded again
-        // later.
-        $coursenode->title(str_replace('&amp;', '&', $fullname));
+        $coursenode->title(format_string($course->fullname, true, array('context' => $coursecontext, 'escape' => false)));
         if ($canexpandcourse) {
             // This course can be expanded by the user, make it a branch to make the system aware that its expandable by ajax.
             $coursenode->nodetype = self::NODETYPE_BRANCH;
@@ -2600,6 +2598,7 @@ class global_navigation extends navigation_node {
         }
 
         $sitecontext = context_system::instance();
+        $isfrontpage = ($course->id == SITEID);
 
         // Hidden node that we use to determine if the front page navigation is loaded.
         // This required as there are not other guaranteed nodes that may be loaded.
@@ -2608,8 +2607,8 @@ class global_navigation extends navigation_node {
         // Participants.
         // If this is the site course, they need to have moodle/site:viewparticipants at the site level.
         // If no, then they need to have moodle/course:viewparticipants at the course level.
-        if ((($course->id == SITEID) && has_capability('moodle/site:viewparticipants', $sitecontext)) ||
-                has_capability('moodle/course:viewparticipants', context_course::instance($course->id))) {
+        if (($isfrontpage && has_capability('moodle/site:viewparticipants', $sitecontext)) ||
+                (!$isfrontpage && has_capability('moodle/course:viewparticipants', context_course::instance($course->id)))) {
             $coursenode->add(get_string('participants'), new moodle_url('/user/index.php?id='.$course->id), self::TYPE_CUSTOM, get_string('participants'), 'participants');
         }
 

@@ -158,6 +158,14 @@ class behat_hooks extends behat_base {
         if (!empty($CFG->behat_faildump_path) && !is_writable($CFG->behat_faildump_path)) {
             throw new Exception('You set $CFG->behat_faildump_path to a non-writable directory');
         }
+
+        // Handle interrupts on PHP7.
+        if (extension_loaded('pcntl')) {
+            $disabled = explode(',', ini_get('disable_functions'));
+            if (!in_array('pcntl_signal', $disabled)) {
+                declare(ticks = 1);
+            }
+        }
     }
 
     /**
@@ -433,8 +441,19 @@ class behat_hooks extends behat_base {
             return false;
         }
 
-        list ($dir, $filename) = $this->get_faildump_filename($event, 'png');
-        $this->saveScreenshot($filename, $dir);
+        // Some drivers (e.g. chromedriver) may throw an exception while trying to take a screenshot.  If this isn't handled,
+        // the behat run dies.  We don't want to lose the information about the failure that triggered the screenshot,
+        // so let's log the exception message to a file (to explain why there's no screenshot) and allow the run to continue,
+        // handling the failure as normal.
+        try {
+            list ($dir, $filename) = $this->get_faildump_filename($event, 'png');
+            $this->saveScreenshot($filename, $dir);
+        } catch (Exception $e) {
+            // Catching all exceptions as we don't know what the driver might throw.
+            list ($dir, $filename) = $this->get_faildump_filename($event, 'txt');
+            $message = "Could not save screenshot due to an error\n" . $e->getMessage();
+            file_put_contents($dir . DIRECTORY_SEPARATOR . $filename, $message);
+        }
     }
 
     /**
@@ -446,9 +465,14 @@ class behat_hooks extends behat_base {
     protected function take_contentdump(StepEvent $event) {
         list ($dir, $filename) = $this->get_faildump_filename($event, 'html');
 
-        $fh = fopen($dir . DIRECTORY_SEPARATOR . $filename, 'w');
-        fwrite($fh, $this->getSession()->getPage()->getContent());
-        fclose($fh);
+        try {
+            // Driver may throw an exception during getContent(), so do it first to avoid getting an empty file.
+            $content = $this->getSession()->getPage()->getContent();
+        } catch (Exception $e) {
+            // Catching all exceptions as we don't know what the driver might throw.
+            $content = "Could not save contentdump due to an error\n" . $e->getMessage();
+        }
+        file_put_contents($dir . DIRECTORY_SEPARATOR . $filename, $content);
     }
 
     /**

@@ -2145,13 +2145,7 @@ function profile_display_badges($userid, $courseid = 0) {
     require_once($CFG->dirroot . '/badges/renderer.php');
 
     debugging('profile_display_badges() is deprecated.', DEBUG_DEVELOPER);
-
-    // Determine context.
-    if (isloggedin()) {
-        $context = context_user::instance($USER->id);
-    } else {
-        $context = context_system::instance();
-    }
+    $context = context_user::instance($userid);
 
     if ($USER->id == $userid || has_capability('moodle/badges:viewotherbadges', $context)) {
         $records = badges_get_user_badges($userid, $courseid, null, null, null, true);
@@ -2740,4 +2734,17 @@ function tag_autocomplete($text) {
     return $DB->get_records_sql("SELECT tg.id, tg.name, tg.rawname
                                    FROM {tag} tg
                                   WHERE tg.name LIKE ?", array(core_text::strtolower($text)."%"));
+}
+
+/**
+ * Add includes (js and css) into uploaded files before returning them,
+ * useful for themes and utf.js includes.
+ *
+ * @param string $text text to search and replace
+ * @return string text
+ * @deprecated Moodle 3.0.5 See MDL-29738
+ */
+function file_modify_html_header($text) {
+    debugging('file_modify_html_header() is deprecated and will not be replaced.', DEBUG_DEVELOPER);
+    return $text;
 }

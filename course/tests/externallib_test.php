@@ -241,6 +241,16 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
 
         $this->assertEquals(1, count($categories));
 
+        // Same query, but forcing a parameters clean.
+        $categories = core_course_external::get_categories(array(
+            array('key' => 'id', 'value' => "$category1->id"),
+            array('key' => 'idnumber', 'value' => $category1->idnumber),
+            array('key' => 'name', 'value' => $category1->name . "<br/>"),
+            array('key' => 'visible', 'value' => '1')), 0);
+        $categories = external_api::clean_returnvalue(core_course_external::get_categories_returns(), $categories);
+
+        $this->assertEquals(1, count($categories));
+
         // Retrieve categories from parent.
         $categories = core_course_external::get_categories(array(
             array('key' => 'parent', 'value' => $category3->id)), 1);
@@ -670,6 +680,7 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
      * @return array A list with the course object and course modules objects
      */
     private function prepare_get_course_contents_test() {
+        global $DB;
         $course  = self::getDataGenerator()->create_course();
         $forumdescription = 'This is the forum description';
         $forum = $this->getDataGenerator()->create_module('forum',
@@ -693,6 +704,10 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
         $context = context_course::instance($course->id);
         $roleid = $this->assignUserCapability('moodle/course:view', $context->id);
         $this->assignUserCapability('moodle/course:update', $context->id, $roleid);
+
+        $conditions = array('course' => $course->id, 'section' => 2);
+        $DB->set_field('course_sections', 'summary', 'Text with iframe <iframe src="https://moodle.org"></iframe>', $conditions);
+        rebuild_course_cache($course->id, true);
 
         return array($course, $forumcm, $datacm, $pagecm, $labelcm, $urlcm);
     }
@@ -737,6 +752,8 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
         // Check that the only return section has the 5 created modules.
         $this->assertCount(4, $firstsection['modules']);
         $this->assertCount(1, $lastsection['modules']);
+        $this->assertContains('<iframe', $lastsection['summary']);
+        $this->assertContains('</iframe>', $lastsection['summary']);
 
         try {
             $sections = core_course_external::get_course_contents($course->id,

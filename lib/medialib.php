@@ -540,20 +540,20 @@ class core_media_player_youtube extends core_media_player_external {
         $params = '';
         $start = self::get_start_time($url);
         if ($start > 0) {
-            $params .= "start=$start&";
+            $params .= "start=$start&amp;";
         }
 
         $listid = $url->param('list');
         // Check for non-empty but valid playlist ID.
         if (!empty($listid) && !preg_match('/[^a-zA-Z0-9\-_]/', $listid)) {
             // This video is part of a playlist, and we want to embed it as such.
-            $params .= "list=$listid&";
+            $params .= "list=$listid&amp;";
         }
 
         return <<<OET
 <span class="mediaplugin mediaplugin_youtube">
 <iframe title="$info" width="$width" height="$height"
-  src="https://www.youtube.com/embed/$videoid?{$params}rel=0&wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
+  src="https://www.youtube.com/embed/$videoid?{$params}rel=0&amp;wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
 </span>
 OET;
 
@@ -1123,8 +1123,8 @@ OET;
                 // is a simplified version, does not take into account old browser
                 // versions or manual plugins.
                 if ($ext === 'ogv' || $ext === 'webm') {
-                    // Formats .ogv and .webm are not supported in IE or Safari.
-                    if (core_useragent::is_ie() || core_useragent::is_safari()) {
+                    // Formats .ogv and .webm are not supported in IE, Edge or Safari.
+                    if (core_useragent::is_ie() || core_useragent::is_edge() || core_useragent::is_safari()) {
                         continue;
                     }
                 } else {
@@ -1195,8 +1195,8 @@ OET;
             $ext = core_media::get_extension($url);
             if (in_array($ext, $extensions)) {
                 if ($ext === 'ogg' || $ext === 'oga') {
-                    // Formats .ogg and .oga are not supported in IE or Safari.
-                    if (core_useragent::is_ie() || core_useragent::is_safari()) {
+                    // Formats .ogg and .oga are not supported in IE, Edge, or Safari.
+                    if (core_useragent::is_ie() || core_useragent::is_edge() || core_useragent::is_safari()) {
                         continue;
                     }
                 } else {

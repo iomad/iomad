@@ -152,14 +152,15 @@ class core_user {
         // If noreply user is set then use it, else create one.
         if (!empty($CFG->noreplyuserid)) {
             self::$noreplyuser = self::get_user($CFG->noreplyuserid);
+            self::$noreplyuser->emailstop = 1; // Force msg stop for this user.
+            return self::$noreplyuser;
+        } else {
+            // Do not cache the dummy user record to avoid language internationalization issues.
+            $noreplyuser = self::get_dummy_user_record();
+            $noreplyuser->maildisplay = '1'; // Show to all.
+            $noreplyuser->emailstop = 1;
+            return $noreplyuser;
         }
-
-        if (empty(self::$noreplyuser)) {
-            self::$noreplyuser = self::get_dummy_user_record();
-            self::$noreplyuser->maildisplay = '1'; // Show to all.
-        }
-        self::$noreplyuser->emailstop = 1; // Force msg stop for this user.
-        return self::$noreplyuser;
     }
 
     /**
@@ -182,18 +183,19 @@ class core_user {
         // If custom support user is set then use it, else if supportemail is set then use it, else use noreply.
         if (!empty($CFG->supportuserid)) {
             self::$supportuser = self::get_user($CFG->supportuserid, '*', MUST_EXIST);
-        }
-
-        // Try sending it to support email if support user is not set.
-        if (empty(self::$supportuser) && !empty($CFG->supportemail)) {
-            self::$supportuser = self::get_dummy_user_record();
-            self::$supportuser->id = self::SUPPORT_USER;
-            self::$supportuser->email = $CFG->supportemail;
+        } else if (empty(self::$supportuser) && !empty($CFG->supportemail)) {
+            // Try sending it to support email if support user is not set.
+            $supportuser = self::get_dummy_user_record();
+            $supportuser->id = self::SUPPORT_USER;
+            $supportuser->email = $CFG->supportemail;
             if ($CFG->supportname) {
-                self::$supportuser->firstname = $CFG->supportname;
+                $supportuser->firstname = $CFG->supportname;
             }
-            self::$supportuser->username = 'support';
-            self::$supportuser->maildisplay = '1'; // Show to all.
+            $supportuser->username = 'support';
+            $supportuser->maildisplay = '1'; // Show to all.
+            // Unset emailstop to make sure support message is sent.
+            $supportuser->emailstop = 0;
+            return $supportuser;
         }
 
         // Send support msg to admin user if nothing is set above.
@@ -293,15 +295,15 @@ class core_user {
         // Every new field on the user table should be added here otherwise it won't be validated.
         $fields = array();
         $fields['id'] = array('type' => PARAM_INT);
-        $fields['auth'] = array('type' => PARAM_NOTAGS);
+        $fields['auth'] = array('type' => PARAM_AUTH);
         $fields['confirmed'] = array('type' => PARAM_BOOL);
         $fields['policyagreed'] = array('type' => PARAM_BOOL);
         $fields['deleted'] = array('type' => PARAM_BOOL);
         $fields['suspended'] = array('type' => PARAM_BOOL);
-        $fields['mnethostid'] = array('type' => PARAM_BOOL);
+        $fields['mnethostid'] = array('type' => PARAM_INT);
         $fields['username'] = array('type' => PARAM_USERNAME);
-        $fields['password'] = array('type' => PARAM_NOTAGS);
-        $fields['idnumber'] = array('type' => PARAM_NOTAGS);
+        $fields['password'] = array('type' => PARAM_RAW);
+        $fields['idnumber'] = array('type' => PARAM_RAW);
         $fields['firstname'] = array('type' => PARAM_NOTAGS);
         $fields['lastname'] = array('type' => PARAM_NOTAGS);
         $fields['surname'] = array('type' => PARAM_NOTAGS);
@@ -318,20 +320,20 @@ class core_user {
         $fields['department'] = array('type' => PARAM_TEXT);
         $fields['address'] = array('type' => PARAM_TEXT);
         $fields['city'] = array('type' => PARAM_TEXT);
-        $fields['country'] = array('type' => PARAM_TEXT);
-        $fields['lang'] = array('type' => PARAM_TEXT);
+        $fields['country'] = array('type' => PARAM_ALPHA);
+        $fields['lang'] = array('type' => PARAM_LANG);
         $fields['calendartype'] = array('type' => PARAM_NOTAGS);
-        $fields['theme'] = array('type' => PARAM_NOTAGS);
-        $fields['timezones'] = array('type' => PARAM_TEXT);
+        $fields['theme'] = array('type' => PARAM_THEME);
+        $fields['timezone'] = array('type' => PARAM_TIMEZONE);
         $fields['firstaccess'] = array('type' => PARAM_INT);
         $fields['lastaccess'] = array('type' => PARAM_INT);
         $fields['lastlogin'] = array('type' => PARAM_INT);
         $fields['currentlogin'] = array('type' => PARAM_INT);
         $fields['lastip'] = array('type' => PARAM_NOTAGS);
-        $fields['secret'] = array('type' => PARAM_TEXT);
+        $fields['secret'] = array('type' => PARAM_RAW);
         $fields['picture'] = array('type' => PARAM_INT);
         $fields['url'] = array('type' => PARAM_URL);
-        $fields['description'] = array('type' => PARAM_CLEANHTML);
+        $fields['description'] = array('type' => PARAM_RAW);
         $fields['descriptionformat'] = array('type' => PARAM_INT);
         $fields['mailformat'] = array('type' => PARAM_INT);
         $fields['maildigest'] = array('type' => PARAM_INT);

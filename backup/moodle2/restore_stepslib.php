@@ -121,6 +121,21 @@ class restore_gradebook_structure_step extends restore_structure_step {
             return false;
         }
 
+        // Identify the backup we're dealing with.
+        $backuprelease = floatval($this->get_task()->get_info()->backup_release); // The major version: 2.9, 3.0, ...
+        $backupbuild = 0;
+        preg_match('/(\d{8})/', $this->get_task()->get_info()->moodle_release, $matches);
+        if (!empty($matches[1])) {
+            $backupbuild = (int) $matches[1]; // The date of Moodle build at the time of the backup.
+        }
+
+        // On older versions the freeze value has to be converted.
+        // We do this from here as it is happening right before the file is read.
+        // This only targets the backup files that can contain the legacy freeze.
+        if ($backupbuild > 20150618 && ($backuprelease < 3.0 || $backupbuild < 20160527)) {
+            $this->rewrite_step_backup_file_for_legacy_freeze($fullpath);
+        }
+
         // Arrived here, execute the step
         return true;
      }
@@ -129,7 +144,7 @@ class restore_gradebook_structure_step extends restore_structure_step {
         $paths = array();
         $userinfo = $this->task->get_setting_value('users');
 
-        $paths[] = new restore_path_element('gradebook', '/gradebook');
+        $paths[] = new restore_path_element('attributes', '/gradebook/attributes');
         $paths[] = new restore_path_element('grade_category', '/gradebook/grade_categories/grade_category');
         $paths[] = new restore_path_element('grade_item', '/gradebook/grade_items/grade_item');
         if ($userinfo) {
@@ -141,7 +156,7 @@ class restore_gradebook_structure_step extends restore_structure_step {
         return $paths;
     }
 
-    protected function process_gradebook($data) {
+    protected function process_attributes($data) {
         // For non-merge restore types:
         // Unset 'gradebook_calculations_freeze_' in the course and replace with the one from the backup.
         $target = $this->get_task()->get_target();
@@ -493,6 +508,8 @@ class restore_gradebook_structure_step extends restore_structure_step {
         $gradebookcalculationsfreeze = get_config('core', 'gradebook_calculations_freeze_' . $this->get_courseid());
         preg_match('/(\d{8})/', $this->get_task()->get_info()->moodle_release, $matches);
         $backupbuild = (int)$matches[1];
+        // The function floatval will return a float even if there is text mixed with the release number.
+        $backuprelease = floatval($this->get_task()->get_info()->backup_release);
 
         // Extra credits need adjustments only for backups made between 2.8 release (20141110) and the fix release (20150619).
         if (!$gradebookcalculationsfreeze && $backupbuild >= 20141110 && $backupbuild < 20150619) {
@@ -504,6 +521,14 @@ class restore_gradebook_structure_step extends restore_structure_step {
             require_once($CFG->libdir . '/db/upgradelib.php');
             upgrade_calculated_grade_items($this->get_courseid());
         }
+        // Courses from before 3.1 (20160518) may have a letter boundary problem and should be checked for this issue.
+        // Backups from before and including 2.9 could have a build number that is greater than 20160518 and should
+        // be checked for this problem.
+        if (!$gradebookcalculationsfreeze && ($backupbuild < 20160518 || $backuprelease <= 2.9)) {
+            require_once($CFG->libdir . '/db/upgradelib.php');
+            upgrade_course_letter_boundary($this->get_courseid());
+        }
+
     }
 
     /**
@@ -571,6 +596,85 @@ class restore_gradebook_structure_step extends restore_structure_step {
             }
         }
     }
+
+    /**
+     * Rewrite step definition to handle the legacy freeze attribute.
+     *
+     * In previous backups the calculations_freeze property was stored as an attribute of the
+     * top level node <gradebook>. The backup API, however, do not process grandparent nodes.
+     * It only processes definitive children, and their parent attributes.
+     *
+     * We had:
+     *
+     * <gradebook calculations_freeze="20160511">
+     *   <grade_categories>
+     *     <grade_category id="10">
+     *       <depth>1</depth>
+     *       ...
+     *     </grade_category>
+     *   </grade_categories>
+     *   ...
+     * </gradebook>
+     *
+     * And this method will convert it to:
+     *
+     * <gradebook >
+     *   <attributes>
+     *     <calculations_freeze>20160511</calculations_freeze>
+     *   </attributes>
+     *   <grade_categories>
+     *     <grade_category id="10">
+     *       <depth>1</depth>
+     *       ...
+     *     </grade_category>
+     *   </grade_categories>
+     *   ...
+     * </gradebook>
+     *
+     * Note that we cannot just load the XML file in memory as it could potentially be huge.
+     * We can also completely ignore if the node <attributes> is already in the backup
+     * file as it never existed before.
+     *
+     * @param string $filepath The absolute path to the XML file.
+     * @return void
+     */
+    protected function rewrite_step_backup_file_for_legacy_freeze($filepath) {
+        $foundnode = false;
+        $newfile = make_request_directory(true) . DIRECTORY_SEPARATOR . 'file.xml';
+        $fr = fopen($filepath, 'r');
+        $fw = fopen($newfile, 'w');
+        if ($fr && $fw) {
+            while (($line = fgets($fr, 4096)) !== false) {
+                if (!$foundnode && strpos($line, '<gradebook ') === 0) {
+                    $foundnode = true;
+                    $matches = array();
+                    $pattern = '@calculations_freeze=.([0-9]+).@';
+                    if (preg_match($pattern, $line, $matches)) {
+                        $freeze = $matches[1];
+                        $line = preg_replace($pattern, '', $line);
+                        $line .= "  <attributes>\n    <calculations_freeze>$freeze</calculations_freeze>\n  </attributes>\n";
+                    }
+                }
+                fputs($fw, $line);
+            }
+            if (!feof($fr)) {
+                throw new restore_step_exception('Error while attempting to rewrite the gradebook step file.');
+            }
+            fclose($fr);
+            fclose($fw);
+            if (!rename($newfile, $filepath)) {
+                throw new restore_step_exception('Error while attempting to rename the gradebook step file.');
+            }
+        } else {
+            if ($fr) {
+                fclose($fr);
+            }
+            if ($fw) {
+                fclose($fw);
+            }
+        }
+    }
+
 }
 
 /**
@@ -1700,27 +1804,54 @@ class restore_course_structure_step extends restore_structure_step {
      */
     public function process_course($data) {
         global $CFG, $DB;
+        $context = context::instance_by_id($this->task->get_contextid());
+        $userid = $this->task->get_userid();
+        $target = $this->get_task()->get_target();
+        $isnewcourse = $target != backup::TARGET_CURRENT_ADDING && $target != backup::TARGET_EXISTING_ADDING;
+
+        // When restoring to a new course we can set all the things except for the ID number.
+        $canchangeidnumber = $isnewcourse || has_capability('moodle/course:changeidnumber', $context, $userid);
+        $canchangeshortname = $isnewcourse || has_capability('moodle/course:changeshortname', $context, $userid);
+        $canchangefullname = $isnewcourse || has_capability('moodle/course:changefullname', $context, $userid);
+        $canchangesummary = $isnewcourse || has_capability('moodle/course:changesummary', $context, $userid);
 
         $data = (object)$data;
+        $data->id = $this->get_courseid();
 
         $fullname  = $this->get_setting_value('course_fullname');
         $shortname = $this->get_setting_value('course_shortname');
         $startdate = $this->get_setting_value('course_startdate');
 
-        // Calculate final course names, to avoid dupes
+        // Calculate final course names, to avoid dupes.
         list($fullname, $shortname) = restore_dbops::calculate_course_names($this->get_courseid(), $fullname, $shortname);
 
-        // Need to change some fields before updating the course record
-        $data->id = $this->get_courseid();
-        $data->fullname = $fullname;
-        $data->shortname= $shortname;
+        if ($canchangefullname) {
+            $data->fullname = $fullname;
+        } else {
+            unset($data->fullname);
+        }
+
+        if ($canchangeshortname) {
+            $data->shortname = $shortname;
+        } else {
+            unset($data->shortname);
+        }
+
+        if (!$canchangesummary) {
+            unset($data->summary);
+            unset($data->summaryformat);
+        }
 
         // Only allow the idnumber to be set if the user has permission and the idnumber is not already in use by
         // another course on this site.
-        $context = context::instance_by_id($this->task->get_contextid());
-        if (!empty($data->idnumber) && has_capability('moodle/course:changeidnumber', $context, $this->task->get_userid()) &&
-                $this->task->is_samesite() && !$DB->record_exists('course', array('idnumber' => $data->idnumber))) {
+        if (!empty($data->idnumber) && $canchangeidnumber && $this->task->is_samesite()
+                && !$DB->record_exists('course', array('idnumber' => $data->idnumber))) {
             // Do not reset idnumber.
+
+        } else if (!$isnewcourse) {
+            // Prevent override when restoring as merge.
+            unset($data->idnumber);
+
         } else {
             $data->idnumber = '';
         }
