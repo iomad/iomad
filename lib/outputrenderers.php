@@ -2766,7 +2766,7 @@ EOD;
      * @param string $debuginfo Debugging information
      * @return string the HTML to output.
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
         global $CFG;
 
         $output = '';
@@ -2795,6 +2795,9 @@ EOD;
             $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
             if (empty($_SERVER['HTTP_RANGE'])) {
                 @header($protocol . ' 404 Not Found');
+            } else if (core_useragent::check_safari_ios_version(602) && !empty($_SERVER['HTTP_X_PLAYBACK_SESSION_ID'])) {
+                // Coax iOS 10 into sending the session cookie.
+                @header($protocol . ' 403 Forbidden');
             } else {
                 // Must stop byteserving attempts somehow,
                 // this is weird but Chrome PDF viewer can be stopped only with 407!
@@ -4335,7 +4338,7 @@ class core_renderer_cli extends core_renderer {
      * @param string $debuginfo Debugging information
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
         global $CFG;
 
         $output = "!!! $message !!!\n";
@@ -4410,13 +4413,14 @@ class core_renderer_ajax extends core_renderer {
      * @param string $debuginfo Debugging information
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
         global $CFG;
 
         $this->page->set_context(null); // ugly hack - make sure page context is set to something, we do not want bogus warnings here
 
         $e = new stdClass();
         $e->error      = $message;
+        $e->errorcode  = $errorcode;
         $e->stacktrace = NULL;
         $e->debuginfo  = NULL;
         $e->reproductionlink = NULL;

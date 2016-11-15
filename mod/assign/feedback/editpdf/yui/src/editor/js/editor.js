@@ -12,6 +12,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+/* eslint-disable no-unused-vars */
+/* global SELECTOR, TOOLSELECTOR, AJAXBASE, COMMENTCOLOUR, ANNOTATIONCOLOUR, AJAXBASEPROGRESS, CLICKTIMEOUT */
 
 /**
  * Provides an in browser PDF editor.
@@ -457,7 +459,9 @@ EDITOR.prototype = {
                             }
 
                             // New ajax request delayed of a second.
+                            M.util.js_pending('checkconversionstatus');
                             Y.later(1000, this, function () {
+                                M.util.js_complete('checkconversionstatus');
                                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
                             });
                         }
@@ -467,7 +471,9 @@ EDITOR.prototype = {
                         // We only continue on error if the all pages were not generated,
                         // and if the ajax call did not produce 5 errors in the row.
                         if (this.pagecount === 0 && ajax_error_total < 5) {
+                            M.util.js_pending('checkconversionstatus');
                             Y.later(1000, this, function () {
+                                M.util.js_complete('checkconversionstatus');
                                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
                             });
                         }
@@ -477,8 +483,10 @@ EDITOR.prototype = {
             };
             // We start the AJAX "generated page total number" call a second later to give a chance to
             // the AJAX "combined pdf generation" call to clean the previous submission images.
+            M.util.js_pending('checkconversionstatus');
             Y.later(1000, this, function () {
                 ajax_error_total = 0;
+                M.util.js_complete('checkconversionstatus');
                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
             });
         }
