@@ -198,7 +198,14 @@ class assign_grading_table extends table_sql implements renderable {
             } else if ($filter == ASSIGN_FILTER_REQUIRE_GRADING) {
                 $where .= ' AND (s.timemodified IS NOT NULL AND
                                  s.status = :submitted AND
-                                 (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL))';
+                                 (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL';
+
+                if ($this->assignment->get_grade_item()->gradetype == GRADE_TYPE_SCALE) {
+                    // Scale grades are set to -1 when not graded.
+                    $where .= ' OR g.grade = -1';
+                }
+
+                $where .= '))';
                 $params['submitted'] = ASSIGN_SUBMISSION_STATUS_SUBMITTED;
 
             } else if (strpos($filter, ASSIGN_FILTER_SINGLE_USER) === 0) {
@@ -618,7 +625,8 @@ class assign_grading_table extends table_sql implements renderable {
                 if ($grade == -1 || $grade === null) {
                     return '';
                 }
-                return format_float($grade, 2);
+                $gradeitem = $this->assignment->get_grade_item();
+                return format_float($grade, $gradeitem->get_decimals());
             } else {
                 // This is a custom scale.
                 $scale = $this->assignment->display_grade($grade, false);
@@ -815,7 +823,8 @@ class assign_grading_table extends table_sql implements renderable {
      * @return string
      */
     public function col_grademax(stdClass $row) {
-        return format_float($this->assignment->get_instance()->grade, 2);
+        $gradeitem = $this->assignment->get_grade_item();
+        return format_float($this->assignment->get_instance()->grade, $gradeitem->get_decimals());
     }
 
     /**

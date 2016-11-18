@@ -96,6 +96,9 @@ abstract class format_base {
      * @return string
      */
     protected static final function get_format_or_default($format) {
+        global $CFG;
+        require_once($CFG->dirroot . '/course/lib.php');
+
         if (array_key_exists($format, self::$classesforformat)) {
             return self::$classesforformat[$format];
         }
@@ -477,7 +480,7 @@ abstract class format_base {
      */
     public function get_default_blocks() {
         global $CFG;
-        if (!empty($CFG->defaultblocks)){
+        if (isset($CFG->defaultblocks)) {
             return blocks_parse_default_blocks_list($CFG->defaultblocks);
         }
         $blocknames = array(
