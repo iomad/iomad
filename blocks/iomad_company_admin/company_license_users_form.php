@@ -256,7 +256,7 @@ class company_license_users_form extends moodleform {
 
         // Process incoming unallocations.
         if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
-            $licensestounassign = optional_param_array(currentlyenrolledusers, null, PARAM_INT);
+            $licensestounassign = optional_param_array('currentlyenrolledusers', null, PARAM_INT);
             $count = $this->license->used;
             $licenserecord = (array) $this->license;
 
@@ -274,7 +274,7 @@ class company_license_users_form extends moodleform {
                         $count--;
                     }
                     // Create an email event.
-                    EmailTemplate::send('license_removed', array('course' => $licensedata->licensecourseid, 'user' => $removeuser));
+                    EmailTemplate::send('license_removed', array('course' => $licensedata->licensecourseid, 'user' => $licensedata->userid));
                 }
 
                 // Update the number of allocated records..
