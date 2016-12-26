@@ -154,6 +154,9 @@ div.iomadlink {
     border-radius: 5px;
     box-shadow: 5px 5px 5px #888888;
 }
+.mform fieldset.collapsible legend a.fheader {
+    margin-left: 0;
+}
 
 /* block icons */
 .block_navigation h2:before {
