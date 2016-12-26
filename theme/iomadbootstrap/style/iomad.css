@@ -192,6 +192,22 @@ div.iomadlink {
     font-family: FontAwesome;
     content: "\f1fd  ";
 }
+.block_iomad_approve_access h2:before {
+    font-family: FontAwesome;
+    content: "\f234  ";
+}
+.block_iomad_company_selector h2:before {
+    font-family: FontAwesome;
+    content: "\f1ad  ";
+}
+.block_iomad_onlineusers h2:before {
+    font-family: FontAwesome;
+    content: "\f2bd  ";
+}
+.block_completionstatus h2:before {
+    font-family: FontAwesome;
+    content: "\f14a  ";
+}
 .block_iomad_reports h3:before {
     font-family: FontAwesome;
     content: "\f200  ";
