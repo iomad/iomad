@@ -36,7 +36,7 @@ class company_edit_form extends company_moodleform {
         $this->companyrecord = $companyrecord;
         $this->firstcompany = $firstcompany;
         if (empty($this->companyrecord->theme)) {
-            $this->companyrecord->theme = 'iomadbootstrap';
+            $this->companyrecord->theme = 'iomadboost';
         }
         parent::__construct($actionurl);
     }
@@ -220,9 +220,9 @@ class company_edit_form extends company_moodleform {
 
             // If theme is already set to a real theme, dont show this.
             if (!isset($this->companyrecord->theme)) {
-                $this->companyrecord->theme = 'iomadbootstrap';
+                $this->companyrecord->theme = 'iomadboost';
             }
-            if ($this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'iomadbootstrap' || $ischild) {
+            if ($this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'iomadbootstrap' || $this->companyrecord->theme = 'iomadboost' || $ischild) {
                 $mform->addElement('HTML', get_string('theoptionsbelow',
                                                       'block_iomad_company_admin'));
                 $mform->addElement('filemanager', 'companylogo',
