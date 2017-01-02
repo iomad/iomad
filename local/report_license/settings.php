@@ -24,9 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$url = new moodle_url('/local/report_license/index.php');
+// Basic navigation settings
+require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
+
+$url = new moodle_url( '/local/report_license/index.php' );
 $ADMIN->add('IomadReports',
             new admin_externalpage('repcourselicense',
-            get_string('repcourselicense', 'local_report_license'),
-            $url,
-            'local/report_license:view'));
+                                   get_string('repcourselicense',
+                                   'local_report_license'),
+                                   $url,
+                                   'local/report_license:view'));

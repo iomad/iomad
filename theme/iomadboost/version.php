@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Iomad - admin settings
+ * IomadBoost
  *
- * @package    Iomad
- * @copyright  2011 onwards E-Learn Design Limited
+ * @package    theme_iomadboost
+ * @copyright  2017 E-Learn Design Ltd http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-// Basic navigation settings
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/report_users/index.php' );
-$ADMIN->add('IomadReports', new admin_externalpage('repusercompletion',
-             get_string('repusercompletion', 'local_report_users'),
-             $url, 'local/report_users:view'));
+$plugin->version   = 2016123100;
+$plugin->requires  = 2016112900;
+$plugin->component = 'theme_iomadboost';
+$plugin->dependencies = [
+    'theme_boost' => '2016102100',
+];

@@ -15,18 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'block_online_users', language 'en', branch 'MOODLE_20_STABLE'
+ * Language file.
  *
- * @package   block_online_users
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @package   theme_iomadboost
+ * @copyright 2017 Howard Miller
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['currentcompany'] = 'Current company is';
-$string['currentcompanyname'] = 'Current company, <b>\'{$a}\'</b>';
-$string['iomad_company_selector:addinstance'] = 'Add a new Iomad company selector block';
-$string['iomad_company_selector:myaddinstance'] = 'Add a new Iomad company selector block to the users dashboard';
-$string['nocurrentcompany'] = 'Please select a company from the drop down list';
-$string['pluginname'] = 'iomad - Company Selector';
-$string['selectacompany'] = 'Select a Company';
-$string['title'] = 'Company select';
+defined('MOODLE_INTERNAL') || die();
+
+$string['choosereadme'] = 'IomadBoost is the standard theme for Iomad based on Moodle\'s core Boost theme';
+$string['pluginname'] = 'IomadBoost';
+$string['region-side-pre'] = 'Right';

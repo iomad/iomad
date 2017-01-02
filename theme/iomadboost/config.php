@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'block_online_users', language 'en', branch 'MOODLE_20_STABLE'
+ * IomadBoost config.
  *
- * @package   block_online_users
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @package   theme_iomadboost
+ * @copyright 2017 Howard Miller
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['currentcompany'] = 'Current company is';
-$string['currentcompanyname'] = 'Current company, <b>\'{$a}\'</b>';
-$string['iomad_company_selector:addinstance'] = 'Add a new Iomad company selector block';
-$string['iomad_company_selector:myaddinstance'] = 'Add a new Iomad company selector block to the users dashboard';
-$string['nocurrentcompany'] = 'Please select a company from the drop down list';
-$string['pluginname'] = 'iomad - Company Selector';
-$string['selectacompany'] = 'Select a Company';
-$string['title'] = 'Company select';
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/lib.php');
+
+$THEME->name = 'iomadboost';
+$THEME->sheets = ['font-awesome', 'font-iomad', 'iomad'];
+$THEME->editor_sheets = [];
+$THEME->parents = ['boost'];
+$THEME->enable_dock = false;
+$THEME->yuicssmodules = array();
+$THEME->rendererfactory = 'theme_overridden_renderer_factory';
+$THEME->requiredblocks = '';
+$THEME->addblockposition = BLOCK_ADDBLOCK_POSITION_FLATNAV;

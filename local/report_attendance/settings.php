@@ -24,9 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$url = new moodle_url('/local/report_attendance/index.php');
-$ADMIN->add('IomadReports',
-            new admin_externalpage('repcourseattendance',
-            get_string('repcourseattendance', 'local_report_attendance'),
-            $url,
-            'local/report_attendance:view'));
+// Basic navigation settings
+require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
+
+$url = new moodle_url( '/local/report_attendance/index.php' );
+$ADMIN->add( 'IomadReports', new admin_externalpage('repcourseattendance',
+                               get_string('repcourseattendance',
+                               'local_report_attendance'),
+                               $url,
+                               'local/report_attendance:view'));
