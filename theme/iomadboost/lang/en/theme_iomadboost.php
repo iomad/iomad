@@ -25,5 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['choosereadme'] = 'IomadBoost is the standard theme for Iomad based on Moodle\'s core Boost theme';
+$string['iomaddashboard'] = 'Iomad dashboard';
 $string['pluginname'] = 'IomadBoost';
 $string['region-side-pre'] = 'Right';
