@@ -24,7 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$url = new moodle_url( '/local/report_license/index.php' );
-$ADMIN->add( 'PerficoReports', new admin_externalpage('repcourselicense',
-                                                       get_string('repcourselicense',
-                                                       'local_report_license'), $url, 'local/report_license:view'));
+$url = new moodle_url('/local/report_license/index.php');
+$ADMIN->add('IomadReports',
+            new admin_externalpage('repcourselicense',
+            get_string('repcourselicense', 'local_report_license'),
+            $url,
+            'local/report_license:view'));

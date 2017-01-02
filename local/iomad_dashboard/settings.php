@@ -46,7 +46,7 @@ $ADMIN->add( 'iomad', new admin_category( 'UserAdmin',
 $ADMIN->add( 'iomad', new admin_category( 'CourseAdmin',
               get_string('coursemanagement', 'block_iomad_company_admin')));
 
-$ADMIN->add( 'iomad', new admin_category( 'PerficoReports',
+$ADMIN->add( 'iomad', new admin_category( 'IomadReports',
               get_string('iomadreports', 'block_iomad_company_admin')));
 
 $ADMIN->add( 'iomad', new admin_category( 'LicenseAdmin',

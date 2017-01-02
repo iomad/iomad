@@ -24,7 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$url = new moodle_url( '/local/report_completion/index.php' );
-$ADMIN->add( 'PerficoReports', new admin_externalpage('repcoursecompletion',
-                                                       get_string('repcoursecompletion',
-                                                       'local_report_completion'), $url, 'local/report_completion:view'));
+$url = new moodle_url('/local/report_completion/index.php');
+$ADMIN->add('IomadReports',
+            new admin_externalpage('repcoursecompletion',
+            get_string('repcoursecompletion', 'local_report_completion'),
+            $url,
+            'local/report_completion:view'));

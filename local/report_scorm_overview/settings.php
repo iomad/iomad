@@ -25,6 +25,8 @@
 defined('MOODLE_INTERNAL') || die;
 
 $url = new moodle_url('/local/report_scorm_overview/index.php');
-$ADMIN->add('PerficoReports', new admin_externalpage('repscormoverview',
-              get_string('repscormoverview', 'local_report_scorm_overview'),
-              $url, 'local/report_scorm_overview:view'));
+$ADMIN->add('IomadReports',
+            new admin_externalpage('repscormoverview',
+            get_string('repscormoverview', 'local_report_scorm_overview'),
+            $url,
+            'local/report_scorm_overview:view'));
