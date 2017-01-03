@@ -1,10 +1,9 @@
 .navbar {
     margin-bottom : 3px;
 }
-.navbar .brand {
+.navbar-light .navbar-brand  {
   font-family: Ubuntu;
-  font-size: 36px;
-  color: red;
+  background-color: #f75701;
 }
 .moodleheader h1 {
     font-family: Ubuntu;
@@ -52,7 +51,7 @@
   font-family: Ubuntu;
   font-weight: normal;
 }
-.block .header .title h2 {
+.block .card-block h3 {
   color: #f75701;
   font-size: 16px;
   font-family: Ubuntu;
@@ -72,11 +71,7 @@ body {
   background-color: #eeeeee;
 }
 #page-footer a {
-  color: #333333;
-}
-#page-footer {
   color: #f75701;
-  border-top-width: 0px;
 }
 
 #sitelogo {
@@ -159,51 +154,51 @@ div.iomadlink {
 }
 
 /* block icons */
-.block_navigation h2:before {
+.block_navigation h3:before {
     font-family: FontAwesome;
     content: "\f018  ";
 }
-.block_settings h2:before {
+.block_settings h3:before {
     font-family: FontAwesome;
     content: "\f013  ";
 }
-.block_news_items h2:before {
+.block_news_items h3:before {
     font-family: FontAwesome;
     content: "\f130  ";
 }
-.block_course_list h2:before {
+.block_course_list h3:before {
     font-family: FontAwesome;
     content: "\f0eb  ";
 }
-.block_private_files h2:before {
+.block_private_files h3:before {
     font-family: FontAwesome;
     content: "\f07b  ";
 }
-.block_online_users h2:before {
+.block_online_users h3:before {
     font-family: FontAwesome;
     content: "\f0c0  ";
 }
-.block_badges h2:before {
+.block_badges h3:before {
     font-family: FontAwesome;
     content: "\f2bd  ";
 }
-.block_calendar_month h2:before {
+.block_calendar_month h3:before {
     font-family: FontAwesome;
     content: "\f073  ";
 }
-.block_calendar_upcoming h2:before {
+.block_calendar_upcoming h3:before {
     font-family: FontAwesome;
     content: "\f1fd  ";
 }
-.block_iomad_approve_access h2:before {
+.block_iomad_approve_access h3:before {
     font-family: FontAwesome;
     content: "\f234  ";
 }
-.block_iomad_company_selector h2:before {
+.block_iomad_company_selector h3:before {
     font-family: FontAwesome;
     content: "\f1ad  ";
 }
-.block_iomad_onlineusers h2:before {
+.block_iomad_onlineusers h3:before {
     font-family: FontAwesome;
     content: "\f2bd  ";
 }
