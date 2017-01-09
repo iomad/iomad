@@ -1626,14 +1626,11 @@ class core_course_renderer extends plugin_renderer_base {
         if ($coursecat->get_children_count()) {
             $classes = array(
                 'collapseexpand',
-                'collapse-all',
             );
-            if ($chelper->get_subcat_depth() == 1) {
-                $classes[] = 'disabled';
-            }
+
             // Only show the collapse/expand if there are children to expand.
             $content .= html_writer::start_tag('div', array('class' => 'collapsible-actions'));
-            $content .= html_writer::link('#', get_string('collapseall'),
+            $content .= html_writer::link('#', get_string('expandall'),
                     array('class' => implode(' ', $classes)));
             $content .= html_writer::end_tag('div');
             $this->page->requires->strings_for_js(array('collapseall', 'expandall'), 'moodle');
@@ -1677,15 +1674,21 @@ class core_course_renderer extends plugin_renderer_base {
                 $this->page->set_title("$site->shortname: $strcategories");
             }
         } else {
-            $this->page->set_title("$site->shortname: ". $coursecat->get_formatted_name());
+            $title = $site->shortname;
+            if (coursecat::count_all() > 1) {
+                $title .= ": ". $coursecat->get_formatted_name();
+            }
+            $this->page->set_title($title);
 
             // Print the category selector
-            $output .= html_writer::start_tag('div', array('class' => 'categorypicker'));
-            $select = new single_select(new moodle_url('/course/index.php'), 'categoryid',
-                    coursecat::make_categories_list(), $coursecat->id, null, 'switchcategory');
-            $select->set_label(get_string('categories').':');
-            $output .= $this->render($select);
-            $output .= html_writer::end_tag('div'); // .categorypicker
+            if (coursecat::count_all() > 1) {
+                $output .= html_writer::start_tag('div', array('class' => 'categorypicker'));
+                $select = new single_select(new moodle_url('/course/index.php'), 'categoryid',
+                        coursecat::make_categories_list(), $coursecat->id, null, 'switchcategory');
+                $select->set_label(get_string('categories').':');
+                $output .= $this->render($select);
+                $output .= html_writer::end_tag('div'); // .categorypicker
+            }
         }
 
         // Print current category description
