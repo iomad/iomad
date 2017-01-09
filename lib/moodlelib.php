@@ -4374,6 +4374,7 @@ function complete_user_login($user) {
             if ($changeurl = $userauth->change_password_url()) {
                 redirect($changeurl);
             } else {
+                require_once($CFG->dirroot . '/login/lib.php');
                 $SESSION->wantsurl = core_login_get_return_url();
                 redirect($CFG->httpswwwroot.'/login/change_password.php');
             }
@@ -5092,6 +5093,7 @@ function reset_course_userdata($data) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->libdir.'/completionlib.php');
+    require_once($CFG->dirroot.'/completion/criteria/completion_criteria_date.php');
     require_once($CFG->dirroot.'/group/lib.php');
 
     $data->courseid = $data->id;
@@ -5134,6 +5136,27 @@ function reset_course_userdata($data) {
         // Update any date activity restrictions.
         if ($CFG->enableavailability) {
             \availability_date\condition::update_all_dates($data->courseid, $data->timeshift);
+        }
+
+        // Update completion expected dates.
+        if ($CFG->enablecompletion) {
+            $modinfo = get_fast_modinfo($data->courseid);
+            $changed = false;
+            foreach ($modinfo->get_cms() as $cm) {
+                if ($cm->completion && !empty($cm->completionexpected)) {
+                    $DB->set_field('course_modules', 'completionexpected', $cm->completionexpected + $data->timeshift,
+                        array('id' => $cm->id));
+                    $changed = true;
+                }
+            }
+
+            // Clear course cache if changes made.
+            if ($changed) {
+                rebuild_course_cache($data->courseid, true);
+            }
+
+            // Update course date completion criteria.
+            \completion_criteria_date::update_date($data->courseid, $data->timeshift);
         }
 
         $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => false);
@@ -5669,6 +5692,18 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     $tempreplyto = array();
 
     $supportuser = core_user::get_support_user();
+    $noreplyaddressdefault = 'noreply@' . get_host_from_url($CFG->wwwroot);
+    $noreplyaddress = empty($CFG->noreplyaddress) ? $noreplyaddressdefault : $CFG->noreplyaddress;
+
+    if (!validate_email($noreplyaddress)) {
+        debugging('email_to_user: Invalid noreply-email '.s($noreplyaddress));
+        $noreplyaddress = $noreplyaddressdefault;
+    }
+
+    if (!validate_email($supportuser->email)) {
+        debugging('email_to_user: Invalid support-email '.s($supportuser->email));
+        $supportuser->email = $noreplyaddress;
+    }
 
     // Make up an email address for handling bounces.
     if (!empty($CFG->handlebounces)) {
@@ -5686,17 +5721,28 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         }
     }
 
+    // Make sure that the explicit replyto is valid, fall back to the implicit one.
+    if (!empty($replyto) && !validate_email($replyto)) {
+        debugging('email_to_user: Invalid replyto-email '.s($replyto));
+        $replyto = $noreplyaddress;
+    }
+
     if (is_string($from)) { // So we can pass whatever we want if there is need.
-        $mail->From     = $CFG->noreplyaddress;
+        $mail->From     = $noreplyaddress;
         $mail->FromName = $from;
     } else if ($usetrueaddress and $from->maildisplay) {
+        if (!validate_email($from->email)) {
+            debugging('email_to_user: Invalid from-email '.s($from->email).' - not sending');
+            // Better not to use $noreplyaddress in this case.
+            return false;
+        }
         $mail->From     = $from->email;
         $mail->FromName = fullname($from);
     } else {
-        $mail->From     = $CFG->noreplyaddress;
+        $mail->From     = $noreplyaddress;
         $mail->FromName = fullname($from);
         if (empty($replyto)) {
-            $tempreplyto[] = array($CFG->noreplyaddress, get_string('noreplyname'));
+            $tempreplyto[] = array($noreplyaddress, get_string('noreplyname'));
         }
     }
 

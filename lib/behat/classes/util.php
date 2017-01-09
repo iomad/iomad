@@ -114,6 +114,12 @@ class behat_util extends testing_util {
         // Enable web cron.
         set_config('cronclionly', 0);
 
+        // Set editor autosave to high value, so as to avoid unwanted ajax.
+        set_config('autosavefrequency', '604800', 'editor_atto');
+
+        // Set noreplyaddress to an example domain, as it should be valid email address and test site can be a localhost.
+        set_config('noreplyaddress', 'noreply@example.com');
+
         // Keeps the current version of database and dataroot.
         self::store_versions_hash();
 
