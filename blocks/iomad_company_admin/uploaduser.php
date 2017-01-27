@@ -284,7 +284,7 @@ if ($mform->is_cancelled()) {
                     $user->{$columns[$key]} = '';
                 }
             }
-    
+
             if (empty($user->username) && !empty($user->email)) {
                 // No username given, try to find an existing user via the email address.
                 if ($perfexistinguser = $DB->get_record('user', array('email' => $user->email, 'mnethostid' => $user->mnethostid))) {
@@ -702,13 +702,21 @@ if ($mform->is_cancelled()) {
                         $upt->track('email', $stremailduplicate, 'warning');
                     }
                 }
+                $createdpassword = false;
                 if (!$isinternalauth) {
                     $user->password = 'not cached';
                     $upt->track('password', 'not cached');
                 } else {
-                    if (isset($user->password) ) {
-                        $user->password = hash_internal_user_password($user->password);
+                    if (!empty($user->password) ) {
+                        if ($user->password == 'changeme') {
+                            $user->password = generate_password();
+                        }
+                        $user->newpassword = $user->password;
+                    } else {
+                        $user->password = generate_password();
+                        $user->newpassword = $user->password;
                     }
+                    $user->password = hash_internal_user_password($user->password);
                 }
     
                 // Merge user with company user defaults.
@@ -723,16 +731,8 @@ if ($mform->is_cancelled()) {
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
                 $usersnew++;
-                if ($createpasswords && $isinternalauth) {
-                    if (empty($user->password) || $forcechangepassword) {
-                        // Passwords will be created and sent out on cron.
-                        set_user_preference('create_password', 1, $user->id);
-                        set_user_preference('auth_forcepasswordchange', 1, $user->id);
-                        $upt->track('password', get_string('new'));
-                    } else {
-                        set_user_preference('auth_forcepasswordchange', 1, $user->id);
-                    }
-                }
+                set_user_preference('auth_forcepasswordchange', 1, $user->id);
+
                 // Save custom profile fields data.
                 profile_save_data($user);
     
@@ -747,6 +747,16 @@ if ($mform->is_cancelled()) {
     
                 \core\event\user_created::create_from_userid($user->id)->trigger();
     
+                if (!empty($CFG->iomad_email_senderisreal)) {
+                    EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER));
+                } else if (is_siteadmin($USER->id)) {
+                    EmailTemplate::send('user_create', array('user' => $user));
+                } else {
+                    EmailTemplate::send('user_create',
+                                         array('user' => $user,
+                                               'headers' => serialize(array("Cc:".$USER->email))));
+                }
+
                 if ($bulk == 1 or $bulk == 3) {
                     if (!in_array($user->id, $SESSION->bulk_users)) {
                         $SESSION->bulk_users[] = $user->id;
