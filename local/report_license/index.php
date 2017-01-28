@@ -352,7 +352,7 @@ if (empty($charttype)) {
                         $license = $DB->get_record('companylicense', array('id' => $user->licenseid));
                         $licensedata = new stdclass();
                         $licensedata->length = $license->validlength;
-                        $licensedata->valid = date('Y-m-d', $license->expirydate);
+                        $licensedata->valid = date($CFG->iomad_date_format, $license->expirydate);
                         EmailTemplate::send('license_reminder', array('course' => $user->courseid,
                                                                       'user' => $userdata,
                                                                       'license' => $licensedata));
@@ -633,7 +633,7 @@ if (empty($charttype)) {
                 if ($user->lastaccess == 0) {
                     $datestring = get_string('never');
                 } else {
-                    $datestring = date('Y-m-d',$user->lastaccess);
+                    $datestring = date($CFG->iomad_date_format, $user->lastaccess);
                 }
                 $user->fullname = $user->firstname . ' ' . $user->lastname;
                 if (empty($dodownload)) {
@@ -647,7 +647,7 @@ if (empty($charttype)) {
                                                         $user->department,
                                                         $datestring,
                                                         $user->licensename,
-                                                        date('Y-m-d',$user->issuedate)."&nbsp; (".format_time(time() - $user->issuedate).")",
+                                                        date($CFG->iomad_date_format, $user->issuedate)."&nbsp; (".format_time(time() - $user->issuedate).")",
                                                         $user->isusing);
                     } else {
                         $compusertable->data[] = array("<a href='".new moodle_url($userurl,
@@ -659,7 +659,7 @@ if (empty($charttype)) {
                                                         $user->department,
                                                         $datestring,
                                                         $user->licensename,
-                                                        date('Y-m-d',$user->issuedate)."&nbsp; (".format_time(time() - $user->issuedate).")");
+                                                        date($CFG->iomad_date_format, $user->issuedate)."&nbsp; (".format_time(time() - $user->issuedate).")");
                     }
                 } else {
                     if ($showused) {
@@ -669,7 +669,7 @@ if (empty($charttype)) {
                              '","'.$user->department.
                              '","'.$datestring.
                              '","'.$user->licensename.
-                             '","'.date('Y-m-d',$user->issuedate)." (".format_time(time() - $user->issuedate).")".
+                             '","'.date($CFG->iomad_date_format, $user->issuedate)." (".format_time(time() - $user->issuedate).")".
                              '","'.$user->isusing.
                              "\"\n";
                     } else {
@@ -679,7 +679,7 @@ if (empty($charttype)) {
                              '","'.$user->department.
                              '","'.$datestring.
                              '","'.$user->licensename.
-                             '","'.date('Y-m-d',$user->issuedate)." (".format_time(time() - $user->issuedate).")".
+                             '","'.date($CFG->iomad_date_format, $user->issuedate)." (".format_time(time() - $user->issuedate).")".
                              "\"\n";
                     }
                 }
