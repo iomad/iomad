@@ -202,13 +202,34 @@ div.iomadlink {
     font-family: FontAwesome;
     content: "\f2bd  ";
 }
-.block_completionstatus h2:before {
+.block_completionstatus h3:before {
     font-family: FontAwesome;
     content: "\f14a  ";
 }
+.block_mycourses h3:before {
+    font-family: FontAwesome;
+    content: "\f0eb  ";
+}
+.block_iomad_welcome h3:before {
+    font-family: FontAwesome;
+    content: "\f2b5  ";
+}
+.block_lp h3:before {
+    font-family: FontAwesome;
+    content: "\f0ea  ";
+}
+.block_adminblock h3:before {
+    font-family: FontAwesome;
+    content: "\f0fe  ";
+}
+
 .block_iomad_reports h3:before {
     font-family: FontAwesome;
     content: "\f200  ";
+}
+.block_course_overview h3:before {
+    font-family: FontAwesome;
+    content: "\f06e  ";
 }
 
 /* header icons */
