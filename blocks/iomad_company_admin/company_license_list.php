@@ -46,6 +46,7 @@ $blockpage->setup();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
+$company = new company($companyid);
 
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage));
 $returnurl = $baseurl;
@@ -55,7 +56,7 @@ $companydepartment = company::get_company_parentnode($companyid);
 if (iomad::has_capability('block/iomad_company_admin:edit_licenses', context_system::instance())) {
     $departmentid = $companydepartment->id;
 } else {
-    $userlevel = company::get_userlevel($USER);
+    $userlevel = $company->get_userlevel($USER);
     $departmentid = $userlevel->id;
 }
 

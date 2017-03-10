@@ -46,7 +46,7 @@ class user_edit_form extends company_moodleform {
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $systemcontext)) {
             $userhierarchylevel = $parentlevel->id;
         } else {
-            $userlevel = company::get_userlevel($USER);
+            $userlevel = $company->get_userlevel($USER);
             $userhierarchylevel = $userlevel->id;
         }
 
@@ -381,6 +381,7 @@ $blockpage->setup();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
+$company = new company($companyid);
 
 $mform = new user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
 
@@ -451,7 +452,7 @@ if ($data = $mform->get_data()) {
     if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $systemcontext)) {
         $userhierarchylevel = $parentnode->id;
     } else {
-        $userlevel = company::get_userlevel($USER);
+        $userlevel = $company->get_userlevel($USER);
         $userhierarchylevel = $userlevel->id;
     }
     company::assign_user_to_department($data->userdepartment, $userid);
