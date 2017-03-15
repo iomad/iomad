@@ -150,6 +150,7 @@ Feature: Edit quiz page - section headings
     And I should see "Are you sure you want to remove the 'Heading 2' section heading?"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     And I wait until the page is ready
+    And I wait until "Heading 2" "text" does not exist
     Then I should see "Heading 1"
     And I should not see "Heading 2"
     And I should see "Heading 3"
@@ -423,5 +424,5 @@ Feature: Edit quiz page - section headings
     And I click on "Edit quiz" "link" in the "Administration" "block"
     And I click on the "Remove" page break icon after question "TF10"
     And I open the "Page 10" add to quiz menu
-    And I choose "a new section heading" in the open action menu
+    And I follow "a new section heading" in the open menu
     Then "TF10" "list_item" should exist in the "Section heading ..." "list_item"
