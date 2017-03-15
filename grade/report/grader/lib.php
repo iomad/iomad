@@ -46,6 +46,13 @@ class grade_report_grader extends grade_report {
     private $allgrades;
 
     /**
+     * Contains all grade items expect GRADE_TYPE_NONE.
+     *
+     * @var array $allgradeitems
+     */
+    private $allgradeitems;
+
+    /**
      * Array of errors for bulk grades updating.
      * @var array $gradeserror
      */
@@ -183,6 +190,7 @@ class grade_report_grader extends grade_report {
                 array_unshift($mygroups, $this->currentgroup);
             }
         }
+        $viewfullnames = has_capability('moodle/site:viewfullnames', $this->context);
 
         // always initialize all arrays
         $queue = array();
@@ -288,7 +296,7 @@ class grade_report_grader extends grade_report {
                             $userfields = 'id, ' . get_all_user_name_fields(true);
                             $user = $DB->get_record('user', array('id' => $userid), $userfields);
                             $gradestr = new stdClass();
-                            $gradestr->username = fullname($user);
+                            $gradestr->username = fullname($user, $viewfullnames);
                             $gradestr->itemname = $gradeitem->get_name();
                             $warnings[] = get_string($errorstr, 'grades', $gradestr);
                             if ($skip) {
@@ -520,6 +528,22 @@ class grade_report_grader extends grade_report {
     }
 
     /**
+     * Load all grade items.
+     */
+    protected function get_allgradeitems() {
+        if (!empty($this->allgradeitems)) {
+            return $this->allgradeitems;
+        }
+        $allgradeitems = grade_item::fetch_all(array('courseid' => $this->courseid));
+        // But hang on - don't include ones which are set to not show the grade at all.
+        $this->allgradeitems = array_filter($allgradeitems, function($item) {
+            return $item->gradetype != GRADE_TYPE_NONE;
+        });
+
+        return $this->allgradeitems;
+    }
+
+    /**
      * we supply the userids in this query, and get all the grades
      * pulls out all the grades, this does not need to worry about paging
      */
@@ -542,11 +566,16 @@ class grade_report_grader extends grade_report {
                  WHERE g.itemid = gi.id AND gi.courseid = :courseid {$this->userselect}";
 
         $userids = array_keys($this->users);
+        $allgradeitems = $this->get_allgradeitems();
 
         if ($grades = $DB->get_records_sql($sql, $params)) {
             foreach ($grades as $graderec) {
                 $grade = new grade_grade($graderec, false);
-                $this->allgrades[$graderec->userid][$graderec->itemid] = $grade;
+                if (!empty($allgradeitems[$graderec->itemid])) {
+                    // Note: Filter out grades which have a grade type of GRADE_TYPE_NONE.
+                    // Only grades without this type are present in $allgradeitems.
+                    $this->allgrades[$graderec->userid][$graderec->itemid] = $grade;
+                }
                 if (in_array($graderec->userid, $userids) and array_key_exists($graderec->itemid, $this->gtree->get_items())) { // some items may not be present!!
                     $this->grades[$graderec->userid][$graderec->itemid] = $grade;
                     $this->grades[$graderec->userid][$graderec->itemid]->grade_item = $this->gtree->get_item($graderec->itemid); // db caching
@@ -564,6 +593,18 @@ class grade_report_grader extends grade_report {
                     $this->grades[$userid][$itemid]->grade_item = $this->gtree->get_item($itemid); // db caching
 
                     $this->allgrades[$userid][$itemid] = $this->grades[$userid][$itemid];
+                }
+            }
+        }
+
+        // Pre fill grades for any remaining items which might be collapsed.
+        foreach ($userids as $userid) {
+            foreach ($allgradeitems as $itemid => $gradeitem) {
+                if (!isset($this->allgrades[$userid][$itemid])) {
+                    $this->allgrades[$userid][$itemid] = new grade_grade();
+                    $this->allgrades[$userid][$itemid]->itemid = $itemid;
+                    $this->allgrades[$userid][$itemid]->userid = $userid;
+                    $this->allgrades[$userid][$itemid]->grade_item = $gradeitem;
                 }
             }
         }
@@ -611,6 +652,7 @@ class grade_report_grader extends grade_report {
             'moodle/grade:edit'), $this->context);
         }
         $hasuserreportcell = $canseeuserreport || $canseesingleview;
+        $viewfullnames = has_capability('moodle/site:viewfullnames', $this->context);
 
         $strfeedback  = $this->get_lang_string("feedback");
         $strgrade     = $this->get_lang_string('grade');
@@ -682,7 +724,7 @@ class grade_report_grader extends grade_report {
                 $usercell->text = $OUTPUT->user_picture($user, array('visibletoscreenreaders' => false));
             }
 
-            $fullname = fullname($user);
+            $fullname = fullname($user, $viewfullnames);
             $usercell->text .= html_writer::link(new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->course->id)), $fullname, array(
                 'class' => 'username',
             ));
@@ -780,6 +822,8 @@ class grade_report_grader extends grade_report {
         $strftimedatetimeshort = get_string('strftimedatetimeshort');
         $strexcludedgrades = get_string('excluded', 'grades');
         $strerror = get_string('error');
+
+        $viewfullnames = has_capability('moodle/site:viewfullnames', $this->context);
 
         foreach ($this->gtree->get_levels() as $key => $row) {
             $headingrow = new html_table_row();
@@ -918,7 +962,7 @@ class grade_report_grader extends grade_report {
         // grade items (in case one has been hidden) as the course total shown needs to be adjusted for this particular
         // user.
         if (!$this->canviewhidden) {
-            $allgradeitems = grade_item::fetch_all(array('courseid' => $this->courseid));
+            $allgradeitems = $this->get_allgradeitems();
         }
 
         foreach ($this->users as $userid => $user) {
@@ -937,7 +981,7 @@ class grade_report_grader extends grade_report {
             $itemrow = new html_table_row();
             $itemrow->id = 'user_'.$userid;
 
-            $fullname = fullname($user);
+            $fullname = fullname($user, $viewfullnames);
             $jsarguments['users'][$userid] = $fullname;
 
             foreach ($this->gtree->items as $itemid => $unused) {
@@ -1730,7 +1774,7 @@ class grade_report_grader extends grade_report {
 
         // Try looking for old location of user setting that used to store all courses in one serialized user preference.
         if (($oldcollapsedpref = get_user_preferences('grade_report_grader_collapsed_categories')) !== null) {
-            if ($collapsedall = @unserialize($oldcollapsedpref)) {
+            if ($collapsedall = unserialize_array($oldcollapsedpref)) {
                 // We found the old-style preference, filter out only categories that belong to this course and update the prefs.
                 $collapsed = static::filter_collapsed_categories($courseid, $collapsedall);
                 if (!empty($collapsed['aggregatesonly']) || !empty($collapsed['gradesonly'])) {

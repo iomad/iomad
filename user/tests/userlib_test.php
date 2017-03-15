@@ -502,6 +502,8 @@ class core_userliblib_testcase extends advanced_testcase {
         $user5 = $this->getDataGenerator()->create_user();
         $user6 = $this->getDataGenerator()->create_user(array('deleted' => 1));
         $user7 = $this->getDataGenerator()->create_user();
+        $user8 = $this->getDataGenerator()->create_user();
+        $user8->id = 0; // Visitor.
 
         $studentrole = $DB->get_record('role', array('shortname' => 'student'));
         // Add the course creator role to the course contact and assign a user to that role.
@@ -575,6 +577,42 @@ class core_userliblib_testcase extends advanced_testcase {
         $this->assertTrue(user_can_view_profile($user4));
 
         $CFG->coursecontact = null;
+
+        // Visitor (Not a guest user, userid=0).
+        $CFG->forceloginforprofiles = 1;
+        $this->setUser($user8);
+
+        $allroles = $DB->get_records_menu('role', array(), 'id', 'archetype, id');
+        // Let us test with guest user.
+        $this->setGuestUser();
+        $CFG->forceloginforprofiles = 1;
+        foreach ($users as $user) {
+            $this->assertFalse(user_can_view_profile($user));
+        }
+
+        // Even with cap, still guests should not be allowed in.
+        assign_capability('moodle/user:viewdetails', CAP_ALLOW, $allroles['guest'], context_system::instance()->id, true);
+        reload_all_capabilities();
+        foreach ($users as $user) {
+            $this->assertFalse(user_can_view_profile($user));
+        }
+
+        $CFG->forceloginforprofiles = 0;
+        foreach ($users as $user) {
+            $this->assertTrue(user_can_view_profile($user));
+        }
+
+        // Let us test with Visitor user.
+        $this->setUser($user8);
+        $CFG->forceloginforprofiles = 1;
+        foreach ($users as $user) {
+            $this->assertFalse(user_can_view_profile($user));
+        }
+
+        $CFG->forceloginforprofiles = 0;
+        foreach ($users as $user) {
+            $this->assertTrue(user_can_view_profile($user));
+        }
     }
 
     /**
