@@ -878,7 +878,8 @@ class company {
                 $department = self::get_company_parentnode($companyid);
                 $departmentid = $department->id;
             } else {
-                $department = self::get_userlevel($USER);
+                $company = new company($companyid);
+                $department = $company->get_userlevel($USER);
                 $departmentid = $department->id;
             }
         }
@@ -1082,7 +1083,9 @@ class company {
             return false;
         } else {
             // Get the list of departments at and below the user assignment.
-            $userhierarchylevel = self::get_userlevel($USER);
+            $context = context_system::instance();
+            $company = new company(iomad::get_my_companyid($context));
+            $userhierarchylevel = $company->get_userlevel($USER);
             $subhierarchytree = self::get_all_subdepartments($userhierarchylevel);
             $subhieracrhieslist = self::get_department_list($subhierarchytree);
             if (isset($subhieracrhieslist[$departmentid])) {
