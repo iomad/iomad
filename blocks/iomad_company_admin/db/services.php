@@ -14,7 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->version  = 2016083102.02;   // The (date) version of this plugin.
-$plugin->requires = 2016052301;   // Requires this Moodle version.
-$plugin->cron = 300;              // Minimum number of seconds between executions of the cron function.
-$plugin->component  = 'block_iomad_company_admin';
+/**
+ * @package    Block IOMAD Company Admin
+ * @copyright  2017 onwards E-Learn Design Limited
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+// Define the web service funtions
+$functions = array(
+    'block_iomad_company_admin_create_company' => array(
+        'classname' => 'block_iomad_company_admin_external',
+        'methodname' => 'create_company',
+        'classpath' => 'blocks/iomad_company_admin/externallib.php',
+        'description' => 'Create new Iomad company',
+        'type' => 'write',
+    ),
+);
