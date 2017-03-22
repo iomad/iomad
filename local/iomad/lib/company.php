@@ -1603,6 +1603,11 @@ class company {
     public static function check_canedit_user($companyid, $userid) {
         global $DB, $USER;
 
+        // If current user is a site admin then they can.
+        if (is_siteadmin($USER->id)) {
+            return true;
+        }
+    
         $context = context_system::instance();
         // Get my companyid.
         $mycompanyid = iomad::get_my_companyid($context);
@@ -1616,11 +1621,6 @@ class company {
         if ($userrec = $DB->get_record('company_users', array('companyid' => $companyid,
                                                               'userid' => $userid))) {
             
-            // If current user is a site admin then they can.
-            if (is_siteadmin($USER->id)) {
-                return true;
-            }
-    
             // Can't edit an admin user here.
             if (is_siteadmin($userid)) {
                 return false;
