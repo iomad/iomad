@@ -20,13 +20,33 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// Define an Iomad service
+$services = array(
+    'iomadservice' => array(
+        'functions' => array(
+            'block_iomad_company_admin_create_companies',
+            'block_iomad_company_admin_get_companies',
+        ),
+        'requiredcapability' => '',
+        'restrictusers' => 1,
+        'enabled' => 1,
+    )
+);
+
 // Define the web service funtions
 $functions = array(
-    'block_iomad_company_admin_create_company' => array(
+    'block_iomad_company_admin_create_companies' => array(
         'classname' => 'block_iomad_company_admin_external',
-        'methodname' => 'create_company',
+        'methodname' => 'create_companies',
         'classpath' => 'blocks/iomad_company_admin/externallib.php',
-        'description' => 'Create new Iomad company',
+        'description' => 'Create new Iomad companies',
         'type' => 'write',
+    ),
+    'block_iomad_company_admin_get_companies' => array(
+        'classname' => 'block_iomad_company_admin_external',
+        'methodname' => 'get_companies',
+        'classpath' => 'blocks/iomad_company_admin/externallib.php',
+        'description' => 'Get all Iomad companies',
+        'type' => 'read',
     ),
 );
