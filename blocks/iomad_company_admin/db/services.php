@@ -26,6 +26,7 @@ $services = array(
         'functions' => array(
             'block_iomad_company_admin_create_companies',
             'block_iomad_company_admin_get_companies',
+            'block_iomad_company_admin_edit_companies',
         ),
         'requiredcapability' => '',
         'restrictusers' => 1,
@@ -48,5 +49,12 @@ $functions = array(
         'classpath' => 'blocks/iomad_company_admin/externallib.php',
         'description' => 'Get all Iomad companies',
         'type' => 'read',
+    ),
+    'block_iomad_company_admin_edit_companies' => array(
+        'classname' => 'block_iomad_company_admin_external',
+        'methodname' => 'edit_companies',
+        'classpath' => 'blocks/iomad_company_admin/externallib.php',
+        'description' => 'Edit Iomad companies',
+        'type' => 'write',
     ),
 );
