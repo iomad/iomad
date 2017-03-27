@@ -152,17 +152,16 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:company_add', $context);
 
         // Get company records
-        $fields = 'id, name, shortname, city, country, maildisplay, mailformat, maildigest, autosubscribe, trackforums, htmleditor, screenreader, timezone, lang';
         if (empty($companyids)) {
-            $companies = $DB->get_records('company', '', $fields);
+            $companies = $DB->get_records('company');
         } else {
-            $companies = $DB->get_records_list('company', 'id', $params['companyids'], '', $fields);
+            $companies = $DB->get_records_list('company', 'id', $params['companyids']);
         }
 
         // convert to suitable format (I think)
         $companyinfo = array();
         foreach ($companies as $company) {
-            $companyinfo = (array) $company;
+            $companyinfo[] = (array) $company;
         }
 
         return $companyinfo;
