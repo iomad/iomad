@@ -23,3 +23,4 @@
  */
 
 $string['pluginname'] = 'Moodle Mobile tools';
+$string['cachedef_plugininfo'] = 'This stores the list of plugins with mobile addons';
