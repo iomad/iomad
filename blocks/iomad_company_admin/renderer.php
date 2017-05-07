@@ -87,4 +87,83 @@ class block_iomad_company_admin_renderer extends plugin_renderer_base {
         return $out;
     }
 
+    /**
+     * Is the supplied id in the leaf somewhere?
+     * @param array $leaf
+     * @param int $id 
+     * @return boolean
+     */
+    private function id_in_tree($leaf, $id) {
+        if ($leaf->id == $id) {
+            return true;
+        }
+        if (!empty($leaf->children)) {
+            foreach ($leaf->children as $child) {
+                if (self::id_in_tree($child, $id)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Render one leaf of department select
+     * @param array $leaf
+     * @param int $depth - how far down the tree
+     * @param int $selected - which node is selected (if any)
+     * @return html
+     */
+    private function department_leaf($leaf, $depth=1, $selected=null) {
+        $haschildren = !empty($leaf->children);
+        $expand = self::id_in_tree($leaf, $selected);
+        $style = 'style="margin-left: ' . $depth * 5 . 'px;"';
+        $class = 'tree_item';
+        $aria = '';
+        if ($haschildren) {
+            $class .= ' haschildren';
+            if (($depth == 1) || $expand) {
+                $aria = 'aria-expanded="true"';
+            } else {
+                $aria = 'aria-expanded="false"';
+            }
+        } else {
+            $class .= ' nochildren';
+        }
+        if ($leaf->id == $selected) {
+            $name = '<b>' . $leaf->name . '</b>';
+        } else {
+            $name = $leaf->name;
+        }
+        $data = 'data-id="' . $leaf->id . '"'; 
+        $html = '<div role="treeitem" ' . $aria . ' class="' . $class .'" ' . $style . '>';
+        $html .= '<span class="tree_dept_name" ' . $data . '>' . $name . '</span>';
+        if ($haschildren) {
+            $html .= '<div role="group">';
+            foreach($leaf->children as $child) {
+                $html .= $this->department_leaf($child, $depth+1);
+            }
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+   
+        return $html;
+    }
+
+    /**
+     * Create list markup for tree.js department select
+     * @param array $tree structure
+     * @param int $selected selected id (if any)
+     * @return string HTML markup
+     */
+    public function department_tree($tree, $selected = null) {
+        $html = '';
+        $html .= '<div class="dep_tree">';
+        $html .= '<div role="tree" id="department_tree">';
+        $html .= $this->department_leaf($tree, 1, $selected);
+        $html .= '</div></div>';
+
+        return $html;
+    }
+
 }
