@@ -155,12 +155,17 @@ function email_reports_cron() {
                     continue;
                 }
                 $foundusers = true;
+                if ($manageruser->timeenrolled == 0 ) {
+                    $datestring = get_string('never') . "\n";
+                } else {
+                    $datestring = date($CFG->iomad_date_format, $manageruser->timeenrolled) . "\n";
+                }
                 $summary .= $manageruser->firstname . "," .
                             $manageruser->lastname . "," .
                             $manageruser->email . "," .
                             $manageruser->departmentname . "," .
                             $manageruser->coursename . "," .
-                            date($CFG->iomad_date_format, $manageruser->timeenrolled) . "\n";
+                            $datestring;
             }
             if ($foundusers && $user = $DB->get_record('user', array('id' => $manager->userid))) {
                 $course = new stdclass();
@@ -292,8 +297,50 @@ function email_reports_cron() {
                 if (!$user = $DB->get_record('user', array('id' => $manageruser->userid))) {
                     continue;
                 }
+
                 if (!$course = $DB->get_record('course', array('id' => $manageruser->courseid))) {
                     continue;
+                }
+
+                $managerusers = $DB->get_records_sql("SELECT * FROM {" . $tempcomptablename . "}
+                                                      WHERE userid IN (" . $departmentids . ")");
+                $summary = get_string('firstname') . "," .
+                           get_string('lastname') . "," .
+                           get_string('email') . "," .
+                           get_string('department', 'block_iomad_company_admin') ."\n";
+                           get_string('course') . "," .
+                           get_string('completed', 'local_report_completion') ."\n";
+                $foundusers = false;
+                foreach ($managerusers as $manageruser) {
+                    if (!$user = $DB->get_record('user', array('id' => $manageruser->userid))) {
+                        continue;
+                    }
+                    if (!$course = $DB->get_record('course', array('id' => $manageruser->courseid))) {
+                        continue;
+                    }
+                    if ($DB->get_records_sql("SELECT id FROM {email}
+                                              WHERE userid = :userid
+                                              AND courseid = :courseid
+                                              AND templatename = :templatename
+                                              AND sent > " . $runtime . " - " . $manageruser->notifyperiod . " * 86400",
+                                              array('userid' => $manageruser->userid,
+                                                    'courseid' => $manageruser->courseid,
+                                                    'templatename' => 'expiry_warn_user'))) {
+                        continue;
+                    }
+                    $foundusers = true;
+                    if ($manageruser->timecompleted == 0) {
+                        $datestring = get_string('never') . "\n";
+                    } else {
+                        $datestring = date($CFG->iomad_date_format, $manageruser->timecompleted) . "\n";
+                    }
+
+                    $summary .= $manageruser->firstname . "," .
+                                $manageruser->lastname . "," .
+                                $manageruser->email . "," .
+                                $manageruser->departmentname . "," .
+                                $manageruser->coursename . "," .
+                                $datestring;
                 }
                 if ($DB->get_records_sql("SELECT id FROM {email}
                                           WHERE userid = :userid
@@ -306,12 +353,17 @@ function email_reports_cron() {
                     continue;
                 }
                 $foundusers = true;
+                if ($manageruser->timecompleted == 0) {
+                    $datestring = get_string('never') . "\n";
+                } else {
+                    $datestring = date($CFG->iomad_date_format, $manageruser->timecompleted) . "\n";
+                }
                 $summary .= $manageruser->firstname . "," .
                             $manageruser->lastname . "," .
                             $manageruser->email . "," .
                             $manageruser->departmentname . "," .
                             $manageruser->coursename . "," .
-                            date($CFG->iomad_date_format, $manageruser->timecompleted) . "\n";
+                            $datestring;
             }
             if ($foundusers && $user = $DB->get_record('user', array('id' => $manager->userid))) {
                 $course = new stdclass();
