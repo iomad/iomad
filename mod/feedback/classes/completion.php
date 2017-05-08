@@ -402,6 +402,21 @@ class mod_feedback_completion extends mod_feedback_structure {
     }
 
     /**
+     * If user has already completed the feedback, create the temproray values from last completed attempt
+     *
+     * @return stdClass record from feedback_completedtmp or false if not found
+     */
+    public function create_completed_tmp_from_last_completed() {
+        if (!$this->get_current_completed_tmp()) {
+            $lastcompleted = $this->find_last_completed();
+            if ($lastcompleted) {
+                $this->completedtmp = feedback_set_tmp_values($lastcompleted);
+            }
+        }
+        return $this->completedtmp;
+    }
+
+    /**
      * Saves unfinished response to the temporary table
      *
      * This is called when user proceeds to the next/previous page in the complete form
@@ -483,7 +498,7 @@ class mod_feedback_completion extends mod_feedback_structure {
 
         // Send email.
         if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
-            feedback_send_email($this->cm, $this->feedback, $this->cm->get_course(), $USER);
+            feedback_send_email($this->cm, $this->feedback, $this->cm->get_course(), $USER, $this->completed);
         } else {
             feedback_send_email_anonym($this->cm, $this->feedback, $this->cm->get_course());
         }
@@ -517,7 +532,7 @@ class mod_feedback_completion extends mod_feedback_structure {
      */
     protected function find_last_completed() {
         global $USER, $DB;
-        if (isloggedin() || isguestuser()) {
+        if (!isloggedin() || isguestuser()) {
             // Not possible to retrieve completed feedback for guests.
             return false;
         }
@@ -525,7 +540,7 @@ class mod_feedback_completion extends mod_feedback_structure {
             // Not possible to retrieve completed anonymous feedback.
             return false;
         }
-        $params = array('feedback' => $this->feedback->id, 'userid' => $USER->id);
+        $params = array('feedback' => $this->feedback->id, 'userid' => $USER->id, 'anonymous_response' => FEEDBACK_ANONYMOUS_NO);
         if ($this->get_courseid()) {
             $params['courseid'] = $this->get_courseid();
         }

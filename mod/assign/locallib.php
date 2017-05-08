@@ -1602,7 +1602,8 @@ class assign {
 
             if ($instance->markingworkflow &&
                     $instance->markingallocation &&
-                    !has_capability('mod/assign:manageallocations', $this->get_context())) {
+                    !has_capability('mod/assign:manageallocations', $this->get_context()) &&
+                    has_capability('mod/assign:grade', $this->get_context())) {
 
                 $additionaljoins .= ' LEFT JOIN {assign_user_flags} uf
                                      ON u.id = uf.userid
@@ -1752,6 +1753,7 @@ class assign {
 
         $params['assignid'] = $this->get_instance()->id;
         $params['submitted'] = ASSIGN_SUBMISSION_STATUS_SUBMITTED;
+        $sqlscalegrade = $this->get_instance()->grade < 0 ? ' OR g.grade = -1' : '';
 
         $sql = 'SELECT COUNT(s.userid)
                    FROM {assign_submission} s
@@ -1765,7 +1767,8 @@ class assign {
                         s.assignment = :assignid AND
                         s.timemodified IS NOT NULL AND
                         s.status = :submitted AND
-                        (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL)';
+                        (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL '
+                            . $sqlscalegrade . ')';
 
         return $DB->count_records_sql($sql, $params);
     }
@@ -6881,7 +6884,9 @@ class assign {
         }
 
         // Do not show if we are editing a previous attempt.
-        if ($attemptnumber == -1 && $this->get_instance()->attemptreopenmethod != ASSIGN_ATTEMPT_REOPEN_METHOD_NONE) {
+        if (($attemptnumber == -1 ||
+            ($attemptnumber + 1) == count($this->get_all_submissions($userid))) &&
+            $this->get_instance()->attemptreopenmethod != ASSIGN_ATTEMPT_REOPEN_METHOD_NONE) {
             $mform->addElement('header', 'attemptsettings', get_string('attemptsettings', 'assign'));
             $attemptreopenmethod = get_string('attemptreopenmethod_' . $this->get_instance()->attemptreopenmethod, 'assign');
             $mform->addElement('static', 'attemptreopenmethod', get_string('attemptreopenmethod', 'assign'), $attemptreopenmethod);
@@ -7430,6 +7435,14 @@ class assign {
                 $feedbackmodified) {
             $this->update_grade($grade, !empty($formdata->addattempt));
         }
+
+        // We never send notifications if we have marking workflow and the grade is not released.
+        if ($this->get_instance()->markingworkflow &&
+                isset($formdata->workflowstate) &&
+                $formdata->workflowstate != ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
+            $formdata->sendstudentnotifications = false;
+        }
+
         // Note the default if not provided for this option is true (e.g. webservices).
         // This is for backwards compatibility.
         if (!isset($formdata->sendstudentnotifications) || $formdata->sendstudentnotifications) {
