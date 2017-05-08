@@ -1,3 +1,5 @@
+
+
 .iomad_company_admin_table {
    width: 95%;
    margin: auto;
@@ -121,3 +123,47 @@ border-radius: 10px;
 .iomadclear {
     clear:both;
 }
+
+/* Tree stuff for company select */
+
+[aria-expanded="false"] > [role="group"] {
+    display: none;
+}
+
+[aria-selected="true"] {
+    font-weight: bold;
+}
+
+[aria-selected="false"] {
+    font-weight: normal;
+}
+
+.dep_tree {
+    padding: 20px;
+    background-color: #fd8c4e;
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+}
+
+.dep_tree .tree_item {
+    padding-left: 20px;
+}
+
+.dep_tree .haschildren [aria-expanded="true"] {
+    background-image: url('[[pix:t/expanded]]');
+    background-repeat: no-repeat;
+
+}
+.dep_tree .haschildren [aria-expanded="false"] {
+    background-image: url('[[pix:t/collapsed]]');
+    background-repeat: no-repeat;
+}
+
+.dep_tree .nochildren [aria-expanded="true"] {
+    background-image: none;
+}
+
+.dep_tree .nochildren [aria-expanded="false"] {
+    background-image: none;
+}
+
