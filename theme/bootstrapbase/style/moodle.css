@@ -195,6 +195,9 @@ a.autolink.glossary:hover {
 .pagingbar .thispage {
   font-weight: bold;
 }
+img.userpicture {
+  margin-right: 5px;
+}
 img.resize {
   height: 1em;
   width: 1em;
@@ -518,7 +521,6 @@ a.skip:active {
 }
 .notepost .userpicture {
   float: left;
-  margin-right: 5px;
 }
 .notepost .content,
 .notepost .footer {
@@ -14495,6 +14497,9 @@ body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebrea
 .path-mod-forum .forumheaderlist .discussion .replies,
 .path-mod-forum .forumheaderlist .discussion .lastpost {
   vertical-align: top;
+}
+.path-mod-forum .forumheaderlist .discussion .unread img {
+  margin: 0;
 }
 .forumpost {
   min-height: 20px;
