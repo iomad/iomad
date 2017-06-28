@@ -232,7 +232,7 @@ class site_registration_form extends moodleform {
         }
         $language = get_config('hub', 'site_language_' . $cleanhuburl);
         if ($language === false) {
-            $language = current_language();
+            $language = explode('_', current_language())[0];
         }
         $geolocation = get_config('hub', 'site_geolocation_' . $cleanhuburl);
         $contactable = get_config('hub', 'site_contactable_' . $cleanhuburl);
@@ -422,12 +422,12 @@ class site_registration_form extends moodleform {
             $mform->addElement('checkbox', 'badges', '',
                     " " . get_string('badgesnumber', 'hub', $badges));
             $mform->setDefault('badges', $badgesnumber != -1);
-            $mform->setType('resources', PARAM_INT);
+            $mform->setType('badges', PARAM_INT);
 
             $mform->addElement('checkbox', 'issuedbadges', '',
                     " " . get_string('issuedbadgesnumber', 'hub', $issuedbadges));
             $mform->setDefault('issuedbadges', $issuedbadgesnumber != -1);
-            $mform->setType('resources', PARAM_INT);
+            $mform->setType('issuedbadges', PARAM_INT);
 
             $mform->addElement('checkbox', 'participantnumberaverage', '',
                     " " . get_string('participantnumberaverage', 'hub', $participantnumberaverage));
