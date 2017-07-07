@@ -52,5 +52,9 @@ if ($ADMIN->fulltree) {
     $simplesettings->add_checkbox('brandfontitalic');
 
     $simplesettings->add_textarea('customcss');
+    
+    $simplesettings->add_textarea('customless');
+    
+    $simplesettings->add_textarea('customjs');
 }
 

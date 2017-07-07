@@ -8,6 +8,7 @@
 //## Gray and brand colors for use across Bootstrap.
 
 @gray-base:              #000;
+@gray-base-rgba:         rgba(0,0,0,0);
 @gray-darker:            lighten(@gray-base, 13.5%); // #222
 @gray-dark:              lighten(@gray-base, 20%);   // #333
 @gray:                   lighten(@gray-base, 33.5%); // #555
@@ -20,7 +21,16 @@
 @brand-warning:         #f0ad4e;
 @brand-danger:          #d9534f;
 
+@box-shadow: rgba(0,0,0,.125);
+@text-shadow: rgba(0,0,0,.2);
+@carousel-gradient-1: rgba(0,0,0,.5);
+@carousel-gradient-2: rgba(0,0,0,.0001);
+@box-shadow-navbar: rgba(255,255,255,.1);
 
+@yellow-normalize: #ff0;
+@white-rgba: rgba(0,0,0,0);
+@white-hex: #fff;
+@whitesmoke: whitesmoke;
 //== Scaffolding
 //
 //## Settings for some of the most global styles.
@@ -169,7 +179,8 @@
 @btn-danger-border:              darken(@btn-danger-bg, 5%);
 
 @btn-link-disabled-color:        @gray-light;
-
+@btn-shadow-1:                   rgba(255,255,255,.15);
+@btn-shadow-2:                   rgba(255,255,255,.075);
 
 //== Forms
 //
@@ -854,3 +865,34 @@
 @dl-horizontal-offset:        @component-offset-horizontal;
 //** Horizontal line color.
 @hr-border:                   @gray-lighter;
+
+
+//== Print
+//
+//##
+
+@print-bg: #fff;
+
+
+//== Yui
+//
+//##
+
+@yui-bg: #ffee69;
+@yui-border-color: #a6982b;
+@yui-border-top-color: #d4c237;
+
+
+//== Filemanager
+//
+//##
+
+@dndupload-target-border-color: #fb7979;
+@dndupload-target-border-color-over: #6c8cd3;
+
+
+//== News
+//
+//##
+
+@msg-sender: #478fca;

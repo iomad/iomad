@@ -21,6 +21,15 @@
 
 /**
  * Grunt configuration
+ * 
+ * If you get the warning in the terminal
+ * Running "watch" task
+ * Waiting...
+ * Warning: watch ENOSPC
+ * 
+ * you can solve it by
+ * echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+ * http://hire.chrisjlee.net/node/232
  */
 
 module.exports = function(grunt) {
@@ -78,32 +87,38 @@ module.exports = function(grunt) {
             }
         },
         less: {
-            bootstrapbase: {
+            iomad: {
                 files: {
-                    "theme/bootstrapbase/style/moodle.css": "theme/bootstrapbase/less/moodle.less",
-                    "theme/bootstrapbase/style/editor.css": "theme/bootstrapbase/less/editor.less",
+                    // Options for iomad theme.
+                    "theme/iomad/style/iomad.css": "theme/iomad/less/iomad.less",
+                    // Options for Iomadbootstrap
+                    "theme/iomadbootstrap/style/moodle.css": "theme/iomadbootstrap/less/moodle.less",
+                    "theme/iomadbootstrap/style/editor.css": "theme/iomadbootstrap/less/editor.less"
                 },
                 options: {
-                    compress: true
+                    compress: false     //Set to true for last compilation before production.
                 }
            }
         },
         watch: {
             options: {
-                nospawn: true // We need not to spawn so config can be changed dynamically.
+                nospawn: true,          // We need not to spawn so config can be changed dynamically.
+                compress: false,        // Set to true for last compilation before production.
+                sourceMap: true,        // To be able to work with Firebug. Set to false for last compilation.
+                outputSourceFiles: true //To be able to work with Firebug. Set to false for last compilation.
             },
             amd: {
                 files: ['**/amd/src/**/*.js'],
                 tasks: ['amd']
             },
-            bootstrapbase: {
-                files: ["theme/bootstrapbase/less/**/*.less"],
-                tasks: ["less:bootstrapbase"]
+            iomad: {
+                files: ["theme/iomad/less/**/*.less","theme/iomadbootstrap/less/**/*.less"],
+                tasks: ["less:iomad"]
             },
             yui: {
                 files: ['**/yui/src/**/*.js'],
                 tasks: ['shifter']
-            },
+            }
         },
         shifter: {
             options: {
@@ -245,7 +260,7 @@ module.exports = function(grunt) {
     grunt.registerTask('js', ['amd', 'shifter']);
 
     // Register CSS taks.
-    grunt.registerTask('css', ['less:bootstrapbase']);
+    grunt.registerTask('css', ['less:iomad']);
 
     // Register the startup task.
     grunt.registerTask('startup', 'Run the correct tasks for the current directory', tasks.startup);

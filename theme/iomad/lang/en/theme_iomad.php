@@ -28,6 +28,12 @@ $string['configtitle'] = 'IOMAD';
 $string['customcss'] = 'Custom CSS';
 $string['customcssdesc'] = 'Whatever CSS rules you add to this textarea will be reflected in every page, making for easier customization of this theme.';
 
+$string['customless'] = 'Custom LESS';
+$string['customlessdesc'] = 'Whatever LESS rules you add to this textarea will be reflected in every page, making for easier customization of this theme. Works with Moodle internal compiler only.';
+
+$string['customjs'] = 'Custom JS';
+$string['customjsdesc'] = 'Whatever JS rules you add to this textarea will be reflected in every page, making for easier customization of this theme. Works with Moodle internal compiler only.';
+
 $string['footnote'] = 'Footnote';
 $string['footnotedesc'] = 'Whatever you add to this textarea will be displayed in the footer throughout your Moodle site.';
 

@@ -102,10 +102,20 @@ class block_iomad_company_admin extends block_base {
             } else {
                 $url = new moodle_url('/blocks/iomad_company_admin/'.$menu['url']);
             }
-
-
+            $ischild = false;
+            try {
+                $theme = theme_config::load($CFG->theme);
+                foreach ($theme->parents as $parentstheme) {
+                    if($parentstheme == 'iomadbootstrap' ){
+                        $ischild = true;
+                        break;
+                    }
+                }
+            } catch (Exception $e) {
+                // Bad theme
+            }
             // Get topic image icon
-            if (($CFG->theme == 'iomadbootstrap') && !empty($menu['icon'])) {
+            if ((($CFG->theme == 'iomadbootstrap') || $ischild) && !empty($menu['icon'])) {
                 $icon = $menu['icon'];
             } else if (!empty($menu['icondefault'])) {
                 $imgsrc = $OUTPUT->pix_url($menu['icondefault'], 'block_iomad_company_admin');

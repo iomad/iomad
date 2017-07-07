@@ -54,7 +54,9 @@
   border: 1px solid @modal-content-fallback-border-color; //old browsers fallback (ie8 etc)
   border: 1px solid @modal-content-border-color;
   border-radius: @border-radius-large;
-  .box-shadow(0 3px 9px rgba(0,0,0,.5));
+    -webkit-box-shadow: inset 0 3px 9px @box-shadow;
+  .box-shadow(0 3px 9px @box-shadow);
+  -webkit-background-clip: padding-box;
   background-clip: padding-box;
   // Remove focus outline from opened modal
   outline: 0;
@@ -136,7 +138,8 @@
     margin: 30px auto;
   }
   .modal-content {
-    .box-shadow(0 5px 15px rgba(0,0,0,.5));
+    -webkit-box-shadow: inset 0 5px 15px @box-shadow;
+    .box-shadow(0 5px 15px @box-shadow);
   }
 
   // Modal sizes

@@ -147,12 +147,15 @@ class company_edit_form extends company_moodleform {
         $mform->setDefault('lang', $CFG->lang);
 
         /* === end user defaults === */
-        $companyTheme = $this->companyrecord->theme;
+        $companytheme = "iomadbootstrap";
+        if(isset($this->companyrecord->theme)){
+            $companytheme = $this->companyrecord->theme;
+        }
         $ischild = false;
         try {
-            $theme = theme_config::load($companyTheme);
-            foreach ($theme->parents as $parentsTheme) {
-                if($parentsTheme == 'iomad' || $parentsTheme == 'bootstrap' ){
+            $theme = theme_config::load($companytheme);
+            foreach ($theme->parents as $parentstheme) {
+                if($parentstheme == 'iomad' || $parentstheme == 'iomadbootstrap' ){
                     $ischild = true;
                     break;
                 }
@@ -163,7 +166,7 @@ class company_edit_form extends company_moodleform {
         // Only show the Appearence section if the theme is iomad or you have abilities
         // to change that.
         if (iomad::has_capability('block/iomad_company_admin:company_add', $context) ||
-            $this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'bootstrap' || $ischild) {
+            $this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'iomadbootstrap' || $ischild) {
 
             $mform->addElement('header', 'appearance',
                                     get_string('appearance', 'block_iomad_company_admin'));
@@ -222,6 +225,7 @@ class company_edit_form extends company_moodleform {
                                     get_string('customcss', 'block_iomad_company_admin'),
                                     'wrap="virtual" rows="20" cols="75"');
                 $mform->setType('customcss', PARAM_CLEAN);
+                $mform->addHelpButton('customcss', 'customcss', 'block_iomad_company_admin');
             } else {
                 $mform->addElement('hidden', 'id_companylogo', $this->companyrecord->companylogo);
                 $mform->addElement('hidden', 'companylogo', $this->companyrecord->companylogo);
@@ -352,9 +356,13 @@ $companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
 
 // Get the form data.
 $draftitemid = file_get_submitted_draft_itemid('companylogo');
+$copanylogotheme = "iomadbootstrap";
+if(isset($companyrecord->theme)){
+    $copanylogotheme = $companyrecord->theme;
+}
 file_prepare_draft_area($draftitemid,
                         $context->id,
-                        'theme_iomad',
+                       'theme_' . $copanylogotheme,
                         'companylogo', $companyid,
                         array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
 $companyrecord->companylogo = $draftitemid;
@@ -428,9 +436,13 @@ if ($mform->is_cancelled()) {
     }
     if (!empty($data->companylogo)) {
 //echo "COMPANYLOGO HERE"; die;
+$copanylogotheme = "iomadbootstrap";
+if($data->theme){
+  $copanylogotheme =   $data->theme;
+}
         file_save_draft_area_files($data->companylogo,
                                    $context->id,
-                                   'theme_iomad',
+                                   'theme_' . $copanylogotheme,
                                    'companylogo',
                                    $data->id,
                                    array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));

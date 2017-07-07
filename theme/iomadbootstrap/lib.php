@@ -115,19 +115,20 @@ function theme_iomadbootstrap_html_for_settings($PAGE) {
     $theme = $PAGE->theme;
     $logo = $theme->setting_file_url('logo', 'logo');
     if (empty($logo)) {
-        $logo = $CFG->wwwroot.'/theme/iomad/pix/iomad_logo.png';
+        $logo = $CFG->wwwroot.'/theme/iomadbootstrap/pix/iomad_logo.png';
     }
     $clientlogo = '';
     $companycss = '';
     if ($companyid = iomad::is_company_user()) {
         $context = context_system::instance();
+        $companyrecord = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);        
         if ($files = $DB->get_records('files', array('contextid' => $context->id,
-                                                     'component' => 'theme_iomad',
+                                                     'component' => 'theme_'. $companyrecord->theme,
                                                      'filearea' => 'companylogo',
                                                      'itemid' => $companyid))) {
             foreach ($files as $file) {
                 if ($file->filename != '.') {
-                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
+                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_{$companyrecord->theme}/companylogo/$companyid/{$file->filename}";
                 }
             }
         }
@@ -139,6 +140,7 @@ function theme_iomadbootstrap_html_for_settings($PAGE) {
                 $companycss = preg_replace("/\[\[company:$key\]\]/", $value, $companycss);
             }
         }
+        $companycss .= iomad::get_company_customcss($companyid);
     }
 
     $html->heading = '<div id="sitelogo">' .
@@ -154,7 +156,15 @@ function theme_iomadbootstrap_html_for_settings($PAGE) {
         $html->footnote = '<div class="footnote text-center">'.$PAGE->theme->settings->footnote.'</div>';
     }
 
-    $html->companycss = $companycss;
+    $generalcustomcss = '';
+    if (!empty($page->theme->settings->customcss)) {
+        $generalcustomcss = $page->theme->settings->customcss;
+    }
+    $generalcustomless = '';
+    if (!empty($page->theme->settings->customless)) {
+        $generalcustomless = $page->theme->settings->customless;
+    }
+    $html->companycss = $generalcustomcss . $generalcustomless . $companycss;
 
     return $html;
 }
@@ -216,4 +226,30 @@ function theme_iomadbootstrap_pluginfile($course, $cm, $context, $filearea, $arg
     }
 
     send_stored_file($file, 0, 0, $forcedownload);
+}
+
+/**
+ * Returns extra variables for LESS from customcss field.
+ * 
+ * It injects LESS variables in customcss field from the settings defined
+ * by the user for the theme.
+ *
+ * @param theme_config $theme The theme config object.
+ * @return array of LESS selectors and rules.
+ */
+function theme_iomadbootstrap_extra_less ($theme) {
+    $variables = '';
+    if (!empty($theme->settings->customless)) {
+        $variables = $theme->settings->customless;
+    }
+    return $variables;
+}
+
+
+/**
+*   Function to add jQuery and jQuery plugins using Moodle standard way
+*   @param moodle_page $page
+*/
+function theme_iomadbootstrap_page_init(moodle_page $page) {
+    $page->requires->jquery();
 }

@@ -49,6 +49,24 @@ if ($ADMIN->fulltree) {
     $setting->set_updatedcallback('theme_reset_all_caches');
     $settings->add($setting);
 
+    // Custom LESS file.
+    $name = 'theme_iomad/customless';
+    $title = get_string('customless', 'theme_iomad');
+    $description = get_string('customlessdesc', 'theme_iomad');
+    $default = '';
+    $setting = new admin_setting_configtextarea($name, $title, $description, $default);
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $settings->add($setting);
+    
+    // Custom Javascript file.
+    $name = 'theme_iomad/customjs';
+    $title = get_string('customjs','theme_iomad');
+    $description = get_string('customjsdesc', 'theme_iomad');
+    $default = '';
+    $setting = new admin_setting_configtextarea($name, $title, $description, $default);
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $settings->add($setting);
+    
     // Footnote setting.
     $name = 'theme_iomad/footnote';
     $title = get_string('footnote', 'theme_iomad');

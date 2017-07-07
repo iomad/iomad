@@ -23,14 +23,25 @@
 $THEME->name = 'iomad';
 
 /////////////////////////////////
-// The only thing you need to change in this file when copying it to
-// create a new theme is the name above. You also need to change the name
-// in version.php and lang/en/theme_clean.php as well.
+// What you need to change in this file when copying it to
+// create a new theme is:
+// -- The name above.
+// -- The name in version.php 
+// -- The lang/en/theme_clean.php
+// 
+// If you want to use less, there are 2 ways:
+// --Installing grunt. Moodle keeps using the .css files on styles.
+//   You will have to uncomment/comment the indicated lines below.
+// --Using Moodle internal compiler. (default) .less are compiled directally to the cache. 
+//   With this option, you can use the less settings field without subtheming.
+//   Thanks to Mary Evans
 //////////////////////////////////
-//
+
 $THEME->doctype = 'html5';
 $THEME->parents = array('bootstrapbase');
-$THEME->sheets = array('iomad', 'custom', 'company');
+//$THEME->sheets = array('iomad');                    // Uncomment if you use grunt or only CSS or static CSS
+$THEME->lessfile = 'iomad';                           // Comment if you use grunt or only CSS
+$THEME->extralesscallback = 'theme_iomad_extra_less'; // Comment if you use grunt or only CSS
 $THEME->supportscssoptimisation = false;
 $THEME->yuicssmodules = array();
 
