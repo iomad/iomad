@@ -442,7 +442,7 @@ if (iomad::has_capability('block/iomad_company_admin:editallusers', $systemconte
     // Make sure we dont display site admins.
     // Set default search to something which cant happen.
     $sqlsearch = "id!='-1'";
-    $siteadmins = explode(" ", $CFG->siteadmins);
+    $siteadmins = explode(",", $CFG->siteadmins);
     foreach ($siteadmins as $siteadmin) {
         $sqlsearch .= " AND id!='$siteadmin'";
     }
