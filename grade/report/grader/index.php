@@ -56,7 +56,7 @@ $PAGE->requires->yui_module('moodle-gradereport_grader-gradereporttable', 'Y.M.g
 
 // basic access checks
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
-    print_error('nocourseid');
+    print_error('invalidcourseid');
 }
 require_login($course);
 $context = context_course::instance($course->id);
@@ -188,7 +188,8 @@ if ($USER->gradeediting[$course->id] && ($report->get_pref('showquickfeedback') 
     echo '<input type="hidden" value="grader" name="report"/>';
     echo '<input type="hidden" value="'.$page.'" name="page"/>';
     echo $reporthtml;
-    echo '<div class="submit"><input type="submit" id="gradersubmit" value="'.s(get_string('savechanges')).'" /></div>';
+    echo '<div class="submit"><input type="submit" id="gradersubmit" class="btn btn-primary"
+        value="'.s(get_string('savechanges')).'" /></div>';
     echo '</div></form>';
 } else {
     echo $reporthtml;
