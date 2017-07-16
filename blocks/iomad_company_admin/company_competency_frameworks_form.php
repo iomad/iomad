@@ -150,7 +150,7 @@ if ($returnurl) {
 // Set the name for the page.
 $linktext = get_string('assigncompetencyframeworks', 'block_iomad_company_admin');
 // Set the url.
-$linkurl = new moodle_url('/blocks/iomad_company_admin/company_competencies_frameworks_form.php');
+$linkurl = new moodle_url('/blocks/iomad_company_admin/company_competency_frameworks_form.php');
 // Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
