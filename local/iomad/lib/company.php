@@ -1661,7 +1661,7 @@ class company {
             $data->timecreated  = time();
             $data->timemodified = $data->timecreated;
             $data->name = $company->shortname;
-            $data->description = "Course group for ".$company->name;
+            $data->description = get_string('coursegroup', 'block_iomad_company_admin') . $company->name;
             $data->courseid = $courseid;
         } else if (!empty($groupdata->groupid)) {
             // Already exists so we are updating it.
