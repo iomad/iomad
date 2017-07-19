@@ -261,7 +261,8 @@ class company_user {
         if (enrol_is_enabled('manual')) {
             $manual = enrol_get_plugin('manual');
         } else {
-            $manual = null;
+            //$manual = null;
+            return;
         }
 
         foreach ($courseids as $courseid) {
@@ -286,12 +287,24 @@ class company_user {
 
             if (!isset($manualcache[$courseid])) {
                 if ($instances = enrol_get_instances($courseid, false)) {
-                    $manualcache[$courseid] = reset($instances);
+                    foreach ($instances as $instance){
+                        if('manual' === $instance->enrol) {
+                            $manualcache[$courseid]  = $instance;
+                            break;
+                        }
+                    }
+                    if(!isset($manualcache[$courseid])){
+                        $manualcache[$courseid] = false;
+                    }
                 } else {
                     $manualcache[$courseid] = false;
                 }
             }
 
+            if(!$manualcache[$courseid]) {
+                // manual enrollment plugin unavailable
+                continue;
+            }
             // Set it to the default course roleid.
             if (empty($rid)) {
                 $rid = $manualcache[$courseid]->roleid;
