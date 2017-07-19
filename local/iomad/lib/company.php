@@ -321,7 +321,7 @@ class company {
                                              {user_info_category} uic, {company} c
                                              WHERE c.id = ".$companyid."
                                              AND ".$DB->sql_compare_text('c.shortname'). "=".
-                                             "'".$DB->sql_compare_text('uic.name')."'")) {
+                                             $DB->sql_compare_text('uic.name'))) {
             return $category;
         } else {
             return false;
