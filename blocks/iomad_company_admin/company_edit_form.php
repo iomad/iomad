@@ -468,7 +468,7 @@ if ($mform->is_cancelled()) {
         $catdata = new stdclass();
         $catdata->sortorder = $DB->count_records('user_info_category') + 1;
         $catdata->name = $data->shortname;
-        $data->profileid = $DB->insert_record('user_info_category', $catdata, false);
+        $data->profileid = $DB->insert_record('user_info_category', $catdata);
 
         $companyid = $DB->insert_record('company', $data);
 
