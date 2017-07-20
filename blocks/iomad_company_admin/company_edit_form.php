@@ -20,7 +20,11 @@
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/includes/colourpicker.php');
 require_once('lib.php');
+
+\MoodleQuickForm::registerElementType('iomad_colourpicker',
+    $CFG->dirroot . '/blocks/iomad_company_admin/includes/colourpicker.php', 'MoodleQuickForm_iomad_colourpicker');
 
 class company_edit_form extends company_moodleform {
     protected $firstcompany;
@@ -236,6 +240,12 @@ class company_edit_form extends company_moodleform {
                                     get_string('customcss', 'block_iomad_company_admin'),
                                     'wrap="virtual" rows="20" cols="75"');
                 $mform->setType('customcss', PARAM_CLEAN);
+                $mform->addElement('iomad_colourpicker', 'headingcolor', get_string('headingcolor', 'block_iomad_company_admin'), 'size="20"');
+                $mform->setType('headingcolor', PARAM_CLEAN);
+                $mform->addElement('iomad_colourpicker', 'maincolor', get_string('maincolor', 'block_iomad_company_admin'), 'size="20"');
+                $mform->setType('maincolor', PARAM_CLEAN);
+                $mform->addElement('iomad_colourpicker', 'linkcolor', get_string('linkcolor', 'block_iomad_company_admin'), 'size="20"');
+                $mform->setType('linkcolor', PARAM_CLEAN);
             } else {
                 $mform->addElement('hidden', 'id_companylogo', $this->companyrecord->companylogo);
                 $mform->addElement('hidden', 'companylogo', $this->companyrecord->companylogo);
