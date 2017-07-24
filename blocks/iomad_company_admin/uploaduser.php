@@ -820,13 +820,6 @@ if ($mform->is_cancelled()) {
                 $count = $licenserecord['used'];
                 $numberoflicenses = $licenserecord['allocation'];
                 foreach ($formdata->licensecourses as $licensecourse) {
-                    if ($count >= $numberoflicenses) {
-                        // Set the used amount.
-                        $licenserecord['used'] = $count;
-                        $DB->update_record('companylicense', $licenserecord);
-                        $numlicenseerrors++;
-                        continue;
-                    }
                     if ($DB->get_record_sql("SELECT id FROM {companylicense_users}
                                              WHERE licenseid = :licenseid
                                              AND licensecourseid = :licensecourseid
