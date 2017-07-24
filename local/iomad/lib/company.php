@@ -2516,6 +2516,11 @@ class company {
         $licenseid = $event->other['licenseid'];
         $courseid = $event->courseid;
         $duedate = $event->other['duedate'];
+        if (!empty($event->other['noemail'])) {
+            $noemail = true;
+        } else {
+            $noemail = false;
+        }
 
         if (!$licenserecord = $DB->get_record('companylicense', array('id'=>$licenseid))) {
             return;
@@ -2533,11 +2538,13 @@ class company {
         $license->length = $licenserecord->validlength;
         $license->valid = date($CFG->iomad_date_format, $licenserecord->expirydate);
                                 
+        if (!$noemail) {
         // Send out the email.
-        EmailTemplate::send('license_allocated', array('course' => $course,
-                                                       'user' => $user,
-                                                       'due' => $duedate,
-                                                       'license' => $license));
+            EmailTemplate::send('license_allocated', array('course' => $course,
+                                                           'user' => $user,
+                                                           'due' => $duedate,
+                                                           'license' => $license));
+        }
 
         // Update the license usage.
         self::update_license_usage($licenseid);
