@@ -803,19 +803,23 @@ if ($mform->is_cancelled()) {
                 company_user::enrol($user, array_keys($formdata->selectedcourses) );
             }
 
+            // Deal with program license.
+            if (!empty($formdata->licenseid) && empty($formdata->licensecourses)) {
+                if ($DB->get_record('companylicense', array('id' => $formdata->licenseid, 'program' => 1))) {
+                    // This is a program of courses.  Set them!
+                    $formdata->licensecourses = $DB->get_records_sql_menu("SELECT c.id, clc.courseid FROM {companylicense_courses} clc
+                                                                          JOIN {course} c ON (clc.courseid = c.id
+                                                                          AND clc.licenseid = :licenseid)",
+                                                                          array('licenseid' => $formdata->licenseid));
+                }
+            }
             // Assign and licenses.
             if (!empty($formdata->licensecourses)) {
+                $timestamp = time();
                 $licenserecord = (array) $DB->get_record('companylicense', array('id' => $formdata->licenseid));
                 $count = $licenserecord['used'];
                 $numberoflicenses = $licenserecord['allocation'];
                 foreach ($formdata->licensecourses as $licensecourse) {
-                    if ($count >= $numberoflicenses) {
-                        // Set the used amount.
-                        $licenserecord['used'] = $count;
-                        $DB->update_record('companylicense', $licenserecord);
-                        $numlicenseerrors++;
-                        continue;
-                    }
                     if ($DB->get_record_sql("SELECT id FROM {companylicense_users}
                                              WHERE licenseid = :licenseid
                                              AND licensecourseid = :licensecourseid
@@ -838,24 +842,28 @@ if ($mform->is_cancelled()) {
                                                   'licensecourseid' => $licensecourse,
                                                   'issuedate' => time()));
                     }
-                    // Create an email event.
-                    $license = new stdclass();
-                    $license->length = $licenserecord['validlength'];
-                    $license->valid = date($CFG->iomad_date_format, $licenserecord['expirydate']);
-                    EmailTemplate::send('license_allocated', array('course' => $licensecourse,
-                                                                   'user' => $user,
-                                                                   'license' => $license));
+
+                    // Create an event.
+                    $eventother = array('licenseid' => $formdata->licenseid,
+                                    'duedate' => $timestamp);
+                    $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($licensecourse),
+                                                                                                  'objectid' => $formdata->licenseid,
+                                                                                                  'courseid' => $licensecourse,
+                                                                                                  'userid' => $user->id,
+                                                                                                  'other' => $eventother));
+                    $event->trigger();
                 }
-        
-                // Set the used amount for the license.
-                $licenserecord['used'] = $DB->count_records('companylicense_users', array('licenseid' => $formdata->licenseid));
-                $DB->update_record('companylicense', $licenserecord);
             }
 
 
             // If user was set to have password generated, generate it now, so that it can be downloaded.
             company_user::generate_temporary_password($user, $formdata->sendnewpasswordemails);
         }
+
+        if (!empty($licenserecord['program'])) {
+            $numlicenses = $numlicenses / count($formdata->licensecourses);
+        }
+
         $upt->flush();
         $upt->close(); // Close table.
     

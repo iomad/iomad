@@ -126,6 +126,7 @@ $strdelete = get_string('delete');
 $strsplit = get_string('split', 'block_iomad_company_admin');
 $straddlicense = get_string('licenseaddnew', 'block_iomad_company_admin');
 $strlicensename = get_string('licensename', 'block_iomad_company_admin');
+$strlicenseprogram = get_string('licenseprogram', 'block_iomad_company_admin');
 $strcoursesname = get_string('allocatedcourses', 'block_iomad_company_admin');
 $strlicenseshelflife = get_string('licenseexpires', 'block_iomad_company_admin');
 $strlicenseduration = get_string('licenseduration', 'block_iomad_company_admin');
@@ -134,6 +135,7 @@ $strlicenseremaining = get_string('licenseremaining', 'block_iomad_company_admin
 
 $table = new html_table();
 $table->head = array ($strlicensename,
+                      $strlicenseprogram,
                       $strcoursesname,
                       $strlicenseshelflife,
                       $strlicenseduration,
@@ -141,7 +143,7 @@ $table->head = array ($strlicensename,
                       $strlicenseremaining,
                       "",
                       "");
-$table->align = array ("left", "left", "left", "left", "center", "center", "center", "center");
+$table->align = array ("left", "left", "left", "left", "left", "center", "center", "center", "center");
 $table->width = "95%";
 
 if ($departmentid == $companydepartment->id) {
@@ -159,7 +161,8 @@ if ($departmentid == $companydepartment->id) {
     // Get the licenses.
     $licenses = $DB->get_records_sql("SELECT * FROM {companylicense}
                                       WHERE companyid = :companyid
-                                      $childsql",
+                                      $childsql
+                                      ORDER BY expirydate DESC",
                                       array('companyid' => $companyid));
 
     // Cycle through the results.
@@ -199,13 +202,26 @@ if ($departmentid == $companydepartment->id) {
             }
         }
 
+        if (!empty($license->program)) {
+            $programstring = get_string('yes');
+            $allocation = $license->allocation / count($licensecourses);
+            $used = $license->used / count($licensecourses);
+            $validlength = "-";
+        } else {
+            $programstring = get_string('no');
+            $allocation = $license->allocation;
+            $used = $license->used;
+            $validlength = $license->validlength;
+        }
+
         // Create the table data.
-        $dataarray = array ("$license->name",
+        $dataarray = array ($license->name,
+                           $programstring,
                            $coursestring,
                            date($CFG->iomad_date_format, $license->expirydate),
-                           "$license->validlength",
-                           "$license->allocation",
-                           "$license->used",
+                           $validlength,
+                           $allocation,
+                           $used,
                            $editbutton,
                            $splitbutton,
                            $deletebutton);
@@ -243,20 +259,18 @@ if ($departmentid == $companydepartment->id) {
     }
 }
 
-if (!empty($table)) {
-    echo html_writer::table($table);
-    echo $OUTPUT->paging_bar($objectcount, $page, $perpage, $baseurl);
-}
-
 
 echo '<div class="buttons">';
-
 if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $context)) {
     echo $OUTPUT->single_button(new moodle_url('company_license_edit_form.php'),
                                                 get_string('licenseaddnew', 'block_iomad_company_admin'), 'get');
 }
-echo $OUTPUT->single_button(new moodle_url('/local/iomad_dashboard/index.php'), get_string('cancel'), 'get');
-
 echo '</div>';
+
+// Display the list of licenses.
+if (!empty($table)) {
+    echo html_writer::table($table);
+    echo $OUTPUT->paging_bar($objectcount, $page, $perpage, $baseurl);
+}
 
 echo $OUTPUT->footer();

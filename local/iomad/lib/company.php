@@ -2440,15 +2440,12 @@ class company {
             foreach ($licenserecords as $licenserecord) {
                 // Delete the record.
                 $DB->delete_records('companylicense_users', array('id' => $licenserecord->id));
-                // Update the license used count.
-                $DB->execute("UPDATE {companylicense},
-                                  (
-                                   SELECT licenseid,count(*) AS licCount FROM {companylicense_users} GROUP BY licenseid
-                                  ) AS t2
-                                  SET {companylicense}.used = t2.licCount
-                                  WHERE mdl_companylicense.id = t2.licenseid;");
+
+                // Update the license usage.
+                self::update_license_usage($licenserecord->licenseid);
             }
         }
+
         return true;
     }
 
@@ -2471,8 +2468,8 @@ class company {
         $company = new company($companyid);
         $childcompanies = $company->get_child_companies();
 
-        foreach ($childcompanies as $childid) {
-            $childcompany = new company($childid);
+        foreach ($childcompanies as $child) {
+            $childcompany = new company($child->id);
             $childcompany->assign_user_to_company($userid, 0, $event->other['usertype'], true);
         }
         
@@ -2498,8 +2495,8 @@ class company {
         $company = new company($companyid);
         $childcompanies = $company->get_child_companies();
 
-        foreach ($childcompanies as $childid) {
-            $childcompany = new company($childid);
+        foreach ($childcompanies as $child) {
+            $childcompany = new company($child->id);
             $childcompany->unassign_user_from_company($userid, true);
         }
         
@@ -2519,6 +2516,11 @@ class company {
         $licenseid = $event->other['licenseid'];
         $courseid = $event->courseid;
         $duedate = $event->other['duedate'];
+        if (!empty($event->other['noemail'])) {
+            $noemail = true;
+        } else {
+            $noemail = false;
+        }
 
         if (!$licenserecord = $DB->get_record('companylicense', array('id'=>$licenseid))) {
             return;
@@ -2536,11 +2538,13 @@ class company {
         $license->length = $licenserecord->validlength;
         $license->valid = date($CFG->iomad_date_format, $licenserecord->expirydate);
                                 
+        if (!$noemail) {
         // Send out the email.
-        EmailTemplate::send('license_allocated', array('course' => $course,
-                                                       'user' => $user,
-                                                       'due' => $duedate,
-                                                       'license' => $license));
+            EmailTemplate::send('license_allocated', array('course' => $course,
+                                                           'user' => $user,
+                                                           'due' => $duedate,
+                                                           'license' => $license));
+        }
 
         // Update the license usage.
         self::update_license_usage($licenseid);
@@ -2555,7 +2559,7 @@ class company {
      * @return bool true on success.
      */
     public static function user_license_unassigned(\block_iomad_company_admin\event\user_license_unassigned $event) {
-        global $DB, $CFG;
+        global $DB, $CFG, $PAGE;
 
         $userid = $event->userid;
         $licenseid = $event->other['licenseid'];
@@ -2571,6 +2575,14 @@ class company {
 
         if (!$user = $DB->get_record('user', array('id' => $userid))) {
             return;
+        }
+
+        // Check if there is an enrolment in the course for this user/license.
+        $manager = new course_enrolment_manager($PAGE, $course);
+        if ($enrolments = $manager->get_user_enrolments($userid)) {
+            foreach ($enrolments as $ue) {
+                $manager->unenrol_user($ue);
+            }
         }
 
         $license = new stdclass();
@@ -2628,11 +2640,103 @@ class company {
             return;
         }
 
+        if (!empty($licenserecord->program)) {
+            // This is a program of courses.
+            // If it's been updated we need to deal with any course changes.
+            $currentcourses = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid), null, 'courseid');
+            $oldcourses = (array) json_decode($event->other['oldcourses'], true);
+
+            // check for courses being removed.
+            foreach ($oldcourses as $oldcourse) {
+                $oldcourseid = $oldcourse['courseid'];
+
+                if (empty($currentcourses[$oldcourseid])) {
+                    // Deal with enrolments.
+                    if ($enrolments = $DB->get_records_sql("SELECT e.id FROM {enrol} e
+                                                            JOIN {companylicense_courses} clc ON (e.courseid = clc.courseid AND e.status = 0)
+                                                            WHERE clc.licenseid = :licenseid
+                                                            AND e.courseid = :courseid",
+                                                            array('licenseid' => $licenseid, 'courseid' => $oldcourseid))) {
+                        foreach ($enrolments as $enrolid) {
+                            $DB->delete_records('user_enrolments', array('enrolid' => $enrolid->id));
+                        }
+                    }
+                    $DB->delete_records('companylicense_users', array('licensecourseid' => $oldcourseid, 'licenseid' => $licenseid));
+                }
+            }
+
+            foreach ($currentcourses as $currentcourse) {
+                $currcourseid = $currentcourse->courseid;
+                if (empty($oldcourses[$currcourseid])) {
+                    // We have a new course.  Add everyone.
+                    if ($licusers = $DB->get_records_sql("SELECT DISTINCT userid
+                                                      FROM {companylicense_users}
+                                                      WHERE licenseid = :licenseid",
+                                                      array('licenseid' => $licenseid))) {
+
+                        foreach ($licusers as $licuser) {
+                            $userlic = array('licenseid' => $licenseid,
+                                             'userid' => $licuser->userid,
+                                             'isusing' => 0,
+                                             'licensecourseid' => $currentcourse->courseid,
+                                             'issuedate' => time());
+                            $DB->insert_record('companylicense_users', $userlic);
+                        }
+                    }
+                }
+            }
+
+            if (isset($event->other['programchange']) && $licenserecord->program == 1) {
+                // We have switched from an ordinary license to a program license.
+                // Get the users who have courses in this licenses.
+                if ($licusers = $DB->get_records_sql("SELECT DISTINCT userid
+                                                      FROM {companylicense_users}
+                                                      WHERE licenseid = :licenseid",
+                                                      array('licenseid' => $licenseid))) {
+
+                        foreach ($licusers as $licuser) {
+                            foreach ($currentcourses as $currentcourse) {
+                            // Check if they have a license allocated.
+                            if (!$DB->get_record('companylicense_users', array('userid' => $licuser->userid,
+                                                                               'licensecourseid' => $currentcourse->courseid,
+                                                                               'licenseid' => $licenseid))) {   
+                                // If not, allocate it to them.
+                                $userlic = array('licenseid' => $licenseid,
+                                                 'userid' => $licuser->userid,
+                                                 'isusing' => 0,
+                                                 'licensecourseid' => $currentcourse->courseid,
+                                                 'issuedate' => time());
+                                $DB->insert_record('companylicense_users', $userlic);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Update the license usage.
+        self::update_license_usage($licenseid);
+
+        // Deal with the parent.
         if (!empty($parentid)) {
             self::update_license_usage($parentid);
         }
 
+        // Update the timeend for any users using this license.
+        if (!empty($licenserecord->type)) {
+            // This is a subscription license.
+            // Update the enrolment end 
+            if ($enrolments = $DB->get_records_sql("SELECT e.id FROM {enrol} e
+                                                    JOIN {companylicense_courses} clc ON (e.courseid = clc.courseid AND e.status = 0)
+                                                    WHERE clc.licenseid = :licenseid",
+                                                    array('licenseid' => $licenseid))) {
+                foreach ($enrolments as $enrolid) {
+                    $DB->execute("UPDATE {user_enrolments} SET timeend = :timeend
+                                  WHERE enrolid = :enrolid",
+                                  array('timeend' => $licenserecord->expirydate, 'enrolid' => $enrolid->id));
+                }
+            }
+        }
         return true;
     }
 
