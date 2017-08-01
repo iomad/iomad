@@ -327,6 +327,7 @@ $string['nocourses'] = 'There are no courses.';
 $string['nogroups'] = 'There are no course groups';
 $string['nodepartments'] = 'There are no departments defined';
 $string['nolocations'] = 'No teaching locations have been created yet';
+$string['noneselected'] = 'No company selected';
 $string['licensecount'] = 'Licenses allocated:';
 $string['licenseerrors'] = 'Licenses not allocated:';
 $string['licenseleft1'] = 'You have ';

@@ -92,6 +92,7 @@ border-radius: 10px;
 .companyselect .col-md-3 {
     top: 31px;
     left: 3px;
+    width: auto;
 }
 
 .block_iomad_company_admin .nav-tabs {
