@@ -179,11 +179,13 @@ if ($departmentid == $companydepartment->id) {
             $deletebutton = "";
             $editbutton = "";
         }
+
         // Set up the edit buttons.
-        if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $context) ||
+        if ((iomad::has_capability('block/iomad_company_admin:edit_licenses', $context) ||
             iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $context) ||
-            (iomad::has_capability('block/iomad_company_admin:split_my_licenses', $context)) &&
-            $license->used < $license->allocation) {
+            iomad::has_capability('block/iomad_company_admin:split_my_licenses', $context)) &&
+            $license->used < $license->allocation &&
+            $gotchildren) {
             $splitbutton = "<a class='btn btn-primary' href='" . new moodle_url('company_license_edit_form.php',
                            array("parentid" => $license->id)) . "'>$strsplit</a>";
         } else {
@@ -202,15 +204,21 @@ if ($departmentid == $companydepartment->id) {
             }
         }
 
+        // Deal with allocation numbers if a program.
         if (!empty($license->program)) {
             $programstring = get_string('yes');
             $allocation = $license->allocation / count($licensecourses);
             $used = $license->used / count($licensecourses);
-            $validlength = "-";
         } else {
             $programstring = get_string('no');
             $allocation = $license->allocation;
             $used = $license->used;
+        }
+
+        // Deal with valid length if a subscription.
+        if (!empty($license->type)) {
+            $validlength = "-";
+        } else {
             $validlength = $license->validlength;
         }
 
