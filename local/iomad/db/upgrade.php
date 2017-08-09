@@ -1339,6 +1339,35 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2016090503, 'local', 'iomad');
     }
 
+    if ($oldversion < 2016090505) {
+
+        // Define field managerdigestday to be added to company.
+        $table = new xmldb_table('company');
+        $field = new xmldb_field('managerdigestday', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'customcss');
+
+        // Conditionally launch add field managerdigestday.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2016090505, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2016090506) {
+
+        // Define field autoenrol to be added to company_course.
+        $table = new xmldb_table('company_course');
+        $field = new xmldb_field('autoenrol', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'departmentid');
+
+        // Conditionally launch add field autoenrol.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2016090506, 'local', 'iomad');
+    }
 
     return $result;
 }
