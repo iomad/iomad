@@ -114,7 +114,7 @@ class iomad_admin_menu {
                 'url' => 'company_courses_form.php',
                 'cap' => 'block/iomad_company_admin:company_course',
                 'icondefault' => 'assigncourses',
-                'style' => 'course',
+                'style' => 'user',
                 'icon' => 'fa-file-text',
                 'iconsmall' => 'fa-chevron-circle-right'
             ),
@@ -124,7 +124,7 @@ class iomad_admin_menu {
                 'name' => get_string('restrictcapabilities', 'block_iomad_company_admin'),
                 'url' => 'company_capabilities.php',
                 'cap' => 'block/iomad_company_admin:restrict_capabilities',
-                'icondefault' => 'useredit',
+                'icondefault' => 'restrictcapabilities',
                 'style' => 'user',
                 'icon' => 'fa-user',
                 'iconsmall' => 'fa-gear'
@@ -214,7 +214,7 @@ class iomad_admin_menu {
                 'url' => 'company_course_create_form.php',
                 'cap' => 'block/iomad_company_admin:createcourse',
                 'icondefault' => 'createcourse',
-                'style' => 'course',
+                'style' => 'other',
                 'icon' => 'fa-file-text',
                 'iconsmall' => 'fa-plus-square',
             ),
@@ -225,7 +225,7 @@ class iomad_admin_menu {
                 'url' => 'company_courses_form.php',
                 'cap' => 'block/iomad_company_admin:company_course',
                 'icondefault' => 'assigntocompany',
-                'style' => 'course',
+                'style' => 'company',
                 'icon' => 'fa-building',
                 'iconsmall' => 'fa-chevron-circle-left'
             ),
@@ -236,7 +236,7 @@ class iomad_admin_menu {
                 'url' => 'iomad_courses_form.php',
                 'cap' => 'block/iomad_company_admin:managecourses',
                 'icondefault' => 'managecoursesettings',
-                'style' => 'course',
+                'style' => 'other',
                 'icon' => 'fa-file-text',
                 'iconsmall' => 'fa-gear',
             ),
@@ -247,7 +247,7 @@ class iomad_admin_menu {
                 'url' => 'company_course_users_form.php',
                 'cap' => 'block/iomad_company_admin:company_course_users',
                 'icondefault' => 'userenrolements',
-                'style' => 'course',
+                'style' => 'user',
                 'icon' => 'fa-file-text',
                 'iconsmall' => 'fa-user',
             ),
@@ -258,7 +258,7 @@ class iomad_admin_menu {
                 'url' => 'company_groups_create_form.php',
                 'cap' => 'block/iomad_company_admin:edit_groups',
                 'icondefault' => 'groupsedit',
-                'style' => 'group',
+                'style' => 'user',
                 'icon' => 'fa-group',
                 'iconsmall' => 'fa-gear',
             ),
@@ -269,7 +269,7 @@ class iomad_admin_menu {
                 'url' => 'company_groups_users_form.php',
                 'cap' => 'block/iomad_company_admin:assign_groups',
                 'icondefault' => 'groupsassign',
-                'style' => 'group',
+                'style' => 'user',
                 'icon' => 'fa-group',
                 'iconsmall' => 'fa-plus-square',
             ),
@@ -280,7 +280,7 @@ class iomad_admin_menu {
                 'url' => 'classroom_list.php',
                 'cap' => 'block/iomad_company_admin:classrooms',
                 'icondefault' => 'teachinglocations',
-                'style' => 'company',
+                'style' => 'other',
                 'icon' => 'fa-map-marker',
                 'iconsmall' => 'fa-gear',
             ));
@@ -291,7 +291,7 @@ class iomad_admin_menu {
                 'url' => 'company_license_list.php',
                 'cap' => 'block/iomad_company_admin:edit_my_licenses',
                 'icondefault' => 'licensemanagement',
-                'style' => 'license',
+                'style' => 'other',
                 'icon' => 'fa-legal',
                 'iconsmall' => 'fa-gear',
             );
@@ -302,7 +302,7 @@ class iomad_admin_menu {
                 'url' => 'company_license_users_form.php',
                 'cap' => 'block/iomad_company_admin:allocate_licenses',
                 'icondefault' => 'userlicenseallocations',
-                'style' => 'license',
+                'style' => 'other',
                 'icon' => 'fa-legal',
                 'iconsmall' => 'fa-user'
             );
@@ -314,7 +314,7 @@ class iomad_admin_menu {
             'url' => '/local/email/template_list.php',
             'cap' => 'local/email:list',
             'icondefault' => 'emailtemplates',
-            'style' => 'company',
+            'style' => 'other',
             'icon' => 'fa-inbox',
             'iconsmall' => 'fa-gear'
         );
@@ -326,7 +326,7 @@ class iomad_admin_menu {
             'url' => '/blocks/iomad_commerce/courselist.php',
             'cap' => 'block/iomad_commerce:admin_view',
             'icondefault' => 'courses',
-            'style' => 'ecomm',
+            'style' => 'other',
             'icon' => 'fa-file-text',
             'iconsmall' => 'fa-money'
         );
@@ -337,7 +337,7 @@ class iomad_admin_menu {
             'url' => '/blocks/iomad_commerce/orderlist.php',
             'cap' => 'block/iomad_commerce:admin_view',
             'icondefault' => 'orders',
-            'style' => 'ecomm',
+            'style' => 'other',
             'icon' => 'fa-truck',
             'iconsmall' => 'fa-eye'
         );
@@ -349,7 +349,7 @@ class iomad_admin_menu {
             'url' => '/blocks/iomad_company_admin/company_competency_frameworks_form.php',
             'cap' => 'block/iomad_company_admin:company_framework',
             'icondefault' => 'assigntocompany',
-            'style' => 'competency',
+            'style' => 'company',
             'icon' => 'fa-list',
             'iconsmall' => 'fa-chevron-circle-right'
         );
@@ -360,7 +360,7 @@ class iomad_admin_menu {
             'url' => '/blocks/iomad_company_admin/iomad_frameworks_form.php',
             'cap' => 'block/iomad_company_admin:manageframeworks',
             'icondefault' => 'managecoursesettings',
-            'style' => 'competency',
+            'style' => 'other',
             'icon' => 'fa-list',
             'iconsmall' => 'fa-cog'
         );
@@ -371,7 +371,7 @@ class iomad_admin_menu {
             'url' => '/admin/tool/lp/competencyframeworks.php?pagecontextid=1',
             'cap' => 'block/iomad_company_admin:competencyview',
             'icondefault' => 'courses',
-            'style' => 'competency',
+            'style' => 'other',
             'icon' => 'fa-list',
             'iconsmall' => 'fa-eye'
         );
@@ -382,7 +382,7 @@ class iomad_admin_menu {
             'url' => '/blocks/iomad_company_admin/company_competency_templates_form.php',
             'cap' => 'block/iomad_company_admin:company_template',
             'icondefault' => 'assigntocompany',
-            'style' => 'competency',
+            'style' => 'company',
             'icon' => 'fa-cubes',
             'iconsmall' => 'fa-chevron-circle-right'
         );
@@ -393,7 +393,7 @@ class iomad_admin_menu {
             'url' => '/blocks/iomad_company_admin/iomad_templates_form.php',
             'cap' => 'block/iomad_company_admin:managetemplates',
             'icondefault' => 'managecoursesettings',
-            'style' => 'competency',
+            'style' => 'other',
             'icon' => 'fa-cubes',
             'iconsmall' => 'fa-cog'
         );
@@ -404,7 +404,7 @@ class iomad_admin_menu {
             'url' => '/admin/tool/lp/learningplans.php?pagecontextid=1',
             'cap' => 'block/iomad_company_admin:templateview',
             'icondefault' => 'userenrolements',
-            'style' => 'competency',
+            'style' => 'other',
             'icon' => 'fa-cubes',
             'iconsmall' => 'fa-eye'
         );
