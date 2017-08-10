@@ -35,7 +35,8 @@
         <FIELD NAME="managernotify" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="send emails to manager 0 = never 1 = when there is a reminder 2 = when the user completes a course 3 - both of the above"/>
         <FIELD NAME="parentid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="ID of parent company"/>
         <FIELD NAME="ecommerce" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Does the company support eccommerce?"/>
-        <FIELD NAME="custommenuitems" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Per company custom menu items which overwrite the site ones if defined."/>
+        <FIELD NAME="custommenuitems" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Per company custom menu items which overwrite the site ones if defined."/>
+        <FIELD NAME="managerdigestday" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Day of the week when a manager gets the digest emails."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -47,6 +48,7 @@
         <FIELD NAME="companyid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="departmentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="autoenrol" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
