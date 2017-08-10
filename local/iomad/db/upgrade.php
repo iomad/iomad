@@ -1566,5 +1566,20 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2017041717, 'local', 'iomad');
     }
 
+    if ($oldversion < 2017041718) {
+
+        // Define field custommenuitems to be added to company.
+        $table = new xmldb_table('company');
+        $field = new xmldb_field('custommenuitems', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'ecommerce');
+
+        // Conditionally launch add field custommenuitems.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041718, 'local', 'iomad');
+    }
+
     return $result;
 }
