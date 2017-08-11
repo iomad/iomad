@@ -319,7 +319,7 @@ class company_edit_form extends company_moodleform {
             }
 
             // If theme is already set to a real theme, dont show this.
-            if ($this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'iomadbootstrap' || $this->companyrecord->theme == 'iomadboost' || $ischild) {
+            if (strpos($this->companyrecord->theme, 'iomad') || $ischild) {
                 $mform->addElement('HTML', get_string('theoptionsbelow',
                                                       'block_iomad_company_admin'));
                 $mform->addElement('filemanager', 'companylogo',
