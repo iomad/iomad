@@ -199,8 +199,7 @@ class user_edit_form extends company_moodleform {
             $mform->addElement('header', 'licenses', get_string('licenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
                                                    WHERE expirydate >= :timestamp
-                                                   AND companyid = :companyid
-                                                   AND used < allocation",
+                                                   AND companyid = :companyid",
                                                    array('timestamp' => time(),
                                                          'companyid' => $this->selectedcompany));
             $licenses = array('0' => get_string('nolicense', 'block_iomad_company_admin')) + $foundlicenses;
