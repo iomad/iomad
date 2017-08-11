@@ -547,9 +547,10 @@ if ($mform->is_cancelled()) {
         $companydetails = $DB->get_record('company', array('id' => $companyid));
         $companydetails->category = $coursecat->id;
         $DB->update_record('company', $companydetails);
+        $company = new company($companydetails->id);
+
         // Deal with any parent company assignments.
         if (!empty($companydetails->parentid)) {
-            $company = new company($companydetails->id);
             $company->assign_parent_managers($companydetails->parentid);
         }
 
