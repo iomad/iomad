@@ -862,6 +862,7 @@ if ($mform->is_cancelled()) {
 
         if (!empty($licenserecord['program'])) {
             $numlicenses = $numlicenses / count($formdata->licensecourses);
+            $numlicenseerrors = $numlicenseerrors / count($formdata->licensecourses);
         }
 
         $upt->flush();
