@@ -559,6 +559,7 @@ if ($mform->is_cancelled()) {
         if (!empty($companydetails->parentid)) {
             $company->assign_parent_managers($companydetails->parentid);
         }
+        $companylist->param('noticeok', get_string('companycreatedok', 'block_iomad_company_admin'));
 
     } else {
         $data->id = $companyid;
@@ -600,6 +601,7 @@ if ($mform->is_cancelled()) {
         if (company_user::is_company_user()) {
             company_user::reload_company();
         }
+        $companylist->param('noticeok', get_string('companysavedok', 'block_iomad_company_admin'));
     }
 
     // Deal with role templates.
