@@ -204,7 +204,7 @@ class observer {
         $completion->timeenroled = $enrolrec->timestart;
         $completion->timestarted = $comprec->timestarted;
         $completion->timecompleted = $timecompleted;
-        if (!empty(graderec->finalgrade)) {
+        if (!empty($graderec->finalgrade)) {
             $completion->finalscore = $graderec->finalgrade;
         } else {
             $completion->finalscore = 0;
