@@ -2554,6 +2554,9 @@ class company {
             }
         }
 
+        // Remove the user from any company.
+        $DB->delete_records('company_users', array('userid' => $userid));
+
         return true;
     }
 
