@@ -325,8 +325,6 @@ class company_edit_form extends company_moodleform {
             }
 
             // If theme is already set to a real theme, dont show this.
-echo $this->companyrecord->theme ."<br>";
-echo preg_match('/iomad/', $this->companyrecord->theme)."<br>";
             if ( preg_match('/iomad/', $this->companyrecord->theme) || $ischild) {
                 $mform->addElement('HTML', get_string('theoptionsbelow',
                                                       'block_iomad_company_admin'));
