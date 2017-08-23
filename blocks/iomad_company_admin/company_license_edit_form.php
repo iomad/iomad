@@ -457,10 +457,12 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         redirect(new moodle_url('/blocks/iomad_company_admin/company_license_list.php'));
     }
 
-    $licenseinfo = new stdclass();
-    $licenseinfo->expirydate = strtotime('+ 1 year');
-
-    $mform->set_data($licenseinfo);
+    if (empty($licenseinfo)) {
+        $licenseinfo = new stdclass();
+        $licenseinfo->expirydate = strtotime('+ 1 year');
+    
+        $mform->set_data($licenseinfo);
+    }
 
     // Display the form.
     echo $OUTPUT->header();
