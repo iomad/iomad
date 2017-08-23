@@ -127,6 +127,7 @@ $strinvalidpasswordpolicy   = get_string('invalidpasswordpolicy', 'error');
 $errorstr                   = get_string('error');
 
 $returnurl = $CFG->wwwroot."/blocks/iomad_company_admin/uploaduser.php";
+$cancelurl = new moodle_url($CFG->wwwroot."/local/iomad_dashboard/index.php");
 $bulknurl  = $CFG->wwwroot.'/'.$CFG->admin.'/user/user_bulk.php';
 
 $today = time();
@@ -151,6 +152,10 @@ if ($proffields = $DB->get_records('user_info_field')) {
 }
 if (empty($iid)) {
     $mform = new admin_uploaduser_form1();
+    // Go back to the dashboard if cancelled.
+    if ($mform->is_cancelled()) {
+        redirect($cancelurl);
+    }
 
     if ($formdata = $mform->get_data()) {
         $iid = csv_import_reader::get_new_iid('uploaduser');
@@ -200,15 +205,15 @@ $mform->set_data(array('iid' => $iid,
 // If a file has been uploaded, then process it.
 if ($mform->is_cancelled()) {
     $cir->cleanup(true);
-    redirect($returnurl);
+    redirect($cancelurl);
 
 } else if ($formdata = $mform->get_data()) {
+    // Another cancelled check.
+    if (!empty($formdata->cancel) && $formdata->cancel == 'Cancel') {
+        $cir->cleanup(true);
+        redirect($cancelurl);
+    }
     if (!empty($formdata->submitbutton)) {
-        // Another cancelled check.
-        if (!empty($formdata->cancel) && $formdata->cancel == 'Cancel') {
-            $cir->cleanup(true);
-            redirect($returnurl);
-        }
         // Print the header.
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('uploadusersresult', 'tool_uploaduser'));
@@ -1107,6 +1112,7 @@ if (in_array('error', $headings)) {
     }
     $mform = new admin_uploaduser_form3();
     $mform->set_data(array('uutype' => $uploadtype));
+
 } else if (empty($contents)) {
     $mform = new admin_uploaduser_form3();
     $mform->set_data(array('uutype' => $uploadtype));
@@ -1186,7 +1192,6 @@ Y.on('change', submit_form, '#licenseidselector');
  }
 </script>
 <?php
-
 
 $mform->display();
 echo $OUTPUT->footer();

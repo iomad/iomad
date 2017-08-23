@@ -57,7 +57,7 @@ class admin_uploaduser_form1 extends company_moodleform {
                          UU_UPDATE     => get_string('uuoptype_update', 'tool_uploaduser'));
         $mform->addElement('select', 'uutype', get_string('uuoptype', 'tool_uploaduser'), $choices);
 
-        $this->add_action_buttons(false, get_string('uploadusers', 'tool_uploaduser'));
+        $this->add_action_buttons(true, get_string('uploadusers', 'tool_uploaduser'));
     }
 }
 
