@@ -1067,7 +1067,7 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:edit_licenses', $context);
 
         // Array to return newly created records
-        $companyinfo = array();
+        $licenseinfo = array();
 
         foreach ($params['licenses'] as $license) {
             // Create the License record
