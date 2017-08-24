@@ -127,6 +127,7 @@ $strinvalidpasswordpolicy   = get_string('invalidpasswordpolicy', 'error');
 $errorstr                   = get_string('error');
 
 $returnurl = $CFG->wwwroot."/blocks/iomad_company_admin/uploaduser.php";
+$cancelurl = new moodle_url($CFG->wwwroot."/local/iomad_dashboard/index.php");
 $bulknurl  = $CFG->wwwroot.'/'.$CFG->admin.'/user/user_bulk.php';
 
 $today = time();
@@ -151,6 +152,10 @@ if ($proffields = $DB->get_records('user_info_field')) {
 }
 if (empty($iid)) {
     $mform = new admin_uploaduser_form1();
+    // Go back to the dashboard if cancelled.
+    if ($mform->is_cancelled()) {
+        redirect($cancelurl);
+    }
 
     if ($formdata = $mform->get_data()) {
         $iid = csv_import_reader::get_new_iid('uploaduser');
@@ -200,15 +205,15 @@ $mform->set_data(array('iid' => $iid,
 // If a file has been uploaded, then process it.
 if ($mform->is_cancelled()) {
     $cir->cleanup(true);
-    redirect($returnurl);
+    redirect($cancelurl);
 
 } else if ($formdata = $mform->get_data()) {
+    // Another cancelled check.
+    if (!empty($formdata->cancel) && $formdata->cancel == 'Cancel') {
+        $cir->cleanup(true);
+        redirect($cancelurl);
+    }
     if (!empty($formdata->submitbutton)) {
-        // Another cancelled check.
-        if (!empty($formdata->cancel) && $formdata->cancel == 'Cancel') {
-            $cir->cleanup(true);
-            redirect($returnurl);
-        }
         // Print the header.
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('uploadusersresult', 'tool_uploaduser'));
@@ -747,9 +752,21 @@ if ($mform->is_cancelled()) {
                 // Add the user to the company
                 $company->assign_user_to_company($user->id);
     
-                // Add the user to the company default hierarchy level.
-                company::assign_user_to_department($formdata->userdepartment, $user->id);
-    
+                // Do we have a department in the file?
+                if ($department = $DB->get_record('department', array('company' => $company->id,
+                                                                      'shortname' => $user->department))) {
+                    // Make sure the user can manage this department.
+                    if (company::can_manage_department($department->id)) {
+                        company::assign_user_to_department($department->id, $user->id);
+
+                    } else {
+                        // They get the one from the form.
+                        company::assign_user_to_department($formdata->userdepartment, $user->id);
+                    }
+                } else {
+                    company::assign_user_to_department($formdata->userdepartment, $user->id);
+                }
+
                 \core\event\user_created::create_from_userid($user->id)->trigger();
     
                 if (!empty($CFG->iomad_email_senderisreal)) {
@@ -803,19 +820,23 @@ if ($mform->is_cancelled()) {
                 company_user::enrol($user, array_keys($formdata->selectedcourses) );
             }
 
+            // Deal with program license.
+            if (!empty($formdata->licenseid) && empty($formdata->licensecourses)) {
+                if ($DB->get_record('companylicense', array('id' => $formdata->licenseid, 'program' => 1))) {
+                    // This is a program of courses.  Set them!
+                    $formdata->licensecourses = $DB->get_records_sql_menu("SELECT c.id, clc.courseid FROM {companylicense_courses} clc
+                                                                          JOIN {course} c ON (clc.courseid = c.id
+                                                                          AND clc.licenseid = :licenseid)",
+                                                                          array('licenseid' => $formdata->licenseid));
+                }
+            }
             // Assign and licenses.
             if (!empty($formdata->licensecourses)) {
+                $timestamp = time();
                 $licenserecord = (array) $DB->get_record('companylicense', array('id' => $formdata->licenseid));
                 $count = $licenserecord['used'];
                 $numberoflicenses = $licenserecord['allocation'];
                 foreach ($formdata->licensecourses as $licensecourse) {
-                    if ($count >= $numberoflicenses) {
-                        // Set the used amount.
-                        $licenserecord['used'] = $count;
-                        $DB->update_record('companylicense', $licenserecord);
-                        $numlicenseerrors++;
-                        continue;
-                    }
                     if ($DB->get_record_sql("SELECT id FROM {companylicense_users}
                                              WHERE licenseid = :licenseid
                                              AND licensecourseid = :licensecourseid
@@ -838,24 +859,29 @@ if ($mform->is_cancelled()) {
                                                   'licensecourseid' => $licensecourse,
                                                   'issuedate' => time()));
                     }
-                    // Create an email event.
-                    $license = new stdclass();
-                    $license->length = $licenserecord['validlength'];
-                    $license->valid = date($CFG->iomad_date_format, $licenserecord['expirydate']);
-                    EmailTemplate::send('license_allocated', array('course' => $licensecourse,
-                                                                   'user' => $user,
-                                                                   'license' => $license));
+
+                    // Create an event.
+                    $eventother = array('licenseid' => $formdata->licenseid,
+                                    'duedate' => $timestamp);
+                    $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($licensecourse),
+                                                                                                  'objectid' => $formdata->licenseid,
+                                                                                                  'courseid' => $licensecourse,
+                                                                                                  'userid' => $user->id,
+                                                                                                  'other' => $eventother));
+                    $event->trigger();
                 }
-        
-                // Set the used amount for the license.
-                $licenserecord['used'] = $DB->count_records('companylicense_users', array('licenseid' => $formdata->licenseid));
-                $DB->update_record('companylicense', $licenserecord);
             }
 
 
             // If user was set to have password generated, generate it now, so that it can be downloaded.
             company_user::generate_temporary_password($user, $formdata->sendnewpasswordemails);
         }
+
+        if (!empty($licenserecord['program'])) {
+            $numlicenses = $numlicenses / count($formdata->licensecourses);
+            $numlicenseerrors = $numlicenseerrors / count($formdata->licensecourses);
+        }
+
         $upt->flush();
         $upt->close(); // Close table.
     
@@ -1086,6 +1112,7 @@ if (in_array('error', $headings)) {
     }
     $mform = new admin_uploaduser_form3();
     $mform->set_data(array('uutype' => $uploadtype));
+
 } else if (empty($contents)) {
     $mform = new admin_uploaduser_form3();
     $mform->set_data(array('uutype' => $uploadtype));
@@ -1154,10 +1181,17 @@ Y.on('change', submit_form, '#licenseidselector');
             $("#licensedetails").html(response);
         }
     });
+    $.ajax({
+        type: "GET",
+        url: "<?php echo $CFG->wwwroot; ?>/blocks/iomad_company_admin/js/company_user_create_form-license-courses.ajax.php?licenseid="+nValue,
+        datatype: "HTML",
+        success: function(response){
+            $("#licensecoursescontainer")[0].style.display = response;
+        }
+    });
  }
 </script>
 <?php
-
 
 $mform->display();
 echo $OUTPUT->footer();
@@ -1179,7 +1213,8 @@ class uu_progress_tracker {
                             'password',
                             'auth',
                             'enrolments',
-                            'deleted');
+                            'deleted',
+                            'department');
 
     public function __construct() {
     }
@@ -1200,6 +1235,7 @@ class uu_progress_tracker {
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('authentication').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('enrolments', 'enrol').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('delete').'</th>';
+        echo '<th class="header c'.$ci++.'" scope="col">'.get_string('department', 'block_iomad_company_admin').'</th>';
         echo '</tr>';
         $this->_row = null;
     }

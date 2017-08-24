@@ -111,6 +111,12 @@ $capabilities = array(
         'contextlevel' => CONTEXT_BLOCK
     ),
 
+    'block/iomad_company_admin:company_edit_appearance' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK
+    ),
+
     'block/iomad_company_admin:company_delete' => array(
 
         'captype' => 'write',
@@ -218,6 +224,18 @@ $capabilities = array(
     ),
 
     'block/iomad_company_admin:edit_departments' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+    ),
+
+    'block/iomad_company_admin:assign_groups' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+    ),
+
+    'block/iomad_company_admin:edit_groups' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,

@@ -1483,6 +1483,118 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2017041711, 'local', 'iomad');
     }
 
+    if ($oldversion < 2017041713) {
+
+        // Define field program to be added to companylicense.
+        $table = new xmldb_table('companylicense');
+        $field = new xmldb_field('program', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'type');
+
+        // Conditionally launch add field program.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041713, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2017041714) {
+
+        // Define field groupid to be added to companylicense_users.
+        $table = new xmldb_table('companylicense_users');
+        $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'issuedate');
+
+        // Conditionally launch add field groupid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041714, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2017041715) {
+
+        // Define field program to be added to companylicense.
+        $table = new xmldb_table('companylicense');
+        $field = new xmldb_field('program', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'type');
+
+        // Conditionally launch add field program.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041715, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2017041717) {
+
+        // Define table company_role_templates to be created.
+        $table = new xmldb_table('company_role_templates');
+
+        // Adding fields to table company_role_templates.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table company_role_templates.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for company_role_templates.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table company_role_templates_caps to be created.
+        $table = new xmldb_table('company_role_templates_caps');
+
+        // Adding fields to table company_role_templates_caps.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('templateid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('roleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('capability', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table company_role_templates_caps.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for company_role_templates_caps.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041717, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2017041719) {
+
+        // Define field custommenuitems to be added to company.
+        $table = new xmldb_table('company');
+        $field = new xmldb_field('custommenuitems', XMLDB_TYPE_TEXT, null, null, null, null, null, 'ecommerce');
+
+        // Conditionally launch add field custommenuitems.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041719, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2017041720) {
+
+        // Define field autoenrol to be added to company_course.
+        $table = new xmldb_table('company_course');
+        $field = new xmldb_field('autoenrol', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'departmentid');
+
+        // Conditionally launch add field autoenrol.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017041720, 'local', 'iomad');
+    }
 
     return $result;
 }

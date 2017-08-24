@@ -227,23 +227,27 @@ class enrol_license_plugin extends enrol_plugin {
 
                 // Enrol the user in the course.
                 $timestart = time();
-                // Set the timeend to be time start + the valid length for the license in days.
-                $timeend = $timestart + ($license->validlength * 24 * 60 * 60 );
+
+                if (empty($license->type)) {
+                    // Set the timeend to be time start + the valid length for the license in days.
+                    $timeend = $timestart + ($license->validlength * 24 * 60 * 60 );
+                } else {
+                    // Set the timeend to be when the license runs out.
+                    $timeend = $license->expirydate;
+                }
 
                 $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
 
-                // Check if it is a shared course.
-                if ($courseinfo = $DB->get_record('iomad_courses', array('courseid' => $instance->courseid))) {
-                    if (!empty($courseinfo->shared)) {
-                        // We have a shared course.
-                        company::add_user_to_shared_course($instance->courseid, $USER->id, $license->companyid);
-                    }
+                // Get the userlicense record.
+                $userlicense = $DB->get_record('companylicense_users', array('id' => $license->id));
+
+                // Add the user to the appropriate course group.
+                if (!$DB->get_record('course', array('id' => $instance->courseid, 'groupmode' => 0))) {
+                    company::add_user_to_shared_course($instance->courseid, $USER->id, $license->companyid, $userlicense->groupid);
                 }
 
                 // Update the userlicense record to mark it as in use.
-                $userlicense = (array) $DB->get_record('companylicense_users', array('id' => $license->id));
-                $userlicense['isusing'] = 1;
-                $DB->update_record('companylicense_users', $userlicense);
+                $DB->set_field('companylicense_users', 'isusing', 1, array('id' => $userlicense->id));
 
                 // Send welcome.
                 if ($instance->customint4) {
@@ -281,47 +285,48 @@ class enrol_license_plugin extends enrol_plugin {
     }
 
     /**
-     * Send welcome email to specified user
+     * Send welcome email to specified user.
      *
-     * @param object $instance
-     * @param object $user user record
+     * @param stdClass $instance
+     * @param stdClass $user user record
      * @return void
      */
     protected function email_welcome_message($instance, $user) {
         global $CFG, $DB;
 
-        $course = $DB->get_record('course', array('id' => $instance->courseid), '*', MUST_EXIST);
+        $course = $DB->get_record('course', array('id'=>$instance->courseid), '*', MUST_EXIST);
+        $context = context_course::instance($course->id);
 
         $a = new stdClass();
-        $a->coursename = format_string($course->fullname);
+        $a->coursename = format_string($course->fullname, true, array('context'=>$context));
         $a->profileurl = "$CFG->wwwroot/user/view.php?id=$user->id&course=$course->id";
-        $a->userurl = "$CFG->wwwroot/user/view.php?id=$user->id";
-        $a->courseurl = "$CFG->wwwroot/course/view.php?id=$course->id";
 
         if (trim($instance->customtext1) !== '') {
             $message = $instance->customtext1;
-            $message = str_replace('{$a->coursename}', $a->coursename, $message);
-            $message = str_replace('{$a->profileurl}', $a->profileurl, $message);
+            $key = array('{$a->coursename}', '{$a->profileurl}', '{$a->fullname}', '{$a->email}');
+            $value = array($a->coursename, $a->profileurl, fullname($user), $user->email);
+            $message = str_replace($key, $value, $message);
+            if (strpos($message, '<') === false) {
+                // Plain text only.
+                $messagetext = $message;
+                $messagehtml = text_to_html($messagetext, null, false, true);
+            } else {
+                // This is most probably the tag/newline soup known as FORMAT_MOODLE.
+                $messagehtml = format_text($message, FORMAT_MOODLE, array('context'=>$context, 'para'=>false, 'newlines'=>true, 'filter'=>true));
+                $messagetext = html_to_text($messagehtml);
+            }
         } else {
-            $message = get_string('welcometocoursetext', 'enrol_license', $a);
+            $messagetext = get_string('welcometocoursetext', 'enrol_license', $a);
+            $messagehtml = text_to_html($messagetext, null, false, true);
         }
 
-        $subject = get_string('welcometocourse', 'enrol_license', format_string($course->fullname));
+        $subject = get_string('welcometocourse', 'enrol_self', format_string($course->fullname, true, array('context'=>$context)));
 
-        $context = context_course::instance($course->id);
-        $rusers = array();
-        if (!empty($CFG->coursecontact)) {
-            $croles = explode(', ', $CFG->coursecontact);
-            $rusers = get_role_users($croles, $context, true, '', 'r.sortorder ASC, u.lastname ASC');
-        }
-        if ($rusers) {
-            $contact = reset($rusers);
-        } else {
-            $contact = get_admin();
-        }
+        $sendoption = $instance->customint4;
+        $contact = $this->get_welcome_email_contact($sendoption, $context);
 
         // Directly emailing welcome message rather than using messaging.
-        email_to_user($user, $contact, $subject, $message);
+        email_to_user($user, $contact, $subject, $messagetext, $messagehtml);
     }
 
     /**
@@ -383,7 +388,7 @@ class enrol_license_plugin extends enrol_plugin {
         // Deal with users who are past enrolment time/ completed the course.
         $runtime = time();
         if ($userids = $DB->get_records_sql("SELECT ue.id, ue.userid, ue.enrolid, e.courseid
-                                             FROM mdl_user_enrolments ue, mdl_enrol e
+                                             FROM {user_enrolments} ue, {enrol} e
                                              WHERE e.enrol='license'
                                              AND e.id = ue.enrolid
                                              AND ue.timeend < :time",
@@ -452,6 +457,52 @@ class enrol_license_plugin extends enrol_plugin {
         }
 
         return true;
+    }
+
+    /**
+     * Get the "from" contact which the email will be sent from.
+     *
+     * @param int $sendoption send email from constant ENROL_SEND_EMAIL_FROM_*
+     * @param $context context where the user will be fetched
+     * @return mixed|stdClass the contact user object.
+     */
+    public function get_welcome_email_contact($sendoption, $context) {
+        global $CFG;
+
+        $contact = null;
+        // Send as the first user assigned as the course contact.
+        if ($sendoption == ENROL_SEND_EMAIL_FROM_COURSE_CONTACT) {
+            $rusers = array();
+            if (!empty($CFG->coursecontact)) {
+                $croles = explode(',', $CFG->coursecontact);
+                list($sort, $sortparams) = users_order_by_sql('u');
+                // We only use the first user.
+                $i = 0;
+                do {
+                    $rusers = get_role_users($croles[$i], $context, true, '',
+                        'r.sortorder ASC, ' . $sort, null, '', '', '', '', $sortparams);
+                    $i++;
+                } while (empty($rusers) && !empty($croles[$i]));
+            }
+            if ($rusers) {
+                $contact = array_values($rusers)[0];
+            }
+        } else if ($sendoption == ENROL_SEND_EMAIL_FROM_KEY_HOLDER) {
+            // Send as the first user with enrol/self:holdkey capability assigned in the course.
+            list($sort) = users_order_by_sql('u');
+            $keyholders = get_users_by_capability($context, 'enrol/self:holdkey', 'u.*', $sort);
+            if (!empty($keyholders)) {
+                $contact = array_values($keyholders)[0];
+            }
+        }
+
+        // If send welcome email option is set to no reply or if none of the previous options have
+        // returned a contact send welcome message as noreplyuser.
+        if ($sendoption == ENROL_SEND_EMAIL_FROM_NOREPLY || empty($contact)) {
+            $contact = core_user::get_noreply_user();
+        }
+
+        return $contact;
     }
 }
 

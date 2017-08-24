@@ -209,14 +209,13 @@ class assign_grading_table extends table_sql implements renderable {
                       JOIN {groups_members} gm ON gm.groupid = g.id
                      WHERE go.assignid = :assignmentid6
                   )
-                ) AS merged
+                ) merged
                 GROUP BY merged.userid
               ) priority ON priority.userid = u.id
 
             JOIN (
               (SELECT 9999999 AS priority,
                       u.id AS userid,
-
                       a.allowsubmissionsfromdate,
                       a.duedate,
                       a.cutoffdate
@@ -226,7 +225,6 @@ class assign_grading_table extends table_sql implements renderable {
               UNION
               (SELECT 0 AS priority,
                       uo.userid,
-
                       uo.allowsubmissionsfromdate,
                       uo.duedate,
                       uo.cutoffdate
@@ -236,7 +234,6 @@ class assign_grading_table extends table_sql implements renderable {
               UNION
               (SELECT go.sortorder AS priority,
                       gm.userid,
-
                       go.allowsubmissionsfromdate,
                       go.duedate,
                       go.cutoffdate
@@ -246,7 +243,7 @@ class assign_grading_table extends table_sql implements renderable {
                 WHERE go.assignid = :assignmentid9
               )
 
-            ) AS effective ON effective.priority = priority.priority AND effective.userid = priority.userid ';
+            ) effective ON effective.priority = priority.priority AND effective.userid = priority.userid ';
         }
 
         if (!empty($this->assignment->get_instance()->blindmarking)) {
@@ -646,8 +643,9 @@ class assign_grading_table extends table_sql implements renderable {
         static $markers = null;
         static $markerlist = array();
         if ($markers === null) {
-            list($sort, $params) = users_order_by_sql();
-            $markers = get_users_by_capability($this->assignment->get_context(), 'mod/assign:grade', '', $sort);
+            list($sort, $params) = users_order_by_sql('u');
+            // Only enrolled users could be assigned as potential markers.
+            $markers = get_enrolled_users($this->assignment->get_context(), 'mod/assign:grade', 0, 'u.*', $sort);
             $markerlist[0] = get_string('choosemarker', 'assign');
             $viewfullnames = has_capability('moodle/site:viewfullnames', $this->assignment->get_context());
             foreach ($markers as $marker) {

@@ -63,3 +63,4 @@ if ($hassiteconfig) {
                          'M d, y, ' => 'Mon n, YYYY');
     $settings->add(new admin_setting_configselect('iomad_date_format', get_string('dateformat', 'local_iomad_settings'), '', 'Y-m-d', $dateformats));
 }
+

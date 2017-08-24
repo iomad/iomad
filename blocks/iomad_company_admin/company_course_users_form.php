@@ -28,11 +28,14 @@ class company_ccu_courses_form extends company_moodleform {
     protected $subhierarchieslist = null;
     protected $companydepartment = 0;
     protected $selectedcourse = 0;
+    protected $company = null;
+    protected $courses = array();
 
 
     public function __construct($actionurl, $context, $companyid, $departmentid, $selectedcourse, $parentlevel) {
-        global $USER;
+        global $DB, $USER;
         $this->selectedcompany = $companyid;
+        $this->company = new company($companyid);
         $this->context = $context;
         $this->departmentid = $departmentid;
         $this->selectedcourse = $selectedcourse;
@@ -43,10 +46,11 @@ class company_ccu_courses_form extends company_moodleform {
                          'departmentid' => $departmentid,
                          'subdepartments' => $this->subhierarchieslist,
                          'parentdepartmentid' => $parentlevel,
-                         'licenses' => false, 'shared' => false);
+                         'licenses' => false,
+                         'shared' => false);
         $this->currentcourses = new current_company_course_selector('currentcourses', $options);
         $this->currentcourses->set_rows(1);
-
+        $this->courses = $this->company->get_menu_courses(true, true);
         parent::__construct($actionurl);
     }
 
@@ -63,19 +67,20 @@ class company_ccu_courses_form extends company_moodleform {
         // function so that when the currentcourses or potentialcourses get changed in the process
         // function, the changes get displayed, rather than the lists as they are before processing.
 
-        $courses = $this->currentcourses->find_courses('');
-        if ($courses) {
-            $mform->addElement('html', "<hr /><div class='fitem'><div class='fitemtitle'>" .
-                                get_string('selectenrolmentcourse', 'block_iomad_company_admin') .
-                                "</div><div class='felement'>");
-            $mform->addElement('html', $this->currentcourses->display(true));
-            $mform->addElement('html', "</div></div>");
+        //$courses = $this->currentcourses->find_courses('');
+        if ($this->courses) {
 
-            $this->add_action_buttons(true,
-                              get_string('enrolunenrollusers', 'block_iomad_company_admin'));
+        // We are going to cheat and be lazy here.
+            $autooptions = array('setmultiple' => false,
+                                 'noselectionstring' => get_string('selectenrolmentcourse', 'block_iomad_company_admin'),
+                                 'onchange' => 'this.form.submit()');
+            $mform->addElement('autocomplete', 'selectedcourse', get_string('selectenrolmentcourse', 'block_iomad_company_admin'), $this->courses, $autooptions);
         } else {
             $mform->addElement('html', '<div class="alert alert-warning">' . get_string('nocourses', 'block_iomad_company_admin') . '</div>');
         }
+
+        // Disable the onchange popup.
+        $mform->disable_form_change_checker();
     }
 
     public function get_data() {
@@ -92,6 +97,7 @@ class company_ccu_courses_form extends company_moodleform {
 class company_course_users_form extends moodleform {
     protected $context = null;
     protected $selectedcompany = 0;
+    protected $selectedcourse = 0;
     protected $potentialusers = null;
     protected $currentusers = null;
     protected $course = null;
@@ -99,12 +105,16 @@ class company_course_users_form extends moodleform {
     protected $companydepartment = 0;
     protected $subhierarchieslist = null;
     protected $parentlevel = null;
+    protected $groups = null;
+    protected $company = null;
 
-    public function __construct($actionurl, $context, $companyid, $departmentid) {
-        global $USER;
+    public function __construct($actionurl, $context, $companyid, $departmentid, $courseid) {
+        global $USER, $DB;
         $this->selectedcompany = $companyid;
+        $this->selectedcourse = $courseid;
         $this->context = $context;
         $company = new company($this->selectedcompany);
+        $this->company = $company;
         $this->parentlevel = company::get_company_parentnode($company->id);
         $this->companydepartment = $this->parentlevel->id;
         $context = context_system::instance();
@@ -123,26 +133,38 @@ class company_course_users_form extends moodleform {
             $this->departmentid = $departmentid;
         }
 
+        $this->course = $DB->get_record('course', array('id' => $courseid));
+
         parent::__construct($actionurl);
     }
 
     public function set_course($courses) {
-        $keys = array_keys($courses);
-        $this->course = $courses[$keys[0]];
+        global $DB;
+
+        if (!$this->groups = $DB->get_records_sql_menu("SELECT g.id, g.description
+                                                   FROM {groups} g
+                                                   JOIN {company_course_groups} ccg
+                                                   ON (g.id = ccg.groupid)
+                                                   WHERE ccg.companyid = :companyid
+                                                   AND ccg.courseid = :courseid",
+                                                   array('companyid' => $this->selectedcompany,
+                                                         'courseid' => $this->course->id))) {
+            $this->groups = array($this->company->get_name());
+        }
     }
 
     public function create_user_selectors() {
-        if (!empty ($this->course->id)) {
+        if (!empty ($this->course)) {
             $options = array('context' => $this->context,
                              'companyid' => $this->selectedcompany,
                              'courseid' => $this->course->id,
                              'departmentid' => $this->departmentid,
                              'subdepartments' => $this->subhierarchieslist,
                              'parentdepartmentid' => $this->parentlevel);
-            if (! $this->potentialusers) {
+            if (empty($this->potentialusers)) {
                 $this->potentialusers = new potential_company_course_user_selector('potentialcourseusers', $options);
             }
-            if (! $this->currentusers) {
+            if (empty($this->currentusers)) {
                 $this->currentusers = new current_company_course_user_selector('currentlyenrolledusers', $options);
             }
         } else {
@@ -154,14 +176,18 @@ class company_course_users_form extends moodleform {
     public function definition() {
         $this->_form->addElement('hidden', 'companyid', $this->selectedcompany);
         $this->_form->addElement('hidden', 'departmentid', $this->departmentid);
+        $this->_form->addElement('hidden', 'selectedcourse', $this->selectedcourse);
         $this->_form->setType('companyid', PARAM_INT);
         $this->_form->setType('departmentid', PARAM_INT);
+        $this->_form->setType('selectedcourse', PARAM_INT);
     }
 
     public function definition_after_data() {
+        global $DB;
+
         $mform =& $this->_form;
 
-        if (!empty($this->course->id)) {
+        if (!empty($this->course)) {
             $this->_form->addElement('hidden', 'courseid', $this->course->id);
         }
         $this->create_user_selectors();
@@ -175,13 +201,24 @@ class company_course_users_form extends moodleform {
             die('No course selected.');
         }
 
+        $course = $DB->get_record('course', array('id' => $this->course->id));
         $company = new company($this->selectedcompany);
         $mform->addElement('header', 'header',
                             get_string('company_users_for', 'block_iomad_company_admin',
-                            $this->course->fullname ));
+                            $course->fullname ));
 
         $mform->addElement('date_time_selector', 'due', get_string('senddate', 'block_iomad_company_admin'));
         $mform->addHelpButton('due', 'senddate', 'block_iomad_company_admin');
+
+        if ($DB->get_record('iomad_courses', array('courseid' => $this->course->id, 'shared' => 0))) {
+            $mform->addElement('hidden', 'groupid', 0);
+            $mform->setType('groupid', PARAM_INT);
+        } else {
+            $mform->addElement('autocomplete', 'groupid', get_string('group'),
+                               $this->groups,
+                               array('setmultiple' => false,
+                                     'onchange' => 'this.form.submit()'));
+        }
 
         $mform->addElement('html', '<table summary="" class="companycourseuserstable'.
                                    ' addremovetable generaltable generalbox'.
@@ -195,7 +232,7 @@ class company_course_users_form extends moodleform {
               </td>
               <td id="buttonscell">
                   <div id="addcontrols">
-                      <input name="add" id="add" type="submit" value="&#x25C4;&nbsp;' .
+                      <input name="add" id="add" type="submit" value="&nbsp;' .
                        get_string('enrol', 'block_iomad_company_admin') .
                        '" title="Enrol" /><br />
 
@@ -204,7 +241,7 @@ class company_course_users_form extends moodleform {
                   <div id="removecontrols">
                       <input name="remove" id="remove" type="submit" value="' .
                        get_string('unenrol', 'block_iomad_company_admin') .
-                       '&nbsp;&#x25BA;" title="Unenrol" />
+                       '&nbsp;" title="Unenrol" />
                   </div>
               </td>
               <td id="potentialcell">');
@@ -215,12 +252,17 @@ class company_course_users_form extends moodleform {
               </td>
             </tr>
           </table>');
+
+        // Disable the onchange popup.
+        $mform->disable_form_change_checker();
+
     }
 
     public function process() {
         global $DB, $CFG;
 
         $this->create_user_selectors();
+        $data = $this->get_data();
 
         // Process incoming enrolments.
         if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -242,8 +284,11 @@ class company_course_users_form extends moodleform {
                         } else {
                             $duedate = 0;
                         }
-                        company_user::enrol($adduser, array($this->course->id),
-                                                            $this->selectedcompany);
+                        company_user::enrol($adduser,
+                                            array($this->course->id),
+                                            $this->selectedcompany,
+                                            0,
+                                            $data->groupid);
                         EmailTemplate::send('user_added_to_course',
                                              array('course' => $this->course,
                                                    'user' => $adduser,
@@ -283,7 +328,8 @@ $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $companyid = optional_param('companyid', 0, PARAM_INTEGER);
 $courseid = optional_param('courseid', 0, PARAM_INTEGER);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
-$selectedcourse = optional_param('currentcourses', 0, PARAM_INTEGER);
+$selectedcourse = optional_param('selectedcourse', 0, PARAM_INTEGER);
+$groupid = optional_param('groupid', 0, PARAM_INTEGER);
 
 $context = context_system::instance();
 require_login();
@@ -340,7 +386,7 @@ $departmentselect->label = get_string('department', 'block_iomad_company_admin')
 
 
 $coursesform = new company_ccu_courses_form($PAGE->url, $context, $companyid, $departmentid, $selectedcourse, $parentlevel);
-$usersform = new company_course_users_form($PAGE->url, $context, $companyid, $departmentid);
+$usersform = new company_course_users_form($PAGE->url, $context, $companyid, $departmentid, $selectedcourse);
 echo $OUTPUT->header();
 
 // Check the department is valid.
@@ -354,8 +400,10 @@ if (!empty($departmentid)) {
     $ccuparamaray['departmentid'] = $departmentid;
 }
 
-if (!empty($courseid)) {
-    $ccuparamarray['currentcourses'] = $courseid;
+if (!empty($selectedcourse)) {
+    $ccuparamarray['selectedcourse'] = $selectedcourse;
+} else {
+    $ccuparamarray['selectedcourse'] = 0;
 }
 
 if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
@@ -375,8 +423,8 @@ if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
         $coursesform->set_data($ccuparamarray);
         echo $coursesform->display();
         if ($data = $coursesform->get_data()) {
-            if (!empty($data->selectedcourses)) {
-                $usersform->set_course($data->selectedcourses);
+            if (!empty($data->selectedcourse)) {
+                $usersform->set_course($data->selectedcourse);
             }
             echo $usersform->display();
         } else if ($courseid > 0) {
@@ -384,6 +432,9 @@ if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
             $course = $DB->get_record('course', array('id' => $courseid));
             $usersform->set_course(array($course));
             $usersform->process();
+            $usersform = new company_course_users_form($PAGE->url, $context, $companyid, $departmentid, $selectedcourse);
+            $usersform->set_course(array($course));
+            $usersform->set_data(array('groupid' => $groupid));
             echo $usersform->display();
         }
     }

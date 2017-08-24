@@ -20,7 +20,11 @@
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/includes/colourpicker.php');
 require_once('lib.php');
+
+\MoodleQuickForm::registerElementType('iomad_colourpicker',
+    $CFG->dirroot . '/blocks/iomad_company_admin/includes/colourpicker.php', 'MoodleQuickForm_iomad_colourpicker');
 
 class company_edit_form extends company_moodleform {
     protected $firstcompany;
@@ -66,15 +70,15 @@ class company_edit_form extends company_moodleform {
 
         $mform->addElement('text', 'name',
                             get_string('companyname', 'block_iomad_company_admin'),
-                            array('size' => 50));
+                            'maxlength="50" size="50"');
         $mform->setType('name', PARAM_NOTAGS);
-        $mform->addRule('name', $strrequired, 'required');
+        $mform->addRule('name', $strrequired, 'required', null, 'client');
 
         $mform->addElement('text', 'shortname',
                             get_string('companyshortname', 'block_iomad_company_admin'),
-                            array('size' => 25));
+                            'maxlength="25" size="25"');
         $mform->setType('shortname', PARAM_NOTAGS);
-        $mform->addRule('shortname', $strrequired, 'required');
+        $mform->addRule('shortname', $strrequired, 'required', null, 'client');
         
         if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             // Add the parent company selector.
@@ -103,9 +107,9 @@ class company_edit_form extends company_moodleform {
 
         $mform->addElement('text', 'city',
                             get_string('companycity', 'block_iomad_company_admin'),
-                            array('size' => 50));
+                            'maxlength="50" size="50"');
         $mform->setType('city', PARAM_NOTAGS);
-        $mform->addRule('city', $strrequired, 'required');
+        $mform->addRule('city', $strrequired, 'required', null, 'client');
 
         /* copied from user/editlib.php */
         $choices = get_string_manager()->get_list_of_countries();
@@ -147,7 +151,53 @@ class company_edit_form extends company_moodleform {
             
         $mform->addElement('select', 'managernotify', get_string('managernotify', 'block_iomad_company_admin'), $emailchoices);
         $mform->setDefault('managernotify', 0);
+
+        // Add in the company role template selector.
+        $templates = company::get_role_templates($this->companyid);
+        $mform->addElement('select', 'roletemplate', get_string('applyroletemplate', 'block_iomad_company_admin'), $templates);
             
+        // Add in the release frequency scheduler.
+        $daysofweek = array(get_string('none'),
+                            get_string('sunday', 'calendar'),
+                            get_string('monday', 'calendar'),
+                            get_string('tuesday', 'calendar'),
+                            get_string('wednesday', 'calendar'),
+                            get_string('thursday', 'calendar'),
+                            get_string('friday', 'calendar'),
+                            get_string('saturday', 'calendar'));
+
+        $mform->addElement('select', 'managerdigestday', get_string('managerdigestday', 'block_iomad_company_admin'), $daysofweek);
+        $mform->setDefault('managerdigestday', 0);
+        $mform->addHelpButton('managerdigestday', 'managerdigestday', 'block_iomad_company_admin');
+
+        if (!empty($this->companyid)) {        
+            // Add the auto enrol courses.
+            $parentnodeid = company::get_company_parentnode($this->companyid);
+            if ($courses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
+                                                      FROM {course} c
+                                                      JOIN {company_course} cc
+                                                      ON (c.id = cc.courseid)
+                                                      WHERE cc.departmentid = :departmentid
+                                                      AND c.id NOT IN
+                                                      ( SELECT courseid FROM {iomad_courses}
+                                                        WHERE licensed != 0)",
+                                                      array('departmentid' => $parentnodeid->id))) {
+                // Add the autoselect for this.
+                $mform->addElement('autocomplete', 'autocourses',
+                                   get_string('autocourses', 'block_iomad_company_admin'),
+                                   $courses,
+                                   array('multiple' => true));
+                $mform->addHelpButton('autocourses', 'autocourses', 'block_iomad_company_admin');
+            } else {
+                $mform->addElement('hidden', 'autocourses', null);
+                $mform->setType('autocourses', PARAM_INT);
+            }
+        } else {
+            $mform->addElement('hidden', 'autocourses', null);
+            $mform->setType('autocourses', PARAM_INT);
+        }
+
+
         /* === end company email notifications === */
 
         /* === User defaults === */
@@ -231,8 +281,8 @@ class company_edit_form extends company_moodleform {
         }
         // Only show the Appearence section if the theme is iomad or you have abilities
         // to change that.
-        if (iomad::has_capability('block/iomad_company_admin:company_add', $context) ||
-            $this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'bootstrap' || $ischild) {
+        if (iomad::has_capability('block/iomad_company_admin:company_edit_appearance', $context) ||
+             preg_match('/iomad/', $this->companyrecord->theme) || $ischild) {
 
             $mform->addElement('header', 'appearance',
                                     get_string('appearance', 'block_iomad_company_admin'));
@@ -275,7 +325,7 @@ class company_edit_form extends company_moodleform {
             }
 
             // If theme is already set to a real theme, dont show this.
-            if ($this->companyrecord->theme == 'iomad' || $this->companyrecord->theme == 'iomadbootstrap' || $this->companyrecord->theme == 'iomadboost' || $ischild) {
+            if ( preg_match('/iomad/', $this->companyrecord->theme) || $ischild) {
                 $mform->addElement('HTML', get_string('theoptionsbelow',
                                                       'block_iomad_company_admin'));
                 $mform->addElement('filemanager', 'companylogo',
@@ -289,11 +339,11 @@ class company_edit_form extends company_moodleform {
                                     get_string('customcss', 'block_iomad_company_admin'),
                                     'wrap="virtual" rows="20" cols="75"');
                 $mform->setType('customcss', PARAM_CLEAN);
-                $mform->addElement('text', 'headingcolor', get_string('headingcolor', 'block_iomad_company_admin'), 'size="20"');
+                $mform->addElement('iomad_colourpicker', 'headingcolor', get_string('headingcolor', 'block_iomad_company_admin'), 'size="20"');
                 $mform->setType('headingcolor', PARAM_CLEAN);
-                $mform->addElement('text', 'maincolor', get_string('maincolor', 'block_iomad_company_admin'), 'size="20"');
+                $mform->addElement('iomad_colourpicker', 'maincolor', get_string('maincolor', 'block_iomad_company_admin'), 'size="20"');
                 $mform->setType('maincolor', PARAM_CLEAN);
-                $mform->addElement('text', 'linkcolor', get_string('linkcolor', 'block_iomad_company_admin'), 'size="20"');
+                $mform->addElement('iomad_colourpicker', 'linkcolor', get_string('linkcolor', 'block_iomad_company_admin'), 'size="20"');
                 $mform->setType('linkcolor', PARAM_CLEAN);
             } else {
                 $mform->addElement('hidden', 'id_companylogo', $this->companyrecord->companylogo);
@@ -309,6 +359,13 @@ class company_edit_form extends company_moodleform {
                 $mform->addElement('hidden', 'linkcolor');
                 $mform->setType('linkcolor', PARAM_CLEAN);
             }
+
+            // Company custom menu items.
+            $mform->addElement('textarea', 'custommenuitems',
+                                get_string('custommenuitems', 'admin'),
+                                'wrap="virtual" rows="20" cols="75"');
+            $mform->setType('customcss', PARAM_CLEAN);
+            $mform->addElement('HTML', get_string('configcustommenuitems', 'admin'));
         } else {
                 $mform->addElement('hidden', 'theme', $this->companyrecord->theme);
                 $mform->setType('theme', PARAM_TEXT);
@@ -452,6 +509,13 @@ if ($domains = $DB->get_records('company_domains', array('companyid' => $company
         $companyrecord->companydomains .= $domain->domain ."\n";
     }
 }
+if ($currentcourses = $DB->get_records('company_course',
+                                        array('autoenrol' => true,
+                                              'companyid' => $companyid), null, 'courseid')) {
+    foreach ($currentcourses as $currentcourse) {
+        $companyrecord->autocourses[] = $currentcourse->courseid;
+    }
+}
 
 // Set up the form.
 $mform = new company_edit_form($PAGE->url, $isadding, $companyid, $companyrecord, $firstcompany);
@@ -489,11 +553,13 @@ if ($mform->is_cancelled()) {
         $companydetails = $DB->get_record('company', array('id' => $companyid));
         $companydetails->category = $coursecat->id;
         $DB->update_record('company', $companydetails);
+        $company = new company($companydetails->id);
+
         // Deal with any parent company assignments.
         if (!empty($companydetails->parentid)) {
-            $company = new company($companydetails->id);
             $company->assign_parent_managers($companydetails->parentid);
         }
+        $companylist->param('noticeok', get_string('companycreatedok', 'block_iomad_company_admin'));
 
     } else {
         $data->id = $companyid;
@@ -507,11 +573,12 @@ if ($mform->is_cancelled()) {
         }
 
         //  Has the company name changed?
-        $topdepartment = $company->get_company_parentnode($companyid);
-        if ($topdepartment->name != $data->name) {
-            $topdepartment->name = $data->name;
-            $topdepartment->shorname = $data->shortname;
-            $DB->update_record('department', $topdepartment);
+        if ($topdepartment = $company->get_company_parentnode($companyid)) {
+            if ($topdepartment->name != $data->name) {
+                $topdepartment->name = $data->name;
+                $topdepartment->shorname = $data->shortname;
+                $DB->update_record('department', $topdepartment);
+            }
         }
 
         // Has the company parentid changed?
@@ -534,9 +601,23 @@ if ($mform->is_cancelled()) {
         if (company_user::is_company_user()) {
             company_user::reload_company();
         }
+        $companylist->param('noticeok', get_string('companysavedok', 'block_iomad_company_admin'));
     }
+
+    // Deal with role templates.
+    if (!empty($data->roletemplate)) {
+        // We need to do something with the roles.
+        if ($data->roletemplate == 'i') {
+            if (!empty($data->parentid)) {
+                // Apply the same roles as per the parent company.
+                $company->apply_role_templates();
+            }
+        } else {
+            $company->apply_role_templates($data->roletemplate);
+        }
+    }
+
     if (!empty($data->companylogo)) {
-//echo "COMPANYLOGO HERE"; die;
         file_save_draft_area_files($data->companylogo,
                                    $context->id,
                                    'theme_iomad',
@@ -552,6 +633,14 @@ if ($mform->is_cancelled()) {
             if (!empty($domain)) {
                 $DB->insert_record('company_domains', array('companyid' => $companyid, 'domain' => $domain));
             }
+        }
+    }
+
+    // Deal with autoenrol courses.
+    $DB->set_field('company_course', 'autoenrol', false, array('companyid' => $companyid));
+    if (!empty($data->autocourses)) {
+        foreach ($data->autocourses as $autoid) {
+            $DB->set_field('company_course', 'autoenrol', true, array('companyid' => $companyid, 'courseid' => $autoid));
         }
     }
     redirect($companylist);

@@ -199,62 +199,52 @@ class user_edit_form extends company_moodleform {
             $mform->addElement('header', 'licenses', get_string('licenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
                                                    WHERE expirydate >= :timestamp
-                                                   AND companyid = :companyid
-                                                   AND used < allocation",
+                                                   AND companyid = :companyid",
                                                    array('timestamp' => time(),
                                                          'companyid' => $this->selectedcompany));
             $licenses = array('0' => get_string('nolicense', 'block_iomad_company_admin')) + $foundlicenses;
+            $licensecourses = array();
             if (count($foundlicenses) == 0) {
                 // No valid licenses.
                 $mform->addElement('html', '<div id="licensedetails"><b>' . get_string('nolicenses', 'block_iomad_company_admin') . '</b></div>');
-                $onlyone = true;
             } else {
-                if (empty($this->licenseid) && count($foundlicenses) == 1) {
-                    // There is only one so select it!
-                    $onlyone = true;
-                    unset($licenses[0]);
-                    list($mylicenseid, $mylicensecourse) = each($licenses);
-                    $mylicensedetails = $DB->get_record('companylicense', array('id' => $mylicenseid));
+                $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
+                                            get_string('selectlicensecourse', 'block_iomad_company_admin') .
+                                            "</div><div class='felement'>");
+                $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, array('id' => 'licenseidselector'));
+                $mylicenseid = $this->licenseid;
+                if (empty($this->licenseid)) {
+                    $mform->addElement('html', '<div id="licensedetails"></div>');
+                } else {
+                    $mylicensedetails = $DB->get_record('companylicense', array('id' => $this->licenseid));
                     $licensestring = get_string('licensedetails', 'block_iomad_company_admin', $mylicensedetails);
                     $licensestring2 = get_string('licensedetails2', 'block_iomad_company_admin', $mylicensedetails);
                     $licensestring3 = get_string('licensedetails3', 'block_iomad_company_admin', $mylicensedetails);
-                    $mform->addElement('html', '<div id="licensedetails"><b>You have ' . ((intval($licensestring3, 0)) - (intval($licensestring2, 0))) . ' courses left to allocate on this license</b></div>');
-                    $mform->addElement('hidden', 'licenseid', $mylicenseid);
-                    $mform->setType('licenseid', PARAM_INT);
-                } else {
-                    $onlyone = false;
-                    $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
-                                                get_string('selectlicensecourse', 'block_iomad_company_admin') .
-                                                "</div><div class='felement'>");
-                    $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, array('id' => 'licenseidselector'));
-                    $mylicenseid = $this->licenseid;
-                    if (empty($this->licenseid)) {
-                        $mform->addElement('html', '<div id="licensedetails"></div>');
-                    } else {
-                        $mylicensedetails = $DB->get_record('companylicense', array('id' => $this->licenseid));
-                        $licensestring = get_string('licensedetails', 'block_iomad_company_admin', $mylicensedetails);
-                        $licensestring2 = get_string('licensedetails2', 'block_iomad_company_admin', $mylicensedetails);
-                        $licensestring3 = get_string('licensedetails3', 'block_iomad_company_admin', $mylicensedetails);
-                        $mform->addElement('html', '<div id="    "><b>You have ' . ((intval($licensestring3, 0)) - (intval($licensestring2, 0))) . ' courses left to allocate on this license </b></div>');
-                    }
+                    $mform->addElement('html', '<div id="    "><b>You have ' . ((intval($licensestring3, 0)) - (intval($licensestring2, 0))) . ' courses left to allocate on this license </b></div>');
                 }
 
+                // Is this a program of courses?
+                if (!empty($mylicensedetails->program)) {
+                     $mform->addElement('html', "<div style='display:none'>");
+                }
                 if (!$licensecourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
                                                              JOIN {course} c ON (clc.courseid = c.id
                                                              AND clc.licenseid = :licenseid)",
                                                              array('licenseid' => $mylicenseid))) {
                     $licensecourses = array();
                 }
-
-                $licensecourseselect = $mform->addElement('select', 'licensecourses',
-                                                          get_string('select_license_courses', 'block_iomad_company_admin'),
-                                                          $licensecourses, array('id' => 'licensecourseselector'));
-                $licensecourseselect->setMultiple(true);
-                $licensecourseselect->setSelected(array());
             }
 
-            if (!$onlyone) {
-                $mform->addElement('html', "</div></div>");
+            $mform->addElement('html', '<div id="licensecoursescontainer" style="display:none;">');
+            $licensecourseselect = $mform->addElement('select', 'licensecourses',
+                                                      get_string('select_license_courses', 'block_iomad_company_admin'),
+                                                      $licensecourses, array('id' => 'licensecourseselector'));
+            $licensecourseselect->setMultiple(true);
+            $mform->addElement('html', '</div>');
+            if (!empty($mylicensedetails->program)) {
+                $licensecourseselect->setSelected($licensecourses);
+            } else {
+                $licensecourseselect->setSelected(array());
             }
         }
 
@@ -332,13 +322,26 @@ class user_edit_form extends company_moodleform {
         }
 
         //  Check numbers of licensed courses against license.
-        if (!empty($usernew->licenseid) && !empty($usernew->licensecourses)) {
-            if ($license = $DB->get_record('companylicense', array('id' => $usernew->licenseid))) {
-                if (count($usernew->licensecourses) + $license->used > $license->allocation) {
-                    $errors['licensecourses'] = get_string('triedtoallocatetoomanylicenses', 'block_iomad_company_admin');
+        if (!empty($usernew->licenseid)) {
+            $license = $DB->get_record('companylicense', array('id' => $usernew->licenseid));
+
+            // Are we dealing with a program license?
+            if (!empty($license->program)) {
+                // If so the courses are not passed automatically.
+                $usernew->licensecourses =  $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
+                                                                       JOIN {course} c ON (clc.courseid = c.id
+                                                                       AND clc.licenseid = :licenseid)",
+                                                                       array('licenseid' => $license->id));
+            }
+        
+            if (!empty($usernew->licensecourses)) {
+                if ($license = $DB->get_record('companylicense', array('id' => $usernew->licenseid))) {
+                    if (count($usernew->licensecourses) + $license->used > $license->allocation) {
+                        $errors['licensecourses'] = get_string('triedtoallocatetoomanylicenses', 'block_iomad_company_admin');
+                    }
+                } else {
+                    $errors['licenseid'] = get_string('invalidlicense', 'block_iomad_company_admin');
                 }
-            } else {
-                $errors['licenseid'] = get_string('invalidlicense', 'block_iomad_company_admin');
             }
         }
         return $errors;
@@ -389,8 +392,10 @@ $companyid = iomad::get_my_companyid($context);
 $company = new company($companyid);
 
 $mform = new user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
-
-if ($data = $mform->get_data()) {
+if ($mform->is_cancelled()) {
+    redirect($dashboardurl);
+    die;
+} else if ($data = $mform->get_data()) {
     $data->userid = $USER->id;
     if ($companyid > 0) {
         $data->companyid = $companyid;
@@ -481,45 +486,54 @@ if ($data = $mform->get_data()) {
         company_user::enrol($userdata, $createcourses, $companyid);
     }
     // Assign and licenses.
-    if (!empty($data->licensecourses)) {
+    if (!empty($licenseid)) {
         $licenserecord = (array) $DB->get_record('companylicense', array('id' => $licenseid));
-        $userdata = $DB->get_record('user', array('id' => $userid));
-        $count = $licenserecord['used'];
-        $numberoflicenses = $licenserecord['allocation'];
-        foreach ($data->licensecourses as $licensecourse) {
-            if ($count >= $numberoflicenses) {
-                // Set the used amount.
-                $licenserecord['used'] = $count;
-                $DB->update_record('companylicense', $licenserecord);
-                redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
-                                         array('licenseid' => $licenseid, 'error' => 1)));
-            }
-            $allow = true;
-
-            if ($allow) {
-                $count++;
-                $DB->insert_record('companylicense_users',
-                                    array('userid' => $userdata->id,
-                                          'licenseid' => $licenseid,
-                                          'issuedate' => time(),
-                                          'licensecourseid' => $licensecourse));
-            }
-            // Create an email event.
-            $license = new stdclass();
-            $license->length = $licenserecord['validlength'];
-            $license->valid = date($CFG->iomad_date_format, $licenserecord['expirydate']);
-            EmailTemplate::send('license_allocated', array('course' => $licensecourse,
-                                                           'user' => $userdata,
-                                                           'due' => $data->due,
-                                                           'license' => $license));
+        if (!empty($licenserecord['program'])) {
+            // If so the courses are not passed automatically.
+            $data->licensecourses =  $DB->get_records_sql_menu("SELECT c.id, clc.courseid FROM {companylicense_courses} clc
+                                                                   JOIN {course} c ON (clc.courseid = c.id
+                                                                   AND clc.licenseid = :licenseid)",
+                                                                   array('licenseid' => $licenserecord['id']));
         }
+        
+        if (!empty($data->licensecourses)) {
+            $userdata = $DB->get_record('user', array('id' => $userid));
+            $count = $licenserecord['used'];
+            $numberoflicenses = $licenserecord['allocation'];
+            foreach ($data->licensecourses as $licensecourse) {
+                if ($count >= $numberoflicenses) {
+                    // Set the used amount.
+                    $licenserecord['used'] = $count;
+                    $DB->update_record('companylicense', $licenserecord);
+                    redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
+                                             array('licenseid' => $licenseid, 'error' => 1)));
+                }
+                $allow = true;
+    
+                if ($allow) {
+                    $count++;
+                    $DB->insert_record('companylicense_users',
+                                        array('userid' => $userdata->id,
+                                              'licenseid' => $licenseid,
+                                              'issuedate' => time(),
+                                              'licensecourseid' => $licensecourse));
+                }
 
-        // Set the used amount for the license.
-        $licenserecord['used'] = $DB->count_records('companylicense_users', array('licenseid' => $licenseid));
-        $DB->update_record('companylicense', $licenserecord);
+                // Create an event.
+                $eventother = array('licenseid' => $licenseid,
+                                    'duedate' => $data->due);
+                $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($licensecourse),
+                                                                                              'objectid' => $licenseid,
+                                                                                              'courseid' => $licensecourse,
+                                                                                              'userid' => $userdata->id,
+                                                                                              'other' => $eventother));
+                $event->trigger();
+            }
+        }
     }
 
     if (isset($data->submitandback)) {
+        $dashboardurl->param('noticeok', get_string('usercreated', 'block_iomad_company_admin'));
         redirect($dashboardurl);
     } else {
         redirect($linkurl."?createdok=1");
@@ -558,13 +572,23 @@ Y.on('change', submit_form, '#licenseidselector');
             $("#licensedetails").html(response);
         }
     });
+    $.ajax({
+        type: "GET",
+        url: "<?php echo $CFG->wwwroot; ?>/blocks/iomad_company_admin/js/company_user_create_form-license-courses.ajax.php?licenseid="+nValue,
+        datatype: "HTML",
+        success: function(response){
+            $("#licensecoursescontainer")[0].style.display = response;
+        }
+    });
  }
 </script>
 <?php
 
 // Display a message if user is created..
 if ($createdok) {
-    echo '<h2>'.get_string('usercreated', 'block_iomad_company_admin').'</h2>';
+    echo html_writer::start_tag('div', array('class' => "alert alert-success"));
+    echo get_string('usercreated', 'block_iomad_company_admin');
+    echo "</div>";
 }
 // Display the form.
 $mform->display();

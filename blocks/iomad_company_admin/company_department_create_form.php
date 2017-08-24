@@ -23,95 +23,6 @@ require_once($CFG->libdir . '/formslib.php');
 require_once('lib.php');
 require_once(dirname(__FILE__) . '/../../course/lib.php');
 
-class department_display_form extends company_moodleform {
-    protected $selectedcompany = 0;
-    protected $context = null;
-    protected $company = null;
-
-    public function __construct($actionurl, $companyid, $departmentid) {
-        global $CFG, $USER;
-
-        $this->selectedcompany = $companyid;
-        $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
-        $syscontext = context_system::instance();
-
-        $company = new company($this->selectedcompany);
-        $parentlevel = company::get_company_parentnode($company->id);
-        $this->companydepartment = $parentlevel->id;
-        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $syscontext)) {
-            $userhierarchylevel = $parentlevel->id;
-        } else {
-            $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
-        }
-
-        $this->departmentid = $userhierarchylevel;
-        parent::__construct($actionurl);
-    }
-
-    public function definition() {
-        global $CFG;
-
-        $mform =& $this->_form;
-        $company = new company($this->selectedcompany);
-        if (!$parentnode = company::get_company_parentnode($company->id)) {
-            // Company has not been set up, possibly from before an upgrade.
-            company::initialise_departments($company->id);
-        }
-        if (!empty($this->departmentid)) {
-            $departmentslist = company::get_all_subdepartments($this->departmentid);
-        } else {
-            $departmentslist = company::get_all_departments($company->id);
-        }
-
-        if (!empty($this->departmentid)) {
-            $department = company::get_departmentbyid($this->departmentid);
-        } else {
-            $department = company::get_company_parentnode($this->selectedcompany);
-        }
-        $subdepartmentslist = company::get_subdepartments_list($department);
-        $subdepartments = company::get_subdepartments($department);
-
-        // Create the sub department checkboxes html.
-        $subdepartmenthtml = "";
-
-        if (!empty($subdepartmentslist)) {
-            $subdepartmenthtml = "<p>".get_string('subdepartments', 'block_iomad_company_admin').
-                               "</p>";
-            foreach ($subdepartmentslist as $key => $value) {
-
-                $subdepartmenthtml .= '<input type = "checkbox" name = "departmentids[]" value="'.
-                                       $key.'" /> '.$value.'</br>';
-            }
-        }
-        // Then show the fields about where this block appears.
-        $mform->addElement('header', 'header',
-                            get_string('companydepartment', 'block_iomad_company_admin').
-                           $company->get_name());
-
-        if (count($departmentslist) == 1) {
-            $mform->addElement('html', "<h3>" . get_string('nodepartments', 'block_iomad_company_admin') . "</h3></br>");
-        }
-        $mform->addElement('html', $subdepartmenthtml);
-        $buttonarray = array();
-        $buttonarray[] = $mform->createElement('submit', 'create',
-                                get_string('createdepartment', 'block_iomad_company_admin'));
-        if (!empty($subdepartmentslist)) {
-            $buttonarray[] = $mform->createElement('submit', 'edit',
-                                get_string('editdepartments', 'block_iomad_company_admin'));
-            $buttonarray[] = $mform->createElement('submit', 'delete',
-                                get_string('deletedepartment', 'block_iomad_company_admin'));
-        }
-        $mform->addGroup($buttonarray, 'buttonarray', '', array(' '), false);
-    }
-
-    public function get_data() {
-        $data = parent::get_data();
-        return $data;
-    }
-
-}
-
 class department_edit_form extends company_moodleform {
     protected $selectedcompany = 0;
     protected $context = null;
@@ -132,13 +43,16 @@ class department_edit_form extends company_moodleform {
     }
 
     public function definition() {
-        global $CFG;
+        global $CFG, $USER;
 
         $mform =& $this->_form;
         $company = new company($this->selectedcompany);
-        $departmentslist = company::get_all_departments($company->id);
-        $departmenttree = company::get_all_departments_raw($company->id);
+
+        $userdepartment = $company->get_userlevel($USER);
+        $departmentslist = company::get_all_subdepartments($userdepartment->id);
+        $departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
         $treehtml = $this->output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
+
         $department = company::get_departmentbyid($this->departmentid);
 
         // Then show the fields about where this block appears.
@@ -155,15 +69,16 @@ class department_edit_form extends company_moodleform {
         $mform->setType('action', PARAM_INT);
 
         // Display department select html (create only)
-        if ($this->action == 0) {
+        //if ($this->action == 0) {
             $mform->addElement('html', '<p>' . get_string('parentdepartment', 'block_iomad_company_admin') . '</p>');
             $mform->addElement('html', $treehtml);
-        }
+        //}
 
         // This is getting hidden anyway, so no need for label
+        $mform->addElement('html', "<div style='display:none;'>");
         $mform->addElement('select', 'deptid', ' ',
                             $departmentslist, array('class' => 'iomad_department_select'));
-        $mform->disabledIf('deptid', 'action', 'eq', 1);
+        $mform->addElement('html', "</div></br>");
 
         $mform->addElement('text', 'fullname',
                             get_string('fullnamedepartment', 'block_iomad_company_admin'),
@@ -193,27 +108,30 @@ class department_edit_form extends company_moodleform {
         $this->add_action_buttons();
     }
 
-    public function get_data() {
-        $data = parent::get_data();
-        return $data;
+    public function validation($data, $files) {
+        global $DB;
+
+        $errors = array();
+
+        if ($departmentbyname = $DB->get_record('department', array('company' => $this->selectedcompany, 'shortname' => $data['shortname']))) {
+            if ($departmentbyname->id != $this->departmentid) {
+                $errors['shortname'] = get_string('departmentnameinuse', 'block_iomad_company_admin');
+            }
+        }
+        return $errors;
     }
 }
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$departmentid = optional_param('deptid', 0, PARAM_INT);
-$deleteids = optional_param_array('departmentids', null, PARAM_INT);
-$createnew = optional_param('createnew', 0, PARAM_INT);
+$departmentid = optional_param('departmentid', 0, PARAM_INT);
+$deptid = optional_param('deptid', 0, PARAM_INT);
 
 $context = context_system::instance();
 require_login();
 
 iomad::require_capability('block/iomad_company_admin:edit_departments', $context);
 
-$urlparams = array();
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-$companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
+$departmentlist = new moodle_url('/blocks/iomad_company_admin/company_departments.php', array('deptid' => $departmentid));
 
 $linktext = get_string('editdepartment', 'block_iomad_company_admin');
 
@@ -232,142 +150,59 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
 
 // Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+company_admin_fix_breadcrumb($PAGE, $linktext, $departmentlist);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
 
-// Javascript for fancy select.
-// Parameter is name of proper select form element. 
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid'));
+// Set up the initial forms.
+if (!empty($departmentid)) {
+    $department = $DB->get_record('department', array('id' => $departmentid));
+    $department->fullname = $department->name;
+    $department->deptid = $department->parent;
+    $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $output);
+    $editform->set_data($department);
+} else {
+    $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $output);
+    $editform->set_data(array('deptid' => $deptid));
+}
 
-$mform = new department_display_form($PAGE->url, $companyid, $departmentid);
-$editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $output);
-
-if ($mform->is_cancelled()) {
-    redirect($companylist);
-
-} else if ($data = $mform->get_data()) {
-    if (isset($data->create)) {
-        if (!empty($deleteids)) {
-            $chosenid = $deleteids['0'];
-        } else {
-            $chosenid = 0;
-        }
-        $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $output, $chosenid);
-        $editform->set_data(array('deptid' => $chosenid));
-        echo $OUTPUT->header();
-        // Check the department is valid.
-        if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-            print_error('invaliddepartment', 'block_iomad_company_admin');
-        }   
-
-        $editform->display();
-        echo $OUTPUT->footer();
-    } else if (isset($data->delete)) {
-        // Get the list of department ids which are to be removed..
-        if (!empty($deleteids)) {
-            foreach ($deleteids as $deletedept) {
-                // Check if department has already been removed.
-                if (company::check_valid_department($companyid, $deletedept)) {
-                    // If not delete it and its sub departments moving users to
-                    // $departmentid or the company parent id if not set (==0).
-                    company::delete_department_recursive($deletedept, $departmentid);
-                }
-            }
-        }
-        $mform = new department_display_form($PAGE->url, $companyid, $departmentid);
-        // Redisplay the form.
-        echo $OUTPUT->header();
-        // Check the department is valid.
-        if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-            print_error('invaliddepartment', 'block_iomad_company_admin');
-        }   
-
-        if (empty($deleteids)) {
-            echo get_string('departmentnoselect', 'block_iomad_company_admin');
-        }
-        $mform->display();
-        echo $OUTPUT->footer();
-        die;
-
-    } else if (isset($data->edit)) {
-        // Editing an existing department.
-        if (!empty($deleteids)) {
-            $department = array_shift($deleteids);
-            $departmentrecord = $DB->get_record('department', array('id' => $department));
-            $editform = new department_edit_form($PAGE->url, $companyid, $departmentid, $output, 0, 1);
-            $editform->set_data(array('departmentid' => $departmentrecord->id,
-                                      'fullname' => $departmentrecord->name,
-                                      'shortname' => $departmentrecord->shortname,
-                                      'chosenid' => $departmentid));
-            echo $OUTPUT->header();
-
-            // Check the department is valid.
-            if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-                print_error('invaliddepartment', 'block_iomad_company_admin');
-            }   
-
-            $editform->display();
-
-            echo $OUTPUT->footer();
-        } else {
-            echo $OUTPUT->header();
-            // Check the department is valid.
-            if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-                print_error('invaliddepartment', 'block_iomad_company_admin');
-            }   
-
-            echo get_string('departmentnoselect', 'block_iomad_company_admin');
-            $mform->display();
-            echo $OUTPUT->footer();
-            die;
-        }
-
-    }
+if ($editform->is_cancelled()) {
+    redirect($departmentlist);
+    die;
 } else if ($createdata = $editform->get_data()) {
-
     // Create or update the department.
-    if (!$createdata->chosenid) {
+    if (!$createdata->action) {
         // We are creating a new department.
-        company::create_department($createdata->chosenid,
+        company::create_department($createdata->departmentid,
                                    $companyid,
                                    $createdata->fullname,
                                    $createdata->shortname,
-                                   $departmentid);
+                                   $createdata->deptid);
     } else {
         // We are editing a current department.
         company::create_department($createdata->departmentid,
                                    $companyid,
                                    $createdata->fullname,
                                    $createdata->shortname,
-                                   $departmentid);
+                                   $createdata->deptid);
     }
 
-    $mform = new department_display_form($PAGE->url, $companyid, $departmentid);
-    // Redisplay the form.
-    echo $OUTPUT->header();
-
-    // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-        print_error('invaliddepartment', 'block_iomad_company_admin');
-    }   
-
-    $mform->display();
-
-    echo $OUTPUT->footer();
-
+    redirect($departmentlist);
+    die;
 } else {
+    // Javascript for fancy select.
+    // Parameter is name of proper select form element. 
+    $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', '', $departmentid));
 
-    echo $OUTPUT->header();
-
+    echo $output->header();
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
     }   
 
-    $mform->display();
+    $editform->display();
 
-    echo $OUTPUT->footer();
+    echo $output->footer();
 }
 

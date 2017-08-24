@@ -471,7 +471,8 @@ if (empty($departmentid)) {
     $departmentid = $userhierarchylevel;
 }
 
-$departmenttree = company::get_all_departments_raw($company->id);
+$userdepartment = $company->get_userlevel($USER);
+$departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
 $treehtml = $output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
 
 $departmentselect = new single_select(new moodle_url($linkurl, $urlparams), 'deptid', $subhierarchieslist, $departmentid);
@@ -479,6 +480,14 @@ $departmentselect->label = get_string('department', 'block_iomad_company_admin')
                            $OUTPUT->help_icon('department', 'block_iomad_company_admin') . '&nbsp';
 
 $managertypes = $company->get_managertypes();
+if ($departmentid != $parentlevel->id) {
+    unset($managertypes[1]);
+    if ($roleid ==1) {
+        $urlparams['managertype'] = '';
+        $urlparams['deptid'] = $departmentid;
+        redirect(new moodle_url($linkurl, $urlparams));
+    }
+}
 $managerselect = new single_select(new moodle_url($linkurl, $urlparams), 'managertype', $managertypes, $roleid);
 $managerselect->label = get_string('managertype', 'block_iomad_company_admin') .
                         $OUTPUT->help_icon('managertype', 'block_iomad_company_admin') . '&nbsp';
@@ -521,7 +530,9 @@ if ($managersform->is_cancelled()) {
     echo html_writer::start_tag('div', array('class' => 'iomadclear'));
     echo html_writer::start_tag('div', array('class' => 'fitem'));
     echo $treehtml;
+    echo html_writer::start_tag('div', array('style' => 'display:none'));
     echo $OUTPUT->render($departmentselect);
+    echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
 
