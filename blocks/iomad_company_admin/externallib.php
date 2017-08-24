@@ -1075,7 +1075,7 @@ class block_iomad_company_admin_external extends external_api {
 
             // Deal with the courses.
             foreach ($license->courses as $course) {
-                $DB->insert_record('companylicemse_courses', array('licenseid' => $licenseid,
+                $DB->insert_record('companylicense_courses', array('licenseid' => $licenseid,
                                                                    'courseid' => $course->courseid));
             }
 
