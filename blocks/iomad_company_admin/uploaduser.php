@@ -741,7 +741,11 @@ if ($mform->is_cancelled()) {
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
                 $usersnew++;
-                set_user_preference('auth_forcepasswordchange', 1, $user->id);
+                $auth = get_auth_plugin($user->auth);
+                $isinternalauth = $auth->is_internal();
+                if ($isinternalauth) {
+                    set_user_preference('auth_forcepasswordchange', 1, $user->id);
+                }
 
                 // Save custom profile fields data.
                 profile_save_data($user);
