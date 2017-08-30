@@ -187,6 +187,11 @@ $string['completion_warn_manager_body'] = 'Dear {User_FirstName},
 the following users have not completed their training within the normal timeframe :
 
 {Course_ReportText}';
+$string['completion_digest_manager_subject'] = 'User completion report';
+$string['completion_digest_manager_body'] = 'Dear {User_FirstName},
+the following users have completed their training within the last week :
+
+{Course_ReportText}';
 $string['expiry_warn_user_subject'] = 'Notice: Accreditation in {Course_FullName} will expire soon.';
 $string['expiry_warn_user_body'] = 'Dear {User_FirstName},
 your accredited training on {Course_FullName} is expiring soon.  Please arrange for re-accreditation if appropriate';
