@@ -125,6 +125,7 @@ $stremailduplicate          = get_string('useremailduplicate', 'error');
 
 $strinvalidpasswordpolicy   = get_string('invalidpasswordpolicy', 'error');
 $errorstr                   = get_string('error');
+$strcantmanageuser          = get_string('invaliduser', 'block_iomad_company_admin');
 
 $returnurl = $CFG->wwwroot."/blocks/iomad_company_admin/uploaduser.php";
 $cancelurl = new moodle_url($CFG->wwwroot."/local/iomad_dashboard/index.php");
@@ -416,6 +417,11 @@ if ($mform->is_cancelled()) {
                         $deleteerrors++;
                         continue;
                     }
+                    if (!company::check_can_manage($existinguser->id)) {
+                        $upt->track('status', $strcantmanageuser, 'error');
+                        $deleteerrors++;
+                        continue;
+                    }
                     if (delete_user($existinguser)) {
                         $upt->track('status', $struserdeleted);
                         $deletes++;
@@ -451,6 +457,11 @@ if ($mform->is_cancelled()) {
                     $upt->track('id', $olduser->id, 'normal', false);
                     if (is_siteadmin($olduser->id)) {
                         $upt->track('status', $strusernotrenamedadmin, 'error');
+                        $renameerrors++;
+                        continue;
+                    }
+                    if (!company::check_can_manage($olduser->id)) {
+                        $upt->track('status', $strcantmanageuser, 'error');
                         $renameerrors++;
                         continue;
                     }
@@ -512,7 +523,13 @@ if ($mform->is_cancelled()) {
                     $userserrors++;
                     continue;
                 }
-    
+
+                if (!company::check_can_manage($user->id)) {
+                    $upt->track('status', $strcantmanageuser, 'error');
+                    $userserrors++;
+                    continue;
+                }
+
                 if (!empty($updatetype)) {
                     $existinguser->timemodified = time();
                     if (empty($existinguser->timecreated)) {
