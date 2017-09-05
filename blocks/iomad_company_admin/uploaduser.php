@@ -125,8 +125,10 @@ $stremailduplicate          = get_string('useremailduplicate', 'error');
 
 $strinvalidpasswordpolicy   = get_string('invalidpasswordpolicy', 'error');
 $errorstr                   = get_string('error');
+$strcantmanageuser          = get_string('invaliduser', 'block_iomad_company_admin');
 
 $returnurl = $CFG->wwwroot."/blocks/iomad_company_admin/uploaduser.php";
+$cancelurl = new moodle_url($CFG->wwwroot."/local/iomad_dashboard/index.php");
 $bulknurl  = $CFG->wwwroot.'/'.$CFG->admin.'/user/user_bulk.php';
 
 $today = time();
@@ -151,6 +153,10 @@ if ($proffields = $DB->get_records('user_info_field')) {
 }
 if (empty($iid)) {
     $mform = new admin_uploaduser_form1();
+    // Go back to the dashboard if cancelled.
+    if ($mform->is_cancelled()) {
+        redirect($cancelurl);
+    }
 
     if ($formdata = $mform->get_data()) {
         $iid = csv_import_reader::get_new_iid('uploaduser');
@@ -200,15 +206,15 @@ $mform->set_data(array('iid' => $iid,
 // If a file has been uploaded, then process it.
 if ($mform->is_cancelled()) {
     $cir->cleanup(true);
-    redirect($returnurl);
+    redirect($cancelurl);
 
 } else if ($formdata = $mform->get_data()) {
+    // Another cancelled check.
+    if (!empty($formdata->cancel) && $formdata->cancel == 'Cancel') {
+        $cir->cleanup(true);
+        redirect($cancelurl);
+    }
     if (!empty($formdata->submitbutton)) {
-        // Another cancelled check.
-        if (!empty($formdata->cancel) && $formdata->cancel == 'Cancel') {
-            $cir->cleanup(true);
-            redirect($returnurl);
-        }
         // Print the header.
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('uploadusersresult', 'tool_uploaduser'));
@@ -411,6 +417,11 @@ if ($mform->is_cancelled()) {
                         $deleteerrors++;
                         continue;
                     }
+                    if (!company::check_can_manage($existinguser->id)) {
+                        $upt->track('status', $strcantmanageuser, 'error');
+                        $deleteerrors++;
+                        continue;
+                    }
                     if (delete_user($existinguser)) {
                         $upt->track('status', $struserdeleted);
                         $deletes++;
@@ -446,6 +457,11 @@ if ($mform->is_cancelled()) {
                     $upt->track('id', $olduser->id, 'normal', false);
                     if (is_siteadmin($olduser->id)) {
                         $upt->track('status', $strusernotrenamedadmin, 'error');
+                        $renameerrors++;
+                        continue;
+                    }
+                    if (!company::check_can_manage($olduser->id)) {
+                        $upt->track('status', $strcantmanageuser, 'error');
                         $renameerrors++;
                         continue;
                     }
@@ -507,7 +523,13 @@ if ($mform->is_cancelled()) {
                     $userserrors++;
                     continue;
                 }
-    
+
+                if (!company::check_can_manage($user->id)) {
+                    $upt->track('status', $strcantmanageuser, 'error');
+                    $userserrors++;
+                    continue;
+                }
+
                 if (!empty($updatetype)) {
                     $existinguser->timemodified = time();
                     if (empty($existinguser->timecreated)) {
@@ -736,7 +758,11 @@ if ($mform->is_cancelled()) {
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
                 $usersnew++;
-                set_user_preference('auth_forcepasswordchange', 1, $user->id);
+                $auth = get_auth_plugin($user->auth);
+                $isinternalauth = $auth->is_internal();
+                if ($isinternalauth) {
+                    set_user_preference('auth_forcepasswordchange', 1, $user->id);
+                }
 
                 // Save custom profile fields data.
                 profile_save_data($user);
@@ -747,9 +773,22 @@ if ($mform->is_cancelled()) {
                 // Add the user to the company
                 $company->assign_user_to_company($user->id);
     
-                // Add the user to the company default hierarchy level.
-                company::assign_user_to_department($formdata->userdepartment, $user->id);
-    
+                // Do we have a department in the file?
+                if (!empty($user->department) &&
+                        $department = $DB->get_record('department', array('company' => $company->id,
+                                                                          'shortname' => $user->department))) {
+                    // Make sure the user can manage this department.
+                    if (company::can_manage_department($department->id)) {
+                        company::assign_user_to_department($department->id, $user->id);
+
+                    } else {
+                        // They get the one from the form.
+                        company::assign_user_to_department($formdata->userdepartment, $user->id);
+                    }
+                } else {
+                    company::assign_user_to_department($formdata->userdepartment, $user->id);
+                }
+
                 \core\event\user_created::create_from_userid($user->id)->trigger();
     
                 if (!empty($CFG->iomad_email_senderisreal)) {
@@ -862,6 +901,7 @@ if ($mform->is_cancelled()) {
 
         if (!empty($licenserecord['program'])) {
             $numlicenses = $numlicenses / count($formdata->licensecourses);
+            $numlicenseerrors = $numlicenseerrors / count($formdata->licensecourses);
         }
 
         $upt->flush();
@@ -1094,6 +1134,7 @@ if (in_array('error', $headings)) {
     }
     $mform = new admin_uploaduser_form3();
     $mform->set_data(array('uutype' => $uploadtype));
+
 } else if (empty($contents)) {
     $mform = new admin_uploaduser_form3();
     $mform->set_data(array('uutype' => $uploadtype));
@@ -1162,10 +1203,17 @@ Y.on('change', submit_form, '#licenseidselector');
             $("#licensedetails").html(response);
         }
     });
+    $.ajax({
+        type: "GET",
+        url: "<?php echo $CFG->wwwroot; ?>/blocks/iomad_company_admin/js/company_user_create_form-license-courses.ajax.php?licenseid="+nValue,
+        datatype: "HTML",
+        success: function(response){
+            $("#licensecoursescontainer")[0].style.display = response;
+        }
+    });
  }
 </script>
 <?php
-
 
 $mform->display();
 echo $OUTPUT->footer();
@@ -1187,7 +1235,8 @@ class uu_progress_tracker {
                             'password',
                             'auth',
                             'enrolments',
-                            'deleted');
+                            'deleted',
+                            'department');
 
     public function __construct() {
     }
@@ -1208,6 +1257,7 @@ class uu_progress_tracker {
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('authentication').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('enrolments', 'enrol').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('delete').'</th>';
+        echo '<th class="header c'.$ci++.'" scope="col">'.get_string('department', 'block_iomad_company_admin').'</th>';
         echo '</tr>';
         $this->_row = null;
     }

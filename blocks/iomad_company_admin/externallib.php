@@ -1034,6 +1034,13 @@ class block_iomad_company_admin_external extends external_api {
                              'used' => new external_value(PARAM_INT, 'Number allocated'),
                              'companyid' => new external_value(PARAM_INT, 'Company id'),
                              'parentid' => new external_value(PARAM_INT, 'Parent license id'),
+                             'courses' => new external_multiple_structure(
+                                 new external_single_structure(
+                                        array(
+                                            'courseid'  => new external_value(PARAM_INT, 'Course ID'),
+                                        )
+                                 )
+                            ),
                         )
                     )
                 )
@@ -1052,7 +1059,11 @@ class block_iomad_company_admin_external extends external_api {
         global $CFG, $DB, $USER;
 
         // Validate parameters
-        $params = self::validate_parameters(self::create_licenses_parameters(), $licenses);
+        // actXc:  can this be? throws invalid structure error,  may be 
+        // org: 
+      //$params = self::validate_parameters(self::create_licenses_parameters(), $licenses);
+        $params = self::validate_parameters(self::create_licenses_parameters(), array('licenses' => $licenses));
+        
 
         // Get/check context/capability
         $context = context_system::instance();
@@ -1060,14 +1071,20 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:edit_licenses', $context);
 
         // Array to return newly created records
-        $companyinfo = array();
+        $licenseinfo = array();
 
         foreach ($params['licenses'] as $license) {
             // Create the License record
             $licenseid = $DB->insert_record('companylicense', $license);
-            $newlicense = $DB->get_record('companylicense', array('id' => $licenseid));
+
+            // Deal with the courses.
+            foreach ($license->courses as $course) {
+                $DB->insert_record('companylicense_courses', array('licenseid' => $licenseid,
+                                                                   'courseid' => $course->courseid));
+            }
 
             // Create an event to deal with an parent license allocations.
+            $newlicense = $DB->get_record('companylicense', array('id' => $licenseid));
             $eventother = array('licenseid' => $licenseid,
                                 'parentid' => $newlicense->parentid);
 
@@ -1077,6 +1094,7 @@ class block_iomad_company_admin_external extends external_api {
                                                                                             'other' => $eventother));
 
             $event->trigger();
+            $newlicense->courses = $license->courses;
             $licenseinfo[] = (array)$newlicense;
         }
 
@@ -1101,6 +1119,13 @@ class block_iomad_company_admin_external extends external_api {
                      'used' => new external_value(PARAM_INT, 'Number allocated'),
                      'companyid' => new external_value(PARAM_INT, 'Company id'),
                      'parentid' => new external_value(PARAM_INT, 'Parent license id'),
+                     'courses' => new external_multiple_structure(
+                         new external_single_structure(
+                                array(
+                                    'courseid'  => new external_value(PARAM_INT, 'Course ID'),
+                                )
+                         )
+                    ),
                 )
             )
         );
@@ -1315,22 +1340,31 @@ class block_iomad_company_admin_external extends external_api {
 
             // Does this license exist?
             if (!$oldlicense = $DB->get_record('companylicense', array('id' => $licenseid))) {
-                throw new invalid_parameter_exception("License id=$id does not exist");
+                throw new invalid_parameter_exception("License id=$licenseid does not exist");
             }
 
             // What about the company?
             if (!$companyrec = $DB->get_record('company', array('id' => $oldlicense->companyid))) {
-                throw new invalid_parameter_exception("Company does not exist for license id=$licenseid");
+                throw new invalid_parameter_exception("Company does not match for license id=$licenseid");
             }
 
             // The user?
-            if (!$user = $DB->get_record('user', array('id' => $oldlicense->userid))) {
-                throw new invalid_parameter_exception("User id=" . $user->id ." does not exist");
+            if (!$user = $DB->get_record('user', array('id' => $license['userid'], 'deleted' => 0))) {
+                throw new invalid_parameter_exception("User id=" . $license['userid'] ." does not exist");
+            }
+            if ($user->suspended == 1) {
+                throw new invalid_parameter_exception("User id=" . $license['userid'] ." is suspended");
             }
 
             // The course?
-            if (!$course = $DB->get_record('course', array('id' => $params['licensecourseid']))) {
-                throw new invalid_parameter_exception("Course id=" . $params['licensecourseid'] ." does not exist");
+            if (!$course = $DB->get_record('course', array('id' => $license['licensecourseid']))) {
+                throw new invalid_parameter_exception("Course id=" . $license['licensecourseid'] ." does not exist");
+            }
+
+            // Does the license include this course?
+            if (!$DB->get_record('companylicense_courses', array('courseid' => $license['licensecourseid'],
+                                                                 'licenseid' => $licenseid))) {
+                throw new invalid_parameter_exception("Course id=" . $license['licensecourseid'] ." is not inculded in license id $licenseid");
             }
 
             // Has the license expired?
@@ -1344,14 +1378,14 @@ class block_iomad_company_admin_external extends external_api {
             }
 
             // Are we double allocating?
-            $params['isusing'] = 0;
-            if ($DB->get_record('companylicense_users', $params)) {
+            $license['isusing'] = 0;
+            if ($DB->get_record('companylicense_users', $license)) {
                 throw new invalid_parameter_exception("User id=" . $user->id ." already has an unused license for that course.");
             }
 
             // Set up the rest of the record.
-            $params['issuedate'] = $timestamp;
-            $DB->insert_record('companylicense_users', $params);
+            $license['issuedate'] = $timestamp;
+            $DB->insert_record('companylicense_users', $license);
 
             // Create an event.
             $eventother = array('licenseid' => $licenseid,
@@ -1426,33 +1460,51 @@ class block_iomad_company_admin_external extends external_api {
 
             // Does this license exist?
             if (!$oldlicense = $DB->get_record('companylicense', array('id' => $licenseid))) {
-                throw new invalid_parameter_exception("License id=$id does not exist");
+                throw new invalid_parameter_exception("License id=$licenseid does not exist");
             }
 
             // What about the company?
             if (!$companyrec = $DB->get_record('company', array('id' => $oldlicense->companyid))) {
-                throw new invalid_parameter_exception("Company does not exist for license id=$licenseid");
+                throw new invalid_parameter_exception("Company does not match for license id=$licenseid");
             }
 
             // The user?
-            if (!$user = $DB->get_record('user', array('id' => $oldlicense->userid))) {
-                throw new invalid_parameter_exception("User id=" . $user->id ." does not exist");
+            if (!$user = $DB->get_record('user', array('id' => $license['userid'], 'deleted' => 0))) {
+                throw new invalid_parameter_exception("User id=" . $license['userid'] ." does not exist");
+            }
+            if ($user->suspended == 1) {
+                throw new invalid_parameter_exception("User id=" . $license['userid'] ." is suspended");
             }
 
             // The course?
-            if (!$course = $DB->get_record('course', array('id' => $params['licensecourseid']))) {
-                throw new invalid_parameter_exception("Course id=" . $params['licensecourseid'] ." does not exist");
+            if (!$course = $DB->get_record('course', array('id' => $license['licensecourseid']))) {
+                throw new invalid_parameter_exception("Course id=" . $license['licensecourseid'] ." does not exist");
             }
 
-            // Has this been allocated and we can?
-            $params['isusing'] = 0;
-            if (!$allocationrec = $DB->get_record('companylicense_users', $params)) {
-                throw new invalid_parameter_exception("User id=" . $user->id ." already has an unused license for that course.");
+            // Does the license include this course?
+            if (!$DB->get_record('companylicense_courses', array('courseid' => $license['licensecourseid'],
+                                                                 'licenseid' => $licenseid))) {
+                throw new invalid_parameter_exception("Course id=" . $license['licensecourseid'] ." is not inculded in license id $licenseid");
+            }
+
+            // Has the license expired?
+            if ($oldlicense->expirydate < $timenow) {
+                throw new invalid_parameter_exception("License id=$licenseid has expired");
+            }
+
+            // Is there any space left?
+            if ($oldlicense->allocation <= $oldlicense->used) {
+                throw new invalid_parameter_exception("License id=$licenseid has no free slots");
+            }
+
+            // Can we remove this?
+            $license['isusing'] = 0;
+            if (!$allocationrec = $DB->get_record('companylicense_users', $license)) {
+                throw new invalid_parameter_exception("User id=" . $user->id ." has used the license for that course.");
             }
 
             // Set up the rest of the record.
-            $params['issuedate'] = $timestamp;
-            $DB->insert_record('companylicense_users', $params);
+            $DB->delete_record('companylicense_users', array('id' => $allocationrec->id));
 
             // Create an event.
             $eventother = array('licenseid' => $licenseid);

@@ -26,7 +26,7 @@ class iomad_company_select_form extends moodleform {
     public function __construct($actionurl, $companies = array(), $selectedcompany = 0) {
         global $USER, $DB;
         if (empty($selectedcompany) || empty($companies[$selectedcompany])) {
-            $this->companies = array(0 => get_string('selectacompany', 'block_iomad_company_selector')) + $companies;
+            $this->companies = array(0 => get_string('noneselected', 'block_iomad_company_admin')) + $companies;
         } else {
             $this->companies = $companies;
         }
@@ -36,8 +36,7 @@ class iomad_company_select_form extends moodleform {
 
     public function definition() {
         $mform =& $this->_form;
-        $autooptions = array('multiple' => false,
-                             'onchange' => 'this.form.submit()');
+        $autooptions = array('onchange' => 'this.form.submit()');
         $mform->addElement('autocomplete', 'company', get_string('selectacompany', 'block_iomad_company_selector'), $this->companies, $autooptions);
         $mform->addElement('hidden', 'showsuspendedcompanies');
         $mform->setType('showsuspendedcompanies', PARAM_BOOL);
@@ -168,7 +167,7 @@ class block_iomad_company_admin extends block_base {
             // Put together link.
             $html .= "<a href=\"$url\">";
             $html .= '<div class="iomadlink">';
-            $html .= '<div class="iomadicon"><div class="fa fa-topic '. $icon .'"> </div>';
+            $html .= '<div class="iomadicon ' . $menu['style'] . '"><div class="fa fa-topic '. $icon .'"> </div>';
             $html .= '<div class="fa fa-action '. $iconsmall .'"> </div></div>';
             $html .= '<div class="actiondescription">' . $action . "</div>";
             $html .= '</div>';
@@ -189,13 +188,16 @@ class block_iomad_company_admin extends block_base {
     public function gettabs($tabs, $selected) {
         global $OUTPUT;
 
+        $showsuspendedcompanies = optional_param('showsuspendedcompanies', false, PARAM_BOOL);
+
         $row = array();
 
         // Build list.
         foreach ($tabs as $key => $tab) {
             $row[] = new tabobject(
                 $key,
-                new moodle_url('/local/iomad_dashboard/index.php', array('tabid'=>$key)),
+                new moodle_url('/local/iomad_dashboard/index.php', array('tabid'=>$key,
+                                                                         'showsuspendedcompanies' => $showsuspendedcompanies)),
                 $tab
             );
         }

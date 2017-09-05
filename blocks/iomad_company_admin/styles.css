@@ -46,12 +46,12 @@ ul.iomadtab a:hover {
     text-decoration: underline;
 }
 
-div.iomadlink a:hover {
+div.iomadlink a:hover, div.iomadlinkreports a:hover{
     color:#fad163 !important;
     text-decoration: none;
 }
 
-div.iomadlink {
+div.iomadlink, div.iomadlinkreports {
     width: 100px;
     min-height: 100px;
     text-align: center;
@@ -82,6 +82,10 @@ border-radius: 10px;
     float: left;
 }
 
+.companyselect {
+    min-height: 75px;
+}
+
 .companyselect .singlebutton {
     float: right;
     position: relative;
@@ -92,6 +96,7 @@ border-radius: 10px;
 .companyselect .col-md-3 {
     top: 31px;
     left: 3px;
+    width: auto;
 }
 
 .block_iomad_company_admin .nav-tabs {
@@ -165,4 +170,12 @@ border-radius: 10px;
 
 .dep_tree .nochildren [aria-expanded="false"] {
     background-image: none;
+}
+
+.licenseok, .licensewarning {
+    font-weight: bold;
+}
+
+.licensewarning {
+    color: red;
 }

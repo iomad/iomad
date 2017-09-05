@@ -74,6 +74,17 @@ class local_iomad_observer {
     }
 
     /**
+     * Triggered via course_deleted event.
+     *
+     * @param \core\event\course_deleted $event
+     * @return bool true on success.
+     */
+    public static function course_deleted($event) {
+        company::course_deleted($event);
+        return true;
+    }
+
+    /**
      * Triggered via course_completed event.
      *
      * @param \core\event\course_completed $event
@@ -168,6 +179,30 @@ class local_iomad_observer {
      */
     public static function company_license_updated($event) {
         company::company_license_updated($event);
+        return true;
+    }
+
+    /**
+     * Triggered via block_iomad_company_admin::company_suspended event.
+     *
+     * @param \block_iomad_company_admin\event\company_suspended $event
+     * @return bool true on success.
+     */
+    public static function company_suspended($event) {
+echo "got a company suspended event in observer</br>";
+        company::company_suspended($event);
+        return true;
+    }
+
+    /**
+     * Triggered via block_iomad_company_admin::company_unsuspended event.
+     *
+     * @param \block_iomad_company_admin\event\company_unsuspended $event
+     * @return bool true on success.
+     */
+    public static function company_unsuspended($event) {
+echo "got a company unsuspended event in observer</br>";
+        company::company_unsuspended($event);
         return true;
     }
 }

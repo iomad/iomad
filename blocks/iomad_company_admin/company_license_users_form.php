@@ -70,11 +70,12 @@ class company_license_users_form extends moodleform {
             $userhierarchylevel = $userlevel->id;
         }
 
-        $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
         if ($departmentid == 0) {
             $this->departmentid = $userhierarchylevel;
+            $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
         } else {
             $this->departmentid = $departmentid;
+            $this->subhierarchieslist = company::get_all_subdepartments($departmentid);
         }
 
         $this->output = $output;
@@ -123,6 +124,7 @@ class company_license_users_form extends moodleform {
     }
 
     public function definition_after_data() {
+        global $USER;
 
         $mform =& $this->_form;
 
@@ -141,11 +143,10 @@ class company_license_users_form extends moodleform {
 
         $company = new company($this->selectedcompany);
 
-        // Create the sub department checkboxes html.
-        $departmentslist = company::get_all_departments($company->id);
-
         $subdepartmenthtml = "";
-        $departmenttree = company::get_all_departments_raw($company->id);
+        $userdepartment = $company->get_userlevel($USER);
+        $departmentslist = company::get_all_subdepartments($userdepartment->id);
+        $departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
         $treehtml = $this->output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
 
         $mform->addElement('html', '<p>' . get_string('updatedepartmentusersselection', 'block_iomad_company_admin') . '</p>');
@@ -153,9 +154,11 @@ class company_license_users_form extends moodleform {
         //$mform->addElement('html', $subdepartmenthtml);
 
         // This is getting hidden anyway, so no need for label
+        $mform->addElement('html', '<div class="display:none;">');
         $mform->addElement('select', 'deptid', ' ',
                             $departmentslist, array('class' => 'iomad_department_select', 'onchange' => 'this.form.submit()'));
         $mform->disabledIf('deptid', 'action', 'eq', 1);
+        $mform->addElement('html', '</div>');
 
         if ($this->license->expirydate > time()) {
             // Add in the courses selector.
@@ -499,28 +502,25 @@ if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', conte
     if (iomad::has_capability('block/iomad_company_admin:edit_licenses', context_system::instance())) {
         $alllicenses = true;
     } else {
-        $allliceses = false;
+        $alllicenses = false;;
     }
-    $licenses = company::get_recursive_departments_licenses($userhierarchylevel);
+    $licenses = $DB->get_records('companylicense', array('companyid' => $companyid), 'expirydate DESC', 'id,name,expirydate');
+
     if (!empty($licenses)) {
-        foreach ($licenses as $deptlicenseid) {
-            // Get the license record.
-            if ($license = $DB->get_records('companylicense',
-                                             array('id' => $deptlicenseid->licenseid, 'companyid' => $companyid),
-                                             null, 'id,name,expirydate')) {
-                if ($alllicenses || $license[$deptlicenseid->licenseid]->expirydate > time()) {
-                    $licenselist[$license[$deptlicenseid->licenseid]->id]  = $license[$deptlicenseid->licenseid]->name;
-                }
+        foreach ($licenses as $license) {
+            if ($alllicenses || $license->expirydate > time()) {
+                $licenselist[$license->id]  = $license->name;
             }
         }
     }
 }
 
 // If we haven't been passed a department level choose the users.
-if (!empty($departmentid)) {
-    $userhierarchylevel = $departmentid;
+if (empty($departmentid)) {
+    $departmentid = $userhierarchylevel;
 }
-$usersform = new company_license_users_form($PAGE->url, $context, $companyid, $licenseid, $userhierarchylevel, $selectedcourses, $error, $output);
+
+$usersform = new company_license_users_form($PAGE->url, $context, $companyid, $licenseid, $departmentid, $selectedcourses, $error, $output);
 
 echo $output->header();
 
@@ -575,7 +575,7 @@ if ($usersform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL)) {
         echo $outputstring."</br>";
         $usersform->process();
         // Reload the form.
-        $usersform = new company_license_users_form($PAGE->url, $context, $companyid, $licenseid, $userhierarchylevel, $selectedcourses, $error, $output);
+        $usersform = new company_license_users_form($PAGE->url, $context, $companyid, $licenseid, $departmentid, $selectedcourses, $error, $output);
         echo $usersform->display();
     }
 }

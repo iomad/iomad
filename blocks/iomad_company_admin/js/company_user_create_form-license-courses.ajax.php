@@ -14,8 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Process ajax requests
+ *
+ * @copyright Andreas Grabs
+ * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
+ * @package mod_feedback
+ */
 
-$plugin->version  = 2017080800;   // The (date) version of this plugin.
-$plugin->requires = 2014111000;   // Requires this Moodle version. (2.8)
-$plugin->component = 'local_iomad_track';
+/*if (!defined('AJAX_SCRIPT')) {
+    define('AJAX_SCRIPT', true);
+}*/
+
+require_once(dirname(__FILE__) . '/../../../config.php');
+require_once('../lib.php');
+
+$licenseid = required_param('licenseid', PARAM_INT);
+
+$context = context_system::instance();
+require_login();
+iomad::require_capability('block/iomad_company_admin:user_create', $context);
+
+$return = 'none';
+
+if ($license = $DB->get_record('companylicense', array('id' => $licenseid))) {
+    $return = 'inline';
+}
+echo $return;
+die;

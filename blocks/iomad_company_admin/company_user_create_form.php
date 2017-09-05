@@ -199,49 +199,53 @@ class user_edit_form extends company_moodleform {
             $mform->addElement('header', 'licenses', get_string('licenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
                                                    WHERE expirydate >= :timestamp
-                                                   AND companyid = :companyid
-                                                   AND used < allocation",
+                                                   AND companyid = :companyid",
                                                    array('timestamp' => time(),
                                                          'companyid' => $this->selectedcompany));
             $licenses = array('0' => get_string('nolicense', 'block_iomad_company_admin')) + $foundlicenses;
-            $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
-                                        get_string('selectlicensecourse', 'block_iomad_company_admin') .
-                                        "</div><div class='felement'>");
-            $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, array('id' => 'licenseidselector'));
-            $mylicenseid = $this->licenseid;
-            if (empty($this->licenseid)) {
-                $mform->addElement('html', '<div id="licensedetails"></div>');
+            $licensecourses = array();
+            if (count($foundlicenses) == 0) {
+                // No valid licenses.
+                $mform->addElement('html', '<div id="licensedetails"><b>' . get_string('nolicenses', 'block_iomad_company_admin') . '</b></div>');
             } else {
-                $mylicensedetails = $DB->get_record('companylicense', array('id' => $this->licenseid));
-                $licensestring = get_string('licensedetails', 'block_iomad_company_admin', $mylicensedetails);
-                $licensestring2 = get_string('licensedetails2', 'block_iomad_company_admin', $mylicensedetails);
-                $licensestring3 = get_string('licensedetails3', 'block_iomad_company_admin', $mylicensedetails);
-                $mform->addElement('html', '<div id="    "><b>You have ' . ((intval($licensestring3, 0)) - (intval($licensestring2, 0))) . ' courses left to allocate on this license </b></div>');
+                $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
+                                            get_string('selectlicensecourse', 'block_iomad_company_admin') .
+                                            "</div><div class='felement'>");
+                $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, array('id' => 'licenseidselector'));
+                $mylicenseid = $this->licenseid;
+                if (empty($this->licenseid)) {
+                    $mform->addElement('html', '<div id="licensedetails"></div>');
+                } else {
+                    $mylicensedetails = $DB->get_record('companylicense', array('id' => $this->licenseid));
+                    $licensestring = get_string('licensedetails', 'block_iomad_company_admin', $mylicensedetails);
+                    $licensestring2 = get_string('licensedetails2', 'block_iomad_company_admin', $mylicensedetails);
+                    $licensestring3 = get_string('licensedetails3', 'block_iomad_company_admin', $mylicensedetails);
+                    $mform->addElement('html', '<div id="    "><b>You have ' . ((intval($licensestring3, 0)) - (intval($licensestring2, 0))) . ' courses left to allocate on this license </b></div>');
+                }
+
+                // Is this a program of courses?
+                if (!empty($mylicensedetails->program)) {
+                     $mform->addElement('html', "<div style='display:none'>");
+                }
+                if (!$licensecourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
+                                                             JOIN {course} c ON (clc.courseid = c.id
+                                                             AND clc.licenseid = :licenseid)",
+                                                             array('licenseid' => $mylicenseid))) {
+                    $licensecourses = array();
+                }
             }
 
-            // Is this a program of courses?
-            if (!empty($mylicensedetails->program)) {
-                 $mform->addElement('html', "<div style='display:none'>");
-            }
-            if (!$licensecourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
-                                                         JOIN {course} c ON (clc.courseid = c.id
-                                                         AND clc.licenseid = :licenseid)",
-                                                         array('licenseid' => $mylicenseid))) {
-                $licensecourses = array();
-            }
-
+            $mform->addElement('html', '<div id="licensecoursescontainer" style="display:none;">');
             $licensecourseselect = $mform->addElement('select', 'licensecourses',
                                                       get_string('select_license_courses', 'block_iomad_company_admin'),
                                                       $licensecourses, array('id' => 'licensecourseselector'));
             $licensecourseselect->setMultiple(true);
-            
+            $mform->addElement('html', '</div>');
             if (!empty($mylicensedetails->program)) {
-                $mform->addElement('html', "</div>");
                 $licensecourseselect->setSelected($licensecourses);
             } else {
                 $licensecourseselect->setSelected(array());
             }
-            $mform->addElement('html', "</div></div>");
         }
 
         if (iomad::has_capability('block/iomad_company_admin:company_course_users', $systemcontext)) {
@@ -388,8 +392,10 @@ $companyid = iomad::get_my_companyid($context);
 $company = new company($companyid);
 
 $mform = new user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
-
-if ($data = $mform->get_data()) {
+if ($mform->is_cancelled()) {
+    redirect($dashboardurl);
+    die;
+} else if ($data = $mform->get_data()) {
     $data->userid = $USER->id;
     if ($companyid > 0) {
         $data->companyid = $companyid;
@@ -458,10 +464,10 @@ if ($data = $mform->get_data()) {
                         'companyid' => $company->id,
                         'usertype' => $data->managertype,
                         'usertypename' => $managertypes[$data->managertype]);
-    $event = \block_iomad_company_admin\event\company_user_unassigned::create(array('context' => context_system::instance(),
-                                                                                    'objectid' => $company->id,
-                                                                                    'userid' => $user->id,
-                                                                                    'other' => $eventother));
+    $event = \block_iomad_company_admin\event\company_user_assigned::create(array('context' => context_system::instance(),
+                                                                                  'objectid' => $company->id,
+                                                                                  'userid' => $user->id,
+                                                                                  'other' => $eventother));
     $event->trigger();
 
     // Assign the user to the default company department.
@@ -527,6 +533,7 @@ if ($data = $mform->get_data()) {
     }
 
     if (isset($data->submitandback)) {
+        $dashboardurl->param('noticeok', get_string('usercreated', 'block_iomad_company_admin'));
         redirect($dashboardurl);
     } else {
         redirect($linkurl."?createdok=1");
@@ -565,13 +572,23 @@ Y.on('change', submit_form, '#licenseidselector');
             $("#licensedetails").html(response);
         }
     });
+    $.ajax({
+        type: "GET",
+        url: "<?php echo $CFG->wwwroot; ?>/blocks/iomad_company_admin/js/company_user_create_form-license-courses.ajax.php?licenseid="+nValue,
+        datatype: "HTML",
+        success: function(response){
+            $("#licensecoursescontainer")[0].style.display = response;
+        }
+    });
  }
 </script>
 <?php
 
 // Display a message if user is created..
 if ($createdok) {
-    echo '<h2>'.get_string('usercreated', 'block_iomad_company_admin').'</h2>';
+    echo html_writer::start_tag('div', array('class' => "alert alert-success"));
+    echo get_string('usercreated', 'block_iomad_company_admin');
+    echo "</div>";
 }
 // Display the form.
 $mform->display();

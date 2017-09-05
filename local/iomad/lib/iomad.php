@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once('company.php');
+require_once(dirname(__FILE__) . '/../../../config.php');
+require_once(dirname(__FILE__) . '/company.php');
+require_once(dirname(__FILE__) . '/user.php');
+
 require_once($CFG->dirroot.'/lib/formslib.php');
 
 class iomad {
@@ -63,7 +66,7 @@ class iomad {
 
         if (!empty($SESSION->currenteditingcompany)) {
             return $SESSION->currenteditingcompany;
-        } else if ($usercompanies = $DB->get_records('company_users', array('userid' => $USER->id))) {
+        } else if ($usercompanies = $DB->get_records('company_users', array('userid' => $USER->id), 'id')) {
             $usercompany = array_pop($usercompanies);
             return $usercompany->companyid;
         } else {

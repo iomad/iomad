@@ -13,7 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+require_once(dirname(__FILE__) . '/../../../config.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+require_once(dirname(__FILE__) . '/user.php');
+
 class company {
     public $id = 0;
 
@@ -39,7 +43,7 @@ class company {
         if (!empty($SESSION->currenteditingcompany)) {
             return new company($SESSION->currenteditingcompany);
         } else {
-            if ($companies = $DB->get_records('company_users', array('userid' => $userid), 'companyid')) {
+            if ($companies = $DB->get_records('company_users', array('userid' => $userid), 'companyid DESC')) {
                 $company = array_pop($companies);
                 return new company($company->companyid);
             } else {
@@ -329,6 +333,79 @@ class company {
     }
 
     /**
+     * Get company role templates
+     *
+     **/
+    public static function get_role_templates($companyid = 0) {
+        global $DB;
+
+        $context = context_system::instance();
+        if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
+            $templates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
+        } else {
+            $templates = $DB->get_records_sql_menu("SELECT crt.id,crt.name FROM {company_role_templates} crt
+                                                    JOIN {company_role_templates_ass} crta
+                                                    ON (crt.id = crta.templateid)
+                                                    WHERE crta.companyid = :companyid
+                                                    ORDEr BY crt.name",
+                                                    array('companyid' => $companyid));
+        }
+        $templates = array('i' => get_string('inherit', 'block_iomad_company_admin')) + $templates;
+
+        // Add the default.
+        $templates = array(0 => get_string('none')) + $templates;
+        
+        return $templates;
+    }
+
+    /**
+     * Apply company role templates
+     *
+     **/
+    public function apply_role_templates($templateid = 0) {
+        global $DB;
+
+        if (!empty($templateid)) {
+            $restrictions = $DB->get_records('company_role_templates_caps', array('templateid' => $templateid));
+        } else {
+            // Get the same role entries as for the parent company id.
+            $restrictions = $DB->get_records('company_role_restriction', array('companyid' => $this->get_parentid()));
+        }
+
+        // Insert the restrictions.
+        // Remove them first.
+        $DB->delete_records('company_role_restriction', array('companyid' => $this->id));
+
+        // Add the template.
+        foreach ($restrictions as $restriction) {
+            $DB->insert_record('company_role_restriction', array('companyid' => $this->id, 'roleid' => $restriction->roleid, 'capability' => $restriction->capability));
+        }
+    }
+
+    /**
+     * Assign company role templates
+     *
+     **/
+    public function assign_role_templates($templates = array(), $clear = false) {
+        global $DB;
+
+        // Deal with any children.
+        $children = $this->get_child_companies();
+        foreach ($children as $child) {
+            $childcompany = new company($child->id);
+            $childcompany->assign_role_templates($templates, $clear);
+        }
+
+        // Final Deal with our own.
+        if ($clear) {
+            $DB->delete_records('company_role_templates_ass', array('companyid' => $this->id));
+        }
+        foreach ($templates as $templateid) {
+            $DB->insert_record('company_role_templates_ass', array('companyid' => $this->id, 'templateid' => $templateid));
+        }
+    }
+
+    /**
      * Associates a course to a company
      *
      * Parameters -
@@ -542,6 +619,11 @@ class company {
             $managertype = 0;
         }
 
+        // if this is the only company, set the theme.
+        if (!$DB->get_record('company_users', array('userid' => $userid))) {
+            $DB->set_field('user', 'theme', $this->get_theme(), array('id' => $userid));
+        }
+
         // Create the record.
         $userrecord = array();
         $userrecord['departmentid'] = $departmentid;
@@ -557,9 +639,6 @@ class company {
                 print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
             }
         }
-
-        // Deal with the company theme.
-        $DB->set_field('user', 'theme', $this->get_theme(), array('id' => $userid));
 
         return true;
     }
@@ -685,6 +764,9 @@ class company {
     public function get_userlevel($user) {
 
         global $DB;
+        if (is_siteadmin()) {
+            return self::get_company_parentnode($this->id);
+        }
         if ($userdepartment = $DB->get_record('company_users', array('userid' => $user->id, 'companyid' => $this->id))) {
             $userlevel = $DB->get_record('department', array('id' => $userdepartment->departmentid));
             return $userlevel;
@@ -884,7 +966,9 @@ class company {
         global $DB;
         if (!$parentnode = $DB->get_record('department', array('company' => $companyid,
                                                                'parent' => '0'))) {
-            return false;
+            self::initialise_departments($companyid);
+            $parentnode = $DB->get_record('department', array('company' => $companyid,
+                                                               'parent' => '0'));
         }
         return $parentnode;
     }
@@ -974,6 +1058,19 @@ class company {
         $parentlist = array();
         $parentnode = self::get_company_parentnode($companyid);
         $departmenttree = self::get_subdepartments($parentnode);
+
+        return $departmenttree;
+    }
+
+    /**
+     * Get array of all departments given companyid
+     * Used to display select tree
+     * @param int companyid
+     * @return array
+     */
+    public static function get_all_subdepartments_raw($departmentid) {
+        $departmentnode = self::get_departmentbyid($departmentid);
+        $departmenttree = self::get_subdepartments($departmentnode);
 
         return $departmenttree;
     }
@@ -1563,7 +1660,7 @@ class company {
         return false;
     }
 
-    public function get_menu_courses($shared = false, $licensed = false, $groups = false) {
+    public function get_menu_courses($shared = false, $licensed = false, $groups = false, $default = true) {
         global $DB;
         
         // Deal with license option.
@@ -1618,7 +1715,11 @@ class company {
                                                        'companyid2' => $this->id));
 
         // Add a default entry and return the courses.
-        return array('0' => get_string('noselection', 'form')) + $retcourses;
+        if ($default) {
+            return array('0' => get_string('noselection', 'form')) + $retcourses;
+        } else {
+            return $retcourses;
+        }
     }
 
     public function get_course_groups_menu($courseid) {
@@ -1959,13 +2060,13 @@ class company {
      *              $theme = string;
      *
      **/
-    public function suspend($suspend) {
+    public function suspend($suspend = true) {
         global $DB;
 
         // Get the company users.
         $users = $this->get_all_user_ids();
 
-        // Update their theme.
+        // Update the users.
         foreach ($users as $userid) {
             if ($user = $DB->get_record('user', array('id' => $userid))) {
                 if (! $DB->get_record('company_users', array('userid' => $user->id, 'companyid' => $this->id, 'suspended' => 1))) {
@@ -1980,6 +2081,16 @@ class company {
 
         // Set the suspend field for the company.
         $DB->set_field('company', 'suspended', $suspend, array('id' => $this->id));
+
+        // Deal with child companies.
+        $childcompanies = $this->get_child_companies();
+        if (!empty($childcompanies)) {
+            foreach ($childcompanies as $childcomprec) {
+
+                $childcompany = new company($childcomprec->id);
+                $childcompany->suspend($suspend);
+            }
+        }
     }
 
     /**
@@ -2169,15 +2280,13 @@ class company {
      *              $user = stdclass();
      *
      **/
-    public static function autoenrol($user) {
+    public function autoenrol($user) {
         global $DB, $CFG, $SITE;
 
         // Get the courses which are assigned to the company which are not licensed.
         $courses = $DB->get_records_sql("SELECT courseid FROM {company_course} WHERE companyid = :companyid
-                                         AND courseid IN (
-                                             SELECT courseid from {iomad_courses}
-                                             WHERE licensed = 0)",
-                                         array('companyid' => $user->companyid));
+                                         AND autoenrol = 1",
+                                         array('companyid' => $this->id));
 
         // Are we also enrolling to unattached courses?
         if (!empty($CFG->local_iomad_signup_autoenrol_unassigned)) {
@@ -2321,6 +2430,45 @@ class company {
     }
 
     /**
+     * Triggered via course_deleted event.
+     *
+     * @param \core\event\course_deleted $event
+     * @return bool true on success.
+     */
+    public static function course_deleted(\core\event\course_deleted $event) {
+        global $DB;
+
+        // Clear everything from the iomad_courses table.
+        $DB->delete_records('iomad_courses', array('courseid' => $event->courseid));
+
+        // Remove the course from company allocation tables.
+        $DB->delete_records('company_course', array('courseid' => $event->courseid));
+
+        // Remove the course from company created course tables.
+        $DB->delete_records('company_created_courses', array('courseid' => $event->courseid));
+
+        // Remove the course from company shared courses tables.
+        $DB->delete_records('company_shared_courses', array('courseid' => $event->courseid));
+
+        // Deal with licenses allocations.
+        $DB->delete_records('companylicense_users', array('licensecourseid' => $event->courseid));
+        $courselicenses = $DB->get_records('//companylicense_courses', array('courseid' => $event->courseid));
+        foreach ($courselicenses as $courselicense) {
+            // Delete the course from the license.
+            $DB->delete_record('companylicense_courses', array('id' => $courselicense->id));
+            // Does the license have any courses left?
+            if ($DB->get_records('companylicense_courses', array('licensid' => $courselicense->licenseid))) {
+                self::update_license_usage($courselicense->licenseid);
+            } else {
+                // Delete the license.  It no longer is valid.
+                $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Triggered via course_completed event.
      *
      * @param \core\event\course_completed $event
@@ -2434,17 +2582,68 @@ class company {
         global $DB;
 
         $userid = $event->objectid;
+        $timestamp = time();
 
-        // Does the user have any unused licenses?
-        if ($licenserecords = $DB->get_records('companylicense_users', array('userid' => $userid, 'isusing' => 0))) {
-            foreach ($licenserecords as $licenserecord) {
-                // Delete the record.
-                $DB->delete_records('companylicense_users', array('id' => $licenserecord->id));
+        // Get licenses which are reusable and can be removed.
+        if ($reusablelicenses = $DB->get_records_sql("SELECT clu.*
+                                                      FROM {companylicense_users} clu
+                                                      JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                                      WHERE cl.type = 1
+                                                      AND cl.expirydate > :timestamp
+                                                      AND clu.userid = :userid",
+                                                      array('timestamp' => $timestamp,
+                                                            'userid' => $userid))) {
+            foreach ($reusablelicenses as $reusablelicense) {
+                $DB->delete_records('companylicense_users', array('id' => $reusablelicense->id));
 
                 // Update the license usage.
-                self::update_license_usage($licenserecord->licenseid);
+                self::update_license_usage($reusablelicense->licenseid);
             }
         }
+
+        // Get licenses which are unused, non-program and can be removed.
+        if ($nonprogramlicenses = $DB->get_records_sql("SELECT clu.*
+                                                        FROM {companylicense_users} clu
+                                                        JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                                        WHERE cl.type = 0
+                                                        AND cl.program = 0
+                                                        AND clu.isusing = 0
+                                                        AND cl.expirydate > :timestamp
+                                                        AND clu.userid = :userid",
+                                                        array('timestamp' => $timestamp,
+                                                              'userid' => $userid))) {
+            foreach ($nonprogramlicenses as $nonprogramlicense) {
+                $DB->delete_records('companylicense_users', array('id' => $nonprogramlicense->id));
+
+                // Update the license usage.
+                self::update_license_usage($nonprogramlicense->licenseid);
+            }
+        }
+
+        // Deal with program licenses.
+        if ($programlicenses = $DB->get_records_sql("SELECT cl.*
+                                                     FROM {companylicense} cl
+                                                     JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
+                                                     WHERE clu.userid = :userid
+                                                     AND cl.expirydate > :timestamp
+                                                     GROUP BY cl.id",
+                                                     array('timestamp' => $timestamp,
+                                                           'userid' => $userid))) {
+
+            foreach ($programlicenses as $programlicense) {
+                // Check if there is a used course here
+                if ($DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id, 'isusing' => 1))) {
+                    continue;
+                } else {
+                    $DB->delete_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id));
+                    // Update the license usage.
+                    self::update_license_usage($programlicense->id);
+                }
+            }
+        }
+
+        // Remove the user from any company.
+        $DB->delete_records('company_users', array('userid' => $userid));
 
         return true;
     }
@@ -2737,6 +2936,46 @@ class company {
                 }
             }
         }
+
+        // Deal with any children.
+        if ($children = $DB->get_records('companylicense', array('parentid' => $licenseid))) {
+            foreach ($children as $child) {
+                // Get the courses.
+                 $oldcourses = $DB->get_records('companylicense_courses', array('licenseid' => $child->id), null, 'courseid');
+
+                // Clear down all of them initially.
+                $DB->delete_records('companylicense_courses', array('licenseid' => $child->id));
+                if (!empty($currentcourses)) {
+                    // Add the course license allocations.
+                    foreach ($currentcourses as $selectedcourse) {
+                        $DB->insert_record('companylicense_courses', array('licenseid' => $child->id, 'courseid' => $selectedcourse->courseid));
+                    }
+                }
+
+                // Deal with the allocation amount if courses changed.
+                if (!empty($child->program)) {
+                    $old = count($oldcourses);
+                    $new = count($currentcourses);
+                    if ($old != $new) {
+                        $allocation = $child->allocation / $old * $new;
+                        $DB->set_field('companylicense', 'allocation', $allocation, array('id' => $child->id));
+                    }
+                }  
+
+                // Create an event to deal with any child license allocations.
+                $eventother = $event->other;
+                $eventother['licenseid'] = $child->id;
+                $eventother['parentid'] = $licenseid;
+                $eventother['oldcourses'] = json_encode($oldcourses);
+
+                $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => context_system::instance(),
+                                                                                                'userid' => $event->userid,
+                                                                                                'objectid' => $child->id,
+                                                                                                'other' => $eventother));
+                $event->trigger();
+            }
+        }
+
         return true;
     }
 
@@ -2758,6 +2997,48 @@ class company {
 
         // Update the license usage.
         self::update_license_usage($parentid);
+
+        return true;
+    }
+
+    /**
+     * Triggered via company_suspended event.
+     *
+     * @param \block_iomad_company_user\event\company_suspended $event
+     * @return bool true on success.
+     */
+    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
+        global $DB, $CFG;
+
+        $companyid = $event->other['companyid'];
+        
+        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
+            return;
+        }
+
+        $suspendcompany = new company($companyid);
+        $suspendcompany->suspend(true);
+
+        return true;
+    }
+
+    /**
+     * Triggered via company_unsuspended event.
+     *
+     * @param \block_iomad_company_user\event\company_unsuspended $event
+     * @return bool true on success.
+     */
+    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
+        global $DB, $CFG;
+
+        $companyid = $event->other['companyid'];
+        
+        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
+            return;
+        }
+
+        $suspendcompany = new company($companyid);
+        $suspendcompany->suspend(false);
 
         return true;
     }

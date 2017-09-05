@@ -39,12 +39,13 @@ use pix_icon;
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+require_once($CFG->dirroot.'/local/iomad/lib/user.php');
+require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
 
 /**
  * Renderers to align Moodle's HTML with that expected by Bootstrap
  *
- * @package    theme_iomadboost
+ * @package    theme_boost
  * @copyright  2012 Bas Brands, www.basbrands.nl
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -109,7 +110,7 @@ class core_renderer extends \core_renderer {
      * @return string HTML fragment.
      */
     public function standard_head_html() {
-        global $SITE, $PAGE, $USER;
+        global $SITE, $PAGE;
 
         $output = parent::standard_head_html();
         if ($PAGE->pagelayout == 'frontpage') {
@@ -117,10 +118,6 @@ class core_renderer extends \core_renderer {
             if (!empty($summary)) {
                 $output .= "<meta name=\"description\" content=\"$summary\" />\n";
             }
-        }
-
-        if ($companyid = \iomad::is_company_user()) {
-            $output .= "<style>" . \iomad::get_company_customcss($companyid) . "</style>";
         }
 
         return $output;
@@ -150,28 +147,12 @@ class core_renderer extends \core_renderer {
      * @return string HTML for the header bar.
      */
     public function context_header($headerinfo = null, $headinglevel = 1) {
-        global $SITE, $DB, $CFG;
+        global $SITE;
 
         if ($this->should_display_main_logo($headinglevel)) {
             $sitename = format_string($SITE->fullname, true, array('context' => context_course::instance(SITEID)));
-            $logoinfo = html_writer::div(html_writer::empty_tag('img', [
+            return html_writer::div(html_writer::empty_tag('img', [
                 'src' => $this->get_logo_url(null, 150), 'alt' => $sitename]), 'logo');
-            if ($companyid = \iomad::is_company_user()) {
-                $context = \context_system::instance();
-                if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
-                    foreach ($files as $file) {
-                        if ($file->filename != '.') {
-                            $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
-                            $logoinfo .= html_writer::end_tag('div');
-                            $logoinfo .= html_writer::start_tag('div', array('class' => 'pull-xs-right'));
-                            $logoinfo .= html_writer::div(html_writer::empty_tag('img', [
-                                         'src' => $clientlogo, 'alt' => '']), 'clientlogo');
-                            $logoinfo .= html_writer::end_tag('div');
-                        }
-                    }
-                }
-            }
-            return $logoinfo;
         }
 
         return parent::context_header($headerinfo, $headinglevel);
@@ -222,11 +203,21 @@ class core_renderer extends \core_renderer {
      * theme settings page.
      */
     public function custom_menu($custommenuitems = '') {
-        global $CFG;
+        global $CFG, $DB;
 
         if (empty($custommenuitems) && !empty($CFG->custommenuitems)) {
             $custommenuitems = $CFG->custommenuitems;
         }
+
+        // Deal with company custom menu items.
+        if ($companyid = \iomad::is_company_user()) {
+            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+                if (!empty($companyrec->custommenuitems)) {
+                    $custommenuitems = $companyrec->custommenuitems;
+                }
+            }
+        }
+
         $custommenu = new custom_menu($custommenuitems, current_language());
         return $this->render_custom_menu($custommenu);
     }
@@ -236,12 +227,22 @@ class core_renderer extends \core_renderer {
      * Just return the menu object exported so we can render it differently.
      */
     public function custom_menu_flat() {
-        global $CFG;
+        global $CFG, $DB;
         $custommenuitems = '';
 
         if (empty($custommenuitems) && !empty($CFG->custommenuitems)) {
             $custommenuitems = $CFG->custommenuitems;
         }
+
+        // Deal with company custom menu items.
+        if ($companyid = \iomad::is_company_user()) {
+            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+                if (!empty($companyrec->custommenuitems)) {
+                    $custommenuitems = $companyrec->custommenuitems;
+                }
+            }
+        }
+
         $custommenu = new custom_menu($custommenuitems, current_language());
         $langs = get_string_manager()->get_list_of_translations();
         $haslangmenu = $this->lang_menu() != '';
@@ -312,7 +313,17 @@ class core_renderer extends \core_renderer {
     public function navbar_button() {
         global $CFG;
 
-        if (empty($CFG->custommenuitems) && $this->lang_menu() == '') {
+        $custommenuitems = false;
+        // Deal with company custom menu items.
+        if ($companyid = \iomad::is_company_user()) {
+            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+                if (!empty($companyrec->custommenuitems)) {
+                    $custommenuitems = true;
+                }
+            }
+        }
+
+        if (empty($CFG->custommenuitems) && $this->lang_menu() == '' && empty($custommenuitems)) {
             return '';
         }
 

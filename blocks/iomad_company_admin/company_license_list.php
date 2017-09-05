@@ -24,6 +24,7 @@ $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
 $perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 $companyid    = optional_param('companyid', 0, PARAM_INTEGER);
+$save         = optional_param('save', 0, PARAM_INTEGER);
 
 global $DB;
 
@@ -150,10 +151,12 @@ if ($departmentid == $companydepartment->id) {
 
     // Do we have any child companies?
     if ($childcompanies = $company->get_child_companies_recursive()) {
+        $showcompanies = true;
         $gotchildren = true;
         array_unshift($table->head, get_string('company', 'block_iomad_company_admin'));
         $childsql = "OR companyid IN (" . join(',', array_keys($childcompanies)) . ")";
     } else {
+        $showcompanies = false;
         $gotchildren = false;
         $childsql = "";
     }
@@ -168,22 +171,42 @@ if ($departmentid == $companydepartment->id) {
     // Cycle through the results.
     foreach ($licenses as $license) {
         // Set up the edit buttons.
+        $deletebutton = "";
+        $editbutton = "";
+
         if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $context) ||
             (iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $context) && !empty($license->parentid))) {
-            $deletebutton = "<a class='btn btn-primary' href='". 
-                             new moodle_url('company_license_list.php', array('delete' => $license->id,
-                                                                              'sesskey' => sesskey())) ."'>$strdelete</a>";
-            $editbutton = "<a class='btn btn-primary' href='" . new moodle_url('company_license_edit_form.php',
-                           array("licenseid" => $license->id, 'departmentid' => $departmentid)) . "'>$stredit</a>";
-        } else {
-            $deletebutton = "";
-            $editbutton = "";
+                // Is this above the user's company allocation?
+                if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $context) ||
+                    $DB->get_record_sql("SELECT id FROM {company_users}
+                                         WHERE userid = :userid
+                                         AND companyid = (
+                                            SELECT companyid FROM {companylicense}
+                                            WHERE id = :parentid)",
+                                         array('userid' => $USER->id,
+                                               'parentid' => $license->parentid))) {
+                $deletebutton = "<a class='btn btn-primary' href='". 
+                                 new moodle_url('company_license_list.php', array('delete' => $license->id,
+                                                                                  'sesskey' => sesskey())) ."'>$strdelete</a>";
+                $editbutton = "<a class='btn btn-primary' href='" . new moodle_url('company_license_edit_form.php',
+                               array("licenseid" => $license->id, 'departmentid' => $departmentid)) . "'>$stredit</a>";
+            }
         }
+
+        // does the company the license is allocated to have any kids?
+        $licensecompany = new company($license->companyid);
+        if ($childcompanies = $licensecompany->get_child_companies_recursive()) {
+            $gotchildren = true;
+        } else {
+            $gotchildren = false;
+        }
+
         // Set up the edit buttons.
-        if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $context) ||
+        if ((iomad::has_capability('block/iomad_company_admin:edit_licenses', $context) ||
             iomad::has_capability('block/iomad_company_admin:edit_my_licenses', $context) ||
-            (iomad::has_capability('block/iomad_company_admin:split_my_licenses', $context)) &&
-            $license->used < $license->allocation) {
+            iomad::has_capability('block/iomad_company_admin:split_my_licenses', $context)) &&
+            $license->used < $license->allocation &&
+            $gotchildren) {
             $splitbutton = "<a class='btn btn-primary' href='" . new moodle_url('company_license_edit_form.php',
                            array("parentid" => $license->id)) . "'>$strsplit</a>";
         } else {
@@ -202,15 +225,21 @@ if ($departmentid == $companydepartment->id) {
             }
         }
 
+        // Deal with allocation numbers if a program.
         if (!empty($license->program)) {
             $programstring = get_string('yes');
             $allocation = $license->allocation / count($licensecourses);
             $used = $license->used / count($licensecourses);
-            $validlength = "-";
         } else {
             $programstring = get_string('no');
             $allocation = $license->allocation;
             $used = $license->used;
+        }
+
+        // Deal with valid length if a subscription.
+        if (!empty($license->type)) {
+            $validlength = "-";
+        } else {
             $validlength = $license->validlength;
         }
 
@@ -222,11 +251,11 @@ if ($departmentid == $companydepartment->id) {
                            $validlength,
                            $allocation,
                            $used,
-                           $editbutton,
-                           $splitbutton,
+                           $editbutton . ' ' .
+                           $splitbutton . ' ' .
                            $deletebutton);
         // Add in the company name if we have any.
-        if ($gotchildren) {
+        if ($showcompanies) {
             $liccompany = new company($license->companyid);
             array_unshift($dataarray, $liccompany->get_name());
         }
