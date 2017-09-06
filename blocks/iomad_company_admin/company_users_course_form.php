@@ -216,7 +216,7 @@ if ($userid) {
 // Set the name for the page.
 $linktext = get_string('edit_users_title', 'block_iomad_company_admin');
 // Set the url.
-$linkurl = new moodle_url('/blocks/iomad_company_admin/editusers.php');
+$linkurl = new moodle_url('/blocks/iomad_company_admin/company_users_course_form.php');
 
 // Print the page header.
 $PAGE->set_context($context);
