@@ -608,7 +608,9 @@ if ($mform->is_cancelled()) {
         $companylist->param('noticeok', get_string('companycreatedok', 'block_iomad_company_admin'));
 
         // Deal with any assigned templates.
-        $company->assign_role_templates($data->templates);
+        if (!empty($data->templates)) {
+            $company->assign_role_templates($data->templates);
+        }
 
     } else {
         $data->id = $companyid;
