@@ -184,7 +184,7 @@ if ($lesson->ongoing && !$reviewmode) {
     echo $lessonoutput->ongoing_score($lesson);
 }
 if (!$reviewmode) {
-    echo $result->feedback;
+    echo format_text($result->feedback, FORMAT_MOODLE, array('context' => $context));
 }
 
 // User is modifying attempts - save button and some instructions
@@ -210,9 +210,7 @@ if (!$result->correctanswer && !$result->noanswer && !$result->isessayquestion &
 
 $url = new moodle_url('/mod/lesson/view.php', array('id'=>$cm->id, 'pageid'=>$result->newpageid));
 if ($lesson->review && !$result->correctanswer && !$result->noanswer && !$result->isessayquestion && !$result->maxattemptsreached) {
-    // When the answer is wrong - the result->newpageid points back to the current question.
-    $newpageid = $lesson->get_next_page($page->nextpageid);
-    $url = new moodle_url('/mod/lesson/view.php', array('id'=>$cm->id, 'pageid'=>$newpageid));
+    // Button to continue the lesson (the page to go is configured by the teacher).
     echo $OUTPUT->single_button($url, get_string('reviewquestioncontinue', 'lesson'));
 } else {
     // Normal continue button

@@ -435,6 +435,7 @@ $string['deleteunconfirmed'] = 'Delete not fully setup users after';
 $string['deleteuser'] = 'Delete user';
 $string['density'] = 'Density';
 $string['denyemailaddresses'] = 'Denied email domains';
+$string['devlibdirpresent'] = 'Directories with development libraries such as <em>vendor</em> or <em>node_modules</em> should not be present on public sites. See the <a href="{$a->moreinfourl}">security overview report</a> for more details.';
 $string['development'] = 'Development';
 $string['devicedetectregex'] = 'Device detection regular expressions';
 $string['devicedetectregex_desc'] = '<p>By default, Moodle can detect devices of the type default (desktop PCs, laptops, etc), mobile (phones and small hand held devices), tablet (iPads, Android tablets) and legacy (Internet Explorer 6 users).  The theme selector can be used to apply separate themes to all of these.  This setting allows regular expressions that allow the detection of extra device types (these take precedence over the default types).</p>
@@ -610,6 +611,7 @@ $string['indexinginfo'] = 'The recommended way to index your site\'s contents is
 $string['installhijacked'] = 'Installation must be finished from the original IP address, sorry.';
 $string['installsessionerror'] = 'Can not initialise PHP session, please verify that your browser accepts cookies.';
 $string['intlrecommended'] = 'Intl extension is used to improve internationalization support, such as locale aware sorting.';
+$string['intlrequired'] = 'Intl extension is required to improve internationalization support, such as locale aware sorting and international domain names.';
 $string['invalidsection'] = 'Invalid section.';
 $string['invaliduserchangeme'] = 'Username "changeme" is reserved -- you cannot create an account with it.';
 $string['ipblocked'] = 'This site is not available currently.';
@@ -939,6 +941,7 @@ $string['registerwithmoodleorg'] = 'Register your site';
 $string['registration'] = 'Registration';
 $string['registration_help'] = 'It is recommended that you register your site in order to receive security alerts and access to Moodle.net, our course sharing platform.';
 $string['registrationwarning'] = 'Your site is not yet registered.';
+$string['registrationwarningcontactadmin'] = 'Your site is not yet registered. Please notify your administrator.';
 $string['releasenoteslink'] = 'For information about this version of Moodle, please see the online <a target="_blank" href="{$a}">Release Notes</a>';
 $string['rememberusername'] = 'Remember username';
 $string['rememberusername_desc'] = 'Enable if you want to store permanent cookies with usernames during user login. Permanent cookies may be considered a privacy issue if used without consent.';

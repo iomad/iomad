@@ -6863,6 +6863,9 @@ a.ygtvspacer:hover {
 #categoryquestions label {
   margin: 0;
 }
+#categoryquestions .header {
+  text-align: left;
+}
 #page-mod-quiz-edit div.questionbankwindow div.header {
   margin: 0;
 }
@@ -7460,9 +7463,12 @@ body.path-question-type .mform fieldset.hidden {
 .userlist table#participants {
   text-align: center;
 }
-.userlist table#participants td,
-.userlist table#participants th {
+.userlist table#participants td {
+  text-align: left;
+  padding: 4px;
   vertical-align: middle;
+}
+.userlist table#participants th {
   text-align: left;
   padding: 4px;
 }
@@ -13840,6 +13846,12 @@ form {
 .singleselect label {
   margin-right: .3em;
 }
+.custom-select {
+  max-width: 100%;
+}
+.custom-select + input[type="submit"] {
+  margin: 0 0 0 5px;
+}
 #portfolio-add-button {
   display: inline;
 }
@@ -14485,11 +14497,14 @@ body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebrea
 .path-mod-forum .forumheaderlist .discussion .topic,
 .path-mod-forum .forumheaderlist .discussion .discussionsubscription,
 .path-mod-forum .forumheaderlist .discussion .topic.starter,
-.path-mod-forum .forumheaderlist .discussion .picture,
 .path-mod-forum .forumheaderlist .discussion .author,
 .path-mod-forum .forumheaderlist .discussion .replies,
 .path-mod-forum .forumheaderlist .discussion .lastpost {
   vertical-align: top;
+}
+.path-mod-forum .forumheaderlist .discussion .picture {
+  margin: 0 20px;
+  float: left;
 }
 .path-mod-forum .forumheaderlist .discussion .unread img {
   margin: 0;
