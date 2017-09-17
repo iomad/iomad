@@ -138,7 +138,7 @@ function email_reports_cron() {
             continue;
         }
 
-        if (!empty($companyrec->managernotify) && ($companyrec->managernotify == 1 || $company->managernotify == 3)) {
+        if (!empty($companyrec->managernotify) && ($companyrec->managernotify == 1 || $companyrec->managernotify == 3)) {
             if ($dayofweek == $companyrec->managerdigestday || empty($companyrec->managerdigestday)) {
                 // Get the managers.
                 $managers = $DB->get_records_sql("SELECT * FROM {company_users}
@@ -405,7 +405,6 @@ function email_reports_cron() {
             }
         }
     }
-    $dbman->drop_table($table);
 
     // Deal with manager completion digests.
     // Get the companies from the list of users in the temp table.
@@ -478,4 +477,7 @@ function email_reports_cron() {
             }
         }
     }
+
+    // Drop the temp database table.
+    $dbman->drop_table($table);
 }

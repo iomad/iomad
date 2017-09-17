@@ -524,7 +524,7 @@ abstract class oauth2_client extends curl {
     public function build_post_data($params) {
         $result = [];
         foreach ($params as $name => $value) {
-            $result[] = str_replace('&', '%26', $name) . '=' . str_replace('&', '%26', $value);
+            $result[] = urlencode($name) . '=' . urlencode($value);
         }
         return implode('&', $result);
     }
@@ -556,6 +556,10 @@ abstract class oauth2_client extends curl {
         }
 
         $r = json_decode($response);
+
+        if (is_null($r)) {
+            throw new moodle_exception("Could not decode JSON token response");
+        }
 
         if (!empty($r->error)) {
             throw new moodle_exception($r->error . ' ' . $r->error_description);
@@ -609,6 +613,9 @@ abstract class oauth2_client extends curl {
                 $this->setHeader('Authorization: Bearer '.$this->accesstoken->token);
             }
         }
+
+        // Force JSON format content in response.
+        $this->setHeader('Accept: application/json');
 
         $response = parent::request($murl->out(false), $options);
 
