@@ -120,5 +120,18 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
         }
     }
 
+    // add new role capability
+    if ($oldversion < 2017090302) {
+        $profilefields = $DB->get_records('user_info_field');
+        foreach ($profilefields as $profilefield) {
+            // Check if there is a hyphen in the shortname.
+            $profilefield->shortname = str_replace('-', '', $profilefield->shortname);
+            $DB->update_record('user_info_field', $profilefield);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017090302, 'block', 'iomad_company_admin');
+    }
+
     return true;
 }
