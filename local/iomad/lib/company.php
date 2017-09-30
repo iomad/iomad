@@ -1430,9 +1430,8 @@ class company {
             $company = new company($departmentrec->company);
             // Get the list of departments at and below the user assignment.
             $userhierarchylevel = $company->get_userlevel($USER);
-            $subhierarchytree = self::get_all_subdepartments($userhierarchylevel);
-            $subhieracrhieslist = self::get_department_list($subhierarchytree);
-            if (isset($subhieracrhieslist[$departmentid])) {
+            $subhierarchytree = self::get_all_subdepartments($userhierarchylevel->id);
+            if (isset($subhierarchytree[$departmentid])) {
                 // Current department is a child of the users assignment.
                 return true;
             } else {
@@ -1892,7 +1891,7 @@ class company {
                                                         'name' => $company->shortname))) {
             // Not got one, create a default.
             $companygroup = new stdclass();
-            $companygroup->id = self::create_company_course_group($companyid, $courseid);
+            $companygroup->groupid = self::create_company_course_group($companyid, $courseid);
         }
         // Get the group information.
         $groupinfo = $DB->get_record('groups', array('id' => $companygroup->groupid));
@@ -2827,12 +2826,22 @@ class company {
         $license = new stdclass();
         $license->length = $licenserecord->validlength;
         $license->valid = date($CFG->iomad_date_format, $licenserecord->expirydate);
-                                
-        // Send out the email.
-        EmailTemplate::send('license_removed', array('course' => $course,
-                                                     'user' => $user,
-                                                     'license' => $license));
 
+        if ($emailrecs = $DB->get_records('email', array('userid' => $user->id,
+                                                         'courseid' => $course->id,
+                                                         'templatename' => 'license_allocated',
+                                                         'sent' => null))) {
+            // Delete the email as it hasn't been sent.
+            foreach ($emailrecs as $emailrec) {
+                $DB->delete_records('email', array('id' => $emailrec->id));
+            }
+        } else {
+            // Send out the email.
+            EmailTemplate::send('license_removed', array('course' => $course,
+                                                         'user' => $user,
+                                                         'license' => $license));
+
+        }
         // Update the license usage.
         self::update_license_usage($licenseid);
 

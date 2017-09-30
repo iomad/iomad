@@ -91,6 +91,7 @@ class company_managers_form extends moodleform {
 
         if (count($this->potentialusers->find_users('')) || count($this->currentusers->find_users(''))) {
 
+            $mform->addElement('html', "(" . get_string('companymanagersforminfo', 'block_iomad_company_admin') . ")");
             $mform->addElement('html', '<table summary=""
                                         class="companymanagertable addremovetable generaltable generalbox boxaligncenter"
                                         cellspacing="0">
@@ -400,7 +401,7 @@ class company_managers_form extends moodleform {
                                             'usertypename' => $managertypes[$roletype]);
                         $event = \block_iomad_company_admin\event\company_user_unassigned::create(array('context' => context_system::instance(),
                                                                                                         'objectid' => $company->id,
-                                                                                                        'userid' => $adduser->id,
+                                                                                                        'userid' => $removeuser->id,
                                                                                                         'other' => $eventother));
                         $event->trigger();
                     }
