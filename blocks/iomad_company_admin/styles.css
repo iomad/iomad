@@ -178,3 +178,7 @@ border-radius: 10px;
 .licensewarning {
     color: red;
 }
+
+#page-blocks-iomad_company_admin-editusers #region-main>.card {
+    overflow-x: visible;
+}
