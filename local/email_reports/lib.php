@@ -81,7 +81,9 @@ function email_reports_cron() {
                         AND u.deleted = 0
                         AND u.suspended = 0)";
 
+$DB->set_debug(true);
     $DB->execute($populatesql);
+$DB->set_debug(false);
 
     // Email all of the users.
     $allusers = $DB->get_records($tempcomptablename);
@@ -161,7 +163,7 @@ function email_reports_cron() {
                     $summary = "<table><tr><th>" . get_string('firstname') . "</th>" .
                                "<th>" . get_string('lastname') . "</th>" .
                                "<th>" . get_string('email') . "</th>" .
-                               "<th>" . get_string('department', 'block_iomad_company_admin') ."</th>";
+                               "<th>" . get_string('department', 'block_iomad_company_admin') ."</th>" .
                                "<th>" . get_string('course') . "</th>" .
                                "<th>" . get_string('timeenrolled', 'local_report_completion') ."</th></tr>";
                     $foundusers = false;
