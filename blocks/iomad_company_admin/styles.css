@@ -179,3 +179,12 @@ border-radius: 10px;
 .licensewarning {
     color: red;
 }
+
+#page-blocks-iomad_company_admin-editusers .generaltable {
+    overflow-x: unset;
+}
+
+#page-blocks-iomad_company_admin-editusers .moodle-actionmenu[data-enhanced].show .menu.align-tl-bl {
+    left: 50px;
+    min-width: 150px;
+}
