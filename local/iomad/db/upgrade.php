@@ -1633,5 +1633,57 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2017090303, 'local', 'iomad');
     }
 
+    if ($oldversion < 2017090304) {
+
+        // Define field startdate to be added to companylicense.
+        $table = new xmldb_table('companylicense');
+        $field = new xmldb_field('startdate', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'validlength');
+
+        // Conditionally launch add field startdate.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017090304, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2017090305) {
+
+        // Define table companycertificate to be created.
+        $table = new xmldb_table('companycertificate');
+
+        // Adding fields to table companycertificate.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('companyid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('uselogo', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('usewatermark', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('usesignature', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('useborder', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('showgrade', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+
+        // Adding keys to table companycertificate.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for companycertificate.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        if ($companies = $DB->get_records('company')) {
+            foreach ($companies as $company) {
+                $companycertrecord = array('companyid' => $company->id,
+                                           'uselogo' => 1,
+                                           'usewatermark' => 1,
+                                           'usesignature' => 1,
+                                           'useborder' => 1,
+                                           'showgrade' => 1);
+                $DB->insert_record('companycertificate', $companycertrecord);
+            }
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2017090305, 'local', 'iomad');
+    }
     return $result;
 }

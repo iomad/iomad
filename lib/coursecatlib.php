@@ -1874,6 +1874,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         }
 
         if ($coursesids) {
+            require_once($CFG->dirroot.'/course/lib.php');
             if (!move_courses($coursesids, $newparentid)) {
                 if ($showfeedback) {
                     echo $OUTPUT->notification("Error moving courses");

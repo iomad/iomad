@@ -46,12 +46,12 @@ ul.iomadtab a:hover {
     text-decoration: underline;
 }
 
-div.iomadlink a:hover {
+div.iomadlink a:hover, div.iomadlinkreports a:hover{
     color:#fad163 !important;
     text-decoration: none;
 }
 
-div.iomadlink {
+div.iomadlink, div.iomadlinkreports {
     width: 100px;
     min-height: 100px;
     text-align: center;
@@ -177,4 +177,13 @@ border-radius: 10px;
 
 .licensewarning {
     color: red;
+}
+
+#page-blocks-iomad_company_admin-editusers .generaltable {
+    overflow-x: unset;
+}
+
+#page-blocks-iomad_company_admin-editusers .moodle-actionmenu[data-enhanced].show .menu.align-tl-bl {
+    left: 50px;
+    min-width: 150px;
 }

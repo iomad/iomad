@@ -84,7 +84,7 @@ class company_edit_form extends company_moodleform {
                             'maxlength="25" size="25"');
         $mform->setType('shortname', PARAM_NOTAGS);
         $mform->addRule('shortname', $strrequired, 'required', null, 'client');
-        
+
         if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             // Add the parent company selector.
             $companies = $DB->get_records_sql_menu("SELECT id,name FROM {company}
@@ -92,7 +92,7 @@ class company_edit_form extends company_moodleform {
                                             ORDER by name", array('companyid' => $this->companyid));
             $allcompanies = array('0' => get_string('none')) + $companies;
             $mform->addElement('select', 'parentid', get_string('parentcompany', 'block_iomad_company_admin'), $allcompanies);
-            $mform->setDefault('parentid', 0);
+            $mform->setDefault('parentid', $this->parentcompanyid);
 
             // Add in the template selector for the company.
             $templates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
@@ -140,15 +140,32 @@ class company_edit_form extends company_moodleform {
             $mform->setDefault('country', $CFG->country);
         }
 
-        $mform->addElement('textarea', 'companydomains', get_string('companydomains', 'block_iomad_company_admin'), array('display' => 'noofficial'));
-        $mform->setType('companydomains', PARAM_NOTAGS);
-
         /* === Company email notifications === */
+         $mform->addElement('header', 'manageremails', get_string('manageremails', 'block_iomad_company_admin'));
 
         $emailchoices = array('0' => get_string('none'),
                               '1' => get_string('reminderemails', 'block_iomad_company_admin'),
                               '2' => get_string('completionemails', 'block_iomad_company_admin'),
                               '3' => get_string('allemails', 'block_iomad_company_admin'));
+
+        $mform->addElement('select', 'managernotify', get_string('managernotify', 'block_iomad_company_admin'), $emailchoices);
+        $mform->setDefault('managernotify', 0);
+        $mform->addHelpButton('managernotify', 'managernotify', 'block_iomad_company_admin');
+
+        // Add in the release frequency scheduler.
+        $daysofweek = array(get_string('none'),
+                            get_string('sunday', 'calendar'),
+                            get_string('monday', 'calendar'),
+                            get_string('tuesday', 'calendar'),
+                            get_string('wednesday', 'calendar'),
+                            get_string('thursday', 'calendar'),
+                            get_string('friday', 'calendar'),
+                            get_string('saturday', 'calendar'));
+
+        $mform->addElement('select', 'managerdigestday', get_string('managerdigestday', 'block_iomad_company_admin'), $daysofweek);
+        $mform->setDefault('managerdigestday', 0);
+        $mform->addHelpButton('managerdigestday', 'managerdigestday', 'block_iomad_company_admin');
+
         // Get the company profile choices.
         $globalfields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
                                               categoryid NOT IN (
@@ -168,28 +185,8 @@ class company_edit_form extends company_moodleform {
 
         $mform->addElement('select', 'emailprofileid', get_string('emailprofileid', 'block_iomad_company_admin'), $profilefields);
         $mform->setDefault('emailprofileid', 0);
-            
-        $mform->addElement('select', 'managernotify', get_string('managernotify', 'block_iomad_company_admin'), $emailchoices);
-        $mform->setDefault('managernotify', 0);
-
-        // Add in the company role template selector.
-        $templates = company::get_role_templates($this->companyid);
-        $mform->addElement('select', 'roletemplate', get_string('applyroletemplate', 'block_iomad_company_admin'), $templates);
-            
-        // Add in the release frequency scheduler.
-        $daysofweek = array(get_string('none'),
-                            get_string('sunday', 'calendar'),
-                            get_string('monday', 'calendar'),
-                            get_string('tuesday', 'calendar'),
-                            get_string('wednesday', 'calendar'),
-                            get_string('thursday', 'calendar'),
-                            get_string('friday', 'calendar'),
-                            get_string('saturday', 'calendar'));
-
-        $mform->addElement('select', 'managerdigestday', get_string('managerdigestday', 'block_iomad_company_admin'), $daysofweek);
-        $mform->setDefault('managerdigestday', 0);
-        $mform->addHelpButton('managerdigestday', 'managerdigestday', 'block_iomad_company_admin');
-
+         $mform->addHelpButton('emailprofileid', 'emailprofileid', 'block_iomad_company_admin');
+           
         if (!empty($this->companyid)) {        
             // Add the auto enrol courses.
             $parentnodeid = company::get_company_parentnode($this->companyid);
@@ -219,6 +216,62 @@ class company_edit_form extends company_moodleform {
 
 
         /* === end company email notifications === */
+         $mform->addElement('header', 'companyadvanced', get_string('companyadvanced', 'block_iomad_company_admin'));
+        
+        // Add in the company role template selector.
+        $templates = company::get_role_templates($this->companyid);
+        $mform->addElement('select', 'roletemplate', get_string('applyroletemplate', 'block_iomad_company_admin'), $templates);
+        $mform->addHelpButton('roletemplate', 'roletemplate', 'block_iomad_company_admin');
+
+        $mform->addElement('textarea', 'companydomains', get_string('companydomains', 'block_iomad_company_admin'), array('display' => 'noofficial'));
+        $mform->setType('companydomains', PARAM_NOTAGS);
+        $mform->addHelpButton('companydomains', 'companydomains', 'block_iomad_company_admin');
+
+        // Add the ecommerce selector.
+        if (empty($CFG->commerce_admin_enableall) && iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
+            $mform->addElement('selectyesno', 'ecommerce', get_string('enableecommerce', 'block_iomad_company_admin'));
+            $mform->setDefault('ecommerce', 0);
+            $mform->addHelpButton('ecommerce', 'ecommerce', 'block_iomad_company_admin');
+        } else {
+            $mform->addElement('hidden', 'ecommerce');
+        }
+
+        if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
+            // Add the parent company selector.
+            $companies = $DB->get_records_sql_menu("SELECT id,name FROM {company}
+                                            WHERE id != :companyid
+                                            ORDER by name", array('companyid' => $this->companyid));
+            $allcompanies = array('0' => get_string('none')) + $companies;
+            $mform->addElement('select', 'parentid', get_string('parentcompany', 'block_iomad_company_admin'), $allcompanies);
+            $mform->setDefault('parentid', 0);
+            $mform->addHelpButton('parentid', 'parentcompany', 'block_iomad_company_admin');
+
+            // Add in the template selector for the company.
+            $availabletemplates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
+            $mform->addElement('autocomplete', 'templates', get_string('availabletemplates', 'block_iomad_company_admin'), $availabletemplates, array('multiple' => true));
+            $mform->addHelpButton('templates', 'availabletemplates', 'block_iomad_company_admin');
+
+        } else if (iomad::has_capability('block/iomad_company_admin:company_add_child', $context) && !empty($this->parentcompanyid)) {
+            // Add it as a hidden field.
+            $mform->addElement('hidden', 'parentid', $this->parentcompanyid);
+            if (!empty($this->companyrecord->templates)) {
+                foreach ($this->companyrecord->templates as $companytemplateid) {
+                    $mform->addElement('hidden', 'templates[' . $companytemplateid . ']', $companytemplateid);
+                }
+            }
+        } else {
+            // Add it as a hidden field.
+            $mform->addElement('hidden', 'parentid');
+            if (!empty($this->companyrecord->templates)) {
+                foreach ($this->companyrecord->templates as $companytemplateid) {
+                    $mform->addElement('hidden', 'templates[' . $companytemplateid . ']', $companytemplateid);
+                }
+            }
+        }
+
+        $mform->setType('parentid', PARAM_INT);
+        $mform->setType('ecommerce', PARAM_INT);
+        $mform->setType('templates', PARAM_RAW);
 
         /* === User defaults === */
         $mform->addElement('header', 'userdefaults',
@@ -395,6 +448,80 @@ class company_edit_form extends company_moodleform {
                 $mform->setType('customcss', PARAM_CLEAN);
         }
 
+        // Only show the certificate section if you have capability.
+        if (iomad::has_capability('block/iomad_company_admin:company_edit_certificateinfo', $context)) {
+            $mform->addElement('header', 'certificatedesign', get_string('certificatedesign', 'block_iomad_company_admin'));
+
+            $mform->addElement('advcheckbox', 'uselogo', get_string('company_uselogo', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement('filemanager', 'companycertificateseal',
+                                get_string('companycertificateseal', 'block_iomad_company_admin'), null,
+                                array('subdirs' => 0,
+                                      'maxbytes' => 150 * 1024,
+                                      'maxfiles' => 1,
+                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+            $mform->disabledIf('companycertificateseal', 'uselogo');
+
+            $mform->addElement('advcheckbox', 'usesignature', get_string('company_usesignature', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement('filemanager', 'companycertificatesignature',
+                                get_string('companycertificatesignature', 'block_iomad_company_admin'), null,
+                                array('subdirs' => 0,
+                                      'maxbytes' => 150 * 1024,
+                                      'maxfiles' => 1,
+                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+            $mform->disabledIf('companycertificatesignature', 'usesignature');
+
+            $mform->addElement('advcheckbox', 'useborder', get_string('company_useborder', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement('filemanager', 'companycertificateborder',
+                                get_string('companycertificateborder', 'block_iomad_company_admin'), null,
+                                array('subdirs' => 0,
+                                      'maxbytes' => 150 * 1024,
+                                      'maxfiles' => 1,
+                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+            $mform->disabledIf('companycertificateborder', 'useborder');
+
+            $mform->addElement('advcheckbox', 'usewatermark', get_string('company_usewatermark', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->addElement('filemanager', 'companycertificatewatermark',
+                                get_string('companycertificatewatermark', 'block_iomad_company_admin'), null,
+                                array('subdirs' => 0,
+                                      'maxbytes' => 150 * 1024,
+                                      'maxfiles' => 1,
+                                      'accepted_types' => array('*.jpg', '*.gif', '*.png')));
+            $mform->disabledIf('companycertificatewatermark', 'usewatermark');
+
+            $mform->addElement('advcheckbox', 'showgrade', get_string('company_showgrade', 'block_iomad_company_admin'), null, null, array(0,1));
+
+            $mform->addHelpButton('companycertificateseal', 'companycertificateseal', 'block_iomad_company_admin');
+            $mform->addHelpButton('companycertificatesignature', 'companycertificatesignature', 'block_iomad_company_admin');
+            $mform->addHelpButton('companycertificateborder', 'companycertificateborder', 'block_iomad_company_admin');
+            $mform->addHelpButton('companycertificatewatermark', 'companycertificatewatermark', 'block_iomad_company_admin');
+            $mform->addHelpButton('uselogo', 'company_uselogo', 'block_iomad_company_admin');
+            $mform->addHelpButton('usesignature', 'company_usesignature', 'block_iomad_company_admin');
+            $mform->addHelpButton('useborder', 'company_useborder', 'block_iomad_company_admin');
+            $mform->addHelpButton('usewatermark', 'company_usewatermark', 'block_iomad_company_admin');
+            $mform->addHelpButton('showgrade', 'company_showgrade', 'block_iomad_company_admin');
+
+        } else {
+            $mform->addElement('hidden', 'companycertificateseal', $this->companyrecord->companycertificateseal);
+            $mform->setType('companycertificateseal', PARAM_CLEAN);
+            $mform->addElement('hidden', 'companycertificatesignature', $this->companyrecord->companycertificatesignature);
+            $mform->setType('companycertificatesignature', PARAM_CLEAN);
+            $mform->addElement('hidden', 'companycertificateborder', $this->companyrecord->companycertificateborder);
+            $mform->setType('companycertificateborder', PARAM_CLEAN);
+            $mform->addElement('hidden', 'companycertificatewatermark', $this->companyrecord->companycertificatewatermark);
+            $mform->setType('companycertificatewatermark', PARAM_CLEAN);
+            $mform->addElement('hidden', 'uselogo', $this->companyrecord->uselogo);
+            $mform->setType('uselogo', PARAM_INT);
+            $mform->addElement('hidden', 'uselogo', $this->companyrecord->uselogo);
+            $mform->setType('uselogo', PARAM_INT);
+            $mform->addElement('hidden', 'usesignature', $this->companyrecord->uselogo);
+            $mform->setType('usesignature', PARAM_INT);
+            $mform->addElement('hidden', 'useborder', $this->companyrecord->uselogo);
+            $mform->setType('useborder', PARAM_INT);
+            $mform->addElement('hidden', 'usewatermark', $this->companyrecord->uselogo);
+            $mform->setType('usewatermark', PARAM_INT);
+            $mform->addElement('hidden', 'showgrade', $this->companyrecord->uselogo);
+            $mform->setType('showgrade', PARAM_INT);
+        }
         $submitlabel = null; // Default.
         if ($this->isadding) {
             $submitlabel = get_string('saveasnewcompany', 'block_iomad_company_admin');
@@ -513,6 +640,7 @@ if (!$new) {
     $isadding = true;
     $companyid = 0;
     $companyrecord = new stdClass;
+    $companyrecord->templates = null;
 
     if (!empty($parentid) && iomad::has_capability('block/iomad_company_admin:company_add_child', $context)) {
         // We are adding a child company.
@@ -537,14 +665,83 @@ if ($returnurl) {
 }
 $companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
 
-// Get the form data.
-$draftitemid = file_get_submitted_draft_itemid('companylogo');
-file_prepare_draft_area($draftitemid,
+// Get the company logo.
+$draftcompanylogoid = file_get_submitted_draft_itemid('companylogo');
+file_prepare_draft_area($draftcompanylogoid,
                         $context->id,
                         'theme_iomad',
                         'companylogo', $companyid,
                         array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
-$companyrecord->companylogo = $draftitemid;
+$companyrecord->companylogo = $draftcompanylogoid;
+
+// Are we creating a child company?
+if (!empty($new) && !empty($parentid)) {
+    // Get the parent certificate files as default.
+    $draftcompanycertificatesealid = file_get_submitted_draft_itemid('companycertificateseal');
+    file_prepare_draft_area($draftcompanycertificatesealid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificateseal', $parentid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificateseal = $draftcompanycertificatesealid;
+    $draftcompanycertificatesignatureid = file_get_submitted_draft_itemid('companycertificatesignature');
+    file_prepare_draft_area($draftcompanycertificatesignatureid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificatesignature', $parentid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificatesignature = $draftcompanycertificatesignatureid;
+    $draftcompanycertificateborderid = file_get_submitted_draft_itemid('companycertificateborder');
+    file_prepare_draft_area($draftcompanycertificateborderid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificateborder', $parentid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificateborder = $draftcompanycertificateborderid;
+    $draftcompanycertificatewatermarkid = file_get_submitted_draft_itemid('companycertificatewatermark');
+    file_prepare_draft_area($draftcompanycertificatewatermarkid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificatewatermark', $parentid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificatewatermark = $draftcompanycertificatewatermarkid;
+    // Deal with the image display options.
+    $parentcompanyoptions = $DB->get_record('companycertificate', array('companyid' => $parentid));
+    $companyrecord->uselogo = $parentcompanyoptions->uselogo;
+    $companyrecord->usesignature = $parentcompanyoptions->usesignature;
+    $companyrecord->useborder = $parentcompanyoptions->useborder;
+    $companyrecord->usewatermark = $parentcompanyoptions->usewatermark;
+    $companyrecord->showgrade = $parentcompanyoptions->showgrade;
+} else {
+    $draftcompanycertificatesealid = file_get_submitted_draft_itemid('companycertificateseal');
+    file_prepare_draft_area($draftcompanycertificatesealid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificateseal', $companyid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificateseal = $draftcompanycertificatesealid;
+    $draftcompanycertificatesignatureid = file_get_submitted_draft_itemid('companycertificatesignature');
+    file_prepare_draft_area($draftcompanycertificatesignatureid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificatesignature', $companyid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificatesignature = $draftcompanycertificatesignatureid;
+    $draftcompanycertificateborderid = file_get_submitted_draft_itemid('companycertificateborder');
+    file_prepare_draft_area($draftcompanycertificateborderid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificateborder', $companyid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificateborder = $draftcompanycertificateborderid;
+    $draftcompanycertificatewatermarkid = file_get_submitted_draft_itemid('companycertificatewatermark');
+    file_prepare_draft_area($draftcompanycertificatewatermarkid,
+                            $context->id,
+                            'local_iomad',
+                            'companycertificatewatermark', $companyid,
+                            array('subdirs' => 0, 'maxbytes' => 15 * 1024, 'maxfiles' => 1));
+    $companyrecord->companycertificatewatermark = $draftcompanycertificatewatermarkid;
+}
 if ($domains = $DB->get_records('company_domains', array('companyid' => $companyid))) {
     $companyrecord->companydomains = '';
     foreach ($domains as $domain) {
@@ -564,6 +761,13 @@ $mform = new company_edit_form($PAGE->url, $isadding, $companyid, $companyrecord
 $companyrecord->templates = array();
 if ($companytemplates = $DB->get_records('company_role_templates_ass', array('companyid' => $companyid), null, 'templateid')) {
     $companyrecord->templates = array_keys($companytemplates);
+}
+if ($certificateinfo = $DB->get_record('companycertificate', array('companyid' => $companyid))) {
+    $companyrecord->uselogo = $certificateinfo->uselogo;
+    $companyrecord->usesignature = $certificateinfo->usesignature;
+    $companyrecord->useborder = $certificateinfo->useborder;
+    $companyrecord->usewatermark = $certificateinfo->usewatermark;
+    $companyrecord->showgrade = $certificateinfo->showgrade;
 }
 $mform->set_data($companyrecord);
 
@@ -611,6 +815,15 @@ if ($mform->is_cancelled()) {
             $company->assign_role_templates($data->templates);
         }
 
+        // Deal with certificate info.
+        $certificateinforec = array('companyid' => $companyid,
+                                    'uselogo' => $data->uselogo,
+                                    'usesignature' => $data->usesignature,
+                                    'useborder' => $data->useborder,
+                                    'usewatermark' => $data->usewatermark,
+                                    'showgrade' => $data->showgrade);
+        $DB->insert_record('companycertificate', $certificateinforec);
+
     } else {
         $data->id = $companyid;
 
@@ -648,6 +861,24 @@ if ($mform->is_cancelled()) {
 
         $DB->update_record('company', $data);
 
+        // Deal with certificate info.
+        if ($certificateinforec = (array) $DB->get_record('companycertificate', array('companyid' => $companyid))) {
+            $certificateinforec['uselogo'] = $data->uselogo;
+            $certificateinforec['usesignature'] = $data->usesignature;
+            $certificateinforec['useborder'] = $data->useborder;
+            $certificateinforec['usewatermark'] = $data->usewatermark;
+            $certificateinforec['showgrade'] = $data->showgrade;
+            $DB->update_record('companycertificate', $certificateinforec);
+        } else {
+            $certificateinforec = array('companyid' => $companyid,
+                                        'uselogo' => $data->uselogo,
+                                        'usesignature' => $data->usesignature,
+                                        'useborder' => $data->useborder,
+                                        'usewatermark' => $data->usewatermark,
+                                        'showgrade' => $data->showgrade);
+            $DB->insert_record('companycertificate', $certificateinforec);
+        }
+
         if (company_user::is_company_user()) {
             company_user::reload_company();
         }
@@ -680,6 +911,38 @@ if ($mform->is_cancelled()) {
                                    $context->id,
                                    'theme_iomad',
                                    'companylogo',
+                                   $data->id,
+                                   array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+    }
+    if (!empty($data->companycertificateseal)) {
+        file_save_draft_area_files($data->companycertificateseal,
+                                   $context->id,
+                                   'local_iomad',
+                                   'companycertificateseal',
+                                   $data->id,
+                                   array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+    }
+    if (!empty($data->companycertificatesignature)) {
+        file_save_draft_area_files($data->companycertificatesignature,
+                                   $context->id,
+                                   'local_iomad',
+                                   'companycertificatesignature',
+                                   $data->id,
+                                   array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+    }
+    if (!empty($data->companycertificateborder)) {
+        file_save_draft_area_files($data->companycertificateborder,
+                                   $context->id,
+                                   'local_iomad',
+                                   'companycertificateborder',
+                                   $data->id,
+                                   array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
+    }
+    if (!empty($data->companycertificatewatermark)) {
+        file_save_draft_area_files($data->companycertificatewatermark,
+                                   $context->id,
+                                   'local_iomad',
+                                   'companycertificatewatermark',
                                    $data->id,
                                    array('subdirs' => 0, 'maxbytes' => 150 * 1024, 'maxfiles' => 1));
     }

@@ -781,7 +781,24 @@ if ($mform->is_cancelled()) {
                 }
 
                 \core\event\user_created::create_from_userid($user->id)->trigger();
-    
+
+                $companyrec = $DB->get_record('company', array('id' => $company->id));
+                if ($companyrec->managernotify == 0) {
+                    $headers = null;
+                } else {
+                    $headers = serialize(array("Cc:".$USER->email));
+                }
+
+                if (!empty($CFG->iomad_email_senderisreal)) {
+                    EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER));
+                } else if (is_siteadmin($USER->id)) {
+                    EmailTemplate::send('user_create', array('user' => $user));
+                } else {
+                    EmailTemplate::send('user_create',
+                                         array('user' => $user,
+                                               'headers' => $headers));
+                }
+
                 if ($bulk == 1 or $bulk == 3) {
                     if (!in_array($user->id, $SESSION->bulk_users)) {
                         $SESSION->bulk_users[] = $user->id;
@@ -851,7 +868,7 @@ if ($mform->is_cancelled()) {
                                              WHERE licenseid = :licenseid
                                              AND licensecourseid = :licensecourseid
                                              AND userid = :userid
-                                             AND (isusing = 0 OR timecompleted IS NOT NULL)",
+                                             AND (isusing = 0 OR timecompleted IS NULL)",
                                              array('userid' => $user->id, 'licenseid' => $formdata->licenseid,
                                                   'licensecourseid' => $licensecourse))) {
                         // Already assigned skip and error.
