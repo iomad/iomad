@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->component  = 'local_iomad';
-$plugin->version  = 2017090306;   // The (date) version of this plugin.
-$plugin->requires = 2016052301;   // Requires this Moodle version.
+$string['blocktitle'] = 'LLL-Dashboard';
+$string['dashboard'] = 'LLL';
+$string['iomad_dashboard:view'] = 'Zum LLL-Dashboard';
+$string['iomad'] = 'lern.link-LMS';
+$string['name'] = 'LLL-Dashboard';
+$string['pluginname'] = 'LLL-Dashboard';

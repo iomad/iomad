@@ -9,32 +9,27 @@
 
 /**
  * XML-RPC client for Moodle 2
+ *  from lern.link Guido Hornig
  *
- * @authorr Jerome Mouneyrac
+ *
  */
+
+//error_reporting(E_ALL);
+ini_set('display_errors', true);
+ini_set('html_errors', true);
 
 require(dirname(__FILE__) . '/config.php');
 
-$functionname = 'block_iomad_company_admin_create_companies';
+$functionname = 'block_iomad_company_admin_get_license_info';
 
 /// PARAMETERS
-$company1 = new stdClass;
-$company1->name = 'Company_5';
-$company1->shortname = 'C5';
-$company1->city = 'Köln';
-$company1->country = 'DE';
+$params = array();
 
-$params = array(
-    $company1,
-);
-
-// XML-RPC CALL
+/// XML-RPC CALL
 $serverurl = $domainname . '/webservice/xmlrpc/server.php'. '?wstoken=' . $token;
 require_once('./curl.php');
 $curl = new curl;
 $post = xmlrpc_encode_request($functionname, array($params));
-echo ("\n \$post: \n");
-print_r($post); //die;
+//var_dump($post); die;
 $resp = xmlrpc_decode($curl->post($serverurl, $post));
-
 var_dump($resp);

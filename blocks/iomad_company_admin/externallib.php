@@ -978,9 +978,9 @@ class block_iomad_company_admin_external extends external_api {
 
         // Get course records
         if (empty($licenseids)) {
-            $licenses = $DB->get_records('company_license');
+            $licenses = $DB->get_records('companylicense');
         } else {
-            $licenses = $DB->get_records_list('company_license', 'id', $params['licenseids']);
+            $licenses = $DB->get_records_list('companylicense', 'id', $params['licenseids']);
         }
 
         // convert to suitable format (I think)
@@ -1006,6 +1006,7 @@ class block_iomad_company_admin_external extends external_api {
                      'name' => new external_value(PARAM_TEXT, 'License name'),
                      'allocation' => new external_value(PARAM_INT, 'Number of license slots'),
                      'validlength' => new external_value(PARAM_INT, 'Course access length (days)'),
+                     'startdate' => new external_value(PARAM_INT, 'License start date'),
                      'expirydate' => new external_value(PARAM_INT, 'License expiry date'),
                      'used' => new external_value(PARAM_INT, 'Number allocated'),
                      'companyid' => new external_value(PARAM_INT, 'Company id'),
@@ -1030,8 +1031,9 @@ class block_iomad_company_admin_external extends external_api {
                              'name' => new external_value(PARAM_TEXT, 'License name'),
                              'allocation' => new external_value(PARAM_INT, 'Number of license slots'),
                              'validlength' => new external_value(PARAM_INT, 'Course access length (days)'),
-                             'expirydate' => new external_value(PARAM_INT, 'License expiry date'),
-                             'used' => new external_value(PARAM_INT, 'Number allocated'),
+                             'startdate' => new external_value(PARAM_INT, 'Date from which the liucense is available (int = timestamp) '),
+                             'expirydate' => new external_value(PARAM_INT, 'License expiry date (int = timestamp)'),
+                             'used' => new external_value(PARAM_INT, 'Number how often the lic can be allocated'),
                              'companyid' => new external_value(PARAM_INT, 'Company id'),
                              'parentid' => new external_value(PARAM_INT, 'Parent license id'),
                              'courses' => new external_multiple_structure(
@@ -1039,9 +1041,9 @@ class block_iomad_company_admin_external extends external_api {
                                         array(
                                             'courseid'  => new external_value(PARAM_INT, 'Course ID'),
                                         )
-                                 )
-                            ),
-                        )
+                                 ),'one or many course IDs', VALUE_REQUIRED
+                            )
+                        ), 'one or many licenses'
                     )
                 )
             )
@@ -1056,10 +1058,9 @@ class block_iomad_company_admin_external extends external_api {
      * @return array of department records.
      */
     public static function create_licenses($licenses = array()) {
-        global $CFG, $DB, $USER;
+        global $DB, $USER;
 
-        // Validate parameters
-        $params = self::validate_parameters(self::create_licenses_parameters(), $licenses);
+        $params = self::validate_parameters(self::create_licenses_parameters(), array('licenses' => $licenses));
 
         // Get/check context/capability
         $context = context_system::instance();
@@ -1067,16 +1068,17 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:edit_licenses', $context);
 
         // Array to return newly created records
-        $companyinfo = array();
+        $licenseinfo = array();
 
         foreach ($params['licenses'] as $license) {
+
             // Create the License record
             $licenseid = $DB->insert_record('companylicense', $license);
 
-            // Deal with the courses.
-            foreach ($license->courses as $course) {
-                $DB->insert_record('companylicemse_courses', array('licenseid' => $licenseid,
-                                                                   'courseid' => $course->courseid));
+            // Deal with the courses
+            foreach ($license['courses'] as $course) {
+                $DB->insert_record('companylicense_courses', array('licenseid' => $licenseid,
+                                                                          'courseid' => $course['courseid']));
             }
 
             // Create an event to deal with an parent license allocations.
@@ -1090,7 +1092,7 @@ class block_iomad_company_admin_external extends external_api {
                                                                                             'other' => $eventother));
 
             $event->trigger();
-            $newlicense->courses = $license->courses;
+            $newlicense->courses = $license['courses'];
             $licenseinfo[] = (array)$newlicense;
         }
 
@@ -1111,7 +1113,8 @@ class block_iomad_company_admin_external extends external_api {
                      'name' => new external_value(PARAM_TEXT, 'License name'),
                      'allocation' => new external_value(PARAM_INT, 'Number of license slots'),
                      'validlength' => new external_value(PARAM_INT, 'Course access length (days)'),
-                     'expirydate' => new external_value(PARAM_INT, 'License expiry date'),
+                     'startdate' => new external_value(PARAM_INT, 'Date from which the liucense is available (int = timestamp) '),
+                     'expirydate' => new external_value(PARAM_INT, 'License expiry date (int = timestamp)'),
                      'used' => new external_value(PARAM_INT, 'Number allocated'),
                      'companyid' => new external_value(PARAM_INT, 'Company id'),
                      'parentid' => new external_value(PARAM_INT, 'Parent license id'),
@@ -1364,7 +1367,7 @@ class block_iomad_company_admin_external extends external_api {
             }
 
             // Has the license expired?
-            if ($oldlicense->expirydate < $timenow) {
+            if ($oldlicense->expirydate < $timestamp) {
                 throw new invalid_parameter_exception("License id=$licenseid has expired");
             }
 
