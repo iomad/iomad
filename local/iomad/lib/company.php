@@ -2559,7 +2559,8 @@ class company {
                         $subject = get_string('completion_course_supervisor_subject', 'block_iomad_company_admin', $params);
                         $messagetext = get_string('completion_course_supervisor_body', 'block_iomad_company_admin', $params);
 
-                        $mail->Sender = $supportuser->firstname;
+                        //$mail->Sender = $supportuser->firstname;
+                        $mail->Sender = $CFG->noreplyaddress;
                         $mail->From     = $CFG->noreplyaddress;
                         $mail->FromName = $supportuser->firstname;
                         if (empty($CFG->divertallemailsto)) {
@@ -2591,29 +2592,16 @@ class company {
 
                         $mail->Body =  "\n$messagetext\n";
                         if (empty($CFG->noemailever)) {
-                            $mail->send();
-                        }
-
-                    }
-                }
-            }
-        }
-
-        // Email the company managers.
-        if ($mymanagers = self::get_my_managers($userid, 1)) {
-            foreach ($mymanagers as $managerid) {
-                // Get the user info.
-                if ($managerinfo = $DB->get_record('user', array('id' => $managerid->userid, 'deleted' => 0, 'suspended' => 0))) {
-                    if ($userinfo = $DB->get_record('user', array('id' => $userid, 'deleted' => 0, 'suspended' => 0))) {
-                        if ($courseinfo = $DB->get_record('course', array('id' => $courseid))) {
-                            $courseinfo->reporttext = fullname($userinfo) . ' has completed ' . $courseinfo->fullname . ' in ' . $company->name .
-                                                       ' on ' . date($CFG->iomad_date_format, $timecompleted) . "\n";
-                            EmailTemplate::send('course_completed_manager', array('course' => $courseinfo, 'user' => $managerinfo, 'company' => $company));
+                            if(!$mail->send()) {
+                                mtrace( 'Message could not be sent.');
+                                mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
+                            }
                         }
                     }
                 }
             }
         }
+
         return true;
     }
 
@@ -3218,7 +3206,7 @@ class company {
                 $subject = get_string('completion_warn_supervisor_subject', 'block_iomad_company_admin', $params);
                 $messagetext = get_string('completion_warn_supervisor_body', 'block_iomad_company_admin', $params);
 
-                $mail->Sender = $supportuser->firstname;
+                $mail->Sender = $CFG->noreplyaddress;
                 $mail->FromName = $supportuser->firstname;
                 $mail->From     = $CFG->noreplyaddress;
                 if (empty($CFG->divertallemailsto)) {
@@ -3234,7 +3222,10 @@ class company {
 
                 $mail->Body =  "\n$messagetext\n";
                 if (empty($CFG->noemailever)) {
-                    $mail->send();
+                    if(!$mail->send()) {
+                        mtrace( 'Message could not be sent.');
+                        mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
+                    }
                 }
             }
         }
@@ -3274,7 +3265,7 @@ class company {
                 $subject = get_string('completion_expiry_warn_supervisor_subject', 'block_iomad_company_admin', $params);
                 $messagetext = get_string('completion_expiry_warn_supervisor_body', 'block_iomad_company_admin', $params);
 
-                $mail->Sender = $supportuser->firstname;
+                $mail->Sender = $CFG->noreplyaddress;
                 $mail->From     = $CFG->noreplyaddress;
                 $mail->FromName = $supportuser->firstname;
                 if (empty($CFG->divertallemailsto)) {
@@ -3290,7 +3281,10 @@ class company {
 
                 $mail->Body =  "\n$messagetext\n";
                 if (empty($CFG->noemailever)) {
-                    $mail->send();
+                    if(!$mail->send()) {
+                        mtrace( 'Message could not be sent.');
+                        mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
+                    }
                 }
 
             }

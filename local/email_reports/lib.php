@@ -81,9 +81,7 @@ function email_reports_cron() {
                         AND u.deleted = 0
                         AND u.suspended = 0)";
 
-$DB->set_debug(true);
     $DB->execute($populatesql);
-$DB->set_debug(false);
 
     // Email all of the users.
     $allusers = $DB->get_records($tempcomptablename);
