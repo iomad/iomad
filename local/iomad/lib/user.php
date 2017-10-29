@@ -45,6 +45,14 @@ class company_user {
             $company = company::by_shortname( $data->company );
         }
 
+        // Deal with manager email CCs.
+        $companyrec = $DB->get_record('company', array('id' => $company->id));
+        if ($companyrec->managernotify == 0) {
+            $headers = null;
+        } else {
+            $headers = serialize(array("Cc:".$USER->email));
+        }
+
         $defaults = $company->get_user_defaults();
         $user = (object) array_merge( (array) $defaults, (array) $data);
 
@@ -92,7 +100,7 @@ class company_user {
         }
 
         $user->confirmed = 1;
-         $user->mnethostid = $DB->get_field('mnet_application','id',['name'=>'moodle']);
+        $user->mnethostid = $DB->get_field('mnet_application','id',['name'=>'moodle']);
         $user->maildisplay = 0; // Hide email addresses by default.
 
         // Create user record and return id.
@@ -111,7 +119,7 @@ class company_user {
                 EmailTemplate::send('user_create',
                                      array('user' => $user,
                                            'due' => $data->due,
-                                           'headers' => serialize(array("Cc:".$USER->email))));
+                                           'headers' => $headers));
             }
             $sendemail = false;
         }
@@ -437,8 +445,15 @@ class company_user {
             if ($reset) {
                 // Get the company details.
                 $company = company::get_company_byuserid($user->id);
+                $companyrec = $DB->get_record('company', array('id' => $companyid));
+                if ($companyrec->managernotify == 0) {
+                    $headers = null;
+                } else {
+                    $headers = serialize(array("Cc:".$USER->email));
+                }
             } else {
                 $company = new stdclass();
+                $headers = serialize(array("Cc:".$USER->email));
             }
             $user->newpassword = $temppassword;
             if (!empty($CFG->iomad_email_senderisreal)) {
@@ -462,11 +477,11 @@ class company_user {
                                          array('user' => $user,
                                          'due' => $due,
                                          'company' => $company,
-                                         'headers' => serialize(array("Cc:".$USER->email))));
+                                         'headers' => $headers));
                 } else {
                     EmailTemplate::send('user_create',
                                          array('user' => $user,
-                                         'headers' => serialize(array("Cc:".$USER->email))));
+                                         'headers' => $headers));
                 }
             }
         } else {
@@ -696,7 +711,7 @@ class iomad_user_filter_form extends moodleform {
 
         $mform =& $this->_form;
         $filtergroup = array();
-        $mform->addElement('header', '', format_string(get_string('usersearchfields', 'local_iomad')));
+        $mform->addElement('header', 'usersearchfields', format_string(get_string('usersearchfields', 'local_iomad')));
         $mform->addElement('text', 'firstname', get_string('firstnamefilter', 'local_iomad'), 'size="20"');
         $mform->addElement('text', 'lastname', get_string('lastnamefilter', 'local_iomad'), 'size="20"');
         $mform->addElement('text', 'email', get_string('emailfilter', 'local_iomad'), 'size="20"');
@@ -711,6 +726,7 @@ class iomad_user_filter_form extends moodleform {
         $mform->setType('eventid', PARAM_INT);
         $mform->setType('courseid', PARAM_INT);
         $mform->setType('sort', PARAM_ALPHA);
+        $mform->setExpanded('usersearchfields', false);
 
         // Get company category.
         if ($category = $DB->get_record_sql('SELECT uic.id, uic.name

@@ -834,9 +834,9 @@ class company {
 
         // get the company info.
         $companyinfo = self::get_company_byuserid($userid);
-        if (!empty($company->emailprofileid)) {
+        if (!empty($companyinfo->emailprofileid)) {
             // Does the user have one defined by the company field?
-            if (!$supervisor = $DB->get_record('user_info_data', array('userid' => $userid, 'fieldid' => $company->emailprofileid))) {
+            if (!$supervisor = $DB->get_record('user_info_data', array('userid' => $userid, 'fieldid' => $companyinfo->emailprofileid))) {
                 return false;
             }
         } else if (!empty($CFG->companyemailprofileid)) {
@@ -2559,7 +2559,8 @@ class company {
                         $subject = get_string('completion_course_supervisor_subject', 'block_iomad_company_admin', $params);
                         $messagetext = get_string('completion_course_supervisor_body', 'block_iomad_company_admin', $params);
 
-                        $mail->Sender = $supportuser->firstname;
+                        //$mail->Sender = $supportuser->firstname;
+                        $mail->Sender = $CFG->noreplyaddress;
                         $mail->From     = $CFG->noreplyaddress;
                         $mail->FromName = $supportuser->firstname;
                         if (empty($CFG->divertallemailsto)) {
@@ -2578,41 +2579,29 @@ class company {
                                                           ORDER BY id DESC',
                                                           array('userid' => $userid, 'courseid' => $courseid), 0, 1);
                         $trackinfo = array_pop($trackinfos);
-                        $trackfileinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $trackinfo->id));
-                        $fileinfo = $DB->get_record('files', array('itemid' => $trackinfo->id, 'component' => 'local_iomad_track', 'filename' => $trackfileinfo->filename));
-                        $filedir1 = substr($fileinfo->contenthash,0,2);
-                        $filedir2 = substr($fileinfo->contenthash,2,2);
-                        $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $fileinfo->contenthash;
-                        $mimetype = mimeinfo('type', $trackfileinfo->filename);
-                        $mail->addAttachment($filepath, $trackfileinfo->filename, 'base64', $mimetype);
+                        if ($trackfileinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $trackinfo->id))) {
+                            $fileinfo = $DB->get_record('files', array('itemid' => $trackinfo->id, 'component' => 'local_iomad_track', 'filename' => $trackfileinfo->filename));
+                            $filedir1 = substr($fileinfo->contenthash,0,2);
+                            $filedir2 = substr($fileinfo->contenthash,2,2);
+                            $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $fileinfo->contenthash;
+                            $mimetype = mimeinfo('type', $trackfileinfo->filename);
+                            $mail->addAttachment($filepath, $trackfileinfo->filename, 'base64', $mimetype);
+                        }
                         // Set word wrap.
                         $mail->WordWrap = 79;
 
                         $mail->Body =  "\n$messagetext\n";
                         if (empty($CFG->noemailever)) {
-                            $mail->send();
-                        }
-
-                    }
-                }
-            }
-        }
-
-        // Email the company managers.
-        if ($mymanagers = self::get_my_managers($userid, 1)) {
-            foreach ($mymanagers as $managerid) {
-                // Get the user info.
-                if ($managerinfo = $DB->get_record('user', array('id' => $managerid->userid, 'deleted' => 0, 'suspended' => 0))) {
-                    if ($userinfo = $DB->get_record('user', array('id' => $userid, 'deleted' => 0, 'suspended' => 0))) {
-                        if ($courseinfo = $DB->get_record('course', array('id' => $courseid))) {
-                            $courseinfo->reporttext = fullname($userinfo) . ' has completed ' . $courseinfo->fullname . ' in ' . $company->name .
-                                                       ' on ' . date($CFG->iomad_date_format, $timecompleted) . "\n";
-                            EmailTemplate::send('course_completed_manager', array('course' => $courseinfo, 'user' => $managerinfo, 'company' => $company));
+                            if(!$mail->send()) {
+                                mtrace( 'Message could not be sent.');
+                                mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
+                            }
                         }
                     }
                 }
             }
         }
+
         return true;
     }
 
@@ -3098,6 +3087,93 @@ class company {
     }
 
     /**
+     * Triggered via user_course_expired event.
+     *
+     * @param \block_iomad_company_user\event\company_license_created $event
+     * @return bool true on success.
+     */
+    public static function user_course_expired(\block_iomad_company_admin\event\user_course_expired $event) {
+        global $DB, $CFG;
+
+        $userid = $event->userid;
+        $courseid = $event->courseid;
+
+        // Remove enrolments
+        $plugins = enrol_get_plugins(true);
+        $instances = enrol_get_instances($courseid, true);
+        foreach ($instances as $instance) {
+            $plugin = $plugins[$instance->enrol];
+            $plugin->unenrol_user($instance, $userid);
+        }
+
+        // Remove completions
+        $DB->delete_records('course_completions', array('userid' => $userid, 'course' => $courseid));
+        if ($compitems = $DB->get_records('course_completion_criteria', array('course' => $courseid))) {
+            foreach ($compitems as $compitem) {
+                $DB->delete_records('course_completion_crit_compl', array('userid' => $userid,
+                                                                          'criteriaid' => $compitem->id));
+            }
+        }
+        if ($modules = $DB->get_records_sql("SELECT id FROM {course_modules} WHERE course = :course AND completion != 0", array('course' => $courseid))) {
+            foreach ($modules as $module) {
+                $DB->delete_records('course_modules_completion', array('userid' => $userid, 'coursemoduleid' => $module->id));
+            }
+        }
+
+        // Remove grades
+        if ($items = $DB->get_records('grade_items', array('courseid' => $courseid))) {
+            foreach ($items as $item) {
+                $DB->delete_records('grade_grades', array('userid' => $userid, 'itemid' => $item->id));
+            }
+        }
+
+        // Remove quiz entries.
+        if ($quizzes = $DB->get_records('quiz', array('course' => $courseid))) {
+            // We have quiz(zes) so clear them down.
+            foreach ($quizzes as $quiz) {
+                $DB->execute("DELETE FROM {quiz_attempts} WHERE quiz=:quiz AND userid = :userid", array('quiz' => $quiz->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {quiz_grades} WHERE quiz=:quiz AND userid = :userid", array('quiz' => $quiz->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {quiz_overrides} WHERE quiz=:quiz AND userid = :userid", array('quiz' => $quiz->id, 'userid' => $userid));
+            }
+        }
+
+        // Remove certificate info.
+        if ($certificates = $DB->get_records('iomadcertificate', array('course' => $courseid))) {
+            foreach ($certificates as $certificate) {
+                $DB->execute("DELETE FROM {iomadcertificate_issues} WHERE iomadcertificateid = :certid AND userid = :userid", array('certid' => $certificate->id, 'userid' => $userid));
+            }
+        }
+
+        // Remove feedback info.
+        if ($feedbacks = $DB->get_records('feedback', array('course' => $courseid))) {
+            foreach ($feedbacks as $feedback) {
+                $DB->execute("DELETE FROM {feedback_completed} WHERE feedback = :feedbackid AND userid = :userid", array('feedbackid' => $feedback->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {feedback_completedtmp} WHERE feedback = :feedbackid AND userid = :userid", array('feedbackid' => $feedback->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {feedback_tracking} WHERE feedback = :feedbackid AND userid = :userid", array('feedbackid' => $feedback->id, 'userid' => $userid));
+            }
+        }
+
+        // Remove lesson info.
+        if ($lessons = $DB->get_records('lesson', array('course' => $courseid))) {
+            foreach ($lessons as $lesson) {
+                $DB->execute("DELETE FROM {lesson_attempts} WHERE lessonid = :lessonid AND userid = :userid", array('lessonid' => $lesson->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {lesson_grades} WHERE lessonid = :lessonid AND userid = :userid", array('lessonid' => $lesson->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {lesson_branch} WHERE lessonid = :lessonid AND userid = :userid", array('lessonid' => $lesson->id, 'userid' => $userid));
+                $DB->execute("DELETE FROM {lesson_timer} WHERE lessonid = :lessonid AND userid = :userid", array('lessonid' => $lesson->id, 'userid' => $userid));
+            }
+        }
+
+        // Fix company licenses
+        if ($licenses = $DB->get_records('companylicense_users', array('licensecourseid' => $courseid, 'userid' =>$userid, 'isusing' => 1, 'timecompleted' => null))) {
+            $license = array_pop($licenses);
+            $license->timecompleted = time();
+            $DB->update_record('companylicense_users', $license);
+        }
+
+        return true;
+    }
+
+    /**
      * Send a user's supervisor a warning email that a user hasn't completed a course.
      *
      * @param user object
@@ -3130,7 +3206,7 @@ class company {
                 $subject = get_string('completion_warn_supervisor_subject', 'block_iomad_company_admin', $params);
                 $messagetext = get_string('completion_warn_supervisor_body', 'block_iomad_company_admin', $params);
 
-                $mail->Sender = $supportuser->firstname;
+                $mail->Sender = $CFG->noreplyaddress;
                 $mail->FromName = $supportuser->firstname;
                 $mail->From     = $CFG->noreplyaddress;
                 if (empty($CFG->divertallemailsto)) {
@@ -3146,7 +3222,10 @@ class company {
 
                 $mail->Body =  "\n$messagetext\n";
                 if (empty($CFG->noemailever)) {
-                    $mail->send();
+                    if(!$mail->send()) {
+                        mtrace( 'Message could not be sent.');
+                        mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
+                    }
                 }
             }
         }
@@ -3186,7 +3265,7 @@ class company {
                 $subject = get_string('completion_expiry_warn_supervisor_subject', 'block_iomad_company_admin', $params);
                 $messagetext = get_string('completion_expiry_warn_supervisor_body', 'block_iomad_company_admin', $params);
 
-                $mail->Sender = $supportuser->firstname;
+                $mail->Sender = $CFG->noreplyaddress;
                 $mail->From     = $CFG->noreplyaddress;
                 $mail->FromName = $supportuser->firstname;
                 if (empty($CFG->divertallemailsto)) {
@@ -3202,7 +3281,10 @@ class company {
 
                 $mail->Body =  "\n$messagetext\n";
                 if (empty($CFG->noemailever)) {
-                    $mail->send();
+                    if(!$mail->send()) {
+                        mtrace( 'Message could not be sent.');
+                        mtrace( 'Mailer Error: ' . $mail->ErrorInfo);
+                    }
                 }
 
             }
