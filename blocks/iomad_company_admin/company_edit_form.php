@@ -862,7 +862,10 @@ if ($mform->is_cancelled()) {
         $DB->update_record('company', $data);
 
         // Deal with certificate info.
-        if ($certificateinforec = (array) $DB->get_record('companycertificate', array('companyid' => $companyid))) {
+
+        if ( $DB->record_exists('companycertificate',array('companyid' => $companyid )) ) {
+            $certificateinforec = (array) $DB->get_record('companycertificate',array('companyid' => $companyid));
+            $certificateinforec['companyid'] = $companyid;
             $certificateinforec['uselogo'] = $data->uselogo;
             $certificateinforec['usesignature'] = $data->usesignature;
             $certificateinforec['useborder'] = $data->useborder;
