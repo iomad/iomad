@@ -618,6 +618,7 @@ if (!$users) {
                           $OUTPUT->action_link($emailurl, $email),
                           $OUTPUT->action_link($departmenturl,
                           $department),
+                          'Staff Number',
                           $OUTPUT->action_link($cityurl, $city),
                           $OUTPUT->action_link($countryurl,
                           $country),
@@ -630,6 +631,7 @@ if (!$users) {
             continue; // Do not dispaly dummy new user and guest here.
         }
 
+        profile_load_data($user);
 
         if ($user->timecreated) {
             $strtimecreated = date($CFG->iomad_date_format, $user->timecreated);
@@ -653,6 +655,7 @@ if (!$users) {
                                 $user->id."'>$fullname</a>",
                             "$user->email",
                             "$user->departmentname",
+                            "$user->profile_field_staffno",
                             "$user->city",
                             "$user->country",
                             $strtimecreated,

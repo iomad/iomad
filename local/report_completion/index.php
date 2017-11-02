@@ -472,6 +472,8 @@ if (empty($charttype)) {
                              'lastname',
                              'department',
                              'email',
+                             'staffnumber',
+                             'city',
                              'status',
                              'timeenrolled',
                              'timestarted',
@@ -482,6 +484,8 @@ if (empty($charttype)) {
                              'lastname',
                              'department',
                              'email',
+                             'staffnumber',
+                             'city',
                              'status',
                              'timeenrolled',
                              'timestarted',
@@ -491,7 +495,9 @@ if (empty($charttype)) {
         }
     
         foreach ($columns as $column) {
-            if ($column != 'timeexpires') {
+            if ($column == 'staffnumber') {
+                $$column = 'Staff Number';
+            } else if ($column != 'timeexpires') {
                 $string[$column] = get_string($column, 'local_report_completion');
                 if ($sort != $column) {
                     $columnicon = "";
@@ -518,8 +524,10 @@ if (empty($charttype)) {
             }
             echo '"'.get_string('name', 'local_report_completion').'","'
                  .get_string('email', 'local_report_completion').'","'
-                 .get_string('course').'","'
                  .get_string('department', 'block_iomad_company_admin').'","'
+                 .get_string('course').'","'
+                 ."Staff Number".'","'
+                 .get_string('city').'","'
                  .get_string('status', 'local_report_completion').'","'
                  .get_string('timeenrolled', 'local_report_completion').'","'
                  .get_string('timestarted', 'local_report_completion').'","'
@@ -652,24 +660,28 @@ if (empty($charttype)) {
                                           $OUTPUT->action_link($emailurl, $email),
                                           get_string('course'),
                                           $OUTPUT->action_link($departmenturl, $department),
+                                          get_string('city'),
+                                          "Staff Number",
                                           $OUTPUT->action_link($timeenrolledurl, $timeenrolled),
                                           $OUTPUT->action_link($statusurl, $status),
                                           $OUTPUT->action_link($timestartedurl, $timestarted),
                                           $OUTPUT->action_link($timecompletedurl, $timecompleted),
                                           $finalscore);
-            $compusertable->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center');
+            $compusertable->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center');
         } else {
             $compusertable->head = array ($fullnamedisplay,
                                           $OUTPUT->action_link($emailurl, $email),
                                           get_string('course'),
                                           $OUTPUT->action_link($departmenturl, $department),
+                                          get_string('city'),
+                                          "Staff Number",
                                           $OUTPUT->action_link($timeenrolledurl, $timeenrolled),
                                           $OUTPUT->action_link($statusurl, $status),
                                           $OUTPUT->action_link($timestartedurl, $timestarted),
                                           $OUTPUT->action_link($timecompletedurl, $timecompleted),
                                           $timeexpires,
                                           $finalscore);
-                                          $compusertable->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center');
+                                          $compusertable->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center');
         }
 		$compusertable->id = 'ReportTable';
         if ($hascertificate) {
@@ -724,6 +736,9 @@ if (empty($charttype)) {
                 }
     
                 $user->fullname = $user->firstname . ' ' . $user->lastname;
+                $userrec = $DB->get_record('user', array('id' => $user->uid));
+                profile_load_data($userrec);
+
                 // Deal with the certificate.
                 if ($hascertificate) {
                     // Check if user has completed the course - if so, show the certificate.
@@ -758,6 +773,8 @@ if (empty($charttype)) {
                                                         $user->email,
                                                         $user->coursename,
                                                         $user->department,
+                                                        $userrec->profile_field_staffno,
+                                                        $userrec->city,
                                                         $enrolledtime,
                                                         $statusstring,
                                                         $starttime,
@@ -772,6 +789,8 @@ if (empty($charttype)) {
                                                         $user->email,
                                                         $user->coursename,
                                                         $user->department,
+                                                        $userrec->profile_field_staffno,
+                                                        $userrec->city,
                                                         $enrolledtime,
                                                         $statusstring,
                                                         $starttime,
@@ -789,6 +808,8 @@ if (empty($charttype)) {
                                                         $user->email,
                                                         $user->coursename,
                                                         $user->department,
+                                                        $userrec->profile_field_staffno,
+                                                        $userrec->city,
                                                         $enrolledtime,
                                                         $statusstring,
                                                         $starttime,
@@ -802,6 +823,8 @@ if (empty($charttype)) {
                                                         $user->email,
                                                         $user->coursename,
                                                         $user->department,
+                                                        $userrec->profile_field_staffno,
+                                                        $userrec->city,
                                                         $enrolledtime,
                                                         $statusstring,
                                                         $starttime,
@@ -816,6 +839,8 @@ if (empty($charttype)) {
                              '","'.$user->email.
                              '","'.$user->coursename.
                              '","'.$user->department.
+                             '","'.$userrec->profile_field_staffno.
+                             '","'.$userrec->city.
                              '","'.$statusstring.
                              '","'.$enrolledtime.
                              '","'.$starttime.
@@ -827,6 +852,8 @@ if (empty($charttype)) {
                              '","'.$user->email.
                              '","'.$user->coursename.
                              '","'.$user->department.
+                             '","'.$userrec->profile_field_staffno.
+                             '","'.$userrec->city.
                              '","'.$statusstring.
                              '","'.$enrolledtime.
                              '","'.$starttime.
