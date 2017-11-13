@@ -6962,6 +6962,12 @@ body.path-question-type .fitem_fgroup .accesshide {
   width: auto;
   vertical-align: baseline;
 }
+.que.multianswer .formulation .yui3-widget-positioned .feedbackspan {
+  box-sizing: content-box;
+  padding-bottom: 0;
+  max-width: inherit;
+  width: inherit;
+}
 .path-mod-quiz input[size] {
   width: auto;
 }
@@ -14305,6 +14311,9 @@ body.modal-open {
   border-radius: 10px;
   border: none;
 }
+.modal-container .modal.modal-lg {
+  max-width: 900px;
+}
 .modal-container .modal .modal-header {
   min-height: 13px;
   padding: 5px;
@@ -14356,6 +14365,19 @@ body.modal-open {
 .modal-container .modal .modal-body {
   max-height: none;
 }
+.modal-container .modal .modal-body > .loading-icon {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.modal-container .modal .modal-body > .loading-icon .icon {
+  position: absolute;
+  top: 50%;
+  /*rtl:ignore*/
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 .modal-container .modal .modal-footer {
   border-top: 1px solid #bbb;
   text-align: center;
@@ -14363,9 +14385,6 @@ body.modal-open {
   background-color: #f2f2f2;
   box-shadow: none;
   border-radius: 0 0 10px 10px;
-}
-.modal-container.large .modal {
-  max-width: 900px;
 }
 .modal-backdrop {
   z-index: 4049;
@@ -14628,6 +14647,9 @@ div#dock {
 .path-mod-choice .media-left {
   float: left;
   padding-right: 1em;
+}
+.path-mod-choice .horizontal .choices .option {
+  display: inline-block;
 }
 .path-mod-lesson .firstpageoptions {
   margin: auto;
