@@ -247,6 +247,12 @@ if (!empty($companyid)) {
             die;
         }
 
+        echo $licenseselectoutput;
+        if (empty($licenseid)) {
+            echo $output->footer();
+            die;
+        }
+
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));
         echo html_writer::start_tag('div', array('class' => 'fitem'));
         echo $treehtml;
