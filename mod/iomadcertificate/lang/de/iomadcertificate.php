@@ -1,4 +1,3 @@
-/*translation DE sponsored from lern.link*/
 <?php
 
 // This file is part of the Certificate module for Moodle - http://moodle.org/
@@ -22,6 +21,7 @@
  * @package    mod
  * @subpackage certificate
  * @copyright  Mark Nelson <markn@moodle.com>
+ * translation for DE sponsored from lern.link
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
