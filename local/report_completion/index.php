@@ -645,7 +645,7 @@ if (empty($charttype)) {
                 }
             }
         }
-        $fullnamedisplay = $OUTPUT->action_link($firstnameurl, 'Name'); //." / ". $OUTPUT->action_link($lastnameurl, $lastname);
+        $fullnamedisplay = $OUTPUT->action_link($firstnameurl, get_string('name')); //." / ". $OUTPUT->action_link($lastnameurl, $lastname);
     
         if (!$showexpiry) {
             $compusertable->head = array ($fullnamedisplay,
