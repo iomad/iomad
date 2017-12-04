@@ -675,7 +675,7 @@ if (!$new) {
                     $index == 'companylogo' || $index == 'uselogo' || $index == 'usesignature' ||
                     $index == 'usewatermark' || $index == 'useborder' || $index == 'showgrade' ||
                     $index == 'companycertificateseal' || $index == 'companycertificatesignatue' || $index == 'companycertificateborder' ||
-                    $index == 'companycertificatewatermark') {
+                    $index == 'companycertificatewatermark' || $index == 'currentparentid') {
                     continue;
                 } else {
                     $companyrecord->$index = $value;
