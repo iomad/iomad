@@ -140,7 +140,7 @@ $stdfields = array('id', 'firstname', 'lastname', 'username', 'email',
         'mnethostid', 'institution', 'department', 'idnumber', 'skype',
         'msn', 'aim', 'yahoo', 'icq', 'phone1', 'phone2', 'address',
         'url', 'description', 'descriptionformat', 'oldusername', 'deleted',
-        'password', 'temppassword');
+        'password', 'temppassword', 'suspended');
 
 $prffields = array();
 
@@ -595,8 +595,10 @@ if ($mform->is_cancelled()) {
                                         $forcechangepassword = true;
                                     }
                                 }
-    
-                                $upt->track($column, '', 'normal', false); // Clear previous.
+
+                                if ($column != 'suspended') {
+                                    $upt->track($column, '', 'normal', false); // Clear previous.
+                                }
                                 if ($column != 'password' && in_array($column, $upt->columns)) {
                                     $upt->track($column, $existinguser->$column.'-->'.$user->$column, 'info');
                                 }
@@ -608,7 +610,6 @@ if ($mform->is_cancelled()) {
                             }
                         }
                     }
-    
                     // Do not update record if new auth plugin does not exist!
                     if (!in_array($existinguser->auth, $availableauths)) {
                         $upt->track('auth', get_string('userautherror', 'error', $existinguser->auth), 'error');
@@ -666,7 +667,7 @@ if ($mform->is_cancelled()) {
                     // Save custom profile fields data from csv file.
                     profile_save_data($existinguser);
     
-                    \core\event\user_updated::create(array('context'=>$systemcontext, 'relateduserid' => $USER->id, 'userid' => $existinguser->id))->trigger();
+                    \core\event\user_updated::create_from_userid($existinguser->id)->trigger();
      
                 }
     
@@ -740,6 +741,21 @@ if ($mform->is_cancelled()) {
     
                     $user = (object) array_merge((array) $defaults, (array) $user);
                 }
+
+                // Is the company department valid?
+                if (!empty($user->department)) {
+                    if (!$department = $DB->get_record('department', array('company' => $company->id,
+                                                                           'shortname' => $user->department))) {
+                        $userserrors++;
+                        continue;
+                    }
+                    // Make sure the user can manage this department.
+                    if (!company::can_manage_department($department->id)) {
+                        $userserrors++;
+                        continue;
+                    }
+                }
+
                 $user->id = $DB->insert_record('user', $user);
                 $info = ': ' . $user->username .' (ID = ' . $user->id . ')';
                 $upt->track('status', $struseradded);
@@ -765,17 +781,9 @@ if ($mform->is_cancelled()) {
                 $company->assign_user_to_company($user->id);
     
                 // Do we have a department in the file?
-                if (!empty($user->department) &&
-                        $department = $DB->get_record('department', array('company' => $company->id,
-                                                                          'shortname' => $user->department))) {
-                    // Make sure the user can manage this department.
-                    if (company::can_manage_department($department->id)) {
-                        company::assign_user_to_department($department->id, $user->id);
-
-                    } else {
-                        // They get the one from the form.
-                        company::assign_user_to_department($formdata->userdepartment, $user->id);
-                    }
+                if (!empty($user->department)) {
+                    // we have already validated this.  Assign the user.
+                    company::assign_user_to_department($department->id, $user->id);
                 } else {
                     company::assign_user_to_department($formdata->userdepartment, $user->id);
                 }

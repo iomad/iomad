@@ -23,7 +23,7 @@ require_once($CFG->dirroot."/local/email/lib.php");
 
 // Params.
 $participant = optional_param('participant', 0, PARAM_INT);
-$dodownload = optional_param('dodownload', 0, PARAM_INT);
+$dodownload = optional_param('dodownload', 0, PARAM_CLEAN);
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
@@ -35,12 +35,17 @@ $perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
-$createdfromraw = optional_param_array('createdfrom', null, PARAM_INT);
-$createdtoraw = optional_param_array('createdto', null, PARAM_INT);
+$loginfromraw = optional_param_array('loginfrom', null, PARAM_INT);
+$logintoraw = optional_param_array('loginto', null, PARAM_INT);
 
 require_login($SITE);
 $systemcontext = context_system::instance();
 iomad::require_capability('local/report_user_logins:view', $systemcontext);
+
+if (!empty($dodownload)) {
+    $page = 0;
+    $perpage = 0;
+}
 
 if ($firstname) {
     $params['firstname'] = $firstname;
@@ -71,6 +76,33 @@ if ($departmentid) {
 }
 if ($showsuspended) {
     $params['showsuspended'] = $showsuspended;
+}
+
+if ($loginfromraw) {
+    if (is_array($loginfromraw)) {
+        $loginfrom = mktime(0, 0, 0, $loginfromraw['month'], $loginfromraw['day'], $loginfromraw['year']);
+    } else {
+        $loginfrom = $loginfromraw;
+    }
+    $params['loginfrom'] = $loginfrom;
+} else {
+    $loginfrom = null;
+}
+
+if ($logintoraw) {
+    if (is_array($logintoraw)) {
+        $loginto = mktime(0, 0, 0, $logintoraw['month'], $logintoraw['day'], $logintoraw['year']);
+    } else {
+        $loginto = $logintoraw;
+    }
+    $params['loginto'] = $loginto;
+} else {
+    if (!empty($comptfrom)) {
+        $loginto = time();
+        $params['loginto'] = $loginto;
+    } else {
+        $loginto = null;
+    }
 }
 
 // Set the companyid
@@ -120,28 +152,6 @@ if (!empty($fieldnames)) {
         }
 
     }
-}
-
-if ($createdfromraw) {
-    if (is_array($createdfromraw)) {
-        $createdfrom = mktime(0, 0, 0, $createdfromraw['month'], $createdfromraw['day'], $createdfromraw['year']);
-    } else {
-        $createdfrom = $createdfromraw;
-    }
-    $params['createdfrom'] = $createdfrom;
-} else {
-    $createdfrom = 0;
-}
-
-if ($createdtoraw) {
-    if (is_array($createdtoraw)) {
-        $createdto = mktime(0, 0, 0, $createdtoraw['month'], $createdtoraw['day'], $createdtoraw['year']);
-    } else {
-        $createdto = $createdtoraw;
-    }
-    $params['createdto'] = $createdto;
-} else {
-    $createdto = 0;
 }
 
 // Url stuff.
@@ -262,7 +272,11 @@ if (!empty($companyid)) {
         echo html_writer::end_tag('div');
 
         // Set up the filter form.
-        $mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
+        $params['companyid'] = $companyid;
+        $params['addfrom'] = 'loginfrom';
+        $params['addto'] = 'loginto';
+        $params['adddodownload'] = true;
+        $mform = new iomad_user_filter_form(null, $params);
         $mform->set_data(array('departmentid' => $departmentid));
         $mform->set_data($params);
 
@@ -275,7 +289,7 @@ if (!empty($dodownload)) {
     // Set up the Excel workbook.
 
     header("Content-Type: application/download\n");
-    header("Content-Disposition: attachment; filename=\"license_report.csv\"");
+    header("Content-Disposition: attachment; filename=\"user_login_report.csv\"");
     header("Expires: 0");
     header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
     header("Pragma: public");
@@ -313,7 +327,7 @@ foreach ($columns as $column) {
     }
     $params['sort'] = $column;
     $params['dir'] = $columndir;
-    if ($column == 'numlogins') {
+    if ($column == 'numlogins' || !empty($dodownload)) {
         $$column = $string[$column];
     } else {
         $$column = "<a href= ". new moodle_url('index.php', $params).">".$string[$column]."</a>$columnicon";
@@ -429,15 +443,43 @@ if (!empty($userrecords)) {
     $userlist = "1=2";
 }
 if (!empty($userlist)) {
-    $users = iomad_get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist, array('companyid' => $companyid));
-    $totalusers = iomad_get_users_listing($sort, $dir, 0, 0, '', '', '', $userlist, array('companyid' => $companyid));
+    $userlistarray = array('companyid' => $companyid,
+                           'loginfrom' => $loginfrom,
+                           'loginto' => $loginto);
+    $users = iomad_get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist, $userlistarray);
+    $totalusers = iomad_get_users_listing($sort, $dir, 0, 0, '', '', '', $userlist, $userlistarray);
 
 } else {
     $users = array();
 }
 $usercount = count($totalusers);
 
-echo $output->heading("$usercount ".get_string('users'));
+// Get total login and user creation events.
+$timesql = "";
+if (!empty($loginfrom)) {
+    $timesql = " AND timecreated > :loginfrom ";
+}
+if (!empty($loginto)) {
+    $timesql .= " AND timecreated < :loginto ";
+}
+$totalcreations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
+                                          WHERE eventname = :eventname
+                                          AND userid IN (". implode(',', array_values($userrecords)).")
+                                          $timesql",
+                                          array('eventname' => '\core\event\user_created',
+                                                'loginfrom' => $loginfrom,
+                                                'loginto' => $loginto));
+$totallogins = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
+                                       WHERE eventname = :eventname
+                                       AND userid IN (". implode(',', array_values($userrecords)).")
+                                       $timesql",
+                                       array('eventname' => '\core\event\user_loggedin',
+                                             'loginfrom' => $loginfrom,
+                                             'loginto' => $loginto));
+
+if (empty($dodownload)) {
+    echo $output->heading(get_string('userssummary', 'local_report_user_logins', array('usercount' => $usercount, 'totalcreations' => $totalcreations, 'totallogins' => $totallogins)));
+}
 
 $alphabet = explode(',', get_string('alphabet', 'block_iomad_company_admin'));
 $strall = get_string('all');
@@ -455,7 +497,7 @@ $baseurl = new moodle_url('index.php', $params);
 flush();
 
 
-if (!$users) {
+if (!$users && empty($dodownload)) {
     $match = array();
     echo $output->heading(get_string('nousersfound'));
 
@@ -463,7 +505,9 @@ if (!$users) {
 
 } else {
 
-    echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+    if (empty($dodownload)) {
+        echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+    }
     $mainadmin = get_admin();
 
     $override = new stdclass();
@@ -478,27 +522,40 @@ if (!$users) {
         $fullnamedisplay = "$lastname / $firstname";
     }
 
-    // set up the table.
-    $table = new html_table();
-    $table->id = 'ReportTable';
-    $headstart = array('fullnamedisplay' => $fullnamedisplay,
-                       'email' => $email,
-                       'department' => $department);
+    if (empty($dodownload)) {
+        // set up the table.
+        $table = new html_table();
+        $table->id = 'ReportTable';
+        $headstart = array('fullnamedisplay' => $fullnamedisplay,
+                           'email' => $email,
+                           'department' => $department);
 
-    $headmid = array();
-    if (!empty($extrafields)) {
-        foreach ($extrafields as $extrafield) {
-            $headmid[$extrafield->name] = $extrafield->title;
+        $headmid = array();
+        if (!empty($extrafields)) {
+            foreach ($extrafields as $extrafield) {
+                $headmid[$extrafield->name] = $extrafield->title;
+            }
         }
-    }
 
-    $headend = array ($created => $created,
-                      $firstaccess => $firstaccess,
-                      $lastaccess => $lastaccess,
-                      $numlogins => $numlogins);
-    $table->head = $headstart + $headmid + $headend;
-    
-    $table->align = array ("left", "center", "center", "center", "center", "center", "center");
+        $headend = array ($created => $created,
+                          $firstaccess => $firstaccess,
+                          $lastaccess => $lastaccess,
+                          $numlogins => $numlogins);
+        $table->head = $headstart + $headmid + $headend;
+
+        $table->align = array ("left", "center", "center", "center", "center", "center", "center");
+    } else {
+        $headstart = "\"$firstname\",\"$lastname\",\"$email\",\"$department\"";
+        $headmid = "";
+        if (!empty($extrafields)) {
+            foreach ($extrafields as $extrafield) {
+                $headmid .= ",\"$extrafield->title\"";
+            }
+        }
+
+        $headend =  ",\"$created\",\"$firstaccess\",\"$lastaccess\",\"$numlogins\"\n";
+        echo $headstart . $headmid . $headend;
+    }
 
     foreach ($users as $user) {
 
@@ -537,25 +594,41 @@ if (!$users) {
         $numlogins = $DB->count_records('logstore_standard_log', array('userid' => $user->id, 'eventname' => '\core\event\user_loggedin'));
 
         $user->department = $user->departmentname;
-        $rowstart = array('fullname' => $fullname,
-                          'email' => $user->email,
-                          'department' => $user->departmentname);
-        $rowmid = array();
-        if (!empty($extrafields)) {
-            foreach($extrafields as $extrafield) {
-                $fieldname = $extrafield->name;
-                $rowmid[$extrafield->name] = $user->$fieldname;
+        if (empty($dodownload)) {
+            $rowstart = array('fullname' => $fullname,
+                              'email' => $user->email,
+                              'department' => $user->departmentname);
+            $rowmid = array();
+            if (!empty($extrafields)) {
+                foreach($extrafields as $extrafield) {
+                    $fieldname = $extrafield->name;
+                    $rowmid[$extrafield->name] = $user->$fieldname;
+                }
             }
-        }
 
-        $rowend = array('timecreated' => $strtimecreated,
-                        'firstaccess' => $strfirstaccess,
-                        'lastaccess' => $strlastaccess,
-                        'numlogins' => $numlogins);
-        $table->data[] = $rowstart + $rowmid + $rowend;
+            $rowend = array('timecreated' => $strtimecreated,
+                            'firstaccess' => $strfirstaccess,
+                            'lastaccess' => $strlastaccess,
+                            'numlogins' => $numlogins);
+            $table->data[] = $rowstart + $rowmid + $rowend;
+        } else {
+            $rowstart = "\"$user->firstname\",\"$user->lastname\",\"$user->email\",\"$user->department\"";
+            $rowmid = "";
+            if (!empty($extrafields)) {
+                foreach($extrafields as $extrafield) {
+                    $fieldname = $extrafield->name;
+                    $rowmid .= ",\"$user->$fieldname\"";
+                }
+            }
+            $rowend = ",\"$strtimecreated\",\"$strfirstaccess\",\"$strlastaccess\",\"$numlogins\"\n";
+            echo $rowstart . $rowmid . $rowend;
+        }
     }
 }
 
+if (!empty($dodownload)) {
+    die;
+}
 if (!empty($table)) {
     echo html_writer::table($table);
     echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
@@ -601,9 +674,25 @@ function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recor
             $sort = " ORDER by d.name $dir";
         } else if ($sort == "company") {
             $sort = " ORDER by c.name $dir";
+        } else if ($sort == "created") {
+            $sort = " ORDER by u.timecreated $dir";
         } else {
             $sort = " ORDER BY u.$sort $dir";
         }
+    }
+
+    $loginsql = "";
+    if ($extraparams['loginfrom'] != null) {
+        $loginsql .= " AND u.id IN (SELECT userid FROM {logstore_standard_log}
+                        WHERE timecreated >= :loginfrom
+                        AND eventname = :loginevent1) ";
+        $params['loginevent1'] = '\core\event\user_loggedin'; 
+    }
+    if ($extraparams['loginto'] != null) {
+        $loginsql .= " AND u.id IN (SELECT userid FROM {logstore_standard_log}
+                        WHERE timecreated <= :loginto
+                        AND eventname = :loginevent2) "; 
+        $params['loginevent2'] = '\core\event\user_loggedin'; 
     }
 
     // Warning: will return UNCONFIRMED USERS!
@@ -630,6 +719,7 @@ function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recor
                                  WHERE $select and cu.userid = u.id and d.id = cu.departmentid AND c.id = cu.companyid
                                  $companysql
                                  $managertypesql
+                                 $loginsql
                                  $sort", $params, $page, $recordsperpage);
 
 }
