@@ -23,7 +23,7 @@ require_once($CFG->dirroot."/local/email/lib.php");
 
 // Params.
 $participant = optional_param('participant', 0, PARAM_INT);
-$dodownload = optional_param('dodownload', 0, PARAM_INT);
+$dodownload = optional_param('dodownload', 0, PARAM_CLEAN);
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
@@ -41,6 +41,11 @@ $logintoraw = optional_param_array('loginto', null, PARAM_INT);
 require_login($SITE);
 $systemcontext = context_system::instance();
 iomad::require_capability('local/report_user_logins:view', $systemcontext);
+
+if (!empty($dodownload)) {
+    $page = 0;
+    $perpage = 0;
+}
 
 if ($firstname) {
     $params['firstname'] = $firstname;
@@ -251,7 +256,11 @@ if (!empty($companyid)) {
         echo html_writer::end_tag('div');
 
         // Set up the filter form.
-        $mform = new iomad_user_filter_form(null, array('companyid' => $companyid, 'addfrom' => 'loginfrom', 'addto' => 'loginto'));
+        $params['companyid'] = $companyid;
+        $params['addfrom'] = 'loginfrom';
+        $params['addto'] = 'loginto';
+        $params['adddodownload'] = true;
+        $mform = new iomad_user_filter_form(null, $params);
         $mform->set_data(array('departmentid' => $departmentid));
         $mform->set_data($params);
 
@@ -264,7 +273,7 @@ if (!empty($dodownload)) {
     // Set up the Excel workbook.
 
     header("Content-Type: application/download\n");
-    header("Content-Disposition: attachment; filename=\"license_report.csv\"");
+    header("Content-Disposition: attachment; filename=\"user_login_report.csv\"");
     header("Expires: 0");
     header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
     header("Pragma: public");
@@ -302,7 +311,7 @@ foreach ($columns as $column) {
     }
     $params['sort'] = $column;
     $params['dir'] = $columndir;
-    if ($column == 'numlogins') {
+    if ($column == 'numlogins' || !empty($dodownload)) {
         $$column = $string[$column];
     } else {
         $$column = "<a href= ". new moodle_url('index.php', $params).">".$string[$column]."</a>$columnicon";
@@ -429,7 +438,32 @@ if (!empty($userlist)) {
 }
 $usercount = count($totalusers);
 
-echo $output->heading("$usercount ".get_string('users'));
+// Get total login and user creation events.
+$timesql = "";
+if (!empty($loginfrom)) {
+    $timesql = " AND timecreated > :loginfrom ";
+}
+if (!empty($loginto)) {
+    $timesql .= " AND timecreated < :loginto ";
+}
+$totalcreations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
+                                          WHERE eventname = :eventname
+                                          AND userid IN (". implode(',', array_values($userrecords)).")
+                                          $timesql",
+                                          array('eventname' => '\core\event\user_created',
+                                                'loginfrom' => $loginfrom,
+                                                'loginto' => $loginto));
+$totallogins = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
+                                       WHERE eventname = :eventname
+                                       AND userid IN (". implode(',', array_values($userrecords)).")
+                                       $timesql",
+                                       array('eventname' => '\core\event\user_loggedin',
+                                             'loginfrom' => $loginfrom,
+                                             'loginto' => $loginto));
+
+if (empty($dodownload)) {
+    echo $output->heading(get_string('userssummary', 'local_report_user_logins', array('usercount' => $usercount, 'totalcreations' => $totalcreations, 'totallogins' => $totallogins)));
+}
 
 $alphabet = explode(',', get_string('alphabet', 'block_iomad_company_admin'));
 $strall = get_string('all');
@@ -447,7 +481,7 @@ $baseurl = new moodle_url('index.php', $params);
 flush();
 
 
-if (!$users) {
+if (!$users && empty($dodownload)) {
     $match = array();
     echo $output->heading(get_string('nousersfound'));
 
@@ -455,7 +489,9 @@ if (!$users) {
 
 } else {
 
-    echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+    if (empty($dodownload)) {
+        echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+    }
     $mainadmin = get_admin();
 
     $override = new stdclass();
@@ -470,11 +506,15 @@ if (!$users) {
         $fullnamedisplay = "$lastname / $firstname";
     }
 
-    // set up the table.
-    $table = new html_table();
-    $table->id = 'ReportTable';
-    $table->head = array ($fullnamedisplay, $email, $department, $created, $firstaccess, $lastaccess, $numlogins);
-    $table->align = array ("left", "center", "center", "center", "center", "center", "center");
+    if (empty($dodownload)) {
+        // set up the table.
+        $table = new html_table();
+        $table->id = 'ReportTable';
+        $table->head = array ($fullnamedisplay, $email, $department, $created, $firstaccess, $lastaccess, $numlogins);
+        $table->align = array ("left", "center", "center", "center", "center", "center", "center");
+    } else {
+        echo "\"$firstname\",\"$lastname\",\"$email\",\"$department\",\"$created\",\"$firstaccess\",\"$lastaccess\",\"$numlogins\"\n";
+    }
 
     foreach ($users as $user) {
 
@@ -514,18 +554,24 @@ if (!$users) {
 
         $user->department = $user->departmentname;
 
-
-        $table->data[] = array("$fullname",
-                                "$user->email",
-                                "$user->department",
-                                $strtimecreated,
-                                $strfirstaccess,
-                                $strlastaccess,
-                                $numlogins
-                                );
+        if (empty($dodownload)) {
+            $table->data[] = array("$fullname",
+                                    "$user->email",
+                                    "$user->department",
+                                    $strtimecreated,
+                                    $strfirstaccess,
+                                    $strlastaccess,
+                                    $numlogins
+                                    );
+        } else {
+            echo "\"$user->firstname\",\"$user->lastname\",\"$user->email\",\"$user->department\",\"$strtimecreated\",\"$strfirstaccess\",\"$strlastaccess\",\"$numlogins\"\n";
+        }
     }
 }
 
+if (!empty($dodownload)) {
+    die;
+}
 if (!empty($table)) {
     echo html_writer::table($table);
     echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
