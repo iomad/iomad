@@ -435,7 +435,7 @@ class company_user {
      * @param text $temppassword
      */
     public static function store_temporary_password($user, $sendemail, $temppassword, $reset = false, $due = 0) {
-        global $CFG, $USER;
+        global $CFG, $USER, $DB;
         if (empty($due)) {
             $due = time();
         }
