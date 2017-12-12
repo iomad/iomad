@@ -200,6 +200,7 @@ $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select),
 $mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
 $mform->set_data(array('departmentid' => $departmentid));
 $mform->set_data($params);
+$mform->get_data();
 
 // Display the user filter form.
 $mform->display();
