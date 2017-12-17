@@ -22,7 +22,7 @@ require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
-$lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
+$lastname      = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended  = optional_param('showsuspended', 0, PARAM_INT);
 $email  = optional_param('email', 0, PARAM_CLEAN);
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
@@ -34,8 +34,15 @@ $perpage      = optional_param('perpage', 30, PARAM_INT);
 $acl          = optional_param('acl', '0', PARAM_INT);
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
+$licenseid    = optional_param('licenseid', 0, PARAM_INTEGER);
+$dodownload  = optional_param('dodownload', '', PARAM_CLEAN);
 
 $params = array();
+
+if (!empty($dodownload)) {
+    $page = 0;
+    $perpage = 0;
+}
 
 if ($firstname) {
     $params['firstname'] = $firstname;
@@ -67,6 +74,9 @@ if ($departmentid) {
 if ($showsuspended) {
     $params['showsuspended'] = $showsuspended;
 }
+if ($licenseid) {
+    $params['licenseid'] = $licenseid;
+}
 
 $systemcontext = context_system::instance();
 require_login(); // Adds to $PAGE, creates $output.
@@ -77,10 +87,10 @@ $companyid = iomad::get_my_companyid($systemcontext);
 
 // Correct the navbar.
 // Set the name for the page.
-$linktext = get_string('report_users_title', 'local_report_users');
+$linktext = get_string('report_user_license_allocations_title', 'local_report_user_license_allocations');
 
 // Set the url.
-$linkurl = new moodle_url('/local/report_users/index.php');
+$linkurl = new moodle_url('/local/report_user_license_allocations/index.php');
 
 // Print the page header.
 $PAGE->set_context($systemcontext);
@@ -101,7 +111,16 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'ini
 // Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
-echo $output->header();
+if (empty($dodownload)) {
+    echo $output->header();
+} else {
+    // Set up the Excel workbook.
+    header("Content-Type: application/download\n");
+    header("Content-Disposition: attachment; filename=\"user_license_allocations.csv\"");
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
+    header("Pragma: public");
+}
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
@@ -190,6 +209,26 @@ if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
 
+// Get the appropriate list of licenses.
+$licenselist = array();
+$licenses = $DB->get_records('companylicense', array('companyid' => $companyid), 'expirydate DESC', 'id,name,startdate,expirydate');
+foreach ($licenses as $license) {
+    if ($license->expirydate < time()) {
+        $licenselist[$license->id] = $license->name . " (" . get_string('licenseexpired', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->expirydate)) . ")";
+    } else if ($license->startdate > time()) {
+        $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate)) . ")";
+    } else {
+        $licenselist[$license->id] = $license->name;
+    }
+}
+
+$selectparams = $params;
+$selecturl = new moodle_url('/local/report_user_license_allocations/index.php', $selectparams);
+$select = new single_select($selecturl, 'licenseid', $licenselist, $licenseid);
+$select->label = get_string('licenseselect', 'block_iomad_company_admin');
+$select->formid = 'chooselicense';
+$licenseselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector'));
+
 // Get the appropriate list of departments.
 $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
@@ -201,25 +240,48 @@ $departmenttree = company::get_all_subdepartments_raw($userhierarchylevel);
 $treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
 
 // Set up the filter form.
-$mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
+$params['adddodownload'] = true;
+$params['companyid'] = $companyid;
+$mform = new iomad_user_filter_form(null, $params);
 $mform->set_data(array('departmentid' => $departmentid));
 $mform->set_data($params);
 $mform->get_data();
 
-// Display the tree selector thing.
-echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-echo html_writer::start_tag('div', array('class' => 'fitem'));
-echo $treehtml;
-echo html_writer::start_tag('div', array('style' => 'display:none'));
-echo $fwselectoutput;
-echo html_writer::end_tag('div');
-echo html_writer::end_tag('div');
-echo html_writer::end_tag('div');
-echo html_writer::start_tag('div', array('class' => 'iomadclear', 'style' => 'padding-top: 5px;'));
+if (empty($licenselist) && empty($dodownload)) {
+    echo get_string('nolicenses', 'block_iomad_company_admin');
+    echo $output->footer();
+    die;
+}
 
-// Display the user filter form.
-$mform->display();
-echo html_writer::end_tag('div');
+if (empty($dodownload)) {
+    echo $licenseselectoutput;
+}
+if (empty($licenseid) && empty($dodownload)) {
+    echo $output->footer();
+    die;
+}
+
+if (empty($dodownload)) {
+    // Display the tree selector thing.
+    echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+    echo html_writer::start_tag('div', array('class' => 'fitem'));
+    echo $treehtml;
+    echo html_writer::start_tag('div', array('style' => 'display:none'));
+    echo $fwselectoutput;
+    echo html_writer::end_tag('div');
+    echo html_writer::end_tag('div');
+    echo html_writer::end_tag('div');
+    echo html_writer::start_tag('div', array('class' => 'iomadclear', 'style' => 'padding-top: 5px;'));
+    
+    if (empty($licenseid)) {
+        echo $output->footer();
+        die;
+    }
+    
+    // Display the user filter form.
+    $mform->display();
+    echo html_writer::end_tag('div');
+}
 
 $stredit   = get_string('edit');
 $strdelete = get_string('delete');
@@ -232,7 +294,7 @@ if (empty($CFG->loginhttps)) {
     $securewwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
 }
 
-$returnurl = $CFG->wwwroot."/local/report_users/index.php";
+$returnurl = $CFG->wwwroot."/local/report_user_license_allocations/index.php";
 
 // Do we have any additional reporting fields?
 $extrafields = array();
@@ -250,22 +312,21 @@ if (!empty($CFG->iomad_report_fields)) {
     }
 }
 
+// Get the license information.
+$license = $DB->get_record('companylicense', array('id' => $licenseid));
+
 // Carry on with the user listing.
-$columns = array("firstname", "lastname", "department", "email", "timecreated", "lastaccess");
+$columns = array("firstname", "lastname", "email", "department", "licenseallocated", "dateallocated", "dateunallocated", "totalallocate", "totalunallocate");
 
 foreach ($columns as $column) {
-    if ($column == 'timecreated') {
-        $string[$column] = get_string("$column", 'local_report_completion');
+    if ($column == 'licenseallocated' ||$column == 'dateallocated' || $column == 'dateunallocated' ||  $column == 'totalallocate' ||  $column == 'totalunallocate') {
+        $string[$column] = get_string("$column", 'local_report_user_license_allocations');
     } else {
         $string[$column] = get_string("$column");
     }
     if ($sort != $column) {
         $columnicon = "";
-        if ($column == "lastaccess") {
-            $columndir = "DESC";
-        } else {
-            $columndir = "ASC";
-        }
+        $columndir = "ASC";
     } else {
         $columndir = $dir == "ASC" ? "DESC":"ASC";
         if ($column == "lastaccess") {
@@ -273,7 +334,7 @@ foreach ($columns as $column) {
         } else {
             $columnicon = $dir == "ASC" ? "down":"up";
         }
-        $columnicon = " <img src=\"" . $output->image_url('t/' . $columnicon) . "\" alt=\"\" />";
+        $columnicon = " <img src=\"" . $output->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
 
     }
     $$column = $string[$column].$columnicon;
@@ -304,156 +365,140 @@ if (!empty($parentcompanies)) {
 
 // Get all or company users depending on capability.
 $dbsort = "";
-// Check if has capability edit all users.
-//if (iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
-    // Check we havent looked and discounted everyone.
-    if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
-        // Make sure we dont display site admins.
-        // Set default search to something which cant happen.
-        $sqlsearch = "id!='-1' $userfilter";
-        $siteadmins = explode(" ", $CFG->siteadmins);
-        foreach ($siteadmins as $siteadmin) {
-            $sqlsearch .= " AND id!='$siteadmin'";
-        }
 
-        // Get department users.
-        $departmentusers = company::get_recursive_department_users($departmentid);
-        if ( count($departmentusers) > 0 ) {
-            $departmentids = "";
-            foreach ($departmentusers as $departmentuser) {
-                if (!empty($departmentids)) {
-                    $departmentids .= ",".$departmentuser->userid;
-                } else {
-                    $departmentids .= $departmentuser->userid;
-                }
-            }
-            if (!empty($showsuspended)) {
-                $sqlsearch .= " AND deleted <> 1 AND id in ($departmentids) ";
-            } else {
-                $sqlsearch .= " AND deleted <> 1 AND suspended = 0 AND id in ($departmentids) ";
-            }
-        } else {
-            $sqlsearch = "1 = 0";
-        }
-
-        // Deal with search strings..
-        $searchparams = array();
-        if (!empty($idlist)) {
-            $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
-        }
-        if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND firstname like :firstname ";
-            $searchparams['firstname'] = '%'.$params['firstname'].'%';
-        }
-
-        if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND lastname like :lastname ";
-            $searchparams['lastname'] = '%'.$params['lastname'].'%';
-        }
-
-        if (!empty($params['email'])) {
-            $sqlsearch .= " AND email like :email ";
-            $searchparams['email'] = '%'.$params['email'].'%';
-        }
-
-        switch($sort) {
-            case "firstname":
-                $sqlsearch .= " order by firstname $dir ";
-            break;
-            case "lastname":
-                $sqlsearch .= " order by lastname $dir ";
-            break;
-            case "email":
-                $sqlsearch .= " order by email $dir ";
-            break;
-            case "timecreated":
-                $sqlsearch .= " order by timecreated $dir ";
-            break;
-            case "access":
-                $sqlsearch .= " order by lastaccess $dir ";
-                $sort = "lastaccess";
-            break;
-        }
-
-        // Get the user records.
-        $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
-    } else {
-        $userrecords = array();
+// Check we havent looked and discounted everyone.
+if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
+    // Make sure we dont display site admins.
+    // Set default search to something which cant happen.
+    $sqlsearch = "id!='-1' $userfilter";
+    $siteadmins = explode(" ", $CFG->siteadmins);
+    foreach ($siteadmins as $siteadmin) {
+        $sqlsearch .= " AND id!='$siteadmin'";
     }
 
-    // Check we havent looked and discounted everyone.
-    if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
-        // Get users company association.
-        $departmentusers = company::get_recursive_department_users($departmentid);
-        $sqlsearch = "id!='-1' $userfilter";
-        if ( count($departmentusers) > 0 ) {
-            $departmentids = "";
-            foreach ($departmentusers as $departmentuser) {
-                if (!empty($departmentids)) {
-                    $departmentids .= ",".$departmentuser->userid;
-                } else {
-                    $departmentids .= $departmentuser->userid;
-                }
-            }
-            if (!empty($showsuspended)) {
-                $sqlsearch .= " AND deleted <> 1 AND id in ($departmentids) ";
+    // Get department users.
+    $departmentusers = company::get_recursive_department_users($departmentid);
+    if ( count($departmentusers) > 0 ) {
+        $departmentids = "";
+        foreach ($departmentusers as $departmentuser) {
+            if (!empty($departmentids)) {
+                $departmentids .= ",".$departmentuser->userid;
             } else {
-                $sqlsearch .= " AND deleted <> 1 AND suspended = 0 AND id in ($departmentids) ";
+                $departmentids .= $departmentuser->userid;
             }
+        }
+        if (!empty($showsuspended)) {
+            $sqlsearch .= " AND deleted <> 1 AND id in ($departmentids) ";
         } else {
-            $sqlsearch = "1 = 0";
+            $sqlsearch .= " AND deleted <> 1 AND suspended = 0 AND id in ($departmentids) ";
         }
-        // Deal with search strings.
-        $searchparams = array();
-        if (!empty($idlist)) {
-            $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
-        }
-        if (!empty($params['firstname'])) {
-            $sqlsearch .= " AND firstname like :firstname ";
-            $searchparams['firstname'] = '%'.$params['firstname'].'%';
-        }
-
-        if (!empty($params['lastname'])) {
-            $sqlsearch .= " AND lastname like :lastname ";
-            $searchparams['lastname'] = '%'.$params['lastname'].'%';
-        }
-
-        if (!empty($params['email'])) {
-            $sqlsearch .= " AND email like :email ";
-            $searchparams['email'] = '%'.$params['email'].'%';
-        }
-
-        switch($sort) {
-            case "name":
-                $sqlsearch .= " order by firstname $dir ";
-                $dbsort = " order by u.firstname $dir ";
-            break;
-            case "lastname":
-                $sqlsearch .= " order by lastname $dir ";
-                $dbsort = " order by u.lastname $dir ";
-            break;
-            case "email":
-                $sqlsearch .= " order by email $dir ";
-                $dbsort = " order by u.email $dir ";
-            break;
-            case "timecreated":
-                $sqlsearch .= " order by timecreated $dir ";
-                $dbsort = " order by u.timecreated $dir ";
-            break;
-            case "lastaccess":
-                $sqlsearch .= " order by currentlogin $dir ";
-                $dbsort = " order by u.currentlogin $dir ";
-            break;
-            case "department":
-                $dbsort = " order by d.name $dir ";
-            break;
-        }
-
-        $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch . $userfilter, $searchparams);
     } else {
-        $userrecords = array();
+        $sqlsearch = "1 = 0";
     }
-//}
+
+    // Deal with search strings..
+    $searchparams = array();
+    if (!empty($idlist)) {
+        $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
+    }
+    if (!empty($params['firstname'])) {
+        $sqlsearch .= " AND firstname like :firstname ";
+        $searchparams['firstname'] = '%'.$params['firstname'].'%';
+    }
+
+    if (!empty($params['lastname'])) {
+        $sqlsearch .= " AND lastname like :lastname ";
+        $searchparams['lastname'] = '%'.$params['lastname'].'%';
+    }
+
+    if (!empty($params['email'])) {
+        $sqlsearch .= " AND email like :email ";
+        $searchparams['email'] = '%'.$params['email'].'%';
+    }
+
+    switch($sort) {
+        case "firstname":
+            $sqlsearch .= " order by firstname $dir ";
+        break;
+        case "lastname":
+            $sqlsearch .= " order by lastname $dir ";
+        break;
+        case "email":
+            $sqlsearch .= " order by email $dir ";
+        break;
+    }
+
+    // Get the user records.
+    $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
+} else {
+    $userrecords = array();
+}
+
+// Check we havent looked and discounted everyone.
+if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
+    // Get users company association.
+    $departmentusers = company::get_recursive_department_users($departmentid);
+    $sqlsearch = "id!='-1' $userfilter";
+    if ( count($departmentusers) > 0 ) {
+        $departmentids = "";
+        foreach ($departmentusers as $departmentuser) {
+            if (!empty($departmentids)) {
+                $departmentids .= ",".$departmentuser->userid;
+            } else {
+                $departmentids .= $departmentuser->userid;
+            }
+        }
+        if (!empty($showsuspended)) {
+            $sqlsearch .= " AND deleted <> 1 AND id in ($departmentids) ";
+        } else {
+            $sqlsearch .= " AND deleted <> 1 AND suspended = 0 AND id in ($departmentids) ";
+        }
+    } else {
+        $sqlsearch = "1 = 0";
+    }
+    // Deal with search strings.
+    $searchparams = array();
+    if (!empty($idlist)) {
+        $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
+    }
+    if (!empty($params['firstname'])) {
+        $sqlsearch .= " AND firstname like :firstname ";
+        $searchparams['firstname'] = '%'.$params['firstname'].'%';
+    }
+
+    if (!empty($params['lastname'])) {
+        $sqlsearch .= " AND lastname like :lastname ";
+        $searchparams['lastname'] = '%'.$params['lastname'].'%';
+    }
+
+    if (!empty($params['email'])) {
+        $sqlsearch .= " AND email like :email ";
+        $searchparams['email'] = '%'.$params['email'].'%';
+    }
+
+    switch($sort) {
+        case "name":
+            $sqlsearch .= " order by firstname $dir ";
+            $dbsort = " order by u.firstname $dir ";
+        break;
+        case "lastname":
+            $sqlsearch .= " order by lastname $dir ";
+            $dbsort = " order by u.lastname $dir ";
+        break;
+        case "email":
+            $sqlsearch .= " order by email $dir ";
+            $dbsort = " order by u.email $dir ";
+        break;
+        case "department":
+            $dbsort = " order by d.name $dir ";
+        break;
+    }
+
+    $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch . $userfilter, $searchparams);
+} else {
+    $userrecords = array();
+}
+
 $userlist = "";
 if (!empty($userrecords)) {
     $userlist = " u.id in (". implode(',', array_values($userrecords)).") ";
@@ -471,8 +516,6 @@ if (!empty($userlist)) {
                                           u.middlename as middlename,
                                           u.city as city,
                                           u.country as country,
-                                          u.timecreated as timecreated,
-                                          u.currentlogin as lastaccess,
                                           u.suspended as suspended,
                                           d.name as departmentname
                                    FROM {user} u, {department} d, {company_users} cu
@@ -487,17 +530,20 @@ if (!empty($userlist)) {
 
 $usercount = count($userrecords);
 
-echo $output->heading("$usercount ".get_string('users'));
+if (empty($dodownload)) {
+    echo $output->heading("$usercount ".get_string('users'));
+}
 
 $alphabet = explode(',', get_string('alphabet', 'block_iomad_company_admin'));
 $strall = get_string('all');
 
-echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+if (empty($dodownload)) {
+    echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+}
 
 flush();
 
-
-if (!$users) {
+if (!$users && empty($dodownload)) {
     $match = array();
     echo $output->heading(get_string('nousersfound'));
 
@@ -602,70 +648,148 @@ if (!$users) {
             }
         }
     }
-    $fullnamedisplay = $output->action_link($firstnameurl, $firstname)." / ".
-                               $output->action_link($lastnameurl, $lastname);
-
-    $table = new html_table();
-    $headstart = array($fullnamedisplay => $fullnamedisplay,
-                       $email => $output->action_link($emailurl, $email),
-                       $department => $output->action_link($departmenturl, $department));
-    $headmid = array();
-    if (!empty($extrafields)) {
-        foreach ($extrafields as $extrafield) {
-            $headmid[$extrafield->name] = $extrafield->title;
+    if (empty($dodownload)) {
+        $fullnamedisplay = $output->action_link($firstnameurl, $firstname)." / ".
+                                   $output->action_link($lastnameurl, $lastname);
+    
+        $table = new html_table();
+        $headstart = array($fullnamedisplay => $fullnamedisplay,
+                           $email => $output->action_link($emailurl, $email),
+                           $department => $output->action_link($departmenturl, $department));
+        $headmid = array();
+        if (!empty($extrafields)) {
+            foreach ($extrafields as $extrafield) {
+                $headmid[$extrafield->name] = $extrafield->title;
+            }
         }
+    
+        $headend = array ($licenseallocated => $licenseallocated,
+                          $dateallocated => $dateallocated,
+                          $dateunallocated => $dateunallocated,
+                          $totalallocate => $totalallocate,
+                          $totalunallocate => $totalunallocate);
+        $table->head = $headstart + $headmid + $headend;
+        $table->align = array ("left", "left", "left", "left", "left", "left", "center", "center", "center");
+        $table->width = "95%";
+    } else {
+        $headstart = "\"$firstname\",\"$lastname\",\"$email\",\"$department\"";
+        $headmid = "";
+        if (!empty($extrafields)) {
+            foreach ($extrafields as $extrafield) {
+                $headmid .= ",\"$extrafield->title\"";
+            }
+        }
+        $detail = get_string('detail', 'local_report_user_license_allocations');
+        $headend = ",\"$licenseallocated\",\"$dateallocated\",\"$dateunallocated\",\"$totalallocate\",\"$detail\",\"$totalallocate\",\"$detail\"";
+        echo $headstart . $headmid . $headend . "\n";
     }
-
-    $headend = array ($timecreated => $output->action_link($timecreatedurl, $timecreated),
-                      $lastaccess => $output->action_link($accessurl, $lastaccess));
-    $table->head = $headstart + $headmid + $headend;
-    $table->align = array ("left", "left", "left", "left", "left", "left", "center", "center", "center");
-    $table->width = "95%";
 
     foreach ($users as $user) {
         if ($user->username == 'guest') {
-            continue; // Do not dispaly dummy new user and guest here.
-        }
-
-
-        if ($user->timecreated) {
-            $strtimecreated = date($CFG->iomad_date_format, $user->timecreated);
-        } else {
-            $strtimecreated = get_string('never');
-        }
-        if ($user->lastaccess) {
-            $strlastaccess = format_time(time() - $user->lastaccess);
-        } else {
-            $strlastaccess = get_string('never');
-        }
-        $fullname = fullname($user, true);
-
-        // Is this a suspended user?
-        if (!empty($user->suspended)) {
-            $fullname .= " (S)";
+            continue; // Do not display dummy new user and guest here.
         }
 
         // load the full user profile.
         profile_load_data($user);
 
-        $userurl = "/local/report_users/userdisplay.php";
-        $rowstart = array('fullname' => "<a href='".new moodle_url($userurl, array('userid' => $user->id)).
-                                        "'>$fullname</a>",
-                          'email' => $user->email,
-                          'department' => $user->departmentname);
-        $rowmid = array();
-        if (!empty($extrafields)) {
-            foreach($extrafields as $extrafield) {
-                $fieldname = $extrafield->name;
-                $rowmid[$extrafield->name] = $user->$fieldname;
+        if (empty($dodownload)) {
+            $fullname = fullname($user, true);
+            // Is this a suspended user?
+            if (!empty($user->suspended)) {
+                $fullname .= " (S)";
             }
+        } else {
+            $fullname = "\"$user->firstname\",\"$user->lastname\"";
         }
 
-        $rowend = array('timecreated' => $strtimecreated,
-                        'lastaccess' => $strlastaccess);
-        $table->data[] = $rowstart + $rowmid + $rowend;
+        // Get the license information.
+        if ($allocations = $DB->get_records('logstore_standard_log', array('eventname' => '\block_iomad_company_admin\event\user_license_assigned',
+                                                                           'userid' => $user->id,
+                                                                           'objectid' => $licenseid))) {
+            if (!empty($license->program)) {
+                // We need to go through the allocations and lump them together.
+                $temp = array();
+                foreach ($allocations as $allocation) {
+                    $temp[$allocation->other. '-' . round($allocation->timecreated, -2)] = $allocation;
+                }
+                $allocations = $temp;
+            }
+            $allocationtip = "";
+            foreach ($allocations as $allocation) {
+                $allocationtip .= date($CFG->iomad_date_format, $allocation->timecreated) . "\n"; 
+            }
+            $totalallocated = count($allocations);
+            $licenseallocated = get_string('yes');
+            $latest = array_pop($allocations);
+            $dateallocated = date($CFG->iomad_date_format, $latest->timecreated);
+        } else {
+            $totalallocated = 0;
+            $dateallocated = get_string('never');
+            $licenseallocated = get_string('no');
+            $allocationtip = "";
+        }
+        if ($unallocations = $DB->get_records('logstore_standard_log', array('eventname' => '\block_iomad_company_admin\event\user_license_unassigned',
+                                                                            'userid' => $user->id,
+                                                                            'objectid' => $licenseid))) {
+            if (!empty($license->program)) {
+                // We need to go through the allocations and lump them together.
+                $temp = array();
+                foreach ($unallocations as $unallocation) {
+                    $temp[$unallocation->other. '-' . round($unallocation->timecreated, -2)] = $unallocation;
+                }
+                $unallocations = $temp;
+            }
+            $unallocationtip = "";
+            foreach ($unallocations as $unallocation) {
+                $unallocationtip .= date($CFG->iomad_date_format, $unallocation->timecreated) . "\n"; 
+            }
+            $totalunallocated = count($unallocations);
+            $unallocation = array_pop($unallocations);
+            $dateunallocated = date($CFG->iomad_date_format, $unallocation->timecreated);
+        } else {
+            $dateunallocated = get_string('never');
+            $totalunallocated = 0;
+            $unallocationtip = "";
+        }
+
+        if (empty($dodownload)) {
+        $userurl = new moodle_url('/local/report_user_license_allocations/userdisplay.php', array('userid' => $user->id));
+            $rowstart = array('fullname' => "<a href = '$userurl'>$fullname</a>",
+                              'email' => $user->email,
+                              'department' => $user->departmentname);
+            $rowmid = array();
+            if (!empty($extrafields)) {
+                foreach($extrafields as $extrafield) {
+                    $fieldname = $extrafield->name;
+                    $rowmid[$extrafield->name] = $user->$fieldname;
+                }
+            }
+    
+            $rowend = array('licenseallocated' => $licenseallocated,
+                          'dateallocated' => $dateallocated,
+                          'dateunallocated' => $dateunallocated,
+                          'totalallocate' => "<a data-toggle='tooltip' data-placement='right' title='$allocationtip'>" . $totalallocated ."</a>",
+                          'totalunallocate' => "<a data-toggle='tooltip' data-placement='right' title='$unallocationtip'>" . $totalunallocated . "</a>");
+            $table->data[] = $rowstart + $rowmid + $rowend;
+        } else {
+            $rowstart = $fullname. ",\"$user->email\",\"$user->departmentname\"";
+            $rowmid = "";
+            if (!empty($extrafields)) {
+                foreach($extrafields as $extrafield) {
+                    $fieldname = $extrafield->name;
+                    $rowmid .= ",\"$user->$fieldname\"";
+                }
+            }
+    
+            $rowend = ",\"$licenseallocated\",\"$dateallocated\",\"$dateunallocated\",\"$totalallocated\",\"$allocationtip\",\"$totalunallocated\",\"$unallocationtip\"";
+            echo $rowstart . $rowmid . $rowend . "\n";
+        }
                             
     }
+}
+
+if (!empty($dodownload)) {
+    die;
 }
 
 if (!empty($table)) {
