@@ -190,6 +190,7 @@ $treehtml = $output->department_tree($departmenttree, optional_param('department
 $mform = new iomad_date_filter_form($params);
 $mform->set_data(array('departmentid' => $departmentid));
 $mform->set_data($params);
+$mform->get_data();
 
 if (empty($licenselist)) {
     echo get_string('nolicenses', 'block_iomad_company_admin');
@@ -367,14 +368,15 @@ if (!empty($userlist)) {
                                                    array('eventname' => '\block_iomad_company_admin\event\user_license_unassigned',
                                                          'licenseid' => $licenseid,
                                                          'fromtime' => $from));
+
             if (empty($unallocations)) {
                 $numunallocations = 0;
             } else {
                 $tempalloc = array();
                 foreach ($unallocations as $unallocation) {
-                    $tempalloc[$unallocation->other] = $allocation;
+                    $tempalloc[$unallocation->other] = $unallocation;
                 }
-                $numallocations = count($tempalloc);
+                $numunallocations = count($tempalloc);
             }
 
             $numstart = $numallocations - $numunallocations;
@@ -428,7 +430,7 @@ if (!empty($userlist)) {
         } else {
             $tempalloc = array();
             foreach ($allocations as $allocation) {
-                $tempalloc[$allocation->other. '-' . round($allocation->timecreated, -2)] = $allocation;
+                $tempalloc[$allocation->userid . '-' . $allocation->other. '-' . round($allocation->timecreated, -1)] = $allocation;
             }
             $numallocations = count($tempalloc);
         }
@@ -437,9 +439,9 @@ if (!empty($userlist)) {
         } else {
             $tempalloc = array();
             foreach ($unallocations as $unallocation) {
-                $tempalloc[$unallocation->other. '-' . round($unallocation->timecreated, -2)] = $allocation;
+                $tempalloc[$unallocation->userid . '-' . $unallocation->other. '-' . round($unallocation->timecreated, -1)] = $unallocation;
             }
-            $numallocations = count($tempalloc);
+            $numunallocations = count($tempalloc);
         }
     }
     $net = $numallocations - $numunallocations;
