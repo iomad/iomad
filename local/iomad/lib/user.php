@@ -316,8 +316,9 @@ class company_user {
                 } else {
                     $timeend = 0;
                 }
-                $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today,
-                                    $timeend, ENROL_USER_ACTIVE);
+                if (!$DB->get_record('user_enrolments', array('userid' => $user->id, 'enrolid' => $manualcache[$courseid]->id))) {
+                    $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today, $timeend, ENROL_USER_ACTIVE);
+                }
                 if ($shared || $grouped) {
                     if (!empty($companyid)) {
                         company::add_user_to_shared_course($courseid, $user->id, $companyid, $groupid);
@@ -435,7 +436,7 @@ class company_user {
      * @param text $temppassword
      */
     public static function store_temporary_password($user, $sendemail, $temppassword, $reset = false, $due = 0) {
-        global $CFG, $USER;
+        global $CFG, $DB, $USER;
         if (empty($due)) {
             $due = time();
         }
@@ -445,7 +446,7 @@ class company_user {
             if ($reset) {
                 // Get the company details.
                 $company = company::get_company_byuserid($user->id);
-                $companyrec = $DB->get_record('company', array('id' => $companyid));
+                $companyrec = $DB->get_record('company', array('id' => $company->id));
                 if ($companyrec->managernotify == 0) {
                     $headers = null;
                 } else {
@@ -695,7 +696,9 @@ class iomad_user_filter_form extends moodleform {
     protected $showhistoric;
     protected $addfrom;
     protected $addto;
-    protected $licensestatus;
+    protected $addlicensestatus;
+    protected $fromname;
+    protected $toname;
 
     public function definition() {
         global $CFG, $DB, $USER, $SESSION;
@@ -713,23 +716,23 @@ class iomad_user_filter_form extends moodleform {
         }
 
         if (!empty($this->_customdata['addfrom'])) {
-            $addfrom = true;
-            $fromname = $this->_customdata['addfrom'];
+            $this->addfrom = true;
+            $this->fromname = $this->_customdata['addfrom'];
         } else {
-            $addfrom = false;
+            $this->addfrom = false;
         }
 
         if (!empty($this->_customdata['addto'])) {
-            $addto = true;
-            $toname = $this->_customdata['addto'];
+            $this->addto = true;
+            $this->toname = $this->_customdata['addto'];
         } else {
-            $addto = false;
+            $this->addto = false;
         }
 
-        if (!empty($this->_customdata['licensestatus'])) {
-            $licensestatus = true;
+        if (!empty($this->_customdata['addlicensestatus'])) {
+            $addlicensestatus = true;
         } else {
-            $licensestatus = false;
+            $addlicensestatus = false;
         }
 
         $mform =& $this->_form;
@@ -793,15 +796,15 @@ class iomad_user_filter_form extends moodleform {
             $mform->addElement('checkbox', 'showhistoric', get_string('showhistoricusers', 'block_iomad_company_admin'));
         }
 
-        if ($addfrom) {
-            $mform->addElement('date_selector', $fromname, get_string($fromname, 'block_iomad_company_admin'), array('optional' => 'yes'));
+        if ($this->addfrom) {
+            $mform->addElement('date_selector', $this->fromname, get_string($this->fromname, 'block_iomad_company_admin'), array('optional' => 'yes'));
         }
 
-        if ($addto) {
-            $mform->addElement('date_selector', $toname, get_string($toname, 'block_iomad_company_admin'), array('optional' => 'yes'));
+        if ($this->addto) {
+            $mform->addElement('date_selector', $this->toname, get_string($this->toname, 'block_iomad_company_admin'), array('optional' => 'yes'));
         }
 
-        if ($licensestatus) {
+        if ($addlicensestatus) {
             $licenseusearray = array ('0' => get_string('any'),
                                       '1' => get_string('notinuse', 'block_iomad_company_admin'),
                                       '2' => get_string('inuse', 'block_iomad_company_admin'));
@@ -816,6 +819,19 @@ class iomad_user_filter_form extends moodleform {
             $buttonarray[] = $mform->createElement('submit', 'dodownload', get_string("downloadcsv", 'local_report_completion'));
             $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
         }
+    }
+
+    public function validation($data, $files) {
+        
+        $errors = array();
+        if (!empty($this->fromname) && !empty($this->toname)) {
+            if (!empty($data[$this->fromname]) && !empty($data[$this->toname])) {
+                if ($data[$this->fromname] > $data[$this->toname]) {
+                    $errors[$this->fromname] = get_string('errorinvaliddate', 'calendar');
+                }
+            }
+        }
+        return $errors;
     }
 }
 

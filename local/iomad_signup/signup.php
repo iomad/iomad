@@ -29,7 +29,7 @@ require_once($CFG->dirroot . '/user/editlib.php');
 require_once('signup_form.php');
 $wantedcompanyid = required_param('id', PARAM_INT);
 $wantedcompanyshort = required_param('code', PARAM_CLEAN);
-$wanteddepartment = optiona_param('dept', '', PARAM_CLEAN);
+$wanteddepartment = optional_param('dept', '', PARAM_CLEAN);
 
 // Try to prevent searching for sites that allow sign-up.
 if (!isset($CFG->additionalhtmlhead)) {
@@ -124,7 +124,7 @@ $PAGE->set_heading($SITE->fullname);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($company->name . ' - ' . $newaccount);
-if (!empty($CFG->auth_instructions)) {
+if (!empty($CFG->auth_instructions) && !empty($CFG->local_iomad_signup_showinstructions)) {
     echo format_text($CFG->auth_instructions);
 } else {
     print_string("logininfo", "local_iomad_signup");

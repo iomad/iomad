@@ -43,19 +43,22 @@ class block_mycourses extends block_base {
             return $this->content;
         }
 
+        // Check if the tab to select wasn't passed in the URL, if so see if the user has any preference.
+        if (!$tab = optional_param('mycoursestab', null, PARAM_ALPHA)) {
+            $tab = 'inprogress';
+        }
+
+        $renderable = new \block_mycourses\output\main($tab);
         $renderer = $this->page->get_renderer('block_mycourses');
         $this->content = new stdClass();
         $this->content->items = array();
         $this->content->icons = array();
         $this->content->footer = '';
 
-        // Get the cut off date.
-        $cutoffdate = time() - ($CFG->mycourses_archivecutoff * 24 * 60 * 60);
+        $this->content = new stdClass();
+        $this->content->text = $renderer->render($renderable);
+        $this->content->footer = '';
 
-        // Get the completion info.
-        $mycompletion = mycourses_get_my_completion($cutoffdate);
-        $this->content->text = $renderer->display_courses($mycompletion);
-        
         return $this->content;
     }
 

@@ -807,20 +807,20 @@ if (empty($charttype)) {
                         }
                     }
                     if (!$showexpiry) {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $scorestring => $scorestring,
-                                        $certtabledata => $certtabledata);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'scorestring' => $scorestring,
+                                        'certtabledata' => $certtabledata);
                     } else {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $expirytime => $expirytime,
-                                        $scorestring => $scorestring,
-                                        $certtabledata => $certtabledata);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'expirytime' => $expirytime,
+                                        'scorestring' => $scorestring,
+                                        'certtabledata' => $certtabledata);
                     }
                     $compusertable->data[] = $rowstart + $rowmid + $rowend;
                 } else {
@@ -838,18 +838,18 @@ if (empty($charttype)) {
                         }
                     }
                     if (!$showexpiry) {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $scorestring => $scorestring);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'scorestring' => $scorestring);
                     } else {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $expirytime => $expirytime,
-                                        $scorestring => $scorestring);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'expirytime' => $expirytime,
+                                        'scorestring' => $scorestring);
                     }
                     $compusertable->data[] = $rowstart + $rowmid + $rowend;
                 }
@@ -892,6 +892,7 @@ if (empty($charttype)) {
 
             $mform->set_data(array('departmentid' => $departmentid));
             $mform->set_data($params);
+            $mform->get_data();
     
             // Display the user filter form.
             echo html_writer::start_tag('div', array('class' => 'iomadclear'));
