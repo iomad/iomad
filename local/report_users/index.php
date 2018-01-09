@@ -70,7 +70,7 @@ if ($showsuspended) {
 
 $systemcontext = context_system::instance();
 require_login(); // Adds to $PAGE, creates $OUTPUT.
-iomad::require_capability('local/report_completion:view', $systemcontext);
+iomad::require_capability('local/report_users:view', $systemcontext);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
