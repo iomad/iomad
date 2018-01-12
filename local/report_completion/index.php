@@ -518,7 +518,9 @@ if (empty($charttype)) {
 
         $columns = $startcolumns + $endcolumns;
         foreach ($columns as $column) {
-            if ($column != 'timeexpires') {
+            if ($column == 'staffnumber') {
+                $$column = 'Staff Number';
+            } else if ($column != 'timeexpires') {
                 $string[$column] = get_string($column, 'local_report_completion');
                 if ($sort != $column) {
                     $columnicon = "";

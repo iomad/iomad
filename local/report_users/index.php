@@ -627,6 +627,7 @@ if (!$users) {
             continue; // Do not dispaly dummy new user and guest here.
         }
 
+        profile_load_data($user);
 
         if ($user->timecreated) {
             $strtimecreated = date($CFG->iomad_date_format, $user->timecreated);
