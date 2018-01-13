@@ -140,6 +140,13 @@ $PAGE->set_title($strcompletion);
 $PAGE->requires->css("/local/report_completion/styles.css");
 $PAGE->requires->jquery();
 
+// get output renderer                                                                                                                                                                                         
+$output = $PAGE->get_renderer('block_iomad_company_admin');
+
+// Javascript for fancy select.
+// Parameter is name of proper select form element followed by 1=submit its form
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
+
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $strcompletion");
 
@@ -173,14 +180,16 @@ company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
 $url = new moodle_url('/local/report_completion/index.php', $params);
 
 // Get the appropriate list of departments.
+$userdepartment = $company->get_userlevel($USER);
+$departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
+$treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
 $selectparams = $params;
-$selectparams['courseid'] = 0;
 $selecturl = new moodle_url('/local/report_completion/index.php', $selectparams);
 $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($selecturl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_iomad_company_admin') . "&nbsp";
 $select->formid = 'choosedepartment';
-$fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_department_selector'));
+$fwselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none;'));
 
 // Get the appropriate list of departments.
 $selectparams = $params;
@@ -192,7 +201,7 @@ $completiontypelist = array('0' => get_string('all'),
 $select = new single_select($selecturl, 'completiontype', $completiontypelist, $completiontype);
 $select->label = get_string('choosecompletiontype', 'block_iomad_company_admin') . "&nbsp";
 $select->formid = 'choosecompletiontype';
-$completiontypeselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_completiontype_selector'));
+$completiontypeselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_completiontype_selector'));
 
 //if (!(iomad::has_capability('block/iomad_company_admin:editusers', $context) or
 //      iomad::has_capability('block/iomad_company_admin:editallusers', $context))) {
@@ -212,7 +221,7 @@ $options['dodownload'] = 1;
 
 // Only print the header if we are not downloading.
 if (empty($dodownload) && empty($showchart)) {
-    echo $OUTPUT->header();
+    echo $output->header();
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
@@ -228,6 +237,7 @@ if (empty($dodownload) && empty($showchart)) {
 if (empty($dodownload) && empty($showchart)) {
     echo "<h3>".get_string('coursesummary', 'local_report_completion')."</h3>";
     if (!empty($companyid) && !empty($courseid)) {
+        echo $treehtml;
         echo $fwselectoutput;
         $dateform = new iomad_date_filter_form($params);
         $dateform->display();
@@ -236,36 +246,36 @@ if (empty($dodownload) && empty($showchart)) {
     if (!empty($courseid)) {
         // Navigation and header.
 		if (empty($params['charttype'])) {
-            echo $OUTPUT->single_button(new moodle_url('index.php', $options), get_string("downloadcsv", 'local_report_completion'));
+            echo $output->single_button(new moodle_url('index.php', $options), get_string("downloadcsv", 'local_report_completion'));
         }
 		$options['charttype'] = 'summary';
         $options['dodownload'] = false;
-        //echo $OUTPUT->single_button(new moodle_url('index.php', $options), get_string("summarychart", 'local_report_completion'));
+        //echo $output->single_button(new moodle_url('index.php', $options), get_string("summarychart", 'local_report_completion'));
     } else {
         $options['charttype'] = 'summary';
         $options['dodownload'] = false;
-        //echo $OUTPUT->single_button(new moodle_url('index.php', $options), get_string("summarychart", 'local_report_completion'));
+        //echo $output->single_button(new moodle_url('index.php', $options), get_string("summarychart", 'local_report_completion'));
         $alluserslink = new moodle_url($url, array(
             'courseid' => 1,
             'departmentid' => $departmentid,
             'showchart' => 0,
             'charttype' => '',
         ));
-        echo $OUTPUT->single_button($alluserslink, get_string("allusers", 'local_report_completion'));
+        echo $output->single_button($alluserslink, get_string("allusers", 'local_report_completion'));
         if (!$showhistoric) {
             $historicuserslink = new moodle_url($url, array('departmentid' => $departmentid,
                                                             'showchart' => 0,
                                                             'charttype' => '',
                                                             'showhistoric' => 1
                                                             ));
-            echo $OUTPUT->single_button($historicuserslink, get_string("historicusers", 'local_report_completion'));
+            echo $output->single_button($historicuserslink, get_string("historicusers", 'local_report_completion'));
         } else {
             $historicuserslink = new moodle_url($url, array('departmentid' => $departmentid,
                                                             'showchart' => 0,
                                                             'charttype' => '',
                                                             'showhistoric' => 0
                                                             ));
-            echo $OUTPUT->single_button($historicuserslink, get_string("hidehistoricusers", 'local_report_completion'));
+            echo $output->single_button($historicuserslink, get_string("hidehistoricusers", 'local_report_completion'));
         }
     }
 
@@ -499,7 +509,7 @@ if (empty($charttype)) {
                 } else {
                     $columndir = $dir == "ASC" ? "DESC":"ASC";
                     $columnicon = $dir == "ASC" ? "down":"up";
-                    $columnicon = " <img src=\"" . $OUTPUT->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
+                    $columnicon = " <img src=\"" . $output->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
 
                 }
                 $$column = $string[$column].$columnicon;
@@ -645,28 +655,28 @@ if (empty($charttype)) {
                 }
             }
         }
-        $fullnamedisplay = $OUTPUT->action_link($firstnameurl, get_string('name')); //." / ". $OUTPUT->action_link($lastnameurl, $lastname);
+        $fullnamedisplay = $output->action_link($firstnameurl, get_string('name')); //." / ". $output->action_link($lastnameurl, $lastname);
     
         if (!$showexpiry) {
             $compusertable->head = array ($fullnamedisplay,
-                                          $OUTPUT->action_link($emailurl, $email),
+                                          $output->action_link($emailurl, $email),
                                           get_string('course'),
-                                          $OUTPUT->action_link($departmenturl, $department),
-                                          $OUTPUT->action_link($timeenrolledurl, $timeenrolled),
-                                          $OUTPUT->action_link($statusurl, $status),
-                                          $OUTPUT->action_link($timestartedurl, $timestarted),
-                                          $OUTPUT->action_link($timecompletedurl, $timecompleted),
+                                          $output->action_link($departmenturl, $department),
+                                          $output->action_link($timeenrolledurl, $timeenrolled),
+                                          $output->action_link($statusurl, $status),
+                                          $output->action_link($timestartedurl, $timestarted),
+                                          $output->action_link($timecompletedurl, $timecompleted),
                                           $finalscore);
             $compusertable->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center');
         } else {
             $compusertable->head = array ($fullnamedisplay,
-                                          $OUTPUT->action_link($emailurl, $email),
+                                          $output->action_link($emailurl, $email),
                                           get_string('course'),
-                                          $OUTPUT->action_link($departmenturl, $department),
-                                          $OUTPUT->action_link($timeenrolledurl, $timeenrolled),
-                                          $OUTPUT->action_link($statusurl, $status),
-                                          $OUTPUT->action_link($timestartedurl, $timestarted),
-                                          $OUTPUT->action_link($timecompletedurl, $timecompleted),
+                                          $output->action_link($departmenturl, $department),
+                                          $output->action_link($timeenrolledurl, $timeenrolled),
+                                          $output->action_link($statusurl, $status),
+                                          $output->action_link($timestartedurl, $timestarted),
+                                          $output->action_link($timecompletedurl, $timecompleted),
                                           $timeexpires,
                                           $finalscore);
                                           $compusertable->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center', 'center');
@@ -851,7 +861,7 @@ if (empty($charttype)) {
     
             // Display the paging bar.
             if (empty($idlist['0'])) {
-                echo $OUTPUT->paging_bar($totalcount, $page, $perpage, new moodle_url('/local/report_completion/index.php', $params));
+                echo $output->paging_bar($totalcount, $page, $perpage, new moodle_url('/local/report_completion/index.php', $params));
 				echo "<br />";
             }
     
@@ -920,4 +930,4 @@ if (empty($dodownload) && !empty($charttype)) {
 if (!empty($dodownload)) {
     exit;
 }
-echo $OUTPUT->footer();
+echo $output->footer();

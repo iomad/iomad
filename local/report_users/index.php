@@ -69,7 +69,7 @@ if ($showsuspended) {
 }
 
 $systemcontext = context_system::instance();
-require_login(); // Adds to $PAGE, creates $OUTPUT.
+require_login(); // Adds to $PAGE, creates $output.
 iomad::require_capability('local/report_users:view', $systemcontext);
 
 // Set the companyid
@@ -88,13 +88,20 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
+// get output renderer                                                                                                                                                                                         
+$output = $PAGE->get_renderer('block_iomad_company_admin');
+
+// Javascript for fancy select.
+// Parameter is name of proper select form element followed by 1=submit its form
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
+
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linktext");
 
 // Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
-echo $OUTPUT->header();
+echo $output->header();
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
@@ -184,17 +191,15 @@ if ($departmentid == 0 ) {
 }
 
 // Get the appropriate list of departments.
+$userdepartment = $company->get_userlevel($USER);
+$departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
+$treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
 $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_iomad_company_admin');
 $select->formid = 'choosedepartment';
-echo html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_department_selector'));
-$fwselectoutput = html_writer::tag('div', $OUTPUT->render($select),
-                                    array('id' => 'iomad_company_selector'));
-//if (!(iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
-//    or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
-//    print_error('nopermissions', 'error', '', 'edit/delete users');
-//}
+echo $treehtml;
+echo html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none'));
 
 // Set up the filter form.
 $mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
@@ -243,7 +248,7 @@ foreach ($columns as $column) {
         } else {
             $columnicon = $dir == "ASC" ? "down":"up";
         }
-        $columnicon = " <img src=\"" . $OUTPUT->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
+        $columnicon = " <img src=\"" . $output->pix_url('t/' . $columnicon) . "\" alt=\"\" />";
 
     }
     $$column = $string[$column].$columnicon;
@@ -461,19 +466,19 @@ if (!empty($userlist)) {
 
 $usercount = count($userrecords);
 
-echo $OUTPUT->heading("$usercount ".get_string('users'));
+echo $output->heading("$usercount ".get_string('users'));
 
 $alphabet = explode(',', get_string('alphabet', 'block_iomad_company_admin'));
 $strall = get_string('all');
 
-echo $OUTPUT->paging_bar($usercount, $page, $perpage, $baseurl);
+echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
 
 flush();
 
 
 if (!$users) {
     $match = array();
-    echo $OUTPUT->heading(get_string('nousersfound'));
+    echo $output->heading(get_string('nousersfound'));
 
     echo "<p><a class='btn' href='" . new moodle_url('/blocks/iomad_company_admin/company_user_create_form.php') . "'>" .
          get_string('createuser', 'block_iomad_company_admin') . "</a></p>";
@@ -608,19 +613,19 @@ if (!$users) {
             }
         }
     }
-    $fullnamedisplay = $OUTPUT->action_link($firstnameurl, $firstname)." / ".
-                               $OUTPUT->action_link($lastnameurl, $lastname);
+    $fullnamedisplay = $output->action_link($firstnameurl, $firstname)." / ".
+                               $output->action_link($lastnameurl, $lastname);
 
     $table = new html_table();
     $table->head = array ($fullnamedisplay,
-                          $OUTPUT->action_link($emailurl, $email),
-                          $OUTPUT->action_link($departmenturl,
+                          $output->action_link($emailurl, $email),
+                          $output->action_link($departmenturl,
                           $department),
-                          $OUTPUT->action_link($cityurl, $city),
-                          $OUTPUT->action_link($countryurl,
+                          $output->action_link($cityurl, $city),
+                          $output->action_link($countryurl,
                           $country),
-                          $OUTPUT->action_link($timecreatedurl, $timecreated),
-                          $OUTPUT->action_link($accessurl, $lastaccess));
+                          $output->action_link($timecreatedurl, $timecreated),
+                          $output->action_link($accessurl, $lastaccess));
     $table->align = array ("left", "left", "left", "left", "left", "left", "center", "center", "center");
     $table->width = "95%";
     foreach ($users as $user) {
@@ -660,7 +665,7 @@ if (!$users) {
 
 if (!empty($table)) {
     echo html_writer::table($table);
-    echo $OUTPUT->paging_bar($usercount, $page, $perpage, $baseurl);
+    echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
 }
 
-echo $OUTPUT->footer();
+echo $output->footer();
