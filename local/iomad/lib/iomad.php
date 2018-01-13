@@ -1368,6 +1368,7 @@ class iomad {
                     AND u.id = clu.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
+                    AND du.companyid = cl.companyid
                     AND cl.id = clu.licenseid
                     AND cl.expirydate > :timestamp
                     $showsuspendedsql
