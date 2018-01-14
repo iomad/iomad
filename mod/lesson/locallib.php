@@ -1059,6 +1059,7 @@ function lesson_get_user_detailed_report_data(lesson $lesson, $userid, $attempt)
         $lesson->update_effective_access($userid);
     }
 
+    $pageid = 0;
     $lessonpages = $lesson->load_all_pages();
     foreach ($lessonpages as $lessonpage) {
         if ($lessonpage->prevpageid == 0) {
@@ -3031,7 +3032,7 @@ class lesson extends lesson_base {
                         $this->add_message(get_string('numberofpagesviewednotice', 'lesson', $a));
                     }
 
-                    if (!$reviewmode && !$this->properties->retake) {
+                    if (!$reviewmode && $this->properties->ongoing) {
                         $this->add_message(get_string("numberofcorrectanswers", "lesson", $gradeinfo->earned), 'notify');
                         if ($this->properties->grade != GRADE_TYPE_NONE) {
                             $a = new stdClass;
@@ -4122,23 +4123,38 @@ abstract class lesson_page extends lesson_base {
                 $options->context = $context;
 
                 $result->feedback .= $OUTPUT->box(format_text($this->get_contents(), $this->properties->contentsformat, $options),
-                        'generalbox boxaligncenter');
-                $studentanswer = format_text($result->studentanswer, $result->studentanswerformat,
-                        array('context' => $context, 'para' => true));
+                        'generalbox boxaligncenter p-y-1');
                 $result->feedback .= '<div class="correctanswer generalbox"><em>'
-                        . get_string("youranswer", "lesson").'</em> : ' . $studentanswer;
-                if (isset($result->responseformat)) {
-                    $result->response = file_rewrite_pluginfile_urls($result->response, 'pluginfile.php', $context->id,
-                            'mod_lesson', 'page_responses', $result->answerid);
-                    $result->feedback .= $OUTPUT->box(format_text($result->response, $result->responseformat, $options)
-                            , $class);
-                } else {
-                    $result->feedback .= $OUTPUT->box($result->response, $class);
+                        . get_string("youranswer", "lesson").'</em> : <div class="studentanswer m-t-2 m-b-2">';
+
+                $studentanswerarray = explode('<br />', $result->studentanswer);
+                $responsearr = explode('<br />', $result->response);
+                $studentanswerresponse = array_combine($studentanswerarray, $responsearr);
+                // Create a table containing the answers and responses.
+                $table = new html_table();
+                foreach ($studentanswerresponse as $answer => $response) {
+                    // Add a table row containing the answer.
+                    $studentanswer = format_text($answer, $result->studentanswerformat,
+                            array('context' => $context, 'para' => true));
+                    $table->data[] = array($studentanswer);
+                    // If the response exists, add a table row containing the response. If not, add en empty row.
+                    if (!empty(trim($response))) {
+                        if (isset($result->responseformat)) {
+                            $convertstudentresponse = file_rewrite_pluginfile_urls($response, 'pluginfile.php',
+                                $context->id, 'mod_lesson', 'page_responses', $result->answerid);
+                            $studentresponse = format_text($convertstudentresponse, $result->responseformat, $options);
+                        } else {
+                            $studentresponse = $response;
+                        }
+                        $table->data[] = array('<em>'.get_string("response", "lesson").
+                            '</em>: <br/>'.$studentresponse);
+                    } else {
+                        $table->data[] = array('');
+                    }
                 }
-                $result->feedback .= '</div>';
+                $result->feedback .= html_writer::table($table).'</div></div>';
             }
         }
-
         return $result;
     }
 

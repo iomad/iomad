@@ -1056,7 +1056,7 @@ class calendar_information {
             }
 
             $courses = [$course->id => $course];
-            $category = (\coursecat::get($course->category))->get_db_record();
+            $category = (\coursecat::get($course->category, MUST_EXIST, true))->get_db_record();
         } else if (!empty($categoryid)) {
             $course = get_site();
             $courses = calendar_get_default_courses();
@@ -1147,7 +1147,7 @@ class calendar_information {
             // A specific course was requested.
             // Fetch the category that this course is in, along with all parents.
             // Do not include child categories of this category, as the user many not have enrolments in those siblings or children.
-            $category = \coursecat::get($course->category);
+            $category = \coursecat::get($course->category, MUST_EXIST, true);
             $this->categoryid = $category->id;
 
             $this->categories = $category->get_parents();
@@ -1803,6 +1803,13 @@ function calendar_time_representation($time) {
     $timeformat = get_user_preferences('calendar_timeformat');
     if (empty($timeformat)) {
         $timeformat = get_config(null, 'calendar_site_timeformat');
+    }
+
+    // Allow language customization of selected time format.
+    if ($timeformat === CALENDAR_TF_12) {
+        $timeformat = get_string('strftimetime12', 'langconfig');
+    } else if ($timeformat === CALENDAR_TF_24) {
+        $timeformat = get_string('strftimetime24', 'langconfig');
     }
 
     return userdate($time, empty($timeformat) ? $langtimeformat : $timeformat);
@@ -2538,7 +2545,7 @@ function calendar_get_allowed_types(&$allowed, $course = null, $groups = null, $
 
     if (!empty($course)) {
         if (!is_object($course)) {
-            $course = $DB->get_record('course', array('id' => $course), '*', MUST_EXIST);
+            $course = $DB->get_record('course', array('id' => $course), 'id, groupmode, groupmodeforce', MUST_EXIST);
         }
         if ($course->id != SITEID) {
             $coursecontext = \context_course::instance($course->id);
@@ -2602,7 +2609,7 @@ function calendar_get_all_allowed_types() {
     // This function warms the context cache for the course so the calls
     // to load the course context in calendar_get_allowed_types don't result
     // in additional DB queries.
-    $courses = calendar_get_default_courses(null, '*', true);
+    $courses = calendar_get_default_courses(null, 'id, groupmode, groupmodeforce', true);
 
     // We want to pre-fetch all of the groups for each course in a single
     // query to avoid calendar_get_allowed_types from hitting the DB for

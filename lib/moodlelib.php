@@ -2111,7 +2111,7 @@ function make_timestamp($year, $month=1, $day=1, $hour=0, $minute=0, $second=0, 
  * Format a date/time (seconds) as weeks, days, hours etc as needed
  *
  * Given an amount of time in seconds, returns string
- * formatted nicely as weeks, days, hours etc as needed
+ * formatted nicely as years, days, hours etc as needed
  *
  * @package core
  * @category time
@@ -3917,11 +3917,11 @@ function update_user_record_by_id($id) {
                 // Unknown or must not be changed.
                 continue;
             }
-            $confval = $userauth->config->{'field_updatelocal_' . $key};
-            $lockval = $userauth->config->{'field_lock_' . $key};
-            if (empty($confval) || empty($lockval)) {
+            if (empty($userauth->config->{'field_updatelocal_' . $key}) || empty($userauth->config->{'field_lock_' . $key})) {
                 continue;
             }
+            $confval = $userauth->config->{'field_updatelocal_' . $key};
+            $lockval = $userauth->config->{'field_lock_' . $key};
             if ($confval === 'onlogin') {
                 // MDL-4207 Don't overwrite modified user profile values with
                 // empty LDAP values when 'unlocked if empty' is set. The purpose
