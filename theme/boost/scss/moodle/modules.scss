@@ -237,6 +237,12 @@ div#dock {
 .path-mod-lesson .invisiblefieldset.fieldsetfix {
     display: block;
 }
+.path-mod-lesson .answeroption .checkbox label p {
+    display: inline;
+}
+#page-mod-lesson-view .branchbuttoncontainer .singlebutton button[type="submit"] {
+    white-space: normal;
+}
 
 .path-mod-wiki .wiki_headingtitle,
 .path-mod-wiki .midpad,
@@ -481,6 +487,10 @@ div#dock {
     }
 }
 
+#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer form input {
+    height: 1.4em;
+    vertical-align: middle;
+}
 
 // Assign.
 .path-mod-assign [data-region="grade-actions-panel"] [data-region="grade-actions"] .collapse-buttons {
