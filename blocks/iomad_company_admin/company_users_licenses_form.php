@@ -194,29 +194,36 @@ class company_users_course_form extends moodleform {
                 $mform->addElement('html', $this->currentcourses->display(true));
         
                 $mform->addElement('html', '
-                      </td>
-                      <td id="buttonscell" valign="middle">
-                          <div id="addcontrols">
-                              <input name="add" id="add" type="submit" value="&nbsp;' .
-                              get_string('enrol', 'block_iomad_company_admin') .
-                              '" title="Enrol" /><br />
-        
-                          </div>
-        
-                          <div id="removecontrols">
-                              <input name="remove" id="remove" type="submit" value="' .
-                              get_string('unenrol', 'block_iomad_company_admin') .
-                              '&nbsp;" title="Unenrol" />
-                          </div>
-                      </td>
-                      <td id="potentialcell" style="text-align:center;">'); //maybe put this in the block CSS?
-        
-                $mform->addElement('html', $this->potentialcourses->display(true));
-        
-                $mform->addElement('html', '
-                      </td>
-                    </tr>
-                  </table>');
+                </td>
+                <td id="buttonscell" valign="middle">
+                    <div id="addcontrols">
+                        <input name="add" id="add" type="submit" value="&nbsp;' .
+                        get_string('enrol', 'block_iomad_company_admin') .
+                        '" title="Enrol" /><br />
+                    </div>');
+
+                if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', context_system::instance())) {
+                    $mform->addElement('html', '
+                            <div id="removecontrols">
+                                <input name="remove" id="remove" type="submit" value="' .
+                                get_string('unenrol', 'block_iomad_company_admin') .
+                                '&nbsp;" title="Unenrol" />
+                            </div>
+                        </td>
+                        <td id="potentialcell" style="text-align:center;">'); //maybe put this in the block CSS?
+                    $mform->addElement('html', $this->potentialcourses->display(true));
+                    $mform->addElement('html', '
+                        </td>
+                        </tr>
+                    </table>');
+                } else {
+                    $mform->addElement('html', '<td id="potentialcell" style="text-align:center;">'); //maybe put this in the block CSS?
+                    $mform->addElement('html', $this->potentialcourses->display(true));
+                    $mform->addElement('html', '
+                          </td>
+                        </tr>
+                      </table>');
+                }
             }  
         } else {
             $mform->addElement('html', '<br /><p align="center"><b>' . get_string('selectlicenseblurb', 'block_iomad_company_admin') . '</b></p>');
