@@ -27,7 +27,10 @@ function local_iomad_signup_user_created($user) {
     global $CFG, $DB;
 
     // check if we already have the user object
-    if (is_int($user)) {
+    // ****************
+    // fixed by Justin Li
+    // ****************
+    if (!is_object($user)) {
         $user = $DB->get_record('user', array('id' => $user), '*', MUST_EXIST);
     }
 
