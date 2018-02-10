@@ -803,6 +803,42 @@ class company {
     }
 
     /**
+     * Set up default company department.
+     *
+     * Parameters -
+     *              $companyid = INT;
+     *              $currentdepartment = department obtject;
+     *              $importtree = json decoded department tree;
+     *              $toplevel = boolean - true if this is the first time the tree is being accessed so initial value will be the same as the parent department. 
+     *
+     **/
+    public static function import_departments($companyid, $currentdepartment, $importtree, $toplevel = false) {
+        global $DB;
+
+        if (!$toplevel) {
+            // Creating a new department.
+            $newdepartment = new stdclass();
+            $newdepartment->name = $importtree->name;
+            $newdepartment->shortname = $importtree->shortname;
+            $newdepartment->company = $companyid;
+            $newdepartment->parent = $currentdepartment->id;
+            $newdepartment->id = $DB->insert_record('department', $newdepartment);
+        } else {
+            // Already created so pass it.
+            $newdepartment = $currentdepartment;
+        }
+        // Are there any children?
+        if (empty($importtree->children)) {
+            return;
+        } else {
+            // Create them.
+            foreach ($importtree->children as $child) {
+                self::import_departments($companyid, $newdepartment, $child, false);
+            }
+        }
+    }
+
+    /**
      * Get the department a user is associated to.
      *
      * Parameters -
@@ -2651,6 +2687,16 @@ class company {
             foreach ($reusablelicenses as $reusablelicense) {
                 $DB->delete_records('companylicense_users', array('id' => $reusablelicense->id));
 
+                // Fire the license deleted event.
+                $eventother = array('licenseid' => $reusablelicense->licenseid,
+                                    'duedate' => 0);
+                $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($reusablelicense->licensecourseid),
+                                                                                                'objectid' => $reusablelicense->licenseid,
+                                                                                                'courseid' => $reusablelicense->licensecourseid,
+                                                                                                'userid' => $reusablelicense->userid,
+                                                                                                'other' => $eventother));
+                $event->trigger();
+
                 // Update the license usage.
                 self::update_license_usage($reusablelicense->licenseid);
             }
@@ -2669,6 +2715,16 @@ class company {
                                                               'userid' => $userid))) {
             foreach ($nonprogramlicenses as $nonprogramlicense) {
                 $DB->delete_records('companylicense_users', array('id' => $nonprogramlicense->id));
+
+                // Fire the license deleted event.
+                $eventother = array('licenseid' => $nonprogramlicense->licenseid,
+                                    'duedate' => 0);
+                $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($nonprogramlicense->licensecourseid),
+                                                                                                'objectid' => $nonprogramlicense->licenseid,
+                                                                                                'courseid' => $nonprogramlicense->licensecourseid,
+                                                                                                'userid' => $nonprogramlicense->userid,
+                                                                                                'other' => $eventother));
+                $event->trigger();
 
                 // Update the license usage.
                 self::update_license_usage($nonprogramlicense->licenseid);
@@ -2690,7 +2746,20 @@ class company {
                 if ($DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id, 'isusing' => 1))) {
                     continue;
                 } else {
-                    $DB->delete_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id));
+                    $licencerecords = $DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id));
+
+                    foreach ($licenserecords as $licenserecord) {
+                        // Fire the license deleted event.
+                        $eventother = array('licenseid' => $licenserecord->licenseid,
+                                            'duedate' => 0);
+                        $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($licenserecord->licensecourseid),
+                                                                                                        'objectid' => $licenserecord->licenseid,
+                                                                                                        'courseid' => $licenserecord->licensecourseid,
+                                                                                                        'userid' => $licenserecord->userid,
+                                                                                                        'other' => $eventother));
+                        $event->trigger();
+                    }
+
                     // Update the license usage.
                     self::update_license_usage($programlicense->id);
                 }
@@ -2827,7 +2896,8 @@ class company {
             return;
         }
 
-        if (!$user = $DB->get_record('user', array('id' => $userid))) {
+        if (!$user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0, 'suspended' => 0))) {
+            self::update_license_usage($licenseid);
             return;
         }
 

@@ -3045,7 +3045,7 @@ class assign {
             } else {
                 $button->set_formats(PORTFOLIO_FORMAT_PLAINHTML);
             }
-            $result .= $button->to_html();
+            $result .= $button->to_html(PORTFOLIO_ADD_TEXT_LINK);
         }
         return $result;
     }
@@ -3638,7 +3638,7 @@ class assign {
         $grade = $this->get_user_grade($userid, false, $attemptnumber);
         $flags = $this->get_user_flags($userid, false);
         if ($this->can_view_submission($userid)) {
-            $gradelocked = ($flags && $flags->locked) || $this->grading_disabled($userid);
+            $submissionlocked = ($flags && $flags->locked);
             $extensionduedate = null;
             if ($flags) {
                 $extensionduedate = $flags->extensionduedate;
@@ -3655,7 +3655,7 @@ class assign {
                                                                      $submissiongroup,
                                                                      $notsubmitted,
                                                                      $this->is_any_submission_plugin_enabled(),
-                                                                     $gradelocked,
+                                                                     $submissionlocked,
                                                                      $this->is_graded($userid),
                                                                      $instance->duedate,
                                                                      $instance->cutoffdate,
@@ -3836,7 +3836,7 @@ class assign {
         $grade = $this->get_user_grade($userid, false, $attemptnumber);
         $flags = $this->get_user_flags($userid, false);
         if ($this->can_view_submission($userid)) {
-            $gradelocked = ($flags && $flags->locked) || $this->grading_disabled($userid);
+            $submissionlocked = ($flags && $flags->locked);
             $extensionduedate = null;
             if ($flags) {
                 $extensionduedate = $flags->extensionduedate;
@@ -3853,7 +3853,7 @@ class assign {
                                                              $submissiongroup,
                                                              $notsubmitted,
                                                              $this->is_any_submission_plugin_enabled(),
-                                                             $gradelocked,
+                                                             $submissionlocked,
                                                              $this->is_graded($userid),
                                                              $instance->duedate,
                                                              $instance->cutoffdate,
@@ -4810,7 +4810,7 @@ class assign {
                     ($this->is_any_submission_plugin_enabled()) &&
                     $this->can_edit_submission($user->id);
 
-        $gradelocked = ($flags && $flags->locked) || $this->grading_disabled($user->id, false);
+        $submissionlocked = ($flags && $flags->locked);
 
         // Grading criteria preview.
         $gradingmanager = get_grading_manager($this->context, 'mod_assign', 'submissions');
@@ -4841,7 +4841,7 @@ class assign {
                                                           $submissiongroup,
                                                           $notsubmitted,
                                                           $this->is_any_submission_plugin_enabled(),
-                                                          $gradelocked,
+                                                          $submissionlocked,
                                                           $this->is_graded($user->id),
                                                           $instance->duedate,
                                                           $instance->cutoffdate,
@@ -5187,7 +5187,8 @@ class assign {
                                                   $this->get_course_module()->id,
                                                   $this->count_submissions_need_grading(),
                                                   $instance->teamsubmission,
-                                                  $warnofungroupedusers);
+                                                  $warnofungroupedusers,
+                                                  $this->can_grade());
         } else {
             // The active group has already been updated in groups_print_activity_menu().
             $countparticipants = $this->count_participants($activitygroup);
@@ -5201,7 +5202,8 @@ class assign {
                                                   $this->get_course_module()->id,
                                                   $this->count_submissions_need_grading(),
                                                   $instance->teamsubmission,
-                                                  false);
+                                                  false,
+                                                  $this->can_grade());
 
         }
 
@@ -7140,9 +7142,6 @@ class assign {
                     $mform->addHelpButton('grade', 'gradeoutofhelp', 'assign');
                     $mform->setType('grade', PARAM_RAW);
                 } else {
-                    $mform->addElement('hidden', 'grade', $name);
-                    $mform->hardFreeze('grade');
-                    $mform->setType('grade', PARAM_RAW);
                     $strgradelocked = get_string('gradelocked', 'assign');
                     $mform->addElement('static', 'gradedisabled', $name, $strgradelocked);
                     $mform->addHelpButton('gradedisabled', 'gradeoutofhelp', 'assign');
@@ -7493,7 +7492,7 @@ class assign {
             return false;
         }
         $submission->status = ASSIGN_SUBMISSION_STATUS_DRAFT;
-        $this->update_submission($submission, $userid, true, $this->get_instance()->teamsubmission);
+        $this->update_submission($submission, $userid, false, $this->get_instance()->teamsubmission);
 
         // Give each submission plugin a chance to process the reverting to draft.
         $plugins = $this->get_submission_plugins();

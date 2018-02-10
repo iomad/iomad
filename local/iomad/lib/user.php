@@ -316,8 +316,9 @@ class company_user {
                 } else {
                     $timeend = 0;
                 }
-                $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today,
-                                    $timeend, ENROL_USER_ACTIVE);
+                if (!$DB->get_record('user_enrolments', array('userid' => $user->id, 'enrolid' => $manualcache[$courseid]->id))) {
+                    $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today, $timeend, ENROL_USER_ACTIVE);
+                }
                 if ($shared || $grouped) {
                     if (!empty($companyid)) {
                         company::add_user_to_shared_course($courseid, $user->id, $companyid, $groupid);
@@ -435,7 +436,7 @@ class company_user {
      * @param text $temppassword
      */
     public static function store_temporary_password($user, $sendemail, $temppassword, $reset = false, $due = 0) {
-        global $CFG, $USER;
+        global $CFG, $DB, $USER;
         if (empty($due)) {
             $due = time();
         }
@@ -445,7 +446,7 @@ class company_user {
             if ($reset) {
                 // Get the company details.
                 $company = company::get_company_byuserid($user->id);
-                $companyrec = $DB->get_record('company', array('id' => $companyid));
+                $companyrec = $DB->get_record('company', array('id' => $company->id));
                 if ($companyrec->managernotify == 0) {
                     $headers = null;
                 } else {
@@ -698,6 +699,7 @@ class iomad_user_filter_form extends moodleform {
     protected $addlicensestatus;
     protected $fromname;
     protected $toname;
+    protected $useusertype;
 
     public function definition() {
         global $CFG, $DB, $USER, $SESSION;
@@ -728,10 +730,36 @@ class iomad_user_filter_form extends moodleform {
             $this->addto = false;
         }
 
+        if (!empty($this->_customdata['addfromb'])) {
+            $this->addfromb = true;
+            $this->fromnameb = $this->_customdata['addfromb'];
+        } else {
+            $this->addfromb = false;
+        }
+
+        if (!empty($this->_customdata['addtob'])) {
+            $this->addtob = true;
+            $this->tonameb = $this->_customdata['addtob'];
+        } else {
+            $this->addtob = false;
+        }
+
         if (!empty($this->_customdata['addlicensestatus'])) {
             $addlicensestatus = true;
         } else {
             $addlicensestatus = false;
+        }
+
+        if (!empty($this->_customdata['addlicenseusage'])) {
+            $addlicenseusage = true;
+        } else {
+            $addlicenseusage = false;
+        }
+
+        if (!empty($this->_customdata['addusertype'])) {
+            $useusertype = true;
+        } else {
+            $useusertype = false;
         }
 
         $mform =& $this->_form;
@@ -774,11 +802,19 @@ class iomad_user_filter_form extends moodleform {
                 }
             }
         }
-        //if (iomad::has_capability('block/iomad_company_admin:viewsuspendedusers', context_system::instance())) {
+        if ($useusertype) {
+            $usertypearray = array ('a' => get_string('any'),
+                                    '0' => get_string('user', 'block_iomad_company_admin'),
+                                    '1' => get_string('companymanager', 'block_iomad_company_admin'),
+                                    '2' => get_string('departmentmanager', 'block_iomad_company_admin'));
+            $mform->addElement('select', 'usertype', get_string('usertype', 'block_iomad_company_admin'), $usertypearray);
+        }
+
+        if (iomad::has_capability('block/iomad_company_admin:viewsuspendedusers', context_system::instance())) {
             $mform->addElement('checkbox', 'showsuspended', get_string('show_suspended_users', 'local_iomad'));
-        /*} else {
+        } else {
             $mform->addElement('hidden', 'showsuspended');
-        }*/
+        }
         $mform->setType('showsuspended', PARAM_INT);
 
         if (!$useshowall) {
@@ -803,11 +839,26 @@ class iomad_user_filter_form extends moodleform {
             $mform->addElement('date_selector', $this->toname, get_string($this->toname, 'block_iomad_company_admin'), array('optional' => 'yes'));
         }
 
+        if ($this->addfromb) {
+            $mform->addElement('date_selector', $this->fromnameb, get_string($this->fromnameb, 'block_iomad_company_admin'), array('optional' => 'yes'));
+        }
+
+        if ($this->addtob) {
+            $mform->addElement('date_selector', $this->tonameb, get_string($this->tonameb, 'block_iomad_company_admin'), array('optional' => 'yes'));
+        }
+
         if ($addlicensestatus) {
-            $licenseusearray = array ('0' => get_string('any'),
+            $licensestatusarray = array ('0' => get_string('any'),
                                       '1' => get_string('notinuse', 'block_iomad_company_admin'),
                                       '2' => get_string('inuse', 'block_iomad_company_admin'));
-            $mform->addElement('select', 'licensestatus', get_string('licensestatus', 'block_iomad_company_admin'), $licenseusearray);
+            $mform->addElement('select', 'licensestatus', get_string('licensestatus', 'block_iomad_company_admin'), $licensestatusarray);
+        }
+
+        if ($addlicenseusage) {
+            $licenseusagearray = array ('0' => get_string('any'),
+                                        '1' => get_string('notallocated', 'block_iomad_company_admin'),
+                                        '2' => get_string('allocated', 'block_iomad_company_admin'));
+            $mform->addElement('select', 'licenseusage', get_string('licenseuseage', 'block_iomad_company_admin'), $licenseusagearray);
         }
 
         if (empty($this->_customdata['adddodownload'])) {
@@ -827,6 +878,13 @@ class iomad_user_filter_form extends moodleform {
             if (!empty($data[$this->fromname]) && !empty($data[$this->toname])) {
                 if ($data[$this->fromname] > $data[$this->toname]) {
                     $errors[$this->fromname] = get_string('errorinvaliddate', 'calendar');
+                }
+            }
+        }
+        if (!empty($this->fromnameb) && !empty($this->tonameb)) {
+            if (!empty($data[$this->fromnameb]) && !empty($data[$this->tonameb])) {
+                if ($data[$this->fromnameb] > $data[$this->tonameb]) {
+                    $errors[$this->fromnameb] = get_string('errorinvaliddate', 'calendar');
                 }
             }
         }

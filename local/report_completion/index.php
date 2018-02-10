@@ -33,7 +33,7 @@ define('PCHART_SIZEY', 500);
 // Params.
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $participant = optional_param('participant', 0, PARAM_INT);
-$dodownload = optional_param('dodownload', 0, PARAM_INT);
+$dodownload = optional_param('dodownload', 0, PARAM_CLEAN);
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
@@ -120,7 +120,7 @@ if ($comptoraw) {
     }
     $params['compto'] = $compto;
 } else {
-    if (!empty($comptfrom)) {
+    if (!empty($compfrom)) {
         $compto = time();
         $params['compto'] = $compto;
     } else {
@@ -139,6 +139,13 @@ $PAGE->set_pagelayout('report');
 $PAGE->set_title($strcompletion);
 $PAGE->requires->css("/local/report_completion/styles.css");
 $PAGE->requires->jquery();
+
+// get output renderer                                                                                                                                                                                         
+$output = $PAGE->get_renderer('block_iomad_company_admin');
+
+// Javascript for fancy select.
+// Parameter is name of proper select form element followed by 1=submit its form
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
 
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $strcompletion");
@@ -180,16 +187,19 @@ company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
 $url = new moodle_url('/local/report_completion/index.php', $params);
 
 // Get the appropriate list of departments.
+$userdepartment = $company->get_userlevel($USER);
+$departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
+$treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
 $selectparams = $params;
 $selecturl = new moodle_url('/local/report_completion/index.php', $selectparams);
 $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($selecturl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_iomad_company_admin') . "&nbsp";
 $select->formid = 'choosedepartment';
-$fwselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector'));
 
 $departmenttree = company::get_all_subdepartments_raw($userhierarchylevel);
 $treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
+$fwselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none;'));
 
 // Get the appropriate list of departments.
 $selectparams = $params;
@@ -257,16 +267,10 @@ if (empty($dodownload) && empty($showchart)) {
         echo html_writer::start_tag('div', array('style' => 'float:left;'));
         echo $completiontypeselectoutput;
         echo html_writer::end_tag('div');
-        // Navigation and header.
-		if (empty($params['charttype'])) {
-            echo html_writer::start_tag('div', array('style' => 'float:right;'));
-            echo $output->single_button(new moodle_url('index.php', $options), get_string("downloadcsv", 'local_report_completion'));
-            echo html_writer::end_tag('div');
-        }
         echo html_writer::end_tag('div');
     }
     if (!empty($courseid)) {
-		$options['charttype'] = 'summary';
+        $options['charttype'] = 'summary';
         $options['dodownload'] = false;
     } else {
         $options['charttype'] = 'summary';
@@ -518,7 +522,9 @@ if (empty($charttype)) {
 
         $columns = $startcolumns + $endcolumns;
         foreach ($columns as $column) {
-            if ($column != 'timeexpires') {
+            if ($column == 'staffnumber') {
+                $$column = 'Staff Number';
+            } else if ($column != 'timeexpires') {
                 $string[$column] = get_string($column, 'local_report_completion');
                 if ($sort != $column) {
                     $columnicon = "";
@@ -693,7 +699,6 @@ if (empty($charttype)) {
             }
         }
         if (!$showexpiry) {
-            
             $headend = array ($timeenrolled => $output->action_link($timeenrolledurl, $timeenrolled),
                               $status => $output->action_link($statusurl, $status),
                               $timestarted => $output->action_link($timestartedurl, $timestarted),
@@ -807,20 +812,20 @@ if (empty($charttype)) {
                         }
                     }
                     if (!$showexpiry) {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $scorestring => $scorestring,
-                                        $certtabledata => $certtabledata);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'scorestring' => $scorestring,
+                                        'certtabledata' => $certtabledata);
                     } else {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $expirytime => $expirytime,
-                                        $scorestring => $scorestring,
-                                        $certtabledata => $certtabledata);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'expirytime' => $expirytime,
+                                        'scorestring' => $scorestring,
+                                        'certtabledata' => $certtabledata);
                     }
                     $compusertable->data[] = $rowstart + $rowmid + $rowend;
                 } else {
@@ -838,18 +843,18 @@ if (empty($charttype)) {
                         }
                     }
                     if (!$showexpiry) {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $scorestring => $scorestring);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'scorestring' => $scorestring);
                     } else {
-                        $rowend = array($enrolledtime => $enrolledtime,
-                                        $statusstring => $statusstring,
-                                        $starttime => $starttime,
-                                        $completetime => $completetime,
-                                        $expirytime => $expirytime,
-                                        $scorestring => $scorestring);
+                        $rowend = array('enrolledtime' => $enrolledtime,
+                                        'statusstring' => $statusstring,
+                                        'starttime' => $starttime,
+                                        'completetime' => $completetime,
+                                        'expirytime' => $expirytime,
+                                        'scorestring' => $scorestring);
                     }
                     $compusertable->data[] = $rowstart + $rowmid + $rowend;
                 }
@@ -888,7 +893,7 @@ if (empty($charttype)) {
         }
         if (empty($dodownload)) {
             // Set up the filter form.
-            $mform = new iomad_user_filter_form(null, array('companyid' => $companyid, 'showhistoric' => true, 'addfrom' => 'compfrom', 'addto' => 'compto'));
+            $mform = new iomad_user_filter_form(null, array('companyid' => $companyid, 'showhistoric' => true, 'addfrom' => 'compfrom', 'addto' => 'compto', 'adddodownload' => true));
 
             $mform->set_data(array('departmentid' => $departmentid));
             $mform->set_data($params);

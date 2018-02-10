@@ -84,7 +84,7 @@ if ($toraw) {
 
 $systemcontext = context_system::instance();
 require_login(); // Adds to $PAGE, creates $output.
-iomad::require_capability('local/report_completion:view', $systemcontext);
+iomad::require_capability('local/report_license_usage:view', $systemcontext);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
@@ -356,7 +356,7 @@ if (!empty($userlist)) {
             } else {
                 $tempalloc = array();
                 foreach ($allocations as $allocation) {
-                    $tempalloc[$allocation->other] = $allocation;
+                    $tempalloc[$allocation->userid. '-' . $allocation->other] = $allocation;
                 }
                 $numallocations = count($tempalloc);
             }
@@ -374,7 +374,7 @@ if (!empty($userlist)) {
             } else {
                 $tempalloc = array();
                 foreach ($unallocations as $unallocation) {
-                    $tempalloc[$unallocation->other] = $unallocation;
+                    $tempalloc[$unallocation->userid. '-' . $unallocation->other] = $unallocation;
                 }
                 $numunallocations = count($tempalloc);
             }
@@ -453,6 +453,25 @@ if (!empty($userlist)) {
     $numallocations = 0;
     $total = 0;
 }
+
+// Display the current license overview.
+$table = new html_table();
+$table->id = 'LicenseOverviewTable';
+$table->head = array (get_string('licensename', 'block_iomad_company_admin'),
+                      get_string('licenseallocated', 'block_iomad_company_admin'),
+                      get_string('licenses', 'block_iomad_company_admin'),
+                      get_string('userlicenseused', 'block_iomad_company_admin'));
+$table->align = array ("left", "center", "center", "center");
+$licenseused = $DB->count_records('companylicense_users', array('licenseid' => $license->id, 'isusing' => 1));
+if (!empty($license->program)) {
+    $weighting = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
+} else {
+    $weighting = 1;
+}
+
+$table->data[] = array('name' => $license->name, 'allocated' => $license->allocation / $weighting, 'remaining' => ($license->allocation - $license->used) / $weighting, 'used' => $licenseused / $weighting);
+
+echo html_writer::table($table);
 
 // Display the chart.
 $startseries = new core\chart_series(get_string('numstart', 'local_report_license_usage'), [$numstart]);

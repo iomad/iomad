@@ -37,6 +37,7 @@ $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
 $email  = optional_param('email', 0, PARAM_CLEAN);
 $showall = optional_param('showall', false, PARAM_BOOL);
+$usertype = optional_param('usertype', 'a', PARAM_ALPHANUM);
 
 $params = array();
 
@@ -85,6 +86,7 @@ if ($email) {
 if ($departmentid) {
     $params['departmentid'] = $departmentid;
 }
+$params['usertype'] = $usertype;
 
 $systemcontext = context_system::instance();
 
@@ -108,6 +110,13 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
+// Get output renderer.                                                                                                                                                                                         
+$output = $PAGE->get_renderer('block_iomad_company_admin');
+
+// Javascript for fancy select.
+// Parameter is name of proper select form element followed by 1=submit its form
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
+
 // Set the page heading.
 $PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
 
@@ -117,12 +126,12 @@ company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
 
-require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
+require_login(null, false); // Adds to $PAGE, creates $output.
 
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
-echo $OUTPUT->header();
+echo $output->header();
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
@@ -152,20 +161,25 @@ if (!(iomad::has_capability('block/iomad_company_admin:editusers', $systemcontex
 // If we are showing all users we can't use the departments.
 if (!$showall) {
 // Get the appropriate list of departments.
+    $userdepartment = $company->get_userlevel($USER);
+    $departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
+    $treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
+    echo $treehtml;
+
     $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
     $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
     $select->label = get_string('department', 'block_iomad_company_admin');
     $select->formid = 'choosedepartment';
-    $departmentselect = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_department_selector'));
+    $departmentselect = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none;'));
 }
 
 // Set up the filter form.
 if (iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)) {
-    $mform = new iomad_user_filter_form(null, array('companyid' => $companyid, 'useshowall' => true));
+    $mform = new iomad_user_filter_form(null, array('companyid' => $companyid, 'useshowall' => true, 'addusertype' => true));
 } else {
-    $mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
+    $mform = new iomad_user_filter_form(null, array('companyid' => $companyid, 'addusertype' => true));
 }
-$mform->set_data(array('departmentid' => $departmentid));
+$mform->set_data(array('departmentid' => $departmentid, 'usertype' => $usertype));
 $mform->set_data($params);
 $mform->get_data();
 
@@ -262,11 +276,11 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($password)) {
         $fullname = fullname($user, true);
-        echo $OUTPUT->heading(get_string('resetpassword', 'block_iomad_company_admin'). " " . $fullname);
+        echo $output->heading(get_string('resetpassword', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('password' => $password, 'confirm' => md5($password), 'sesskey' => sesskey());
-        echo $OUTPUT->confirm(get_string('resetpasswordcheckfull', 'block_iomad_company_admin', "'$fullname'"),
+        echo $output->confirm(get_string('resetpasswordcheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $OUTPUT->footer();
+        echo $output->footer();
         die;
     } else {
         // Actually delete the user.
@@ -292,18 +306,18 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($delete)) {
         $fullname = fullname($user, true);
-        echo $OUTPUT->heading(get_string('deleteuser', 'block_iomad_company_admin'). " " . $fullname);
+        echo $output->heading(get_string('deleteuser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
-        echo $OUTPUT->confirm(get_string('deletecheckfull', 'block_iomad_company_admin', "'$fullname'"),
+        echo $output->confirm(get_string('deletecheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $OUTPUT->footer();
+        echo $output->footer();
         die;
     } else {
         // Actually delete the user.
         company_user::delete($user->id);
 
         // Create an event for this.
-        $eventother = array('userid' => $user->id);
+        $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
         $event = \block_iomad_company_admin\event\company_user_deleted::create(array('context' => context_system::instance(),
                                                                                      'objectid' => $user->id,
                                                                                      'userid' => $USER->id,
@@ -331,18 +345,18 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($suspend)) {
         $fullname = fullname($user, true);
-        echo $OUTPUT->heading(get_string('suspenduser', 'block_iomad_company_admin'). " " . $fullname);
+        echo $output->heading(get_string('suspenduser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('suspend' => $suspend, 'confirm' => md5($suspend), 'sesskey' => sesskey());
-        echo $OUTPUT->confirm(get_string('suspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
+        echo $output->confirm(get_string('suspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $OUTPUT->footer();
+        echo $output->footer();
         die;
     } else {
         // Actually suspend the user.
         company_user::suspend($user->id);
 
         // Create an event for this.
-        $eventother = array('userid' => $user->id);
+        $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
         $event = \block_iomad_company_admin\event\company_user_suspended::create(array('context' => context_system::instance(),
                                                                                        'objectid' => $user->id,
                                                                                        'userid' => $USER->id,
@@ -373,18 +387,18 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($unsuspend)) {
         $fullname = fullname($user, true);
-        echo $OUTPUT->heading(get_string('unsuspenduser', 'block_iomad_company_admin'). " " . $fullname);
+        echo $output->heading(get_string('unsuspenduser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('unsuspend' => $unsuspend, 'confirm' => md5($unsuspend), 'sesskey' => sesskey());
-        echo $OUTPUT->confirm(get_string('unsuspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
+        echo $output->confirm(get_string('unsuspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
                               new moodle_url('editusers.php', $optionsyes), 'editusers.php');
-        echo $OUTPUT->footer();
+        echo $output->footer();
         die;
     } else {
         // Actually unsuspend the user.
         company_user::unsuspend($user->id);
 
         // Create an event for this.
-        $eventother = array('userid' => $user->id);
+        $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
         $event = \block_iomad_company_admin\event\company_user_unsuspended::create(array('context' => context_system::instance(),
                                                                                          'objectid' => $user->id,
                                                                                          'userid' => $USER->id,
@@ -456,7 +470,7 @@ foreach ($columns as $column) {
         } else {
             $columnicon = $dir == "ASC" ? "down":"up";
         }
-        $columnicon = " <img src=\"" . $OUTPUT->image_url('t/' . $columnicon) . "\" alt=\"\" />";
+        $columnicon = " <img src=\"" . $output->image_url('t/' . $columnicon) . "\" alt=\"\" />";
 
     }
     $params['sort'] = $column;
@@ -522,6 +536,12 @@ if (iomad::has_capability('block/iomad_company_admin:editallusers', $systemconte
         $searchparams['email'] = '%'.$params['email'].'%';
     }
 
+    if ($usertype != 'a' ) {
+        $sqlsearch .= " AND id IN (SELECT userid FROM {company_users}
+                         WHERE managertype = :managertype) ";
+        $searchparams['managertype'] = $usertype;
+    }
+
     $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
 
 } else if (iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)) {   // Check if has role edit company users.
@@ -565,6 +585,12 @@ if (iomad::has_capability('block/iomad_company_admin:editallusers', $systemconte
         $searchparams['email'] = '%'.$params['email'].'%';
     }
 
+    if ($usertype != 'a' ) {
+        $sqlsearch .= " AND id IN (SELECT userid FROM {company_users}
+                         WHERE managertype = :managertype) ";
+        $searchparams['managertype'] = $usertype;
+    }
+
     $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
 }
 $userlist = "";
@@ -575,15 +601,15 @@ if (!empty($userrecords)) {
     $userlist = "1=2";
 }
 if (!empty($userlist)) {
-    $users = iomad_get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist, array('companyid' => $companyid, 'showall' => $showall));
-    $totalusers = iomad_get_users_listing($sort, $dir, 0, 0, '', '', '', $userlist, array('companyid' => $companyid, 'showall' => $showall));
+    $users = iomad_get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist, array('companyid' => $companyid, 'showall' => $showall, 'usertype' => $usertype));
+    $totalusers = iomad_get_users_listing($sort, $dir, 0, 0, '', '', '', $userlist, array('companyid' => $companyid, 'showall' => $showall, 'usertype' => $usertype));
 
 } else {
     $users = array();
 }
 $usercount = count($totalusers);
 
-echo $OUTPUT->heading("$usercount ".get_string('users'));
+echo $output->heading("$usercount ".get_string('users'));
 
 $alphabet = explode(',', get_string('alphabet', 'block_iomad_company_admin'));
 $strall = get_string('all');
@@ -598,14 +624,14 @@ $params['confirm'] = '';
 
 $baseurl = new moodle_url('editusers.php', $params);
 //echo "usercount = $usercount - page = $page - perpage = $perpage</br>";
-echo $OUTPUT->paging_bar($usercount, $page, $perpage, $baseurl);
+echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
 
 flush();
 
 
 if (!$users) {
     $match = array();
-    echo $OUTPUT->heading(get_string('nousersfound'));
+    echo $output->heading(get_string('nousersfound'));
 
     $table = null;
 
@@ -648,57 +674,67 @@ if (!$users) {
         if ((iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
              or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))
              and ($user->id == $USER->id or $user->id != $mainadmin->id) and !is_mnet_remote_user($user)) {
-            $url = new moodle_url('/blocks/iomad_company_admin/editadvanced.php', array(
-                'id' => $user->id,   
-            ));
-            $actions['edit'] = new action_menu_link_secondary(
-                $url,
-                null,
-                $stredit
-            );
-            $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
-                'password' => $user->id,
-                'sesskey' => sesskey(),   
-            ));
-            $actions['password'] = new action_menu_link_secondary(
-                $url,
-                null,
-                $strpassword
-            );
+            if ($user->id != $USER->id && $DB->get_record_select('company_users', 'companyid =:company AND managertype != 0 AND userid = :userid', array('company' => $companyid, 'userid' => $user->id))
+                && !iomad::has_capability('block/iomad_company_admin:editmanagers', $systemcontext)) {
+               // This manager can't edit manager users.
+            } else {
+                $url = new moodle_url('/blocks/iomad_company_admin/editadvanced.php', array(
+                    'id' => $user->id,   
+                ));
+                $actions['edit'] = new action_menu_link_secondary(
+                    $url,
+                    null,
+                    $stredit
+                );
+                $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
+                    'password' => $user->id,
+                    'sesskey' => sesskey(),   
+                ));
+                $actions['password'] = new action_menu_link_secondary(
+                    $url,
+                    null,
+                    $strpassword
+                );
+            }
         }
 
         if ($user->id != $USER->id) {
             if ((iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
                  or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
-                $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
-                    'delete' => $user->id,
-                    'sesskey' => sesskey(),
-                ));
-                $actions['delete'] = new action_menu_link_secondary(
-                    $url,
-                    null,
-                    $strdelete
-                );
-                if (!empty($user->suspended)) {
-                    $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
-                        'unsuspend' => $user->id,
-                        'sesskey' => sesskey(),
-                    ));
-                    $actions['unsuspend'] = new action_menu_link_secondary(
-                        $url,
-                        null,
-                        $strunsuspend
-                    );
+                if ($DB->get_record_select('company_users', 'companyid =:company AND managertype != 0 AND userid = :userid', array('company' => $companyid, 'userid' => $user->id))
+                && !iomad::has_capability('block/iomad_company_admin:editmanagers', $systemcontext)) {
+                    // Do nothing.
                 } else {
                     $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
-                        'suspend' => $user->id,
+                        'delete' => $user->id,
                         'sesskey' => sesskey(),
                     ));
-                    $actions['suspend'] = new action_menu_link_secondary(
+                    $actions['delete'] = new action_menu_link_secondary(
                         $url,
                         null,
-                        $strsuspend
+                        $strdelete
                     );
+                    if (!empty($user->suspended)) {
+                        $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
+                            'unsuspend' => $user->id,
+                            'sesskey' => sesskey(),
+                        ));
+                        $actions['unsuspend'] = new action_menu_link_secondary(
+                            $url,
+                            null,
+                            $strunsuspend
+                        );
+                    } else {
+                        $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
+                            'suspend' => $user->id,
+                            'sesskey' => sesskey(),
+                        ));
+                        $actions['suspend'] = new action_menu_link_secondary(
+                            $url,
+                            null,
+                            $strsuspend
+                        );
+                    }
                 }
             }
         }
@@ -760,7 +796,7 @@ if (!$users) {
                                 "$user->email",
                                 "$user->department",
                                 $strlastaccess,
-                                $OUTPUT->render($menu),
+                                $output->render($menu),
                                 );
         } else {
             $user->company = $user->companyname;
@@ -770,7 +806,7 @@ if (!$users) {
                                     $user->email,
                                     $user->department,
                                     $strlastaccess,
-                                    $OUTPUT->render($menu),
+                                    $output->render($menu),
                                     );
         }
     }
@@ -778,10 +814,10 @@ if (!$users) {
 
 if (!empty($table)) {
     echo html_writer::table($table);
-    echo $OUTPUT->paging_bar($usercount, $page, $perpage, $baseurl);
+    echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
 }
 
-echo $OUTPUT->footer();
+echo $output->footer();
 
 function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recordsperpage=0,
                        $search='', $firstinitial='', $lastinitial='', $extraselect='', array $extraparams = null) {
@@ -826,10 +862,10 @@ function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recor
         }
     }
 
-    // Warning: will return UNCONFIRMED USERS!
-    if (!is_siteadmin($USER->id)) {
-        // only show normal users.
-        $managertypesql = " AND cu.managertype = 0";
+    // return the right type of user.
+    if ($extraparams['usertype'] != 'a' ) {
+        $managertypesql = " AND cu.managertype = :managertype ";
+        $params['managertype'] = $extraparams['usertype'];
     } else {
         $managertypesql = "";
     }

@@ -274,6 +274,15 @@ class report_completion {
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
+        // Strip out people from companies above here.
+        if (!empty($parentcompanies)) {
+            $companyusql = " AND u.id NOT IN (
+                            SELECT userid FROM {company_users}
+                            WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) ."))";
+        } else {
+            $companyusql = "";
+        }
+
         $completiondata = new stdclass();
 
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
@@ -313,7 +322,7 @@ class report_completion {
         // Get the user details.
         $shortname = addslashes($course->shortname);
         $countsql = "SELECT cc.id,
-                     ue.timestart AS timeenrolled,
+                     cc.timeenrolled AS timeenrolled,
                      cc.timestarted,
                      cc.timecompleted,
                      cc.finalscore ";
@@ -323,7 +332,7 @@ class report_completion {
                       u.email AS email,
                       '{$shortname}' AS coursename,
                       '$courseid' AS courseid,
-                      ue.timestart AS timeenrolled,
+                      cc.timeenrolled AS timeenrolled,
                       cc.timestarted AS timestarted,
                       cc.timecompleted AS timecompleted,
                       cc.certsource as certsource,
@@ -333,19 +342,18 @@ class report_completion {
                      JOIN {".$tempcomptablename."} cc ON (u.id = cc.userid)
                      JOIN {company_users} du ON (u.id = du.userid)
                      JOIN {department} d ON (du.departmentid = d.id)
-                     JOIN {user_enrolments} ue ON (u.id = ue.userid)
-                     JOIN {enrol} e ON (ue.enrolid = e.id and cc.courseid = e.courseid)
                     WHERE $searchinfo->sqlsearch
                     AND cc.userid = u.id
                     AND u.id = cc.userid
-                    AND e.courseid = cc.courseid
-                    AND ue.userid = cc.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
+                    AND du.companyid = :companyid
                     AND cc.courseid = $courseid
+                    $companyusql
                     $completionsql $userfilter";
 
         $searchinfo->searchparams['courseid'] = $courseid;
+        $searchinfo->searchparams['companyid'] = $companyid;
         $users = $DB->get_records_sql($selectsql.$fromsql.$searchinfo->sqlsort, $searchinfo->searchparams, $page * $perpage, $perpage);
         $countusers = $DB->get_records_sql($countsql.$fromsql.$searchinfo->sqlsort, $searchinfo->searchparams);
         $numusers = count($countusers);
@@ -380,6 +388,15 @@ class report_completion {
         $topcompany = new company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
+
+        // Strip out people from companies above here.
+        if ($parentcompanies) {
+            $companyusql = " AND u.id NOT IN (
+                            SELECT userid FROM {company_users}
+                            WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+        } else {
+            $companyusql = "";
+        }
 
         $completiondata = new stdclass();
 
@@ -426,22 +443,23 @@ class report_completion {
                 u.email AS email,
                 co.shortname AS coursename,
                 co.id AS courseid,
-                ue.timestart AS timeenrolled,
+                cc.timeenrolled AS timeenrolled,
                 cc.timestarted AS timestarted,
                 cc.timecompleted AS timecompleted,
                 cc.finalscore AS result,
                 d.name AS department";
-        $fromsql = " FROM {user} u, {".$tempcomptablename."} cc, {department} d, {company_users} du, {course} co, {user_enrolments} ue, {enrol} e
+        $fromsql = " FROM {user} u
+                    JOIN {".$tempcomptablename."} cc ON (u.id = cc.userid)
+                    JOIN {company_users} du ON (u.id = du.userid)
+                    JOIN {department} d ON (du.departmentid = d.id)
+                    JOIN {course} co ON (cc.courseid = co.id)
 
                 WHERE $searchinfo->sqlsearch
-                AND co.id = cc.courseid
-                AND u.id = cc.userid
-                AND e.courseid = cc.courseid
-                AND ue.userid = cc.userid
-                AND du.userid = u.id
-                AND d.id = du.departmentid
+                AND du.companyid = :companyid
+                $companyusql
                 $completionsql $userfilter
                 $searchinfo->sqlsort";
+        $searchinfo->searchparams['companyid'] = $companyid;
 
         $users = $DB->get_records_sql($selectsql.$fromsql, $searchinfo->searchparams, $page * $perpage, $perpage);
         $countusers = $DB->get_records_sql($countsql.$fromsql, $searchinfo->searchparams);

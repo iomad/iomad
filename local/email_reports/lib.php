@@ -96,6 +96,19 @@ function email_reports_cron() {
         if (!$company = $DB->get_record('company', array('id' => $compuser->companyid))) {
             continue;
         }
+
+        // Deal with parent companies as we only want users in this company.
+        $companyobj = new company($company->id);
+        if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+            if ($DB->get_records_sql("SELECT userid FROM {company_users}
+                                      WHERE companyid IN (" . implode(',', array_keys($parentslist)) .")
+                                      AND userid = :userid",
+                                      array('userid' => $compuser->userid))) {
+                continue;
+   
+            }
+        }
+
         if (!$DB->get_record_sql("SELECT ra.id FROM
                                  {user_enrolments} ue 
                                  INNER JOIN {enrol} e ON (ue.enrolid = e.id AND e.status=0)
@@ -124,10 +137,6 @@ function email_reports_cron() {
             continue;
         }
         mtrace("Sending completion warning email to $user->email");
-        $event = \block_iomad_company_admin\event\user_course_expired::create(array('context' => context_course::instance($course->id),
-                                                                                    'courseid' => $course->id,
-                                                                                    'userid' => $user->id));
-        $event->trigger();
 
         EmailTemplate::send('completion_warn_user', array('course' => $course, 'user' => $user, 'company' => $company));
 
@@ -146,11 +155,40 @@ function email_reports_cron() {
 
         if (!empty($companyrec->managernotify) && ($companyrec->managernotify == 1 || $companyrec->managernotify == 3)) {
             if ($dayofweek == $companyrec->managerdigestday || empty($companyrec->managerdigestday)) {
+
+                // Deal with parent companies as we only want manager of this company.
+                $companyobj = new company($company->companyid);
+                if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+                    $companysql = " AND userid NOT IN (
+                                    SELECT userid FROM {company_users}
+                                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                } else {
+                    $companysql = "";
+                }
+
                 // Get the managers.
                 $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                   WHERE companyid = :companyid
-                                                  AND managertype != 0", array('companyid' => $company->companyid));
+                                                  AND managertype != 0
+                                                  $companysql", array('companyid' => $company->companyid));
                 foreach ($managers as $manager) {
+                    // Deparment managers dont get reports on company manager users.
+                    if ($manager->managertype == 2) {
+                        $departmentmanager = true;
+                    } else {
+                        $departmentmanager = false;
+                    }
+
+                    // If this is a manager of a parent company - skip them.
+                    if ($DB->get_records_sql("SELECT id FROM {company_users}
+                                              WHERE userid = :userid
+                                              AND userid IN (
+                                              SELECT userid FROM {company_users}
+                                              WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))
+                                              ", array('userid' => $manager->userid))) {
+                        continue;
+                    }
+
                     // Get their users.
                     $departmentusers = company::get_recursive_department_users($manager->departmentid);
                     $departmentids = "";
@@ -162,7 +200,8 @@ function email_reports_cron() {
                         }
                     }
                     $managerusers = $DB->get_records_sql("SELECT * FROM {" . $tempcomptablename . "}
-                                                          WHERE userid IN (" . $departmentids . ")");
+                                                          WHERE userid IN (" . $departmentids . ")
+                                                          $companysql");
                     
                     $summary = "<table><tr><th>" . get_string('firstname') . "</th>" .
                                "<th>" . get_string('lastname') . "</th>" .
@@ -176,6 +215,9 @@ function email_reports_cron() {
                             continue;
                         }
                         if (!$course = $DB->get_record('course', array('id' => $manageruser->courseid))) {
+                            continue;
+                        }
+                        if ($departmentmanager && $DB->get_record('company_users', array('companyid' => $company->companyid, 'managertype' => 1, 'userid' => $manageruser->userid))) {
                             continue;
                         }
                         if (!$DB->get_record_sql("SELECT ra.id FROM
@@ -283,6 +325,19 @@ function email_reports_cron() {
         if (!$company = $DB->get_record('company', array('id' => $compuser->companyid))) {
             continue;
         }
+
+        // Deal with parent companies as we only want users in this company.
+        $companyobj = new company($company->id);
+        if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+            if ($DB->get_records_sql("SELECT userid FROM {company_users}
+                                      WHERE companyid IN (" . implode(',', array_keys($parentslist)) .")
+                                      AND userid = :userid",
+                                      array('userid' => $compuser->userid))) {
+                continue;
+   
+            }
+        }
+
         if (!$DB->get_record_sql("SELECT ra.id FROM
                                  {user_enrolments} ue 
                                  INNER JOIN {enrol} e ON (ue.enrolid = e.id AND e.status=0)
@@ -309,6 +364,10 @@ function email_reports_cron() {
             continue;
         }
         mtrace("Sending expiry warning email to $user->email");
+        $event = \block_iomad_company_admin\event\user_course_expired::create(array('context' => context_course::instance($course->id),
+                                                                                    'courseid' => $course->id,
+                                                                                    'userid' => $user->id));
+        $event->trigger();
         EmailTemplate::send('expiry_warn_user', array('course' => $course, 'user' => $user, 'company' => $company));
         // Send the supervisor email too.
         mtrace("Sending supervisor warning email for $user->email");
@@ -324,11 +383,40 @@ function email_reports_cron() {
         }
         if ($companyrec->managernotify == 1 || $companyrec->managernotify == 3) {
             if ($dayofweek == $companyrec->managerdigestday || empty($companyrec->managerdigestday)) {
+
+                // Deal with parent companies as we only want manager of this company.
+                $companyobj = new company($company->companyid);
+                if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+                    $companysql = " AND userid NOT IN (
+                                    SELECT userid FROM {company_users}
+                                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                } else {
+                    $companysql = "";
+                }
+
                 // Get the managers.
                 $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                   WHERE companyid = :companyid
-                                                  AND managertype != 0", array('companyid' => $company->companyid));
+                                                  AND managertype != 0
+                                                  $companysql", array('companyid' => $company->companyid));
                 foreach ($managers as $manager) {
+                    // Deparment managers dont get reports on company manager users.
+                    if ($manager->managertype == 2) {
+                        $departmentmanager = true;
+                    } else {
+                        $departmentmanager = false;
+                    }
+
+                    // If this is a manager of a parent company - skip them.
+                    if ($DB->get_records_sql("SELECT id FROM {company_users}
+                                              WHERE userid = :userid
+                                              AND userid IN (
+                                              SELECT userid FROM {company_users}
+                                              WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))
+                                              ", array('userid' => $manager->userid))) {
+                        continue;
+                    }
+
                     // Get their users.
                     $departmentusers = company::get_recursive_department_users($manager->departmentid);
                     $departmentids = "";
@@ -340,7 +428,8 @@ function email_reports_cron() {
                         }
                     }
                     $managerusers = $DB->get_records_sql("SELECT * FROM {" . $tempcomptablename . "}
-                                                          WHERE userid IN (" . $departmentids . ")");
+                                                          WHERE userid IN (" . $departmentids . ")
+                                                          $companysql");
                     $summary = "<table><tr><th>" . get_string('firstname') . "</th>" .
                                "<th>" . get_string('lastname') . "</th>" .
                                "<th>" . get_string('email') . "</th>" .
@@ -354,6 +443,9 @@ function email_reports_cron() {
                         }
 
                         if (!$course = $DB->get_record('course', array('id' => $manageruser->courseid))) {
+                            continue;
+                        }
+                        if ($departmentmanager && $DB->get_record('company_users', array('companyid' => $company->companyid, 'managertype' => 1, 'userid' => $manageruser->userid))) {
                             continue;
                         }
 
@@ -416,10 +508,41 @@ function email_reports_cron() {
                                        AND managernotify in (2,3)",
                                        array('dayofweek' => $dayofweek));
     foreach ($companies as $company) {
+
+        // Deal with parent companies as we only want manager of this company.
+        $companyobj = new company($company->id);
+        if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+            $companyusql = " AND u.id NOT IN (
+                            SELECT userid FROM {company_users}
+                            WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+            $companysql = " AND userid NOT IN (
+                            SELECT userid FROM {company_users}
+                            WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+        } else {
+            $companyusql = "";
+            $companysql = "";
+        }
+
         $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                           WHERE companyid = :companyid
-                                          AND managertype != 0", array('companyid' => $company->id));
+                                          AND managertype != 0
+                                          $companysql", array('companyid' => $company->id));
         foreach ($managers as $manager) {
+            // Deparment managers dont get reports on company manager users.
+            if ($manager->managertype == 2) {
+                $departmentmanager = true;
+            } else {
+                $departmentmanager = false;
+            }
+            // If this is a manager of a parent company - skip them.
+            if ($DB->get_records_sql("SELECT id FROM {company_users}
+                                      WHERE userid = :userid
+                                      AND userid IN (
+                                      SELECT userid FROM {company_users}
+                                      WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))
+                                      ", array('userid' => $manager->userid))) {
+                continue;
+            }
 
             // Get their users.
             $departmentusers = company::get_recursive_department_users($manager->departmentid);
@@ -438,6 +561,7 @@ function email_reports_cron() {
                                                   JOIN {company_users} cu ON (u.id = cu.userid)
                                                   JOIN {department} d ON (cu.departmentid = d.id)
                                                   WHERE cc.userid IN (" . $departmentids . ")
+                                                  $companyusql
                                                   AND cc.timecompleted > :weekago",
                                                   array('weekago' => $runtime - (60 * 60 * 24 * 7)));
             $summary = "<table><tr><th>" . get_string('firstname') . "</th>" .
@@ -453,6 +577,9 @@ function email_reports_cron() {
                 }
 
                 if (!$course = $DB->get_record('course', array('id' => $manageruser->courseid))) {
+                    continue;
+                }
+                if ($departmentmanager && $DB->get_record('company_users', array('companyid' => $company->id, 'managertype' => 1, 'userid' => $manageruser->userid))) {
                     continue;
                 }
 

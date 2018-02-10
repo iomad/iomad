@@ -238,7 +238,7 @@ class assign_submission_onlinetext extends assign_submission_plugin {
         $groupid = 0;
         // Get the group name as other fields are not transcribed in the logs and this information is important.
         if (empty($submission->userid) && !empty($submission->groupid)) {
-            $groupname = $DB->get_field('groups', 'name', array('id' => $submission->groupid), '*', MUST_EXIST);
+            $groupname = $DB->get_field('groups', 'name', array('id' => $submission->groupid), MUST_EXIST);
             $groupid = $submission->groupid;
         } else {
             $params['relateduserid'] = $submission->userid;
@@ -352,6 +352,7 @@ class assign_submission_onlinetext extends assign_submission_plugin {
                                                              'onlinetext',
                                                              'assignsubmission_onlinetext');
 
+            $onlinetext = trim($onlinetextsubmission->onlinetext);
             $shorttext = shorten_text($text, 140);
             $plagiarismlinks = '';
 
@@ -359,13 +360,13 @@ class assign_submission_onlinetext extends assign_submission_plugin {
                 require_once($CFG->libdir . '/plagiarismlib.php');
 
                 $plagiarismlinks .= plagiarism_get_links(array('userid' => $submission->userid,
-                    'content' => trim($text),
+                    'content' => $onlinetext,
                     'cmid' => $this->assignment->get_course_module()->id,
                     'course' => $this->assignment->get_course()->id,
                     'assignment' => $submission->assignment));
             }
             if ($text != $shorttext) {
-                $wordcount = get_string('numwords', 'assignsubmission_onlinetext', count_words($text));
+                $wordcount = get_string('numwords', 'assignsubmission_onlinetext', count_words($onlinetext));
 
                 return $plagiarismlinks . $wordcount . $shorttext;
             } else {

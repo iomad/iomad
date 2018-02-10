@@ -205,6 +205,12 @@ $capabilities = array(
         'contextlevel' => CONTEXT_BLOCK,
     ),
 
+    'block/iomad_company_admin:editmanagers' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+    ),
+
     'block/iomad_company_admin:editallusers' => array(
 
         'captype' => 'write',
@@ -218,6 +224,18 @@ $capabilities = array(
     ),
 
     'block/iomad_company_admin:allcompany_user_profiles' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+    ),
+
+    'block/iomad_company_admin:export_departments' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+    ),
+
+    'block/iomad_company_admin:import_departments' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,

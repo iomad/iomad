@@ -659,7 +659,7 @@ class iomad {
         if ($allcourse) {
             $sqlsort = " GROUP BY cc.id, co.id, u.id, d.name";
         } else {
-            $sqlsort = " GROUP BY cc.id, u.id, ue.timestart, cc.timestarted, cc.timecompleted, d.name";
+            $sqlsort = " GROUP BY cc.id, u.id, cc.timestarted, cc.timecompleted, d.name";
         }
         if (!$nogrades) {
             $sqlsort .= ', cc.finalscore';
@@ -693,11 +693,15 @@ class iomad {
             $sqlsearch .= " AND u.email LIKE :email ";
             $searchparams['email'] = '%'.$params['email'].'%';
         }
-
         if (!empty($params['compfrom'])) {
+            $params['courseid2'] = $params['courseid'];
             if ($compfromids = $DB->get_records_sql("SELECT userid FROM {course_completions}
-                                                     WHERE course = :courseid AND timecompleted < :compfrom
-                                                     AND timecompleted IS NOT NULL", $params)) {
+                                                     WHERE (course = :courseid
+                                                     AND timecompleted < :compfrom
+                                                     AND timecompleted IS NOT NULL)
+                                                     OR (
+                                                     course = :courseid2
+                                                     AND timecompleted IS NULL)", $params)) {
                 $sqlsearch .= " AND u.id NOT IN (".implode(',', array_keys($compfromids)).") ";
             }
         }
@@ -1368,6 +1372,7 @@ class iomad {
                     AND u.id = clu.userid
                     AND du.userid = u.id
                     AND d.id = du.departmentid
+                    AND du.companyid = cl.companyid
                     AND cl.id = clu.licenseid
                     AND cl.expirydate > :timestamp
                     $showsuspendedsql

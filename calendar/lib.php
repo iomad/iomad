@@ -1457,7 +1457,7 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
                         $name = format_string($event->name, true);
                     }
                 }
-                $popupcontent .= \html_writer::link($dayhref, $name);
+                $popupcontent .= \html_writer::link($dayhref, clean_text($name));
                 $popupcontent .= \html_writer::end_tag('div');
             }
 
@@ -2114,6 +2114,13 @@ function calendar_time_representation($time) {
     $timeformat = get_user_preferences('calendar_timeformat');
     if (empty($timeformat)) {
         $timeformat = get_config(null, 'calendar_site_timeformat');
+    }
+
+    // Allow language customization of selected time format.
+    if ($timeformat === CALENDAR_TF_12) {
+        $timeformat = get_string('strftimetime12', 'langconfig');
+    } else if ($timeformat === CALENDAR_TF_24) {
+        $timeformat = get_string('strftimetime24', 'langconfig');
     }
 
     return userdate($time, empty($timeformat) ? $langtimeformat : $timeformat);
