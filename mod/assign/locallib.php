@@ -1130,11 +1130,11 @@ class assign {
                 // Remove all grades from gradebook.
                 require_once($CFG->dirroot.'/mod/assign/lib.php');
                 assign_reset_gradebook($data->courseid);
+            }
 
-                // Reset revealidentities if both submissions and grades have been reset.
-                if ($this->get_instance()->blindmarking && $this->get_instance()->revealidentities) {
-                    $DB->set_field('assign', 'revealidentities', 0, array('id' => $this->get_instance()->id));
-                }
+            // Reset revealidentities for assign if blindmarking is enabled.
+            if ($this->get_instance()->blindmarking) {
+                $DB->set_field('assign', 'revealidentities', 0, array('id' => $this->get_instance()->id));
             }
         }
 
@@ -3134,13 +3134,14 @@ class assign {
      * Render the content in editor that is often used by plugin.
      *
      * @param string $filearea
-     * @param int  $submissionid
+     * @param int $submissionid
      * @param string $plugintype
      * @param string $editor
      * @param string $component
+     * @param bool $shortentext Whether to shorten the text content.
      * @return string
      */
-    public function render_editor_content($filearea, $submissionid, $plugintype, $editor, $component) {
+    public function render_editor_content($filearea, $submissionid, $plugintype, $editor, $component, $shortentext = false) {
         global $CFG;
 
         $result = '';
@@ -3148,6 +3149,9 @@ class assign {
         $plugin = $this->get_submission_plugin_by_type($plugintype);
 
         $text = $plugin->get_editor_text($editor, $submissionid);
+        if ($shortentext) {
+            $text = shorten_text($text, 140);
+        }
         $format = $plugin->get_editor_format($editor, $submissionid);
 
         $finaltext = file_rewrite_pluginfile_urls($text,
@@ -4509,11 +4513,15 @@ class assign {
             return $this->view_notices($title, $message);
         }
 
+        $postfix = '';
+        if ($this->has_visible_attachments()) {
+            $postfix = $this->render_area_files('mod_assign', ASSIGN_INTROATTACHMENT_FILEAREA, 0);
+        }
         $o .= $this->get_renderer()->render(new assign_header($this->get_instance(),
                                                       $this->get_context(),
                                                       $this->show_intro(),
                                                       $this->get_course_module()->id,
-                                                      $title));
+                                                      $title, '', $postfix));
         if ($userid == $USER->id) {
             // We only show this if it their submission.
             $o .= $this->plagiarism_print_disclosure();
