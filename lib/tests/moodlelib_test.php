@@ -682,6 +682,13 @@ class core_moodlelib_testcase extends advanced_testcase {
         $this->assertSame(' . .dontltrim.me', clean_param(' . .dontltrim.me', PARAM_FILE));
         $this->assertSame('here is a tab.txt', clean_param("here is a tab\t.txt", PARAM_FILE));
         $this->assertSame('here is a linebreak.txt', clean_param("here is a line\r\nbreak.txt", PARAM_FILE));
+        // Test filename that contains more than 90 characters.
+        $filename = 'sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem';
+        $this->assertSame('sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laud',
+            clean_param($filename, PARAM_FILE));
+        // Filename contains extension.
+        $this->assertSame('sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laud.zip',
+            clean_param($filename . '.zip', PARAM_FILE));
 
         // The following behaviours have been maintained although they seem a little odd.
         $this->assertSame('funnything', clean_param('funny:thing', PARAM_FILE));
@@ -3591,5 +3598,131 @@ class core_moodlelib_testcase extends advanced_testcase {
         // Array used in the grader report.
         $a = array('aggregatesonly' => [51, 34], 'gradesonly' => [21, 45, 78]);
         $this->assertEquals($a, unserialize_array(serialize($a)));
+    }
+
+    /**
+     * Test that the component_class_callback returns the correct default value when the class was not found.
+     *
+     * @dataProvider component_class_callback_default_provider
+     * @param $default
+     */
+    public function test_component_class_callback_not_found($default) {
+        $this->assertSame($default, component_class_callback('thisIsNotTheClassYouWereLookingFor', 'anymethod', [], $default));
+    }
+
+    /**
+     * Test that the component_class_callback returns the correct default value when the class was not found.
+     *
+     * @dataProvider component_class_callback_default_provider
+     * @param $default
+     */
+    public function test_component_class_callback_method_not_found($default) {
+        require_once(__DIR__ . '/fixtures/component_class_callback_example.php');
+
+        $this->assertSame($default, component_class_callback(test_component_class_callback_example::class, 'this_is_not_the_method_you_were_looking_for', ['abc'], $default));
+    }
+
+    /**
+     * Test that the component_class_callback returns the default when the method returned null.
+     *
+     * @dataProvider component_class_callback_default_provider
+     * @param $default
+     */
+    public function test_component_class_callback_found_returns_null($default) {
+        require_once(__DIR__ . '/fixtures/component_class_callback_example.php');
+
+        $this->assertSame($default, component_class_callback(test_component_class_callback_example::class, 'method_returns_value', [null], $default));
+        $this->assertSame($default, component_class_callback(test_component_class_callback_child_example::class, 'method_returns_value', [null], $default));
+    }
+
+    /**
+     * Test that the component_class_callback returns the expected value and not the default when there was a value.
+     *
+     * @dataProvider component_class_callback_data_provider
+     * @param $default
+     */
+    public function test_component_class_callback_found_returns_value($value) {
+        require_once(__DIR__ . '/fixtures/component_class_callback_example.php');
+
+        $this->assertSame($value, component_class_callback(test_component_class_callback_example::class, 'method_returns_value', [$value], 'This is not the value you were looking for'));
+        $this->assertSame($value, component_class_callback(test_component_class_callback_child_example::class, 'method_returns_value', [$value], 'This is not the value you were looking for'));
+    }
+
+    /**
+     * Test that the component_class_callback handles multiple params correctly.
+     *
+     * @dataProvider component_class_callback_multiple_params_provider
+     * @param $default
+     */
+    public function test_component_class_callback_found_accepts_multiple($params, $count) {
+        require_once(__DIR__ . '/fixtures/component_class_callback_example.php');
+
+        $this->assertSame($count, component_class_callback(test_component_class_callback_example::class, 'method_returns_all_params', $params, 'This is not the value you were looking for'));
+        $this->assertSame($count, component_class_callback(test_component_class_callback_child_example::class, 'method_returns_all_params', $params, 'This is not the value you were looking for'));
+    }
+
+    /**
+     * Data provider with list of default values for user in component_class_callback tests.
+     *
+     * @return array
+     */
+    public function component_class_callback_default_provider() {
+        return [
+            'null' => [null],
+            'empty string' => [''],
+            'string' => ['This is a string'],
+            'int' => [12345],
+            'stdClass' => [(object) ['this is my content']],
+            'array' => [['a' => 'b',]],
+        ];
+    }
+
+    /**
+     * Data provider with list of default values for user in component_class_callback tests.
+     *
+     * @return array
+     */
+    public function component_class_callback_data_provider() {
+        return [
+            'empty string' => [''],
+            'string' => ['This is a string'],
+            'int' => [12345],
+            'stdClass' => [(object) ['this is my content']],
+            'array' => [['a' => 'b',]],
+        ];
+    }
+
+    /**
+     * Data provider with list of default values for user in component_class_callback tests.
+     *
+     * @return array
+     */
+    public function component_class_callback_multiple_params_provider() {
+        return [
+            'empty array' => [
+                [],
+                0,
+            ],
+            'string value' => [
+                ['one'],
+                1,
+            ],
+            'string values' => [
+                ['one', 'two'],
+                2,
+            ],
+            'arrays' => [
+                [[], []],
+                2,
+            ],
+            'nulls' => [
+                [null, null, null, null],
+                4,
+            ],
+            'mixed' => [
+                ['a', 1, null, (object) [], []],
+                5,
+            ],
+        ];
     }
 }

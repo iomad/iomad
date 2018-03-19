@@ -304,8 +304,8 @@ $string['configproxypassword'] = 'Password needed to access internet through pro
 $string['configproxyport'] = 'If this server needs to use a proxy computer, then provide the proxy port here.';
 $string['configproxytype'] = 'Type of web proxy (PHP5 and cURL extension required for SOCKS5 support).';
 $string['configproxyuser'] = 'Username needed to access internet through proxy if required, empty if none (PHP cURL extension required).';
-$string['configrecaptchaprivatekey'] = 'String of characters (private key) used to communicate between your Moodle server and the recaptcha server. ReCAPTCHA keys can be obtained from <a target="_blank" href="https://www.google.com/recaptcha">Google reCAPTCHA</a>.';
-$string['configrecaptchapublickey'] = 'String of characters (public key) used to display the reCAPTCHA element in the signup form. ReCAPTCHA keys can be obtained from <a target="_blank" href="https://www.google.com/recaptcha">Google reCAPTCHA</a>.';
+$string['configrecaptchaprivatekey'] = 'String of characters (secret key) used to communicate between your Moodle server and the recaptcha server. ReCAPTCHA keys can be obtained from <a target="_blank" href="https://www.google.com/recaptcha">Google reCAPTCHA</a>.';
+$string['configrecaptchapublickey'] = 'String of characters (site key) used to display the reCAPTCHA element in the signup form. ReCAPTCHA keys can be obtained from <a target="_blank" href="https://www.google.com/recaptcha">Google reCAPTCHA</a>.';
 $string['configrequestcategoryselection'] = 'Allow the selection of a category when requesting a course.';
 $string['configrequestedstudentname'] = 'Word for student used in requested courses';
 $string['configrequestedstudentsname'] = 'Word for students used in requested courses';
@@ -857,6 +857,9 @@ $string['pluginscheckfailed'] = 'Dependencies check failed for {$a->pluginslist}
 $string['pluginschecktodo'] = 'You must solve all the plugin requirements before proceeding to install this Moodle version!';
 $string['pluginsoverview'] = 'Plugins overview';
 $string['pluginsoverviewsee'] = 'See <a href="{$a->url}">plugins overview</a> page for more details.';
+$string['policysettings'] = 'Policy settings';
+$string['privacyandpolicies'] = 'Privacy and policies';
+$string['privacysettings'] = 'Privacy settings';
 $string['profilecategory'] = 'Category';
 $string['profilecategoryname'] = 'Category name (must be unique)';
 $string['profilecategorynamenotunique'] = 'This category name is already in use';
@@ -1050,6 +1053,10 @@ $string['sitemaintenancewarning2'] = 'Your site is currently in maintenance mode
 $string['sitepolicies'] = 'Site policies';
 $string['sitepolicy'] = 'Site policy URL';
 $string['sitepolicy_help'] = 'If you have a site policy that all registered users must see and agree to before using this site, then specify the URL to it here, otherwise leave this field blank. This setting can contain any public URL.';
+$string['sitepolicyhandler'] = 'Site policy handler';
+$string['sitepolicyhandler_desc'] = 'Select the component to handle user agreements to site policies. The default core handler provides a simple functionality controlled by the two other settings `sitepolicy` and `sitepolicyguest`. Alternative handlers may be provided by additional plugins and offer more advanced control of site policies.';
+$string['sitepolicyhandlercore'] = 'Default (core)';
+$string['sitepolicyhandlerplugin'] = '{$a->name} ({$a->component})';
 $string['sitepolicyguest'] = 'Site policy URL for guests';
 $string['sitepolicyguest_help'] = 'If you have a site policy that all guests must see and agree to before using this site, then specify the URL to it here, otherwise leave this field blank. This setting can contain any public URL. Note: access of not-logged-in users may be prevented with forcelogin setting.';
 $string['sitesectionhelp'] = 'If selected, a topic section will be displayed on the site\'s front page.';

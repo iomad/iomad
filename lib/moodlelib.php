@@ -439,6 +439,11 @@ define('FEATURE_SHOW_DESCRIPTION', 'showdescription');
 /** True if module uses the question bank */
 define('FEATURE_USES_QUESTIONS', 'usesquestions');
 
+/**
+ * Maximum filename char size
+ */
+define('MAX_FILENAME_SIZE', 90);
+
 /** Unspecified module archetype */
 define('MOD_ARCHETYPE_OTHER', 0);
 /** Resource-like type module */
@@ -985,6 +990,21 @@ function clean_param($param, $type) {
             $param = preg_replace('~[[:cntrl:]]|[&<>"`\|\':\\\\/]~u', '', $param);
             if ($param === '.' || $param === '..') {
                 $param = '';
+            }
+            // Extract a part of the filename if it's char size exceeds MAX_FILENAME_SIZE.
+            // If the filename is too long, the file cannot be created on the filesystem due to exceeding max byte size.
+            // Limiting the filename to a certain size (considering multibyte characters) will prevent this.
+            if (core_text::strlen($param) > MAX_FILENAME_SIZE) {
+                // Exclude extension if present in filename.
+                $mimetypes = get_mimetypes_array();
+                $extension = pathinfo($param, PATHINFO_EXTENSION);
+                if ($extension && !empty($mimetypes[$extension])) {
+                    $basename = pathinfo($param, PATHINFO_FILENAME);
+                    $param = core_text::substr($basename, 0, MAX_FILENAME_SIZE);
+                    $param .= '.' . $extension;
+                } else {
+                    $param = core_text::substr($param, 0, MAX_FILENAME_SIZE);
+                }
             }
             return $param;
 
@@ -2695,24 +2715,24 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         return;
     }
 
+    // Scripts have a chance to declare that $USER->policyagreed should not be checked.
+    // This is mostly for places where users are actually accepting the policies, to avoid the redirect loop.
+    if (!defined('NO_SITEPOLICY_CHECK')) {
+        define('NO_SITEPOLICY_CHECK', false);
+    }
+
     // Check that the user has agreed to a site policy if there is one - do not test in case of admins.
-    if (!$USER->policyagreed and !is_siteadmin()) {
-        if (!empty($CFG->sitepolicy) and !isguestuser()) {
+    // Do not test if the script explicitly asked for skipping the site policies check.
+    if (!$USER->policyagreed && !is_siteadmin() && !NO_SITEPOLICY_CHECK) {
+        $manager = new \core_privacy\local\sitepolicy\manager();
+        if ($policyurl = $manager->get_redirect_url(isguestuser())) {
             if ($preventredirect) {
-                throw new moodle_exception('sitepolicynotagreed', 'error', '', $CFG->sitepolicy);
+                throw new moodle_exception('sitepolicynotagreed', 'error', '', $policyurl->out());
             }
             if ($setwantsurltome) {
                 $SESSION->wantsurl = qualified_me();
             }
-            redirect($CFG->wwwroot .'/user/policy.php');
-        } else if (!empty($CFG->sitepolicyguest) and isguestuser()) {
-            if ($preventredirect) {
-                throw new moodle_exception('sitepolicynotagreed', 'error', '', $CFG->sitepolicyguest);
-            }
-            if ($setwantsurltome) {
-                $SESSION->wantsurl = qualified_me();
-            }
-            redirect($CFG->wwwroot .'/user/policy.php');
+            redirect($policyurl);
         }
     }
 
@@ -7711,6 +7731,37 @@ function component_callback_exists($component, $function) {
         return $function;
     }
     return false;
+}
+
+/**
+ * Call the specified callback method on the provided class.
+ *
+ * If the callback returns null, then the default value is returned instead.
+ * If the class does not exist, then the default value is returned.
+ *
+ * @param   string      $classname The name of the class to call upon.
+ * @param   string      $methodname The name of the staticically defined method on the class.
+ * @param   array       $params The arguments to pass into the method.
+ * @param   mixed       $default The default value.
+ * @return  mixed       The return value.
+ */
+function component_class_callback($classname, $methodname, array $params, $default = null) {
+    if (!class_exists($classname)) {
+        return $default;
+    }
+
+    if (!method_exists($classname, $methodname)) {
+        return $default;
+    }
+
+    $fullfunction = $classname . '::' . $methodname;
+    $result = call_user_func_array($fullfunction, $params);
+
+    if (null === $result) {
+        return $default;
+    } else {
+        return $result;
+    }
 }
 
 /**
