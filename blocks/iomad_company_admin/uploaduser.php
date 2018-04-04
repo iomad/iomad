@@ -855,11 +855,14 @@ if ($mform->is_cancelled()) {
                                                                           AND clc.licenseid = :licenseid)",
                                                                           array('licenseid' => $formdata->licenseid));
                 }
+                else
+                {
+                   $formdata->licensecourses = optional_param_array('licensecourses', array(), PARAM_INT);
+                }
             }
 
             // Assign and licenses.
             if (!empty($formdata->licenseid)) {
-                $formdata->licensecourses = optional_param_array('licensecourses', array(), PARAM_INT);
                 $timestamp = time();
                 $licenserecord = (array) $DB->get_record('companylicense', array('id' => $formdata->licenseid));
                 $count = $licenserecord['used'];
