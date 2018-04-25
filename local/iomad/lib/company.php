@@ -3109,6 +3109,12 @@ class company {
                     }
                 }  
 
+                // Did we change anything else about the license?
+                $child->validlength = $licenserecord->validlength;
+                $child->expirydate = $licenserecord->expirydate;
+                $child->type = $licenserecord->type;
+                $child->startdate = $licenserecord->startdate;
+
                 // Create an event to deal with any child license allocations.
                 $eventother = $event->other;
                 $eventother['licenseid'] = $child->id;
