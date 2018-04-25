@@ -2246,7 +2246,7 @@ class company {
      *
      **/
     public static function check_valid_user($companyid, $userid, $deparmentid=0) {
-        global $DB;
+        global $DB, $USER;
 
         $context = context_system::instance();
         // If current user is a site admin or they have appropriate capabilities then they can.
