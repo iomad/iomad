@@ -3114,6 +3114,7 @@ class company {
                 $child->expirydate = $licenserecord->expirydate;
                 $child->type = $licenserecord->type;
                 $child->startdate = $licenserecord->startdate;
+                $DB->update_record('companylicense', $child);
 
                 // Create an event to deal with any child license allocations.
                 $eventother = $event->other;
