@@ -115,8 +115,8 @@ define('PARAM_CAPABILITY',   'capability');
 
 /**
  * PARAM_CLEANHTML - cleans submitted HTML code. Note that you almost never want
- * to use this. The normal mode of operation is to use PARAM_RAW when recieving
- * the input (required/optional_param or formslib) and then sanitse the HTML
+ * to use this. The normal mode of operation is to use PARAM_RAW when receiving
+ * the input (required/optional_param or formslib) and then sanitise the HTML
  * using format_text on output. This is for the rare cases when you want to
  * sanitise the HTML on input. This cleaning may also fix xhtml strictness.
  */
@@ -442,7 +442,7 @@ define('FEATURE_USES_QUESTIONS', 'usesquestions');
 /**
  * Maximum filename char size
  */
-define('MAX_FILENAME_SIZE', 90);
+define('MAX_FILENAME_SIZE', 100);
 
 /** Unspecified module archetype */
 define('MOD_ARCHETYPE_OTHER', 0);
@@ -990,21 +990,6 @@ function clean_param($param, $type) {
             $param = preg_replace('~[[:cntrl:]]|[&<>"`\|\':\\\\/]~u', '', $param);
             if ($param === '.' || $param === '..') {
                 $param = '';
-            }
-            // Extract a part of the filename if it's char size exceeds MAX_FILENAME_SIZE.
-            // If the filename is too long, the file cannot be created on the filesystem due to exceeding max byte size.
-            // Limiting the filename to a certain size (considering multibyte characters) will prevent this.
-            if (core_text::strlen($param) > MAX_FILENAME_SIZE) {
-                // Exclude extension if present in filename.
-                $mimetypes = get_mimetypes_array();
-                $extension = pathinfo($param, PATHINFO_EXTENSION);
-                if ($extension && !empty($mimetypes[$extension])) {
-                    $basename = pathinfo($param, PATHINFO_FILENAME);
-                    $param = core_text::substr($basename, 0, MAX_FILENAME_SIZE);
-                    $param .= '.' . $extension;
-                } else {
-                    $param = core_text::substr($param, 0, MAX_FILENAME_SIZE);
-                }
             }
             return $param;
 
@@ -6827,7 +6812,6 @@ function clean_filename($string) {
     return clean_param($string, PARAM_FILE);
 }
 
-
 // STRING TRANSLATION.
 
 /**
@@ -8272,6 +8256,54 @@ function shorten_text($text, $ideal=30, $exact = false, $ending='...') {
     return $truncate;
 }
 
+/**
+ * Shortens a given filename by removing characters positioned after the ideal string length.
+ * When the filename is too long, the file cannot be created on the filesystem due to exceeding max byte size.
+ * Limiting the filename to a certain size (considering multibyte characters) will prevent this.
+ *
+ * @param string $filename file name
+ * @param int $length ideal string length
+ * @param bool $includehash Whether to include a file hash in the shortened version. This ensures uniqueness.
+ * @return string $shortened shortened file name
+ */
+function shorten_filename($filename, $length = MAX_FILENAME_SIZE, $includehash = false) {
+    $shortened = $filename;
+    // Extract a part of the filename if it's char size exceeds the ideal string length.
+    if (core_text::strlen($filename) > $length) {
+        // Exclude extension if present in filename.
+        $mimetypes = get_mimetypes_array();
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        if ($extension && !empty($mimetypes[$extension])) {
+            $basename = pathinfo($filename, PATHINFO_FILENAME);
+            $hash = empty($includehash) ? '' : ' - ' . substr(sha1($basename), 0, 10);
+            $shortened = core_text::substr($basename, 0, $length - strlen($hash)) . $hash;
+            $shortened .= '.' . $extension;
+        } else {
+            $hash = empty($includehash) ? '' : ' - ' . substr(sha1($filename), 0, 10);
+            $shortened = core_text::substr($filename, 0, $length - strlen($hash)) . $hash;
+        }
+    }
+    return $shortened;
+}
+
+/**
+ * Shortens a given array of filenames by removing characters positioned after the ideal string length.
+ *
+ * @param array $path The paths to reduce the length.
+ * @param int $length Ideal string length
+ * @param bool $includehash Whether to include a file hash in the shortened version. This ensures uniqueness.
+ * @return array $result Shortened paths in array.
+ */
+function shorten_filenames(array $path, $length = MAX_FILENAME_SIZE, $includehash = false) {
+    $result = null;
+
+    $result = array_reduce($path, function($carry, $singlepath) use ($length, $includehash) {
+        $carry[] = shorten_filename($singlepath, $length, $includehash);
+        return $carry;
+    }, []);
+
+    return $result;
+}
 
 /**
  * Given dates in seconds, how many weeks is the date from startdate

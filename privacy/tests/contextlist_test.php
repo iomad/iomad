@@ -52,4 +52,57 @@ class contextlist_test extends advanced_testcase {
 
         $this->assertCount(count($allcontexts), $uit);
     }
+
+    /**
+     * Ensure that valid system context id is added.
+     */
+    public function test_add_system_context() {
+        $cl = new contextlist();
+        $cl->add_system_context();
+
+        $this->assertCount(1, $cl);
+
+        foreach ($cl->get_contexts() as $context) {
+            $this->assertEquals(SYSCONTEXTID, $context->id);
+        }
+    }
+
+    /**
+     * Ensure that a valid user context id is added.
+     */
+    public function test_add_user_context() {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->create_user();
+
+        $cl = new contextlist();
+        $cl->add_user_context($user->id);
+
+        $this->assertCount(1, $cl);
+
+        foreach ($cl->get_contexts() as $context) {
+            $this->assertEquals(\context_user::instance($user->id)->id, $context->id);
+        }
+    }
+
+    /**
+     * Ensure that valid user contexts are added.
+     */
+    public function test_add_user_contexts() {
+        $this->resetAfterTest();
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->create_user();
+
+        $cl = new contextlist();
+        $cl->add_user_contexts([$user1->id, $user2->id]);
+
+        $this->assertCount(2, $cl);
+
+        $contexts = $cl->get_contextids();
+        $this->assertContains(\context_user::instance($user1->id)->id, $contexts);
+        $this->assertContains(\context_user::instance($user2->id)->id, $contexts);
+    }
 }

@@ -1970,7 +1970,6 @@ class mod_quiz_display_options extends question_display_options {
     }
 }
 
-
 /**
  * A {@link qubaid_condition} for finding all the question usages belonging to
  * a particular quiz.
@@ -1982,6 +1981,41 @@ class qubaids_for_quiz extends qubaid_join {
     public function __construct($quizid, $includepreviews = true, $onlyfinished = false) {
         $where = 'quiza.quiz = :quizaquiz';
         $params = array('quizaquiz' => $quizid);
+
+        if (!$includepreviews) {
+            $where .= ' AND preview = 0';
+        }
+
+        if ($onlyfinished) {
+            $where .= ' AND state = :statefinished';
+            $params['statefinished'] = quiz_attempt::FINISHED;
+        }
+
+        parent::__construct('{quiz_attempts} quiza', 'quiza.uniqueid', $where, $params);
+    }
+}
+
+/**
+ * A {@link qubaid_condition} for finding all the question usages belonging to a particular user and quiz combination.
+ *
+ * @copyright  2018 Andrew Nicols <andrwe@nicols.co.uk>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class qubaids_for_quiz_user extends qubaid_join {
+    /**
+     * Constructor for this qubaid.
+     *
+     * @param   int     $quizid The quiz to search.
+     * @param   int     $userid The user to filter on
+     * @param   bool    $includepreviews Whether to include preview attempts
+     * @param   bool    $onlyfinished Whether to only include finished attempts or not
+     */
+    public function __construct($quizid, $userid, $includepreviews = true, $onlyfinished = false) {
+        $where = 'quiza.quiz = :quizaquiz AND quiza.userid = :quizauserid';
+        $params = [
+            'quizaquiz' => $quizid,
+            'quizauserid' => $userid,
+        ];
 
         if (!$includepreviews) {
             $where .= ' AND preview = 0';
@@ -2368,4 +2402,36 @@ function quiz_prepare_and_start_new_attempt(quiz $quizobj, $attemptnumber, $last
     $transaction->allow_commit();
 
     return $attempt;
+}
+
+/**
+ * Get quiz attempt and handling error.
+ *
+ * @param int $attemptid the id of the current attempt.
+ * @param int|null $cmid the course_module id for this quiz.
+ * @return quiz_attempt $attemptobj all the data about the quiz attempt.
+ * @throws moodle_exception
+ */
+function quiz_create_attempt_handling_errors($attemptid, $cmid = null) {
+    try {
+        $attempobj = quiz_attempt::create($attemptid);
+    } catch (moodle_exception $e) {
+        if (!empty($cmid)) {
+            list($course, $cm) = get_course_and_cm_from_cmid($cmid, 'quiz');
+            $continuelink = new moodle_url('/mod/quiz/view.php', array('id' => $cmid));
+            $context = context_module::instance($cm->id);
+            if (has_capability('mod/quiz:preview', $context)) {
+                throw new moodle_exception('attempterrorcontentchange', 'quiz', $continuelink);
+            } else {
+                throw new moodle_exception('attempterrorcontentchangeforuser', 'quiz', $continuelink);
+            }
+        } else {
+            throw new moodle_exception('attempterrorinvalid', 'quiz');
+        }
+    }
+    if (!empty($cmid) && $attempobj->get_cmid() != $cmid) {
+        throw new moodle_exception('invalidcoursemodule');
+    } else {
+        return $attempobj;
+    }
 }

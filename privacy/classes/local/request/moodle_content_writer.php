@@ -79,11 +79,12 @@ class moodle_content_writer implements content_writer {
      *
      * @param   array           $subcontext The location within the current context that this data belongs.
      * @param   \stdClass       $data       The data to be exported
+     * @return  content_writer
      */
     public function export_data(array $subcontext, \stdClass $data) {
         $path = $this->get_path($subcontext, 'data.json');
 
-        $this->write_data($path, json_encode($data));
+        $this->write_data($path, json_encode($data, JSON_UNESCAPED_UNICODE));
 
         return $this;
     }
@@ -97,6 +98,7 @@ class moodle_content_writer implements content_writer {
      * @param   string          $key        The metadata name.
      * @param   string          $value      The metadata value.
      * @param   string          $description    The description of the value.
+     * @return  content_writer
      */
     public function export_metadata(array $subcontext, $key, $value, $description) {
         $path = $this->get_full_path($subcontext, 'metadata.json');
@@ -113,7 +115,7 @@ class moodle_content_writer implements content_writer {
         ];
 
         $path = $this->get_path($subcontext, 'metadata.json');
-        $this->write_data($path, json_encode($data));
+        $this->write_data($path, json_encode($data, JSON_UNESCAPED_UNICODE));
 
         return $this;
     }
@@ -124,11 +126,12 @@ class moodle_content_writer implements content_writer {
      * @param   array           $subcontext The location within the current context that this data belongs.
      * @param   string          $name       The name of the file to be exported.
      * @param   \stdClass       $data       The related data to export.
+     * @return  content_writer
      */
     public function export_related_data(array $subcontext, $name, $data) {
         $path = $this->get_path($subcontext, "{$name}.json");
 
-        $this->write_data($path, json_encode($data));
+        $this->write_data($path, json_encode($data, JSON_UNESCAPED_UNICODE));
 
         return $this;
     }
@@ -159,7 +162,7 @@ class moodle_content_writer implements content_writer {
      * @return  string                      The processed string
      */
     public function rewrite_pluginfile_urls(array $subcontext, $component, $filearea, $itemid, $text) {
-        return str_replace('@@PLUGINFILE@@/', 'files/', $text);
+        return str_replace('@@PLUGINFILE@@/', $this->get_files_target_path($component, $filearea, $itemid).'/', $text);
     }
 
     /**
@@ -188,11 +191,12 @@ class moodle_content_writer implements content_writer {
      */
     public function export_file(array $subcontext, \stored_file $file) {
         if (!$file->is_directory()) {
-            $subcontextextra = [
-                get_string('files'),
-                $file->get_filepath(),
-            ];
-            $path = $this->get_path(array_merge($subcontext, $subcontextextra), $file->get_filename());
+            $pathitems = array_merge(
+                $subcontext,
+                [$this->get_files_target_path($file->get_component(), $file->get_filearea(), $file->get_itemid())],
+                [$file->get_filepath()]
+            );
+            $path = $this->get_path($pathitems, $file->get_filename());
             check_dir_exists(dirname($path), true, true);
             $this->files[$path] = $file;
         }
@@ -210,9 +214,6 @@ class moodle_content_writer implements content_writer {
      * @return  content_writer
      */
     public function export_user_preference($component, $key, $value, $description) {
-        if ($this->context !== \context_system::instance()) {
-            throw new \coding_exception('export_user_preference must be called against the system context');
-        }
         $subcontext = [
             get_string('userpreferences'),
         ];
@@ -229,7 +230,7 @@ class moodle_content_writer implements content_writer {
             'value' => $value,
             'description' => $description,
         ];
-        $this->write_data($path, json_encode($data));
+        $this->write_data($path, json_encode($data, JSON_UNESCAPED_UNICODE));
 
         return $this;
     }
@@ -243,7 +244,9 @@ class moodle_content_writer implements content_writer {
         $path = [];
         $contexts = array_reverse($this->context->get_parent_contexts(true));
         foreach ($contexts as $context) {
-            $path[] = clean_param($context->get_context_name(), PARAM_FILE);
+            $name = $context->get_context_name();
+            $id = $context->id;
+            $path[] = shorten_filename(clean_param("{$name} {$id}", PARAM_FILE), MAX_FILENAME_SIZE, true);
         }
 
         return $path;
@@ -257,6 +260,9 @@ class moodle_content_writer implements content_writer {
      * @return  string                      The fully-qualfiied file path.
      */
     protected function get_path(array $subcontext, $name) {
+        $subcontext = shorten_filenames($subcontext, MAX_FILENAME_SIZE, true);
+        $name = shorten_filename($name, MAX_FILENAME_SIZE, true);
+
         // Combine the context path, and the subcontext data.
         $path = array_merge(
             $this->get_context_path(),
@@ -286,6 +292,26 @@ class moodle_content_writer implements content_writer {
         $filepath = implode(DIRECTORY_SEPARATOR, $path);
 
         return preg_replace('@' . DIRECTORY_SEPARATOR . '+@', DIRECTORY_SEPARATOR, $filepath);
+    }
+
+    /**
+     * Get a path within a subcontext where exported files should be written to.
+     *
+     * @param string $component The name of the component that the files belong to.
+     * @param string $filearea The filearea within that component.
+     * @param string $itemid Which item those files belong to.
+     * @return string The path
+     */
+    protected function get_files_target_path($component, $filearea, $itemid) {
+
+        // We do not need to include the component because we organise things by context.
+        $parts = ['_files', $filearea];
+
+        if (!empty($itemid)) {
+            $parts[] = $itemid;
+        }
+
+        return implode(DIRECTORY_SEPARATOR, $parts);
     }
 
     /**

@@ -13,6 +13,7 @@
         stopOnFailure="false"
         stopOnIncomplete="false"
         stopOnSkipped="false"
+        beStrictAboutOutputDuringTests="true"
         printerClass="Hint_ResultPrinter"
         testSuiteLoaderClass="phpunit_autoloader"
         >
@@ -124,6 +125,9 @@
         <testsuite name="core_repository_testsuite">
             <directory suffix="_test.php">repository/tests</directory>
         </testsuite>
+        <testsuite name="core_userkey_testsuite">
+            <directory suffix="_test.php">lib/userkey/tests</directory>
+        </testsuite>
         <testsuite name="core_user_testsuite">
             <directory suffix="_test.php">user/tests</directory>
         </testsuite>
@@ -153,6 +157,18 @@
         </testsuite>
         <testsuite name="core_block_testsuite">
             <directory suffix="_test.php">blocks/tests</directory>
+        </testsuite>
+        <testsuite name="core_plagiarism_testsuite">
+            <directory suffix="_test.php">plagiarism/tests</directory>
+        </testsuite>
+        <testsuite name="core_portfolio_testsuite">
+            <directory suffix="_test.php">portfolio/tests</directory>
+        </testsuite>
+        <testsuite name="core_editor_testsuite">
+            <directory suffix="_test.php">lib/editor/tests</directory>
+        </testsuite>
+        <testsuite name="core_rss_testsuite">
+            <directory suffix="_test.php">rss/tests</directory>
         </testsuite>
 
         <!--Plugin suites: use admin/tool/phpunit/cli/util.php to build phpunit.xml from phpunit.xml.dist with up-to-date list of plugins in current install-->

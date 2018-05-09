@@ -132,6 +132,21 @@ class manager {
     }
 
     /**
+     * Retrieve the reason for implementing the null provider interface.
+     *
+     * @param  string $component Frankenstyle component name.
+     * @return string The key to retrieve the language string for the null provider reason.
+     */
+    public function get_null_provider_reason($component) {
+        if ($this->component_implements($component, \core_privacy\local\metadata\null_provider::class)) {
+            $classname = $this->get_provider_classname($component);
+            return $classname::get_reason();
+        } else {
+            throw new \coding_exception('Call to undefined method', 'Please only call this method on a null provider.');
+        }
+    }
+
+    /**
      * Get the privacy metadata for all components.
      *
      * @return collection[] The array of collection objects, indexed by frankenstyle component name.
@@ -290,22 +305,9 @@ class manager {
      * @return array the array of frankenstyle component names.
      */
     protected function get_component_list() {
-        $components = [];
-        // Get all plugins.
-        $plugintypes = \core_component::get_plugin_types();
-        foreach ($plugintypes as $plugintype => $typedir) {
-            $plugins = \core_component::get_plugin_list($plugintype);
-            foreach ($plugins as $pluginname => $plugindir) {
-                $components[] = $plugintype . '_' . $pluginname;
-            }
-        }
-        // Get all subsystems.
-        foreach (\core_component::get_core_subsystems() as $name => $path) {
-            if (isset($path)) {
-                $components[] = 'core_' . $name;
-            }
-        }
-        return $components;
+        return array_keys(array_reduce(\core_component::get_component_list(), function($carry, $item) {
+            return array_merge($carry, $item);
+        }, []));
     }
 
     /**
@@ -343,5 +345,38 @@ class manager {
             return $rc->implementsInterface($interface);
         }
         return false;
+    }
+
+    /**
+     * Call the named method with the specified params on any plugintype implementing the relevant interface.
+     *
+     * @param   string  $plugintype The plugingtype to check
+     * @param   string  $interface The interface to implement
+     * @param   string  $methodname The method to call
+     * @param   array   $params The params to call
+     */
+    public static function plugintype_class_callback($plugintype, $interface, $methodname, array $params) {
+        $components = \core_component::get_plugin_list($plugintype);
+        foreach (array_keys($components) as $component) {
+            static::component_class_callback("{$plugintype}_{$component}", $interface, $methodname, $params);
+        }
+    }
+
+    /**
+     * Call the named method with the specified params on the supplied component if it implements the relevant interface on its provider.
+     *
+     * @param   string  $component The component to call
+     * @param   string  $interface The interface to implement
+     * @param   string  $methodname The method to call
+     * @param   array   $params The params to call
+     * @return  mixed
+     */
+    public static function component_class_callback($component, $interface, $methodname, array $params) {
+        $classname = static::get_provider_classname_for_component($component);
+        if (class_exists($classname) && is_subclass_of($classname, $interface)) {
+            return component_class_callback($classname, $methodname, $params);
+        }
+
+        return null;
     }
 }

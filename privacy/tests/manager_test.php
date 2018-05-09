@@ -201,4 +201,30 @@ class privacy_manager_testcase extends advanced_testcase {
         $metadata = $manager->get_metadata_for_components();
         $this->assertNotEmpty($metadata);
     }
+
+    /**
+     * Test that the reason for the null provider is returned.
+     */
+    public function test_get_null_provider_reason() {
+        $manager = new \core_privacy\manager();
+        // Null providers return the reason string.
+        $this->assertEquals('testcomponent2 null provider reason', $manager->get_null_provider_reason('mod_testcomponent2'));
+        // Throw an exception if the wrong type of provider is given.
+        $this->expectException(\coding_exception::class);
+        $string = $manager->get_null_provider_reason('mod_testcomponent');
+    }
+
+    /**
+     * Test that manager::plugintype_class_callback() can be executed.
+     */
+    public function test_plugintype_class_callback() {
+        \core_privacy\manager::plugintype_class_callback('doesnotexist', 'unusable', 'foo', ['bar']);
+    }
+
+    /**
+     * Test that manager::component_class_callback() can be executed.
+     */
+    public function test_component_class_callback() {
+        \core_privacy\manager::component_class_callback('foo_bar', 'unusable', 'foo', ['bar']);
+    }
 }
