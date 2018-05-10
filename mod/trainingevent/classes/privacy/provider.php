@@ -32,15 +32,162 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\null_provider {
+class provider implements
+        // This plugin stores personal data.
+        \core_privacy\local\metadata\provider,
+
+        // This plugin is a core_user_data_provider.
+        \core_privacy\local\request\plugin\provider {
+    /**
+     * Return the fields which contain personal data.
+     *
+     * @param collection $items a reference to the collection to use to store the metadata.
+     * @return collection the updated collection of metadata items.
+     */
+    public static function get_metadata(collection $items) {
+        $items->add_database_table(
+            'trainingevent_users',
+            [
+                'trainingeventid' => 'privacy:metadata:choice_answers:trainingeventid',
+                'id' => 'privacy:metadata:choice_answers:id',
+                'userid' => 'privacy:metadata:choice_answers:userid',
+            ],
+            'privacy:metadata:trainingevent_users'
+        );
+
+        return $items;
+    }
 
     /**
-     * Get the language string identifier with the component's language
-     * file to explain why this plugin stores no data.
+     * Get the list of contexts that contain user information for the specified user.
      *
-     * @return  string
+     * @param int $userid the userid.
+     * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_reason() {
-        return 'privacy:metadata';
+    public static function get_contexts_for_userid($userid) {
+        // Fetch all choice answers.
+        $sql = "SELECT c.id
+                  FROM {context} c
+            INNER JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
+            INNER JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+            INNER JOIN {choice} ch ON ch.id = cm.instance
+            INNER JOIN {choice_options} co ON co.choiceid = ch.id
+            INNER JOIN {choice_answers} ca ON ca.optionid = co.id AND ca.choiceid = ch.id
+                 WHERE ca.userid = :userid";
+
+        $params = [
+            'modname'       => 'trainingevent',
+            'contextlevel'  => CONTEXT_MODULE,
+            'userid'        => $userid,
+        ];
+        $contextlist = new contextlist();
+        $contextlist->add_from_sql($sql, $params);
+
+        return $contextlist;
+    }
+
+    /**
+     * Export personal data for the given approved_contextlist. User and context information is contained within the contextlist.
+     *
+     * @param approved_contextlist $contextlist a list of contexts approved for export.
+     */
+    public static function export_user_data(approved_contextlist $contextlist) {
+        global $DB;
+
+        if (empty($contextlist->count())) {
+            return;
+        }
+
+        $user = $contextlist->get_user();
+
+        list($contextsql, $contextparams) = $DB->get_in_or_equal($contextlist->get_contextids(), SQL_PARAMS_NAMED);
+
+        $sql = "SELECT cm.id AS cmid
+                  FROM {context} c
+            INNER JOIN {course_modules} cm ON cm.id = c.instanceid
+            INNER JOIN {trainingevent} te ON te.id = cm.instance
+            INNER JOIN {trainingevent_users} tu ON tu.trainingeventid = te.id
+                 WHERE c.id {$contextsql}
+                       AND tu.userid = :userid
+              ORDER BY cm.id";
+
+        $params = ['userid' => $user->id] + $contextparams;
+
+        $trainingevents = $DB->get_recordset_sql($sql, $params);
+        foreach ($choiceanswers as $choiceanswer) {
+            // If we've moved to a new choice, then write the last choice data and reinit the choice data array.
+            if ($lastcmid != $choiceanswer->cmid) {
+                if (!empty($choicedata)) {
+                    $context = \context_module::instance($lastcmid);
+                    self::export_choice_data_for_user($choicedata, $context, $user);
+                }
+                $choicedata = [
+                    'answer' => [],
+                    'timemodified' => \core_privacy\local\request\transform::datetime($choiceanswer->timemodified),
+                ];
+            }
+            $choicedata['answer'][] = $choiceanswer->answer;
+            $lastcmid = $choiceanswer->cmid;
+        }
+        $choiceanswers->close();
+
+        // The data for the last activity won't have been written yet, so make sure to write it now!
+        if (!empty($choicedata)) {
+            $context = \context_module::instance($lastcmid);
+            self::export_choice_data_for_user($choicedata, $context, $user);
+        }
+    }
+
+    /**
+     * Export the supplied personal data for a single choice activity, along with any generic data or area files.
+     *
+     * @param array $choicedata the personal data to export for the choice.
+     * @param \context_module $context the context of the choice.
+     * @param \stdClass $user the user record
+     */
+    protected static function export_choice_data_for_user(array $choicedata, \context_module $context, \stdClass $user) {
+        // Fetch the generic module data for the choice.
+        $contextdata = helper::get_context_data($context, $user);
+
+        // Merge with choice data and write it.
+        $contextdata = (object)array_merge((array)$contextdata, $choicedata);
+        writer::with_context($context)->export_data([], $contextdata);
+
+        // Write generic module intro files.
+        helper::export_context_files($context, $user);
+    }
+
+    /**
+     * Delete all data for all users in the specified context.
+     *
+     * @param \context $context the context to delete in.
+     */
+    public static function delete_data_for_all_users_in_context(\context $context) {
+        global $DB;
+
+        if (empty($context)) {
+            return;
+        }
+        $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
+        $DB->delete_records('choice_answers', ['choiceid' => $instanceid]);
+    }
+
+    /**
+     * Delete all user data for the specified user, in the specified contexts.
+     *
+     * @param approved_contextlist $contextlist a list of contexts approved for deletion.
+     */
+    public static function delete_data_for_user(approved_contextlist $contextlist) {
+        global $DB;
+
+        if (empty($contextlist->count())) {
+            return;
+        }
+
+        $userid = $contextlist->get_user()->id;
+        foreach ($contextlist->get_contexts() as $context) {
+            $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
+            $DB->delete_records('choice_answers', ['choiceid' => $instanceid, 'userid' => $userid]);
+        }
     }
 }
