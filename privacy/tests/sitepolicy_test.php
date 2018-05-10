@@ -37,6 +37,29 @@ global $CFG;
  */
 class sitepolicy_test extends advanced_testcase {
 
+
+    /**
+     * Tests for \core_privacy\local\sitepolicy\manager::get_handler_classname() behaviour.
+     */
+    public function test_get_handler_classname() {
+        global $CFG;
+        $this->resetAfterTest(true);
+
+        $manager = $this->get_mock_manager_with_handler();
+
+        // If no handler is specified, then we should get the default one.
+        $CFG->sitepolicyhandler = '';
+        $this->assertEquals($manager->get_handler_classname(), \core_privacy\local\sitepolicy\default_handler::class);
+
+        // If non-existing handler is specified, we should get the default one too.
+        $CFG->sitepolicyhandler = 'non_existing_plugin_which_i_really_hope_will_never_exist';
+        $this->assertEquals($manager->get_handler_classname(), \core_privacy\local\sitepolicy\default_handler::class);
+
+        // If the defined handler is among known handlers, we should get its class name.
+        $CFG->sitepolicyhandler = 'testtool_testhandler';
+        $this->assertEquals($manager->get_handler_classname(), 'mock_sitepolicy_handler');
+    }
+
     /**
      * Tests for \core_privacy\local\sitepolicy\manager::is_defined()
      */
@@ -59,6 +82,13 @@ class sitepolicy_test extends advanced_testcase {
 
         $CFG->sitepolicy = null;
         $this->assertTrue($manager->is_defined(true));
+        $this->assertFalse($manager->is_defined(false));
+
+        // When non existing plugin is set as $CFG->sitepolicyhandler, assume that $CFG->sitepolicy* are all not set.
+        $CFG->sitepolicy = 'http://example.com/sitepolicy.html';
+        $CFG->sitepolicyguest = 'http://example.com/sitepolicyguest.html';
+        $CFG->sitepolicyhandler = 'non_existing_plugin_which_i_really_hope_will_never_exist';
+        $this->assertFalse($manager->is_defined(true));
         $this->assertFalse($manager->is_defined(false));
     }
 
@@ -85,6 +115,13 @@ class sitepolicy_test extends advanced_testcase {
         $CFG->sitepolicy = null;
         $this->assertEquals($CFG->wwwroot.'/user/policy.php', $manager->get_redirect_url(true)->out(false));
         $this->assertEquals(null, $manager->get_redirect_url(false));
+
+        // When non existing plugin is set as $CFG->sitepolicyhandler, assume that $CFG->sitepolicy* are all not set.
+        $CFG->sitepolicy = 'http://example.com/sitepolicy.html';
+        $CFG->sitepolicyguest = 'http://example.com/sitepolicyguest.html';
+        $CFG->sitepolicyhandler = 'non_existing_plugin_which_i_really_hope_will_never_exist';
+        $this->assertEquals(null, $manager->get_redirect_url(true));
+        $this->assertEquals(null, $manager->get_redirect_url(false));
     }
 
     /**
@@ -109,6 +146,13 @@ class sitepolicy_test extends advanced_testcase {
 
         $CFG->sitepolicy = null;
         $this->assertEquals($CFG->sitepolicyguest, $manager->get_embed_url(true)->out(false));
+        $this->assertEquals(null, $manager->get_embed_url(false));
+
+        // When non existing plugin is set as $CFG->sitepolicyhandler, assume that $CFG->sitepolicy* are all not set.
+        $CFG->sitepolicy = 'http://example.com/sitepolicy.html';
+        $CFG->sitepolicyguest = 'http://example.com/sitepolicyguest.html';
+        $CFG->sitepolicyhandler = 'non_existing_plugin_which_i_really_hope_will_never_exist';
+        $this->assertEquals(null, $manager->get_embed_url(true));
         $this->assertEquals(null, $manager->get_embed_url(false));
     }
 
@@ -138,6 +182,15 @@ class sitepolicy_test extends advanced_testcase {
         $this->assertTrue($manager->accept());
         $this->assertEquals(1, $USER->policyagreed);
         $this->assertEquals(1, $DB->get_field('user', 'policyagreed', ['id' => $USER->id]));
+
+        // When non existing plugin is set as $CFG->sitepolicyhandler, assume that $CFG->sitepolicy* are all not set.
+        $CFG->sitepolicy = 'http://example.com/sitepolicy.html';
+        $CFG->sitepolicyhandler = 'non_existing_plugin_which_i_really_hope_will_never_exist';
+        $user3 = $this->getDataGenerator()->create_user();
+        $this->setUser($user3);
+        $this->assertEquals(0, $USER->policyagreed);
+        $this->assertFalse($manager->accept());
+        $this->assertEquals(0, $USER->policyagreed);
     }
 
     /**
@@ -162,6 +215,13 @@ class sitepolicy_test extends advanced_testcase {
         $this->assertTrue($manager->accept());
         $this->assertEquals(1, $USER->policyagreed);
         $this->assertEquals(0, $DB->get_field('user', 'policyagreed', ['id' => $USER->id]));
+
+        // When non existing plugin is set as $CFG->sitepolicyhandler, assume that $CFG->sitepolicy* are all not set.
+        $USER->policyagreed = 0; // Reset.
+        $CFG->sitepolicyguest = 'http://example.com/sitepolicyguest.html';
+        $CFG->sitepolicyhandler = 'non_existing_plugin_which_i_really_hope_will_never_exist';
+        $this->assertFalse($manager->accept());
+        $this->assertEquals(0, $USER->policyagreed);
     }
 
     /**

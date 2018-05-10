@@ -471,10 +471,8 @@ $cache = '.var_export($cache, true).';
             'plugin'      => null,
             'portfolio'   => $CFG->dirroot.'/portfolio',
             'privacy'     => $CFG->dirroot . '/privacy',
-            'publish'     => $CFG->dirroot.'/course/publish',
             'question'    => $CFG->dirroot.'/question',
             'rating'      => $CFG->dirroot.'/rating',
-            'register'    => $CFG->dirroot.'/'.$CFG->admin.'/registration', // Broken badly if $CFG->admin changed.
             'repository'  => $CFG->dirroot.'/repository',
             'rss'         => $CFG->dirroot.'/rss',
             'role'        => $CFG->dirroot.'/'.$CFG->admin.'/roles',
@@ -483,7 +481,7 @@ $cache = '.var_export($cache, true).';
             'tag'         => $CFG->dirroot.'/tag',
             'timezones'   => null,
             'user'        => $CFG->dirroot.'/user',
-            'userkey'     => null,
+            'userkey'     => $CFG->dirroot.'/lib/userkey',
             'webservice'  => $CFG->dirroot.'/webservice',
         );
 
@@ -1243,5 +1241,39 @@ $cache = '.var_export($cache, true).';
                 }
             }
         }
+    }
+
+    /**
+     * Returns a list of frankenstyle component names and their paths, for all components (plugins and subsystems).
+     *
+     * E.g.
+     *  [
+     *      'mod' => [
+     *          'mod_forum' => FORUM_PLUGIN_PATH,
+     *          ...
+     *      ],
+     *      ...
+     *      'core' => [
+     *          'core_comment' => COMMENT_SUBSYSTEM_PATH,
+     *          ...
+     *      ]
+     * ]
+     *
+     * @return array an associative array of components and their corresponding paths.
+     */
+    public static function get_component_list() : array {
+        $components = [];
+        // Get all plugins.
+        foreach (self::get_plugin_types() as $plugintype => $typedir) {
+            $components[$plugintype] = [];
+            foreach (self::get_plugin_list($plugintype) as $pluginname => $plugindir) {
+                $components[$plugintype][$plugintype . '_' . $pluginname] = $plugindir;
+            }
+        }
+        // Get all subsystems.
+        foreach (self::get_core_subsystems() as $subsystemname => $subsystempath) {
+            $components['core']['core_' . $subsystemname] = $subsystempath;
+        }
+        return $components;
     }
 }

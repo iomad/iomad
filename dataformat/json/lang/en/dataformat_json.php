@@ -23,5 +23,6 @@
  */
 
 $string['dataformat'] = 'Javascript Object Notation (.json)';
+$string['privacy:metadata'] = 'The JSON Data format plugin does not store any personal data.';
 $string['shortname'] = 'JSON';
 

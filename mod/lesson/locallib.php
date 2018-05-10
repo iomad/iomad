@@ -2519,6 +2519,11 @@ class lesson extends lesson_base {
                     if (!array_key_exists($exitjump, $lessonpages)) {
                         return LESSON_EOL;
                     }
+                    // Check to see that the return type is not a cluster.
+                    if ($lessonpages[$exitjump]->qtype == LESSON_PAGE_CLUSTER) {
+                        // If the exitjump is a cluster then go through this function again and try to find an unseen question.
+                        $exitjump = $this->cluster_jump($exitjump, $userid);
+                    }
                     return $exitjump;
                 }
             }
@@ -4715,7 +4720,7 @@ abstract class lesson_page extends lesson_base {
         $i = 1;
         foreach ($answers as $answer) {
             $cells = array();
-            $cells[] = "<span class=\"label\">".get_string("jump", "lesson")." $i<span>: ";
+            $cells[] = '<label>' . get_string('jump', 'lesson') . ' ' . $i . '</label>:';
             $cells[] = $this->get_jump_name($answer->jumpto);
             $table->data[] = new html_table_row($cells);
             if ($i === 1){

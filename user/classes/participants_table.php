@@ -226,7 +226,7 @@ class participants_table extends \table_sql {
         $this->enrolid = $enrolid;
         $this->status = $status;
         $this->selectall = $selectall;
-        $this->countries = get_string_manager()->get_list_of_countries();
+        $this->countries = get_string_manager()->get_list_of_countries(true);
         $this->extrafields = $extrafields;
         $this->context = $context;
         if ($canseegroups) {
@@ -380,8 +380,10 @@ class participants_table extends \table_sql {
                     case ENROL_USER_ACTIVE:
                         $currentdate = new DateTime();
                         $now = $currentdate->getTimestamp();
-                        // If user enrolment status has not yet started/already ended.
-                        if ($timestart > $now || ($timeend > 0 && $timeend < $now)) {
+                        $isexpired = $timestart > $now || ($timeend > 0 && $timeend < $now);
+                        $enrolmentdisabled = $ue->enrolmentinstance->status == ENROL_INSTANCE_DISABLED;
+                        // If user enrolment status has not yet started/already ended or the enrolment instance is disabled.
+                        if ($isexpired || $enrolmentdisabled) {
                             $status = get_string('participationnotcurrent', 'enrol');
                             $statusval = status_field::STATUS_NOT_CURRENT;
                         }
