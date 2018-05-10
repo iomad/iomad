@@ -101,10 +101,6 @@ $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linkte
 // Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
-// Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
-
 // Build the nav bar.
 company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
@@ -205,11 +201,7 @@ $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
 $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
 $select->label = get_string('department', 'block_iomad_company_admin');
 $select->formid = 'choosedepartment';
-echo html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none'));
-
-$departmenttree = company::get_all_subdepartments_raw($userhierarchylevel);
-$treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
-echo $treehtml;
+$fwselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none'));
 
 // Set up the filter form.
 $mform = new iomad_user_filter_form(null, array('companyid' => $companyid));
@@ -321,11 +313,7 @@ $dbsort = "";
     if ((empty($idlist) && !$foundfields) || (!empty($idlist) && $foundfields)) {
         // Make sure we dont display site admins.
         // Set default search to something which cant happen.
-        $sqlsearch = "id!='-1' $userfilter";
-        $siteadmins = explode(" ", $CFG->siteadmins);
-        foreach ($siteadmins as $siteadmin) {
-            $sqlsearch .= " AND id!='$siteadmin'";
-        }
+        $sqlsearch = "id!='-1' AND id NOT IN (" . $CFG->siteadmins . ") $userfilter";
 
         // Get department users.
         $departmentusers = company::get_recursive_department_users($departmentid);

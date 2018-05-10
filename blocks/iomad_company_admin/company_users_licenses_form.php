@@ -293,13 +293,13 @@ class company_users_course_form extends moodleform {
                                 // Check we are not adding multiple times.
                                 if (!$DB->get_record('companylicense_users', $assignrecord)) {
                                     $assignrecord['issuedate'] = time();
-                                    $DB->insert_record('companylicense_users', $assignrecord);
+                                    $assignrecord['id'] = $DB->insert_record('companylicense_users', $assignrecord);
         
                                     // Create an event.
                                     $eventother = array('licenseid' => $licenserecord['id'],
                                                         'duedate' => $duedate);
                                     $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($course->id),
-                                                                                                                  'objectid' => $licenserecord['id'],
+                                                                                                                  'objectid' => $assignrecord['id'],
                                                                                                                   'courseid' => $course->id,
                                                                                                                   'userid' => $this->userid,
                                                                                                                   'other' => $eventother));
@@ -491,7 +491,9 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
                     $licenselist[$license->id] = $license->name . " (" . get_string('licenseexpired', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->expirydate)) . ")";
                 } else if ($license->startdate > time()) {
                     $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate)) . ")";
-                    $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate));
+                    if ($licenseid == $license->id) {
+                        $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate));
+                    }
                 } else {
                     $licenselist[$license->id] = $license->name;
                 }
@@ -509,7 +511,9 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
                         if ($license[$deptlicenseid->licenseid]->expirydate > time()) {
                             if ($license->startdate > time()) {
                                 $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate)) . ")";
-                                $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate));
+                                if ($licenseid == $license->id) {
+                                    $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', date($CFG->iomad_date_format, $license->startdate));
+                                }
                             } else {
                                 $licenselist[$license[$deptlicenseid->licenseid]->id]  = $license[$deptlicenseid->licenseid]->name;
                             }

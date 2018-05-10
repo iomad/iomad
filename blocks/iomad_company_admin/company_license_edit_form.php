@@ -164,6 +164,8 @@ class company_license_form extends company_moodleform {
             $mform->addHelpButton('type', 'licensetype', 'block_iomad_company_admin');
             $mform->addElement('selectyesno', 'program', get_string('licenseprogram', 'block_iomad_company_admin'));
             $mform->addHelpButton('program', 'licenseprogram', 'block_iomad_company_admin');
+            $mform->addElement('selectyesno', 'instant', get_string('licenseinstant', 'block_iomad_company_admin'));
+            $mform->addHelpButton('instant', 'licenseinstant', 'block_iomad_company_admin');
             $mform->addElement('date_selector', 'startdate', get_string('licensestartdate', 'block_iomad_company_admin'));
 
             $mform->addHelpButton('startdate', 'licensestartdate', 'block_iomad_company_admin');
@@ -386,14 +388,16 @@ if ($licenseinfo = $DB->get_record('companylicense', array('id' => $licenseid)))
     }
 
     $mform->set_data($licenseinfo);
-} else if (!empty($parentid)) {
+} else {
     $licenseinfo = new stdclass();
-    if ($currentcourses = $DB->get_records('companylicense_courses', array('licenseid' => $parentid), null, 'courseid')) {
-        foreach ($currentcourses as $currentcourse) {
-            $licenseinfo->licensecourses[] = $currentcourse->courseid;
+    $licenseinfo->expirydate = strtotime('+ 1 year');
+    if (!empty($parentid)) {		
+        if ($currentcourses = $DB->get_records('companylicense_courses', array('licenseid' => $parentid), null, 'courseid')) {
+            foreach ($currentcourses as $currentcourse) {
+                $licenseinfo->licensecourses[] = $currentcourse->courseid;
+            }
         }
     }
-
     $mform->set_data($licenseinfo);
 }
 
@@ -409,8 +413,8 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
 
         $new = false;
         $licensedata = array();
-        $licensedata['name'] = $data->name;
-        $licensedata['reference'] = $data->reference;
+        $licensedata['name'] = trim($data->name);
+        $licensedata['reference'] = trim($data->reference);
         if (empty($data->program)) {
             $licensedata['program'] = 0;
             $licensedata['allocation'] = $data->allocation;
@@ -418,12 +422,13 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
             $licensedata['program'] = $data->program;
             $licensedata['allocation'] = $data->allocation * count($data->licensecourses);
         }
+        $licensedata['instant'] = $data->instant;
         $licensedata['expirydate'] = $data->expirydate;
         $licensedata['startdate'] = $data->startdate;
         if (empty($data->languages)) {
             $data->languages = array();
         }
-        if (empty($data->parentid)) { 
+        if (empty($data->parentid)) {
             $licensedata['companyid'] = $data->companyid;
         } else {
             $licensedata['companyid'] = $data->designatedcompany;
@@ -482,11 +487,6 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         $event->trigger();
         redirect(new moodle_url('/blocks/iomad_company_admin/company_license_list.php'));
     }
-
-    $licenseinfo = new stdclass();
-    $licenseinfo->expirydate = strtotime('+ 1 year');
-
-    $mform->set_data($licenseinfo);
 
     // Display the form.
     echo $OUTPUT->header();

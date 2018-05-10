@@ -102,6 +102,7 @@ $string['forgottenpasswordurl'] = 'Forgotten password URL';
 $string['getanaudiocaptcha'] = 'Get an audio CAPTCHA';
 $string['getanimagecaptcha'] = 'Get an image CAPTCHA';
 $string['getanothercaptcha'] = 'Get another CAPTCHA';
+$string['getrecaptchaapi'] = 'To use reCAPTCHA you must get an API key from <a href=\'https://www.google.com/recaptcha/admin\'>https://www.google.com/recaptcha/admin</a>';
 $string['guestloginbutton'] = 'Guest login button';
 $string['changepassword'] = 'Change password URL';
 $string['changepasswordhelp'] = 'URL of lost password recovery page, which will be sent to users in an email. Note that this setting will have no effect if a forgotten password URL is set in the authentication common settings.';
@@ -136,11 +137,19 @@ $string['passwordhandling'] = 'Password field handling';
 $string['plaintext'] = 'Plain text';
 $string['pluginnotenabled'] = 'Authentication plugin \'{$a}\' is not enabled.';
 $string['pluginnotinstalled'] = 'Authentication plugin \'{$a}\' is not installed.';
+$string['privacy:metadata:userpref:createpassword'] = 'Indicates that a password should be generated for the user';
+$string['privacy:metadata:userpref:forcepasswordchange'] = 'Indicates whether the user should change their password upon logging in';
+$string['privacy:metadata:userpref:loginfailedcount'] = 'The number of times the user failed to log in';
+$string['privacy:metadata:userpref:loginfailedcountsincesuccess'] = 'The number of times the user failed to login since their last successful login';
+$string['privacy:metadata:userpref:loginfailedlast'] = 'The date at which the last failed login attempt was recorded';
+$string['privacy:metadata:userpref:loginlockout'] = 'Indicates whether the user\'s account is locked due to failed login attempts, and the date at which the account entered the lockout state';
+$string['privacy:metadata:userpref:loginlockoutignored'] = 'Indicates that a user\'s account should never be subject to lockouts';
+$string['privacy:metadata:userpref:loginlockoutsecret'] = 'When locked, the secret the user must use for unlocking their account';
 $string['potentialidps'] = 'Log in using your account on:';
 $string['recaptcha'] = 'reCAPTCHA';
-$string['recaptcha_help'] = 'The CAPTCHA is for preventing abuse from automated programs. Simply enter the words in the box, in order and separated by a space.
+$string['recaptcha_help'] = 'The CAPTCHA is for preventing abuse from automated programs. Follow the instructions to verify you are a person. This could be a box to check, characters presented in an image you must enter or a set of images to select from.
 
-If you are not sure what the words are, you can try getting another CAPTCHA or an audio CAPTCHA.';
+If you are not sure what the images are, you can try getting another CAPTCHA or an audio CAPTCHA.';
 $string['recaptcha_link'] = 'auth/email';
 $string['security_question'] = 'Security question';
 $string['selfregistration'] = 'Self registration';

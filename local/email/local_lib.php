@@ -30,6 +30,7 @@ function local_email_get_templates() {
                         'course_completed_manager',
                         'completion_course_supervisor',
                         'completion_digest_manager',
+                        'completion_expiry_warn_supervisor',
                         'completion_warn_supervisor',
                         'expire',
                         'expire_manager',

@@ -36,7 +36,7 @@ function mycourses_get_my_completion($datefrom = 0) {
     }
 
     $mycompletions = new stdclass();
-    $mycompleted = $DB->get_records_sql("SELECT cc.id, cc.userid, cc.courseid as courseid, cc.finalscore as finalgrade, c.fullname as coursefullname, c.summary as coursesummary
+    $mycompleted = $DB->get_records_sql("SELECT cc.id, cc.userid, cc.courseid as courseid, cc.finalscore as finalgrade, cc.timecompleted, c.fullname as coursefullname, c.summary as coursesummary
                                        FROM {local_iomad_track} cc
                                        JOIN {course} c ON (c.id = cc.courseid)
                                        WHERE cc.userid = :userid
@@ -86,6 +86,7 @@ function mycourses_get_my_completion($datefrom = 0) {
                                                          AND c.id IN (
                                                            SELECT courseid FROM {company_course}
                                                            WHERE companyid = :companyid)
+                                                         AND c.visible = 1
                                                          $inprogresssql",
                                                          array('companyid' => $companyid,
                                                                'enrol' => 'self'));
@@ -97,6 +98,7 @@ function mycourses_get_my_completion($datefrom = 0) {
                                                          AND c.id IN (
                                                            SELECT courseid FROM {iomad_courses}
                                                            WHERE shared = 1)
+                                                         AND c.visible = 1
                                                         $inprogresssql",
                                                         array('enrol' => 'self'));
         foreach ($companyselfenrolcourses as $companyselfenrolcourse) {

@@ -15,11 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $string['pluginname'] = 'Iomad settings';
+$string['privacy:metadata'] = 'The Local Iomad settings plugin only shows data stored in other locations.';
 $string['establishment_code'] = 'Establishment Code';
 $string['establishment_code_help'] = 'What should the admin see in the course list block?';
 $string['customtext2'] = 'Custom Text 2';
 $string['customtext3'] = 'Custom Text 3';
 $string['dateformat'] = 'Date format';
+$string['iomad_autoenrol_managers'] = 'Enrol managers as non students'; 
+$string['iomad_autoenrol_managers_help'] = 'If this is unticked then manager accounts will not be enrolled as the company teacher roles on manual enrol courses '; 
 $string['iomadcertificate_logo'] = 'Default logo for Iomad Company certificate';
 $string['iomadcertificate_signature'] = 'Default signature for Iomad Company certificate';
 $string['iomadcertificate_border'] = 'Default border for Iomad Company certificate';
@@ -28,6 +31,8 @@ $string['iomadcertificate_logodesc'] = 'This is the default logo image used for 
 $string['iomadcertificate_signaturedesc'] = 'This is the default signature image used for the Iomad Company certificate type. You can override it in the company edit pages. The uploaded image should be 31 pixels x 150 pixels and have a transparent background';
 $string['iomadcertificate_borderdesc'] = 'This is the default border image used for the Iomad Company certificate type. You can override it in the company edit pages. The uploaded image should be 800 pixels x 604 pixels.';
 $string['iomadcertificate_watermarkdesc'] = 'This is the default watermark image used for the Iomad Company certificate type. You can override it in the company edit pages. The uploaded image should be no more than 800 pixels x 604 pixels.';
+$string['iomad_allow_username'] = 'Can specify username';
+$string['iomad_allow_username_help'] = 'Selecting this will allow the username field to be presented when creating accounts.  This will supercede the use email address as username setting.';
 $string['iomad_report_fields'] = 'Additional report profile fields';
 $string['iomad_report_fields_help'] = 'This is a list of profile fields separated by a comma.  If you want to use an optional profile field you need to use profile_field_<shortname> where <shortname> is the shortname defined for the profile field. The order given is the order they are displayed in.';
 $string['iomad_settings:addinstance'] = 'Add a new Iomad Settings';

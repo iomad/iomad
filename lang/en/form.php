@@ -61,6 +61,7 @@ $string['othersettings'] = 'Other settings';
 $string['passwordunmaskedithint'] = 'Edit password';
 $string['passwordunmaskrevealhint'] = 'Reveal';
 $string['passwordunmaskinstructions'] = 'Press enter to save changes';
+$string['privacy:metadata'] = 'Forms subsystem itself does not store any personal data.';
 $string['requiredelement'] = 'Required field';
 $string['security'] = 'Security';
 $string['selectallornone'] = 'Select all/none';

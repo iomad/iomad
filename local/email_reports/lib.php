@@ -49,7 +49,7 @@ function email_reports_cron() {
     $table->add_field('timeenrolled', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('companyname', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('departmentname', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('coursename', XMLDB_TYPE_CHAR, '254', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('coursename', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('firstname', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('lastname', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('email', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
@@ -274,12 +274,12 @@ function email_reports_cron() {
     $table->add_field('notifyperiod', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('timecompleted', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, null, null, null);
     $table->add_field('companyname', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('departmentname', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('coursename', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('firstname', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('lastname', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('email', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
-    $table->add_field('username', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('departmentname', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('coursename', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('firstname', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('lastname', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('email', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
+    $table->add_field('username', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, null);
     $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
 
     $dbman->create_temp_table($table);
@@ -535,7 +535,8 @@ function email_reports_cron() {
                 $departmentmanager = false;
             }
             // If this is a manager of a parent company - skip them.
-            if ($DB->get_records_sql("SELECT id FROM {company_users}
+            if (!empty($parentslist) &&
+                $DB->get_records_sql("SELECT id FROM {company_users}
                                       WHERE userid = :userid
                                       AND userid IN (
                                       SELECT userid FROM {company_users}

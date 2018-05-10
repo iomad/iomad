@@ -2167,7 +2167,7 @@ class lesson extends lesson_base {
 
     /**
      * Returns the link for the related activity
-     * @return array|false
+     * @return string
      */
     public function link_for_activitylink() {
         global $DB;
@@ -2177,9 +2177,9 @@ class lesson extends lesson_base {
             if ($modname) {
                 $instancename = $DB->get_field($modname, 'name', array('id' => $module->instance));
                 if ($instancename) {
-                    return html_writer::link(new moodle_url('/mod/'.$modname.'/view.php', array('id'=>$this->properties->activitylink)),
-                        get_string('activitylinkname', 'lesson', $instancename),
-                        array('class'=>'centerpadded lessonbutton standardbutton'));
+                    return html_writer::link(new moodle_url('/mod/'.$modname.'/view.php',
+                        array('id' => $this->properties->activitylink)), get_string('activitylinkname',
+                        'lesson', $instancename), array('class' => 'centerpadded lessonbutton standardbutton p-r-1'));
                 }
             }
         }
@@ -2488,6 +2488,11 @@ class lesson extends lesson_base {
                     }
                     if (!array_key_exists($exitjump, $lessonpages)) {
                         return LESSON_EOL;
+                    }
+                    // Check to see that the return type is not a cluster.
+                    if ($lessonpages[$exitjump]->qtype == LESSON_PAGE_CLUSTER) {
+                        // If the exitjump is a cluster then go through this function again and try to find an unseen question.
+                        $exitjump = $this->cluster_jump($exitjump, $userid);
                     }
                     return $exitjump;
                 }
@@ -3677,6 +3682,11 @@ abstract class lesson_page extends lesson_base {
     const TYPE_STRUCTURE = 1;
 
     /**
+     * Constant used as a delimiter when parsing multianswer questions
+     */
+    const MULTIANSWER_DELIMITER = '@^#|';
+
+    /**
      * This method should return the integer used to identify the page type within
      * the database and throughout code. This maps back to the defines used in 1.x
      * @abstract
@@ -4097,35 +4107,79 @@ abstract class lesson_page extends lesson_base {
                 $result->feedback .= '<div class="correctanswer generalbox"><em>'
                         . get_string("youranswer", "lesson").'</em> : <div class="studentanswer m-t-2 m-b-2">';
 
-                $studentanswerarray = explode('<br />', $result->studentanswer);
-                $responsearr = explode('<br />', $result->response);
-                $studentanswerresponse = array_combine($studentanswerarray, $responsearr);
                 // Create a table containing the answers and responses.
                 $table = new html_table();
-                foreach ($studentanswerresponse as $answer => $response) {
+                // Multianswer allowed.
+                if ($this->properties->qoption) {
+                    $studentanswerarray = explode(self::MULTIANSWER_DELIMITER, $result->studentanswer);
+                    $responsearr = explode(self::MULTIANSWER_DELIMITER, $result->response);
+                    $studentanswerresponse = array_combine($studentanswerarray, $responsearr);
+
+                    foreach ($studentanswerresponse as $answer => $response) {
+                        // Add a table row containing the answer.
+                        $studentanswer = $this->format_answer($answer, $context, $result->studentanswerformat);
+                        $table->data[] = array($studentanswer);
+                        // If the response exists, add a table row containing the response. If not, add en empty row.
+                        if (!empty(trim($response))) {
+                            $studentresponse = isset($result->responseformat) ?
+                                $this->format_response($response, $context, $result->responseformat, $options) : $response;
+                            $table->data[] = array('<em>'.get_string("response", "lesson").
+                                '</em>: <br/>'.$studentresponse);
+                        } else {
+                            $table->data[] = array('');
+                        }
+                    }
+                } else {
                     // Add a table row containing the answer.
-                    $studentanswer = format_text($answer, $result->studentanswerformat,
-                            array('context' => $context, 'para' => true));
+                    $studentanswer = $this->format_answer($result->studentanswer, $context, $result->studentanswerformat);
                     $table->data[] = array($studentanswer);
                     // If the response exists, add a table row containing the response. If not, add en empty row.
-                    if (!empty(trim($response))) {
-                        if (isset($result->responseformat)) {
-                            $convertstudentresponse = file_rewrite_pluginfile_urls($response, 'pluginfile.php',
-                                $context->id, 'mod_lesson', 'page_responses', $result->answerid);
-                            $studentresponse = format_text($convertstudentresponse, $result->responseformat, $options);
-                        } else {
-                            $studentresponse = $response;
-                        }
+                    if (!empty(trim($result->response))) {
+                        $studentresponse = isset($result->responseformat) ?
+                            $this->format_response($result->response, $context, $result->responseformat,
+                                $result->answerid, $options) : $result->response;
                         $table->data[] = array('<em>'.get_string("response", "lesson").
                             '</em>: <br/>'.$studentresponse);
                     } else {
                         $table->data[] = array('');
                     }
                 }
+
                 $result->feedback .= html_writer::table($table).'</div></div>';
             }
         }
         return $result;
+    }
+
+    /**
+     * Formats the answer
+     *
+     * @param string $answer
+     * @param context $context
+     * @param int $answerformat
+     * @return string Returns formatted string
+     */
+    private function format_answer($answer, $context, $answerformat) {
+
+        return format_text($answer, $answerformat, array('context' => $context, 'para' => true));
+    }
+
+    /**
+     * Formats the response
+     *
+     * @param string $response
+     * @param context $context
+     * @param int $responseformat
+     * @param int $answerid
+     * @param stdClass $options
+     * @return string Returns formatted string
+     */
+    private function format_response($response, $context, $responseformat, $answerid, $options) {
+
+        $convertstudentresponse = file_rewrite_pluginfile_urls($response, 'pluginfile.php',
+            $context->id, 'mod_lesson', 'page_responses', $answerid);
+
+        return format_text($convertstudentresponse, $responseformat, $options);
     }
 
     /**
@@ -4636,7 +4690,7 @@ abstract class lesson_page extends lesson_base {
         $i = 1;
         foreach ($answers as $answer) {
             $cells = array();
-            $cells[] = "<span class=\"label\">".get_string("jump", "lesson")." $i<span>: ";
+            $cells[] = '<label>' . get_string('jump', 'lesson') . ' ' . $i . '</label>:';
             $cells[] = $this->get_jump_name($answer->jumpto);
             $table->data[] = new html_table_row($cells);
             if ($i === 1){

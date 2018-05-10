@@ -109,12 +109,19 @@ class user_edit_form extends company_moodleform {
             $mform->addRule('email', $strrequired, 'required', null, 'client');
             $mform->setType('email', PARAM_EMAIL);
         }
+        if (!empty($CFG->iomad_allow_username)) {
+            $mform->addElement('text', 'username', get_string('username'), 'size="20"');
+            $mform->addHelpButton('username', 'username', 'auth');
+            $mform->setType('username', PARAM_RAW);
+            $mform->disabledif('username', 'use_email_as_username', 'eq', 1);
+        }
         $mform->addElement('advcheckbox', 'use_email_as_username', get_string('iomad_use_email_as_username', 'local_iomad_settings'));
         if (!empty($CFG->iomad_use_email_as_username)) {
             $mform->setDefault('use_email_as_username', 1);
         } else {
             $mform->setDefault('use_email_as_username', 0);
         }
+
 
         /* /copied from /user/editlib.php */
 
@@ -435,7 +442,7 @@ if ($mform->is_cancelled()) {
     $systemcontext = context_system::instance();
 
     // Check if we are assigning a different role to the user.
-    if (!empty($data->managertype)) {
+    if (!empty($data->managertype) && $CFG->iomad_autoenrol_managers) {
         $companycourseeditorrole = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
         $companycoursenoneditorrole = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
         if ($data->managertype == 2) {

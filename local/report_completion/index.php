@@ -100,6 +100,9 @@ if ($showhistoric) {
 if ($charttype) {
     $params['charttype'] = $charttype;
 }
+if ($completiontype) {
+    $params['completiontype'] = $completiontype;
+}
 
 if ($compfromraw) {
     if (is_array($compfromraw)) {
@@ -152,10 +155,6 @@ $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $strcom
 
 // Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
-
-// Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
@@ -454,7 +453,7 @@ if (!empty($CFG->iomad_report_fields)) {
 if (empty($charttype)) {
     if (!empty($courseid)) {
         // Get the course completion information.
-        $showexpiry = false;
+        $showexpiry = true;
         if ($iomadcourseinfo = $DB->get_record('iomad_courses', array('courseid' => $courseid))) {
             if (!empty($iomadcourseinfo->validlength)) {
                 $showexpiry = true;
@@ -553,11 +552,20 @@ if (empty($charttype)) {
                             .get_string('email', 'local_report_completion').'","'
                             .get_string('course').'","'
                             .get_string('department', 'block_iomad_company_admin').'",';
-            $endcolumns = '"' . get_string('status', 'local_report_completion').'","'
-                          .get_string('timeenrolled', 'local_report_completion').'","'
-                          .get_string('timestarted', 'local_report_completion').'","'
-                          .get_string('timecompleted', 'local_report_completion').'","'
-                          .get_string('finalscore', 'local_report_completion')."\"\n";
+            if (!$showexpiry) {
+                $endcolumns = '"' . get_string('status', 'local_report_completion').'","'
+                              .get_string('timeenrolled', 'local_report_completion').'","'
+                              .get_string('timestarted', 'local_report_completion').'","'
+                              .get_string('timecompleted', 'local_report_completion').'","'
+                              .get_string('finalscore', 'local_report_completion')."\"\n";
+            } else {
+                $endcolumns = '"' . get_string('status', 'local_report_completion').'","'
+                              .get_string('timeenrolled', 'local_report_completion').'","'
+                              .get_string('timestarted', 'local_report_completion').'","'
+                              .get_string('timecompleted', 'local_report_completion').'","'
+                              .get_string('timeexpires', 'local_report_completion').'","'
+                              .get_string('finalscore', 'local_report_completion')."\"\n";
+            }
             $midcolumns = "";
             if (!empty($extrafields)) {
                 foreach ($extrafields as $extrafield) {
@@ -727,6 +735,14 @@ if (empty($charttype)) {
     
         if (empty($idlist['0'])) {
             foreach ($coursedata as $userid => $user) {
+
+                // Get the course info if it's all of them.
+                if ($courseid == 1) {
+                    if (!$iomadcourseinfo = $DB->get_record('iomad_courses', array('courseid' => $user->courseid))) {
+                        $iomadcourseinfo = new stdclass();
+                    }
+                }
+
                 if (empty($user->timestarted)) {
                     $statusstring = get_string('notstarted', 'local_report_completion');
                 } else {
@@ -753,7 +769,7 @@ if (empty($charttype)) {
                     $completetime = "-";
                 }
     
-                if ($showexpiry && !empty($user->timecompleted)) {
+                if ($showexpiry && !empty($user->timecompleted) && !empty($iomadcourseinfo->validlength)) {
                     $expirytime = date($CFG->iomad_date_format, $user->timecompleted + ($iomadcourseinfo->validlength * 24 * 60 * 60) );
                 } else {
                     $expirytime = "-";

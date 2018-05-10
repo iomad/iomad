@@ -88,34 +88,6 @@ class company_edit_form extends company_moodleform {
         $mform->setType('shortname', PARAM_NOTAGS);
         $mform->addRule('shortname', $strrequired, 'required', null, 'client');
 
-        if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
-            // Add the parent company selector.
-            $companies = $DB->get_records_sql_menu("SELECT id,name FROM {company}
-                                            WHERE id != :companyid
-                                            ORDER by name", array('companyid' => $this->companyid));
-            $allcompanies = array('0' => get_string('none')) + $companies;
-            $mform->addElement('select', 'parentid', get_string('parentcompany', 'block_iomad_company_admin'), $allcompanies, array('onchange' => 'this.form.submit()'));
-            $mform->setDefault('parentid', $this->parentcompanyid);
-
-            // Add in the template selector for the company.
-            $templates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
-            $mform->addElement('autocomplete', 'templates', get_string('availabletemplates', 'block_iomad_company_admin'), $templates, array('multiple' => true));
-            $mform->addHelpButton('templates', 'availabletemplates', 'block_iomad_company_admin');   
-
-        } else if (iomad::has_capability('block/iomad_company_admin:company_add_child', $context) && !empty($this->parentcompanyid)) {
-            // Add it as a hidden field.
-            $mform->addElement('hidden', 'parentid', $this->parentcompanyid);
-            foreach ($this->companyrecord->templates as $companytemplateid) {
-                $mform->addElement('hidden', 'templates[' . $companytemplateid . ']', $companytemplateid);
-            }
-        } else {
-            // Add it as a hidden field.
-            $mform->addElement('hidden', 'parentid');
-            foreach ($this->companyrecord->templates as $companytemplateid) {
-                $mform->addElement('hidden', 'templates[' . $companytemplateid . ']', $companytemplateid);
-            }
-        }
-
         $mform->addElement('hidden', 'previousroletemplateid');
 
         // Add the ecommerce selector.
@@ -233,6 +205,10 @@ class company_edit_form extends company_moodleform {
         $mform->setType('companydomains', PARAM_NOTAGS);
         $mform->addHelpButton('companydomains', 'companydomains', 'block_iomad_company_admin');
 
+        $mform->addElement('text', 'hostname', get_string('companyhostname', 'block_iomad_company_admin'));
+        $mform->setType('hostname', PARAM_NOTAGS);
+        $mform->addHelpButton('hostname', 'companyhostname', 'block_iomad_company_admin');
+
         // Add the ecommerce selector.
         if (empty($CFG->commerce_admin_enableall) && iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             $mform->addElement('selectyesno', 'ecommerce', get_string('enableecommerce', 'block_iomad_company_admin'));
@@ -248,7 +224,7 @@ class company_edit_form extends company_moodleform {
                                             WHERE id != :companyid
                                             ORDER by name", array('companyid' => $this->companyid));
             $allcompanies = array('0' => get_string('none')) + $companies;
-            $mform->addElement('select', 'parentid', get_string('parentcompany', 'block_iomad_company_admin'), $allcompanies);
+            $mform->addElement('select', 'parentid', get_string('parentcompany', 'block_iomad_company_admin'), $allcompanies, array('onchange' => 'this.form.submit()'));
             $mform->setDefault('parentid', 0);
             $mform->addHelpButton('parentid', 'parentcompany', 'block_iomad_company_admin');
 
@@ -417,7 +393,7 @@ class company_edit_form extends company_moodleform {
                 $mform->addElement('textarea', 'customcss',
                                     get_string('customcss', 'block_iomad_company_admin'),
                                     'wrap="virtual" rows="20" cols="75"');
-                $mform->setType('customcss', PARAM_TEXT);
+                $mform->setType('customcss', PARAM_RAW);
                 $mform->addElement('iomad_colourpicker', 'headingcolor', get_string('headingcolor', 'block_iomad_company_admin'), 'size="20"');
                 $mform->setType('headingcolor', PARAM_CLEAN);
                 $mform->addElement('iomad_colourpicker', 'maincolor', get_string('maincolor', 'block_iomad_company_admin'), 'size="20"');
@@ -430,7 +406,7 @@ class company_edit_form extends company_moodleform {
                 $mform->setType('companylogo', PARAM_CLEAN);
                 $mform->setType('id_companylogo', PARAM_CLEAN);
                 $mform->addElement('hidden', 'customcss');
-                $mform->setType('customcss', PARAM_TEXT);
+                $mform->setType('customcss', PARAM_RAW);
                 $mform->addElement('hidden', 'headingcolor');
                 $mform->setType('headingcolor', PARAM_CLEAN);
                 $mform->addElement('hidden', 'maincolor');
@@ -443,7 +419,7 @@ class company_edit_form extends company_moodleform {
             $mform->addElement('textarea', 'custommenuitems',
                                 get_string('custommenuitems', 'admin'),
                                 'wrap="virtual" rows="20" cols="75"');
-            $mform->setType('customcss', PARAM_CLEAN);
+            $mform->setType('customcss', PARAM_RAW);
             $mform->addElement('HTML', get_string('configcustommenuitems', 'admin'));
         } else {
                 $mform->addElement('hidden', 'theme', $this->companyrecord->theme);
@@ -451,7 +427,7 @@ class company_edit_form extends company_moodleform {
                 $mform->addElement('hidden', 'companylogo', $this->companyrecord->companylogo);
                 $mform->setType('companylogo', PARAM_CLEAN);
                 $mform->addElement('hidden', 'customcss');
-                $mform->setType('customcss', PARAM_CLEAN);
+                $mform->setType('customcss', PARAM_RAW);
         }
 
         // Only show the certificate section if you have capability.
@@ -596,6 +572,21 @@ class company_edit_form extends company_moodleform {
                 }
                 $foundcompanynamestring = implode(',', $foundcompanyshortnames);
                 $errors['shortname'] = get_string('companyshortnametaken',
+                                                 'block_iomad_company_admin',
+                                                  $foundcompanynamestring);
+            }
+        }
+
+        if (!empty($data['hostname']) && $foundcompanies = $DB->get_records('company', array('hostname' => $data['hostname']))) {
+            if (!empty($this->companyid)) {
+                unset($foundcompanies[$this->companyid]);
+            }
+            if (!empty($foundcompanies)) {
+                foreach ($foundcompanies as $foundcompany) {
+                    $foundcompanyhostnames[] = $foundcompany->hostname;
+                }
+                $foundcompanynamestring = implode(',', $foundcompanyhostnames);
+                $errors['hostname'] = get_string('companyhostnametaken',
                                                  'block_iomad_company_admin',
                                                   $foundcompanynamestring);
             }
@@ -834,6 +825,16 @@ if ($currentcourses = $DB->get_records('company_course',
 // Set up the form.
 $mform = new company_edit_form($PAGE->url, $isadding, $companyid, $companyrecord, $firstcompany, $parentid, $child);
 $companyrecord->templates = array();
+
+// Set the parent company id if it's being passed.
+if (!empty($companyrecord->parentid)) {
+    $companyrecord->currentparentid = $companyrecord->parentid;
+} else {
+    $companyrecord->currentparentid = 0;
+}
+if (!empty($parentid)) {
+    $companyrecord->parentid = $parentid;
+}
 if ($companytemplates = $DB->get_records('company_role_templates_ass', array('companyid' => $companyid), null, 'templateid')) {
     $companyrecord->templates = array_keys($companytemplates);
 }
@@ -858,6 +859,11 @@ if ($mform->is_cancelled()) {
         $catdata->sortorder = $DB->count_records('user_info_category') + 1;
         $catdata->name = $data->shortname;
         $data->profileid = $DB->insert_record('user_info_category', $catdata, false);
+
+        // Deal with leading/trailing spaces
+        $data->name = trim($data->name);
+        $data->shortname = trim($data->shortname);
+        $data->city = trim($data->city);
 
         $companyid = $DB->insert_record('company', $data);
 

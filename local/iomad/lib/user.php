@@ -56,9 +56,13 @@ class company_user {
         $defaults = $company->get_user_defaults();
         $user = (object) array_merge( (array) $defaults, (array) $data);
 
-        $user->username = self::generate_username( $user->email, $data->use_email_as_username );
-        $user->username = clean_param($user->username, PARAM_USERNAME);
-        
+        if (!empty($data->username)) {
+            $user->username = $data->username;
+        } else {
+            $user->username = self::generate_username( $user->email, $data->use_email_as_username );
+            $user->username = clean_param($user->username, PARAM_USERNAME);
+        }
+
         // Deal with the company theme.
         $user->theme = $company->get_theme();
 
@@ -769,6 +773,7 @@ class iomad_user_filter_form extends moodleform {
         $mform->addElement('text', 'lastname', get_string('lastnamefilter', 'local_iomad'), 'size="20"');
         $mform->addElement('text', 'email', get_string('emailfilter', 'local_iomad'), 'size="20"');
         $mform->addElement('hidden', 'departmentid');
+        $mform->addElement('hidden', 'completiontype');
         $mform->addElement('hidden', 'eventid');
         $mform->addElement('hidden', 'courseid');
         $mform->addElement('hidden', 'licenseid');
@@ -777,6 +782,7 @@ class iomad_user_filter_form extends moodleform {
         $mform->setType('lastname', PARAM_CLEAN);
         $mform->setType('email', PARAM_EMAIL);
         $mform->setType('departmentid', PARAM_INT);
+        $mform->setType('completiontype', PARAM_INT);
         $mform->setType('eventid', PARAM_INT);
         $mform->setType('courseid', PARAM_INT);
         $mform->setType('licenseid', PARAM_INT);
@@ -861,14 +867,13 @@ class iomad_user_filter_form extends moodleform {
             $mform->addElement('select', 'licenseusage', get_string('licenseuseage', 'block_iomad_company_admin'), $licenseusagearray);
         }
 
-        if (empty($this->_customdata['adddodownload'])) {
-            $this->add_action_buttons(false, get_string('userfilter', 'local_iomad'));
-        } else {
-            $buttonarray=array();
-            $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('userfilter', 'local_iomad'));
+        $buttonarray=array();
+        $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('userfilter', 'local_iomad'));
+        if (!empty($this->_customdata['adddodownload'])) {
             $buttonarray[] = $mform->createElement('submit', 'dodownload', get_string("downloadcsv", 'local_report_completion'));
-            $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
         }
+        $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
+        $mform->closeHeaderBefore('buttonar');
     }
 
     public function validation($data, $files) {

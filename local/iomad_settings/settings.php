@@ -35,6 +35,11 @@ if ($hassiteconfig) {
                                                 get_string('iomad_use_email_as_username_help', 'local_iomad_settings'),
                                                 0));
 
+    $settings->add(new admin_setting_configcheckbox('iomad_allow_username',
+                                                get_string('iomad_allow_username', 'local_iomad_settings'),
+                                                get_string('iomad_allow_username_help', 'local_iomad_settings'),
+                                                0));
+
     $settings->add(new admin_setting_configcheckbox('iomad_sync_institution',
                                                 get_string('iomad_sync_institution', 'local_iomad_settings'),
                                                 get_string('iomad_sync_institution_help', 'local_iomad_settings'),
@@ -44,6 +49,11 @@ if ($hassiteconfig) {
                                                 get_string('iomad_sync_department', 'local_iomad_settings'),
                                                 get_string('iomad_sync_department', 'local_iomad_settings'),
                                                 0));
+
+    $settings->add(new admin_setting_configcheckbox('iomad_autoenrol_managers',
+                                                get_string('iomad_autoenrol_managers', 'local_iomad_settings'),
+                                                get_string('iomad_autoenrol_managers', 'local_iomad_settings'),
+                                                1));
 
     $dateformats = array('Y-m-d' => 'YYYY-MM-DD',
                          'Y/m/d' => 'YYYY/MM/DD',

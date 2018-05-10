@@ -460,7 +460,7 @@ class company {
      *
      **/
     public function add_course($course, $departmentid=0, $own=false, $licensed=false) {
-        global $DB;
+        global $DB, $CFG;
 
         if ($departmentid != 0 ) {
             // Adding to a specified department.
@@ -484,7 +484,7 @@ class company {
                                                          'shared' => 0));
         }
         // Set up manager roles.
-        if (!$licensed) {
+        if (!$licensed && $CFG->iomad_autoenrol_managers) {
             if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                          WHERE companyid = :companyid
                                                          AND managertype != 0", array('companyid' => $this->id))) {
@@ -2244,9 +2244,12 @@ class company {
      *
      **/
     public static function check_valid_user($companyid, $userid, $deparmentid=0) {
-        global $DB;
+        global $DB, $USER;
 
-        if (is_siteadmin($userid)) {
+        $context = context_system::instance();
+        // If current user is a site admin or they have appropriate capabilities then they can.
+        if (is_siteadmin($USER->id) ||
+            iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             return true;
         }
 
@@ -2283,6 +2286,13 @@ class company {
         }
 
         $context = context_system::instance();
+        $context = context_system::instance();
+        // If current user is a site admin or they have appropriate capabilities then they can.
+        if (is_siteadmin($USER->id) ||
+            iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
+            return true;
+        }
+    
         // Get my companyid.
         $mycompanyid = iomad::get_my_companyid($context);
 
@@ -2294,16 +2304,6 @@ class company {
         // Check if the user is in the company.
         if ($userrec = $DB->get_record('company_users', array('companyid' => $companyid,
                                                               'userid' => $userid))) {
-
-            // If current user is a site admin then they can.
-            if (is_siteadmin($USER->id)) {
-                return true;
-            }
-
-            // Can't edit an admin user here.
-            if (is_siteadmin($userid)) {
-                return false;
-            }
 
             // Check the current user is a manager or not and what levels they can edit.
             if ($manrec = $DB->get_record('company_users', array('companyid' => $companyid,
@@ -2836,6 +2836,7 @@ class company {
         global $DB, $CFG;
 
         $userid = $event->userid;
+        $userlicid = $event->objectid;
         $licenseid = $event->other['licenseid'];
         $courseid = $event->courseid;
         $duedate = $event->other['duedate'];
@@ -2871,6 +2872,44 @@ class company {
 
         // Update the license usage.
         self::update_license_usage($licenseid);
+
+        // Is this an immediate license?
+        if (!empty($licenserecord->immediate)) {
+            if ($instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'license'))) {
+                // Enrol the user on the course.
+                $enrol = enrol_get_plugin('license');
+    
+                // Enrol the user in the course.
+                $timestart = time();
+    
+                if (empty($licenserecord->type)) {
+                    // Set the timeend to be time start + the valid length for the license in days.
+                    $timeend = $timestart + ($licenserecord->validlength * 24 * 60 * 60 );
+                } else {
+                    // Set the timeend to be when the license runs out.
+                    $timeend = $licenserecord->expirydate;
+                }
+    
+                $this->enrol_user($instance, $user->id, $instance->roleid, $timestart, $timeend);
+    
+                // Get the userlicense record.
+                $userlicense = $DB->get_record('companylicense_users', array('id' => $userlicid));
+    
+                // Add the user to the appropriate course group.
+                if (!empty($course->groupmode)) {
+                    $userlicense = $DB->get_record('companylicense_users', array('id' => $userlicid));
+                    self::add_user_to_shared_course($instance->courseid, $user->id, $license->companyid, $userlicense->groupid);
+                }
+    
+                // Update the userlicense record to mark it as in use.
+                $DB->set_field('companylicense_users', 'isusing', 1, array('id' => $userlicense->id));
+    
+                // Send welcome.
+                if ($instance->customint4) {
+                    $this->email_welcome_message($instance, $user);
+                }
+            }
+        }
 
         return true;
     }
@@ -3096,6 +3135,14 @@ class company {
                         $DB->set_field('companylicense', 'allocation', $allocation, array('id' => $child->id));
                     }
                 }  
+
+                // Did we change anything else about the license?
+                $child->validlength = $licenserecord->validlength;
+                $child->expirydate = $licenserecord->expirydate;
+                $child->type = $licenserecord->type;
+                $child->startdate = $licenserecord->startdate;
+                $child->instant = $licenserecord->instant;
+                $DB->update_record('companylicense', $child);
 
                 // Create an event to deal with any child license allocations.
                 $eventother = $event->other;
