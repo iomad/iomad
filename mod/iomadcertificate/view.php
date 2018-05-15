@@ -94,7 +94,7 @@ if (($edit != -1) and $PAGE->user_allowed_editing()) {
 }
 
 // Add block editing button
-if ($PAGE->user_allowed_editing()) {
+if ( empty($action) && $PAGE->user_allowed_editing()) {
     $editvalue = $PAGE->user_is_editing() ? 'off' : 'on';
     $strsubmit = $PAGE->user_is_editing() ? get_string('blockseditoff') : get_string('blocksediton');
     $url = new moodle_url($CFG->wwwroot . '/mod/iomadcertificate/view.php', array('id' => $cm->id, 'edit' => $editvalue));
