@@ -327,7 +327,7 @@ $string['completion_warn_supervisor_name'] = 'User\'s supervisor course completi
 $string['completion_warn_supervisor_subject'] = 'Notice: Course {Course_FullName} has not been completed';
 $string['completion_warn_supervisor_body'] = '<p>{User_FirstName} {User_LastName} has not completed their training in course {Course_FullName} within the normal timeframe</p>';
 
-$string['completion_expiry_warn_description'] = 'Template sent out to a users supervisor email address (if defined) when a user\'s training has expired.';
-$string['completion_expiry_warn_name'] = 'User\'s supervisor training expired warning';
+$string['completion_expiry_warn_supervisor_description'] = 'Template sent out to a users supervisor email address (if defined) when a user\'s training has expired.';
+$string['completion_expiry_warn_supervisor_name'] = 'User\'s supervisor training expired warning';
 $string['completion_expiry_warn_supervisor_subject'] = 'Notice: Course {Course_FullName} training expiry';
 $string['completion_expiry_warn_supervisor_body'] = '<p>The training for {User_FirstName} {User_LastName} in course {Course_FullName} will expiry shortly.  Please arrange for them to retake this training if appropriate.</p>';
