@@ -327,6 +327,9 @@ function email_reports_cron() {
         if (!$company = $DB->get_record('company', array('id' => $compuser->companyid))) {
             continue;
         }
+        if ($DB->get_record('course_completions', array('userid' => $compuser->userid, 'course' => $compuser->courseid, 'timecompleted' => null))) {
+            continue;
+        }
 
         // Deal with parent companies as we only want users in this company.
         $companyobj = new company($company->id);
@@ -358,8 +361,8 @@ function email_reports_cron() {
                                   WHERE userid = :userid
                                   AND courseid = :courseid
                                   AND templatename = :templatename
-                                  AND sent IS NULL
-                                  OR sent > " . $runtime . " - " . $compuser->notifyperiod . " * 86400",
+                                  AND (sent IS NULL
+                                  OR sent > " . $runtime . " - " . $compuser->notifyperiod . " * 86400)",
                                   array('userid' => $compuser->userid,
                                         'courseid' => $compuser->courseid,
                                         'templatename' => 'expiry_warn_user'))) {
