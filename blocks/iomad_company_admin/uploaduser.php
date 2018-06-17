@@ -249,6 +249,7 @@ if ($mform->is_cancelled()) {
         $weakpasswords = 0;
         $numlicenses = 0;
         $numlicenseerrors = 0;
+        $erroredusers[] = array();
 
         // Caches.
         $ccache       = array(); // Course cache - do not fetch all courses here, we  will not probably use them all anyway!
@@ -283,6 +284,7 @@ if ($mform->is_cancelled()) {
         while ($line = $cir->next()) {
             $upt->flush();
             $linenum++;
+            $errornum = 1;
     
             $upt->track('line', $linenum);
     
@@ -321,7 +323,10 @@ if ($mform->is_cancelled()) {
                 if (!isset($user->username)) {
                     $upt->track('status', get_string('missingfield', 'error', 'username'), 'error');
                     $upt->track('username', $errorstr, 'error');
+                    $line[] = get_string('missingfield', 'error', 'username');
                     $userserrors++;
+                    $errornum++;
+                    $erroredusers[] = $line;
                     continue;
                 }
     
@@ -331,15 +336,22 @@ if ($mform->is_cancelled()) {
                 if (!isset($user->firstname) or $user->firstname === '') {
                     $upt->track('status', get_string('missingfield', 'error', 'firstname'), 'error');
                     $upt->track('firstname', $errorstr, 'error');
+                    $line[] = get_string('missingfield', 'error', 'firstname');
+                    $errornum++;
+                    $userserrors++;
                     $error = true;
                 }
                 if (!isset($user->lastname) or $user->lastname === '') {
                     $upt->track('status', get_string('missingfield', 'error', 'lastname'), 'error');
                     $upt->track('lastname', $errorstr, 'error');
+                    $line[] = get_string('missingfield', 'error', 'lastname');
+                    $errornum++;
+                    $userserrors++;
                     $error = true;
                 }
                 if ($error) {
                     $userserrors++;
+                    $erroredusers[] = $line;
                     continue;
                 }
                 // We require username too - we might use template for it though.
@@ -347,7 +359,10 @@ if ($mform->is_cancelled()) {
                     if (!isset($formdata->username) or $formdata->username === '') {
                         $upt->track('status', get_string('missingfield', 'error', 'username'), 'error');
                         $upt->track('username', $errorstr, 'error');
+                        $line[] = get_string('missingfield', 'error', 'username');
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     } else {
                         $user->username = process_template($formdata->username, $user);
@@ -362,7 +377,10 @@ if ($mform->is_cancelled()) {
             if (empty($user->username)) {
                 $upt->track('status', get_string('missingfield', 'error', 'username'), 'error');
                 $upt->track('username', $errorstr, 'error');
+                $line[] = get_string('missingfield', 'error', 'username');
+                $errornum++;
                 $userserrors++;
+                $erroredusers[] = $line;
                 continue;
             }
     
@@ -528,13 +546,19 @@ if ($mform->is_cancelled()) {
     
                 if (is_siteadmin($user->id)) {
                     $upt->track('status', $strusernotupdatedadmin, 'error');
+                    $line[] = $strusernotupdatedadmin;
+                    $errornum++;
                     $userserrors++;
+                    $erroredusers[] = $line;
                     continue;
                 }
 
                 if (!company::check_can_manage($user->id)) {
                     $upt->track('status', $strcantmanageuser, 'error');
+                    $line[] = $strcantmanageuser;
+                    $errornum++;
                     $userserrors++;
+                    $erroredusers[] = $line;
                     continue;
                 }
 
@@ -574,7 +598,10 @@ if ($mform->is_cancelled()) {
                                         if ($noemailduplicates) {
                                             $upt->track('email', $stremailduplicate, 'error');
                                             $upt->track('status', $strusernotupdated, 'error');
+                                            $line[] = $stremailduplicate;
+                                            $errornum++;
                                             $userserrors++;
+                                            $erroredusers[] = $line;
                                             continue 2;
                                         } else {
                                             $upt->track('email', $stremailduplicate, 'warning');
@@ -626,7 +653,10 @@ if ($mform->is_cancelled()) {
                     if (!in_array($existinguser->auth, $availableauths)) {
                         $upt->track('auth', get_string('userautherror', 'error', $existinguser->auth), 'error');
                         $upt->track('status', $strusernotupdated, 'error');
+                        $line[] = get_string('userautherror', 'error', $existinguser->auth);
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     } else if (!in_array($existinguser->auth, $allowedauths)) {
                         $upt->track('auth', $struserauthunsupported, 'warning');
@@ -638,7 +668,10 @@ if ($mform->is_cancelled()) {
                     if ($isinternalauth && $updatepasswords && !check_password_policy($user->password, $errmsg)) {
                         $upt->track('password', get_string('internalauthpassworderror', 'error', $existinguser->password), 'error');
                         $upt->track('status', $strusernotupdated, 'error');
+                        $line[] = get_string('internalauthpassworderror', 'error', $existinguser->password);
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     } else {
                         $forcechangepassword = true;
@@ -705,12 +738,18 @@ if ($mform->is_cancelled()) {
                     if (empty($user->password)) {
                         $upt->track('password', get_string('missingfield', 'error', 'password'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('missingfield', 'error', 'password');
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     } else if ($forcechangepassword) {
                         $upt->track('password', $strinvalidpasswordpolicy);
                         $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = $strinvalidpasswordpolicy;
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     }
                 }
@@ -720,7 +759,10 @@ if ($mform->is_cancelled()) {
                     if (!in_array($user->auth, $availableauths)) {
                         $upt->track('auth', get_string('userautherror', 'error', $user->auth), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('userautherror', 'error', $user->auth);
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     } else if (!in_array($user->auth, $allowedauths)) {
                         $upt->track('auth', $struserauthunsupported, 'warning');
@@ -731,7 +773,10 @@ if ($mform->is_cancelled()) {
                     if ($noemailduplicates) {
                         $upt->track('email', $stremailduplicate, 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = $stremailduplicate;
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     } else {
                         $upt->track('email', $stremailduplicate, 'warning');
@@ -766,12 +811,22 @@ if ($mform->is_cancelled()) {
                 if (!empty($user->department)) {
                     if (!$department = $DB->get_record('department', array('company' => $company->id,
                                                                            'shortname' => $user->department))) {
+                        $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
+                        $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     }
                     // Make sure the user can manage this department.
                     if (!company::can_manage_department($department->id)) {
+                        $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
+                        $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
+                        $errornum++;
                         $userserrors++;
+                        $erroredusers[] = $line;
                         continue;
                     }
                 }
@@ -932,6 +987,16 @@ if ($mform->is_cancelled()) {
         $cir->close();
         $cir->cleanup(true);
     
+        // Deal with any erroring users.
+        if (!empty($erroredusers)) {
+            echo get_string('erroredusers', 'block_iomad_company_admin');
+            $erroredtable = new html_table();
+            foreach ($erroredusers as $erroreduser) {
+                $erroredtable->data[] = $erroreduser;
+            }
+            echo html_writer::table($erroredtable);
+        }
+
         echo $output->box_start('boxwidthnarrow boxaligncenter generalbox', 'uploadresults');
         echo '<p>';
         if ($optype != UU_UPDATE) {
