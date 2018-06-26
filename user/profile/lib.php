@@ -441,6 +441,8 @@ function profile_definition($mform, $userid = 0) {
     $update = has_capability('moodle/user:update', context_system::instance());
 
     if ($categories = $DB->get_records('user_info_category', null, 'sortorder ASC')) {
+        // IOMAD: filter out categories the user shouldn't see.
+        $categories = iomad::iomad_filter_categories($categories, $userid);
         foreach ($categories as $category) {
             if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
 
