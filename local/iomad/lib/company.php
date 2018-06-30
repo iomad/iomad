@@ -2483,6 +2483,92 @@ class company {
     /***  Event Handlers  ***/
 
     /**
+     * Triggered via company_created event.
+     *
+     * @param \core\event\company_created $event
+     * @return bool true on success.
+     */
+    public static function company_created(\core\event\company_created $event) {
+        global $CFG;
+
+        $companyid = $event->other['companyid'];
+        if (!$company = new company($companyid)) {
+            return;
+        }
+
+        if ($CFG->commerce_enable_external) {
+            // Fire off the payload to the external site.
+            iomad_commerce::update_company($company);
+        }
+
+        return true;
+    }
+
+    /**
+     * Triggered via company_suspended event.
+     *
+     * @param \block_iomad_company_user\event\company_suspended $event
+     * @return bool true on success.
+     */
+    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
+        global $DB, $CFG;
+
+        $companyid = $event->other['companyid'];
+
+        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
+            return;
+        }
+
+        $suspendcompany = new company($companyid);
+        $suspendcompany->suspend(true);
+
+        return true;
+    }
+
+    /**
+     * Triggered via company_unsuspended event.
+     *
+     * @param \block_iomad_company_user\event\company_unsuspended $event
+     * @return bool true on success.
+     */
+    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
+        global $DB, $CFG;
+
+        $companyid = $event->other['companyid'];
+
+        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
+            return;
+        }
+
+        $suspendcompany = new company($companyid);
+        $suspendcompany->suspend(false);
+
+        return true;
+    }
+
+    /**
+     * Triggered via company_updated event.
+     *
+     * @param \core\event\company_updated $event
+     * @return bool true on success.
+     */
+    public static function company_updated(\core\event\company_updated $event) {
+        global $CFG;
+
+        $companyid = $event->other['companyid'];
+        if (!$company = new company($companyid)) {
+            return;
+        }
+
+        if ($CFG->commerce_enable_external) {
+            // Fire off the payload to the external site.
+            iomad_commerce::update_company($company);
+        }
+
+        return true;
+    }
+
+    /**
      * Triggered via competency_framework_created event.
      *
      * @param \core\event\competency_framework_created $event
@@ -2668,6 +2754,26 @@ class company {
     }
 
     /**
+     * Triggered via user_created event.
+     *
+     * @param \core\event\user_created $event
+     * @return bool true on success.
+     */
+    public static function user_created(\core\event\user_created $event) {
+        global $DB, $CFG;
+
+        $userid = $event->objectid;
+        $user = $DB->get_record('user', array('id' => $userid));
+
+        if ($CFG->commerce_enable_external) {
+            // Fire off the payload to the external site.
+            iomad_commerce::update_user($user);
+        }
+
+        return true;
+    }
+
+    /**
      * Triggered via user_deleted event.
      *
      * @param \core\event\user_deleted $event
@@ -2798,6 +2904,12 @@ class company {
         foreach ($childcompanies as $child) {
             $childcompany = new company($child->id);
             $childcompany->assign_user_to_company($userid, 0, $event->other['usertype'], true);
+        }
+
+        $user = $DB->get_record('user', array('id' => $userid));
+        if ($CFG->commerce_enable_external) {
+            // Fire off the payload to the external site.
+            iomad_commerce::assign_user($user, $company);
         }
 
         return true;
@@ -3108,6 +3220,22 @@ class company {
                     }
                 }
             }
+            if (isset($event->other['educatorchange']) && $licenserecord->type > 1) {
+                //We have switched from an ordinary license to an educator one.
+                // Remove all of the users who have the license and haven't used it.
+                // Rest can be sorted out by the admin.
+                if ($noneducators = $DB->get_records_sql("SELECT clu.* FROM {company_license_users}
+                                                          WHERE licenseid = :licenseid
+                                                          AND isusing = 0 AND userid IN (
+                                                              SELECT userid FROM {company_users}
+                                                              WHERE companyid = :companyid
+                                                              AND educator = 0)",
+                                                          array('licenseid' => $licenseid, 'companyid' => $licenserecord->companyid))) {
+                    foreach ($noneducators as $noneducator) {
+                        $DB->delete_records('company_license_users', array('id' => $noneducator));
+                    }
+                }
+            }
         }
 
         // Update the license usage.
@@ -3119,7 +3247,7 @@ class company {
         }
 
         // Update the timeend for any users using this license.
-        if (!empty($licenserecord->type)) {
+        if ($licenserecord->type == 1 || $licenserecord->type == 3) {
             // This is a subscription license.
             // Update the enrolment end
             if ($enrolments = $DB->get_records_sql("SELECT e.id FROM {enrol} e
@@ -3172,6 +3300,9 @@ class company {
                 $eventother['licenseid'] = $child->id;
                 $eventother['parentid'] = $licenseid;
                 $eventother['oldcourses'] = json_encode($oldcourses);
+                if (isset($event->other['educatorchange'])) {
+                    $eventother['educatorchange'] = true;
+                }
 
                 $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => context_system::instance(),
                                                                                                 'userid' => $event->userid,
@@ -3202,48 +3333,6 @@ class company {
 
         // Update the license usage.
         self::update_license_usage($parentid);
-
-        return true;
-    }
-
-    /**
-     * Triggered via company_suspended event.
-     *
-     * @param \block_iomad_company_user\event\company_suspended $event
-     * @return bool true on success.
-     */
-    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->other['companyid'];
-
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $suspendcompany = new company($companyid);
-        $suspendcompany->suspend(true);
-
-        return true;
-    }
-
-    /**
-     * Triggered via company_unsuspended event.
-     *
-     * @param \block_iomad_company_user\event\company_unsuspended $event
-     * @return bool true on success.
-     */
-    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->other['companyid'];
-
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $suspendcompany = new company($companyid);
-        $suspendcompany->suspend(false);
 
         return true;
     }
