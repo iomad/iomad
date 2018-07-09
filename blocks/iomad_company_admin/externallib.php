@@ -1545,7 +1545,7 @@ class block_iomad_company_admin_external extends external_api {
                                         'courseid' => new external_value(PARAM_INT, 'The course to enrol the user role in'),
                                         'timestart' => new external_value(PARAM_INT, 'Timestamp when the enrolment start', VALUE_OPTIONAL),
                                         'timeend' => new external_value(PARAM_INT, 'Timestamp when the enrolment end', VALUE_OPTIONAL),
-                                        'suspend' => new external_value(PARAM_INT, 'set to 1 to suspend the enrolment', VALUE_OPTIONAL)
+                                        'suspend' => new external_value(PARAM_INT, 'set to 1 to suspend the enrolment', VALUE_OPTIONAL),
                                         'quantity' => new external_value(PARAM_INT, 'Number of items purchased.', VALUE_OPTIONAL)
                                     )
                             )
@@ -1612,7 +1612,7 @@ class block_iomad_company_admin_external extends external_api {
 
                 // Create the license record.
                 $licenserec = array('name' => $enrolment['userid'] . '-' . $enrolment['courseid'] . '-' . $enrolment['timestart'],
-                                    'allocation' => $enrolment['quantity',
+                                    'allocation' => $enrolment['quantity'],
                                     'validlength' => $shelflife,
                                     'startdate' => $enrolment['timestart'],
                                     'expirydate' => $enrolment['timeend'],
