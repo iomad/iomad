@@ -348,7 +348,7 @@ class company {
      **/
     public static function get_company_byuserid($userid) {
         global $DB;
-        $companies = $DB->get_record_sql("SELECT c.* FROM {company_users} cu
+        $companies = $DB->get_records_sql("SELECT c.* FROM {company_users} cu
                                           INNER JOIN {company} c ON cu.companyid = c.id
                                           WHERE cu.userid = :userid
                                           ORDER BY cu.id",
