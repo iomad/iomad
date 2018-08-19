@@ -217,7 +217,20 @@ class report_completion {
                           ON (cc.course = gi.courseid
                           AND gi.itemtype = 'course')
                           LEFT JOIN {grade_grades} gg ON (gg.userid = cc.userid AND gi.id = gg.itemid)
-                          WHERE ra.roleid = " . $studentrole->id;
+                          WHERE cc.timecompleted is NULL AND ra.roleid = " . $studentrole->id;
+
+        if (!empty($courseid)) {
+            $tempcreatesql .= " AND cc.course = ".$courseid;
+        }
+        $DB->execute($tempcreatesql);
+
+        // Populate it.
+        $tempcreatesql = "INSERT INTO {".$tempcomptablename."} (userid, courseid, timeenrolled, timestarted, timecompleted, finalscore, certsource)
+                          SELECT lit.userid, lit.courseid, lit.timeenrolled, lit.timestarted, lit.timecompleted, lit.finalscore, lit.id
+                          FROM {".$tempusertablename."} tut
+                          JOIN {local_iomad_track} lit ON (tut.userid = lit.userid)
+                          JOIN {course_completions} cc ON (lit.userid = cc.userid AND lit.courseid = cc.course AND lit.timecompleted = cc.timecompleted)
+                          WHERE cc.timecompleted IS NOT NULL";
 
         if (!empty($courseid)) {
             $tempcreatesql .= " AND cc.course = ".$courseid;

@@ -215,7 +215,19 @@ class userrep {
                           AND gi.itemtype = 'course')
                           JOIN {user_enrolments} ue ON (cc.userid = ue.userid)
                           JOIN {enrol} e ON (cc.course = e.courseid AND e.id = ue.enrolid)
-                          WHERE cc.userid = :userid ";
+                          WHERE  cc.timecompleted is NULL AND cc.userid = :userid ";
+        if (!empty($courseid)) {
+            $tempcreatesql .= " AND cc.course = ".$courseid;
+        }
+        $DB->execute($tempcreatesql, array('userid' => $userid, 'courseid' => $courseid));
+
+        // Populate it.
+        $tempcreatesql = "INSERT INTO {".$tempcomptablename."} (userid, courseid, timeenrolled, timestarted, timecompleted, finalscore, certsource)
+                          SELECT lit.userid, lit.courseid, lit.timeenrolled, lit.timestarted, lit.timecompleted, lit.finalscore, lit.id
+                          FROM {local_iomad_track} lit
+                          JOIN {course_completions} cc ON (lit.userid = cc.userid AND lit.courseid = cc.course AND lit.timecompleted = cc.timecompleted)
+                          WHERE cc.timecompleted IS NOT NULL AND cc.userid = :userid";
+
         if (!empty($courseid)) {
             $tempcreatesql .= " AND cc.course = ".$courseid;
         }
