@@ -76,8 +76,11 @@ select {
             }
         }
 
+        .author .media-body {
+            width: auto;
+        }
+
         .discussion {
-            .author,
             .replies,
             .lastpost {
                 white-space: normal;
@@ -91,8 +94,6 @@ select {
             .topic,
             .discussionsubscription,
             .topic.starter,
-            .picture,
-            .author,
             .replies,
             .lastpost {
                 vertical-align: top;
@@ -240,10 +241,22 @@ div#dock {
 .path-mod-lesson .answeroption .checkbox label p {
     display: inline;
 }
+.path-mod-lesson .slideshow {
+    overflow: auto;
+    padding: 15px;
+}
 #page-mod-lesson-view .branchbuttoncontainer .singlebutton button[type="submit"] {
     white-space: normal;
 }
-
+#page-mod-lesson-view {
+    .vertical .singlebutton {
+        display: block;
+        + .singlebutton {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+    }
+}
 .path-mod-wiki .wiki_headingtitle,
 .path-mod-wiki .midpad,
 .path-mod-wiki .wiki_headingtime {

@@ -1233,29 +1233,35 @@ class flexible_table {
             switch ($column) {
 
                 case 'fullname':
-                // Check the full name display for sortable fields.
-                $nameformat = $CFG->fullnamedisplay;
-                if ($nameformat == 'language') {
-                    $nameformat = get_string('fullnamedisplay');
-                }
-                $requirednames = order_in_string(get_all_user_name_fields(), $nameformat);
-
-                if (!empty($requirednames)) {
-                    if ($this->is_sortable($column)) {
-                        // Done this way for the possibility of more than two sortable full name display fields.
-                        $this->headers[$index] = '';
-                        foreach ($requirednames as $name) {
-                            $sortname = $this->sort_link(get_string($name),
-                                    $name, $primarysortcolumn === $name, $primarysortorder);
-                            $this->headers[$index] .= $sortname . ' / ';
-                        }
-                        $helpicon = '';
-                        if (isset($this->helpforheaders[$index])) {
-                            $helpicon = $OUTPUT->render($this->helpforheaders[$index]);
-                        }
-                        $this->headers[$index] = substr($this->headers[$index], 0, -3). $helpicon;
+                    // Check the full name display for sortable fields.
+                    if (has_capability('moodle/site:viewfullnames', context_system::instance())) {
+                        $nameformat = $CFG->alternativefullnameformat;
+                    } else {
+                        $nameformat = $CFG->fullnamedisplay;
                     }
-                }
+
+                    if ($nameformat == 'language') {
+                        $nameformat = get_string('fullnamedisplay');
+                    }
+
+                    $requirednames = order_in_string(get_all_user_name_fields(), $nameformat);
+
+                    if (!empty($requirednames)) {
+                        if ($this->is_sortable($column)) {
+                            // Done this way for the possibility of more than two sortable full name display fields.
+                            $this->headers[$index] = '';
+                            foreach ($requirednames as $name) {
+                                $sortname = $this->sort_link(get_string($name),
+                                        $name, $primarysortcolumn === $name, $primarysortorder);
+                                $this->headers[$index] .= $sortname . ' / ';
+                            }
+                            $helpicon = '';
+                            if (isset($this->helpforheaders[$index])) {
+                                $helpicon = $OUTPUT->render($this->helpforheaders[$index]);
+                            }
+                            $this->headers[$index] = substr($this->headers[$index], 0, -3). $helpicon;
+                        }
+                    }
                 break;
 
                 case 'userpic':
@@ -1263,14 +1269,14 @@ class flexible_table {
                 break;
 
                 default:
-                if ($this->is_sortable($column)) {
-                    $helpicon = '';
-                    if (isset($this->helpforheaders[$index])) {
-                        $helpicon = $OUTPUT->render($this->helpforheaders[$index]);
+                    if ($this->is_sortable($column)) {
+                        $helpicon = '';
+                        if (isset($this->helpforheaders[$index])) {
+                            $helpicon = $OUTPUT->render($this->helpforheaders[$index]);
+                        }
+                        $this->headers[$index] = $this->sort_link($this->headers[$index],
+                                $column, $primarysortcolumn == $column, $primarysortorder) . $helpicon;
                     }
-                    $this->headers[$index] = $this->sort_link($this->headers[$index],
-                            $column, $primarysortcolumn == $column, $primarysortorder) . $helpicon;
-                }
             }
 
             $attributes = array(
@@ -1499,9 +1505,9 @@ class table_sql extends flexible_table {
      * method or if other_cols returns NULL then put the data straight into the
      * table.
      *
-     * @return void
+     * After calling this function, don't forget to call close_recordset.
      */
-    function build_table() {
+    public function build_table() {
 
         if ($this->rawdata instanceof \Traversable && !$this->rawdata->valid()) {
             return;
@@ -1515,10 +1521,16 @@ class table_sql extends flexible_table {
             $this->add_data_keyed($formattedrow,
                 $this->get_row_class($row));
         }
+    }
 
-        if ($this->rawdata instanceof \core\dml\recordset_walk ||
-                $this->rawdata instanceof moodle_recordset) {
+    /**
+     * Closes recordset (for use after building the table).
+     */
+    public function close_recordset() {
+        if ($this->rawdata && ($this->rawdata instanceof \core\dml\recordset_walk ||
+                $this->rawdata instanceof moodle_recordset)) {
             $this->rawdata->close();
+            $this->rawdata = null;
         }
     }
 
@@ -1629,6 +1641,7 @@ class table_sql extends flexible_table {
         $this->setup();
         $this->query_db($pagesize, $useinitialsbar);
         $this->build_table();
+        $this->close_recordset();
         $this->finish_output();
     }
 }

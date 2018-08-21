@@ -1183,6 +1183,7 @@ function xmldb_main_upgrade($oldversion) {
             $i++;
             $pbar->update($i, $total, "Updating duplicate question category stamp - $i/$total.");
         }
+        $rs->close();
         unset($usedstamps);
 
         // The uniqueness of each (contextid, stamp) pair is now guaranteed, so add the unique index to stop future duplicates.
@@ -2847,6 +2848,27 @@ function xmldb_main_upgrade($oldversion) {
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2017111302.12);
+    }
+
+    if ($oldversion < 2017111303.07) {
+        // Add foreign key fk_user to the comments table.
+        $table = new xmldb_table('comments');
+        $key = new xmldb_key('fk_user', XMLDB_KEY_FOREIGN, array('userid'), 'user', array('id'));
+        $dbman->add_key($table, $key);
+
+        upgrade_main_savepoint(true, 2017111303.07);
+    }
+
+    if ($oldversion < 2017111303.08) {
+        // Add composite index ix_concomitem to the table comments.
+        $table = new xmldb_table('comments');
+        $index = new xmldb_index('ix_concomitem', XMLDB_INDEX_NOTUNIQUE, array('contextid', 'commentarea', 'itemid'));
+
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_main_savepoint(true, 2017111303.08);
     }
 
     return true;

@@ -1905,9 +1905,9 @@ class core_plugin_manager {
 
             'tool' => array(
                 'analytics', 'assignmentupgrade', 'availabilityconditions', 'behat', 'capability', 'cohortroles', 'customlang',
-                'dbtransfer', 'filetypes', 'generator', 'health', 'httpsreplace', 'innodb', 'installaddon',
+                'dataprivacy', 'dbtransfer', 'filetypes', 'generator', 'health', 'httpsreplace', 'innodb', 'installaddon',
                 'langimport', 'log', 'lp', 'lpimportcsv', 'lpmigrate', 'messageinbound', 'mobile', 'multilangupgrade',
-                'monitor', 'oauth2', 'phpunit', 'profiling', 'recyclebin', 'replace', 'spamcleaner', 'task', 'templatelibrary',
+                'monitor', 'oauth2', 'phpunit', 'policy', 'profiling', 'recyclebin', 'replace', 'spamcleaner', 'task', 'templatelibrary',
                 'uploadcourse', 'uploaduser', 'unsuproles', 'usertours', 'xmldb'
             ),
 
