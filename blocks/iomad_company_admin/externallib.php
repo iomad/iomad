@@ -1289,6 +1289,8 @@ class block_iomad_company_admin_external extends external_api {
                     new external_single_structure(
                         array(
                              'name' => new external_value(PARAM_TEXT, 'License name'),
+                             'type' => new external_value(PARAM_INT, 'License type'),
+                             'program' => new external_value(PARAM_BOOL, 'Program of courses'),
                              'allocation' => new external_value(PARAM_INT, 'Number of license slots'),
                              'validlength' => new external_value(PARAM_INT, 'Course access length (days)'),
                              'startdate' => new external_value(PARAM_INT, 'Date from which the liucense is available (int = timestamp) '),
@@ -1332,6 +1334,10 @@ class block_iomad_company_admin_external extends external_api {
 
         foreach ($params['licenses'] as $license) {
 
+            // deal with the license quantity for program of courses
+            if(!empty($license->program)) {
+                $license->allocation = $license->allocation * count($license->courses);
+            }
             // Create the License record
             $licenseid = $DB->insert_record('companylicense', $license);
 
@@ -1340,7 +1346,7 @@ class block_iomad_company_admin_external extends external_api {
                 $DB->insert_record('companylicense_courses', array('licenseid' => $licenseid,
                                                                           'courseid' => $course['courseid']));
             }
-
+   
             // Create an event to deal with an parent license allocations.
             $newlicense = $DB->get_record('companylicense', array('id' => $licenseid));
             $eventother = array('licenseid' => $licenseid,
@@ -1371,6 +1377,8 @@ class block_iomad_company_admin_external extends external_api {
                 array(
                      'id' => new external_value(PARAM_INT, 'license ID'),
                      'name' => new external_value(PARAM_TEXT, 'License name'),
+                     'type' => new external_value(PARAM_INT, 'License type'),
+                     'program' => new external_value(PARAM_BOOL, 'Program of courses'),
                      'allocation' => new external_value(PARAM_INT, 'Number of license slots'),
                      'validlength' => new external_value(PARAM_INT, 'Course access length (days)'),
                      'startdate' => new external_value(PARAM_INT, 'Date from which the liucense is available (int = timestamp) '),
@@ -1404,6 +1412,8 @@ class block_iomad_company_admin_external extends external_api {
                         array(
                              'id' => new external_value(PARAM_INT, 'license ID'),
                              'name' => new external_value(PARAM_TEXT, 'License name'),
+                             'type' => new external_value(PARAM_INT, 'License type'),
+                             'program' => new external_value(PARAM_BOOL, 'Program of courses'),
                              'allocation' => new external_value(PARAM_INT, 'Number of license slots'),
                              'validlength' => new external_value(PARAM_INT, 'Course access length (days)'),
                              'expirydate' => new external_value(PARAM_INT, 'License expiry date'),
