@@ -1335,9 +1335,10 @@ class block_iomad_company_admin_external extends external_api {
         foreach ($params['licenses'] as $license) {
 
             // deal with the license quantity for program of courses
-            if(!empty($license->program)) {
-                $license->allocation = $license->allocation * count($license->courses);
-            }
+	        if($license['program'] == TRUE) {
+		        $license['allocation'] = $license['allocation'] * count($license['courses']);
+	        }
+            
             // Create the License record
             $licenseid = $DB->insert_record('companylicense', $license);
 
