@@ -79,7 +79,7 @@ class block_iomad_company_admin extends block_base {
      * Check company status when accessing this block
      */
     private function check_company_status() {
-        global $SESSION, $DB;
+        global $SESSION, $DB, $USER;
 
         $systemcontext = context_system::instance();
 
@@ -93,8 +93,9 @@ class block_iomad_company_admin extends block_base {
         $SESSION->showsuspendedcompanies = $showsuspendedcompanies;
 
         // Set the session to a user if they are editing a company other than their own.
-        if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)
-            || $DB->get_record('company_users', array('managertype' => 1, 'companyid' => $company, 'userid' => $USER->id)))) {
+        $admin = iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext);
+        if (!empty($company) && ( $admin
+                        || $DB->get_record('company_users', array('managertype' => 1, 'companyid' => $company, 'userid' => $USER->id)))) {
             $SESSION->currenteditingcompany = $company;
         }
 
@@ -108,10 +109,15 @@ class block_iomad_company_admin extends block_base {
         // If we don't have one selected pick the first of these.
         if (empty($SESSION->currenteditingcompany)) {
             // Otherwise, make the first (or only) company the current one
-            $companies = $DB->get_records('company');
-            $firstcompany = reset($companies);
-            $SESSION->currenteditingcompany = $firstcompany->id;
-            $company = $firstcompany->id;
+            if ($admin) {
+                $companies = $DB->get_records('company');
+            } else {
+                $companies = $DB->get_records('company_users', array('userid' => $USER->id), 'id', 'id,companyid', 0, 1);
+            }
+            if (!empty($companies)) {
+                $firstcompany = reset($companies);
+                $SESSION->currenteditingcompany = $firstcompany->companyid;
+            }
         }
     }
 
