@@ -736,8 +736,8 @@ function get_module_metadata($course, $modnames, $sectionreturn = null) {
 
                     if (!empty($type->help)) {
                         $subtype->help = $type->help;
-                    } else if (get_string_manager()->string_exists('help' . $subtype->name, $modname)) {
-                        $subtype->help = get_string('help' . $subtype->name, $modname);
+                    } else if (get_string_manager()->string_exists('help' . $typename, $modname)) {
+                        $subtype->help = get_string('help' . $typename, $modname);
                     }
                     $subtype->link = new moodle_url($urlbase, array('add' => $modname, 'type' => $typename));
                     $subtype->name = $modname . ':' . $subtype->link;
@@ -1217,6 +1217,9 @@ function course_delete_module($cmid, $async = false) {
             $grade_item->delete('moddelete');
         }
     }
+
+    // Delete associated blogs and blog tag instances.
+    blog_remove_associations_for_module($modcontext->id);
 
     // Delete completion and availability data; it is better to do this even if the
     // features are not turned on, in case they were turned on previously (these will be
@@ -3751,6 +3754,41 @@ function core_course_inplace_editable($itemtype, $itemid, $newvalue) {
     if ($itemtype === 'activityname') {
         return \core_course\output\course_module_name::update($itemid, $newvalue);
     }
+}
+
+/**
+ * This function calculates the minimum and maximum cutoff values for the timestart of
+ * the given event.
+ *
+ * It will return an array with two values, the first being the minimum cutoff value and
+ * the second being the maximum cutoff value. Either or both values can be null, which
+ * indicates there is no minimum or maximum, respectively.
+ *
+ * If a cutoff is required then the function must return an array containing the cutoff
+ * timestamp and error string to display to the user if the cutoff value is violated.
+ *
+ * A minimum and maximum cutoff return value will look like:
+ * [
+ *     [1505704373, 'The date must be after this date'],
+ *     [1506741172, 'The date must be before this date']
+ * ]
+ *
+ * @param calendar_event $event The calendar event to get the time range for
+ * @param stdClass $course The course object to get the range from
+ * @return array Returns an array with min and max date.
+ */
+function core_course_core_calendar_get_valid_event_timestart_range(\calendar_event $event, $course) {
+    $mindate = null;
+    $maxdate = null;
+
+    if ($course->startdate) {
+        $mindate = [
+            $course->startdate,
+            get_string('errorbeforecoursestart', 'calendar')
+        ];
+    }
+
+    return [$mindate, $maxdate];
 }
 
 /**

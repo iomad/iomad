@@ -208,10 +208,10 @@ class external_api {
             // Do not allow access to write or delete webservices as a public user.
             if ($externalfunctioninfo->loginrequired) {
                 if (defined('NO_MOODLE_COOKIES') && NO_MOODLE_COOKIES && !PHPUNIT_TEST) {
-                    throw new moodle_exception('servicenotavailable', 'webservice');
+                    throw new moodle_exception('servicerequireslogin', 'webservice');
                 }
                 if (!isloggedin()) {
-                    throw new moodle_exception('servicenotavailable', 'webservice');
+                    throw new moodle_exception('servicerequireslogin', 'webservice');
                 } else {
                     require_sesskey();
                 }
@@ -380,8 +380,9 @@ class external_api {
                     return (bool)$response;
                 }
             }
+            $responsetype = gettype($response);
             $debuginfo = 'Invalid external api response: the value is "' . $response .
-                    '", the server was expecting "' . $description->type . '" type';
+                    '" of PHP type "' . $responsetype . '", the server was expecting "' . $description->type . '" type';
             try {
                 return validate_param($response, $description->type, $description->allownull, $debuginfo);
             } catch (invalid_parameter_exception $e) {

@@ -275,7 +275,10 @@ class assign {
     public function get_return_params() {
         global $PAGE;
 
-        $params = $PAGE->url->params();
+        $params = array();
+        if (!WS_SERVER) {
+            $params = $PAGE->url->params();
+        }
         unset($params['id']);
         unset($params['action']);
         return $params;
@@ -1329,9 +1332,9 @@ class assign {
             // Now process the event.
             if ($event->id) {
                 $calendarevent = calendar_event::load($event->id);
-                $calendarevent->update($event);
+                $calendarevent->update($event, false);
             } else {
-                calendar_event::create($event);
+                calendar_event::create($event, false);
             }
         } else {
             $DB->delete_records('event', array('modulename' => 'assign', 'instance' => $instance->id,
@@ -1350,9 +1353,9 @@ class assign {
             // Now process the event.
             if ($event->id) {
                 $calendarevent = calendar_event::load($event->id);
-                $calendarevent->update($event);
+                $calendarevent->update($event, false);
             } else {
-                calendar_event::create($event);
+                calendar_event::create($event, false);
             }
         } else {
             $DB->delete_records('event', array('modulename' => 'assign', 'instance' => $instance->id,
@@ -2369,6 +2372,7 @@ class assign {
         // Submissions are included if all are true:
         //   - The assignment is visible in the gradebook.
         //   - No previous notification has been sent.
+        //   - The grader was a real user, not an automated process.
         //   - If marking workflow is not enabled, the grade was updated in the past 24 hours, or
         //     if marking workflow is enabled, the workflow state is at 'released'.
         $sql = "SELECT g.id as gradeid, a.course, a.name, a.blindmarking, a.revealidentities,
@@ -2382,7 +2386,7 @@ class assign {
             LEFT JOIN {assign_user_mapping} um ON g.id = um.userid AND um.assignment = a.id
                  WHERE ((a.markingworkflow = 0 AND g.timemodified >= :yesterday AND g.timemodified <= :today) OR
                         (a.markingworkflow = 1 AND uf.workflowstate = :wfreleased)) AND
-                       uf.mailed = 0 AND gri.hidden = 0
+                       g.grader > 0 AND uf.mailed = 0 AND gri.hidden = 0
               ORDER BY a.course, cm.id";
 
         $params = array(
@@ -3712,7 +3716,8 @@ class assign {
                 $grade->timemodified = $grade->timecreated;
             }
             $grade->grade = -1;
-            $grade->grader = $USER->id;
+            // Do not set the grader id here as it would be the admin users which is incorrect.
+            $grade->grader = -1;
             if ($attemptnumber >= 0) {
                 $grade->attemptnumber = $attemptnumber;
             }
@@ -5098,8 +5103,10 @@ class assign {
                     $gradefordisplay = $this->display_grade($gradebookgrade->grade, false);
                 }
                 $gradeddate = $gradebookgrade->dategraded;
-                if (isset($grade->grader)) {
+                if (isset($grade->grader) && $grade->grader > 0) {
                     $grader = $DB->get_record('user', array('id' => $grade->grader));
+                } else if (isset($gradebookgrade->usermodified) && $gradebookgrade->usermodified > 0) {
+                    $grader = $DB->get_record('user', array('id' => $gradebookgrade->usermodified));
                 }
             }
 
@@ -5260,10 +5267,12 @@ class assign {
             // First lookup the grader info.
             if (isset($gradercache[$grade->grader])) {
                 $grade->grader = $gradercache[$grade->grader];
-            } else {
+            } else if ($grade->grader > 0) {
                 // Not in cache - need to load the grader record.
                 $grade->grader = $DB->get_record('user', array('id'=>$grade->grader));
-                $gradercache[$grade->grader->id] = $grade->grader;
+                if ($grade->grader) {
+                    $gradercache[$grade->grader->id] = $grade->grader;
+                }
             }
 
             // Now get the gradefordisplay.

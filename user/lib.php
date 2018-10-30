@@ -48,12 +48,16 @@ function user_create_user($user, $updatepassword = true, $triggerevent = true) {
     }
 
     // Check username.
+    if (trim($user->username) === '') {
+        throw new moodle_exception('invalidusernameblank');
+    }
+
     if ($user->username !== core_text::strtolower($user->username)) {
         throw new moodle_exception('usernamelowercase');
-    } else {
-        if ($user->username !== core_user::clean_field($user->username, 'username')) {
-            throw new moodle_exception('invalidusername');
-        }
+    }
+
+    if ($user->username !== core_user::clean_field($user->username, 'username')) {
+        throw new moodle_exception('invalidusername');
     }
 
     // Save the password in a temp value for later.
@@ -1474,7 +1478,7 @@ function user_get_course_lastaccess_sql($accesssince = null, $tableprefix = 'ul'
     if ($accesssince == -1) { // Never.
         return $tableprefix . '.timeaccess = 0';
     } else {
-        return $tableprefix . '.timeaccess != 0 AND ul.timeaccess < ' . $accesssince;
+        return $tableprefix . '.timeaccess != 0 AND ' . $tableprefix . '.timeaccess < ' . $accesssince;
     }
 }
 
@@ -1493,7 +1497,7 @@ function user_get_user_lastaccess_sql($accesssince = null, $tableprefix = 'u') {
     if ($accesssince == -1) { // Never.
         return $tableprefix . '.lastaccess = 0';
     } else {
-        return $tableprefix . '.lastaccess != 0 AND u.lastaccess < ' . $accesssince;
+        return $tableprefix . '.lastaccess != 0 AND ' . $tableprefix . '.lastaccess < ' . $accesssince;
     }
 }
 

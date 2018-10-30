@@ -28,10 +28,7 @@
 namespace tool_dataprivacy;
 
 use coding_exception;
-use tool_dataprivacy\purpose;
-use tool_dataprivacy\category;
-use tool_dataprivacy\contextlevel;
-use tool_dataprivacy\context_instance;
+use core\persistent;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -59,13 +56,22 @@ class data_registry {
     /**
      * Returns purpose and category var names from a context class name
      *
-     * @param string $classname
+     * @param string $classname The context level's class.
+     * @param string $pluginname The name of the plugin associated with the context level.
      * @return string[]
      */
-    public static function var_names_from_context($classname) {
+    public static function var_names_from_context($classname, $pluginname = '') {
+        $pluginname = trim($pluginname);
+        if (!empty($pluginname)) {
+            $categoryvar = $classname . '_' . $pluginname . '_category';
+            $purposevar = $classname . '_' . $pluginname . '_purpose';
+        } else {
+            $categoryvar = $classname . '_category';
+            $purposevar = $classname . '_purpose';
+        }
         return [
-            $classname . '_purpose',
-            $classname . '_category',
+            $purposevar,
+            $categoryvar
         ];
     }
 
@@ -74,16 +80,30 @@ class data_registry {
      *
      * The caller code is responsible of checking that $contextlevel is an integer.
      *
-     * @param int $contextlevel
-     * @return int|false[]
+     * @param int $contextlevel The context level.
+     * @param string $pluginname The name of the plugin associated with the context level.
+     * @return int[]|false[]
      */
-    public static function get_defaults($contextlevel) {
+    public static function get_defaults($contextlevel, $pluginname = '') {
 
         $classname = \context_helper::get_class_for_level($contextlevel);
-        list($purposevar, $categoryvar) = self::var_names_from_context($classname);
+        list($purposevar, $categoryvar) = self::var_names_from_context($classname, $pluginname);
 
         $purposeid = get_config('tool_dataprivacy', $purposevar);
         $categoryid = get_config('tool_dataprivacy', $categoryvar);
+
+        if (!empty($pluginname)) {
+            list($purposevar, $categoryvar) = self::var_names_from_context($classname);
+            // If the plugin-level doesn't have a default purpose set, try the context level.
+            if ($purposeid === false) {
+                $purposeid = get_config('tool_dataprivacy', $purposevar);
+            }
+
+            // If the plugin-level doesn't have a default category set, try the context level.
+            if ($categoryid === false) {
+                $categoryid = get_config('tool_dataprivacy', $categoryvar);
+            }
+        }
 
         if (empty($purposeid)) {
             $purposeid = false;
@@ -171,14 +191,14 @@ class data_registry {
      * @param int|false $forcedvalue Use this value as if this was this context instance value.
      * @return persistent|false It return a 'purpose' instance or a 'category' instance, depending on $element
      */
-    public static function get_effective_context_value(\context $context, $element, $forcedvalue=false) {
+    public static function get_effective_context_value(\context $context, $element, $forcedvalue = false) {
 
         if ($element !== 'purpose' && $element !== 'category') {
             throw new coding_exception('Only \'purpose\' and \'category\' are supported.');
         }
         $fieldname = $element . 'id';
 
-        if ($forcedvalue === false) {
+        if (empty($forcedvalue)) {
             $instance = context_instance::get_record_by_contextid($context->id, false);
 
             if (!$instance) {
@@ -197,14 +217,29 @@ class data_registry {
             // The effective value varies depending on the context level.
             if ($context->contextlevel == CONTEXT_USER) {
                 // Use the context level value as we don't allow people to set specific instances values.
-                return self::get_effective_contextlevel_value($context->contextlevel, $element);
-            } else {
-                // Use the default context level value.
-                list($purposeid, $categoryid) = self::get_effective_default_contextlevel_purpose_and_category(
-                    $context->contextlevel
-                );
-                return self::get_element_instance($element, $$fieldname);
+                return self::get_effective_contextlevel_value(CONTEXT_USER, $element);
             }
+
+            $parents = $context->get_parent_contexts(true);
+            foreach ($parents as $parent) {
+                if ($parent->contextlevel == CONTEXT_USER) {
+                    // Use the context level value as we don't allow people to set specific instances values.
+                    return self::get_effective_contextlevel_value(CONTEXT_USER, $element);
+                }
+            }
+
+            // Check if we need to pass the plugin name of an activity.
+            $forplugin = '';
+            if ($context->contextlevel == CONTEXT_MODULE) {
+                list($course, $cm) = get_course_and_cm_from_cmid($context->instanceid);
+                $forplugin = $cm->modname;
+            }
+            // Use the default context level value.
+            list($purposeid, $categoryid) = self::get_effective_default_contextlevel_purpose_and_category(
+                $context->contextlevel, false, false, $forplugin
+            );
+
+            return self::get_element_instance($element, $$fieldname);
         }
 
         // Specific value for this context instance.
@@ -285,14 +320,15 @@ class data_registry {
      * Returns the effective default purpose and category for a context level.
      *
      * @param int $contextlevel
-     * @param int $forcedpurposevalue Use this value as if this was this context level purpose.
-     * @param int $forcedcategoryvalue Use this value as if this was this context level category.
+     * @param int|bool $forcedpurposevalue Use this value as if this was this context level purpose.
+     * @param int|bool $forcedcategoryvalue Use this value as if this was this context level category.
+     * @param string $activity The plugin name of the activity.
      * @return int[]
      */
     public static function get_effective_default_contextlevel_purpose_and_category($contextlevel, $forcedpurposevalue = false,
-                                                                                   $forcedcategoryvalue = false) {
+                                                                                   $forcedcategoryvalue = false, $activity = '') {
 
-        list($purposeid, $categoryid) = self::get_defaults($contextlevel);
+        list($purposeid, $categoryid) = self::get_defaults($contextlevel, $activity);
 
         // Honour forced values.
         if ($forcedpurposevalue) {

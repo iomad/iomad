@@ -8593,9 +8593,6 @@ a.dimmed_text:visited,
   #page-admin-report-backups-index .backup-unfinished[href]:focus, #page-admin-index .adminwarning.availableupdatesinfo .moodleupdateinfo.maturity50 .info.release[href]:focus {
     background-color: #c9302c; }
 
-.custom-select {
-  width: auto; }
-
 .fade.in {
   opacity: 1; }
 
@@ -9659,14 +9656,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .path-rating .ratingtable td.time {
   white-space: nowrap;
   text-align: center; }
-
-.initialbarlabel {
-  display: inline-block;
-  width: 6em;
-  float: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap; }
 
 /* Moodle Dialogue Settings (moodle-core-dialogue)  */
 .moodle-dialogue-base .moodle-dialogue-lightbox {
@@ -11850,7 +11839,7 @@ table.calendartable caption {
   padding: 0; }
   .course-content ul.topics li.section,
   .course-content ul.weeks li.section {
-    padding-top: 1rem;
+    margin-top: 1rem;
     padding-bottom: 1rem; }
     .course-content ul.topics li.section .content,
     .course-content ul.weeks li.section .content {
@@ -12490,10 +12479,12 @@ span.editinstructions {
   font-size: 32px; }
 
 /* Anchor link offset fix. This makes hash links scroll 60px down to account for the fixed header. */
-:target {
-  padding-top: 80px !important;
-  /* stylelint-disable declaration-no-important */
-  margin-top: -50px !important;
+:target::before {
+  content: " ";
+  display: block;
+  height: 60px;
+  /* fixed header height*/
+  margin-top: -60px;
   /* negative fixed header height */ }
 
 .pagelayout-embedded :target {
