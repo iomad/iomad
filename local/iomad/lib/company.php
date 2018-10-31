@@ -2863,7 +2863,7 @@ class company {
 
         $userid = $event->objectid;
         $user = $DB->get_record('user', array('id' => $userid));
-        $user->manager = false;
+        $user->manager = 'no';
 
         if ($CFG->commerce_enable_external) {
             // Fire off the payload to the external site.
@@ -2883,17 +2883,19 @@ class company {
     public static function user_updated(\core\event\user_updated $event) {
         global $DB, $CFG;
 
-        $userid = $event->objectid;
+        $userid = $event->relateduserid;
         $user = $DB->get_record('user', array('id' => $userid));
-        if ($DB->get_record('company_users', array('userid'=> $user->id, 'managertype' => 1))) {
-            $user->manager = true;
-            $company = self::get_company_byuserid($user->id);
+        $company = self::get_company_byuserid($user->id);
+        if ($DB->get_record('company_users', array('userid'=> $user->id, 'companyid' => $company->id, 'managertype' => 1))) {
+            $user->manager = 'yes';
             $user->country = $company->country;
             $user->city = $company->city;
             $user->adress = "";
         } else {
-            $user->manager = false;
+            $user->manager = 'no';
         }
+        $user->company = $company->name;
+
 
         if ($CFG->commerce_enable_external) {
             // Fire off the payload to the external site.
