@@ -1987,6 +1987,8 @@ class block_iomad_company_admin_external extends external_api {
         }
 
         //$transaction->allow_commit();
+        return array('status' => true);
+
     }
 
     /**
@@ -1996,7 +1998,12 @@ class block_iomad_company_admin_external extends external_api {
      * @since Moodle 2.2
      */
     public static function enrol_users_returns() {
-        return null;
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                )
+            )
+        );
     }
 
     /**
