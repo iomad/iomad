@@ -19,10 +19,11 @@ Feature: Data export from the privacy API
       | user   | role  | contextlevel | reference |
       | parent | tired | User         | victim    |
     And the following config values are set as admin:
-      | contactdataprotectionofficer | 1 | tool_dataprivacy |
+      | contactdataprotectionofficer | 1  | tool_dataprivacy |
+      | privacyrequestexpiry         | 55 | tool_dataprivacy |
 
   @javascript
-  Scenario: As admin, export data for a user and download it
+  Scenario: As admin, export data for a user and download it, unless it has expired
     Given I log in as "admin"
     And I navigate to "Users > Privacy and policies > Data requests" in site administration
     And I follow "New request"
@@ -39,12 +40,19 @@ Feature: Data export from the privacy API
     And I should see "Approved" in the "Victim User 1" "table_row"
     And I run all adhoc tasks
     And I reload the page
-    And I should see "Complete" in the "Victim User 1" "table_row"
+    And I should see "Download ready" in the "Victim User 1" "table_row"
     And I follow "Actions"
     And following "Download" should download between "1" and "100000" bytes
+    And the following config values are set as admin:
+      | privacyrequestexpiry | 1 | tool_dataprivacy |
+    And I wait "1" seconds
+    And I navigate to "Users > Privacy and policies > Data requests" in site administration
+    And I should see "Expired" in the "Victim User 1" "table_row"
+    And I follow "Actions"
+    And I should not see "Download"
 
   @javascript
-  Scenario: As a student, request data export and then download it when approved
+  Scenario: As a student, request data export and then download it when approved, unless it has expired
     Given I log in as "victim"
     And I follow "Profile" in the user menu
     And I follow "Data requests"
@@ -70,9 +78,17 @@ Feature: Data export from the privacy API
     And I should see "Approved" in the "Export all of my personal data" "table_row"
     And I run all adhoc tasks
     And I reload the page
-    And I should see "Complete" in the "Export all of my personal data" "table_row"
+    And I should see "Download ready" in the "Export all of my personal data" "table_row"
     And I follow "Actions"
     And following "Download" should download between "1" and "100000" bytes
+
+    And the following config values are set as admin:
+      | privacyrequestexpiry | 1 | tool_dataprivacy |
+    And I wait "1" seconds
+    And I reload the page
+
+    And I should see "Expired" in the "Export all of my personal data" "table_row"
+    And I should not see "Actions"
 
   @javascript
   Scenario: As a parent, request data export for my child because I don't trust the little blighter
@@ -102,6 +118,14 @@ Feature: Data export from the privacy API
     And I should see "Approved" in the "Victim User 1" "table_row"
     And I run all adhoc tasks
     And I reload the page
-    And I should see "Complete" in the "Victim User 1" "table_row"
+    And I should see "Download ready" in the "Victim User 1" "table_row"
     And I follow "Actions"
     And following "Download" should download between "1" and "100000" bytes
+
+    And the following config values are set as admin:
+      | privacyrequestexpiry | 1 | tool_dataprivacy |
+    And I wait "1" seconds
+    And I reload the page
+
+    And I should see "Expired" in the "Victim User 1" "table_row"
+    And I should not see "Actions"
