@@ -35,6 +35,7 @@ $string['approverequest'] = 'Approve request';
 $string['bulkapproverequests'] = 'Approve requests';
 $string['bulkdenyrequests'] = 'Deny requests';
 $string['cachedef_purpose'] = 'Data purposes';
+$string['cachedef_purpose_overrides'] = 'Purpose overrides in the Data privacy tool';
 $string['cachedef_contextlevel'] = 'Context levels purpose and category';
 $string['cancelrequest'] = 'Cancel request';
 $string['cancelrequestconfirmation'] = 'Do you really want cancel this data request?';
@@ -76,9 +77,10 @@ $string['dataprivacy:downloadownrequest'] = 'Download your own exported data';
 $string['dataprivacy:downloadallrequests'] = 'Download exported data for everyone';
 $string['dataregistry'] = 'Data registry';
 $string['dataregistryinfo'] = 'The data registry enables categories (types of data) and purposes (the reasons for processing data) to be set for all content on the site - from users and courses down to activities and blocks. For each purpose, a retention period may be set. When a retention period has expired, the data is flagged and listed for deletion, awaiting admin confirmation.';
-$string['dataretentionexplanation'] = 'This summary shows the default categories and purposes for retaining user\'s information on this system. Certain areas of the system may have more specific categories and purposes than those listed here.';
+$string['dataretentionexplanation'] = 'This summary shows the default categories and purposes for retaining user data. Certain areas may have more specific categories and purposes than those listed here.';
 $string['dataretentionsummary'] = 'Data retention summary';
 $string['datarequestcreatedforuser'] = 'Data request created for {$a}';
+$string['datarequestcreatedfromscheduledtask'] = 'Automatically created from a scheduled task (pre-existing deleted user).';
 $string['datarequestemailsubject'] = 'Data request: {$a}';
 $string['datarequests'] = 'Data requests';
 $string['datecomment'] = '[{$a->date}]: ' . PHP_EOL . ' {$a->comment}';
@@ -91,12 +93,16 @@ $string['deletecategorytext'] = 'Are you sure you want to delete the category \'
 $string['deletedefaults'] = 'Delete defaults: {$a}';
 $string['deletedefaultsconfirmation'] = 'Are you sure you want to delete the default category and purpose for {$a} modules?';
 $string['deleteexpiredcontextstask'] = 'Delete expired contexts';
-$string['deleteexpireddatarequeststask'] = 'Delete files from completed data requests that have expired';
+$string['deleteexpireddatarequeststask'] = 'Delete expired data request export files';
+$string['deleteexistingdeleteduserstask'] = 'Create delete data request for pre-existing deleted users';
+$string['deletemyaccount'] = 'Delete my account';
 $string['deletepurpose'] = 'Delete purpose';
 $string['deletepurposetext'] = 'Are you sure you want to delete the purpose \'{$a}\'?';
 $string['defaultssaved'] = 'Defaults saved';
 $string['deny'] = 'Deny';
 $string['denyrequest'] = 'Deny request';
+$string['deprecated'] = 'Deprecated';
+$string['deprecatedexplanation'] = 'This plugin is using an old version of one of the privacy interfaces and should be updated.';
 $string['download'] = 'Download';
 $string['downloadexpireduser'] = 'Download has expired. Submit a new request if you wish to export your personal data.';
 $string['dporolemapping'] = 'Privacy officer role mapping';
@@ -196,6 +202,7 @@ $string['nopurposes'] = 'There are no purposes yet';
 $string['nosubjectaccessrequests'] = 'There are no data requests that you need to act on';
 $string['nosystemdefaults'] = 'Site purpose and category have not yet been defined.';
 $string['notset'] = 'Not set (use the default value)';
+$string['notyetexpired'] = '{$a} (not yet expired)';
 $string['overrideinstances'] = 'Reset instances with custom values';
 $string['pluginregistry'] = 'Plugin privacy registry';
 $string['pluginregistrytitle'] = 'Plugin privacy compliance registry';
@@ -230,9 +237,9 @@ $string['requestcomments'] = 'Comments';
 $string['requestcomments_help'] = 'This box enables you to enter any further details about your data request.';
 $string['requestdenied'] = 'The request has been denied';
 $string['requestemailintro'] = 'You have received a data request:';
-$string['requestfor'] = 'Requesting for';
+$string['requestfor'] = 'User';
 $string['requestmarkedcomplete'] = 'The request has been marked as complete';
-$string['requestorigin'] = 'Request origin';
+$string['requestorigin'] = 'Site';
 $string['requestsapproved'] = 'The requests have been approved';
 $string['requestsdenied'] = 'The requests have been denied';
 $string['requeststatus'] = 'Status';
@@ -252,7 +259,7 @@ $string['requireallenddatesforuserdeletion_desc'] = 'When calculating user expir
 * the user\'s last login time is compared against the retention period for users; and
 * whether the user is actively enrolled in any courses.
 
-When checking the active enrolment of a corse, if the course has no end date then this setting is used to determine whether that course is considered active or not.
+When checking the active enrolment in a course, if the course has no end date then this setting is used to determine whether that course is considered active or not.
 
 If the course has no end date, and this setting is enabled, then the user cannot be deleted.';
 $string['requiresattention'] = 'Requires attention.';
@@ -264,6 +271,7 @@ $string['retentionperiod'] = 'Retention period';
 $string['retentionperiod_help'] = 'The retention period specifies the length of time that data should be kept for. When the retention period has expired, the data is flagged and listed for deletion, awaiting admin confirmation.';
 $string['retentionperiodnotdefined'] = 'No retention period was defined';
 $string['retentionperiodzero'] = 'No retention period';
+$string['roleoverrides'] = 'Role overrides';
 $string['selectbulkaction'] = 'Please select a bulk action.';
 $string['selectdatarequests'] = 'Please select data requests.';
 $string['selectuserdatarequest'] = 'Select {$a->username}\'s {$a->requesttype} data request.';
@@ -271,6 +279,8 @@ $string['send'] = 'Send';
 $string['sensitivedatareasons'] = 'Sensitive personal data processing reasons';
 $string['sensitivedatareasons_help'] = 'Select one or more applicable reasons that exempts the prohibition of processing sensitive personal data tied to this purpose. For more information, please see  <a href="https://gdpr-info.eu/art-9-gdpr/" target="_blank">GDPR Art. 9.2</a>';
 $string['setdefaults'] = 'Set defaults';
+$string['showdataretentionsummary'] = 'Show data retention summary';
+$string['showdataretentionsummary_desc'] = 'If enabled, a link to the data retention summary is shown in the page footer and in the user profile page.';
 $string['statusapproved'] = 'Approved';
 $string['statusawaitingapproval'] = 'Awaiting approval';
 $string['statuscancelled'] = 'Cancelled';
@@ -287,5 +297,26 @@ $string['subjectscope'] = 'Subject scope';
 $string['subjectscope_help'] = 'The subject scope lists the roles which may be assigned in this context.';
 $string['summary'] = 'Registry configuration summary';
 $string['user'] = 'User';
+$string['userlistnoncompliant'] = 'Userlist provider missing';
+$string['userlistexplanation'] = 'This plugin has the base provider but should also implement the userlist provider for full support of privacy functionality.';
 $string['viewrequest'] = 'View the request';
 $string['visible'] = 'Expand all';
+$string['unexpiredrolewithretention'] = '{$a->retention} (Unexpired)';
+$string['expiredrolewithretention'] = '{$a->retention} (Expired)';
+$string['defaultexpired'] = 'Data for all users';
+$string['defaultexpiredexcept'] = 'Data for all users, except those who hold any of the following roles:<br>
+{$a->unexpired}';
+$string['defaultunexpiredwithexceptions'] = 'Only data for users who hold any of the following roles:<br>
+{$a->expired}
+Unless they also hold any of the following roles:<br>
+{$a->unexpired}';
+$string['defaultunexpired'] = 'Only data for users holding any of the following roles:<br>
+{$a->expired}';
+$string['tobedeleted'] = 'Data to be deleted';
+$string['addroleoverride'] = 'Add role override';
+$string['roleoverride'] = 'Role override';
+$string['role'] = 'Role';
+$string['role_help'] = 'The role which the override should apply to.';
+$string['duplicaterole'] = 'Role already specified';
+$string['purposeoverview'] = 'A purpose describes the intended use and retention policy for stored data. The basis for storing and retaining that data is also described in the purpose.';
+$string['roleoverrideoverview'] = 'The default retention policy can be overridden for specific user roles, allowing you to specify a longer, or a shorter, retention policy. A user is only expired when all of their roles have expired.';

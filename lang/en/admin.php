@@ -911,6 +911,7 @@ $string['profilerequired'] = 'Is this field required?';
 $string['profileroles'] = 'Profile visible roles';
 $string['profilesforenrolledusersonly'] = 'Profiles for enrolled users only';
 $string['profileshortname'] = 'Short name (must be unique)';
+$string['profileshortnameinvalid'] = 'This short name can only contain alphanumeric characters (letters and numbers) or underscore (_).';
 $string['profileshortnamenotunique'] = 'This short name is already in use';
 $string['profilesignup'] = 'Display on signup page?';
 $string['profilespecificsettings'] = 'Specific settings';
@@ -1050,6 +1051,7 @@ $string['showdetails'] = 'Show details';
 $string['showuseridentity'] = 'Show user identity';
 $string['showuseridentity_desc'] = 'When selecting or searching for users, and when displaying lists of users, these fields may be shown in addition to their full name. The fields are only shown to users who have the moodle/site:viewuseridentity capability; by default, teachers and managers. (This option makes most sense if you choose one or two fields that are mandatory at your institution.)';
 $string['simplexmlrequired'] = 'The SimpleXML PHP extension is now required by Moodle.';
+$string['sitemenubar'] = 'Site navigation';
 $string['sitemailcharset'] = 'Character set';
 $string['sitemaintenance'] = 'The site is undergoing maintenance and is currently not available';
 $string['sitemaintenancemode'] = 'Maintenance mode';
@@ -1227,7 +1229,7 @@ $string['upgradekeyset'] = 'Upgrade key (leave empty to not set it)';
 $string['upgradelogs'] = 'For full functionality, your old logs need to be upgraded.  <a href="{$a}">More information</a>';
 $string['upgradelogsinfo'] = 'Some changes have recently been made in the way logs are stored.  To be able to view all of your old logs on a per-activity basis, your old logs need to be upgraded.  Depending on your site this can take a long time (eg several hours) and can be quite taxing on the database for large sites.  Once you start this process you should let it finish (by keeping the browser window open).  Don\'t worry - your site will work fine for other people while the logs are being upgraded.<br /><br />Do you want to upgrade your logs now?';
 $string['upgradesettings'] = 'New settings';
-$string['upgradesettingsintro'] = 'The settings shown below were added during your last Moodle upgrade. Make any changes necessary to the defaults and then click the &quot;Save changes&quot; button at the bottom of this page.';
+$string['upgradesettingsintro'] = 'The settings shown below were added during your last Moodle upgrade. Make any changes necessary to the defaults and then click the \'Save changes\' button at the bottom of this page.';
 $string['upgradestalefiles'] = 'Mixed Moodle versions detected, upgrade cannot continue';
 $string['upgradestalefilesinfo'] = 'The Moodle update process has been paused because PHP scripts from at least two major versions of Moodle have been detected in the Moodle directory.
 

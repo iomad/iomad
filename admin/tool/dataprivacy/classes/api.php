@@ -227,25 +227,24 @@ class api {
      * @param int $foruser The user whom the request is being made for.
      * @param int $type The request type.
      * @param string $comments Request comments.
+     * @param int $creationmethod The creation method of the data request.
      * @return data_request
      * @throws invalid_persistent_exception
      * @throws coding_exception
      */
-    public static function create_data_request($foruser, $type, $comments = '') {
-        global $USER;
+    public static function create_data_request($foruser, $type, $comments = '',
+                                               $creationmethod = data_request::DATAREQUEST_CREATION_MANUAL) {
+        global $USER, $ADMIN;
 
         $datarequest = new data_request();
         // The user the request is being made for.
         $datarequest->set('userid', $foruser);
 
-        $requestinguser = $USER->id;
-        // Check when the user is making a request on behalf of another.
-        if ($requestinguser != $foruser) {
-            if (self::is_site_dpo($requestinguser)) {
-                // The user making the request is a DPO. Should be fine.
-                $datarequest->set('dpo', $requestinguser);
-            }
-        }
+        // The cron is considered to be a guest user when it creates a data request.
+        // NOTE: This should probably be changed. We should leave the default value for $requestinguser if
+        // the request is not explicitly created by a specific user.
+        $requestinguser = (isguestuser() && $creationmethod == data_request::DATAREQUEST_CREATION_AUTO) ?
+                $ADMIN->id : $USER->id;
         // The user making the request.
         $datarequest->set('requestedby', $requestinguser);
         // Set status.
@@ -914,7 +913,7 @@ class api {
      * @param int $forcedvalue Use this categoryid value as if this was this context instance category.
      * @return category|false
      */
-    public static function get_effective_context_category(\context $context, $forcedvalue=false) {
+    public static function get_effective_context_category(\context $context, $forcedvalue = false) {
         if (!data_registry::defaults_set()) {
             return false;
         }
@@ -941,15 +940,14 @@ class api {
      * Returns the effective category given a context level.
      *
      * @param int $contextlevel
-     * @param int $forcedvalue Use this categoryid value as if this was this context level category.
      * @return category|false
      */
-    public static function get_effective_contextlevel_category($contextlevel, $forcedvalue=false) {
+    public static function get_effective_contextlevel_category($contextlevel) {
         if (!data_registry::defaults_set()) {
             return false;
         }
 
-        return data_registry::get_effective_contextlevel_value($contextlevel, 'category', $forcedvalue);
+        return data_registry::get_effective_contextlevel_value($contextlevel, 'category');
     }
 
     /**
@@ -988,6 +986,7 @@ class api {
      */
     public static function add_request_contexts_with_status(contextlist_collection $clcollection, int $requestid, int $status) {
         $request = new data_request($requestid);
+        $user = \core_user::get_user($request->get('userid'));
         foreach ($clcollection as $contextlist) {
             // Convert the \core_privacy\local\request\contextlist into a contextlist persistent and store it.
             $clp = \tool_dataprivacy\contextlist::from_contextlist($contextlist);
@@ -998,10 +997,14 @@ class api {
             foreach ($contextlist->get_contextids() as $contextid) {
                 if ($request->get('type') == static::DATAREQUEST_TYPE_DELETE) {
                     $context = \context::instance_by_id($contextid);
-                    if (($purpose = static::get_effective_context_purpose($context)) && !empty($purpose->get('protected'))) {
+                    $purpose = static::get_effective_context_purpose($context);
+
+                    // Data can only be deleted from it if the context is either expired, or unprotected.
+                    if (!expired_contexts_manager::is_context_expired_or_unprotected_for_user($context, $user)) {
                         continue;
                     }
                 }
+
                 $context = new contextlist_context();
                 $context->set('contextid', $contextid)
                     ->set('contextlistid', $contextlistid)
@@ -1097,6 +1100,15 @@ class api {
                     $approvedcollection->add_contextlist(new approved_contextlist($foruser, $lastcomponent, $contexts));
                 }
                 $contexts = [];
+            }
+
+            if ($request->get('type') == static::DATAREQUEST_TYPE_DELETE) {
+                $context = \context::instance_by_id($record->contextid);
+                $purpose = static::get_effective_context_purpose($context);
+                // Data can only be deleted from it if the context is either expired, or unprotected.
+                if (!expired_contexts_manager::is_context_expired_or_unprotected_for_user($context, $foruser)) {
+                    continue;
+                }
             }
 
             $contexts[] = $record->contextid;
@@ -1195,5 +1207,26 @@ class api {
         }
 
         return true;
+    }
+
+    /**
+     * Format the supplied date interval as a retention period.
+     *
+     * @param   \DateInterval   $interval
+     * @return  string
+     */
+    public static function format_retention_period(\DateInterval $interval) : string {
+        // It is one or another.
+        if ($interval->y) {
+            $formattedtime = get_string('numyears', 'moodle', $interval->format('%y'));
+        } else if ($interval->m) {
+            $formattedtime = get_string('nummonths', 'moodle', $interval->format('%m'));
+        } else if ($interval->d) {
+            $formattedtime = get_string('numdays', 'moodle', $interval->format('%d'));
+        } else {
+            $formattedtime = get_string('retentionperiodzero', 'tool_dataprivacy');
+        }
+
+        return $formattedtime;
     }
 }
