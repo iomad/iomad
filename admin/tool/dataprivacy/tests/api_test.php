@@ -24,11 +24,14 @@
 
 use core\invalid_persistent_exception;
 use core\task\manager;
+use tool_dataprivacy\contextlist_context;
 use tool_dataprivacy\context_instance;
 use tool_dataprivacy\api;
 use tool_dataprivacy\data_registry;
 use tool_dataprivacy\expired_context;
 use tool_dataprivacy\data_request;
+use tool_dataprivacy\purpose;
+use tool_dataprivacy\category;
 use tool_dataprivacy\local\helper;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
@@ -46,16 +49,65 @@ global $CFG;
 class tool_dataprivacy_api_testcase extends advanced_testcase {
 
     /**
-     * setUp.
+     * Ensure that the check_can_manage_data_registry function fails cap testing when a user without capabilities is
+     * tested with the default context.
      */
-    public function setUp() {
+    public function test_check_can_manage_data_registry_admin() {
         $this->resetAfterTest();
+
+        $this->setAdminUser();
+        // Technically this actually returns void, but assertNull will suffice to avoid a pointless test.
+        $this->assertNull(api::check_can_manage_data_registry());
+    }
+
+    /**
+     * Ensure that the check_can_manage_data_registry function fails cap testing when a user without capabilities is
+     * tested with the default context.
+     */
+    public function test_check_can_manage_data_registry_without_cap_default() {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $this->expectException(required_capability_exception::class);
+        api::check_can_manage_data_registry();
+    }
+
+    /**
+     * Ensure that the check_can_manage_data_registry function fails cap testing when a user without capabilities is
+     * tested with the default context.
+     */
+    public function test_check_can_manage_data_registry_without_cap_system() {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $this->expectException(required_capability_exception::class);
+        api::check_can_manage_data_registry(\context_system::instance()->id);
+    }
+
+    /**
+     * Ensure that the check_can_manage_data_registry function fails cap testing when a user without capabilities is
+     * tested with the default context.
+     */
+    public function test_check_can_manage_data_registry_without_cap_own_user() {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $this->expectException(required_capability_exception::class);
+        api::check_can_manage_data_registry(\context_user::instance($user->id)->id);
     }
 
     /**
      * Test for api::update_request_status().
      */
     public function test_update_request_status() {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $s1 = $generator->create_user();
         $this->setUser($s1);
@@ -65,13 +117,33 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         $requestid = $datarequest->get('id');
 
+        // Update with a comment.
+        $comment = 'This is an example of a comment';
+        $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_AWAITING_APPROVAL, 0, $comment);
+        $this->assertTrue($result);
+        $datarequest = new data_request($requestid);
+        $this->assertStringEndsWith($comment, $datarequest->get('dpocomment'));
+
+        // Update with a comment which will be trimmed.
+        $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_AWAITING_APPROVAL, 0, '  ');
+        $this->assertTrue($result);
+        $datarequest = new data_request($requestid);
+        $this->assertStringEndsWith($comment, $datarequest->get('dpocomment'));
+
+        // Update with a comment.
+        $secondcomment = '  - More comments -  ';
+        $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_AWAITING_APPROVAL, 0, $secondcomment);
+        $this->assertTrue($result);
+        $datarequest = new data_request($requestid);
+        $this->assertRegExp("/.*{$comment}.*{$secondcomment}/s", $datarequest->get('dpocomment'));
+
         // Update with a valid status.
-        $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_COMPLETE);
+        $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_DOWNLOAD_READY);
         $this->assertTrue($result);
 
         // Fetch the request record again.
         $datarequest = new data_request($requestid);
-        $this->assertEquals(api::DATAREQUEST_STATUS_COMPLETE, $datarequest->get('status'));
+        $this->assertEquals(api::DATAREQUEST_STATUS_DOWNLOAD_READY, $datarequest->get('status'));
 
         // Update with an invalid status.
         $this->expectException(invalid_persistent_exception::class);
@@ -82,6 +154,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::get_site_dpos() when there are no users with the DPO role.
      */
     public function test_get_site_dpos_no_dpos() {
+        $this->resetAfterTest();
+
         $admin = get_admin();
 
         $dpos = api::get_site_dpos();
@@ -95,6 +169,9 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      */
     public function test_get_site_dpos() {
         global $DB;
+
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $u1 = $generator->create_user();
         $u2 = $generator->create_user();
@@ -125,10 +202,55 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
+     * Test for \tool_dataprivacy\api::get_assigned_privacy_officer_roles().
+     */
+    public function test_get_assigned_privacy_officer_roles() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        // Erroneously set the manager roles as the PO, even if it doesn't have the managedatarequests capability yet.
+        $managerroleid = $DB->get_field('role', 'id', array('shortname' => 'manager'));
+        set_config('dporoles', $managerroleid, 'tool_dataprivacy');
+        // Get the assigned PO roles when nothing has been set yet.
+        $roleids = api::get_assigned_privacy_officer_roles();
+        // Confirm that the returned list is empty.
+        $this->assertEmpty($roleids);
+
+        $context = context_system::instance();
+
+        // Give the manager role with the capability to manage data requests.
+        assign_capability('tool/dataprivacy:managedatarequests', CAP_ALLOW, $managerroleid, $context->id, true);
+
+        // Give the editing teacher role with the capability to manage data requests.
+        $editingteacherroleid = $DB->get_field('role', 'id', array('shortname' => 'editingteacher'));
+        assign_capability('tool/dataprivacy:managedatarequests', CAP_ALLOW, $editingteacherroleid, $context->id, true);
+
+        // Get the non-editing teacher role ID.
+        $teacherroleid = $DB->get_field('role', 'id', array('shortname' => 'teacher'));
+
+        // Erroneously map the manager and the non-editing teacher roles to the PO role.
+        $badconfig = $managerroleid . ',' . $teacherroleid;
+        set_config('dporoles', $badconfig, 'tool_dataprivacy');
+
+        // Get the assigned PO roles.
+        $roleids = api::get_assigned_privacy_officer_roles();
+
+        // There should only be one PO role.
+        $this->assertCount(1, $roleids);
+        // Confirm it contains the manager role.
+        $this->assertContains($managerroleid, $roleids);
+        // And it does not contain the editing teacher role.
+        $this->assertNotContains($editingteacherroleid, $roleids);
+    }
+
+    /**
      * Test for api::approve_data_request().
      */
     public function test_approve_data_request() {
         global $DB;
+
+        $this->resetAfterTest();
 
         $generator = new testing_data_generator();
         $s1 = $generator->create_user();
@@ -172,6 +294,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     public function test_approve_data_request_not_yet_ready() {
         global $DB;
 
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $s1 = $generator->create_user();
         $u1 = $generator->create_user();
@@ -202,6 +326,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::approve_data_request() when called by a user who doesn't have the DPO role.
      */
     public function test_approve_data_request_non_dpo_user() {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $student = $generator->create_user();
         $teacher = $generator->create_user();
@@ -211,17 +337,14 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $datarequest = api::create_data_request($student->id, api::DATAREQUEST_TYPE_EXPORT);
 
         $requestid = $datarequest->get('id');
-
-        // Login as a user without DPO role.
-        $this->setUser($teacher);
-        $this->expectException(required_capability_exception::class);
-        api::approve_data_request($requestid);
     }
 
     /**
      * Test for api::can_contact_dpo()
      */
     public function test_can_contact_dpo() {
+        $this->resetAfterTest();
+
         // Default ('contactdataprotectionofficer' is disabled by default).
         $this->assertFalse(api::can_contact_dpo());
 
@@ -239,6 +362,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      */
     public function test_can_manage_data_requests() {
         global $DB;
+
+        $this->resetAfterTest();
 
         // No configured site DPOs yet.
         $admin = get_admin();
@@ -277,9 +402,119 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
+     * Test that a user who has no capability to make any data requests for children cannot create data requests for any
+     * other user.
+     */
+    public function test_can_create_data_request_for_user_no() {
+        $this->resetAfterTest();
+
+        $parent = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+
+        $this->setUser($parent);
+        $this->assertFalse(api::can_create_data_request_for_user($otheruser->id));
+    }
+
+    /**
+     * Test that a user who has the capability to make any data requests for one other user cannot create data requests
+     * for any other user.
+     */
+    public function test_can_create_data_request_for_user_some() {
+        $this->resetAfterTest();
+
+        $parent = $this->getDataGenerator()->create_user();
+        $child = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+
+        $systemcontext = \context_system::instance();
+        $parentrole = $this->getDataGenerator()->create_role();
+        assign_capability('tool/dataprivacy:makedatarequestsforchildren', CAP_ALLOW, $parentrole, $systemcontext);
+        role_assign($parentrole, $parent->id, \context_user::instance($child->id));
+
+        $this->setUser($parent);
+        $this->assertFalse(api::can_create_data_request_for_user($otheruser->id));
+    }
+
+    /**
+     * Test that a user who has the capability to make any data requests for one other user cannot create data requests
+     * for any other user.
+     */
+    public function test_can_create_data_request_for_user_own_child() {
+        $this->resetAfterTest();
+
+        $parent = $this->getDataGenerator()->create_user();
+        $child = $this->getDataGenerator()->create_user();
+
+        $systemcontext = \context_system::instance();
+        $parentrole = $this->getDataGenerator()->create_role();
+        assign_capability('tool/dataprivacy:makedatarequestsforchildren', CAP_ALLOW, $parentrole, $systemcontext);
+        role_assign($parentrole, $parent->id, \context_user::instance($child->id));
+
+        $this->setUser($parent);
+        $this->assertTrue(api::can_create_data_request_for_user($child->id));
+    }
+
+    /**
+     * Test that a user who has no capability to make any data requests for children cannot create data requests for any
+     * other user.
+     */
+    public function test_require_can_create_data_request_for_user_no() {
+        $this->resetAfterTest();
+
+        $parent = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+
+        $this->setUser($parent);
+        $this->expectException('required_capability_exception');
+        api::require_can_create_data_request_for_user($otheruser->id);
+    }
+
+    /**
+     * Test that a user who has the capability to make any data requests for one other user cannot create data requests
+     * for any other user.
+     */
+    public function test_require_can_create_data_request_for_user_some() {
+        $this->resetAfterTest();
+
+        $parent = $this->getDataGenerator()->create_user();
+        $child = $this->getDataGenerator()->create_user();
+        $otheruser = $this->getDataGenerator()->create_user();
+
+        $systemcontext = \context_system::instance();
+        $parentrole = $this->getDataGenerator()->create_role();
+        assign_capability('tool/dataprivacy:makedatarequestsforchildren', CAP_ALLOW, $parentrole, $systemcontext);
+        role_assign($parentrole, $parent->id, \context_user::instance($child->id));
+
+        $this->setUser($parent);
+        $this->expectException('required_capability_exception');
+        api::require_can_create_data_request_for_user($otheruser->id);
+    }
+
+    /**
+     * Test that a user who has the capability to make any data requests for one other user cannot create data requests
+     * for any other user.
+     */
+    public function test_require_can_create_data_request_for_user_own_child() {
+        $this->resetAfterTest();
+
+        $parent = $this->getDataGenerator()->create_user();
+        $child = $this->getDataGenerator()->create_user();
+
+        $systemcontext = \context_system::instance();
+        $parentrole = $this->getDataGenerator()->create_role();
+        assign_capability('tool/dataprivacy:makedatarequestsforchildren', CAP_ALLOW, $parentrole, $systemcontext);
+        role_assign($parentrole, $parent->id, \context_user::instance($child->id));
+
+        $this->setUser($parent);
+        $this->assertTrue(api::require_can_create_data_request_for_user($child->id));
+    }
+
+    /**
      * Test for api::can_download_data_request_for_user()
      */
     public function test_can_download_data_request_for_user() {
+        $this->resetAfterTest();
+
         $generator = $this->getDataGenerator();
 
         // Three victims.
@@ -331,6 +566,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::create_data_request()
      */
     public function test_create_data_request() {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $user = $generator->create_user();
         $comment = 'sample comment';
@@ -358,6 +595,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     public function test_create_data_request_by_dpo() {
         global $USER;
 
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $user = $generator->create_user();
         $comment = 'sample comment';
@@ -369,7 +608,6 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $datarequest = api::create_data_request($user->id, api::DATAREQUEST_TYPE_EXPORT, $comment);
         $this->assertEquals($user->id, $datarequest->get('userid'));
         $this->assertEquals($USER->id, $datarequest->get('requestedby'));
-        $this->assertEquals($USER->id, $datarequest->get('dpo'));
         $this->assertEquals(api::DATAREQUEST_TYPE_EXPORT, $datarequest->get('type'));
         $this->assertEquals(api::DATAREQUEST_STATUS_PENDING, $datarequest->get('status'));
         $this->assertEquals($comment, $datarequest->get('comments'));
@@ -384,6 +622,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      */
     public function test_create_data_request_by_parent() {
         global $DB;
+
+        $this->resetAfterTest();
 
         $generator = new testing_data_generator();
         $user = $generator->create_user();
@@ -420,6 +660,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::deny_data_request()
      */
     public function test_deny_data_request() {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $user = $generator->create_user();
         $comment = 'sample comment';
@@ -442,34 +684,13 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for api::deny_data_request()
-     */
-    public function test_deny_data_request_without_permissions() {
-        $generator = new testing_data_generator();
-        $user = $generator->create_user();
-        $comment = 'sample comment';
-
-        // Login as user.
-        $this->setUser($user->id);
-
-        // Test data request creation.
-        $datarequest = api::create_data_request($user->id, api::DATAREQUEST_TYPE_EXPORT, $comment);
-
-        // Login as a non-DPO user and try to call deny_data_request.
-        $user2 = $generator->create_user();
-        $this->setUser($user2);
-        $this->expectException(required_capability_exception::class);
-        api::deny_data_request($datarequest->get('id'));
-    }
-
-    /**
      * Data provider for \tool_dataprivacy_api_testcase::test_get_data_requests().
      *
      * @return array
      */
     public function get_data_requests_provider() {
-        $completeonly = [api::DATAREQUEST_STATUS_COMPLETE];
-        $completeandcancelled = [api::DATAREQUEST_STATUS_COMPLETE, api::DATAREQUEST_STATUS_CANCELLED];
+        $completeonly = [api::DATAREQUEST_STATUS_COMPLETE, api::DATAREQUEST_STATUS_DOWNLOAD_READY, api::DATAREQUEST_STATUS_DELETED];
+        $completeandcancelled = array_merge($completeonly, [api::DATAREQUEST_STATUS_CANCELLED]);
 
         return [
             // Own data requests.
@@ -494,6 +715,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * @param int[] $statuses Status filters.
      */
     public function test_get_data_requests($usertype, $fetchall, $statuses) {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $user1 = $generator->create_user();
         $user2 = $generator->create_user();
@@ -612,6 +835,9 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
             [api::DATAREQUEST_STATUS_COMPLETE, false],
             [api::DATAREQUEST_STATUS_CANCELLED, false],
             [api::DATAREQUEST_STATUS_REJECTED, false],
+            [api::DATAREQUEST_STATUS_DOWNLOAD_READY, false],
+            [api::DATAREQUEST_STATUS_EXPIRED, false],
+            [api::DATAREQUEST_STATUS_DELETED, false],
         ];
     }
 
@@ -623,6 +849,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * @param bool $expected The expected result.
      */
     public function test_has_ongoing_request($status, $expected) {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $user1 = $generator->create_user();
 
@@ -655,6 +883,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      */
     public function test_is_site_dpo() {
         global $DB;
+
+        $this->resetAfterTest();
 
         // No configured site DPOs yet.
         $admin = get_admin();
@@ -706,6 +936,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * @param string $comments The requestor's message to the DPO.
      */
     public function test_notify_dpo($byadmin, $type, $typestringid, $comments) {
+        $this->resetAfterTest();
+
         $generator = new testing_data_generator();
         $user1 = $generator->create_user();
         // Let's just use admin as DPO (It's the default if not set).
@@ -741,85 +973,12 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
-     * Test of creating purpose as a user without privileges.
-     */
-    public function test_create_purpose_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        api::create_purpose((object)[
-            'name' => 'aaa',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1,
-            'retentionperiod' => 'PT1M'
-        ]);
-    }
-
-    /**
-     * Test fetching of purposes as a user without privileges.
-     */
-    public function test_get_purposes_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-        $this->setAdminUser();
-        api::create_purpose((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1,
-            'retentionperiod' => 'PT1M',
-            'lawfulbases' => 'gdpr_art_6_1_a'
-        ]);
-
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        api::get_purposes();
-    }
-
-    /**
-     * Test updating of purpose as a user without privileges.
-     */
-    public function test_update_purposes_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-        $this->setAdminUser();
-        $purpose = api::create_purpose((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1,
-            'retentionperiod' => 'PT1M',
-            'lawfulbases' => 'gdpr_art_6_1_a'
-        ]);
-
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        $purpose->set('retentionperiod', 'PT2M');
-        api::update_purpose($purpose->to_record());
-    }
-
-    /**
-     * Test purpose deletion as a user without privileges.
-     */
-    public function test_delete_purpose_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-        $this->setAdminUser();
-        $purpose = api::create_purpose((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1,
-            'retentionperiod' => 'PT1M',
-            'lawfulbases' => 'gdpr_art_6_1_a'
-        ]);
-
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        api::delete_purpose($purpose->get('id'));
-    }
-
-    /**
      * Test data purposes CRUD actions.
      *
      * @return null
      */
     public function test_purpose_crud() {
+        $this->resetAfterTest();
 
         $this->setAdminUser();
 
@@ -856,85 +1015,12 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
-     * Test creation of data categories as a user without privileges.
-     */
-    public function test_create_category_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        api::create_category((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1
-        ]);
-    }
-
-    /**
-     * Test fetching of data categories as a user without privileges.
-     */
-    public function test_get_categories_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-
-        $this->setAdminUser();
-        api::create_category((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1
-        ]);
-
-        // Back to a regular user.
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        api::get_categories();
-    }
-
-    /**
-     * Test updating of data category as a user without privileges.
-     */
-    public function test_update_category_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-
-        $this->setAdminUser();
-        $category = api::create_category((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1
-        ]);
-
-        // Back to a regular user.
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        $category->set('name', 'yeah');
-        api::update_category($category->to_record());
-    }
-
-    /**
-     * Test deletion of data category as a user without privileges.
-     */
-    public function test_delete_category_non_dpo_user() {
-        $pleb = $this->getDataGenerator()->create_user();
-
-        $this->setAdminUser();
-        $category = api::create_category((object)[
-            'name' => 'bbb',
-            'description' => '<b>yeah</b>',
-            'descriptionformat' => 1
-        ]);
-
-        // Back to a regular user.
-        $this->setUser($pleb);
-        $this->expectException(required_capability_exception::class);
-        api::delete_category($category->get('id'));
-        $this->fail('Users shouldn\'t be allowed to manage categories by default');
-    }
-
-    /**
      * Test data categories CRUD actions.
      *
      * @return null
      */
     public function test_category_crud() {
+        $this->resetAfterTest();
 
         $this->setAdminUser();
 
@@ -974,6 +1060,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     public function test_context_instances() {
         global $DB;
 
+        $this->resetAfterTest();
+
         $this->setAdminUser();
 
         list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
@@ -1007,6 +1095,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      */
     public function test_contextlevel() {
         global $DB;
+
+        $this->resetAfterTest();
 
         $this->setAdminUser();
         list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
@@ -1042,6 +1132,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     public function test_effective_contextlevel_defaults() {
         $this->setAdminUser();
 
+        $this->resetAfterTest();
+
         list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
 
         list($purposeid, $categoryid) = data_registry::get_effective_default_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
@@ -1054,11 +1146,6 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
 
         list($purposeid, $categoryid) = data_registry::get_effective_default_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
-        $this->assertEquals($purposes[0]->get('id'), $purposeid);
-        $this->assertEquals(false, $categoryid);
-
-        // Course inherits from system if not defined.
-        list($purposeid, $categoryid) = data_registry::get_effective_default_contextlevel_purpose_and_category(CONTEXT_COURSE);
         $this->assertEquals($purposes[0]->get('id'), $purposeid);
         $this->assertEquals(false, $categoryid);
 
@@ -1075,196 +1162,293 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         // Context level defaults are also allowed to be set to 'inherit'.
         set_config($purposevar, context_instance::INHERIT, 'tool_dataprivacy');
+    }
 
-        list($purposeid, $categoryid) = data_registry::get_effective_default_contextlevel_purpose_and_category(CONTEXT_COURSE);
-        $this->assertEquals($purposes[0]->get('id'), $purposeid);
-        $this->assertEquals($categories[0]->get('id'), $categoryid);
+    /**
+     * Ensure that when nothing is configured, all values return false.
+     */
+    public function test_get_effective_contextlevel_unset() {
+        // Before setup, get_effective_contextlevel_purpose will return false.
+        $this->assertFalse(api::get_effective_contextlevel_category(CONTEXT_SYSTEM));
+        $this->assertFalse(api::get_effective_contextlevel_purpose(CONTEXT_SYSTEM));
 
-        list($purposeid, $categoryid) = data_registry::get_effective_default_contextlevel_purpose_and_category(CONTEXT_MODULE);
-        $this->assertEquals($purposes[0]->get('id'), $purposeid);
-        $this->assertEquals($categories[0]->get('id'), $categoryid);
+        $this->assertFalse(api::get_effective_contextlevel_category(CONTEXT_USER));
+        $this->assertFalse(api::get_effective_contextlevel_purpose(CONTEXT_USER));
+    }
+
+    /**
+     * Ensure that when nothing is configured, all values return false.
+     */
+    public function test_get_effective_context_unset() {
+        // Before setup, get_effective_contextlevel_purpose will return false.
+        $this->assertFalse(api::get_effective_context_category(\context_system::instance()));
+        $this->assertFalse(api::get_effective_context_purpose(\context_system::instance()));
+    }
+
+    /**
+     * Ensure that fetching the effective value for context levels is only available to system, and user context levels.
+     *
+     * @dataProvider invalid_effective_contextlevel_provider
+     * @param   int $contextlevel
+     */
+    public function test_set_contextlevel_invalid_contextlevels($contextlevel) {
+
+        $this->expectException(coding_exception::class);
+        api::set_contextlevel((object) [
+                'contextlevel' => $contextlevel,
+            ]);
+
     }
 
     /**
      * Test effective contextlevel return.
-     *
-     * @return null
      */
     public function test_effective_contextlevel() {
-        $this->setAdminUser();
+        $this->resetAfterTest();
 
-        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
-
-        // Set the system context level to purpose 1.
-        $record = (object)[
+        // Set the initial purpose and category.
+        $purpose1 = api::create_purpose((object)['name' => 'p1', 'retentionperiod' => 'PT1H', 'lawfulbases' => 'gdpr_art_6_1_a']);
+        $category1 = api::create_category((object)['name' => 'a']);
+        api::set_contextlevel((object)[
             'contextlevel' => CONTEXT_SYSTEM,
-            'purposeid' => $purposes[1]->get('id'),
-            'categoryid' => $categories[1]->get('id'),
-        ];
-        api::set_contextlevel($record);
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
 
-        $purpose = api::get_effective_contextlevel_purpose(CONTEXT_SYSTEM);
-        $this->assertEquals($purposes[1]->get('id'), $purpose->get('id'));
+        $this->assertEquals($purpose1, api::get_effective_contextlevel_purpose(CONTEXT_SYSTEM));
+        $this->assertEquals($category1, api::get_effective_contextlevel_category(CONTEXT_SYSTEM));
 
-        // Value 'not set' will get the default value for the context level. For context level defaults
-        // both 'not set' and 'inherit' result in inherit, so the parent context (system) default
-        // will be retrieved.
-        $purpose = api::get_effective_contextlevel_purpose(CONTEXT_USER);
-        $this->assertEquals($purposes[1]->get('id'), $purpose->get('id'));
+        // The user context inherits from the system context when not set.
+        $this->assertEquals($purpose1, api::get_effective_contextlevel_purpose(CONTEXT_USER));
+        $this->assertEquals($category1, api::get_effective_contextlevel_category(CONTEXT_USER));
 
-        // The behaviour forcing an inherit from context system should result in the same effective
-        // purpose.
-        $record->purposeid = context_instance::INHERIT;
-        $record->contextlevel = CONTEXT_USER;
-        api::set_contextlevel($record);
-        $purpose = api::get_effective_contextlevel_purpose(CONTEXT_USER);
-        $this->assertEquals($purposes[1]->get('id'), $purpose->get('id'));
+        // Forcing the behaviour to inherit will have the same result.
+        api::set_contextlevel((object) [
+                'contextlevel' => CONTEXT_USER,
+                'purposeid' => context_instance::INHERIT,
+                'categoryid' => context_instance::INHERIT,
+            ]);
+        $this->assertEquals($purpose1, api::get_effective_contextlevel_purpose(CONTEXT_USER));
+        $this->assertEquals($category1, api::get_effective_contextlevel_category(CONTEXT_USER));
 
-        $record->purposeid = $purposes[2]->get('id');
-        $record->contextlevel = CONTEXT_USER;
-        api::set_contextlevel($record);
+        // Setting specific values will override the inheritance behaviour.
+        $purpose2 = api::create_purpose((object)['name' => 'p2', 'retentionperiod' => 'PT2H', 'lawfulbases' => 'gdpr_art_6_1_a']);
+        $category2 = api::create_category((object)['name' => 'b']);
+        // Set the system context level to purpose 1.
+        api::set_contextlevel((object) [
+                'contextlevel' => CONTEXT_USER,
+                'purposeid' => $purpose2->get('id'),
+                'categoryid' => $category2->get('id'),
+            ]);
 
-        $purpose = api::get_effective_contextlevel_purpose(CONTEXT_USER);
-        $this->assertEquals($purposes[2]->get('id'), $purpose->get('id'));
+        $this->assertEquals($purpose2, api::get_effective_contextlevel_purpose(CONTEXT_USER));
+        $this->assertEquals($category2, api::get_effective_contextlevel_category(CONTEXT_USER));
+    }
 
-        // Only system and user allowed.
+    /**
+     * Ensure that fetching the effective value for context levels is only available to system, and user context levels.
+     *
+     * @dataProvider invalid_effective_contextlevel_provider
+     * @param   int $contextlevel
+     */
+    public function test_effective_contextlevel_invalid_contextlevels($contextlevel) {
+        $this->resetAfterTest();
+
+        $purpose1 = api::create_purpose((object)['name' => 'p1', 'retentionperiod' => 'PT1H', 'lawfulbases' => 'gdpr_art_6_1_a']);
+        $category1 = api::create_category((object)['name' => 'a']);
+        api::set_contextlevel((object)[
+            'contextlevel' => CONTEXT_SYSTEM,
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
+
         $this->expectException(coding_exception::class);
-        $record->contextlevel = CONTEXT_COURSE;
-        $record->purposeid = $purposes[1]->get('id');
-        api::set_contextlevel($record);
+        api::get_effective_contextlevel_purpose($contextlevel);
     }
 
     /**
-     * Test effective context purposes and categories.
-     *
-     * @return null
+     * Data provider for invalid contextlevel fetchers.
      */
-    public function test_effective_context() {
-        $this->setAdminUser();
-
-        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
-
-        // Define system defaults (all context levels below will inherit).
-        list($purposevar, $categoryvar) = data_registry::var_names_from_context(
-            \context_helper::get_class_for_level(CONTEXT_SYSTEM)
-        );
-        set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
-        set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
-
-        // Define course defaults.
-        list($purposevar, $categoryvar) = data_registry::var_names_from_context(
-            \context_helper::get_class_for_level(CONTEXT_COURSE)
-        );
-        set_config($purposevar, $purposes[1]->get('id'), 'tool_dataprivacy');
-        set_config($categoryvar, $categories[1]->get('id'), 'tool_dataprivacy');
-
-        $course0context = \context_course::instance($courses[0]->id);
-        $course1context = \context_course::instance($courses[1]->id);
-        $mod0context = \context_module::instance($modules[0]->cmid);
-        $mod1context = \context_module::instance($modules[1]->cmid);
-
-        // Set course instance values.
-        $record = (object)[
-            'contextid' => $course0context->id,
-            'purposeid' => $purposes[1]->get('id'),
-            'categoryid' => $categories[2]->get('id'),
+    public function invalid_effective_contextlevel_provider() {
+        return [
+            [CONTEXT_COURSECAT],
+            [CONTEXT_COURSE],
+            [CONTEXT_MODULE],
+            [CONTEXT_BLOCK],
         ];
-        api::set_context_instance($record);
-        $category = api::get_effective_context_category($course0context);
-        $this->assertEquals($record->categoryid, $category->get('id'));
-
-        // Module instances get the context level default if nothing specified.
-        $category = api::get_effective_context_category($mod0context);
-        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
-
-        // Module instances get the parent context category if they inherit.
-        $record->contextid = $mod0context->id;
-        $record->categoryid = context_instance::INHERIT;
-        api::set_context_instance($record);
-        $category = api::get_effective_context_category($mod0context);
-        $this->assertEquals($categories[2]->get('id'), $category->get('id'));
-
-        // The $forcedvalue param allows us to override the actual value (method php-docs for more info).
-        $category = api::get_effective_context_category($mod0context, $categories[1]->get('id'));
-        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
-        $category = api::get_effective_context_category($mod0context, $categories[0]->get('id'));
-        $this->assertEquals($categories[0]->get('id'), $category->get('id'));
-
-        // Module instances get the parent context category if they inherit; in
-        // this case the parent context category is not set so it should use the
-        // context level default (see 'Define course defaults' above).
-        $record->contextid = $mod1context->id;
-        $record->categoryid = context_instance::INHERIT;
-        api::set_context_instance($record);
-        $category = api::get_effective_context_category($mod1context);
-        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
-
-        // User instances use the value set at user context level instead of the user default.
-
-        // User defaults to cat 0 and user context level to 1.
-        list($purposevar, $categoryvar) = data_registry::var_names_from_context(
-            \context_helper::get_class_for_level(CONTEXT_USER)
-        );
-        set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
-        set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
-        $usercontextlevel = (object)[
-            'contextlevel' => CONTEXT_USER,
-            'purposeid' => $purposes[1]->get('id'),
-            'categoryid' => $categories[1]->get('id'),
-        ];
-        api::set_contextlevel($usercontextlevel);
-
-        $newuser = $this->getDataGenerator()->create_user();
-        $usercontext = \context_user::instance($newuser->id);
-        $category = api::get_effective_context_category($usercontext);
-        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
     }
 
     /**
-     * Tests the deletion of expired contexts.
-     *
-     * @return null
+     * Ensure that context inheritance works up the context tree.
      */
-    public function test_expired_context_deletion() {
-        global $DB;
+    public function test_effective_context_inheritance() {
+        $this->resetAfterTest();
 
-        $this->setAdminUser();
+        $systemdata = $this->create_and_set_purpose_for_contextlevel('PT1S', CONTEXT_SYSTEM);
 
-        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
+        /*
+         * System
+         * - Cat
+         *   - Subcat
+         *     - Course
+         *       - Forum
+         * - User
+         *   - User block
+         */
+        $cat = $this->getDataGenerator()->create_category();
+        $subcat = $this->getDataGenerator()->create_category(['parent' => $cat->id]);
+        $course = $this->getDataGenerator()->create_course(['category' => $subcat->id]);
+        $forum = $this->getDataGenerator()->create_module('forum', ['course' => $course->id]);
+        list(, $forumcm) = get_course_and_cm_from_instance($forum->id, 'forum');
 
-        $course0context = \context_course::instance($courses[0]->id);
-        $course1context = \context_course::instance($courses[1]->id);
+        $user = $this->getDataGenerator()->create_user();
 
-        $expiredcontext0 = api::create_expired_context($course0context->id);
-        $this->assertEquals(1, $DB->count_records('tool_dataprivacy_ctxexpired'));
-        $expiredcontext1 = api::create_expired_context($course1context->id);
-        $this->assertEquals(2, $DB->count_records('tool_dataprivacy_ctxexpired'));
+        $contextsystem = \context_system::instance();
+        $contextcat = \context_coursecat::instance($cat->id);
+        $contextsubcat = \context_coursecat::instance($subcat->id);
+        $contextcourse = \context_course::instance($course->id);
+        $contextforum = \context_module::instance($forumcm->id);
+        $contextuser = \context_user::instance($user->id);
 
-        api::delete_expired_context($expiredcontext0->get('id'));
-        $this->assertEquals(1, $DB->count_records('tool_dataprivacy_ctxexpired'));
-    }
+        // Initially everything is set to Inherit.
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsystem));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextcat));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsubcat));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextcourse));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextforum));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextuser));
 
-    /**
-     * Tests the status of expired contexts.
-     *
-     * @return null
-     */
-    public function test_expired_context_status() {
-        global $DB;
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsystem));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextcat));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsubcat));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextcourse));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextforum));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextuser));
 
-        $this->setAdminUser();
+        // When actively set, user will use the specified value.
+        $userdata = $this->create_and_set_purpose_for_contextlevel('PT1S', CONTEXT_USER);
 
-        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsystem));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextcat));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsubcat));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextcourse));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextforum));
+        $this->assertEquals($userdata->purpose, api::get_effective_context_purpose($contextuser));
 
-        $course0context = \context_course::instance($courses[0]->id);
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsystem));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextcat));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsubcat));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextcourse));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextforum));
+        $this->assertEquals($userdata->category, api::get_effective_context_category($contextuser));
 
-        $expiredcontext = api::create_expired_context($course0context->id);
+        // Set a context for the top category.
+        $catpurpose = new purpose(0, (object) [
+                'name' => 'Purpose',
+                'retentionperiod' => 'P1D',
+                'lawfulbases' => 'gdpr_art_6_1_a',
+            ]);
+        $catpurpose->save();
+        $catcategory = new category(0, (object) ['name' => 'Category']);
+        $catcategory->save();
+        api::set_context_instance((object) [
+                'contextid' => $contextcat->id,
+                'purposeid' => $catpurpose->get('id'),
+                'categoryid' => $catcategory->get('id'),
+            ]);
 
-        // Default status.
-        $this->assertEquals(expired_context::STATUS_EXPIRED, $expiredcontext->get('status'));
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsystem));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextcat));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextsubcat));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextcourse));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextforum));
 
-        api::set_expired_context_status($expiredcontext, expired_context::STATUS_APPROVED);
-        $this->assertEquals(expired_context::STATUS_APPROVED, $expiredcontext->get('status'));
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsystem));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextcat));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextsubcat));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextcourse));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextforum));
+
+        // Set a context for the sub category.
+        $subcatpurpose = new purpose(0, (object) [
+                'name' => 'Purpose',
+                'retentionperiod' => 'P1D',
+                'lawfulbases' => 'gdpr_art_6_1_a',
+            ]);
+        $subcatpurpose->save();
+        $subcatcategory = new category(0, (object) ['name' => 'Category']);
+        $subcatcategory->save();
+        api::set_context_instance((object) [
+                'contextid' => $contextsubcat->id,
+                'purposeid' => $subcatpurpose->get('id'),
+                'categoryid' => $subcatcategory->get('id'),
+            ]);
+
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsystem));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextcat));
+        $this->assertEquals($subcatpurpose, api::get_effective_context_purpose($contextsubcat));
+        $this->assertEquals($subcatpurpose, api::get_effective_context_purpose($contextcourse));
+        $this->assertEquals($subcatpurpose, api::get_effective_context_purpose($contextforum));
+
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsystem));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextcat));
+        $this->assertEquals($subcatcategory, api::get_effective_context_category($contextsubcat));
+        $this->assertEquals($subcatcategory, api::get_effective_context_category($contextcourse));
+        $this->assertEquals($subcatcategory, api::get_effective_context_category($contextforum));
+
+        // Set a context for the course.
+        $coursepurpose = new purpose(0, (object) [
+                'name' => 'Purpose',
+                'retentionperiod' => 'P1D',
+                'lawfulbases' => 'gdpr_art_6_1_a',
+            ]);
+        $coursepurpose->save();
+        $coursecategory = new category(0, (object) ['name' => 'Category']);
+        $coursecategory->save();
+        api::set_context_instance((object) [
+                'contextid' => $contextcourse->id,
+                'purposeid' => $coursepurpose->get('id'),
+                'categoryid' => $coursecategory->get('id'),
+            ]);
+
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsystem));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextcat));
+        $this->assertEquals($subcatpurpose, api::get_effective_context_purpose($contextsubcat));
+        $this->assertEquals($coursepurpose, api::get_effective_context_purpose($contextcourse));
+        $this->assertEquals($coursepurpose, api::get_effective_context_purpose($contextforum));
+
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsystem));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextcat));
+        $this->assertEquals($subcatcategory, api::get_effective_context_category($contextsubcat));
+        $this->assertEquals($coursecategory, api::get_effective_context_category($contextcourse));
+        $this->assertEquals($coursecategory, api::get_effective_context_category($contextforum));
+
+        // Set a context for the forum.
+        $forumpurpose = new purpose(0, (object) [
+                'name' => 'Purpose',
+                'retentionperiod' => 'P1D',
+                'lawfulbases' => 'gdpr_art_6_1_a',
+            ]);
+        $forumpurpose->save();
+        $forumcategory = new category(0, (object) ['name' => 'Category']);
+        $forumcategory->save();
+        api::set_context_instance((object) [
+                'contextid' => $contextforum->id,
+                'purposeid' => $forumpurpose->get('id'),
+                'categoryid' => $forumcategory->get('id'),
+            ]);
+
+        $this->assertEquals($systemdata->purpose, api::get_effective_context_purpose($contextsystem));
+        $this->assertEquals($catpurpose, api::get_effective_context_purpose($contextcat));
+        $this->assertEquals($subcatpurpose, api::get_effective_context_purpose($contextsubcat));
+        $this->assertEquals($coursepurpose, api::get_effective_context_purpose($contextcourse));
+        $this->assertEquals($forumpurpose, api::get_effective_context_purpose($contextforum));
+
+        $this->assertEquals($systemdata->category, api::get_effective_context_category($contextsystem));
+        $this->assertEquals($catcategory, api::get_effective_context_category($contextcat));
+        $this->assertEquals($subcatcategory, api::get_effective_context_category($contextsubcat));
+        $this->assertEquals($coursecategory, api::get_effective_context_category($contextcourse));
+        $this->assertEquals($forumcategory, api::get_effective_context_category($contextforum));
     }
 
     /**
@@ -1273,6 +1457,7 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * @return null
      */
     protected function add_purposes_and_categories() {
+        $this->resetAfterTest();
 
         $purpose1 = api::create_purpose((object)['name' => 'p1', 'retentionperiod' => 'PT1H', 'lawfulbases' => 'gdpr_art_6_1_a']);
         $purpose2 = api::create_purpose((object)['name' => 'p2', 'retentionperiod' => 'PT2H', 'lawfulbases' => 'gdpr_art_6_1_b']);
@@ -1300,6 +1485,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test that delete requests filter out protected purpose contexts.
      */
     public function test_add_request_contexts_with_status_delete() {
+        $this->resetAfterTest();
+
         $data = $this->setup_test_add_request_contexts_with_status(api::DATAREQUEST_TYPE_DELETE);
         $contextids = $data->list->get_contextids();
 
@@ -1311,11 +1498,393 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test that export requests don't filter out protected purpose contexts.
      */
     public function test_add_request_contexts_with_status_export() {
+        $this->resetAfterTest();
+
         $data = $this->setup_test_add_request_contexts_with_status(api::DATAREQUEST_TYPE_EXPORT);
         $contextids = $data->list->get_contextids();
 
         $this->assertCount(2, $contextids);
         $this->assertEquals($data->contexts->used, $contextids, '', 0.0, 10, true);
+    }
+
+    /**
+     * Test that delete requests do not filter out protected purpose contexts if they are already expired.
+     */
+    public function test_add_request_contexts_with_status_delete_course_expired_protected() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $purposes = $this->setup_basics('PT1H', 'PT1H', 'PT1H');
+        $purposes->course->purpose->set('protected', 1)->save();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['startdate' => time() - YEARSECS, 'enddate' => time() - YEARSECS]);
+        $coursecontext = \context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        $collection = new \core_privacy\local\request\contextlist_collection($user->id);
+        $contextlist = new \core_privacy\local\request\contextlist();
+        $contextlist->set_component('tool_dataprivacy');
+        $contextlist->add_from_sql('SELECT id FROM {context} WHERE id IN(:ctx1)', ['ctx1' => $coursecontext->id]);
+        $collection->add_contextlist($contextlist);
+
+        $request = api::create_data_request($user->id, api::DATAREQUEST_TYPE_DELETE);
+
+        $purposes->course->purpose->set('protected', 1)->save();
+        api::add_request_contexts_with_status($collection, $request->get('id'), contextlist_context::STATUS_APPROVED);
+
+        $requests = contextlist_context::get_records();
+        $this->assertCount(1, $requests);
+    }
+
+    /**
+     * Test that delete requests does filter out protected purpose contexts which are not expired.
+     */
+    public function test_add_request_contexts_with_status_delete_course_unexpired_protected() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $purposes = $this->setup_basics('PT1H', 'PT1H', 'P1Y');
+        $purposes->course->purpose->set('protected', 1)->save();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['startdate' => time() - YEARSECS, 'enddate' => time()]);
+        $coursecontext = \context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        $collection = new \core_privacy\local\request\contextlist_collection($user->id);
+        $contextlist = new \core_privacy\local\request\contextlist();
+        $contextlist->set_component('tool_dataprivacy');
+        $contextlist->add_from_sql('SELECT id FROM {context} WHERE id IN(:ctx1)', ['ctx1' => $coursecontext->id]);
+        $collection->add_contextlist($contextlist);
+
+        $request = api::create_data_request($user->id, api::DATAREQUEST_TYPE_DELETE);
+
+        $purposes->course->purpose->set('protected', 1)->save();
+        api::add_request_contexts_with_status($collection, $request->get('id'), contextlist_context::STATUS_APPROVED);
+
+        $requests = contextlist_context::get_records();
+        $this->assertCount(0, $requests);
+    }
+
+    /**
+     * Test that delete requests do not filter out unexpired contexts if they are not protected.
+     */
+    public function test_add_request_contexts_with_status_delete_course_unexpired_unprotected() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $purposes = $this->setup_basics('PT1H', 'PT1H', 'P1Y');
+        $purposes->course->purpose->set('protected', 1)->save();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['startdate' => time() - YEARSECS, 'enddate' => time()]);
+        $coursecontext = \context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        $collection = new \core_privacy\local\request\contextlist_collection($user->id);
+        $contextlist = new \core_privacy\local\request\contextlist();
+        $contextlist->set_component('tool_dataprivacy');
+        $contextlist->add_from_sql('SELECT id FROM {context} WHERE id IN(:ctx1)', ['ctx1' => $coursecontext->id]);
+        $collection->add_contextlist($contextlist);
+
+        $request = api::create_data_request($user->id, api::DATAREQUEST_TYPE_DELETE);
+
+        $purposes->course->purpose->set('protected', 0)->save();
+        api::add_request_contexts_with_status($collection, $request->get('id'), contextlist_context::STATUS_APPROVED);
+
+        $requests = contextlist_context::get_records();
+        $this->assertCount(1, $requests);
+    }
+
+    /**
+     * Test that delete requests do not filter out protected purpose contexts if they are already expired.
+     */
+    public function test_get_approved_contextlist_collection_for_request_delete_course_expired_protected() {
+        $this->resetAfterTest();
+
+        $purposes = $this->setup_basics('PT1H', 'PT1H', 'PT1H');
+        $purposes->course->purpose->set('protected', 1)->save();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['startdate' => time() - YEARSECS, 'enddate' => time() - YEARSECS]);
+        $coursecontext = \context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        // Create the request, with its contextlist and context.
+        $request = api::create_data_request($user->id, api::DATAREQUEST_TYPE_DELETE);
+        $contextlist = new \tool_dataprivacy\contextlist(0, (object) ['component' => 'tool_dataprivacy']);
+        $contextlist->save();
+
+        $clcontext = new \tool_dataprivacy\contextlist_context(0, (object) [
+                'contextid' => $coursecontext->id,
+                'status' => contextlist_context::STATUS_APPROVED,
+                'contextlistid' => $contextlist->get('id'),
+            ]);
+        $clcontext->save();
+
+        $rcl = new \tool_dataprivacy\request_contextlist(0, (object) [
+                'requestid' => $request->get('id'),
+                'contextlistid' => $contextlist->get('id'),
+            ]);
+        $rcl->save();
+
+        $purposes->course->purpose->set('protected', 1)->save();
+        $collection = api::get_approved_contextlist_collection_for_request($request);
+
+        $this->assertCount(1, $collection);
+
+        $list = $collection->get_contextlist_for_component('tool_dataprivacy');
+        $this->assertCount(1, $list);
+    }
+
+    /**
+     * Test that delete requests does filter out protected purpose contexts which are not expired.
+     */
+    public function test_get_approved_contextlist_collection_for_request_delete_course_unexpired_protected() {
+        $this->resetAfterTest();
+
+        $purposes = $this->setup_basics('PT1H', 'PT1H', 'P1Y');
+        $purposes->course->purpose->set('protected', 1)->save();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['startdate' => time() - YEARSECS, 'enddate' => time()]);
+        $coursecontext = \context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        // Create the request, with its contextlist and context.
+        $request = api::create_data_request($user->id, api::DATAREQUEST_TYPE_DELETE);
+        $contextlist = new \tool_dataprivacy\contextlist(0, (object) ['component' => 'tool_dataprivacy']);
+        $contextlist->save();
+
+        $clcontext = new \tool_dataprivacy\contextlist_context(0, (object) [
+                'contextid' => $coursecontext->id,
+                'status' => contextlist_context::STATUS_APPROVED,
+                'contextlistid' => $contextlist->get('id'),
+            ]);
+        $clcontext->save();
+
+        $rcl = new \tool_dataprivacy\request_contextlist(0, (object) [
+                'requestid' => $request->get('id'),
+                'contextlistid' => $contextlist->get('id'),
+            ]);
+        $rcl->save();
+
+        $purposes->course->purpose->set('protected', 1)->save();
+        $collection = api::get_approved_contextlist_collection_for_request($request);
+
+        $this->assertCount(0, $collection);
+
+        $list = $collection->get_contextlist_for_component('tool_dataprivacy');
+        $this->assertEmpty($list);
+    }
+
+    /**
+     * Test that delete requests do not filter out unexpired contexts if they are not protected.
+     */
+    public function test_get_approved_contextlist_collection_for_request_delete_course_unexpired_unprotected() {
+        $this->resetAfterTest();
+
+        $purposes = $this->setup_basics('PT1H', 'PT1H', 'P1Y');
+        $purposes->course->purpose->set('protected', 1)->save();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course(['startdate' => time() - YEARSECS, 'enddate' => time()]);
+        $coursecontext = \context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+
+        // Create the request, with its contextlist and context.
+        $request = api::create_data_request($user->id, api::DATAREQUEST_TYPE_DELETE);
+        $contextlist = new \tool_dataprivacy\contextlist(0, (object) ['component' => 'tool_dataprivacy']);
+        $contextlist->save();
+
+        $clcontext = new \tool_dataprivacy\contextlist_context(0, (object) [
+                'contextid' => $coursecontext->id,
+                'status' => contextlist_context::STATUS_APPROVED,
+                'contextlistid' => $contextlist->get('id'),
+            ]);
+        $clcontext->save();
+
+        $rcl = new \tool_dataprivacy\request_contextlist(0, (object) [
+                'requestid' => $request->get('id'),
+                'contextlistid' => $contextlist->get('id'),
+            ]);
+        $rcl->save();
+
+        $purposes->course->purpose->set('protected', 0)->save();
+        $collection = api::get_approved_contextlist_collection_for_request($request);
+
+        $this->assertCount(1, $collection);
+
+        $list = $collection->get_contextlist_for_component('tool_dataprivacy');
+        $this->assertCount(1, $list);
+    }
+
+    /**
+     * Data provider for \tool_dataprivacy_api_testcase::test_set_context_defaults
+     */
+    public function set_context_defaults_provider() {
+        $contextlevels = [
+            [CONTEXT_COURSECAT],
+            [CONTEXT_COURSE],
+            [CONTEXT_MODULE],
+            [CONTEXT_BLOCK],
+        ];
+        $paramsets = [
+            [true, true, false, false], // Inherit category and purpose, Not for activity, Don't override.
+            [true, false, false, false], // Inherit category but not purpose, Not for activity, Don't override.
+            [false, true, false, false], // Inherit purpose but not category, Not for activity, Don't override.
+            [false, false, false, false], // Don't inherit both category and purpose, Not for activity, Don't override.
+            [false, false, false, true], // Don't inherit both category and purpose, Not for activity, Override instances.
+        ];
+        $data = [];
+        foreach ($contextlevels as $level) {
+            foreach ($paramsets as $set) {
+                $data[] = array_merge($level, $set);
+            }
+            if ($level == CONTEXT_MODULE) {
+                // Add a combination where defaults for activity is being set.
+                $data[] = [CONTEXT_MODULE, false, false, true, false];
+                $data[] = [CONTEXT_MODULE, false, false, true, true];
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Test for \tool_dataprivacy\api::set_context_defaults()
+     *
+     * @dataProvider set_context_defaults_provider
+     * @param int $contextlevel The context level
+     * @param bool $inheritcategory Whether to set category value as INHERIT.
+     * @param bool $inheritpurpose Whether to set purpose value as INHERIT.
+     * @param bool $foractivity Whether to set defaults for an activity.
+     * @param bool $override Whether to override instances.
+     */
+    public function test_set_context_defaults($contextlevel, $inheritcategory, $inheritpurpose, $foractivity, $override) {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator();
+
+        // Generate course cat, course, block, assignment, forum instances.
+        $coursecat = $generator->create_category();
+        $course = $generator->create_course(['category' => $coursecat->id]);
+        $block = $generator->create_block('online_users');
+        $assign = $generator->create_module('assign', ['course' => $course->id]);
+        $forum = $generator->create_module('forum', ['course' => $course->id]);
+
+        $coursecatcontext = context_coursecat::instance($coursecat->id);
+        $coursecontext = context_course::instance($course->id);
+        $blockcontext = context_block::instance($block->id);
+
+        list($course, $assigncm) = get_course_and_cm_from_instance($assign->id, 'assign');
+        list($course, $forumcm) = get_course_and_cm_from_instance($forum->id, 'forum');
+        $assigncontext = context_module::instance($assigncm->id);
+        $forumcontext = context_module::instance($forumcm->id);
+
+        // Generate purposes and categories.
+        $category1 = api::create_category((object)['name' => 'Test category 1']);
+        $category2 = api::create_category((object)['name' => 'Test category 2']);
+        $purpose1 = api::create_purpose((object)[
+            'name' => 'Test purpose 1', 'retentionperiod' => 'PT1M', 'lawfulbases' => 'gdpr_art_6_1_a'
+        ]);
+        $purpose2 = api::create_purpose((object)[
+            'name' => 'Test purpose 2', 'retentionperiod' => 'PT1M', 'lawfulbases' => 'gdpr_art_6_1_a'
+        ]);
+
+        // Assign purposes and categories to contexts.
+        $coursecatctxinstance = api::set_context_instance((object) [
+            'contextid' => $coursecatcontext->id,
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
+        $coursectxinstance = api::set_context_instance((object) [
+            'contextid' => $coursecontext->id,
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
+        $blockctxinstance = api::set_context_instance((object) [
+            'contextid' => $blockcontext->id,
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
+        $assignctxinstance = api::set_context_instance((object) [
+            'contextid' => $assigncontext->id,
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
+        $forumctxinstance = api::set_context_instance((object) [
+            'contextid' => $forumcontext->id,
+            'purposeid' => $purpose1->get('id'),
+            'categoryid' => $category1->get('id'),
+        ]);
+
+        $categoryid = $inheritcategory ? context_instance::INHERIT : $category2->get('id');
+        $purposeid = $inheritpurpose ? context_instance::INHERIT : $purpose2->get('id');
+        $activity = '';
+        if ($contextlevel == CONTEXT_MODULE && $foractivity) {
+            $activity = 'assign';
+        }
+        $result = api::set_context_defaults($contextlevel, $categoryid, $purposeid, $activity, $override);
+        $this->assertTrue($result);
+
+        $targetctxinstance = false;
+        switch ($contextlevel) {
+            case CONTEXT_COURSECAT:
+                $targetctxinstance = $coursecatctxinstance;
+                break;
+            case CONTEXT_COURSE:
+                $targetctxinstance = $coursectxinstance;
+                break;
+            case CONTEXT_MODULE:
+                $targetctxinstance = $assignctxinstance;
+                break;
+            case CONTEXT_BLOCK:
+                $targetctxinstance = $blockctxinstance;
+                break;
+        }
+        $this->assertNotFalse($targetctxinstance);
+
+        // Check the context instances.
+        $instanceexists = context_instance::record_exists($targetctxinstance->get('id'));
+        if ($override) {
+            // If overridden, context instances on this context level would have been deleted.
+            $this->assertFalse($instanceexists);
+
+            // Check forum context instance.
+            $forumctxexists = context_instance::record_exists($forumctxinstance->get('id'));
+            if ($contextlevel != CONTEXT_MODULE || $foractivity) {
+                // The forum context instance won't be affected in this test if:
+                // - The overridden defaults are not for context modules.
+                // - Only the defaults for assign have been set.
+                $this->assertTrue($forumctxexists);
+            } else {
+                // If we're overriding for the whole course module context level,
+                // then this forum context instance will be deleted as well.
+                $this->assertFalse($forumctxexists);
+            }
+        } else {
+            // Otherwise, the context instance record remains.
+            $this->assertTrue($instanceexists);
+        }
+
+        // Check defaults.
+        list($defaultpurpose, $defaultcategory) = data_registry::get_defaults($contextlevel, $activity);
+        if (!$inheritpurpose) {
+            $this->assertEquals($purposeid, $defaultpurpose);
+        }
+        if (!$inheritcategory) {
+            $this->assertEquals($categoryid, $defaultcategory);
+        }
     }
 
     /**
@@ -1325,6 +1894,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * @return      \stdClass
      */
     protected function setup_test_add_request_contexts_with_status($type) {
+        $this->resetAfterTest();
+
         $this->setAdminUser();
 
         // User under test.
@@ -1415,6 +1986,70 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
                 ],
             ],
             'list' => $approvedcollection->get_contextlist_for_component('tool_dataprivacy'),
+        ];
+    }
+
+    /**
+     * Setup the basics with the specified retention period.
+     *
+     * @param   string  $system Retention policy for the system.
+     * @param   string  $user Retention policy for users.
+     * @param   string  $course Retention policy for courses.
+     * @param   string  $activity Retention policy for activities.
+     */
+    protected function setup_basics(string $system, string $user, string $course = null, string $activity = null) : \stdClass {
+        $this->resetAfterTest();
+
+        $purposes = (object) [
+            'system' => $this->create_and_set_purpose_for_contextlevel($system, CONTEXT_SYSTEM),
+            'user' => $this->create_and_set_purpose_for_contextlevel($user, CONTEXT_USER),
+        ];
+
+        if (null !== $course) {
+            $purposes->course = $this->create_and_set_purpose_for_contextlevel($course, CONTEXT_COURSE);
+        }
+
+        if (null !== $activity) {
+            $purposes->activity = $this->create_and_set_purpose_for_contextlevel($activity, CONTEXT_MODULE);
+        }
+
+        return $purposes;
+    }
+
+    /**
+     * Create a retention period and set it for the specified context level.
+     *
+     * @param   string  $retention
+     * @param   int     $contextlevel
+     */
+    protected function create_and_set_purpose_for_contextlevel(string $retention, int $contextlevel) {
+        $purpose = new purpose(0, (object) [
+            'name' => 'Test purpose ' . rand(1, 1000),
+            'retentionperiod' => $retention,
+            'lawfulbases' => 'gdpr_art_6_1_a',
+        ]);
+        $purpose->create();
+
+        $cat = new category(0, (object) ['name' => 'Test category']);
+        $cat->create();
+
+        if ($contextlevel <= CONTEXT_USER) {
+            $record = (object) [
+                'purposeid'     => $purpose->get('id'),
+                'categoryid'    => $cat->get('id'),
+                'contextlevel'  => $contextlevel,
+            ];
+            api::set_contextlevel($record);
+        } else {
+            list($purposevar, ) = data_registry::var_names_from_context(
+                    \context_helper::get_class_for_level(CONTEXT_COURSE)
+                );
+            set_config($purposevar, $purpose->get('id'), 'tool_dataprivacy');
+        }
+
+        return (object) [
+            'purpose' => $purpose,
+            'category' => $cat,
         ];
     }
 }

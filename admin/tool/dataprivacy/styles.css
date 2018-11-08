@@ -32,3 +32,15 @@ dd a.contactdpo {
 #page-admin-tool-dataprivacy-datarequests [data-region="data-requests-table"] .moodle-actionmenu {
     min-width: 150px;
 }
+
+.context-level-view {
+    margin: 1em;
+}
+
+[data-region="purposes"] .col-name-description {
+    width: 25%;
+}
+
+[data-region="categories"] .col-description {
+    width: 50%;
+}

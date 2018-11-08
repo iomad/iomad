@@ -162,5 +162,120 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2017111305, 'tool', 'dataprivacy');
     }
 
+    if ($oldversion < 2017111315) {
+        // Update completed delete requests to new delete status.
+        $query = "UPDATE {tool_dataprivacy_request}
+                     SET status = :setstatus
+                   WHERE type = :type
+                         AND status = :wherestatus";
+        $params = array(
+            'setstatus' => 10, // Request deleted.
+            'type' => 2, // Delete type.
+            'wherestatus' => 5, // Request completed.
+        );
+
+        $DB->execute($query, $params);
+
+        // Update completed data export requests to new download ready status.
+        $params = array(
+            'setstatus' => 8, // Request download ready.
+            'type' => 1, // export type.
+            'wherestatus' => 5, // Request completed.
+        );
+
+        $DB->execute($query, $params);
+
+        upgrade_plugin_savepoint(true, 2017111315, 'tool', 'dataprivacy');
+    }
+
+    if ($oldversion < 2017111316) {
+
+        // Changing precision of field status on table tool_dataprivacy_request to (2).
+        $table = new xmldb_table('tool_dataprivacy_request');
+        $field = new xmldb_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'requestedby');
+
+        // Launch change of precision for field status.
+        $dbman->change_field_precision($table, $field);
+
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2017111316, 'tool', 'dataprivacy');
+    }
+
+    if ($oldversion < 2017111354) {
+        // Define table tool_dataprivacy_purposerole to be created.
+        $table = new xmldb_table('tool_dataprivacy_purposerole');
+
+        // Adding fields to table tool_dataprivacy_purposerole.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('roleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('lawfulbases', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('sensitivedatareasons', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('retentionperiod', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('protected', XMLDB_TYPE_INTEGER, '1', null, null, null, null);
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table tool_dataprivacy_purposerole.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('purposepurposeid', XMLDB_KEY_FOREIGN, ['purposeid'], 'tool_dataprivacy_purpose', ['id']);
+        $table->add_key('puproseroleid', XMLDB_KEY_FOREIGN, ['roleid'], 'role', ['id']);
+
+        // Adding indexes to table tool_dataprivacy_purposerole.
+        $table->add_index('purposerole', XMLDB_INDEX_UNIQUE, ['purposeid', 'roleid']);
+
+        // Conditionally launch create table for tool_dataprivacy_purposerole.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Update the ctxexpired table.
+        $table = new xmldb_table('tool_dataprivacy_ctxexpired');
+
+        // Add the unexpiredroles field.
+        $field = new xmldb_field('unexpiredroles', XMLDB_TYPE_TEXT, null, null, null, null, null, 'contextid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $DB->set_field('tool_dataprivacy_ctxexpired', 'unexpiredroles', '');
+
+        // Add the expiredroles field.
+        $field = new xmldb_field('expiredroles', XMLDB_TYPE_TEXT, null, null, null, null, null, 'unexpiredroles');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $DB->set_field('tool_dataprivacy_ctxexpired', 'expiredroles', '');
+
+        // Add the defaultexpired field.
+        $field = new xmldb_field('defaultexpired', XMLDB_TYPE_INTEGER, '1', null, null, null, '1', 'expiredroles');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Change the default for the expired field to be empty.
+        $field = new xmldb_field('defaultexpired', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'expiredroles');
+        $dbman->change_field_default($table, $field);
+
+        // Prevent hte field from being nullable.
+        $field = new xmldb_field('defaultexpired', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null, 'expiredroles');
+        $dbman->change_field_notnull($table, $field);
+
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2017111354, 'tool', 'dataprivacy');
+    }
+
+    if ($oldversion < 2017111356) {
+        // Define field sensitivedatareasons to be added to tool_dataprivacy_purpose.
+        $table = new xmldb_table('tool_dataprivacy_request');
+        $field = new xmldb_field('creationmethod', XMLDB_TYPE_INTEGER, 10, null, XMLDB_NOTNULL, null, 0, 'timemodified');
+        // Conditionally launch add field sensitivedatareasons.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2017111356, 'tool', 'dataprivacy');
+    }
+
     return true;
 }
