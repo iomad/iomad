@@ -3467,48 +3467,6 @@ class company {
     }
 
     /**
-     * Triggered via company_suspended event.
-     *
-     * @param \block_iomad_company_user\event\company_suspended $event
-     * @return bool true on success.
-     */
-    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->other['companyid'];
-
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $suspendcompany = new company($companyid);
-        $suspendcompany->suspend(true);
-
-        return true;
-    }
-
-    /**
-     * Triggered via company_unsuspended event.
-     *
-     * @param \block_iomad_company_user\event\company_unsuspended $event
-     * @return bool true on success.
-     */
-    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->other['companyid'];
-
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $suspendcompany = new company($companyid);
-        $suspendcompany->suspend(false);
-
-        return true;
-    }
-
-    /**
      * Triggered via user_course_expired event.
      *
      * @param \block_iomad_company_user\event\company_license_created $event
