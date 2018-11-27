@@ -313,7 +313,11 @@ class potential_company_course_user_selector extends company_user_selector_base 
         $this->companyid  = $options['companyid'];
         $this->courseid  = $options['courseid'];
         $this->departmentid = $options['departmentid'];
-        $this->roletype = $options['roletype'];
+        if (!empty($options['roletype'])) {
+            $this->roletype = $options['roletype'];
+        } else {
+            $this->roletype = null;
+        }
         $this->subdepartments = $options['subdepartments'];
         $this->parentdepartmentid = $options['parentdepartmentid'];
         parent::__construct($name, $options);
