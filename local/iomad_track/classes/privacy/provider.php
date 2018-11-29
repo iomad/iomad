@@ -24,6 +24,15 @@
 
 namespace local_iomad_track\privacy;
 
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\deletion_criteria;
+use core_privacy\local\request\helper;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\writer;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -37,14 +46,18 @@ class provider implements
         \core_privacy\local\metadata\provider,
 
         // This plugin is a core_user_data_provider.
-        \core_privacy\local\request\plugin\provider {
+        \core_privacy\local\request\plugin\provider,
+
+        // This plugin is capable of determining which users have data within it.
+        \core_privacy\local\request\core_userlist_provider {
+
     /**
      * Return the fields which contain personal data.
      *
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $items) {
+    public static function get_metadata(collection $items) : collection {
         $items->add_database_table(
             'local_iomad_track',
             [
@@ -78,19 +91,28 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid($userid) {
-        $sql = "SELECT c.id
-                  FROM {context} c
-                WHERE contextlevel = :contextlevel";
-
-        $params = [
-            'userid'  => $userid,
-            'contextlevel'  => CONTEXT_SYSTEM,
-        ];
+    public static function get_contexts_for_userid(int $userid) : contextlist {
         $contextlist = new contextlist();
-        $contextlist->add_from_sql($sql, $params);
+        $contextlist->add_system_context();
 
         return $contextlist;
+    }
+
+    /**
+     * Get the list of users who have data within a context.
+     *
+     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(userlist $userlist) {
+
+        // Fetch all iomad_track users.
+        $sql = "SELECT userid
+                  FROM {local_iomad_track}";
+
+        $params = [
+        ];
+
+        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -164,7 +186,7 @@ class provider implements
      * @param approved_contextlist $contextlist a list of contexts approved for deletion.
      */
     public static function delete_data_for_user(approved_contextlist $contextlist) {
-        global $DB;
+        global $DB, $CFG;
 
         if (empty($contextlist->count())) {
             return;
@@ -188,6 +210,32 @@ class provider implements
                 $DB->delete_records('local_iomad_track_certs', array('id' => $cert->id));
             }
             $DB->delete_records('files', array('component' => 'local_iomad_track', 'userid' => $userid));
+        }
+    }
+
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        global $DB, $CFG;
+
+        $userids = $userlist->get_userids();
+        list($usersql, $userparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+
+        $select = " userid $usersql";
+        $DB->delete_records_select('local_iomad_track', $select, array());
+
+        // Get the certs.
+        if ($certs = $DB->get_records_select('local_iomad_track_certs', $select, array())) {
+            // Delete the files.
+            require_once($CFG->libdir . '/filelib.php');
+            foreach ($certs as $cert) {
+                if ($file = $DB->get_record('files', array('component' => 'local_iomad_track', 'itemid' => $cert->trackid, 'filename' => $cert->filename))) {
+                    $filedir1 = substr($file->contenthash,0,2);
+                    $filedir2 = substr($file->contenthash,2,2);
+                    $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
+                    fulldelete($filepath);
+                }
+
+                $DB->delete_records('local_iomad_track_certs', array('id' => $cert->id));
+            }
         }
     }
 }

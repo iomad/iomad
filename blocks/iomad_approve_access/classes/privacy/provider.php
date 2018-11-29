@@ -26,9 +26,11 @@ namespace block_iomad_approve_access\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\deletion_criteria;
 use core_privacy\local\request\helper;
+use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -44,14 +46,18 @@ class provider implements
         \core_privacy\local\metadata\provider,
 
         // This plugin is a core_user_data_provider.
-        \core_privacy\local\request\plugin\provider {
+        \core_privacy\local\request\plugin\provider,
+
+        // This plugin is capable of determining which users have data within it.
+        \core_privacy\local\request\core_userlist_provider {
+
     /**
      * Return the fields which contain personal data.
      *
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $items) {
+    public static function get_metadata(collection $items) : collection {
         $items->add_database_table(
             'block_iomad_approve_access',
             [
@@ -75,20 +81,28 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid($userid) {
-        // Fetch all choice answers.
-        $sql = "SELECT c.id
-                  FROM {context} c
-                WHERE contextlevel = :contextlevel";
-
-        $params = [
-            'userid'  => $userid,
-            'contextlevel'  => CONTEXT_SYSTEM,
-        ];
+    public static function get_contexts_for_userid(int $userid) : contextlist {
         $contextlist = new contextlist();
-        $contextlist->add_from_sql($sql, $params);
+        $contextlist->add_system_context();
 
         return $contextlist;
+    }
+
+    /**
+     * Get the list of users who have data within a context.
+     *
+     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(userlist $userlist) {
+
+        // Fetch all approve_access users.
+        $sql = "SELECT userid
+                  FROM {block_iomad_approve_access}";
+
+        $params = [
+        ];
+
+        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -155,5 +169,15 @@ class provider implements
                 $DB->delete_records('block_iomad_approve_access', array('id' => $approval->id));
             }
         }
+    }
+
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        global $DB;
+
+        $userids = $userlist->get_userids();
+        list($usersql, $userparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+
+        $select = " userid $usersql";
+        $DB->delete_records_select('block_iomad_approve_access', $select, array());
     }
 }

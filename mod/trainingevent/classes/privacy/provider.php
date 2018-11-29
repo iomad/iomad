@@ -26,9 +26,11 @@ namespace mod_trainingevent\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\deletion_criteria;
 use core_privacy\local\request\helper;
+use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -44,20 +46,24 @@ class provider implements
         \core_privacy\local\metadata\provider,
 
         // This plugin is a core_user_data_provider.
-        \core_privacy\local\request\plugin\provider {
+        \core_privacy\local\request\plugin\provider,
+
+        // This plugin is capable of determining which users have data within it.
+        \core_privacy\local\request\core_userlist_provider {
+
     /**
      * Return the fields which contain personal data.
      *
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $items) {
+    public static function get_metadata(collection $items) : collection {
         $items->add_database_table(
             'trainingevent_users',
             [
-                'trainingeventid' => 'privacy:metadata:choice_answers:trainingeventid',
-                'id' => 'privacy:metadata:choice_answers:id',
-                'userid' => 'privacy:metadata:choice_answers:userid',
+                'trainingeventid' => 'privacy:metadata:trainingeventid:trainingeventid',
+                'id' => 'privacy:metadata:trainingeventid:id',
+                'userid' => 'privacy:metadata:trainingeventid:userid',
             ],
             'privacy:metadata:trainingevent_users'
         );
@@ -71,15 +77,14 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid($userid) {
-        // Fetch all choice answers.
+    public static function get_contexts_for_userid(int $userid) : contextlist {
+        // Fetch all training events
         $sql = "SELECT c.id
                   FROM {context} c
             INNER JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
             INNER JOIN {modules} m ON m.id = cm.module AND m.name = :modname
-            INNER JOIN {choice} ch ON ch.id = cm.instance
-            INNER JOIN {choice_options} co ON co.choiceid = ch.id
-            INNER JOIN {choice_answers} ca ON ca.optionid = co.id AND ca.choiceid = ch.id
+            INNER JOIN {trainingevent} te ON te.id = cm.instance
+            INNER JOIN {trainingevent_users} tu ON tu.trainingeventid = te.id
                  WHERE ca.userid = :userid";
 
         $params = [
@@ -91,6 +96,33 @@ class provider implements
         $contextlist->add_from_sql($sql, $params);
 
         return $contextlist;
+    }
+
+    /**
+     * Get the list of users who have data within a context.
+     *
+     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(userlist $userlist) {
+        $context = $userlist->get_context();
+
+        if (!$context instanceof \context_module) {
+            return;
+        }
+
+        // Fetch all trainingevent users.
+        $sql = "SELECT tu.userid
+                  FROM {course_modules} cm
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {trainingevent_users} tu ON tu.trainingeventid = cm.instance
+                 WHERE cm.id = :cmid";
+
+        $params = [
+            'cmid'      => $context->instanceid,
+            'modname'   => 'trainingevent',
+        ];
+
+        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -121,43 +153,27 @@ class provider implements
         $params = ['userid' => $user->id] + $contextparams;
 
         $trainingevents = $DB->get_recordset_sql($sql, $params);
-        foreach ($choiceanswers as $choiceanswer) {
-            // If we've moved to a new choice, then write the last choice data and reinit the choice data array.
-            if ($lastcmid != $choiceanswer->cmid) {
-                if (!empty($choicedata)) {
-                    $context = \context_module::instance($lastcmid);
-                    self::export_choice_data_for_user($choicedata, $context, $user);
-                }
-                $choicedata = [
-                    'answer' => [],
-                    'timemodified' => \core_privacy\local\request\transform::datetime($choiceanswer->timemodified),
-                ];
-            }
-            $choicedata['answer'][] = $choiceanswer->answer;
-            $lastcmid = $choiceanswer->cmid;
+        foreach ($trainingevents as $trainingevent) {
+            foreach ($trainingevents as $trainingevent) {
+                writer::with_context($context)->export_data($context, $trainingevent);
         }
-        $choiceanswers->close();
+        $trainintevents->close();
 
-        // The data for the last activity won't have been written yet, so make sure to write it now!
-        if (!empty($choicedata)) {
-            $context = \context_module::instance($lastcmid);
-            self::export_choice_data_for_user($choicedata, $context, $user);
-        }
     }
 
     /**
-     * Export the supplied personal data for a single choice activity, along with any generic data or area files.
+     * Export the supplied personal data for a single trainingevent activity, along with any generic data or area files.
      *
-     * @param array $choicedata the personal data to export for the choice.
-     * @param \context_module $context the context of the choice.
+     * @param array $trainingeventdata the personal data to export for the trainingevent.
+     * @param \context_module $context the context of the trainingevent.
      * @param \stdClass $user the user record
      */
-    protected static function export_choice_data_for_user(array $choicedata, \context_module $context, \stdClass $user) {
-        // Fetch the generic module data for the choice.
+    protected static function export_trainingevent_data_for_user(array $trainingeventdata, \context_module $context, \stdClass $user) {
+        // Fetch the generic module data for the trainingevent.
         $contextdata = helper::get_context_data($context, $user);
 
-        // Merge with choice data and write it.
-        $contextdata = (object)array_merge((array)$contextdata, $choicedata);
+        // Merge with trainingevent data and write it.
+        $contextdata = (object)array_merge((array)$contextdata, $trainingeventdata);
         writer::with_context($context)->export_data([], $contextdata);
 
         // Write generic module intro files.
@@ -176,7 +192,7 @@ class provider implements
             return;
         }
         $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
-        $DB->delete_records('choice_answers', ['choiceid' => $instanceid]);
+        $DB->delete_records('trainingevent_users', ['trainingeventid' => $instanceid]);
     }
 
     /**
@@ -194,7 +210,35 @@ class provider implements
         $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
             $instanceid = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid], MUST_EXIST);
-            $DB->delete_records('choice_answers', ['choiceid' => $instanceid, 'userid' => $userid]);
+            $DB->delete_records('trainingevent_users', ['trainingeventid' => $instanceid, 'userid' => $userid]);
         }
+    }
+    /**
+     * Delete multiple users within a single context.
+     *
+     * @param   approved_userlist       $userlist The approved context and user information to delete information for.
+     */
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        global $DB;
+
+        $context = $userlist->get_context();
+
+        if (!$context instanceof \context_module) {
+            return;
+        }
+
+        $cm = get_coursemodule_from_id('trainingevent', $context->instanceid);
+
+        if (!$cm) {
+            // Only trainingevent module will be handled.
+            return;
+        }
+
+        $userids = $userlist->get_userids();
+        list($usersql, $userparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+
+        $select = "trainingeventid = :trainingeventid AND userid $usersql";
+        $params = ['trainingeventid' => $cm->instance] + $userparams;
+        $DB->delete_records_select('trainingevent_users', $select, $params);
     }
 }
