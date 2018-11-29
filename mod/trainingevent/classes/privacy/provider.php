@@ -156,6 +156,7 @@ class provider implements
         foreach ($trainingevents as $trainingevent) {
             foreach ($trainingevents as $trainingevent) {
                 writer::with_context($context)->export_data($context, $trainingevent);
+            }
         }
         $trainintevents->close();
 
