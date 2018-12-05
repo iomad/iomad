@@ -46,10 +46,7 @@ class provider implements
         \core_privacy\local\metadata\provider,
 
         // This plugin is a core_user_data_provider.
-        \core_privacy\local\request\plugin\provider,
-
-        // This plugin is capable of determining which users have data within it.
-        \core_privacy\local\request\core_userlist_provider {
+        \core_privacy\local\request\plugin\provider {
 
     /**
      * Return the fields which contain personal data.
@@ -91,7 +88,7 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid($userid) : contextlist {
         $contextlist = new contextlist();
         $contextlist->add_system_context();
 
