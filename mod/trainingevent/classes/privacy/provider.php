@@ -85,7 +85,7 @@ class provider implements
             INNER JOIN {modules} m ON m.id = cm.module AND m.name = :modname
             INNER JOIN {trainingevent} te ON te.id = cm.instance
             INNER JOIN {trainingevent_users} tu ON tu.trainingeventid = te.id
-                 WHERE ca.userid = :userid";
+                 WHERE tu.userid = :userid";
 
         $params = [
             'modname'       => 'trainingevent',
