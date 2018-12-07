@@ -33,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @package     core_privacy
  * @copyright   2018 Andrew Nicols <andrew@nicols.co.uk>
  */
-interface core_userlist_provider {
+interface core_userlist_provider extends userlist_provider {
 
     /**
      * Get the list of users who have data within a context.

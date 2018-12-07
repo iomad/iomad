@@ -21,6 +21,13 @@ Feature: Data export from the privacy API
     And the following config values are set as admin:
       | contactdataprotectionofficer | 1  | tool_dataprivacy |
       | privacyrequestexpiry         | 55 | tool_dataprivacy |
+    And the following data privacy "categories" exist:
+      | name          |
+      | Site category |
+    And the following data privacy "purposes" exist:
+      | name         | retentionperiod |
+      | Site purpose | P10Y           |
+    And I set the site category and purpose to "Site category" and "Site purpose"
 
   @javascript
   Scenario: As admin, export data for a user and download it, unless it has expired
@@ -42,7 +49,7 @@ Feature: Data export from the privacy API
     And I reload the page
     And I should see "Download ready" in the "Victim User 1" "table_row"
     And I open the action menu in "Victim User 1" "table_row"
-    And following "Download" should download between "1" and "100000" bytes
+    And following "Download" should download between "1" and "130000" bytes
     And the following config values are set as admin:
       | privacyrequestexpiry | 1 | tool_dataprivacy |
     And I wait "1" seconds
@@ -80,7 +87,7 @@ Feature: Data export from the privacy API
     And I reload the page
     And I should see "Download ready" in the "Export all of my personal data" "table_row"
     And I open the action menu in "Victim User 1" "table_row"
-    And following "Download" should download between "1" and "100000" bytes
+    And following "Download" should download between "1" and "130000" bytes
 
     And the following config values are set as admin:
       | privacyrequestexpiry | 1 | tool_dataprivacy |
@@ -120,7 +127,7 @@ Feature: Data export from the privacy API
     And I reload the page
     And I should see "Download ready" in the "Victim User 1" "table_row"
     And I open the action menu in "Victim User 1" "table_row"
-    And following "Download" should download between "1" and "100000" bytes
+    And following "Download" should download between "1" and "130000" bytes
 
     And the following config values are set as admin:
       | privacyrequestexpiry | 1 | tool_dataprivacy |

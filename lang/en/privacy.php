@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['broughtbymoodle'] = 'This data export provided by Moodle';
+$string['broughtbymoodle'] = 'This data export is provided by Moodle.';
 $string['exportfrom'] = 'Exported from {$a}';
 $string['exporttime'] = 'Exported on {$a}';
 $string['exportuser'] = 'Data for {$a}';
@@ -36,7 +36,7 @@ $string['trace:processingcomponent'] = 'Processing {$a->component} ({$a->progres
 $string['trace:preprocessingcomponent'] = 'Pre-processing {$a->component} ({$a->progress}/{$a->total}) ({$a->datetime})';
 $string['trace:fetchcomponents'] = 'Fetching data from {$a->total} components ({$a->datetime})';
 $string['trace:deletingapproved'] = 'Performing removal of {$a->total} approved contexts ({$a->datetime})';
-$string['trace:deletingapprovedusers'] = 'Performing removal of users in {$a->total} approved component for context {$a->contextid} ({$a->datetime})';
+$string['trace:deletingapprovedusers'] = 'Performing removal of users in {$a->total} approved components for context {$a->contextid} ({$a->datetime}).';
 $string['trace:deletingcontext'] = 'Performing removal of context from {$a->total} components ({$a->datetime})';
 $string['navigation'] = 'Navigation';
 $string['trace:deletinguser'] = 'Performing removal of user from {$a->total} components ({$a->datetime})';

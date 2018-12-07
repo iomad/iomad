@@ -74,6 +74,11 @@ class process_data_request_task extends adhoc_task {
             return;
         }
 
+        if (!\tool_dataprivacy\data_registry::defaults_set()) {
+            // Warn if no site purpose is defined.
+            mtrace('Warning: No purpose is defined at the system level. Deletion will delete all.');
+        }
+
         // Get the user details now. We might not be able to retrieve it later if it's a deletion processing.
         $foruser = core_user::get_user($request->userid);
 
@@ -81,6 +86,7 @@ class process_data_request_task extends adhoc_task {
         mtrace('Processing request...');
         api::update_request_status($requestid, api::DATAREQUEST_STATUS_PROCESSING);
         $completestatus = api::DATAREQUEST_STATUS_COMPLETE;
+        $deleteuser = false;
 
         if ($request->type == api::DATAREQUEST_TYPE_EXPORT) {
             // Get the user context.
@@ -124,6 +130,7 @@ class process_data_request_task extends adhoc_task {
 
             $manager->delete_data_for_user($approvedclcollection);
             $completestatus = api::DATAREQUEST_STATUS_DELETED;
+            $deleteuser = !$foruser->deleted;
         }
 
         // When the preparation of the metadata finishes, update the request status to awaiting approval.
@@ -256,7 +263,7 @@ class process_data_request_task extends adhoc_task {
             }
         }
 
-        if ($request->type == api::DATAREQUEST_TYPE_DELETE) {
+        if ($deleteuser) {
             // Delete the user.
             delete_user($foruser);
         }

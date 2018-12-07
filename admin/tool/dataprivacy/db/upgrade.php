@@ -252,12 +252,28 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         // Define field sensitivedatareasons to be added to tool_dataprivacy_purpose.
         $table = new xmldb_table('tool_dataprivacy_request');
         $field = new xmldb_field('creationmethod', XMLDB_TYPE_INTEGER, 10, null, XMLDB_NOTNULL, null, 0, 'timemodified');
+
         // Conditionally launch add field sensitivedatareasons.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
+
         // Dataprivacy savepoint reached.
         upgrade_plugin_savepoint(true, 2018051413, 'tool', 'dataprivacy');
+    }
+
+    if ($oldversion < 2018051415) {
+        // Delete orphaned data privacy requests.
+        $sql = "SELECT r.id
+                  FROM {tool_dataprivacy_request} r LEFT JOIN {user} u ON r.userid = u.id
+                 WHERE u.id IS NULL";
+        $orphaned = $DB->get_fieldset_sql($sql);
+
+        if ($orphaned) {
+            $DB->delete_records_list('tool_dataprivacy_request', 'id', $orphaned);
+        }
+
+        upgrade_plugin_savepoint(true, 2018051415, 'tool', 'dataprivacy');
     }
 
     return true;
