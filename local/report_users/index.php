@@ -448,7 +448,7 @@ $dbsort = "";
             break;
         }
 
-        $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch . $userfilter, $searchparams);
+        $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
     } else {
         $userrecords = array();
     }
