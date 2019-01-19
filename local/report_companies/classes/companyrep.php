@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_report_companies;
+
 class companyrep{
 
     // Get the jsmodule setup thingy.
@@ -28,9 +30,14 @@ class companyrep{
         return $jsmodule;
     }
 
-    // Create the select list of companies.
-    // If the user is in the company managers table then the list is restricted.
-    public static function companylist( $user ) {
+    /**
+     * Create the select list of companies.
+     * If the user is in the company managers table then the list is restricted.
+     * @param object $user
+     * @param int $companyid
+     * @return array
+     */
+    public static function companylist($user, $companyid = null) {
         global $DB;
 
         // Create "empty" array.
@@ -47,12 +54,26 @@ class companyrep{
         }
 
         // Get companies information.
-        if (!$companies = $DB->get_records('company', array(), 'name')) {
-            return $companylist;
+        if ($companyid) {
+            $params = ['id' => $companyid];
+        } else {
+            $params = [];
+        }
+        if (!$companies = $DB->get_records('company', $params)) {
+            return [];
         }
 
         // And finally build the list.
         foreach ($companies as $company) {
+
+            // Is this a child company?
+            if ($company->parentid) {
+                $parent = $DB->get_record('company', ['id' => $company->parentid], '*', MUST_EXIST);
+                $company->parentlink = new \moodle_url('/local/report_companies', ['companyid' => $company->parentid]);
+                $company->parent = '<a href="' . $company->parentlink . '">' . $parent->name . '</a>';
+            } else {
+                $company->parent = '';
+            }
 
             // If managers found then only allow selected companies.
             if (!empty($managedcompanies)) {
@@ -63,42 +84,47 @@ class companyrep{
             $companylist[$company->id] = $company;
         }
 
+        $companylist = \block_iomad_company_admin\iomad_company_admin::order_companies_by_parent($companylist);
+
         return $companylist;
     }
 
-    // Append the company managers to companies.
-    public static function addmanagers( &$companies ) {
+    /**
+     * Append the company managers to companies.
+     * @param array $companies
+     */
+    public static function addmanagers(&$companies) {
         global $DB;
 
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
-            $companymanagers = array();
-            $managers = array();
-            if ($companymanagers = $DB->get_records_sql("SELECT * from {company_users} WHERE
-                                                  companyid = :companyid
-                                                  AND managertype = 1", array('companyid' => $company->id))) {
-                foreach ($companymanagers as $companymanager) {
-                    if ($user = $DB->get_record( 'user', array('id' => $companymanager->userid))) {
-                        $managers[$user->id] = $user;
-                    }
-                }
-            }
-            $company->managers['company'] = $managers;
-            $managers = array();
-            if ($companymanagers = $DB->get_records_sql("SELECT * from {company_users} WHERE
-                                                  companyid = :companyid
-                                                  AND managertype = 2", array('companyid' => $company->id))) {
-                foreach ($companymanagers as $companymanager) {
-                    if ($user = $DB->get_record( 'user', array('id' => $companymanager->userid))) {
-                        $managers[$user->id] = $user;
-                    }
-                }
-            }
-            $company->managers['department'] = $managers;
+
+            // Company managers
+            $company->companymanagers = $DB->get_records_sql(
+                "SELECT u.* from {company_users} cu 
+                JOIN {user} u ON u.id = cu.userid 
+                WHERE companyid = :companyid
+                AND managertype = 1", ['companyid' => $company->id]);
+
+            // Department managers
+            $company->departmentmanagers = $DB->get_records_sql(
+                "SELECT u.* from {company_users} cu 
+                JOIN {user} u ON u.id = cu.userid 
+                WHERE companyid = :companyid
+                AND managertype = 2", ['companyid' => $company->id]);
+
+            $company->nomanagers = empty($company->departmentmanagers) && empty($company->companymanagers);
+            $company->companymanagerscount = count($company->companymanagers);
+            $company->departmentmanagerscount = count($company->departmentmanagers);
+            $company->companymanagers = self::listusers($company->companymanagers);
+            $company->departmentmanagers = self::listusers($company->departmentmanagers);
         }
     }
 
-    // Append the company users to companies.
+    /**
+     * Append the company users to companies.
+     * @param array $companies
+     */
     public static function addusers( &$companies ) {
         global $DB;
 
@@ -112,7 +138,9 @@ class companyrep{
                     }
                 }
             }
-            $company->users = $users;
+            $company->users = self::listusers($users);
+            $company->nousers = empty($users);
+            $company->userscount = count($users);
         }
     }
 
@@ -131,21 +159,25 @@ class companyrep{
                 }
             }
             $company->courses = $courses;
+            $company->nocourses = empty($courses);
+            $company->coursescount = count($courses);
         }
     }
 
-    // List users.
-    public static function listusers( $users ) {
+    /**
+     * Update users for template
+     * @param array users
+     * @return array
+     */
+    public static function listusers($users) {
         global $CFG;
 
-        echo "<ul class=\"iomad_user_list\">\n";
         foreach ($users as $user) {
-            if (!empty($user->id) && !empty($user->email) && !empty($user->firstname) && !empty($user->lastname)) {
-                $link = "{$CFG->wwwroot}/user/view.php?id={$user->id}";
-                echo "<li><a href=\"$link\">".fullname( $user )."</a> ({$user->email})</li>\n";
-            }
+            $user->link = new \moodle_url('/user/view.php', ['id' => $user->id]);
+            $user->fullname = fullname($user);
         }
-        echo "</ul>\n";
+
+        return array_values($users);
     }
 
 }

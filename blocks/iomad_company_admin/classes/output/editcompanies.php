@@ -31,32 +31,20 @@ use renderer_base;
 use templatable;
 
 /**
- * Class contains data for course_overview
+ * Class contains data for editcompanies filter/form
  *
- * @copyright  2017 Howard Miller <howardsmiller@gmail.com>
+ * @copyright  2018 Howard Miller <howardsmiller@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class adminblock implements renderable, templatable {
+class editcompanies implements renderable, templatable {
 
-    protected $logourl;
- 
-    protected $companyselect;
-
-    protected $tabs;
-
-    protected $panes;
+    protected $params = [];
 
     /**
-     * @param string $logourl
-     * @param string $companyselect
-     * @param array $tabs
-     * @param array $panes
+     * @param array $params
      */
-    public function __construct($logourl, $companyselect, $tabs, $panes) {
-        $this->logourl = $logourl;
-        $this->companyselect = $companyselect;
-        $this->tabs = $tabs;
-        $this->panes = $panes;
+    public function __construct($params) {
+        $this->params = $params;
     }
 
     /**
@@ -67,10 +55,11 @@ class adminblock implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         return [
-            'logourl' => $this->logourl,
-            'companyselect' => $this->companyselect,
-            'tabs' => $this->tabs,
-            'panes' => array_values($this->panes),
+            'form' => $this->params['form'],
+            'table' => $this->params['table'],
+            'pagingbar' => $this->params['pagingbar'],
+            'companycount' => $this->params['companycount'],
+            'companycountplural' => $this->params['companycountplural'],
         ];
     }
 

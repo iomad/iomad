@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace block_iomad_company_admin;
+
+defined('MOODLE_INTERNAL') || die;
+
+use \context_system;
+
 class iomad_company_admin {
 
     /**
@@ -111,5 +117,32 @@ class iomad_company_admin {
         }
 
         return $filtered_capabilities;
+    }
+
+    /**
+     * Rearrange list of companies into parent/child order
+     * @param array $companies complete list of companies
+     * @param array $newlist (partial) ordered list
+     * @param int $parentid
+     * @param int $depth
+     * @return array
+     */
+    public static function order_companies_by_parent($companies, &$newlist = [], $parentid = 0, $depth = 0) {
+
+        foreach ($companies as $company) {
+            $companyid = $company->id;
+            if ($company->parentid == $parentid) {
+                $company->depth = $depth;
+                $newlist[] = $company;
+                $children = array_filter($companies, function($comp) use ($companyid) {
+                    return $comp->parentid == $companyid;
+                });
+                foreach ($children as $child) {
+                    self::order_companies_by_parent($companies, $newlist, $companyid, $depth + 1);
+                }
+            }
+        }
+
+        return $newlist;
     }
 }

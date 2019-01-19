@@ -14,6 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->version  = 2018122700;   // The (date) version of this plugin.
-$plugin->requires = 2018051700;   // Requires this Moodle version.
-$plugin->component  = 'block_iomad_company_admin';
+namespace local_report_companies\output;
+
+defined('MOODLE_INTERNAL') || die();
+
+use plugin_renderer_base;
+
+class renderer extends plugin_renderer_base {
+
+    /**
+     * Render companies list
+     * @param main $main
+     */
+    public function render_main(main $main) {
+        return $this->render_from_template('local_report_companies/main', $main->export_for_template($this));
+    }
+
+}

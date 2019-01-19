@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+$string['addnewchildcompany'] = 'Add a new child company';
 $string['addnewcompany'] = 'Add a new company';
 $string['allcourses'] = 'All courses';
 $string['alltemplates'] = 'All competency templates';
@@ -235,6 +236,7 @@ $string['editroletemplate'] = 'Edit role template';
 $string['edituser'] = 'Edit users';
 $string['educator'] = 'Course educator';
 $string['educatorreusable'] = 'Course educator - reusable';
+$string['emailpasswordstask'] = 'Email out passwords for newly created Iomad users';
 $string['emailprofileid'] = 'External supervisor email field';
 $string['emailprofileid_help'] = 'Choose the profile field which will contain the email address of a user\'s manager who does not have an account on the system.';
 $string['edit_users_title'] = 'Edit Users';
@@ -432,6 +434,7 @@ $string['movedepartmentcheckfull'] = 'You are moving this department to another 
 $string['newcourse'] = 'New course';
 $string['newuser'] = 'New user';
 $string['nocompanies'] = 'There are no companies - please add a company first';
+$string['nocompaniesfilter'] = 'No companies match your current filter';
 $string['nocompaniesfound'] = 'There are no companies which match your criteria';
 $string['nocompany'] = 'Unallocated courses';
 $string['nocompanyframeworks'] = 'Unallocated competency frameworks';
