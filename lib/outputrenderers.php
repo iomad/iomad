@@ -3440,7 +3440,7 @@ EOD;
                         // Process this as a link item.
                         $pix = null;
                         if (isset($value->pix) && !empty($value->pix)) {
-                            $pix = new pix_icon($value->pix, $value->title, null, array('class' => 'iconsmall'));
+                            $pix = new pix_icon($value->pix, '', null, array('class' => 'iconsmall'));
                         } else if (isset($value->imgsrc) && !empty($value->imgsrc)) {
                             $value->title = html_writer::img(
                                 $value->imgsrc,
@@ -4448,6 +4448,22 @@ EOD;
                     } else {
                         $text = $element->getText();
                     }
+                }
+
+                // Generate the form element wrapper ids and names to pass to the template.
+                // This differs between group and non-group elements.
+                if ($element->getType() === 'group') {
+                    // Group element.
+                    // The id will be something like 'fgroup_id_NAME'. E.g. fgroup_id_mygroup.
+                    $elementcontext['wrapperid'] = $elementcontext['id'];
+
+                    // Ensure group elements pass through the group name as the element name so the id_error_{{element.name}} is
+                    // properly set in the template.
+                    $elementcontext['name'] = $elementcontext['groupname'];
+                } else {
+                    // Non grouped element.
+                    // Creates an id like 'fitem_id_NAME'. E.g. fitem_id_mytextelement.
+                    $elementcontext['wrapperid'] = 'fitem_' . $elementcontext['id'];
                 }
 
                 $context = array(

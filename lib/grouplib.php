@@ -38,6 +38,11 @@ define('SEPARATEGROUPS', 1);
  */
 define('VISIBLEGROUPS', 2);
 
+/**
+ * This is for filtering users without any group.
+ */
+define('USERSWITHOUTGROUP', -1);
+
 
 /**
  * Determines if a group with a given groupid exists.
@@ -188,16 +193,20 @@ function groups_get_grouping($groupingid, $fields='*', $strictness=IGNORE_MISSIN
 }
 
 /**
- * Gets array of all groups in a specified course.
+ * Gets array of all groups in a specified course (subject to the conditions imposed by the other arguments).
  *
  * @category group
  * @param int $courseid The id of the course.
- * @param mixed $userid optional user id or array of ids, returns only groups of the user.
+ * @param int|int[] $userid optional user id or array of ids, returns only groups continaing one or more of those users.
  * @param int $groupingid optional returns only groups in the specified grouping.
- * @param string $fields
- * @param bool $withmembers If true - this will return an extra field which is the list of userids that
- *                          are members of this group.
- * @return array Returns an array of the group objects (userid field returned if array in $userid)
+ * @param string $fields defaults to g.*. This allows you to vary which fields are returned.
+ *      If $groupingid is specified, the groupings_groups table will be available with alias gg.
+ *      If $userid is specified, the groups_members table will be available as gm.
+ * @param bool $withmembers if true return an extra field members (int[]) which is the list of userids that
+ *      are members of each group. For this to work, g.id (or g.*) must be included in $fields.
+ *      In this case, the final results will always be an array indexed by group id.
+ * @return array returns an array of the group objects (unless you have done something very weird
+ *      with the $fields option).
  */
 function groups_get_all_groups($courseid, $userid=0, $groupingid=0, $fields='g.*', $withmembers=false) {
     global $DB;
@@ -242,57 +251,54 @@ function groups_get_all_groups($courseid, $userid=0, $groupingid=0, $fields='g.*
         // Yay! We could use the cache. One more query saved.
         return $groups;
     }
-    $memberselect = '';
-    $memberjoin = '';
 
-    if (empty($userid)) {
-        $userfrom  = "";
-        $userwhere = "";
-        $params = array();
-    } else {
+    $params = [];
+    $userfrom  = '';
+    $userwhere = '';
+    if (!empty($userid)) {
         list($usql, $params) = $DB->get_in_or_equal($userid);
-        $userfrom  = ", {groups_members} gm";
-        $userwhere = "AND g.id = gm.groupid AND gm.userid $usql";
+        $userfrom  = "JOIN {groups_members} gm ON gm.groupid = g.id";
+        $userwhere = "AND gm.userid $usql";
     }
 
+    $groupingfrom  = '';
+    $groupingwhere = '';
     if (!empty($groupingid)) {
-        $groupingfrom  = ", {groupings_groups} gg";
-        $groupingwhere = "AND g.id = gg.groupid AND gg.groupingid = ?";
+        $groupingfrom  = "JOIN {groupings_groups} gg ON gg.groupid = g.id";
+        $groupingwhere = "AND gg.groupingid = ?";
         $params[] = $groupingid;
-    } else {
-        $groupingfrom  = "";
-        $groupingwhere = "";
-    }
-
-    if ($withmembers) {
-        $memberselect = $DB->sql_concat("COALESCE(ugm.userid, 0)", "':'", 'g.id') . ' AS ugmid, ugm.userid, ';
-        $memberjoin = ' LEFT JOIN {groups_members} ugm ON ugm.groupid = g.id ';
     }
 
     array_unshift($params, $courseid);
 
-    $results = $DB->get_records_sql("SELECT $memberselect $fields
-                                   FROM {groups} g $userfrom $groupingfrom $memberjoin
-                                  WHERE g.courseid = ? $userwhere $groupingwhere
-                               ORDER BY name ASC", $params);
+    $results = $DB->get_records_sql("
+            SELECT $fields
+              FROM {groups} g
+              $userfrom
+              $groupingfrom
+             WHERE g.courseid = ?
+               $userwhere
+               $groupingwhere
+          ORDER BY g.name ASC", $params);
 
-    if ($withmembers) {
-        // We need to post-process the results back into standard format.
-        $groups = [];
-        foreach ($results as $row) {
-            if (!isset($groups[$row->id])) {
-                $row->members = [$row->userid => $row->userid];
-                unset($row->userid);
-                unset($row->ugmid);
-                $groups[$row->id] = $row;
-            } else {
-                $groups[$row->id]->members[$row->userid] = $row->userid;
-            }
-        }
-        $results = $groups;
+    if (!$withmembers) {
+        return $results;
     }
 
-    return $results;
+    // We also want group members. We do this in a separate query, becuse the above
+    // query will return a lot of data (e.g. g.description) for each group, and
+    // some groups may contain hundreds of members. We don't want the results
+    // to contain hundreds of copies of long descriptions.
+    $groups = [];
+    foreach ($results as $row) {
+        $groups[$row->id] = $row;
+        $groups[$row->id]->members = [];
+    }
+    $groupmembers = $DB->get_records_list('groups_members', 'groupid', array_keys($groups));
+    foreach ($groupmembers as $gm) {
+        $groups[$gm->groupid]->members[$gm->userid] = $gm->userid;
+    }
+    return $groups;
 }
 
 /**
@@ -1122,15 +1128,20 @@ function groups_group_visible($groupid, $course, $cm = null, $userid = null) {
  * Get sql and parameters that will return user ids for a group
  *
  * @param int $groupid
+ * @param context $context Course context or a context within a course. Mandatory when $groupid = USERSWITHOUTGROUP
  * @return array($sql, $params)
+ * @throws coding_exception if empty or invalid context submitted when $groupid = USERSWITHOUTGROUP
  */
-function groups_get_members_ids_sql($groupid) {
-    $groupjoin = groups_get_members_join($groupid, 'u.id');
+function groups_get_members_ids_sql($groupid, context $context = null) {
+    $groupjoin = groups_get_members_join($groupid, 'u.id', $context);
 
     $sql = "SELECT DISTINCT u.id
               FROM {user} u
             $groupjoin->joins
              WHERE u.deleted = 0";
+    if (!empty($groupjoin->wheres)) {
+        $sql .= ' AND '. $groupjoin->wheres;
+    }
 
     return array($sql, $groupjoin->params);
 }
@@ -1138,20 +1149,42 @@ function groups_get_members_ids_sql($groupid) {
 /**
  * Get sql join to return users in a group
  *
- * @param int $groupid
+ * @param int $groupid The groupid, 0 means all groups and USERSWITHOUTGROUP no group
  * @param string $useridcolumn The column of the user id from the calling SQL, e.g. u.id
+ * @param context $context Course context or a context within a course. Mandatory when $groupid = USERSWITHOUTGROUP
  * @return \core\dml\sql_join Contains joins, wheres, params
+ * @throws coding_exception if empty or invalid context submitted when $groupid = USERSWITHOUTGROUP
  */
-function groups_get_members_join($groupid, $useridcolumn) {
+function groups_get_members_join($groupid, $useridcolumn, context $context = null) {
     // Use unique prefix just in case somebody makes some SQL magic with the result.
     static $i = 0;
     $i++;
     $prefix = 'gm' . $i . '_';
 
-    $join = "JOIN {groups_members} {$prefix}gm ON ({$prefix}gm.userid = $useridcolumn AND {$prefix}gm.groupid = :{$prefix}gmid)";
-    $param = array("{$prefix}gmid" => $groupid);
+    $coursecontext = (!empty($context)) ? $context->get_course_context() : null;
+    if ($groupid == USERSWITHOUTGROUP && empty($coursecontext)) {
+        // Throw an exception if $context is empty or invalid because it's needed to get the users without any group.
+        throw new coding_exception('Missing or wrong $context parameter in an attempt to get members without any group');
+    }
 
-    return new \core\dml\sql_join($join, '', $param);
+    if ($groupid == USERSWITHOUTGROUP) {
+        // Get members without any group.
+        $join = "LEFT JOIN (
+                    SELECT g.courseid, m.groupid, m.userid
+                    FROM {groups_members} m
+                    JOIN {groups} g ON g.id = m.groupid
+                ) {$prefix}gm ON ({$prefix}gm.userid = $useridcolumn AND {$prefix}gm.courseid = :{$prefix}gcourseid)";
+        $where = "{$prefix}gm.userid IS NULL";
+        $param = array("{$prefix}gcourseid" => $coursecontext->instanceid);
+    } else {
+        // Get members of defined groupid.
+        $join = "JOIN {groups_members} {$prefix}gm
+                ON ({$prefix}gm.userid = $useridcolumn AND {$prefix}gm.groupid = :{$prefix}gmid)";
+        $where = '';
+        $param = array("{$prefix}gmid" => $groupid);
+    }
+
+    return new \core\dml\sql_join($join, $where, $param);
 }
 
 /**
