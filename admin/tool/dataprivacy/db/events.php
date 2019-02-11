@@ -15,15 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Data privacy plugin version information
+ * This file defines observers needed by the plugin.
  *
  * @package    tool_dataprivacy
- * @copyright  2018 onwards Jun Pataleta
+ * @copyright   2018 Mihail Geshoski <mihail@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017051556;
-$plugin->requires  = 2017051507.00;        // Moodle 3.3.7 (Build: 20180517) and upwards.
-$plugin->component = 'tool_dataprivacy';
+$observers = [
+    [
+        'eventname'   => '\core\event\user_deleted',
+        'callback'    => '\tool_dataprivacy\event\user_deleted_observer::create_delete_data_request',
+    ],
+];
