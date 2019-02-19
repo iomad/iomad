@@ -235,24 +235,19 @@ class company_course_users_form extends moodleform {
         $mform->addElement('html', '
               </td>
               <td id="buttonscell">
-                  <div id="addcontrols">
                       <input name="add" id="add" type="submit" value="&nbsp;' .
                       $output->larrow().'&nbsp;'. get_string('enrol', 'block_iomad_company_admin') .
-                       '" title="Enrol" />
+                       '" title="Enrol" /></br>
                       <input name="addall" id="addall" type="submit" value="&nbsp;' .
                       $output->larrow().'&nbsp;'. get_string('enrolall', 'block_iomad_company_admin') .
-                      '" title="Enrolall" />
+                      '" title="Enrolall" /></br>
 
-                  </div>
-
-                  <div id="removecontrols">
                       <input name="remove" id="remove" type="submit" value="' .
                        $output->rarrow().'&nbsp;'. get_string('unenrol', 'block_iomad_company_admin') .
-                       '&nbsp;" title="Unenrol" />
+                       '&nbsp;" title="Unenrol" /></br>
                       <input name="removeall" id="removeall" type="submit" value="&nbsp;' .
                       $output->rarrow().'&nbsp;'. get_string('unenrolall', 'block_iomad_company_admin') .
-                      '" title="Enrolall" />
-                  </div>
+                      '" title="Enrolall" /></br>
               </td>
               <td id="potentialcell">');
 
@@ -324,7 +319,7 @@ class company_course_users_form extends moodleform {
         $removeall = false;;
         $remove = false;
         $userstounassign = array();
-    
+
         if (optional_param('removeall', false, PARAM_BOOL) && confirm_sesskey()) {
             $search = optional_param('currentlyenrolledusers_searchtext', '', PARAM_RAW);
             // Process incoming allocations.
@@ -396,15 +391,14 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
 
-// get output renderer                                                                                                                                                                                         
+// get output renderer
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
 // Parameter is name of proper select form element followed by 1=submit its form
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
-
-// Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $linkurl);
 
 require_login(null, false); // Adds to $PAGE, creates $output.
 iomad::require_capability('block/iomad_company_admin:company_course_users', $context);
@@ -442,7 +436,7 @@ echo $output->header();
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
-}   
+}
 
 if ($coursesform->is_cancelled() || $usersform->is_cancelled() ||
      optional_param('cancel', false, PARAM_BOOL) ) {

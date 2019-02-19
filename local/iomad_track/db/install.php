@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+// This script is run after the dashboard has been installed.
+
 // In case we ever want to switch back to ordinary certificates
 define('CERTIFICATE', 'iomadcertificate');
 
@@ -100,9 +102,9 @@ function xmldb_local_iomad_track_create_certificate($certificate, $user, $cm, $c
     // Assumes a whole bunch of stuff exists without being explicitly required (double grrrrr)
     $typefield = CERTIFICATE . 'type';
     require("$CFG->dirroot/mod/" . CERTIFICATE . "/type/{$certificate->$typefield}/certificate.php");
-    
+
     // Create the certificate content. 'S' means return as string
-    return $pdf->Output('', 'S'); 
+    return $pdf->Output('', 'S');
 }
 
 /**

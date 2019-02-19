@@ -66,6 +66,15 @@ class companyrep{
         // And finally build the list.
         foreach ($companies as $company) {
 
+            // Is this a child company?
+            if ($company->parentid) {
+                $parent = $DB->get_record('company', ['id' => $company->parentid], '*', MUST_EXIST);
+                $company->parentlink = new \moodle_url('/local/report_companies', ['companyid' => $company->parentid]);
+                $company->parent = '<a href="' . $company->parentlink . '">' . $parent->name . '</a>';
+            } else {
+                $company->parent = '';
+            }
+
             // If managers found then only allow selected companies.
             if (!empty($managedcompanies)) {
                 if (!in_array($company->id, $managedcompanies)) {
@@ -74,6 +83,8 @@ class companyrep{
             }
             $companylist[$company->id] = $company;
         }
+
+        $companylist = \block_iomad_company_admin\iomad_company_admin::order_companies_by_parent($companylist);
 
         return $companylist;
     }
@@ -90,15 +101,15 @@ class companyrep{
 
             // Company managers
             $company->companymanagers = $DB->get_records_sql(
-                "SELECT u.* from {company_users} cu 
-                JOIN {user} u ON u.id = cu.userid 
+                "SELECT u.* from {company_users} cu
+                JOIN {user} u ON u.id = cu.userid
                 WHERE companyid = :companyid
                 AND managertype = 1", ['companyid' => $company->id]);
 
             // Department managers
             $company->departmentmanagers = $DB->get_records_sql(
-                "SELECT u.* from {company_users} cu 
-                JOIN {user} u ON u.id = cu.userid 
+                "SELECT u.* from {company_users} cu
+                JOIN {user} u ON u.id = cu.userid
                 WHERE companyid = :companyid
                 AND managertype = 2", ['companyid' => $company->id]);
 

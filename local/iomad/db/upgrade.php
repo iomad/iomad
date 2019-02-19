@@ -909,7 +909,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 'local_report_users:view',
                 'local_report_scorm_overview:view',
             );
-    
+
             foreach ($companydepartmentmanagercaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companydepartmentmanagerid, $systemcontext->id );
             }
@@ -926,7 +926,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 'local_report_users:view',
                 'local_report_scorm_overview:view',
             );
-    
+
             foreach ($clientadministratorcaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $clientadministratorid, $systemcontext->id );
             }
@@ -964,7 +964,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
     }
 
     if ($oldversion < 2014052702) {
-        
+
         // Define new table company_role_restriction
         $table = new xmldb_table('company_role_restriction');
 
@@ -1307,25 +1307,25 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 assign_capability( $cap, CAP_ALLOW, $companymanager->id, $systemcontext->id );
             }
         }
-        
+
         if ($companydepartmentmanager = $DB->get_record( 'role', array( 'shortname' => 'companydepartmentmanager') )) {
             foreach ($companydepartmentmanagercaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companydepartmentmanager->id, $systemcontext->id );
             }
         }
-        
+
         if ($companycourseeditor = $DB->get_record( 'role', array( 'shortname' => 'companycourseeditor') )) {
             foreach ($companycourseeditorcaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companycourseeditor->id, $systemcontext->id );
             }
         }
-        
+
         if ($companycoursenoneditor = $DB->get_record( 'role', array( 'shortname' => 'companycoursenoneditor') )) {
             foreach ($companycoursenoneditorcaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companycoursenoneditor->id, $systemcontext->id );
             }
         }
-        
+
         // Remove moodle/my:manageblocks capability from authenticated user
         if ($authenticateduser = $DB->get_record('role', array('shortname' => 'user'))) {
             assign_capability('moodle/my:manageblocks', CAP_PREVENT, $authenticateduser->id, $systemcontext->id, true);
@@ -1693,12 +1693,12 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // They do not exist.
         $roles = $DB->get_records('role');
         foreach ($roles as $role) {
-            unassign_capability('block/iomad_company_admin:view', $role->id); 
-            unassign_capability('block/side_bar_block:editblock', $role->id); 
-            unassign_capability('block/side_bar_block:viewblock', $role->id); 
-            unassign_capability('enrol/authorize:manage', $role->id); 
-            unassign_capability('mod/certificate:manage', $role->id); 
-            unassign_capability('mod/certificate:view', $role->id); 
+            unassign_capability('block/iomad_company_admin:view', $role->id);
+            unassign_capability('block/side_bar_block:editblock', $role->id);
+            unassign_capability('block/side_bar_block:viewblock', $role->id);
+            unassign_capability('enrol/authorize:manage', $role->id);
+            unassign_capability('mod/certificate:manage', $role->id);
+            unassign_capability('mod/certificate:view', $role->id);
         }
 
         // Fix capability typo in company department manager role
@@ -1805,6 +1805,58 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2017090313, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2018122700) {
+
+        // Define field expireafter to be added to iomad_courses.
+        $table = new xmldb_table('iomad_courses');
+        $field = new xmldb_field('expireafter', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'notifyperiod');
+
+        // Conditionally launch add field expireafter.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Perform clear up on courses data which may have become out of step.
+
+        $sql = 'SELECT ic.courseid FROM {iomad_courses} ic
+                LEFT OUTER JOIN {course} c ON c.id = ic.courseid
+                WHERE c.id IS NULL';
+        $deletedcourses = $DB->get_fieldset_sql($sql);
+
+        foreach ($deletedcourses as $deletedcourse) {
+
+            // Clear everything from the iomad_courses table.
+            $DB->delete_records('iomad_courses', array('courseid' => $deletedcourse));
+
+            // Remove the course from company allocation tables.
+            $DB->delete_records('company_course', array('courseid' => $deletedcourse));
+
+            // Remove the course from company created course tables.
+            $DB->delete_records('company_created_courses', array('courseid' => $deletedcourse));
+
+            // Remove the course from company shared courses tables.
+            $DB->delete_records('company_shared_courses', array('courseid' => $deletedcourse));
+
+            // Deal with licenses allocations.
+            $DB->delete_records('companylicense_users', array('licensecourseid' => $deletedcourse));
+            $courselicenses = $DB->get_records('companylicense_courses', array('courseid' => $deletedcourse));
+            foreach ($courselicenses as $courselicense) {
+                // Delete the course from the license.
+                $DB->delete_record('companylicense_courses', array('id' => $courselicense->id));
+                // Does the license have any courses left?
+                if ($DB->get_records('companylicense_courses', array('licensid' => $courselicense->licenseid))) {
+                    company::update_license_usage($courselicense->licenseid);
+                } else {
+                    // Delete the license.  It no longer is valid.
+                    $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
+                }
+            }
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2018122700, 'local', 'iomad');
     }
 
     return $result;

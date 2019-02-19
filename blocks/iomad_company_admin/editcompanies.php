@@ -63,7 +63,6 @@ iomad::require_capability('block/iomad_company_admin:company_add_child', $contex
 // Correct the navbar.
 $linktext = get_string('managecompanies', 'block_iomad_company_admin');
 $linkurl = new moodle_url('/blocks/iomad_company_admin/editcompanies.php', $params);
-company_admin_fix_breadcrumb($PAGE, $linktext, null);
 
 // Print the page header.
 $PAGE->set_context($context);
@@ -74,6 +73,8 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $linkurl);
 
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
@@ -265,7 +266,7 @@ if (!empty($companylist)) {
 $baseurl = new moodle_url('editcompanies.php', $params);
 
 if ($companies) {
-    
+
     // set up the table.
     $table = new html_table();
     $table->head = array ($name, $city, $country, "");
@@ -295,7 +296,7 @@ if ($companies) {
                                   array('companyid' => $company->id, 'userid' => $USER->id))) {
             // primary company is either only company you are in or its any company in the list
             // which doesn't have a parent in the list.
-            $primary = false; 
+            $primary = false;
         }
         if (!empty($company->suspended)) {
             if (!$primary) {
@@ -383,5 +384,5 @@ $editcompanies = new block_iomad_company_admin\output\editcompanies([
 ]);
 
 echo $OUTPUT->header();
-echo $output->render_editcompanies($editcompanies); 
+echo $output->render_editcompanies($editcompanies);
 echo $OUTPUT->footer();

@@ -149,14 +149,13 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
-// get output renderer                                                                                                                                                                                         
+// get output renderer
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
-
-// Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $departmentlist);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $departmentlist);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
@@ -238,14 +237,14 @@ if ($editform->is_cancelled()) {
     die;
 } else {
     // Javascript for fancy select.
-    // Parameter is name of proper select form element. 
+    // Parameter is name of proper select form element.
     $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', '', $departmentid));
 
     echo $output->header();
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }   
+    }
 
     $editform->display();
 

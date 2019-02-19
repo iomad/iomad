@@ -99,11 +99,14 @@ $linkurl = new moodle_url('/local/report_license_usage/index.php');
 // Print the page header.
 $PAGE->set_context($systemcontext);
 $PAGE->set_url($linkurl);
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('report');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linktext");
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $linkurl);
+
 
 // Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
@@ -111,9 +114,6 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Javascript for fancy select.
 // Parameter is name of proper select form element followed by 1=submit its form
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
-
-// Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 echo $output->header();
 
@@ -139,7 +139,7 @@ if ($category = company::get_category($companyid)) {
         }
     }
 }
-if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category} 
+if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
                                                  SELECT profileid FROM {company})")) {
     foreach ($categories as $category) {
@@ -334,60 +334,41 @@ if (!empty($userlist)) {
     if (!empty($from)) {
         // We need to get the total allocated up to that date.
         if (empty($license->program)) {
-            $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
-                                                      WHERE eventname = :eventname
-                                                      AND objectid = :licenseid
-                                                      AND timecreated < :fromtime
+            $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+                                                      WHERE action = 1
+                                                      AND licenseid = :licenseid
+                                                      AND date < :fromtime
                                                       AND userid IN (" . $departmentids . ")",
-                                                      array('eventname' => '\block_iomad_company_admin\event\user_license_assigned',
-                                                            'licenseid' => $licenseid,
+                                                      array('licenseid' => $licenseid,
                                                             'fromtime' => $from));
-            $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
-                                                        WHERE eventname = :eventname
-                                                        AND objectid = :licenseid
-                                                        AND timecreated < :fromtime
+            $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+                                                        WHERE action = 0
+                                                        AND licenseid = :licenseid
+                                                        AND date < :fromtime
                                                         AND userid IN (" . $departmentids . ")",
-                                                        array('eventname' => '\block_iomad_company_admin\event\user_license_unassigned',
-                                                              'licenseid' => $licenseid,
+                                                        array('licenseid' => $licenseid,
                                                               'fromtime' => $from));
             $numstart = $numallocations - $numunallocations;
         } else {
-            $allocations = $DB->get_records_sql("SELECT * FROM {logstore_standard_log}
-                                                 WHERE eventname = :eventname
-                                                 AND objectid = :licenseid
-                                                 AND timecreated < :fromtime
+            $coursecount = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
+            $allocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
+                                                 WHERE action = 1
+                                                 AND license = :licenseid
+                                                 AND date < :fromtime
                                                  AND userid IN (" . $departmentids . ")",
-                                                 array('eventname' => '\block_iomad_company_admin\event\user_license_assigned',
-                                                         'licenseid' => $licenseid,
-                                                         'fromtime' => $from));
-            if (empty($allocations)) {
-                $numallocations = 0;
-            } else {
-                $tempalloc = array();
-                foreach ($allocations as $allocation) {
-                    $tempalloc[$allocation->userid. '-' . $allocation->other] = $allocation;
-                }
-                $numallocations = count($tempalloc);
-            }
-            $unallocations = $DB->get_records_sql("SELECT * FROM {logstore_standard_log}
-                                                   WHERE eventname = :eventname
-                                                   AND objectid = :licenseid
+                                                 array('licenseid' => $licenseid,
+                                                       'fromtime' => $from));
+
+            $numallocations = $allocations / $coursecount;
+            $unallocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
+                                                   WHERE action = 0
+                                                   AND licenseid = :licenseid
                                                    AND timecreated < :fromtime
                                                    AND userid IN (" . $departmentids . ")",
-                                                   array('eventname' => '\block_iomad_company_admin\event\user_license_unassigned',
-                                                         'licenseid' => $licenseid,
+                                                   array('licenseid' => $licenseid,
                                                          'fromtime' => $from));
 
-            if (empty($unallocations)) {
-                $numunallocations = 0;
-            } else {
-                $tempalloc = array();
-                foreach ($unallocations as $unallocation) {
-                    $tempalloc[$unallocation->userid. '-' . $unallocation->other] = $unallocation;
-                }
-                $numunallocations = count($tempalloc);
-            }
-
+            $numunallocations = $unallocations / $coursecount;
             $numstart = $numallocations - $numunallocations;
         }
     } else {
@@ -396,62 +377,43 @@ if (!empty($userlist)) {
     $sqlparams = array('licenseid' => $licenseid);
     $timesql = "";
     if (!empty($from)) {
-        $timesql = " AND timecreated > :from ";
+        $timesql = " AND date > :from ";
         $sqlparams['from'] = $from;
     }
     if (!empty($to)) {
-        $timesql .= " AND timecreated < :to ";
+        $timesql .= " AND date < :to ";
         $sqlparams['to'] = $to;
     }
     // Get the number of allocations.
     if (empty($license->program)) {
-        $sqlparams['eventname'] = '\block_iomad_company_admin\event\user_license_assigned';
-        $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
-                                                  WHERE eventname = :eventname
-                                                  AND objectid = :licenseid
+        $numallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+                                                  WHERE action = 1
+                                                  AND licenseid = :licenseid
                                                   $timesql
                                                   AND userid IN (" . $departmentids . ")",
                                                   $sqlparams);
-        $sqlparams['eventname'] = '\block_iomad_company_admin\event\user_license_unassigned';
-        $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
-                                                    WHERE eventname = :eventname
-                                                    AND objectid = :licenseid
+        $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
+                                                    WHERE action = 0
+                                                    AND licenseid = :licenseid
                                                     $timesql
                                                     AND userid IN (" . $departmentids . ")",
                                                     $sqlparams);
     } else {
-        $sqlparams['eventname'] = '\block_iomad_company_admin\event\user_license_assigned';
-        $allocations = $DB->get_records_sql("SELECT * FROM {logstore_standard_log}
-                                             WHERE eventname = :eventname
-                                             AND objectid = :licenseid
+        $coursecount = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
+        $allocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
+                                             WHERE action = 1
+                                             AND licenseid = :licenseid
                                              $timesql
                                              AND userid IN (" . $departmentids . ")",
                                              $sqlparams);
-        $sqlparams['eventname'] = '\block_iomad_company_admin\event\user_license_unassigned';
-        $unallocations = $DB->get_records_sql("SELECT * FROM {logstore_standard_log}
-                                               WHERE eventname = :eventname
-                                               AND objectid = :licenseid
+        $unallocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
+                                               WHERE action = 0
+                                               AND licenseid = :licenseid
                                                $timesql
                                                AND userid IN (" . $departmentids . ")",
                                                $sqlparams);
-        if (empty($allocations)) {
-            $numallocations = 0;
-        } else {
-            $tempalloc = array();
-            foreach ($allocations as $allocation) {
-                $tempalloc[$allocation->userid . '-' . $allocation->other. '-' . round($allocation->timecreated, -1)] = $allocation;
-            }
-            $numallocations = count($tempalloc);
-        }
-        if (empty($unallocations)) {
-            $numunallocations = 0;
-        } else {
-            $tempalloc = array();
-            foreach ($unallocations as $unallocation) {
-                $tempalloc[$unallocation->userid . '-' . $unallocation->other. '-' . round($unallocation->timecreated, -1)] = $unallocation;
-            }
-            $numunallocations = count($tempalloc);
-        }
+        $numallocations = $allocations / $coursecount;
+        $numunallocations = $unallocations / $coursecount;
     }
     $net = $numallocations - $numunallocations;
     $total = $numstart + $net;

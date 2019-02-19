@@ -71,7 +71,7 @@ class company_ccu_courses_form extends company_moodleform {
         if ($this->courses) {
 
         // We are going to cheat and be lazy here.
-            $autooptions = array('multiple' => false,                                                                                                     
+            $autooptions = array('multiple' => false,
                                  'noselectionstring' => get_string('selectenrolmentcourse', 'block_iomad_company_admin'),
                                  'onchange' => 'this.form.submit()');
             $mform->addElement('autocomplete', 'selectedcourse', get_string('selectenrolmentcourse', 'block_iomad_company_admin'), $this->courses, $autooptions);
@@ -178,7 +178,7 @@ class company_course_groups_form extends moodleform {
     }
 
     public function definition_after_data() {
-        global $DB;
+        global $DB, $OUTPUT;
 
         $mform =& $this->_form;
 
@@ -207,7 +207,7 @@ class company_course_groups_form extends moodleform {
 
         $mform->addElement('autocomplete', 'groupid', get_string('group'), $this->groups, array('setmultiple' => false));
 
-        $mform->addElement('html', '<table summary="" class="companycourseuserstable'.
+        $mform->addElement('html', '<table summary="" class="companycoursegroupstable'.
                                    ' addremovetable generaltable generalbox'.
                                    ' boxaligncenter" cellspacing="0">
             <tr>
@@ -218,18 +218,12 @@ class company_course_groups_form extends moodleform {
         $mform->addElement('html', '
               </td>
               <td id="buttonscell">
-                  <div id="addcontrols">
-                      <input name="add" id="add" type="submit" value="&#x25C4;&nbsp;' .
-                       get_string('enrol', 'block_iomad_company_admin') .
-                       '" title="Enrol" /><br />
-
-                  </div>
-
-                  <div id="removecontrols">
-                      <input name="remove" id="remove" type="submit" value="' .
-                       get_string('unenrol', 'block_iomad_company_admin') .
-                       '&nbsp;&#x25BA;" title="Unenrol" />
-                  </div>
+                  <p class="arrow_button">
+                    <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.'enrol', get_string('add') . '"
+                           title="' . print_string('add') .'" class="btn btn-secondary"/><br />
+                    <input name="remove" id="remove" type="submit" value="'. get_string('remove').'&nbsp;'.$OUTPUT->rarrow(). '"
+                           title="'. print_string('unenrol', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
+                 </p>
               </td>
               <td id="potentialcell">');
 
@@ -333,9 +327,8 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
-
-// Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $linkurl);
 
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 iomad::require_capability('block/iomad_company_admin:company_course_users', $context);
@@ -365,7 +358,7 @@ echo $OUTPUT->header();
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
-}   
+}
 
 $ccuparamarray = array();
 if (!empty($departmentid)) {

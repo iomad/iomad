@@ -66,8 +66,8 @@ if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
 
-// Set the url.
-company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($strcompletion, $url);
 
 // Create data for form.
 $customdata = null;
@@ -84,12 +84,12 @@ if (empty($dodownload)) {
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }   
+    }
 } else {
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }   
+    }
 }
 
 

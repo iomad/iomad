@@ -40,8 +40,8 @@ $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $strcom
 // Renderer
 $output = $PAGE->get_renderer('local_report_companies');
 
-// Set the url.
-company_admin_fix_breadcrumb($PAGE, get_string('pluginname', 'local_report_companies'), $url);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add(get_string('pluginname', 'local_report_companies'), $url);
 
 // Navigation and header.
 echo $OUTPUT->header();
@@ -51,7 +51,7 @@ echo $OUTPUT->heading( get_string('pluginname', 'local_report_companies') );
 $PAGE->requires->js_init_call('M.local_report_companies.init');
 
 // Get the company list.
-$companies = companyrep::companylist($USER);
+$companies = companyrep::companylist($USER, $companyid);
 companyrep::addmanagers($companies) ;
 companyrep::addusers($companies);
 companyrep::addcourses($companies);

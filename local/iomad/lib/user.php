@@ -302,8 +302,8 @@ class company_user {
             }
 
             if (!isset($manualcache[$courseid])) {
-                if ($instances = enrol_get_instances($courseid, false)) {
-                    $manualcache[$courseid] = reset($instances);
+                if ($instance = $DB->get_record('enrol', array('courseid'=>$courseid, 'enrol'=>'manual'))) {
+                    $manualcache[$courseid] = $instance;
                 } else {
                     $manualcache[$courseid] = false;
                 }
@@ -965,7 +965,7 @@ class iomad_user_filter_form extends moodleform {
         }
 
         // Deal with non company categories.
-        if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category} 
+        if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
                                                  SELECT profileid FROM {company})")) {
             foreach ($categories as $category) {

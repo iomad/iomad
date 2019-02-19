@@ -98,7 +98,7 @@ if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM {user_info_cat
         }
     }
 }
-if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category} 
+if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
                                                  SELECT profileid FROM {company})")) {
     foreach ($categories as $category) {
@@ -153,7 +153,7 @@ $dashboardurl = new moodle_url('/my');
 // Page stuff:.
 $strcompletion = get_string('pluginname', 'local_report_user_licenses');
 $PAGE->set_url($url);
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('report');
 $PAGE->set_title($strcompletion);
 $PAGE->requires->css("/local/report_user_licenses/styles.css");
 $PAGE->requires->jquery();
@@ -182,8 +182,8 @@ $foundobj = iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
-// Set the url.
-company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($strcompletion, $url);
 $url = new moodle_url('/local/report_user_licenses/index.php', $params);
 
 // Do we have any additional reporting fields?

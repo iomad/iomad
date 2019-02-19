@@ -63,7 +63,7 @@ class company_ccu_courses_form extends company_moodleform {
 
         if ($this->courses) {
             $autooptions = array('setmultiple' => false,
-                                 'noselectionstring' => '',                                                                                                     
+                                 'noselectionstring' => '',
                                  'onchange' => 'this.form.submit()');
             $mform->addElement('autocomplete', 'selectedcourse', get_string('selectcourse', 'block_iomad_company_admin'), $this->courses, $autooptions);
 
@@ -106,7 +106,7 @@ class course_group_display_form extends company_moodleform {
             $coursegroups = array();
         }
 
-        
+
         // Then show the fields about where this block appears.
         $mform->addElement('header', 'header',
                             get_string('companygroupsusers', 'block_iomad_company_admin').
@@ -116,12 +116,12 @@ class course_group_display_form extends company_moodleform {
             $mform->addElement('html', "<h3>" . get_string('nogroups', 'block_iomad_company_admin') . "</h3></br>");
         } else {
             $autooptions = array('setmultiple' => false,
-                                 'noselectionstring' => '',                                                                                                     
+                                 'noselectionstring' => '',
                                  'onchange' => 'this.form.submit()');
             $mform->addElement('autocomplete', 'selectedgroup', get_string('selectgroup', 'block_iomad_company_admin'), $coursegroups, $autooptions);
 
         }
-        
+
         $mform->addElement('hidden', 'selectedcourse', $this->courseid);
         $mform->setType('selectedcourse', PARAM_INT);
 
@@ -274,7 +274,7 @@ class course_group_users_form extends moodleform {
             $mform->addElement('html', '<p><strong>' . get_string('isdefaultgroupusers', 'block_iomad_company_admin') . '</strong></p>');
         }
 
-        $mform->addElement('html', '<table summary="" class="companycourseuserstable'.
+        $mform->addElement('html', '<table summary="" class="companygroupuserstable'.
                                    ' addremovetable generaltable generalbox'.
                                    ' boxaligncenter" cellspacing="0">
             <tr>
@@ -285,24 +285,19 @@ class course_group_users_form extends moodleform {
         $mform->addElement('html', '
               </td>
               <td id="buttonscell">
-                  <div id="addcontrols">
                       <input name="add" id="add" type="submit" value="' .
                        $OUTPUT->larrow().'&nbsp;'.get_string('add') .
-                       '" title="Add" /><br />
-
-                  </div>');
+                       '" title="'.get_string('add') .'" /><br />');
 
         if (!$this->isdefault) {
 
             $mform->addElement('html', '
-                  <div id="removecontrols">
                       <input name="remove" id="remove" type="submit" value="' .
                        get_string('remove') . '&nbsp;' . $OUTPUT->rarrow() .
-                       '" title="Remove" />
-                  </div>');
+                       '" title="'.get_string('remove') .'" /></br>');
         }
 
-        $mform->addElement('html', '                  
+        $mform->addElement('html', '
               </td>
               <td id="potentialcell">');
 
@@ -403,20 +398,19 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
-// get output renderer                                                                                                                                                                                         
+// get output renderer
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
-
-// Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element. 
+// Parameter is name of proper select form element.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid'));
 
 $courseform = new company_ccu_courses_form($PAGE->url, $context, $companyid, $selectedcourse);
@@ -437,7 +431,7 @@ if (!empty($groupform) && $groupform->is_cancelled()) {
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }   
+    }
 
     $courseform->display();
     if (!empty($selectedcourse)) {

@@ -124,7 +124,7 @@ class company_license_users_form extends moodleform {
     }
 
     public function definition_after_data() {
-        global $USER;
+        global $USER, $OUTPUT;
 
         $mform =& $this->_form;
 
@@ -208,7 +208,7 @@ class company_license_users_form extends moodleform {
         }
 
         $mform->addElement('html', '<table summary=""
-                                     class="companycourseuserstable addremovetable generaltable generalbox boxaligncenter"
+                                     class="companylicenseuserstable addremovetable generaltable generalbox boxaligncenter"
                                      cellspacing="0">
             <tr>
               <td id="existingcell">');
@@ -219,24 +219,16 @@ class company_license_users_form extends moodleform {
             $mform->addElement('html', '
                   </td>
                   <td id="buttonscell">
-                      <div id="addcontrols">
-                          <input name="add" id="add" type="submit" value="&nbsp;' .
-                       $this->output->larrow().'&nbsp;'. get_string('licenseallocate', 'block_iomad_company_admin') .
-                          '" title="Enrol" />
-
-                          <input name="addall" id="addall" type="submit" value="&nbsp;' .
-                          $this->output->larrow().'&nbsp;'. get_string('licenseallocateall', 'block_iomad_company_admin') .
-                          '" title="Enrolall" />
-
-                      </div>
-
-                      <div id="removecontrols"><input name="remove" id="remove" type="submit" value="' .
-                       $this->output->rarrow().'&nbsp;'. get_string('licenseremove', 'block_iomad_company_admin') .
-                          '" title="Unenrol" />
-                          <input name="removeall" id="removeall" type="submit" value="' .
-                          $this->output->rarrow().'&nbsp;'. get_string('licenseremoveall', 'block_iomad_company_admin') .
-                          '" title="Unenrolall" />
-                      </div>
+                      <p class="arrow_button">
+                        <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('licenseallocate', 'block_iomad_company_admin') . '"
+                               title="' . get_string('licenseallocate', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
+                        <input name="addall" id="addall" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('licenseallocateall', 'block_iomad_company_admin') . '"
+                               title="' . get_string('licenseallocateall', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
+                        <input name="remove" id="remove" type="submit" value="'. get_string('licenseremove', 'block_iomad_company_admin').'&nbsp;'.$OUTPUT->rarrow(). '"
+                               title="'. get_string('licenseremove', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
+                        <input name="removeall" id="removeall" type="submit" value="'. get_string('licenseremoveall', 'block_iomad_company_admin').'&nbsp;'.$OUTPUT->rarrow(). '"
+                               title="'. get_string('licenseremoveall', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
+                     </p>
                   </td>
                   <td id="potentialcell">');
 
@@ -306,16 +298,16 @@ class company_license_users_form extends moodleform {
                 $numberoflicenses = $this->license->allocation;
                 $count = $this->license->used;
                 $licenserecord = (array) $this->license;
-    
+
                 if (!empty($userstoassign) && !empty($courses)) {
                     $required = count($userstoassign) * count($courses);
                     if ($count + $required > $numberoflicenses) {
                         redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
                                                  array('licenseid' => $this->licenseid, 'error' => 1)));
-    
+
                     }
                     foreach ($userstoassign as $adduser) {
-    
+
                         // Check the userid is valid.
                         if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
                             print_error('invaliduserdepartment', 'block_iomad_company_management');
@@ -327,7 +319,7 @@ class company_license_users_form extends moodleform {
                                                      'userid' => $adduser->id,
                                                      'licenseid' => $this->licenseid,
                                                      'isusing' => 0);
-    
+
                                 // Check if we are not assigning multiple times.
                                 if (!$DB->get_record('companylicense_users', $recordarray)) {
                                     $recordarray['issuedate'] = time();
@@ -339,7 +331,7 @@ class company_license_users_form extends moodleform {
                                     } else {
                                         $duedate = 0;
                                     }
-    
+
                                     // Create an event.
                                     $eventother = array('licenseid' => $this->license->id,
                                                         'duedate' => $duedate);
@@ -353,17 +345,17 @@ class company_license_users_form extends moodleform {
                             }
                         }
                     }
-    
+
                     $this->potentialusers->invalidate_selected_users();
                     $this->currentusers->invalidate_selected_users();
                 }
             }
-    
+
             $removeall = false;;
             $remove = false;
             $licensestounassign = array();
             $licenserecords = array();
-    
+
             if (optional_param('removeall', false, PARAM_BOOL) && confirm_sesskey()) {
                 $search = optional_param('currentlyenrolledusers_searchtext', '', PARAM_RAW);
                 // Process incoming allocations.
@@ -378,22 +370,22 @@ class company_license_users_form extends moodleform {
             foreach($licenserecords as $licenserecord) {
                 $licensestounassign[$licenserecord->licenseid] = $licenserecord->licenseid;
             }
-    
+
             // Process incoming unallocations.
             if ($remove || $removeall) {
                 $licenserecord = (array) $this->license;
-    
+
                 if (!empty($licenserecord['program'])) {
                     $userrecords = array();
                     foreach ($licensestounassign as $licenserecid) {
-    
+
                         // Get the user from the initial license ID passed.
                         $userlic = $DB->get_record('companylicense_users',array('id' => $licenserecid), '*', MUST_EXIST);
                         $userrecords = $userrecords + array_keys($DB->get_records_sql("SELECT id FROM {companylicense_users}
                                                                                        WHERE licenseid = :licenseid
                                                                                        AND userid IN (
                                                                                            SELECT userid FROM {companylicense_users}
-                                                                                           WHERE id IN 
+                                                                                           WHERE id IN
                                                                                        (" . implode(',', $licensestounassign) . "))",
                                                                                        array('licenseid' => $this->license->id)));
                     }
@@ -412,19 +404,19 @@ class company_license_users_form extends moodleform {
                         $licensestounassign = array();
                     }
                 }
-    
+
                 if (!empty($licensestounassign)) {
                     foreach ($licensestounassign as $unassignid) {
                         $licensedata = $DB->get_record('companylicense_users' ,array('id' => $unassignid), '*', MUST_EXIST);
-        
+
                         // Check the userid is valid.
                         if (!company::check_valid_user($this->selectedcompany, $licensedata->userid, $this->departmentid)) {
                             print_error('invaliduserdepartment', 'block_iomad_company_management');
                         }
-    
+
                         if (!$licensedata->isusing || $this->license->type == 1 || $this->license->type == 3) {
                             $DB->delete_records('companylicense_users', array('id' => $unassignid));
-    
+
                             // Create an event.
                             $eventother = array('licenseid' => $this->license->id,
                                                 'duedate' => 0);
@@ -436,7 +428,7 @@ class company_license_users_form extends moodleform {
                             $event->trigger();
                         }
                     }
-    
+
                     $this->potentialusers->invalidate_selected_users();
                     $this->currentusers->invalidate_selected_users();
                 }
@@ -483,11 +475,10 @@ $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element. 
+// Parameter is name of proper select form element.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 'mform1', $departmentid));
-
-// Build the nav bar.
-company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+$PAGE->navbar->add($linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
