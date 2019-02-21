@@ -260,7 +260,6 @@ function xmldb_local_email_upgrade($oldversion) {
             $dbman->create_table($table);
         }
 
-
         // Email savepoint reached.
         upgrade_plugin_savepoint(true, 2017080702, 'local', 'email');
     }
@@ -294,7 +293,9 @@ function xmldb_local_email_upgrade($oldversion) {
 
         foreach ($emails as $email) {
             $company = company::by_userid($email->userid);
-            $DB->execute("update {email} set companyid = :companyid where id = :id", array('companyid' => $company->id, 'id' => $email->id));
+            if (!empty($company->id)) {
+                $DB->set_field('email','companyid', $company->id, array('id' => $email->id));
+            }
         }
 
         // Email savepoint reached.

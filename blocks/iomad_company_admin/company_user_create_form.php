@@ -423,6 +423,12 @@ $PAGE->navbar->add($linktext, $linkurl);
 $companyid = iomad::get_my_companyid($context);
 $company = new company($companyid);
 
+// Check if the company has gone over the user quota.
+if (!$company->check_usercount(1)) {
+    $maxusers = $company->get('maxusers');
+    print_error('maxuserswarning', 'block_iomad_company_admin', $dashboardurl, $maxusers->maxusers);
+}
+
 $mform = new user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
 if ($mform->is_cancelled()) {
     redirect($dashboardurl);
@@ -549,19 +555,17 @@ if ($mform->is_cancelled()) {
                     redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
                                              array('licenseid' => $licenseid, 'error' => 1)));
                 }
-                $allow = true;
 
-                if ($allow) {
-                    $count++;
-                    $DB->insert_record('companylicense_users',
-                                        array('userid' => $userdata->id,
-                                              'licenseid' => $licenseid,
-                                              'issuedate' => time(),
-                                              'licensecourseid' => $licensecourse));
-                }
+                $issuedate = time();
+                $DB->insert_record('companylicense_users',
+                                    array('userid' => $userdata->id,
+                                          'licenseid' => $licenseid,
+                                          'issuedate' => $issuedate,
+                                          'licensecourseid' => $licensecourse));
 
                 // Create an event.
                 $eventother = array('licenseid' => $licenseid,
+                                    'issuedate' => $issuedate,
                                     'duedate' => $data->due);
                 $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($licensecourse),
                                                                                               'objectid' => $licenseid,
@@ -569,6 +573,7 @@ if ($mform->is_cancelled()) {
                                                                                               'userid' => $userdata->id,
                                                                                               'other' => $eventother));
                 $event->trigger();
+                $count++;
             }
         }
     }

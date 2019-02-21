@@ -25,7 +25,6 @@ require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/lib/formslib.php');
 require_once($CFG->dirroot.'/group/lib.php');
 
-
 class company_user {
 
     /**
@@ -1091,15 +1090,83 @@ class iomad_date_filter_form extends moodleform {
 
         $mform =& $this->_form;
         foreach ($this->params as $param => $value) {
-            if ($param == 'compfrom' || $param == 'compto') {
+            if ($param == 'compfrom' || $param == 'compto' || $param == 'yearfrom' || $param == 'yearto') {
                 continue;
             }
             $mform->addElement('hidden', $param, $value);
             $mform->setType($param, PARAM_CLEAN);
         }
-        $mform->addElement('date_selector', 'compfrom', get_string('compfrom', 'local_report_completion'), array('optional' => 'yes'));
-        $mform->addElement('date_selector', 'compto', get_string('compto', 'local_report_completion'), array('optional' => 'yes'));
-        $mform->setDefault('compfrom', 0);
+
+        if (empty($this->params['yearonly'])) {
+            $mform->addElement('date_selector', 'compfrom', get_string('compfrom', 'local_report_completion'), array('optional' => 'yes'));
+            $mform->addElement('date_selector', 'compto', get_string('compto', 'local_report_completion'), array('optional' => 'yes'));
+            $mform->setDefault('compfrom', 0);
+        } else {
+            // Get the calendar type used - see MDL-18375.
+            $calendartype = \core_calendar\type_factory::get_calendar_instance();
+            $dateformat = $calendartype->get_date_order();
+            $from = array();
+            $from[] = $mform->createElement('select', 'yearfrom', get_string('compfrom', 'local_report_completion'), $dateformat['year']);
+            $from[] = $mform->createElement('checkbox', 'yearfromoptional', '', get_string('optional', 'form'));
+            $mform->addGroup($from, 'fromarray', get_string('compfrom', 'local_report_completion'));
+            $to[] = $mform->createElement('select', 'yearto', get_string('compfrom', 'local_report_completion'), $dateformat['year']);
+            $to[] = $mform->createElement('checkbox', 'yeartooptional', '', get_string('optional', 'form'));
+            $mform->addGroup($to, 'toarray', get_string('compto', 'local_report_completion'));
+
+            if (!empty($this->params['yearto'])) {
+                $mform->setDefault('toarray[yearto]', $this->params['yearto']);
+            } else {
+                $mform->setDefault('toarray[yearto]', '2018');
+            }
+
+            if (!empty($this->params['yearfrom'])) {
+                $mform->setDefault('fromarray[yearfrom]', $this->params['yearfrom']);
+            } else {
+                $mform->setDefault('fromarray[yearfrom]', '2018');
+            }
+
+            if (!empty($this->params['yearfromoptional'])) {
+                $mform->setDefault('fromarray[yearfromoptional]', 'checked');
+            }
+            if (!empty($this->params['yeartooptional'])) {
+                $mform->setDefault('toarray[yeartooptional]', 'checked');
+            }
+            $mform->disabledIf('fromarray', 'fromarray[yearfromoptional]');
+            $mform->disabledIf('toarray', 'toarray[yeartooptional]');
+        }
         $this->add_action_buttons(false, get_string('userfilter', 'local_iomad'));
+    }
+
+}
+
+/**
+ * User Filter form used on the Iomad pages.
+ *
+ */
+class iomad_course_search_form extends moodleform {
+    protected $params = array();
+
+    public function __construct($params) {
+        $this->params = $params;
+        parent::__construct();
+    }
+
+    public function definition() {
+        global $CFG, $DB, $USER, $SESSION;
+
+        $mform =& $this->_form;
+        foreach ($this->params as $param => $value) {
+            if ($param == 'coursesearch') {
+                continue;
+            }
+            $mform->addElement('hidden', $param, $value);
+            $mform->setType($param, PARAM_CLEAN);
+        }
+
+        $sarcharray = array();
+        $searcharray[] = $mform->createElement('text', 'coursesearch');
+        $searcharray[] = $mform->createElement('submit', 'searchbutton', get_string('search'));
+        $mform->addGroup($searcharray, 'searcharray', get_string('coursenamesearch', 'block_iomad_company_admin'), ' ', false);
+        $mform->setType('coursesearch', PARAM_CLEAN);
     }
 }
