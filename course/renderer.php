@@ -457,7 +457,7 @@ class core_course_renderer extends plugin_renderer_base {
             }
         }
         if ($completionicon) {
-            $formattedname = $mod->get_formatted_name();
+            $formattedname = html_entity_decode($mod->get_formatted_name(), ENT_QUOTES, 'UTF-8');
             if ($completiondata->overrideby) {
                 $args = new stdClass();
                 $args->modname = $formattedname;
@@ -468,7 +468,7 @@ class core_course_renderer extends plugin_renderer_base {
                 $imgalt = get_string('completion-alt-' . $completionicon, 'completion', $formattedname);
             }
 
-            if ($this->page->user_is_editing()) {
+            if ($this->page->user_is_editing() || !has_capability('moodle/course:togglecompletion', $mod->context)) {
                 // When editing, the icon is just an image.
                 $completionpixicon = new pix_icon('i/completion-'.$completionicon, $imgalt, '',
                         array('title' => $imgalt, 'class' => 'iconsmall'));
@@ -498,12 +498,12 @@ class core_course_renderer extends plugin_renderer_base {
                 $output .= html_writer::empty_tag('input', array(
                     'type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
                 $output .= html_writer::empty_tag('input', array(
-                    'type' => 'hidden', 'name' => 'modulename', 'value' => $mod->name));
+                    'type' => 'hidden', 'name' => 'modulename', 'value' => $formattedname));
                 $output .= html_writer::empty_tag('input', array(
                     'type' => 'hidden', 'name' => 'completionstate', 'value' => $newstate));
                 $output .= html_writer::tag('button',
                     $this->output->pix_icon('i/completion-' . $completionicon, $imgalt),
-                        array('class' => 'btn btn-link', 'title' => $imgalt));
+                        array('class' => 'btn btn-link', 'aria-live' => 'assertive'));
                 $output .= html_writer::end_tag('div');
                 $output .= html_writer::end_tag('form');
             } else {
@@ -2413,7 +2413,8 @@ class core_course_renderer extends plugin_renderer_base {
             $frontpagelayout = $CFG->frontpage;
         }
 
-        foreach (explode(',', $frontpagelayout) as $v) {
+        $frontpageoptions = explode(',', $frontpagelayout);
+        foreach ($frontpageoptions as $v) {
             switch ($v) {
                 // Display the main part of the front page.
                 case FRONTPAGENEWS:
@@ -2435,6 +2436,12 @@ class core_course_renderer extends plugin_renderer_base {
                         $output .= $this->frontpage_part('skipmycourses', 'frontpage-course-list',
                             get_string('mycourses'), $mycourseshtml);
                         break;
+                    } else {
+                        // Temp fix/fallback in order to display available courses when enrolled courses should be shown,
+                        // but user is not enrolled in any course.
+                        if (array_search(FRONTPAGEALLCOURSELIST, $frontpageoptions)) {
+                            break;
+                        }
                     }
                     // No "break" here. If there are no enrolled courses - continue to 'Available courses'.
 
@@ -2463,7 +2470,6 @@ class core_course_renderer extends plugin_renderer_base {
             }
             $output .= '<br />';
         }
-
         return $output;
     }
 }

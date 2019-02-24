@@ -1729,6 +1729,25 @@ class lesson extends lesson_base {
     }
 
     /**
+     * Checks user enrollment in the current course.
+     *
+     * @param int $userid
+     * @return null|stdClass user record
+     */
+    public function is_participant($userid) {
+        return is_enrolled($this->get_context(), $userid, 'mod/lesson:view', $this->show_only_active_users());
+    }
+
+    /**
+     * Check is only active users in course should be shown.
+     *
+     * @return bool true if only active users should be shown.
+     */
+    public function show_only_active_users() {
+        return !has_capability('moodle/course:viewsuspendedusers', $this->get_context());
+    }
+
+    /**
      * Updates the lesson properties with override information for a user.
      *
      * Algorithm:  For each lesson setting, if there is a matching user-specific override,
@@ -4181,7 +4200,7 @@ abstract class lesson_page extends lesson_base {
 
                     foreach ($studentanswerresponse as $answer => $response) {
                         // Add a table row containing the answer.
-                        $studentanswer = $this->format_answer($answer, $context, $result->studentanswerformat);
+                        $studentanswer = $this->format_answer($answer, $context, $result->studentanswerformat, $options);
                         $table->data[] = array($studentanswer);
                         // If the response exists, add a table row containing the response. If not, add en empty row.
                         if (!empty(trim($response))) {
@@ -4195,7 +4214,7 @@ abstract class lesson_page extends lesson_base {
                     }
                 } else {
                     // Add a table row containing the answer.
-                    $studentanswer = $this->format_answer($result->studentanswer, $context, $result->studentanswerformat);
+                    $studentanswer = $this->format_answer($result->studentanswer, $context, $result->studentanswerformat, $options);
                     $table->data[] = array($studentanswer);
                     // If the response exists, add a table row containing the response. If not, add en empty row.
                     if (!empty(trim($result->response))) {
@@ -4223,9 +4242,15 @@ abstract class lesson_page extends lesson_base {
      * @param int $answerformat
      * @return string Returns formatted string
      */
-    private function format_answer($answer, $context, $answerformat) {
+    private function format_answer($answer, $context, $answerformat, $options = []) {
 
-        return format_text($answer, $answerformat, array('context' => $context, 'para' => true));
+        if (empty($options)) {
+            $options = [
+                'context' => $context,
+                'para' => true
+            ];
+        }
+        return format_text($answer, $answerformat, $options);
     }
 
     /**
