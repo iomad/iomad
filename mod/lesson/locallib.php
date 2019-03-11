@@ -1729,6 +1729,25 @@ class lesson extends lesson_base {
     }
 
     /**
+     * Checks user enrollment in the current course.
+     *
+     * @param int $userid
+     * @return null|stdClass user record
+     */
+    public function is_participant($userid) {
+        return is_enrolled($this->get_context(), $userid, 'mod/lesson:view', $this->show_only_active_users());
+    }
+
+    /**
+     * Check is only active users in course should be shown.
+     *
+     * @return bool true if only active users should be shown.
+     */
+    public function show_only_active_users() {
+        return !has_capability('moodle/course:viewsuspendedusers', $this->get_context());
+    }
+
+    /**
      * Updates the lesson properties with override information for a user.
      *
      * Algorithm:  For each lesson setting, if there is a matching user-specific override,
@@ -4187,8 +4206,9 @@ abstract class lesson_page extends lesson_base {
                         if (!empty(trim($response))) {
                             $studentresponse = isset($result->responseformat) ?
                                 $this->format_response($response, $context, $result->responseformat, $options) : $response;
-                            $table->data[] = array('<em>'.get_string("response", "lesson").
-                                '</em>: <br/>'.$studentresponse);
+                            $studentresponsecontent = html_writer::div('<em>' . get_string("response", "lesson") .
+                                '</em>: <br/>' . $studentresponse, $class);
+                            $table->data[] = array($studentresponsecontent);
                         } else {
                             $table->data[] = array('');
                         }
@@ -4202,8 +4222,9 @@ abstract class lesson_page extends lesson_base {
                         $studentresponse = isset($result->responseformat) ?
                             $this->format_response($result->response, $context, $result->responseformat,
                                 $result->answerid, $options) : $result->response;
-                        $table->data[] = array('<em>'.get_string("response", "lesson").
-                            '</em>: <br/>'.$studentresponse);
+                        $studentresponsecontent = html_writer::div('<em>' . get_string("response", "lesson") .
+                            '</em>: <br/>' . $studentresponse, $class);
+                        $table->data[] = array($studentresponsecontent);
                     } else {
                         $table->data[] = array('');
                     }

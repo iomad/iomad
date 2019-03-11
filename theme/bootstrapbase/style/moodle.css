@@ -8577,6 +8577,7 @@ a.ygtvspacer:hover {
   display: table-cell;
 }
 .messaging-area-container .messaging-area .messages-area .response .message-box .message-text-container textarea {
+  direction: ltr;
   width: 100%;
   margin: 0;
   resize: none;
@@ -16601,12 +16602,14 @@ form {
 .jsenabled .mform .collapsed .fcontainer {
   display: none;
 }
-.mform .fitem .fitemtitle div {
+.mform .fitem .fitemtitle > div:not(.mediaplugin) div {
   display: inline;
 }
-.mform .fitem .fitemtitle .mediaplugin,
-.mform .fitem .fitemtitle .mediaplugin div {
-  display: block;
+.mform .fitem .fitemtitle .mediaplugin > div {
+  margin: 0;
+}
+.que.match .mediaplugin {
+  width: 50vw;
 }
 #adminsettings .error,
 .loginpanel .error,

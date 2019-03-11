@@ -2693,6 +2693,13 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     // Make sure the USER has a sesskey set up. Used for CSRF protection.
     sesskey();
 
+    if (\core\session\manager::is_loggedinas()) {
+        // During a "logged in as" session we should force all content to be cleaned because the
+        // logged in user will be viewing potentially malicious user generated content.
+        // See MDL-63786 for more details.
+        $CFG->forceclean = true;
+    }
+
     // Do not bother admins with any formalities, except for activities pending deletion.
     if (is_siteadmin() && !($cm && $cm->deletioninprogress)) {
         // Set the global $COURSE.
@@ -4696,9 +4703,22 @@ function get_complete_user_data($field, $value, $mnethostid = null) {
         return false;
     }
 
+    // Change the field to lowercase.
+    $field = core_text::strtolower($field);
+
+    // List of case insensitive fields.
+    $caseinsensitivefields = ['username'];
+
     // Build the WHERE clause for an SQL query.
     $params = array('fieldval' => $value);
-    $constraints = "$field = :fieldval AND deleted <> 1";
+
+    // Do a case-insensitive query, if necessary.
+    if (in_array($field, $caseinsensitivefields)) {
+        $fieldselect = $DB->sql_equal($field, ':fieldval', false);
+    } else {
+        $fieldselect = "$field = :fieldval";
+    }
+    $constraints = "$fieldselect AND deleted <> 1";
 
     // If we are loading user data based on anything other than id,
     // we must also restrict our search based on mnet host.
@@ -6381,8 +6401,10 @@ function send_password_change_info($user) {
 function email_is_not_allowed($email) {
     global $CFG;
 
+    // Comparing lowercase domains.
+    $email = strtolower($email);
     if (!empty($CFG->allowemailaddresses)) {
-        $allowed = explode(' ', $CFG->allowemailaddresses);
+        $allowed = explode(' ', strtolower($CFG->allowemailaddresses));
         foreach ($allowed as $allowedpattern) {
             $allowedpattern = trim($allowedpattern);
             if (!$allowedpattern) {
@@ -6401,7 +6423,7 @@ function email_is_not_allowed($email) {
         return get_string('emailonlyallowed', '', $CFG->allowemailaddresses);
 
     } else if (!empty($CFG->denyemailaddresses)) {
-        $denied = explode(' ', $CFG->denyemailaddresses);
+        $denied = explode(' ', strtolower($CFG->denyemailaddresses));
         foreach ($denied as $deniedpattern) {
             $deniedpattern = trim($deniedpattern);
             if (!$deniedpattern) {
