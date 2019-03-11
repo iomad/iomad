@@ -33,12 +33,12 @@ defined('MOODLE_INTERNAL') || die();
 $string['clianswerno'] = 'ο';
 $string['cliansweryes'] = 'ν';
 $string['cliincorrectvalueerror'] = 'Σφάλμα, λανθασμένη τιμή "{$a->value}" για το "{$a->option}"';
-$string['cliincorrectvalueretry'] = 'Λανθασμένη τιμή, παρακαλώ προσπαθήστε ξανά';
-$string['clitypevalue'] = 'δώσε μία τιμή';
-$string['clitypevaluedefault'] = 'δώσε μία τιμή, πάτησε Enter για να χρησιμοποιήσεις τη προκαθορισμένη τιμή ({$a})';
-$string['cliunknowoption'] = 'Μη αναγνωρίσιμες επιλογές:
-{$a}
-Παρακαλώ χρησιμοποιείστε την επιλογή --βοήθεια';
-$string['cliyesnoprompt'] = 'πατώντας ν (σημαίνει ναι) αλλιώς πατώντας ο (σημαίνει όχι)';
+$string['cliincorrectvalueretry'] = 'Λανθασμένη τιμή. Παρακαλούμε προσπαθήστε ξανά.';
+$string['clitypevalue'] = 'πληκτρολογήστε μια τιμή';
+$string['clitypevaluedefault'] = 'πληκτρολογήστε μια τιμή· πατήστε Enter για να χρησιμοποιήσετε τηνπροεπιλεγμένη τιμή ({$a})';
+$string['cliunknowoption'] = 'Μη αναγνωρίσιμες επιλογές: {$a}<br />
+Παρακαλούμε χρησιμοποιήστε την επιλογή --βοήθεια';
+$string['cliyesnoprompt'] = 'πατώντας y (σημαίνει yes=ναι) αλλιώς πατώντας n (σημαίνει no=όχι)';
 $string['environmentrequireinstall'] = 'απαιτείται να εγκατασταθεί/ ενεργοποιηθεί';
 $string['environmentrequireversion'] = 'απαιτείται η έκδοση {$a->needed} ενώ εσείς έχετε την {$a->current}';
+$string['upgradekeyset'] = 'Κλειδί αναβάθμισης (αφήστε κενό για να μην το ορίσετε)';
