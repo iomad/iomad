@@ -1347,7 +1347,7 @@ function assign_capability($capability, $permission, $roleid, $contextid, $overw
     }
 
     // Capability must exist.
-    if (!$capinfo = get_capability_info($capability)) {
+    if (!during_initial_install() && !$capinfo = get_capability_info($capability)) {
         throw new coding_exception("Capability '{$capability}' was not found! This has to be fixed in code.");
     }
 
