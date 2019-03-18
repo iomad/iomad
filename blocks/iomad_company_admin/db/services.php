@@ -185,4 +185,20 @@ $functions = array(
         'description' => 'Check SSO token',
         'type' => 'read',
     ),
+    'block_iomad_company_admin_restrict_capability' => array(
+        'classname' => 'block_iomad_company_admin_external',
+        'methodname' => 'restrict_capability',
+        'classpath' => 'blocks/iomad_company_admin/externallib.php',
+        'description' => 'set/reset Iomad capability',
+        'type' => 'write',
+        'ajax' => true,
+    ),
+    'block_iomad_company_admin_capability_delete_template' => array(
+        'classname' => 'block_iomad_company_admin_external',
+        'methodname' => 'capability_delete_template',
+        'classpath' => 'blocks/iomad_company_admin/externallib.php',
+        'description' => 'Delete Iomad capabilities template',
+        'type' => 'write',
+        'ajax' => true,
+    ),
 );
