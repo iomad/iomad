@@ -59,16 +59,11 @@ class provider implements
             [
                 'id' => 'privacy:metadata:local_iomad_track:id',
                 'courseid' => 'privacy:metadata:local_iomad_track:courseid',
-                'coursename' => 'privacy:metadata:local_iomad_track:coursename',
                 'userid' => 'privacy:metadata:local_iomad_track:userid',
                 'timecompleted' => 'privacy:metadata:local_iomad_track:timecompleted',
                 'timeenrolled' => 'privacy:metadata:local_iomad_track:timeenrolled',
                 'timestarted' => 'privacy:metadata:local_iomad_track:timestarted',
                 'finalscore' => 'privacy:metadata:local_iomad_track:finalscore',
-                'companyid' => 'privacy:metadata:local_iomad_track:companyid',
-                'licenseid' => 'privacy:metadata:local_iomad_track:licenseid',
-                'licensename' => 'privacy:metadata:local_iomad_track:licensename',
-                'licenseallocated' => 'privacy:metadata:local_iomad_track:licenseallocated',
             ],
             'privacy:metadata:local_iomad_track'
         );
