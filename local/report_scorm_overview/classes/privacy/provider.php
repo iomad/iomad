@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for report_scorm_overview.
+ * Privacy Subsystem implementation for local_report_scorm_overview.
  *
- * @package    report_scorm_overview
+ * @package    local_report_scorm_overview
  * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace report_scorm_overview\privacy;
+namespace local_report_scorm_overview\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Privacy Subsystem for report_scorm_overview implementing null_provider.
+ * Privacy Subsystem for local_report_scorm_overview implementing null_provider.
  *
  * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -40,7 +40,7 @@ class provider implements \core_privacy\local\metadata\null_provider {
      *
      * @return  string
      */
-    public static function get_reason() {
+    public static function get_reason() : string {
         return 'privacy:metadata';
     }
 }
