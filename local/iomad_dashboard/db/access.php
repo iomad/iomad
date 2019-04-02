@@ -19,6 +19,11 @@ $capabilities = array(
     'local/iomad_dashboard:view' => array(
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+        ),
     ),
 );

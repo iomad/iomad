@@ -1078,7 +1078,12 @@ function get_role_archetypes() {
         'student'        => 'student',
         'guest'          => 'guest',
         'user'           => 'user',
-        'frontpage'      => 'frontpage'
+        'frontpage'      => 'frontpage',
+        'companymanager'           => 'companymanager',
+        'companydepartmentmanager' => 'companydepartmentmanager',
+        'companycourseeditor'      => 'companycourseeditor',
+        'companycoursenoneditor'   => 'companycoursenoneditor',
+        'clientadministrator'      => 'clientadministrator'
     );
 }
 
@@ -2036,6 +2041,11 @@ function get_default_role_archetype_allows($type, $archetype) {
             'guest'          => array(),
             'user'           => array(),
             'frontpage'      => array(),
+            'companymanager'           => array(),
+            'companydepartmentmanager' => array(),
+            'companycourseeditor'      => array(),
+            'companycoursenoneditor'   => array(),
+            'clientadministrator'      => array(),
         ),
         'override' => array(
             'manager'        => array('manager', 'coursecreator', 'editingteacher', 'teacher', 'student', 'guest', 'user', 'frontpage'),
@@ -2046,6 +2056,11 @@ function get_default_role_archetype_allows($type, $archetype) {
             'guest'          => array(),
             'user'           => array(),
             'frontpage'      => array(),
+            'companymanager'           => array(),
+            'companydepartmentmanager' => array(),
+            'companycourseeditor'      => array(),
+            'companycoursenoneditor'   => array(),
+            'clientadministrator'      => array(),
         ),
         'switch' => array(
             'manager'        => array('editingteacher', 'teacher', 'student', 'guest'),
@@ -2056,6 +2071,11 @@ function get_default_role_archetype_allows($type, $archetype) {
             'guest'          => array(),
             'user'           => array(),
             'frontpage'      => array(),
+            'companymanager'           => array(),
+            'companydepartmentmanager' => array(),
+            'companycourseeditor'      => array(),
+            'companycoursenoneditor'   => array(),
+            'clientadministrator'      => array(),
         ),
     );
 

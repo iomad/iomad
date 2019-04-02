@@ -480,3 +480,10 @@ $string['privacy:metadata:role_capabilities:roleid'] = 'The ID of the role';
 $string['privacy:metadata:role_capabilities:tableexplanation'] = 'The capabilities and override capabilities for a particular role in a particular context';
 $string['privacy:metadata:role_capabilities:timemodified'] = 'The date when the capability was created or modified.';
 $string['privacy:metadata:role_cohortroles'] = 'Roles to cohort';
+
+// Iomad additions.
+$string['archetypeclientadministrator'] = 'Iomad client administrator';
+$string['archetypecompanymanager'] = 'Company manager';
+$string['archetypecompanydepartmentmanager'] = 'Company department manager';
+$string['archetypecompanycourseeditor'] = 'Company course editing teacher';
+$string['archetypecompanycoursenoneditor'] = 'Company course non editing teacher';

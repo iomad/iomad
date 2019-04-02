@@ -19,9 +19,9 @@ $capabilities = array(
     'local/report_scorm_overview:view' => array(
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
+        'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
-        )
+            'clientadministrator' => CAP_ALLOW
+        ),
     )
 );
