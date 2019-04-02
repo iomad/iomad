@@ -405,6 +405,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -415,6 +416,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -426,6 +428,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -440,6 +444,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -453,6 +459,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -465,6 +473,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -533,6 +542,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -713,6 +724,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -825,6 +837,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -931,6 +944,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -963,6 +977,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -973,6 +988,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -984,6 +1000,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -996,6 +1014,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1008,6 +1028,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:update'
@@ -1067,6 +1088,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:update'
@@ -1129,6 +1151,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1141,6 +1164,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1264,6 +1288,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1277,6 +1303,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1532,6 +1560,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1552,6 +1581,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1562,6 +1592,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1592,6 +1623,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:viewcoursegrades'
@@ -1612,6 +1645,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:viewcoursegrades'
@@ -1646,6 +1681,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:managegrades'
@@ -1657,6 +1693,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:managegrades'
@@ -1670,6 +1707,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:managegrades'
@@ -1702,6 +1740,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:managegrades'
@@ -1712,6 +1751,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:managegrades'
@@ -1722,6 +1762,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1731,6 +1772,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1740,6 +1782,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1758,6 +1801,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1770,6 +1815,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1823,6 +1870,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
         )
     ),
 
@@ -1833,6 +1882,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1917,6 +1967,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1930,6 +1982,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1943,6 +1997,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1955,6 +2011,8 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -1973,6 +2031,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -2168,14 +2228,18 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSECAT,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
         )
     ),
     'moodle/competency:competencyview' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSECAT,
         'archetypes' => array(
-            'user' => CAP_ALLOW
+            'user' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW,
         ),
     ),
     'moodle/competency:competencygrade' => array(
@@ -2184,6 +2248,8 @@ $capabilities = array(
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
+            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
     ),
@@ -2193,6 +2259,7 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
+            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
     ),
@@ -2231,7 +2298,10 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:planmanagedraft' => array(
@@ -2257,7 +2327,10 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:planviewdraft' => array(
@@ -2298,14 +2371,20 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:plancomment' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:plancommentown' => array(
@@ -2322,7 +2401,10 @@ $capabilities = array(
         'archetypes' => array(
             'manager' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW
+            'teacher' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         )
     ),
     'moodle/competency:usercompetencyrequestreview' => array(
@@ -2343,14 +2425,20 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:usercompetencycomment' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:usercompetencycommentown' => array(
@@ -2365,7 +2453,10 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSECAT,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/analytics:listinsights' => array(
@@ -2390,7 +2481,10 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSECAT,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     // User evidence.
@@ -2398,7 +2492,10 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/competency:userevidencemanageown' => array(
@@ -2412,7 +2509,10 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
+            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+
         ),
     ),
     'moodle/site:maintenanceaccess' => array(
