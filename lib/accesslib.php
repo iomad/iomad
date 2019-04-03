@@ -2081,8 +2081,8 @@ function get_default_role_archetype_allows($type, $archetype) {
             'frontpage'      => array(),
             'companymanager'           => array(),
             'companydepartmentmanager' => array(),
-            'companycourseeditor'      => array(),
-            'companycoursenoneditor'   => array(),
+            'companycourseeditor'      => array('companycoursenoneditor', 'student', 'guest'),
+            'companycoursenoneditor'   => array('student', 'guest'),
             'clientadministrator'      => array(),
         ),
         'view' => array(
@@ -2094,6 +2094,11 @@ function get_default_role_archetype_allows($type, $archetype) {
             'guest'          => array(),
             'user'           => array(),
             'frontpage'      => array(),
+            'companymanager'           => array(),
+            'companydepartmentmanager' => array(),
+            'companycourseeditor'      => array(),
+            'companycoursenoneditor'   => array(),
+            'clientadministrator'      => array(),
         ),
     );
 
