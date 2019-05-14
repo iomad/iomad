@@ -103,9 +103,9 @@ class lesson_page_type_shortanswer extends lesson_page {
                     $ignorecase = 'i';
                 }
             } else {
-                $expectedanswer = str_replace('*', '#####', $expectedanswer);
+                $expectedanswer = str_replace('*', '%@@%@@%', $expectedanswer);
                 $expectedanswer = preg_quote($expectedanswer, '/');
-                $expectedanswer = str_replace('#####', '.*', $expectedanswer);
+                $expectedanswer = str_replace('%@@%@@%', '.*', $expectedanswer);
             }
             // see if user typed in any of the correct answers
             if ((!$this->lesson->custom && $this->lesson->jumpto_is_correct($this->properties->id, $answer->jumpto)) or ($this->lesson->custom && $answer->score > 0) ) {
@@ -170,6 +170,7 @@ class lesson_page_type_shortanswer extends lesson_page {
                 $result->newpageid = $answer->jumpto;
                 $options = new stdClass();
                 $options->para = false;
+                $options->noclean = true;
                 $result->response = format_text($answer->response, $answer->responseformat, $options);
                 $result->answerid = $answer->id;
                 break; // quit answer analysis immediately after a match has been found

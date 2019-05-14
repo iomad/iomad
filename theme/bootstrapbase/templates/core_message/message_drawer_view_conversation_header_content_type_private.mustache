@@ -42,12 +42,12 @@
 
 <div class="d-flex align-items-center">
     <div class="align-self-stretch" >
-        <a class="h-100 mr-2 d-flex align-items-center" href="#" data-route-back>
+        <a class="h-100 mr-2 d-flex align-items-center" href="#" data-route-back role="button">
             {{> core_message/message_drawer_icon_back }}
         </a>
     </div>
     <div class="d-flex text-truncate">
-        <a class="d-flex text-truncate text-decoration-none" href="#" data-action="view-contact">
+        <a class="d-flex text-truncate text-decoration-none" href="#" data-action="view-contact" role="button">
             {{#imageurl}}
                 <div class="d-flex align-items-center">
                     <img
@@ -62,7 +62,8 @@
             <div class="w-100 text-truncate ml-2">
                 <div class="d-flex">
                     <strong class="m-0 text-truncate">{{name}}</strong>
-                    <span class="{{^isfavourite}}hidden{{/isfavourite}} ml-1 text-primary" data-region="favourite-icon-container">
+                    <span class="{{^isfavourite}}hidden{{/isfavourite}} ml-1 text-primary" data-region="favourite-icon-container"
+                    aria-label="{{#str}} favourites, core {{/str}}">
                         {{#pix}} i/star, core {{/pix}}
                     </span>
                 </div>
@@ -76,47 +77,50 @@
         </a>
     </div>
     <div class="ml-auto dropdown">
-        <button class="btn btn-link btn-icon icon-size-3" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button id="conversation-actions-menu-button" class="btn btn-link btn-icon icon-size-3" type="button"
+        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+        aria-label="{{#str}} conversationactions, core_message {{/str}}" aria-controls="conversation-actions-menu">
             {{#pix}} i/moremenu, core {{/pix}}
         </button>
-        <ul class="dropdown-menu pull-right">
+        <ul id="conversation-actions-menu" class="dropdown-menu pull-right" role="menu"
+        aria-labelledby="conversation-actions-menu-button">
             <li data-action="view-contact">
-                <a class="dropdown-item" href="#" >
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} info, core_message {{/str}}
                 </a>
             </li>
             <li class="{{#isfavourite}}hidden{{/isfavourite}} {{^showfavourite}}hidden{{/showfavourite}}" data-action="confirm-favourite">
-                <a class="dropdown-item" href="#" >
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} addtofavourites, core_message {{/str}}
                 </a>
             </li>
             <li class="{{^isfavourite}}hidden{{/isfavourite}} {{^showfavourite}}hidden{{/showfavourite}}" data-action="confirm-unfavourite">
-                <a class="dropdown-item " href="#">
+                <a class="dropdown-item " href="#" role="menuitem">
                     {{#str}} removefromfavourites, core_message {{/str}}
                 </a>
             </li>
             <li class="{{#isblocked}}hidden{{/isblocked}}" data-action="request-block">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} blockuser, core_message {{/str}}
                 </a>
             </li>
             <li class="{{^isblocked}}hidden{{/isblocked}}" data-action="request-unblock">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} unblockuser, core_message {{/str}}
                 </a>
             </li>
             <li data-action="request-delete-conversation">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} deleteconversation, core_message {{/str}}
                 </a>
             </li>
             <li class="{{#iscontact}}hidden{{/iscontact}}" data-action="request-add-contact">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} addtoyourcontacts, core_message {{/str}}
                 </a>
             </li>
             <li class="{{^iscontact}}hidden{{/iscontact}}" data-action="request-remove-contact">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="#" role="menuitem">
                     {{#str}} removefromyourcontacts, core_message {{/str}}
                 </a>
             </li>

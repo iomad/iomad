@@ -2952,5 +2952,131 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2018120302.04);
     }
 
+    if ($oldversion < 2018120303.01) {
+        // Remove any conversations and their members associated with non-existent groups.
+        $sql = "SELECT mc.id
+                  FROM {message_conversations} mc
+             LEFT JOIN {groups} g
+                    ON mc.itemid = g.id
+                 WHERE mc.component = :component
+                   AND mc.itemtype = :itemtype
+                   AND g.id is NULL";
+        $conversations = $DB->get_records_sql($sql, ['component' => 'core_group', 'itemtype' => 'groups']);
+
+        if ($conversations) {
+            $conversationids = array_keys($conversations);
+
+            $DB->delete_records_list('message_conversations', 'id', $conversationids);
+            $DB->delete_records_list('message_conversation_members', 'conversationid', $conversationids);
+
+            // Now, go through each conversation and delete any messages and related message actions.
+            foreach ($conversationids as $conversationid) {
+                if ($messages = $DB->get_records('messages', ['conversationid' => $conversationid])) {
+                    $messageids = array_keys($messages);
+
+                    // Delete the actions.
+                    list($insql, $inparams) = $DB->get_in_or_equal($messageids);
+                    $DB->delete_records_select('message_user_actions', "messageid $insql", $inparams);
+
+                    // Delete the messages.
+                    $DB->delete_records('messages', ['conversationid' => $conversationid]);
+                }
+            }
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2018120303.01);
+    }
+
+    if ($oldversion < 2018120303.02) {
+
+        // Add missing indicators to course_dropout.
+        $params = [
+            'target' => '\core\analytics\target\course_dropout',
+            'trained' => 0,
+            'enabled' => 0,
+        ];
+        $models = $DB->get_records('analytics_models', $params);
+        foreach ($models as $model) {
+            $indicators = json_decode($model->indicators);
+
+            $potentiallymissingindicators = [
+                '\core_course\analytics\indicator\completion_enabled',
+                '\core_course\analytics\indicator\potential_cognitive_depth',
+                '\core_course\analytics\indicator\potential_social_breadth',
+                '\core\analytics\indicator\any_access_after_end',
+                '\core\analytics\indicator\any_access_before_start',
+                '\core\analytics\indicator\any_write_action_in_course',
+                '\core\analytics\indicator\read_actions'
+            ];
+
+            $missing = false;
+            foreach ($potentiallymissingindicators as $potentiallymissingindicator) {
+                if (!in_array($potentiallymissingindicator, $indicators)) {
+                    // Add the missing indicator to sites upgraded before 2017072000.02.
+                    $indicators[] = $potentiallymissingindicator;
+                    $missing = true;
+                }
+            }
+
+            if ($missing) {
+                $model->indicators = json_encode($indicators);
+                $model->version = time();
+                $model->timemodified = time();
+                $DB->update_record('analytics_models', $model);
+            }
+        }
+
+        // Add missing indicators to no_teaching.
+        $params = [
+            'target' => '\core\analytics\target\no_teaching',
+        ];
+        $models = $DB->get_records('analytics_models', $params);
+        foreach ($models as $model) {
+            $indicators = json_decode($model->indicators);
+            if (!in_array('\core_course\analytics\indicator\no_student', $indicators)) {
+                // Add the missing indicator to sites upgraded before 2017072000.02.
+
+                $indicators[] = '\core_course\analytics\indicator\no_student';
+
+                $model->indicators = json_encode($indicators);
+                $model->version = time();
+                $model->timemodified = time();
+                $DB->update_record('analytics_models', $model);
+            }
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2018120303.02);
+    }
+
+    if ($oldversion < 2018120303.05) {
+        // The no_teaching model might have been marked as not-trained by mistake (static models are always trained).
+        $DB->set_field('analytics_models', 'trained', 1, ['target' => '\core\analytics\target\no_teaching']);
+        upgrade_main_savepoint(true, 2018120303.05);
+    }
+
+    if ($oldversion < 2018120303.16) {
+        // Delete all stale favourite records which were left behind when a course was deleted.
+        $params = ['component' => 'core_message', 'itemtype' => 'message_conversations'];
+        $sql = "SELECT fav.id as id
+                  FROM {favourite} fav
+             LEFT JOIN {context} ctx ON (ctx.id = fav.contextid)
+                 WHERE fav.component = :component
+                       AND fav.itemtype = :itemtype
+                       AND ctx.id IS NULL";
+
+        if ($records = $DB->get_fieldset_sql($sql, $params)) {
+            // Just for safety, delete by chunks.
+            $chunks = array_chunk($records, 1000);
+            foreach ($chunks as $chunk) {
+                list($insql, $inparams) = $DB->get_in_or_equal($chunk);
+                $DB->delete_records_select('favourite', "id $insql", $inparams);
+            }
+        }
+
+        upgrade_main_savepoint(true, 2018120303.16);
+    }
+
     return true;
 }

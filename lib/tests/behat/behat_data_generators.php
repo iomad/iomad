@@ -183,10 +183,28 @@ class behat_data_generators extends behat_base {
                 'category' => 'categoryid',
             )
         ),
+        'message contacts' => array(
+            'datagenerator' => 'message_contacts',
+            'required' => array('user', 'contact'),
+            'switchids' => array('user' => 'userid', 'contact' => 'contactid')
+        ),
+        'private messages' => array(
+            'datagenerator' => 'private_messages',
+            'required' => array('user', 'contact', 'message'),
+            'switchids' => array('user' => 'userid', 'contact' => 'contactid')
+        ),
+        'favourite conversations' => array(
+            'datagenerator' => 'favourite_conversations',
+            'required' => array('user', 'contact'),
+            'switchids' => array('user' => 'userid', 'contact' => 'contactid')
+        ),
     );
 
     /**
-     * Creates the specified element. More info about available elements in http://docs.moodle.org/dev/Acceptance_testing#Fixtures.
+     * Creates the specified element.
+     *
+     * The most reliable list of what types of thing can be created is the
+     * $elements array defined above.
      *
      * @Given /^the following "(?P<element_string>(?:[^"]|\\")*)" exist:$/
      *
@@ -837,4 +855,62 @@ class behat_data_generators extends behat_base {
         return $context;
     }
 
+    /**
+     * Adds user to contacts
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_message_contacts($data) {
+        \core_message\api::add_contact($data['userid'], $data['contactid']);
+    }
+
+    /**
+     * Gets the contact id from it's username.
+     * @throws Exception
+     * @param string $username
+     * @return int
+     */
+    protected function get_contact_id($username) {
+        global $DB;
+
+        if (!$id = $DB->get_field('user', 'id', array('username' => $username))) {
+            throw new Exception('The specified user with username "' . $username . '" does not exist');
+        }
+        return $id;
+    }
+
+    /**
+     * Send a new message from user to contact in a private conversation
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_private_messages(array $data) {
+        if (!$conversationid = \core_message\api::get_conversation_between_users([$data['userid'], $data['contactid']])) {
+            $conversation = \core_message\api::create_conversation(
+                \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+                [$data['userid'], $data['contactid']]
+            );
+            $conversationid = $conversation->id;
+        }
+        \core_message\api::send_message_to_conversation($data['userid'], $conversationid, $data['message'], FORMAT_PLAIN);
+    }
+
+    /**
+     * Mark a private conversation as favourite for user
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_favourite_conversations(array $data) {
+        if (!$conversationid = \core_message\api::get_conversation_between_users([$data['userid'], $data['contactid']])) {
+            $conversation = \core_message\api::create_conversation(
+                \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+                [$data['userid'], $data['contactid']]
+            );
+            $conversationid = $conversation->id;
+        }
+        \core_message\api::set_favourite_conversation($conversationid, $data['userid']);
+    }
 }

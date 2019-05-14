@@ -2692,6 +2692,11 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 $authplugin = get_auth_plugin($authname);
                 $authplugin->pre_loginpage_hook();
                 if (isloggedin()) {
+                    if ($cm) {
+                        $modinfo = get_fast_modinfo($course);
+                        $cm = $modinfo->get_cm($cm->id);
+                    }
+                    set_access_log_user();
                     break;
                 }
             }
@@ -4767,9 +4772,11 @@ function update_internal_user_password($user, $password, $fasthash = false) {
  * @param string $field The user field to be checked for a given value.
  * @param string $value The value to match for $field.
  * @param int $mnethostid
+ * @param bool $throwexception If true, it will throw an exception when there's no record found or when there are multiple records
+ *                              found. Otherwise, it will just return false.
  * @return mixed False, or A {@link $USER} object.
  */
-function get_complete_user_data($field, $value, $mnethostid = null) {
+function get_complete_user_data($field, $value, $mnethostid = null, $throwexception = false) {
     global $CFG, $DB;
 
     if (!$field || !$value) {
@@ -4780,7 +4787,7 @@ function get_complete_user_data($field, $value, $mnethostid = null) {
     $field = core_text::strtolower($field);
 
     // List of case insensitive fields.
-    $caseinsensitivefields = ['username'];
+    $caseinsensitivefields = ['username', 'email'];
 
     // Build the WHERE clause for an SQL query.
     $params = array('fieldval' => $value);
@@ -4807,8 +4814,18 @@ function get_complete_user_data($field, $value, $mnethostid = null) {
     }
 
     // Get all the basic user data.
-    if (! $user = $DB->get_record_select('user', $constraints, $params)) {
-        return false;
+    try {
+        // Make sure that there's only a single record that matches our query.
+        // For example, when fetching by email, multiple records might match the query as there's no guarantee that email addresses
+        // are unique. Therefore we can't reliably tell whether the user profile data that we're fetching is the correct one.
+        $user = $DB->get_record_select('user', $constraints, $params, '*', MUST_EXIST);
+    } catch (dml_exception $exception) {
+        if ($throwexception) {
+            throw $exception;
+        } else {
+            // Return false when no records or multiple records were found.
+            return false;
+        }
     }
 
     // Get various settings and preferences.
@@ -5458,6 +5475,7 @@ function reset_course_userdata($data) {
             }
         }
 
+        $usersroles = enrol_get_course_users_roles($data->courseid);
         foreach ($data->unenrol_users as $withroleid) {
             if ($withroleid) {
                 $sql = "SELECT ue.*
@@ -5489,7 +5507,15 @@ function reset_course_userdata($data) {
                     continue;
                 }
 
-                $plugin->unenrol_user($instance, $ue->userid);
+                if ($withroleid && count($usersroles[$ue->userid]) > 1) {
+                    // If we don't remove all roles and user has more than one role, just remove this role.
+                    role_unassign($withroleid, $ue->userid, $context->id);
+
+                    unset($usersroles[$ue->userid][$withroleid]);
+                } else {
+                    // If we remove all roles or user has only one role, unenrol user from course.
+                    $plugin->unenrol_user($instance, $ue->userid);
+                }
                 $data->unenrolled[$ue->userid] = $ue->userid;
             }
             $rs->close();
@@ -7336,10 +7362,12 @@ class emoticon_manager {
     /**
      * Returns the currently enabled emoticons
      *
+     * @param boolean $selectable - If true, only return emoticons that should be selectable from a list.
      * @return array of emoticon objects
      */
-    public function get_emoticons() {
+    public function get_emoticons($selectable = false) {
         global $CFG;
+        $notselectable = ['martin', 'egg'];
 
         if (empty($CFG->emoticons)) {
             return array();
@@ -7351,6 +7379,14 @@ class emoticon_manager {
             // Something is wrong with the format of stored setting.
             debugging('Invalid format of emoticons setting, please resave the emoticons settings form', DEBUG_NORMAL);
             return array();
+        }
+        if ($selectable) {
+            foreach ($emoticons as $index => $emote) {
+                if (in_array($emote->altidentifier, $notselectable)) {
+                    // Skip this one.
+                    unset($emoticons[$index]);
+                }
+            }
         }
 
         return $emoticons;
@@ -10252,4 +10288,29 @@ function get_callable_name($callable) {
     } else {
         return $name;
     }
+}
+
+/**
+ * Tries to guess if $CFG->wwwroot is publicly accessible or not.
+ * Never put your faith on this function and rely on its accuracy as there might be false positives.
+ * It just performs some simple checks, and mainly is used for places where we want to hide some options
+ * such as site registration when $CFG->wwwroot is not publicly accessible.
+ * Good thing is there is no false negative.
+ *
+ * @return bool
+ */
+function site_is_public() {
+    global $CFG;
+
+    $host = parse_url($CFG->wwwroot, PHP_URL_HOST);
+
+    if ($host === 'localhost' || preg_match('|^127\.\d+\.\d+\.\d+$|', $host)) {
+        $ispublic = false;
+    } else if (\core\ip_utils::is_ip_address($host) && !ip_is_public($host)) {
+        $ispublic = false;
+    } else {
+        $ispublic = true;
+    }
+
+    return $ispublic;
 }
