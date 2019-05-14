@@ -1346,12 +1346,7 @@ echo "H</br>";
         foreach(explode(',', $supervisor->data) as $testemail) {
             // Is it a valid email address?
             if (validate_email($testemail)) {
-                // Are we diverting everything??
-                if (empty($CFG->divertallemailsto)) {
-                    $emaillist[$testemail] = $testemail;
-                } else {
-                    $emaillist[$CFG->divertallemailsto] = $CFG->divertallemailsto;
-                }
+                $emaillist[$testemail] = $testemail;
             }
         }
 
@@ -3251,7 +3246,8 @@ echo "H</br>";
 
         $course = $DB->get_record('course', array('id' => $courseid));
         $user = $DB->get_record('user', array('id' => $userid));
-        $company = self::get_company_byuserid($userid);
+        $companyinfo = self::get_company_byuserid($userid);
+        $company = new company($companyinfo->id);
 
         // Deal with attachment.
         $trackinfos = $DB->get_records_sql('SELECT * FROM {local_iomad_track}
@@ -4015,8 +4011,9 @@ echo "H</br>";
     public static function send_supervisor_warning_email($user, $course) {
         global $DB, $CFG;
 
-        $company = self::get_company_byuserid($user->id);
-        $supervisortemplate = new EmailTemplate('completion_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
+        $companyinfo = self::get_company_byuserid($user->id);
+        $company = new company($companyinfo->id);
+        $template = new EmailTemplate('completion_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('completion_expiry_warn_supervisor', 2)) {
@@ -4040,16 +4037,17 @@ echo "H</br>";
                     $supportuser->firstname = $CFG->supportname;
                 }
 
-                $subject = get_string('completion_warn_supervisor_subject', 'block_iomad_company_admin', $params);
-                $messagetext = get_string('completion_warn_supervisor_body', 'block_iomad_company_admin', $params);
+                $subject = $user->email . ": " . $template->subject();
+                $messagetext = $template->body();
 
-                $mail->Sender = $supportuser->firstname;
+                $mail->Sender = $CFG->noreplyaddress;
                 $mail->FromName = $supportuser->firstname;
                 $mail->From     = $CFG->noreplyaddress;
                 if (empty($CFG->divertallemailsto)) {
                     $mail->Subject = substr($subject, 0, 900);
                 } else {
-                    $mail->Subject = substr('[DIVERTED ' . $user->email . '] ' . $subject, 0, 900);
+                    $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
+                    $supervisoremail = $CFG->divertallemailsto;
                 }
 
                 $mail->addAddress($supervisoremail, '');
@@ -4058,6 +4056,72 @@ echo "H</br>";
                 $mail->WordWrap = 79;
 
                 $mail->Body =  "\n$messagetext\n";
+                $mail->IsHTML();
+
+                if (empty($CFG->noemailever)) {
+                    $mail->send();
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Send a user's supervisor a warning email that a user hasn't started a course.
+     *
+     * @param user object
+     * @param course object
+     * @return bool true on success.
+     */
+    public static function send_supervisor_not_started_warning_email($user, $course) {
+        global $DB, $CFG;
+
+        $companyinfo = self::get_company_byuserid($user->id);
+        $company = new company($companyinfo->id);
+        $template = new EmailTemplate('course_not_started_warning', array('course' => $course, 'user' => $user, 'company' => $company));
+
+        // Is this enabled for this company?
+        if (!$company->email_template_is_enabled('course_not_started_warning', 2)) {
+            return true;
+        }
+
+        // Do we have a supervisor?
+        if ($supervisoremails = self::get_usersupervisor($user->id)) {
+            foreach ($supervisoremails as $supervisoremail) {
+                $params = new stdclass();
+                $params->fullname = $course->fullname;
+                $params->firstname = $user->firstname;
+                $params->lastname = $user->lastname;
+                $mail = get_mailer();
+
+                $supportuser = core_user::get_support_user();
+                if (!empty($CFG->supportemail)) {
+                    $supportuser->email = $CFG->supportemail;
+                }
+                if ($CFG->supportname) {
+                    $supportuser->firstname = $CFG->supportname;
+                }
+
+                $subject = $user->email . ": " . $template->subject();
+                $messagetext = $template->body();
+
+                $mail->Sender = $CFG->noreplyaddress;
+                $mail->FromName = $supportuser->firstname;
+                $mail->From     = $CFG->noreplyaddress;
+                if (empty($CFG->divertallemailsto)) {
+                    $mail->Subject = substr($subject, 0, 900);
+                } else {
+                    $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
+                    $supervisoremail = $CFG->divertallemailsto;
+                }
+
+                $mail->addAddress($supervisoremail, '');
+
+                // Set word wrap.
+                $mail->WordWrap = 79;
+
+                $mail->Body =  "\n$messagetext\n";
+                $mail->IsHTML();
                 if (empty($CFG->noemailever)) {
                     $mail->send();
                 }
@@ -4076,7 +4140,8 @@ echo "H</br>";
     public static function send_supervisor_expiry_warning_email($user, $course) {
         global $DB, $CFG;
 
-        $company = self::get_company_byuserid($user->id);
+        $companyinfo = self::get_company_byuserid($user->id);
+        $company = new company($companyinfo->id);
         $supervisortemplate = new EmailTemplate('completion_expiry_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Is this enabled for this company?
@@ -4101,16 +4166,17 @@ echo "H</br>";
                     $supportuser->firstname = $CFG->supportname;
                 }
 
-                $subject = get_string('completion_expiry_warn_supervisor_subject', 'block_iomad_company_admin', $params);
-                $messagetext = get_string('completion_expiry_warn_supervisor_body', 'block_iomad_company_admin', $params);
+                $subject = $user->email . ": " . $template->subject();
+                $messagetext = $template->body();
 
-                $mail->Sender = $supportuser->firstname;
-                $mail->From     = $CFG->noreplyaddress;
+                $mail->Sender = $CFG->noreplyaddress;
                 $mail->FromName = $supportuser->firstname;
+                $mail->From     = $CFG->noreplyaddress;
                 if (empty($CFG->divertallemailsto)) {
                     $mail->Subject = substr($subject, 0, 900);
                 } else {
-                    $mail->Subject = substr('[DIVERTED ' . $user->email . '] ' . $subject, 0, 900);
+                    $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
+                    $supervisoremail = $CFG->divertallemailsto;
                 }
 
                 $mail->addAddress($supervisoremail, '');
@@ -4119,6 +4185,8 @@ echo "H</br>";
                 $mail->WordWrap = 79;
 
                 $mail->Body =  "\n$messagetext\n";
+                $mail->IsHTML();
+
                 if (empty($CFG->noemailever)) {
                     $mail->send();
                 }
