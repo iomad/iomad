@@ -1316,7 +1316,8 @@ function assign_capability($capability, $permission, $roleid, $contextid, $overw
 
     // Capability must exist.
     if (!$capinfo = get_capability_info($capability)) {
-        throw new coding_exception("Capability '{$capability}' was not found! This has to be fixed in code.");
+        // IOMAD - commenting out next line as it breaks upgrades and installs due to the way roles are set up in Iomad.
+        //throw new coding_exception("Capability '{$capability}' was not found! This has to be fixed in code.");
     }
 
     if (empty($permission) || $permission == CAP_INHERIT) { // if permission is not set
