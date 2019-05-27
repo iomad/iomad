@@ -16229,7 +16229,7 @@ body {
   border-width: 2px;
   border-style: dashed;
 }
-.block.invisible .header h2 {
+.block.invisibleblock .header h2 {
   opacity: 0.5;
   filter: alpha(opacity=50);
 }
@@ -22426,4 +22426,9 @@ ul.indented-list {
 }
 .font-weight-bold {
   font-weight: 700 !important;
+}
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
