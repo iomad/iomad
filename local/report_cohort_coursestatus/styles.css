@@ -1,0 +1,66 @@
+#page-local-report_completion-index .col-md-9 {
+    clear:both;
+}
+
+#page-local-report_completion-index #iomad_course_selector, #page-local-report_completion-index #iomad_cohort_selector {
+    float:left;
+}
+
+#page-local-report_completion-index #iomad_course_selector select, #page-local-report_completion-index #iomad_cohort_selector select {
+    background-color: #ddd;
+}
+
+#page-local-report_completion-index #iomad_course_selector, #page-local-report_completion-index #iomad_cohort_selector {
+    padding-top: 7px;
+    padding-bottom: 17px;
+    padding-right: 5px;
+}
+
+#page-local-report_completion-index #mform1 {
+    display: flex;
+    padding-top: 5px;
+}
+
+#page-local-report_completion-index .mform fieldset {
+    border-bottom: 0px;
+}
+
+#page-local-report_completion-index .chart-area{
+    max-width: 400px;
+}
+
+.reporttablecontrols {
+    display: inline-block;
+}
+
+.reporttablecontrolscontrol {
+    float: left;
+}
+
+.reporttablecontrolscontrol .singlebutton {
+    padding-top: 7px;
+    padding-right: 5px;
+}
+
+ .reporttablecontrolscontrol #id_searchbutton {
+    color: #212529;
+    background-color: #e9ecef;
+    border-color: #e9ecef;
+    padding-right: 3px;
+}
+
+ .reporttablecontrolscontrol div.col-md-9.form-inline.felement {
+     display: contents
+ }
+ 
+  .reporttablecontrolscontrol  div.col-md-3 {
+      display: none
+  }
+
+.progress {
+    background-color: #666;
+}
+
+.progress-bar {
+    background-color: green;
+}
