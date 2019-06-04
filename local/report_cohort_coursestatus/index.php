@@ -272,23 +272,72 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = "";
 }
 
+// SQL to determine what courses should be reported on.
+$courseselect = 'SELECT c.id, c.shortname ';
+$coursefrom = 'FROM {enrol} e ' .
+    'INNER JOIN {course} c ON c.id = e.courseid ';
+$coursewhere = 'WHERE e.enrol = :enroltype AND e.customint1 = :cohortid';
+$sqlparams['enroltype'] = 'cohort';
+$sqlparams['cohortid'] = $cohortid;
+$reportcourses = $DB->get_records_sql($courseselect . $coursefrom . $coursewhere, $sqlparams);
+print_object($reportcourses);
+
 // Set up the initial SQL for the form.
-$selectsql = 'cm.id, u.id as userid, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, ' .
-    'u.alternatename, c.name as cohort';
+
+//$activitysql = 'SELECT cm1.course, m1.name, cmc1.coursemoduleid, cmc1.userid, cmc1.timemodified ' .
+$activitysql = 'SELECT CONCAT(m1.name, "_", cm1.instance) ' .
+    'FROM {course_modules_completion} cmc1 '.
+    'INNER JOIN {course_modules} cm1 ON cmc1.coursemoduleid = cm1.id ' .
+    'INNER JOIN {modules} m1 ON cm1.module = m1.id ' .
+//    'WHERE timemodified='.
+//        '(SELECT MAX(timemodified) FROM {course_modules_completion} cmc2) ' .
+    'WHERE cmc1.userid = u.id AND cmc1.course = lit.courseid ' .
+    'ORDER BY cmc1.timemodified DESC ' .
+    'LIMIT 1 ' .
+    '';
+//print_object($DB->get_records_sql($activitysql));
+
+// CASE WHEN is database angnostic.
+$selectsql = 'lit.id, cm.id as cmid, u.id as userid, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, ' .
+    'u.alternatename, ch.name as cohort, lit.coursename as coursename, ';
+
+    $comma = '';
+    foreach ($reportcourses as $reportcourse) {
+        $selectsql .= $comma .
+        'CASE ' .
+            'WHEN lit.timecompleted IS NOT NULL THEN "Complete" ' .
+            'ELSE (SELECT cmc.coursemoduleid FROM {course_modules_completion} cmc WHERE cmc.id = 81346) '.
+        'END as courseid_' . $reportcourse->id . ' ';
+        $comma = ', ';
+    }
 $fromsql = '{cohort_members} cm ' .
     'INNER JOIN {user} u ON u.id = cm.userid ' .
-    'INNER JOIN {cohort} c ON cm.cohortid = c.id ' .
+    'INNER JOIN {cohort} ch ON cm.cohortid = ch.id ' .
+    'INNER JOIN {enrol} e ON e.enrol = "cohort" AND ch.id = e.customint1 ' .
+    'INNER JOIN {role_assignments} ra ON cm.userid = ra.userid AND ra.component = "enrol_cohort" AND ra.itemid = e.id ' .
+    'INNER JOIN {context} cx ON ra.contextid = cx.id AND cx.CONTEXTLEVEL = :coursecontext ' .
     'INNER JOIN {company_users} cu ON (u.id = cu.userid) ' .
-    'INNER JOIN {department} d ON (cu.departmentid = d.id) ';
+    'INNER JOIN {department} d ON (cu.departmentid = d.id) ' .
+    'INNER JOIN {local_iomad_track} as lit ON cu.userid = lit.userid AND lit.courseid = cx.instanceid';
 
 $wheresql = 'cm.cohortid = :cohortid ' .
-    'AND cu.companyid = :companyid ' . $departmentsql . ' ' . $companysql;
+    'AND cu.companyid = :companyid ' .
+    $departmentsql . ' ' . $companysql .
+    ' GROUP BY u.id';
 $sqlparams['cohortid'] = $cohortid;
 $sqlparams['companyid'] = $companyid;
+$sqlparams['coursecontext'] = CONTEXT_COURSE;
+print_object($wheresql);
+print_object($sqlparams);
 
 // Set up the headers for the form.
 $headers = [get_string('cohort', 'cohort'), get_string('fullname')];
 $columns = ['cohort', 'fullname'];
+foreach ($reportcourses as $reportcourse) {
+    $headers[] = $reportcourse->shortname;
+    $columns[] = 'courseid_' . $reportcourse->id;
+}
+
 
 // Set up the table and display it.
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
