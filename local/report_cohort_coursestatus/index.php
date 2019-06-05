@@ -24,13 +24,15 @@ require_once($CFG->dirroot . '/cohort/lib.php');
 // Params.
 $download = optional_param('download', 0, PARAM_CLEAN);
 $fullname       = optional_param('fullname', 0, PARAM_CLEAN);
+$firstname       = optional_param('firstname', 0, PARAM_CLEAN);
+$lastname      = optional_param('lastname', '', PARAM_CLEAN);
+$email  = optional_param('email', 0, PARAM_CLEAN);
 $sort         = optional_param('sort', '', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
 $perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);        // How many per page.
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
-$coursesearch = optional_param('coursesearch', '', PARAM_CLEAN);// Search string.
-$cohortid = optional_param('cohortid', 1, PARAM_INT);
+$cohortid = optional_param('cohortid', 0, PARAM_INT);
 $compfromraw = optional_param_array('compfrom', null, PARAM_INT);
 $comptoraw = optional_param_array('compto', null, PARAM_INT);
 $completiontype = optional_param('completiontype', 0, PARAM_INT);
@@ -46,6 +48,15 @@ iomad::require_capability('local/report_cohort_coursestatus:view', $context);
 if ($fullname) {
     $params['fullname'] = $fullname;
 }
+if ($firstname) {
+    $params['firstname'] = $firstname;
+}
+if ($lastname) {
+    $params['lastname'] = $lastname;
+}
+if ($email) {
+    $params['email'] = $email;
+}
 if ($sort) {
     $params['sort'] = $sort;
 }
@@ -57,9 +68,6 @@ if ($page) {
 }
 if ($perpage) {
     $params['perpage'] = $perpage;
-}
-if ($coursesearch) {
-    $params['coursesearch'] = $coursesearch;
 }
 if ($cohortid) {
     $params['cohortid'] = $cohortid;
@@ -162,6 +170,7 @@ $departmenttree = company::get_all_subdepartments_raw($userhierarchylevel);
 $treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
 $fwselectoutput = html_writer::tag('div', $output->render($select),
     ['id' => 'iomad_department_selector', 'style' => 'display: none;']);
+$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, false, false);
 
 $availablecohorts = cohort_get_cohorts($context->id);
 $availablecohorts = $availablecohorts['cohorts'];
@@ -183,24 +192,20 @@ if (!empty($availablecohorts)) {
     $coselectoutput = html_writer::tag('div', $output->render($select), ['id' => 'iomad_cohort_selector']);
 }
 
-// Create data for filter form.
-$customdata = null;
-$options = $params;
-
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
 }
 
 // Do we have any additional reporting fields?
-$extrafields = array();
+$extrafields = [];
 if (!empty($CFG->iomad_report_fields)) {
     foreach (explode(',', $CFG->iomad_report_fields) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
-            $profilefield = $DB->get_record('user_info_field', array('shortname' => str_replace('profile_field_', '', $extrafield)));
+            $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
             $extrafields[$extrafield]->title = $profilefield->name;
             $extrafields[$extrafield]->fieldid = $profilefield->id;
         } else {
@@ -219,10 +224,10 @@ if (!$table->is_downloading()) {
     // Display the search form and department picker.
     if (!empty($companyid)) {
         if (empty($table->is_downloading())) {
-            echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-            echo html_writer::start_tag('div', array('class' => 'fitem'));
+            echo html_writer::start_tag('div', ['class' => 'iomadclear']);
+            echo html_writer::start_tag('div', ['class' => 'fitem']);
             echo $treehtml;
-            echo html_writer::start_tag('div', array('style' => 'display:none'));
+            echo html_writer::start_tag('div', ['style' => 'display:none']);
             echo $fwselectoutput;
             echo html_writer::end_tag('div');
             echo html_writer::end_tag('div');
@@ -234,7 +239,7 @@ if (!$table->is_downloading()) {
             $params['addto'] = 'compto';
             $params['adddodownload'] = false;
             $mform = new iomad_user_filter_form(null, $params);
-            $mform->set_data(array('departmentid' => $departmentid));
+            $mform->set_data(['departmentid' => $departmentid]);
             $mform->set_data($params);
             $mform->get_data();
 
@@ -244,16 +249,14 @@ if (!$table->is_downloading()) {
     }
 
     // Display the search form and cohort picker.
-    if (!empty($cohortid)) {
-        if (empty($table->is_downloading())) {
-            echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-            echo html_writer::start_tag('div', array('class' => 'fitem'));
-            echo html_writer::start_tag('div', array('class' => 'iomadclear', 'style' => 'padding-top: 5px;'));
-            echo $coselectoutput;
-            echo html_writer::end_tag('div');
-            echo html_writer::end_tag('div');
-            echo html_writer::end_tag('div');
-        }
+    if (empty($table->is_downloading())) {
+        echo html_writer::start_tag('div', ['class' => 'iomadclear']);
+        echo html_writer::start_tag('div', ['class' => 'fitem']);
+        echo html_writer::start_tag('div', ['class' => 'iomadclear', 'style' => 'padding-top: 5px;']);
+        echo $coselectoutput;
+        echo html_writer::end_tag('div');
+        echo html_writer::end_tag('div');
+        echo html_writer::end_tag('div');
     }
 }
 
@@ -280,64 +283,42 @@ $coursewhere = 'WHERE e.enrol = :enroltype AND e.customint1 = :cohortid';
 $sqlparams['enroltype'] = 'cohort';
 $sqlparams['cohortid'] = $cohortid;
 $reportcourses = $DB->get_records_sql($courseselect . $coursefrom . $coursewhere, $sqlparams);
-print_object($reportcourses);
 
-// Set up the initial SQL for the form.
-
-//$activitysql = 'SELECT cm1.course, m1.name, cmc1.coursemoduleid, cmc1.userid, cmc1.timemodified ' .
-$activitysql = 'SELECT CONCAT(m1.name, "_", cm1.instance) ' .
-    'FROM {course_modules_completion} cmc1 '.
-    'INNER JOIN {course_modules} cm1 ON cmc1.coursemoduleid = cm1.id ' .
-    'INNER JOIN {modules} m1 ON cm1.module = m1.id ' .
-//    'WHERE timemodified='.
-//        '(SELECT MAX(timemodified) FROM {course_modules_completion} cmc2) ' .
-    'WHERE cmc1.userid = u.id AND cmc1.course = lit.courseid ' .
-    'ORDER BY cmc1.timemodified DESC ' .
-    'LIMIT 1 ' .
-    '';
-//print_object($DB->get_records_sql($activitysql));
-
-// CASE WHEN is database angnostic.
-$selectsql = 'lit.id, cm.id as cmid, u.id as userid, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, ' .
-    'u.alternatename, ch.name as cohort, lit.coursename as coursename, ';
-
-    $comma = '';
-    foreach ($reportcourses as $reportcourse) {
-        $selectsql .= $comma .
-        'CASE ' .
-            'WHEN lit.timecompleted IS NOT NULL THEN "Complete" ' .
-            'ELSE (SELECT cmc.coursemoduleid FROM {course_modules_completion} cmc WHERE cmc.id = 81346) '.
-        'END as courseid_' . $reportcourse->id . ' ';
-        $comma = ', ';
-    }
+$selectsql = 'u.id as userid, u.firstname, u.lastname, u.firstnamephonetic, ' .
+    'u.lastnamephonetic, u.middlename, u.alternatename, ch.name as cohort';
 $fromsql = '{cohort_members} cm ' .
     'INNER JOIN {user} u ON u.id = cm.userid ' .
     'INNER JOIN {cohort} ch ON cm.cohortid = ch.id ' .
-    'INNER JOIN {enrol} e ON e.enrol = "cohort" AND ch.id = e.customint1 ' .
-    'INNER JOIN {role_assignments} ra ON cm.userid = ra.userid AND ra.component = "enrol_cohort" AND ra.itemid = e.id ' .
-    'INNER JOIN {context} cx ON ra.contextid = cx.id AND cx.CONTEXTLEVEL = :coursecontext ' .
     'INNER JOIN {company_users} cu ON (u.id = cu.userid) ' .
-    'INNER JOIN {department} d ON (cu.departmentid = d.id) ' .
-    'INNER JOIN {local_iomad_track} as lit ON cu.userid = lit.userid AND lit.courseid = cx.instanceid';
+    'INNER JOIN {department} d ON (cu.departmentid = d.id) ';
 
-$wheresql = 'cm.cohortid = :cohortid ' .
-    'AND cu.companyid = :companyid ' .
-    $departmentsql . ' ' . $companysql .
-    ' GROUP BY u.id';
+$suffix = 1;
+foreach ($reportcourses as $course) {
+    $alias = 'lit' . $suffix;
+    $sqlconcat = $DB->sql_concat("'incomplete_'", $alias.'.courseid');
+    $selectsql .= ', ' . $alias . '.timecompleted as completed' . $suffix . ', ' . $alias . '.courseid as courseid' . $suffix;
+    $fromsql .= 'LEFT JOIN {local_iomad_track} as ' . $alias . ' ON cu.userid = '.$alias.'.userid AND '.$alias.'.courseid = ' .
+        $course->id . ' AND ' . $alias . '.id = ' .
+            '(SELECT MAX(id) FROM {local_iomad_track} WHERE userid=cu.userid AND courseid='.$course->id.') ';
+    $suffix++;
+}
+
+$wheresql = $searchinfo->sqlsearch . ' AND cm.cohortid = :cohortid ' . 'AND cu.companyid = :companyid ' .
+    $departmentsql . ' ' . $companysql;
+
 $sqlparams['cohortid'] = $cohortid;
 $sqlparams['companyid'] = $companyid;
 $sqlparams['coursecontext'] = CONTEXT_COURSE;
-print_object($wheresql);
-print_object($sqlparams);
+$sqlparams += $searchinfo->searchparams;
 
 // Set up the headers for the form.
 $headers = [get_string('cohort', 'cohort'), get_string('fullname')];
 $columns = ['cohort', 'fullname'];
+$counter = 1;
 foreach ($reportcourses as $reportcourse) {
     $headers[] = $reportcourse->shortname;
-    $columns[] = 'courseid_' . $reportcourse->id;
+    $columns[] = 'completed' . $counter++;
 }
-
 
 // Set up the table and display it.
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);

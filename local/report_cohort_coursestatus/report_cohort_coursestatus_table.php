@@ -56,30 +56,53 @@ class local_report_cohort_coursestatus_table extends table_sql {
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
-    public function col_status($row) {
+    public function other_cols($column, $row) {
         global $DB;
 
-        if (!empty($row->timecompleted)) {
-            $progress = 100;
-        } else {
-            $total = $DB->count_records('course_completion_criteria', array('course' => $row->courseid));
-            if ($total != 0) {
-                $usercount = $DB->count_records('course_completion_crit_compl', array('course' => $row->courseid, 'userid' => $row->userid));
-                $progress = round($usercount * 100 / $total, 0);
+        $completecolname = 'completed';
+
+        // Only process 'completed' columns.
+        if (strpos($column, $completecolname) !== 0) {
+            return null;
+        }
+
+        // The completed time is in column named 'completed' followed by a digit. The course id if valid is found in a column named
+        // 'courseid' followed by the same digit.
+        $index = substr($column, strlen($completecolname));
+        $coursecolname = 'courseid' . $index;
+
+        // Only process columns where the user has a course record. If another indicator is needed, this is where it should be set.
+        if (empty($row->$coursecolname)) {
+            return null;
+        }
+
+        // If the course is completed, indicate that.
+        if (!empty($row->$column)) {
+            return get_string('complete');
+        }
+
+        $select = 'SELECT cm.id, cm.instance, m.name ';
+        $from = 'FROM {course_modules} cm ' .
+            'INNER JOIN {course_modules_completion} cmc ON cm.id = cmc.coursemoduleid '.
+            'INNER JOIN {modules} m ON cm.module = m.id ' .
+            '';
+        $where = 'WHERE cm.course = :courseid AND cmc.userid = :userid AND cmc.completionstate != 0 ';
+        $order = 'ORDER BY cmc.timemodified DESC ';
+        $params = ['courseid' => $row->$coursecolname, 'userid' => $row->userid, 'userid2' => $row->userid];
+
+        // Limit the return set to one, so we get the one with the largest timemodified value.
+        $records = $DB->get_records_sql($select.$from.$where.$order, $params, 0, 1);
+
+        $colval = null;
+        if (!empty($records)) {
+            $record = reset($records);
+            if (empty($record)) {
+                $colval = get_string('notstarted', 'local_report_users');
             } else {
-                $progress = -1;
+                $colval = $DB->get_field($record->name, 'name', ['id' => $record->instance]);
             }
         }
-        if ($progress == -1) {
-            return get_string('notstarted', 'local_report_users');
-        } else {
-            if (!$this->is_downloading()) {
-                return '<div class="progress" style="height:20px">
-                        <div class="progress-bar" style="width:' . $progress . '%;height:20px">' . $progress . '%</div>
-                        </div>';
-            } else {
-                return $progress . "%";
-            }
-        }
+
+        return $colval;
     }
 }

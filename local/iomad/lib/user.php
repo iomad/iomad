@@ -953,6 +953,7 @@ class iomad_user_filter_form extends moodleform {
         $mform->addElement('hidden', 'licenseid');
         $mform->addElement('hidden', 'templateid');
         $mform->addElement('hidden', 'sort');
+        $mform->addElement('hidden', 'cohortid');
         $mform->setType('firstname', PARAM_CLEAN);
         $mform->setType('lastname', PARAM_CLEAN);
         $mform->setType('email', PARAM_EMAIL);
@@ -963,6 +964,7 @@ class iomad_user_filter_form extends moodleform {
         $mform->setType('licenseid', PARAM_INT);
         $mform->setType('templateid', PARAM_INT);
         $mform->setType('sort', PARAM_ALPHA);
+        $mform->setType('cohortid', PARAM_INT);
         $mform->setExpanded('usersearchfields', false);
 
         // Get company category.
