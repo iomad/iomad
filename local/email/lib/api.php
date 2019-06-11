@@ -454,11 +454,7 @@ class EmailTemplate {
                 $supportuser->customheaders['From'] = $template->emailfromother;
             }
             if (!empty($template->emailfromothername)) {
-                if ($template->emailfromothername == "{Company_Name}") {
-                    $supportuser->firstname = $company->get_name();
-                } else {
-                    $supportuser->firstname = $template->emailfromothername;
-                }
+                $supportuser->firstname = str_replace('{Company_Name}', $company->get_name(), $template->emailfromothername);
             }
             if (!empty($template->emailfrom)) {
                 $fromuser = self::get_user($template->emailfrom);
