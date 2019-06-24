@@ -739,7 +739,11 @@ class theme_config {
         $this->name     = $config->name;
         $this->dir      = $config->dir;
 
-        $baseconfig = $config;
+        if ($this->name != self::DEFAULT_THEME) {
+            $baseconfig = self::find_theme_config(self::DEFAULT_THEME, $this->settings);
+        } else {
+            $baseconfig = $config;
+        }
 
         $configurable = array(
             'parents', 'sheets', 'parents_exclude_sheets', 'plugins_exclude_sheets', 'usefallback',
@@ -1543,7 +1547,7 @@ class theme_config {
      * @return string Return compiled css.
      */
     public function get_precompiled_css_content() {
-        $configs = [$this] + $this->parent_configs;
+        $configs = array_reverse($this->parent_configs) + [$this];
         $css = '';
 
         foreach ($configs as $config) {
