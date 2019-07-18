@@ -79,10 +79,6 @@ body {
   background-color: #eeeeee;
 }
 
- {
-  background-color: #ddd !important;
-}
-
 #page-footer, #nav-drawer, .navbar {
   background-color: #ddd !important;
   color: #666 !important;
