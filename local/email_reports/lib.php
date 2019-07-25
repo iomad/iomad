@@ -524,9 +524,9 @@ function email_reports_cron() {
     }
 
     // Deal with users who have passed the expired threshold.
-    $completionexpirycourses = $DB->get_records_sql("SELECT * FROM {iomad_courses)
+    $completionexpirycourses = $DB->get_records_sql("SELECT * FROM {iomad_courses}
                                                      WHERE expireafter > 0");
-    foreach ($completionexpirecourses as $completionexpirecourse) {
+    foreach ($completionexpirycourses as $completionexpirecourse) {
         // Get all of the users who have a time completed time > this time.
         $expiretime = 24 * 60 * 60 * $completionexpirecourse->expireafter;
         $userlist = $DB->get_records_sql("SELECT lit.* FROM
