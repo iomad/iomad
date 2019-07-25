@@ -95,6 +95,7 @@ class local_email {
                             'completion_warn_manager',
                             'completion_warn_supervisor',
                             'completion_warn_user',
+                            'completion_expiry_warn_supervisor',
                             'course_classroom_approval',
                             'course_classroom_approved',
                             'course_classroom_approval_request',
