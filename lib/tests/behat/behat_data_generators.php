@@ -120,7 +120,7 @@ class behat_data_generators extends behat_base {
         'activities' => array(
             'datagenerator' => 'activity',
             'required' => array('activity', 'idnumber', 'course'),
-            'switchids' => array('course' => 'course', 'gradecategory' => 'gradecat')
+            'switchids' => array('course' => 'course', 'gradecategory' => 'gradecat', 'grouping' => 'groupingid')
         ),
         'blocks' => array(
             'datagenerator' => 'block_instance',
@@ -805,6 +805,11 @@ class behat_data_generators extends behat_base {
      */
     protected function get_grouping_id($idnumber) {
         global $DB;
+
+        // Do not fetch grouping ID for empty grouping idnumber.
+        if (empty($idnumber)) {
+            return null;
+        }
 
         if (!$id = $DB->get_field('groupings', 'id', array('idnumber' => $idnumber))) {
             throw new Exception('The specified grouping with idnumber "' . $idnumber . '" does not exist');

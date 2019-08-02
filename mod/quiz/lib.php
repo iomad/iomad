@@ -1128,6 +1128,14 @@ function quiz_process_options($quiz) {
     $quiz->reviewoverallfeedback = quiz_review_option_form_to_db($quiz, 'overallfeedback');
     $quiz->reviewattempt |= mod_quiz_display_options::DURING;
     $quiz->reviewoverallfeedback &= ~mod_quiz_display_options::DURING;
+
+    // Ensure that disabled checkboxes in completion settings are set to 0.
+    if (empty($quiz->completionusegrade)) {
+        $quiz->completionpass = 0;
+    }
+    if (empty($quiz->completionpass)) {
+        $quiz->completionattemptsexhausted = 0;
+    }
 }
 
 /**
@@ -2155,6 +2163,14 @@ function mod_quiz_core_calendar_provide_event_action(calendar_event $event,
 
     // Check they have capabilities allowing them to view the quiz.
     if (!has_any_capability(['mod/quiz:reviewmyattempts', 'mod/quiz:attempt'], $quizobj->get_context(), $userid)) {
+        return null;
+    }
+
+    $completion = new \completion_info($cm->get_course());
+
+    $completiondata = $completion->get_data($cm, false, $userid);
+
+    if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
         return null;
     }
 

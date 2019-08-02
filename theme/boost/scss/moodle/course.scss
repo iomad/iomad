@@ -653,7 +653,8 @@ span.editinstructions {
     margin: 0;
 }
 
-.coursebox .moreinfo {
+.coursebox .moreinfo,
+.coursebox .enrolmenticons {
     padding: 3px 0;
     float: right;
 }
@@ -1199,4 +1200,14 @@ span.editinstructions {
     width: auto;
     height: 32px;
     font-size: 32px;
+}
+
+.activity-navigation {
+    .row {
+        align-items: center;
+    }
+    #prev-activity-link,
+    #next-activity-link {
+        white-space: pre-wrap;
+    }
 }
