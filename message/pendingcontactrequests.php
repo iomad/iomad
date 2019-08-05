@@ -15,16 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz activity version information.
+ * This is a placeholder file for a legacy implementation.
  *
- * @package   mod_quiz
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    core
+ * @copyright  2019 Ryan Wyllie <ryan@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+// Disable moodle specific debug messages since we're just redirecting.
+define('NO_DEBUG_DISPLAY', true);
+require('../config.php');
 
-$plugin->version   = 2018120301;
-$plugin->requires  = 2018112800;
-$plugin->component = 'mod_quiz';
-$plugin->cron      = 60;
+require_login(null, false);
+
+// We have a bunch of old notifications (both internal and external, e.g. email) that
+// reference this URL which means we can't remove it so let's just redirect.
+redirect("{$CFG->wwwroot}/message/index.php?view=contactrequests");
