@@ -669,7 +669,7 @@ class company {
      *
      **/
     public function assign_user_to_company($userid, $departmentid = 0, $managertype = 0, $ws = false) {
-        global $DB;
+        global $DB, $CFG;
 
         // Were we passed a departmentid?
         if (!empty($departmentid)) {
@@ -695,7 +695,7 @@ class company {
             $DB->set_field('user', 'theme', $this->get_theme(), array('id' => $userid));
             if (!empty($CFG->iomad_sync_institution)) {
                 $institution = $this->get('shortname');
-                $DB->set_field('user', 'institution', $institution, array('id' => $userid));
+                $DB->set_field('user', 'institution', $institution->shortname, array('id' => $userid));
             }
             if (!empty($CFG->iomad_sync_department)) {
                 $deptrec = $DB->get_record('department', array('id' => $departmentid));
