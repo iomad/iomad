@@ -840,9 +840,17 @@ class company {
             $managertype = 0;
         }
 
-        // if this is the only company, set the theme.
+        // if this is the only company, set the theme and any company profile info.
         if (!$DB->get_records('company_users', array('userid' => $userid))) {
             $DB->set_field('user', 'theme', $this->get_theme(), array('id' => $userid));
+            if (!empty($CFG->iomad_sync_institution)) {
+                $institution = $this->get('shortname');
+                $DB->set_field('user', 'institution', $institution->shortname, array('id' => $userid));
+            }
+            if (!empty($CFG->iomad_sync_department)) {
+                $deptrec = $DB->get_record('department', array('id' => $departmentid));
+                $DB->set_field('user', 'department', $deptrec->name, array('id' => $userid));
+            }
         }
 
         // Create the record.
@@ -2892,6 +2900,78 @@ class company {
                 $childcompany = new company($childcomprec->id);
                 $childcompany->suspend($suspend);
             }
+        }
+    }
+
+    /**
+     * Terminates a company's contract,
+     * removing all course access and licenses for
+     * all of their users.
+     *
+     **/
+    public function terminate() {
+        global $DB;
+
+        $runtime = time();
+
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Update all of the company licenes to have an end-date of now.
+            $DB->set_field('companylicense', 'expirydate', time(), array('companyid' => $this->id));
+
+            // Get the company users.
+            $users = $this->get_all_user_ids();
+
+            // Update the users.
+            foreach ($users as $userid) {
+                if ($user = $DB->get_record('user', array('id' => $userid))) {
+                    // Does the user belong to another company?
+                    if ($DB->count_records('company_users', array('userid' => $userid)) > 1 ) {
+                        // Belongs to more than one company.  Skip.
+                        continue;
+                    }
+                    // Terminate all of their enrolments.
+                    $usercourses = enrol_get_users_courses($userid);
+                    foreach ($usercourses as $courseid => $usercourse) {
+                        company_user::delete_user_course($userid, $courseid, 'autodelete');
+                    }
+                }
+            }
+
+            // Set the companyterminated field for the company.
+            $DB->set_field('company', 'companyterminated', true, array('id' => $this->id));
+
+            // Deal with local_iomad_track lines too.
+            $DB-set_field('local_iomad_track', 'timeenrolled', $runtime, array('companyid' => $this->id, 'timeenrolled' => null));
+            $DB-set_field('local_iomad_track', 'timestarted', $runtime, array('companyid' => $this->id, 'timestarted' => null));
+            $DB-set_field('local_iomad_track', 'timecompleted', $runtime, array('companyid' => $this->id, 'timecompleted' => null));
+
+            // Deal with child companies.
+            $childcompanies = $this->get_child_companies_recursive();
+            if (!empty($childcompanies)) {
+                foreach ($childcompanies as $childcomprec) {
+
+                    $childcompany = new company($childcomprec->id);
+                    $childcompany->terminate();
+                }
+            }
+
+            // All OK commit the transaction.
+            $transaction->allow_commit();
+            return true;
+
+            // Create an event for this.  This handles the actual lifting.
+            $eventother = array('companyid' => $company->id);
+            $event = \block_iomad_company_admin\event\company_terminated::create(array('context' => context_system::instance(),
+                                                                                       'objectid' => $company->id,
+                                                                                       'userid' => $USER->id,
+                                                                                       'other' => $eventother));
+            $event->trigger();
+
+        } catch(Exception $e) {
+            $transaction->rollback($e);
+            return false;
         }
     }
 

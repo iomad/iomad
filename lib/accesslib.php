@@ -2136,6 +2136,8 @@ function get_default_role_archetype_allows($type, $archetype) {
             'companycourseeditor'      => array('companycoursenoneditor', 'student', 'guest'),
             'companycoursenoneditor'   => array('student', 'guest'),
             'clientadministrator'      => array(),
+            'clientreporter'           => array(),
+            'companyreporter'          => array(),
         ),
         'view' => array(
             'manager'        => array('manager', 'coursecreator', 'editingteacher', 'teacher', 'student', 'guest', 'user', 'frontpage'),
