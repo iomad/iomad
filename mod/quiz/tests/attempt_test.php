@@ -305,6 +305,67 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
                 $attempt->review_url(11, -1, false, 0));
     }
 
+    /**
+     * Tests attempt page titles when all questions are on a single page.
+     */
+    public function test_attempt_titles_single() {
+        $attempt = $this->create_quiz_and_attempt_with_layout('1,2,0');
+
+        // Attempt page.
+        $this->assertEquals('Quiz 1', $attempt->attempt_page_title(0));
+
+        // Summary page.
+        $this->assertEquals('Quiz 1: Attempt summary', $attempt->summary_page_title());
+
+        // Review page.
+        $this->assertEquals('Quiz 1: Attempt review', $attempt->review_page_title(0));
+    }
+
+    /**
+     * Tests attempt page titles when questions are on multiple pages, but are reviewed on a single page.
+     */
+    public function test_attempt_titles_multiple_single() {
+        $attempt = $this->create_quiz_and_attempt_with_layout('1,2,0,3,4,0,5,6,0');
+
+        // Attempt page.
+        $this->assertEquals('Quiz 1 (page 1 of 3)', $attempt->attempt_page_title(0));
+        $this->assertEquals('Quiz 1 (page 2 of 3)', $attempt->attempt_page_title(1));
+        $this->assertEquals('Quiz 1 (page 3 of 3)', $attempt->attempt_page_title(2));
+
+        // Summary page.
+        $this->assertEquals('Quiz 1: Attempt summary', $attempt->summary_page_title());
+
+        // Review page.
+        $this->assertEquals('Quiz 1: Attempt review', $attempt->review_page_title(0, true));
+    }
+
+    /**
+     * Tests attempt page titles when questions are on multiple pages, and they are reviewed on multiple pages as well.
+     */
+    public function test_attempt_titles_multiple_multiple() {
+        $attempt = $this->create_quiz_and_attempt_with_layout(
+                '1,2,3,4,5,6,7,8,9,10,0,11,12,13,14,15,16,17,18,19,20,0,' .
+                '21,22,23,24,25,26,27,28,29,30,0,31,32,33,34,35,36,37,38,39,40,0,' .
+                '41,42,43,44,45,46,47,48,49,50,0,51,52,53,54,55,56,57,58,59,60,0');
+
+        // Attempt page.
+        $this->assertEquals('Quiz 1 (page 1 of 6)', $attempt->attempt_page_title(0));
+        $this->assertEquals('Quiz 1 (page 2 of 6)', $attempt->attempt_page_title(1));
+        $this->assertEquals('Quiz 1 (page 6 of 6)', $attempt->attempt_page_title(5));
+
+        // Summary page.
+        $this->assertEquals('Quiz 1: Attempt summary', $attempt->summary_page_title());
+
+        // Review page.
+        $this->assertEquals('Quiz 1: Attempt review (page 1 of 6)', $attempt->review_page_title(0));
+        $this->assertEquals('Quiz 1: Attempt review (page 2 of 6)', $attempt->review_page_title(1));
+        $this->assertEquals('Quiz 1: Attempt review (page 6 of 6)', $attempt->review_page_title(5));
+
+        // When all questions are shown.
+        $this->assertEquals('Quiz 1: Attempt review', $attempt->review_page_title(0, true));
+        $this->assertEquals('Quiz 1: Attempt review', $attempt->review_page_title(1, true));
+    }
+
     public function test_is_participant() {
         global $USER;
         $this->resetAfterTest();
@@ -338,5 +399,49 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $this->getDataGenerator()->enrol_user(2, $course->id, [], 'manual', 0, 0, ENROL_USER_SUSPENDED);
         $this->assertEquals(true, $quizobj->is_participant($USER->id),
             'Admin is enrolled, suspended and can participate');
+    }
+
+    /**
+     * Create quiz and attempt data with layout.
+     *
+     * @param string $layout layout to set. Like quiz attempt.layout. E.g. '1,2,0,3,4,0,'.
+     * @return quiz_attempt the new quiz_attempt object
+     */
+    protected function create_quiz_and_attempt_with_layout($layout) {
+        $this->resetAfterTest(true);
+
+        // Make a user to do the quiz.
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course();
+        // Make a quiz.
+        $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
+        $quiz = $quizgenerator->create_instance(['course' => $course->id,
+            'grade' => 100.0, 'sumgrades' => 2, 'layout' => $layout]);
+
+        $quizobj = quiz::create($quiz->id, $user->id);
+
+        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
+        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
+
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $questiongenerator->create_question_category();
+
+        $page = 1;
+        foreach (explode(',', $layout) as $slot) {
+            if ($slot == 0) {
+                $page += 1;
+                continue;
+            }
+
+            $question = $questiongenerator->create_question('shortanswer', null, ['category' => $cat->id]);
+            quiz_add_quiz_question($question->id, $quiz, $page);
+        }
+
+        $timenow = time();
+        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, false, $user->id);
+        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
+        quiz_attempt_save_started($quizobj, $quba, $attempt);
+
+        return quiz_attempt::create($attempt->id);
     }
 }
