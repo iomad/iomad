@@ -12557,9 +12557,6 @@ span.editinstructions {
 #nav-drawer.closed {
   left: -305px; }
 
-#page {
-  margin-top: 50px; }
-
 /* Use a variable for the drawer background colors. */
 [data-region="drawer"] {
   position: fixed;
@@ -15294,10 +15291,14 @@ fieldset.coursesearchbox label {
 
 .form-autocomplete-downarrow {
   color: #373a3c;
-  position: relative;
-  top: 0.2em;
-  left: -1.5em;
+  top: 0.2rem;
+  right: 0.5rem;
   cursor: pointer; }
+  .form-autocomplete-downarrow .loading-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #fff; }
 
 .form-autocomplete-selection:focus {
   outline: none; }
