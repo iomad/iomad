@@ -159,7 +159,7 @@ class company_users_course_form extends moodleform {
                         } else {
                             $duedate = 0;
                         }
-                        company_user::enrol($this->user, array($addcourse->id));
+                        company_user::enrol($this->user, array($addcourse->id), $this->selectedcompany);
                         EmailTemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user, 'due' => $duedate));
                     }
                 }
@@ -220,7 +220,6 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('company_users_course_title', 'block_iomad_company_admin'));
-$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
 $PAGE->navbar->add($linktext, $linkurl);
 
 $coursesform = new company_users_course_form($formurl, $context, $companyid, $departmentid, $userid);

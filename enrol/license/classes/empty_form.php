@@ -15,16 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Self enrolment plugin version specification.
+ * Empty enrol_license form.
  *
- * @package    enrol
- * @subpackage license
- * @copyright  2010 Petr Skoda  {@link http://skodak.org}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Useful to mimic valid enrol instances UI when the enrolment instance is not available.
+ *
+ * @package enrol_license
+ * @copyright  2019 E-Learn Design Ltd. http://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component  = 'enrol_license';
-$plugin->version = 2019082300;
-$plugin->cron    = 180;
+require_once($CFG->libdir.'/formslib.php');
+
+class enrol_license_empty_form extends moodleform {
+
+    /**
+     * Form definition.
+     * @return void
+     */
+    public function definition() {
+        $this->_form->addElement('header', 'licenseheader', $this->_customdata->header);
+        $this->_form->addElement('static', 'info', '', $this->_customdata->info);
+    }
+}
