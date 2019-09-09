@@ -98,6 +98,8 @@ $string['attemptincomplete'] = 'That attempt (by {$a}) is not yet completed.';
 $string['attemptlast'] = 'Last attempt';
 $string['attemptnumber'] = 'Attempt';
 $string['attemptquiznow'] = 'Attempt quiz now';
+$string['attemptreviewtitle'] = '{$a}: Attempt review';
+$string['attemptreviewtitlepaged'] = '{$a->name}: Attempt review (page {$a->currentpage} of {$a->totalpages})';
 $string['attempts'] = 'Attempts';
 $string['attempts_help'] = 'The total number of attempts allowed (not the number of extra attempts).';
 $string['attemptsallowed'] = 'Attempts allowed';
@@ -110,7 +112,10 @@ $string['attemptsnumyourgroups'] = 'Attempts: {$a->total} ({$a->group} from your
 $string['attemptsonly'] = 'Show only students with attempts';
 $string['attemptstate'] = 'State';
 $string['attemptstillinprogress'] = 'Attempt still in progress';
+$string['attemptsummarytitle'] = '{$a}: Attempt summary';
 $string['attemptsunlimited'] = 'Unlimited attempts';
+$string['attempttitle'] = '{$a}';
+$string['attempttitlepaged'] = '{$a->name} (page {$a->currentpage} of {$a->totalpages})';
 $string['autosaveperiod'] = 'Auto-save delay';
 $string['autosaveperiod_desc'] = 'Responses can be saved automatically during quiz attempts. The responses are saved whenever one is changed, and then after this delay. There is a trade-off: a shorter delay increases the server load, but reduces the chance that students lose their work. If you are going to make this delay much shorter, you should change the value gradually and monitor the server load. If the load gets too high, make the delay longer again. Setting the delay to 0 turns off auto-saving.';
 $string['back'] = 'Back to preview question';
@@ -900,7 +905,7 @@ $string['shuffledrandomly'] = 'Shuffled randomly';
 $string['shufflequestions'] = 'Shuffle';
 $string['shufflequestions_help'] = 'If enabled, every time the quiz is attempted, the order of the questions in this section will be shuffled into a different random order.
 
-This can make it harder for students to share answers, but it also makes it harder for students discuss a particular question with the teacher.';
+This can make it harder for students to share answers, but it also makes it harder for students to discuss a particular question with the teacher.';
 $string['shufflewithin'] = 'Shuffle within questions';
 $string['shufflewithin_help'] = 'If enabled, the parts making up each question will be randomly shuffled each time a student attempts the quiz, provided the option is also enabled in the question settings. This setting only applies to questions that have multiple parts, such as multiple choice or matching questions.';
 $string['singleanswer'] = 'Choose one answer.';

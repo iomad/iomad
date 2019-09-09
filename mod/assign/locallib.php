@@ -5541,7 +5541,7 @@ class assign {
                                                   $this->is_any_submission_plugin_enabled(),
                                                   $this->count_submissions_with_status($submitted, $activitygroup),
                                                   $instance->cutoffdate,
-                                                  $instance->duedate,
+                                                  $this->get_duedate($activitygroup),
                                                   $this->get_course_module()->id,
                                                   $this->count_submissions_need_grading($activitygroup),
                                                   $instance->teamsubmission,
@@ -5557,7 +5557,7 @@ class assign {
                                                   $this->is_any_submission_plugin_enabled(),
                                                   $this->count_submissions_with_status($submitted, $activitygroup),
                                                   $instance->cutoffdate,
-                                                  $instance->duedate,
+                                                  $this->get_duedate($activitygroup),
                                                   $this->get_course_module()->id,
                                                   $this->count_submissions_need_grading($activitygroup),
                                                   $instance->teamsubmission,
@@ -5567,6 +5567,29 @@ class assign {
         }
 
         return $summary;
+    }
+
+    /**
+     * Return group override duedate.
+     *
+     * @param int $activitygroup Activity active group
+     * @return int $duedate
+     */
+    private function  get_duedate($activitygroup = null) {
+        global $DB;
+
+        if ($activitygroup === null) {
+            $activitygroup = groups_get_activity_group($this->get_course_module());
+        }
+
+        if ($this->can_view_grades()) {
+            $params = array('groupid' => $activitygroup, 'assignid' => $this->get_instance()->id);
+            $groupoverride = $DB->get_record('assign_overrides', $params);
+            if (!empty($groupoverride->duedate)) {
+                return $groupoverride->duedate;
+            }
+        }
+        return $this->get_instance()->duedate;
     }
 
     /**
@@ -8041,14 +8064,14 @@ class assign {
 
                 // Will not apply update if user does not have permission to assign this workflow state.
                 if (!$gradingdisabled && $this->update_user_flags($flags)) {
-                    if ($state == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
-                        // Update Gradebook.
-                        $assign = clone $this->get_instance();
-                        $assign->cmidnumber = $this->get_course_module()->idnumber;
-                        // Set assign gradebook feedback plugin status.
-                        $assign->gradefeedbackenabled = $this->is_gradebook_feedback_enabled();
-                        assign_update_grades($assign, $userid);
-                    }
+                    // Update Gradebook.
+                    $grade = $this->get_user_grade($userid, true);
+                    $this->update_grade($grade);
+                    $assign = clone $this->get_instance();
+                    $assign->cmidnumber = $this->get_course_module()->idnumber;
+                    // Set assign gradebook feedback plugin status.
+                    $assign->gradefeedbackenabled = $this->is_gradebook_feedback_enabled();
+                    assign_update_grades($assign, $userid);
 
                     $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
                     \mod_assign\event\workflow_state_updated::create_from_user($this, $user, $state)->trigger();

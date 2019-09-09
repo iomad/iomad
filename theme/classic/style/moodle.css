@@ -12839,9 +12839,6 @@ span.editinstructions {
 #nav-drawer.closed {
   left: -305px; }
 
-#page {
-  margin-top: 50px; }
-
 /* Use a variable for the drawer background colors. */
 [data-region="drawer"] {
   position: fixed;
@@ -15118,9 +15115,8 @@ fieldset.coursesearchbox label {
 
 .form-autocomplete-downarrow {
   color: #373a3c;
-  position: relative;
-  top: 0.2em;
-  left: -1.5em;
+  top: 0.2rem;
+  right: 0.5rem;
   cursor: pointer; }
   .form-autocomplete-downarrow .loading-icon {
     position: absolute;
@@ -15673,10 +15669,6 @@ div#dock {
 .path-mod-assign [data-region="grade-panel"] fieldset,
 .path-mod-assign [data-region="grade-panel"] .fitem.row {
   margin: 0; }
-
-.path-mod-assign [data-region="grade-panel"] .fitem > .col-md-3 > .pull-xs-right {
-  float: none !important;
-  /* stylelint-disable-line declaration-no-important */ }
 
 .path-mod-assign [data-region="grade-panel"] .mform .fitem.has-popout .felement {
   width: 100%; }
