@@ -3535,14 +3535,17 @@ class company {
                                                'courseid' => $courseid));
 
         // Do not send if this is already recorded.
-        if ($DB->get_record_sql("SELECT id FROM {local_iomad_track}
-                                 WHERE userid=:userid
-                                 AND courseid = :courseid
-                                 AND timeenrolled = :timeenrolled
-                                 AND timecompleted IS NOT NULL",
-                                 array('userid' => $userid,
-                                       'courseid' => $courseid,
-                                       'timeenrolled' => $enrolrec->timestart))) {
+        if (!$DB->get_record_sql("SELECT id FROM {local_iomad_track}
+                                  WHERE userid=:userid
+                                  AND courseid = :courseid
+                                  AND timeenrolled = :timeenrolled
+                                  AND timecompleted < :timecompleted1
+                                  AND timecompleted > :timecompleted2",
+                                  array('userid' => $userid,
+                                        'courseid' => $courseid,
+                                        'timecompleted1' => $timecompleted + 5,
+                                        'timecompleted2' => $timecompleted - 300,
+                                        'timeenrolled' => $enrolrec->timestart))) {
             return true;
         }
 
