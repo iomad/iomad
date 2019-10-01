@@ -15,20 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IomadBoost
+ * Boost.
  *
  * @package    theme_iomadboost
- * @copyright  2017 E-Learn Design Ltd http://www.e-learndesign.co.uk
- * @author     Howard Miller
+ * @copyright  2016 Frédéric Massart
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016123100;
-$plugin->requires  = 2016112900;
-$plugin->release  = '3.6.6 (Build: 20190909)'; // Human-friendly version name
+$plugin->version   = 2018120300;
+$plugin->requires  = 2018112800;
 $plugin->component = 'theme_iomadboost';
-$plugin->dependencies = [
-    'theme_boost' => '2016102100',
-];
