@@ -462,6 +462,47 @@ class company {
     }
 
     /**
+     * Get company email templates
+     *
+     **/
+    public static function get_email_templates($companyid = 0) {
+        global $DB;
+
+        $context = context_system::instance();
+        $templates = $DB->get_records_menu('email_templateset', array(), 'templatesetname', 'id,templatesetname');
+
+        // Add the default.
+        $templates = array(0 => get_string('none')) + $templates;
+
+        return $templates;
+    }
+
+    /**
+     * Apply company email templates
+     *
+     **/
+    public function apply_email_templates($templatesetid = 0) {
+        global $DB;
+
+        if (!empty($templatesetid)) {
+            $templates = $DB->get_records('email_templateset_templates', array('templateset' => $templatesetid));
+        } else {
+            return false;
+        }
+
+        // Insert the restrictions.
+        // Remove them first.
+        $DB->delete_records('email_template', array('companyid' => $this->id));
+
+        // Add the template.
+        foreach ($templates as $template) {
+            unset($template->templateset);
+            $template->companyid = $this->id;
+            $DB->insert_record('email_template', $template);
+        }
+    }
+
+    /**
      * Associates a course to a company
      *
      * Parameters -
@@ -646,7 +687,7 @@ class company {
             return false;
         }
 
-        if ($iomadcourse = $DB->get_record('iomad_courses', array('courseid' => $courseid))) {
+        if (!$iomadcourse = $DB->get_record('iomad_courses', array('courseid' => $courseid))) {
             try {
                 throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
             } catch (\Exception $e) {
@@ -690,7 +731,7 @@ class company {
         }
 
         // Is the course a shared course?
-        if ($iomadcourses->shared == 0) {
+        if ($iomadcourse->shared == 0) {
             // Call the moodle course delete function.
             if (!delete_course($courseid)) {
                 $errors = true;
@@ -3079,7 +3120,8 @@ class company {
                                                  JOIN {user} u ON (cu.userid = u.id)
                                                  WHERE cu.companyid = :companyid
                                                  AND u.deleted = 0
-                                                 AND u.suspended = 0",
+                                                 AND u.suspended = 0
+                                                 $companysql",
                                                  array('companyid' => $this->id));
             if ($usercount + $new > $this->companyrecord->maxusers) {
                 return false;

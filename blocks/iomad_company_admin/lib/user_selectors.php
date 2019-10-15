@@ -24,6 +24,9 @@ abstract class company_user_selector_base extends user_selector_base {
     protected $companyid;
     protected $courseid;
     protected $departmentid;
+    protected $courses;
+    protected $company;
+    protected $selectedcourses;
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
@@ -36,6 +39,14 @@ abstract class company_user_selector_base extends user_selector_base {
         } else {
             $this->departmentid = $options['departmentid'];
         }
+        if (!empty($options['courses'])) {
+            $this->courses = $options['courses'];
+        }
+        if (!empty($options['selectedcourses'])) {
+            $this->selectedcourses = $options['selectedcourses'];
+        }
+        $this->company = new company($this->companyid);
+
         parent::__construct($name, $options);
     }
 
@@ -43,6 +54,13 @@ abstract class company_user_selector_base extends user_selector_base {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
         $options['file']    = 'blocks/iomad_company_admin/lib.php';
+        if (!empty($this->courses)) {
+            $options['courses'] = $this->courses;
+        }
+        if (!empty($this->selectedcourses)) {
+            $options['selectedcourses'] = $this->selectedcourses;
+        }
+
         return $options;
     }
 
@@ -80,7 +98,7 @@ class current_company_managers_user_selector extends company_user_selector_base 
                 JOIN {company_users} cu ON (u.id = cu.userid AND cu.companyid = :companyid)
                 WHERE $wherecondition AND u.suspended = 0 ";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -123,10 +141,10 @@ class potential_company_managers_user_selector extends company_user_selector_bas
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu ON (cu.userid = u.id AND cu.companyid = :companyid AND cu.managertype = 0)
+                    {user} u INNER JOIN {company_users} cu ON (cu.userid = u.id AND cu.companyid = :companyid AND cu.managertype = 0)
                 WHERE $wherecondition AND u.suspended = 0 ";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -167,10 +185,10 @@ class current_company_users_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu ON (cu.companyid = :companyid AND cu.userid = u.id )
+                    {user} u INNER JOIN {company_users} cu ON (cu.companyid = :companyid AND cu.userid = u.id )
                 WHERE $wherecondition AND u.suspended = 0 ";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -220,7 +238,7 @@ class potential_company_users_user_selector extends company_user_selector_base {
                         FROM
                             {company_users} )";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -253,10 +271,25 @@ class current_company_course_user_selector extends company_user_selector_base {
      */
     public function find_users($search, $all = false) {
         global $CFG, $DB;
+
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
-        $params['courseid'] = $this->courseid;
+
+        if (in_array(0, $this->selectedcourses)) {
+            // Deal with all.
+            $companycourses = $this->company->get_menu_courses(true, true);
+            unset($companycourses[0]);
+            $coursesql = "AND e.courseid IN (" . join (',', array_keys($companycourses)). ")";
+        } else {
+            $coursesql = "AND e.courseid IN (" .  join (',', array_values($this->selectedcourses)) . ")";
+        }
+
+        if (!in_array(0, $this->selectedcourses) && count($this->selectedcourses) == 1) {
+            $single = true;
+        } else {
+            $single = false;
+        }
 
         // Deal with departments.
         $departmentlist = company::get_all_subdepartments($this->departmentid);
@@ -265,23 +298,21 @@ class current_company_course_user_selector extends company_user_selector_base {
             $departmentsql = " AND cu.departmentid in (".implode(',', array_keys($departmentlist)).")";
         }
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('u');
+        $fields      = 'SELECT ue.id as userenrolmentid, ' . $this->required_fields_sql('u') . ', c.id AS courseid, c.fullname';
         $countfields = 'SELECT COUNT(1)';
 
-        $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu
-	                ON cu.userid = u.id AND managertype = 0 $departmentsql
+        $sql = " FROM {user} u
+                    JOIN {company_users} cu
+                    ON (cu.userid = u.id AND cu.managertype = 0 $departmentsql)
+                    JOIN {user_enrolments} ue ON (ue.userid = u.id)
+                    JOIN {enrol} e
+                    ON (ue.enrolid = e.id AND ".$DB->sql_compare_text('e.enrol')."='manual' AND e.status = 0)
+                    JOIN {course} c ON (e.courseid = c.id)
                 WHERE $wherecondition AND u.suspended = 0
                     AND cu.companyid = :companyid
-                    AND cu.userid IN
-                     (SELECT DISTINCT(ue.userid)
-                     FROM {user_enrolments} ue
-                     INNER JOIN {enrol} e
-                     ON ue.enrolid=e.id
-                     WHERE e.courseid=:courseid
-                     AND ".$DB->sql_compare_text('e.enrol')."='manual')";
+                    $coursesql";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname, u.lastname, c.fullname ASC';
 
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -289,13 +320,18 @@ class current_company_course_user_selector extends company_user_selector_base {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
-
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
 
         if (empty($availableusers)) {
             return array();
         }
 
+        // are we doing any post processing?
+        if (!$single) {
+            foreach ($availableusers as $id => $user) {
+                $availableusers[$id]->email = $user->email . "(" . $user->fullname . ")";
+            }
+        }
         if ($search) {
             $groupname = get_string('currentlyenrolledusersmatching', 'block_iomad_company_admin', $search);
         } else {
@@ -304,13 +340,85 @@ class current_company_course_user_selector extends company_user_selector_base {
 
         return array($groupname => $availableusers);
     }
+
+    /**
+     * Get the list of users that were selected by doing optional_param then validating the result.
+     *
+     * @return array of user objects.
+     */
+    protected function load_selected_users() {
+        // See if we got anything.
+        if ($this->multiselect) {
+            $userids = optional_param_array($this->name, array(), PARAM_INT);
+        } else if ($userid = optional_param($this->name, 0, PARAM_INT)) {
+            $userids = array($userid);
+        }
+        // If there are no users there is nobody to load.
+        if (empty($userids)) {
+            return array();
+        }
+
+        // If we did, use the find_users method to validate the ids.
+        $groupedusers = $this->find_users('');
+
+        // Aggregate the resulting list back into a single one.
+        $users = array();
+        foreach ($groupedusers as $group) {
+            foreach ($group as $user) {
+                if (!isset($users[$user->userenrolmentid]) && empty($user->disabled) && in_array($user->userenrolmentid, $userids)) {
+                    $users[$user->userenrolmentid] = $user;
+                }
+            }
+        }
+
+        // If we are only supposed to be selecting a single user, make sure we do.
+        if (!$this->multiselect && count($users) > 1) {
+            $users = array_slice($users, 0, 1);
+        }
+
+        return $users;
+    }
+
+    /**
+     * Output one particular optgroup. Used by the preceding function output_options.
+     *
+     * @param string $groupname the label for this optgroup.
+     * @param array $users the users to put in this optgroup.
+     * @param boolean $select if true, select the users in this group.
+     * @return string HTML code.
+     */
+    protected function output_optgroup($groupname, $users, $select) {
+        if (!empty($users)) {
+            $output = '  <optgroup label="' . htmlspecialchars($groupname) . ' (' . count($users) . ')">' . "\n";
+            foreach ($users as $user) {
+                $attributes = '';
+                if (!empty($user->disabled)) {
+                    $attributes .= ' disabled="disabled"';
+                } else if ($select || isset($this->selected[$user->id])) {
+                    $attributes .= ' selected="selected"';
+                }
+                unset($this->selected[$user->id]);
+                $output .= '    <option' . $attributes . ' value="' . $user->userenrolmentid . '">' .
+                        $this->output_user($user) . "</option>\n";
+                if (!empty($user->infobelow)) {
+                    // Poor man's indent  here is because CSS styles do not work in select options, except in Firefox.
+                    $output .= '    <option disabled="disabled" class="userselector-infobelow">' .
+                            '&nbsp;&nbsp;&nbsp;&nbsp;' . s($user->infobelow) . '</option>';
+                }
+            }
+        } else {
+            $output = '  <optgroup label="' . htmlspecialchars($groupname) . '">' . "\n";
+            $output .= '    <option disabled="disabled">&nbsp;</option>' . "\n";
+        }
+        $output .= "  </optgroup>\n";
+        return $output;
+    }
 }
 
 class potential_company_course_user_selector extends company_user_selector_base {
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
-        $this->courseid  = $options['courseid'];
         $this->departmentid = $options['departmentid'];
         $this->subdepartments = $options['subdepartments'];
         $this->parentdepartmentid = $options['parentdepartmentid'];
@@ -326,6 +434,36 @@ class potential_company_course_user_selector extends company_user_selector_base 
         $options['parentdepartmentid'] = $this->parentdepartmentid;
         $options['file']    = 'blocks/iomad_company_admin/lib.php';
         return $options;
+    }
+
+    protected function get_courses_user_ids() {
+        global $CFG, $DB;
+
+        if (in_array(0, $this->selectedcourses)) {
+            $selectedcourses = $this->company->get_menu_courses(true, true);
+            unset ($selectedcourses[0]);
+            $coursesql = "e.courseid IN (" . implode(',', array_keys($selectedcourses)) . ") ";
+            $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
+        } else {
+            $selectedcourses = $this->selectedcourses;
+            $coursesql = "e.courseid IN (" . implode(',', array_values($selectedcourses)) . ") ";
+            $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
+        }
+        if (!isset( $this->selectedcourses) ) {
+            return array();
+        } else {
+            $usersql = "SELECT ue.userid,count(ue.enrolid) AS enrolcount FROM {user_enrolments} ue
+                        JOIN {enrol} e ON (ue.enrolid = e.id AND ".$DB->sql_compare_text('e.enrol')."='manual' AND e.status = 0)
+                        WHERE $coursesql
+                        GROUP BY ue.userid
+                        $countsql";
+            if ($users = $DB->get_records_sql($usersql)) {
+                // Only return the keys (user ids).
+                return array_keys($users);
+            } else {
+                return array();
+            }
+        }
     }
 
     /**
@@ -367,24 +505,23 @@ class potential_company_course_user_selector extends company_user_selector_base 
             $userfilter = "";
         }
 
+        // Get the current enrolled users.
+        $enrolledusers = $this->get_courses_user_ids();
+        if (count($enrolledusers) > 0) {
+            $userfilter .= " AND u.id NOT IN (" . implode(',', $enrolledusers) . ") ";
+        }
+
         $fields      = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu ON cu.userid = u.id
+                    {user} u INNER JOIN {company_users} cu ON cu.userid = u.id
                 WHERE $wherecondition  AND u.suspended = 0 $departmentsql
                     AND
                     cu.companyid = :companyid
-                    $userfilter
-                    AND u.id NOT IN
-                     (SELECT DISTINCT(ue.userid)
-                     FROM {user_enrolments} ue
-                     INNER JOIN {enrol} e
-                     ON ue.enrolid=e.id
-                     WHERE e.courseid=:courseid
-                     AND ".$DB->sql_compare_text('e.enrol')."='manual')";
+                    $userfilter";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -548,7 +685,7 @@ class potential_department_user_selector extends user_selector_base {
                     $departmentsql
                     $userfilter";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         // Are we also looking for other managers?
         if (!empty($this->showothermanagers)) {
@@ -684,7 +821,7 @@ class current_department_user_selector extends user_selector_base {
                     AND
                     cu.departmentid = ($this->departmentid)";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -879,6 +1016,12 @@ class potential_license_user_selector extends user_selector_base {
 
     public function find_users($search, $all = false) {
         global $CFG, $DB, $USER;
+
+        // If there are no courses we can't display any users.
+        if (empty($this->selectedcourses)) {
+            return array();
+        }
+
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
         $company = new company($this->companyid);
 
@@ -940,7 +1083,7 @@ class potential_license_user_selector extends user_selector_base {
                     $userfilter
                     $edusql";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -1076,6 +1219,11 @@ class current_license_user_selector extends user_selector_base {
     public function find_users($search, $all = false) {
         global $CFG, $DB, $USER;
 
+        // If there are no courses we can't display any users.
+        if (empty($this->selectedcourses)) {
+            return array();
+        }
+
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
         $params['companyid'] = $this->companyid;
@@ -1124,7 +1272,7 @@ class current_license_user_selector extends user_selector_base {
                         WHERE departmentid IN (" .
                         implode(',', array_keys($this->subdepartments)) .
                      "))";
-            $order = ' ORDER BY u.lastname ASC, u.firstname ASC, c.fullname ASC';
+            $order = ' ORDER BY u.firstname , u.lastname, c.fullname ASC';
         } else {
             $maxcount = $CFG->iomad_max_select_users * count($this->courses);
             $fields      = 'SELECT clu.id as licenseid, ' . $this->required_fields_sql('u') . ', u.email, clu.isusing ';
@@ -1141,7 +1289,7 @@ class current_license_user_selector extends user_selector_base {
                         WHERE departmentid IN (" .
                         implode(',', array_keys($this->subdepartments)) .
                      "))";
-            $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+            $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
         }
         if (!$this->is_validating() && !$all) {
             if (!empty($userfilter)) {
@@ -1298,8 +1446,8 @@ class current_company_group_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu
-	                ON cu.userid = u.id AND managertype = 0 $departmentsql
+                    {user} u INNER JOIN {company_users} cu
+                    ON cu.userid = u.id AND managertype = 0 $departmentsql
                 WHERE $wherecondition AND u.suspended = 0
                     AND cu.companyid = :companyid
                     AND cu.userid IN (
@@ -1315,7 +1463,7 @@ class current_company_group_user_selector extends company_user_selector_base {
                       AND groupid = :licgroupid
                     )";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
@@ -1397,7 +1545,7 @@ class potential_company_group_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM
-	                {user} u INNER JOIN {company_users} cu ON (cu.userid = u.id)
+                    {user} u INNER JOIN {company_users} cu ON (cu.userid = u.id)
                 WHERE $wherecondition  AND u.suspended = 0 $departmentsql
                     AND
                     cu.companyid = :companyid
@@ -1422,7 +1570,7 @@ class potential_company_group_user_selector extends company_user_selector_base {
                       )
                     )";
 
-        $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
+        $order = ' ORDER BY u.firstname ASC, u.lastname ASC';
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
