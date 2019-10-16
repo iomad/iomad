@@ -367,8 +367,9 @@ class company_user {
             $courseids = array($courseids);
         }
 
-        foreach ($courseids as $courseid) {
-            $roles = get_user_roles(context_course::instance($courseid), $user->id, false);
+        // Did we get passed a course id in the user? (Comes from a selector)
+        if (!empty($user->courseid)) {
+            $roles = get_user_roles(context_course::instance($user->courseid), $user->id, false);
             foreach ($roles as $role) {
                 if (!$all && $role->roleid == $studentrole->id) {
                     $isstudent = true;
@@ -377,28 +378,85 @@ class company_user {
                 }
             }
             if (!$isstudent) {
-                if (!$DB->get_record('iomad_courses', array('courseid' => $courseid, 'shared' => 0))) {
+                if (!$DB->get_record('iomad_courses', array('courseid' => $user->courseid, 'shared' => 0))) {
                     $shared = true;
                 } else {
                     $shared = false;
                 }
-                $course = $DB->get_record('course', array('id' => $courseid));
+                $course = $DB->get_record('course', array('id' => $user->courseid));
                 $courseenrolmentmanager = new course_enrolment_manager($PAGE, $course);
 
                 $ues = $courseenrolmentmanager->get_user_enrolments($user->id);
 
                 foreach ($ues as $ue) {
-                    if ( $ue->enrolmentinstance->courseid == $courseid ) {
-                        $courseenrolmentmanager->unenrol_user($ue);
+                    if ( $ue->enrolmentinstance->courseid == $user->courseid ) {
+                        //$courseenrolmentmanager->unenrol_user($ue);
+                        $DB->delete_records('user_enrolments', array('id' => $ue->id));
                     }
                 }
                 if ($shared) {
                     if (!empty($companyid)) {
-                        company::remove_user_from_shared_course($courseid,
+                        company::remove_user_from_shared_course($user->courseid,
                                                                 $user->id,
                                                                 $companyid);
                     }
                 }
+            }
+
+            // Check if there is a user enroled email which hasn't been sent yet.
+            if ($emails = $DB->get_records('email', array('userid' => $user->id, 'courseid' => $user->courseid, 'templatename' => 'user_added_to_course', 'sent' => null))) {
+                foreach ($emails as $email) {
+                    $DB->delete_records('email', array('id' => $email->id));
+                }
+            }
+
+            // Remove the tracking inf if the user hasn't completed the course.
+            //$DB->delete_records('local_iomad_track', array('courseid' => $user->courseid, 'userid' => $user->id, 'timecompleted' => null));
+        } else {
+            foreach ($courseids as $courseid) {
+                $roles = get_user_roles(context_course::instance($courseid), $user->id, false);
+                foreach ($roles as $role) {
+                    if (!$all && $role->roleid == $studentrole->id) {
+                        $isstudent = true;
+                    } else {
+                        $DB->delete_records('role_assignments', array('id' => $role->id));
+                    }
+                }
+                if (!$isstudent) {
+                    if (!$DB->get_record('iomad_courses', array('courseid' => $courseid, 'shared' => 0))) {
+                        $shared = true;
+                    } else {
+                        $shared = false;
+                    }
+                    $course = $DB->get_record('course', array('id' => $courseid));
+                    $courseenrolmentmanager = new course_enrolment_manager($PAGE, $course);
+
+                    $ues = $courseenrolmentmanager->get_user_enrolments($user->id);
+
+                    foreach ($ues as $ue) {
+                        if ( $ue->enrolmentinstance->courseid == $courseid ) {
+                            $DB->delete_records('user_enrolments', array('id' => $ue->id));
+                            //$courseenrolmentmanager->unenrol_user($ue);
+                        }
+                    }
+                    if ($shared) {
+                        if (!empty($companyid)) {
+                            company::remove_user_from_shared_course($courseid,
+                                                                    $user->id,
+                                                                    $companyid);
+                        }
+                    }
+                }
+
+                // Check if there is a user enroled email which hasn't been sent yet.
+                if ($emails = $DB->get_records('email', array('userid' => $user->id, 'courseid' => $courseid, 'templatename' => 'user_added_to_course', 'sent' => null))) {
+                    foreach ($emails as $email) {
+                        $DB->delete_records('email', array('id' => $email->id));
+                    }
+                }
+
+                // Remove the tracking inf if the user hasn't completed the course.
+                $DB->delete_records('local_iomad_track', array('courseid' => $courseid, 'userid' => $user->id, 'timecompleted' => null));
             }
         }
     }
@@ -837,7 +895,7 @@ class company_user {
                                             'issuedate' => time(),
                                             'duedate' => 0);
                         $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($courseid),
-                                                                                                      'objectid' => $newlicenseid,
+                                                                                                      'objectid' => $licenserecord->id,
                                                                                                       'courseid' => $courseid,
                                                                                                       'userid' => $userid,
                                                                                                       'other' => $eventother));
@@ -1163,20 +1221,19 @@ class iomad_date_filter_form extends moodleform {
         }
 
         if (empty($this->params['yearonly'])) {
-            $mform->addElement('date_selector', 'compfrom', get_string('compfrom', 'local_report_completion'), array('optional' => 'yes'));
-            $mform->addElement('date_selector', 'compto', get_string('compto', 'local_report_completion'), array('optional' => 'yes'));
-            $mform->setDefault('compfrom', 0);
+            $mform->addElement('date_selector', 'compfromraw', get_string('compfromraw', 'block_iomad_company_admin'), array('optional' => 'yes'));
+            $mform->addElement('date_selector', 'comptoraw', get_string('comptoraw', 'block_iomad_company_admin'), array('optional' => 'yes'));
         } else {
             // Get the calendar type used - see MDL-18375.
             $calendartype = \core_calendar\type_factory::get_calendar_instance();
             $dateformat = $calendartype->get_date_order();
             $from = array();
-            $from[] = $mform->createElement('select', 'yearfrom', get_string('compfrom', 'local_report_completion'), $dateformat['year']);
+            $from[] = $mform->createElement('select', 'yearfrom', get_string('compfromraw', 'block_iomad_company_admin'), $dateformat['year']);
             $from[] = $mform->createElement('checkbox', 'yearfromoptional', '', get_string('optional', 'form'));
-            $mform->addGroup($from, 'fromarray', get_string('compfrom', 'local_report_completion'));
-            $to[] = $mform->createElement('select', 'yearto', get_string('compfrom', 'local_report_completion'), $dateformat['year']);
+            $mform->addGroup($from, 'fromarray', get_string('compfromraw', 'block_iomad_company_admin'));
+            $to[] = $mform->createElement('select', 'yearto', get_string('comptoraw', 'block_iomad_company_admin'), $dateformat['year']);
             $to[] = $mform->createElement('checkbox', 'yeartooptional', '', get_string('optional', 'form'));
-            $mform->addGroup($to, 'toarray', get_string('compto', 'local_report_completion'));
+            $mform->addGroup($to, 'toarray', get_string('comptoraw', 'block_iomad_company_admin'));
 
             if (!empty($this->params['yearto'])) {
                 $mform->setDefault('toarray[yearto]', $this->params['yearto']);

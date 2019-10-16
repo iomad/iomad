@@ -16,5 +16,5 @@
 
 $plugin->version = 2016083100;
 $plugin->requires  = 2014110400;        // Requires this Moodle version
-$plugin->release  = '3.6.5+ (Build: 20190816)'; // Human-friendly version name
+$plugin->release  = '3.6.6 (Build: 20190909)'; // Human-friendly version name
 $plugin->component = 'block_iomad_onlineusers'; // Full name of the plugin (used for diagnostics)
