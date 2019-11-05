@@ -4151,7 +4151,7 @@ class company {
         $managers = $company->get_managers();
         foreach ($managers as $manager) {
             // Fire the email.
-            EmailTemplate::send('company_licenseassigned', array('user' => $manager));
+            EmailTemplate::send('company_licenseassigned', array('user' => $manager, 'company' => $company));
 
         }
 
