@@ -307,6 +307,7 @@ if (!$table->is_downloading()) {
             $options = $params;
             $options['companyid'] = $companyid;
             $options['addlicenseusage'] = true;
+            $options['licenseuseage'] = $licenseusage;
             $options['addfrom'] = 'licenseallocatedfromraw';
             $options['addto'] = 'licenseallocatedtoraw';
             $options['addfromb'] = 'licenseunallocatedfromraw';
