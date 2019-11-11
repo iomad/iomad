@@ -488,11 +488,10 @@ define('HOMEPAGE_USER', 2);
  */
 define('HUB_HUBDIRECTORYURL', "https://hubdirectory.moodle.org");
 
-
 /**
- * Moodle.net url (should be moodle.net)
+ * URL of the Moodle sites registration portal.
  */
-define('HUB_MOODLEORGHUBURL', "https://moodle.net");
+defined('HUB_MOODLEORGHUBURL') || define('HUB_MOODLEORGHUBURL', 'https://stats.moodle.org');
 define('HUB_OLDMOODLEORGHUBURL', "http://hub.moodle.org");
 
 /**
@@ -1404,6 +1403,14 @@ function set_config($name, $value, $plugin=null) {
                 $config->name  = $name;
                 $config->value = $value;
                 $DB->insert_record('config', $config, false);
+            }
+            // When setting config during a Behat test (in the CLI script, not in the web browser
+            // requests), remember which ones are set so that we can clear them later.
+            if (defined('BEHAT_TEST')) {
+                if (!property_exists($CFG, 'behat_cli_added_config')) {
+                    $CFG->behat_cli_added_config = [];
+                }
+                $CFG->behat_cli_added_config[$name] = true;
             }
         }
         if ($name === 'siteidentifier') {
@@ -3191,6 +3198,8 @@ function require_user_key_login($script, $instance = null, $keyvalue = null) {
     if (!$user = $DB->get_record('user', array('id' => $key->userid))) {
         print_error('invaliduserid');
     }
+
+    core_user::require_active_user($user, true, true);
 
     // Emulate normal session.
     enrol_check_plugins($user);
@@ -6434,7 +6443,7 @@ function send_password_change_confirmation_email($user, $resetrecord) {
  * @return bool Returns true if mail was sent OK and false if there was an error.
  */
 function send_password_change_info($user) {
-    global $CFG;
+    global $CFG, $USER;
 
     $site = get_site();
     $supportuser = core_user::get_support_user();
@@ -6456,6 +6465,10 @@ function send_password_change_info($user) {
         return email_to_user($user, $supportuser, $subject, $message);
     }
 
+    // This is a workaround as change_password_url() is designed to allow
+    // use of the $USER global. See MDL-66984.
+    $olduser = $USER;
+    $USER = $user;
     if ($userauth->can_change_password() and $userauth->change_password_url()) {
         // We have some external url for password changing.
         $data->link .= $userauth->change_password_url();
@@ -6464,6 +6477,7 @@ function send_password_change_info($user) {
         // No way to change password, sorry.
         $data->link = '';
     }
+    $USER = $olduser;
 
     if (!empty($data->link) and has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
         $message = get_string('emailpasswordchangeinfo', '', $data);
@@ -7020,19 +7034,10 @@ function current_language() {
  */
 function get_parent_language($lang=null) {
 
-    // Let's hack around the current language.
-    if (!empty($lang)) {
-        $oldforcelang = force_current_language($lang);
-    }
+    $parentlang = get_string_manager()->get_string('parentlanguage', 'langconfig', null, $lang);
 
-    $parentlang = get_string('parentlanguage', 'langconfig');
     if ($parentlang === 'en') {
         $parentlang = '';
-    }
-
-    // Let's hack around the current language.
-    if (!empty($lang)) {
-        force_current_language($oldforcelang);
     }
 
     return $parentlang;

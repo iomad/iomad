@@ -187,8 +187,12 @@
 }
 
 .path-mod-assign .expandsummaryicon {
-    cursor: pointer;
     display: none;
+}
+
+.path-mod-assign .expandsummaryicon i,
+.path-mod-assign .expandsummaryicon img {
+    pointer-events: none;
 }
 
 .path-mod-assign.jsenabled .expandsummaryicon {

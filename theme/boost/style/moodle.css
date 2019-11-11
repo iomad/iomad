@@ -14702,13 +14702,19 @@ body.path-question-type {
 .questionbankwindow .module {
   width: auto; }
 
+.questionbankwindow .form-autocomplete-selection {
+  margin-left: 0; }
+
 #page-mod-quiz-edit div.editq div.question div.content {
   background-color: #fff;
   border: 1px solid #ddd;
   overflow: hidden; }
 
 #page-mod-quiz-edit ul.slots .activityinstance img.activityicon {
-  margin-top: 0; }
+  margin-top: 0;
+  width: 16px;
+  height: 16px;
+  padding-right: 4px; }
 
 .path-mod-quiz .statedetails {
   display: block;
@@ -15258,8 +15264,12 @@ fieldset.coursesearchbox label {
   margin: 0.25rem;
   min-height: 2.375rem; }
 
-.form-autocomplete-multiple [role=listitem] {
-  cursor: pointer; }
+.form-autocomplete-selection [role=listitem] {
+  cursor: pointer;
+  white-space: inherit;
+  word-break: break-word;
+  line-height: 1.4;
+  text-align: left; }
 
 .form-autocomplete-suggestions {
   position: absolute;

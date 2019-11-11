@@ -9882,6 +9882,13 @@ body.path-question-type .fitem_fgroup .accesshide {
 #page-mod-quiz-edit div.questionbank .categoryinfo {
   padding: 0.3em 0;
 }
+.questionbankwindow .boxaligncenter.categoryinfo {
+  padding-left: 0;
+}
+.questionbankwindow .singlebutton div,
+.questionbankwindow .singlebutton div input {
+  margin-left: 0;
+}
 #page-mod-quiz-edit div.questionbank .modulespecificbuttonscontainer {
   padding: 0;
 }
@@ -9906,6 +9913,9 @@ body.path-question-type .fitem_fgroup .accesshide {
 }
 .questionbankwindow .module {
   width: auto;
+}
+.questionbankwindow .form-autocomplete-selection {
+  margin-left: 0;
 }
 #page-mod-quiz-edit div.editq div.question div.content {
   background-color: #fff;
@@ -16009,6 +16019,9 @@ sub {
 .dropdown-backdrop {
   position: static;
 }
+.pagination ul > li.hidden {
+  display: none;
+}
 /* some very targetted corrections to roll back nameclashes between
  * Moodle and Bootstrap like .row, .label, .content, .controls
  *
@@ -17150,8 +17163,11 @@ select.form-autocomplete-original-select {
   margin: 0.2em;
   min-height: 27px;
 }
-.form-autocomplete-multiple [role=listitem] {
+.form-autocomplete-selection [role=listitem] {
   cursor: pointer;
+  white-space: inherit;
+  word-break: break-word;
+  line-height: 1.4;
 }
 .form-autocomplete-suggestions {
   position: absolute;
@@ -21411,6 +21427,9 @@ span[data-flexitour="container"][x-placement="right-start"] div[data-role="arrow
     margin-right: 0;
     padding-right: 0;
   }
+}
+#page-mod-forum-discuss select[name="mode"] {
+  margin-bottom: 10px;
 }
 @media (max-width: 768px) {
   .fp-forminset .control-group .controls {
