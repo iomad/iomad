@@ -584,7 +584,7 @@ function lesson_add_header_buttons($cm, $context, $extraeditbuttons=false, $less
                 'id'       => $cm->id,
                 'pageid'   => $lessonpageid,
                 'edit'     => 1,
-                'returnto' => $PAGE->url->out(false)
+                'returnto' => $PAGE->url->out_as_local_url(false)
             ));
             $PAGE->set_button($OUTPUT->single_button($url, get_string('editpagecontent', 'lesson')));
         }
@@ -1324,7 +1324,7 @@ abstract class lesson_add_page_form_base extends moodleform {
 
         if (!empty($this->_customdata['returnto'])) {
             $mform->addElement('hidden', 'returnto', $this->_customdata['returnto']);
-            $mform->setType('returnto', PARAM_URL);
+            $mform->setType('returnto', PARAM_LOCALURL);
         }
 
         $mform->addElement('hidden', 'id');
@@ -4510,7 +4510,7 @@ abstract class lesson_page extends lesson_base {
                     $this->answers[$i]->responseformat = $properties->response_editor[$i]['format'];
                 }
 
-                if (isset($this->answers[$i]->answer) && $this->answers[$i]->answer != '') {
+                if ($this->answers[$i]->answer !== null && $this->answers[$i]->answer !== '') {
                     if (isset($properties->jumpto[$i])) {
                         $this->answers[$i]->jumpto = $properties->jumpto[$i];
                     }

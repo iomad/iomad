@@ -93,8 +93,9 @@ class mod_forum_external extends external_api {
 
                 $forum->name = external_format_string($forum->name, $context->id);
                 // Format the intro before being returning using the format setting.
-                list($forum->intro, $forum->introformat) = external_format_text($forum->intro, $forum->introformat,
-                                                                                $context->id, 'mod_forum', 'intro', null);
+                $options = array('noclean' => true);
+                list($forum->intro, $forum->introformat) =
+                    external_format_text($forum->intro, $forum->introformat, $context->id, 'mod_forum', 'intro', null, $options);
                 $forum->introfiles = external_util::get_area_files($context->id, 'mod_forum', 'intro', false, false);
                 // Discussions count. This function does static request cache.
                 $forum->numdiscussions = forum_count_discussions($forum, $cm, $course);
@@ -413,8 +414,10 @@ class mod_forum_external extends external_api {
 
             $post->subject = external_format_string($post->subject, $modcontext->id);
             // Rewrite embedded images URLs.
+            $options = array('trusted' => $post->messagetrust);
             list($post->message, $post->messageformat) =
-                external_format_text($post->message, $post->messageformat, $modcontext->id, 'mod_forum', 'post', $post->id);
+                external_format_text($post->message, $post->messageformat, $modcontext->id, 'mod_forum', 'post', $post->id,
+                    $options);
 
             // List attachments.
             if (!empty($post->attachment)) {
@@ -626,9 +629,10 @@ class mod_forum_external extends external_api {
                 $discussion->name = external_format_string($discussion->name, $modcontext->id);
                 $discussion->subject = external_format_string($discussion->subject, $modcontext->id);
                 // Rewrite embedded images URLs.
+                $options = array('trusted' => $discussion->messagetrust);
                 list($discussion->message, $discussion->messageformat) =
                     external_format_text($discussion->message, $discussion->messageformat,
-                                            $modcontext->id, 'mod_forum', 'post', $discussion->id);
+                                            $modcontext->id, 'mod_forum', 'post', $discussion->id, $options);
 
                 // List attachments.
                 if (!empty($discussion->attachment)) {
@@ -925,9 +929,10 @@ class mod_forum_external extends external_api {
                 $discussionobject->name = external_format_string($discussion->get_name(), $modcontext->id);
                 $discussionobject->subject = external_format_string($discussionobject->subject, $modcontext->id);
                 // Rewrite embedded images URLs.
+                $options = array('trusted' => $discussionobject->messagetrust);
                 list($discussionobject->message, $discussionobject->messageformat) =
                     external_format_text($discussionobject->message, $discussionobject->messageformat,
-                        $modcontext->id, 'mod_forum', 'post', $discussionobject->id);
+                        $modcontext->id, 'mod_forum', 'post', $discussionobject->id, $options);
 
                 // List attachments.
                 if (!empty($discussionobject->attachment)) {

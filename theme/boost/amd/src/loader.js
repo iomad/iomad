@@ -23,10 +23,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      2.9
  */
-define(['jquery', './tether', 'core/event'], function(jQuery, Tether, Event) {
+define(['jquery', './tether', 'core/event', 'core/custom_interaction_events'], function(jQuery, Tether, Event, customEvents) {
 
     window.jQuery = jQuery;
     window.Tether = Tether;
+    M.util.js_pending('theme_boost/loader:children');
 
     require(['theme_boost/aria',
             'theme_boost/pending',
@@ -47,6 +48,14 @@ define(['jquery', './tether', 'core/event'], function(jQuery, Tether, Event) {
         jQuery('body').popover({
             trigger: 'focus',
             selector: "[data-toggle=popover][data-trigger!=hover]"
+        });
+
+        // Popovers must close on Escape for accessibility reasons.
+        customEvents.define(jQuery('body'), [
+            customEvents.events.escape,
+        ]);
+        jQuery('body').on(customEvents.events.escape, '[data-toggle=popover]', function() {
+            jQuery(this).popover('hide');
         });
 
         jQuery("html").popover({
@@ -70,6 +79,7 @@ define(['jquery', './tether', 'core/event'], function(jQuery, Tether, Event) {
         });
 
         Aria.init();
+        M.util.js_complete('theme_boost/loader:children');
     });
 
 
