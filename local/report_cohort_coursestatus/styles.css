@@ -2,15 +2,15 @@
     clear:both;
 }
 
-#page-local-report_cohort_coursestatus-index #iomad_course_selector, #page-local-report_cohort_coursestatus-index #iomad_license_selector {
+#page-local-report_cohort_coursestatus-index #iomad_course_selector, #page-local-report_cohort_coursestatus-index #iomad_cohort_selector {
     float:left;
 }
 
-#page-local-report_cohort_coursestatus-index #iomad_course_selector select, #page-local-report_cohort_coursestatus-index #iomad_license_selector select {
+#page-local-report_cohort_coursestatus-index #iomad_course_selector select, #page-local-report_cohort_coursestatus-index #iomad_cohort_selector select {
     background-color: #ddd;
 }
 
-#page-local-report_cohort_coursestatus-index #iomad_course_selector, #page-local-report_cohort_coursestatus-index #iomad_license_selector {
+#page-local-report_cohort_coursestatus-index #iomad_course_selector, #page-local-report_cohort_coursestatus-index #iomad_cohort_selector {
     padding-top: 7px;
     padding-bottom: 17px;
     padding-right: 5px;
@@ -63,4 +63,8 @@
 
 .progress-bar {
     background-color: green;
+}
+
+#page-local-report_cohort_coursestatus-index .fitem .singleselect select {
+    width: 100%;
 }
