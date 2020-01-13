@@ -16,5 +16,5 @@
 
 $plugin->version  = 2016083100;   // The (date) version of this plugin.
 $plugin->requires = 2010021900;   // Requires this Moodle version.
-$plugin->release  = '3.6.7+ (Build: 20191122)'; // Human-friendly version name
+$plugin->release  = '3.6.8 (Build: 20200113)'; // Human-friendly version name
 $plugin->component  = 'local_framework_selector';

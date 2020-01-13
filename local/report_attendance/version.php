@@ -16,5 +16,5 @@
 
 $plugin->version  = 2016120600;
 $plugin->requires = 2010090501;
-$plugin->release  = '3.6.7+ (Build: 20191122)'; // Human-friendly version name
+$plugin->release  = '3.6.8 (Build: 20200113)'; // Human-friendly version name
 $plugin->component  = 'local_report_attendance';
