@@ -30,6 +30,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['clianswerno'] = 'ទេ';
-$string['environmentrequireinstall'] = 'ត្រូវតែបានដំឡើង និងអនុញ្ញាត';
-$string['environmentrequireversion'] = 'ត្រូវការកំណែ {$a->needed} ហើយអ្នកកំពុងរត់ {$a->current}';
+$string['availablelangs'] = 'Giellapáhkat mat leat gávdnamis';
+$string['chooselanguagehead'] = 'Vállje giela';
+$string['chooselanguagesub'] = 'Vállje giela (dušše installašuvdnjii). Don sáhtát válljet neahttabáikki ja geavaheaddji giela šearbmagovas maŋŋelaš.';
+$string['clialreadyconfigured'] = 'Fiila config.php gávdno jo. Geavat admin/cli/install_database.php jus áiggut installeret dán portála.';
+$string['clialreadyinstalled'] = 'Fiila config.php gávdno jo. Geavat admin/cli/install_database.php jus háliidat ođasmahttit Moodle dán portálas.';
+$string['langdownloaderror'] = 'Dađibahábut ii installerejuvvon giellapáhkka "{$a}". Installašuvdnaproseassa joatká eaŋgalsgillii.';
+$string['phpextension'] = '{$a} PHP gilkor';
