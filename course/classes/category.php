@@ -723,12 +723,22 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
     protected static function get_tree($id) {
         global $DB, $USER;
 
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+
         // IOMAD: Needed to make changes for the count.
         $coursecattreecache = cache::make('core', 'coursecattree');
         $rv = $coursecattreecache->get($id);
         if (iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance()) && $rv !== false) {
             return $rv;
         }
+
+        $allowedcategories = $DB->get_records_sql("SELECT id FROM {course_categories}
+                                                   WHERE parent = 0
+                                                   AND id NOT IN (
+                                                    SELECT category FROM {company}
+                                                    WHERE id != :companyid
+                                                   )", array('companyid' => $companyid));
+        $allowedcategories = array_keys($allowedcategories);
 
         // Might need to rebuild the tree. Put a lock in place to ensure other requests don't try and do this in parallel.
         $lockfactory = \core\lock\lock_config::get_lock_factory('core_coursecattree');
@@ -742,6 +752,13 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         if ($rv !== false) {
             // Tree was built while we were waiting for the lock.
             $lock->release();
+            if ($id === 0) {
+                return($allowedcategories);
+            }
+            if (!in_array($id, $allowedcategories)) {
+                return [];
+            }
+
             return $rv;
         }
         // Re-build the tree.
@@ -751,9 +768,13 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         } finally {
             $lock->release();
         }
-        if (array_key_exists($id, $all)) {
-            return $all[$id];
+        if ($id === 0) {
+            return($allowedcategories);
         }
+        if (!in_array($id, $allowedcategories)) {
+            return [];
+        }
+
         // Requested non-existing category.
         return array();
     }
@@ -770,9 +791,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         global $DB;
         $sql = "SELECT cc.id, cc.parent, cc.visible
                 FROM {course_categories} cc
-                $companysql
                 ORDER BY cc.sortorder";
-        $rs = $DB->get_recordset_sql($sql, array('companyid' => $company->id));
+        $rs = $DB->get_recordset_sql($sql, array());
         $all = array(0 => array(), '0i' => array());
         $count = 0;
         foreach ($rs as $record) {
@@ -805,18 +825,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         }
         // We must add countall to all in case it was the requested ID.
         $all['countall'] = $count;
-<<<<<<< HEAD
-        $coursecattreecache->set_many($all);
-
-        if (array_key_exists($id, $all)) {
-            return $all[$id];
-        }
-
-        // Requested non-existing category.
-        return array();
-=======
         return $all;
->>>>>>> ee0a8161dd4d9893fda4f0d8619240e7fb375e17
     }
 
     /**
