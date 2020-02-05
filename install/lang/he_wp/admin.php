@@ -30,4 +30,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['thislanguage'] = 'ဗမာစာ';
+$string['clianswerno'] = 'ל';
+$string['cliansweryes'] = 'כ';
+$string['cliincorrectvalueretry'] = 'ערך לא תקין, נסו שוב בבקשה';
