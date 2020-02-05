@@ -16,5 +16,5 @@
 
 $plugin->version  = 2019032103;   // The (date) version of this plugin.
 $plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->release  = '3.7.4 (Build: 20200113)'; // Human-friendly version name
+$plugin->release  = '3.7.4+ (Build: 20200130)'; // Human-friendly version name
 $plugin->component  = 'block_iomad_company_admin';
