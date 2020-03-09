@@ -119,34 +119,32 @@ function question_save_qtype_order($neworder, $config = null) {
  * @return boolean whether any of these questions are being used by any part of Moodle.
  */
 function questions_in_use($questionids) {
-    global $CFG;
 
+    // Are they used by the core question system?
     if (question_engine::questions_in_use($questionids)) {
         return true;
     }
 
-    foreach (core_component::get_plugin_list('mod') as $module => $path) {
-        $lib = $path . '/lib.php';
-        if (is_readable($lib)) {
-            include_once($lib);
+    // Check if any plugins are using these questions.
+    $callbacksbytype = get_plugins_with_function('questions_in_use');
+    foreach ($callbacksbytype as $callbacks) {
+        foreach ($callbacks as $function) {
+            if ($function($questionids)) {
+                return true;
+            }
+        }
+    }
 
-            $fn = $module . '_questions_in_use';
-            if (function_exists($fn)) {
-                if ($fn($questionids)) {
-                    return true;
-                }
-            } else {
+    // Finally check legacy callback.
+    $legacycallbacks = get_plugin_list_with_function('mod', 'question_list_instances');
+    foreach ($legacycallbacks as $plugin => $function) {
+        if (isset($callbacksbytype['mod'][substr($plugin, 4)])) {
+            continue; // Already done.
+        }
 
-                // Fallback for legacy modules.
-                $fn = $module . '_question_list_instances';
-                if (function_exists($fn)) {
-                    foreach ($questionids as $questionid) {
-                        $instances = $fn($questionid);
-                        if (!empty($instances)) {
-                            return true;
-                        }
-                    }
-                }
+        foreach ($questionids as $questionid) {
+            if (!empty($function($questionid))) {
+                return true;
             }
         }
     }
@@ -511,7 +509,8 @@ function question_save_from_deletion($questionids, $newcontextid, $oldplace,
         $newcategory = new stdClass();
         $newcategory->parent = question_get_top_category($newcontextid, true)->id;
         $newcategory->contextid = $newcontextid;
-        $newcategory->name = get_string('questionsrescuedfrom', 'question', $oldplace);
+        // Max length of column name in question_categories is 255.
+        $newcategory->name = shorten_text(get_string('questionsrescuedfrom', 'question', $oldplace), 255);
         $newcategory->info = get_string('questionsrescuedfrominfo', 'question', $oldplace);
         $newcategory->sortorder = 999;
         $newcategory->stamp = make_unique_id_code();
@@ -1349,7 +1348,8 @@ function question_make_default_categories($contexts) {
             // Otherwise, we need to make one
             $category = new stdClass();
             $contextname = $context->get_context_name(false, true);
-            $category->name = get_string('defaultfor', 'question', $contextname);
+            // Max length of name field is 255.
+            $category->name = shorten_text(get_string('defaultfor', 'question', $contextname), 255);
             $category->info = get_string('defaultinfofor', 'question', $contextname);
             $category->contextid = $context->id;
             $category->parent = $topcategory->id;
@@ -1659,7 +1659,8 @@ class context_to_string_translator{
 /**
  * Check capability on category
  *
- * @param int|stdClass $questionorid object or id. If an object is passed, it should include ->contextid and ->createdby.
+ * @param int|stdClass|question_definition $questionorid object or id.
+ *      If an object is passed, it should include ->contextid and ->createdby.
  * @param string $cap 'add', 'edit', 'view', 'use', 'move' or 'tag'.
  * @param int $notused no longer used.
  * @return bool this user has the capability $cap for this question $question?

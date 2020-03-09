@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-$plugin->version   = 2019052000; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2019052001; // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2019051100; // Requires this Moodle version.
 $plugin->component = 'tool_cohortroles'; // Full name of the plugin (used for diagnostics).
 

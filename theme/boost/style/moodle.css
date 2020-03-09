@@ -12103,7 +12103,7 @@ span.editinstructions {
 
 #coursesearch {
   margin-top: 1em;
-  text-align: center; }
+  text-align: left; }
 
 #page-course-pending .pendingcourserequests {
   margin-bottom: 1em; }
@@ -12579,6 +12579,9 @@ span.editinstructions {
 
 #nav-drawer.closed {
   left: -305px; }
+
+#nav-drawer[aria-hidden=true] .list-group-item {
+  display: none; }
 
 /* Use a variable for the drawer background colors. */
 [data-region="drawer"] {
