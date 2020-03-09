@@ -30,6 +30,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['parentlanguage'] = 'he';
-$string['thisdirection'] = 'rtl';
-$string['thislanguage'] = 'עברית בתי־ספר';
+$string['clianswerno'] = 'ל';
+$string['cliansweryes'] = 'כ';
+$string['cliincorrectvalueretry'] = 'ערך לא תקין, נסו שוב בבקשה';

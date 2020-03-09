@@ -8993,23 +8993,13 @@ function cleardoubleslashes ($path) {
  * @return bool
  */
 function remoteip_in_list($list) {
-    $inlist = false;
     $clientip = getremoteaddr(null);
 
     if (!$clientip) {
         // Ensure access on cli.
         return true;
     }
-
-    $list = explode("\n", $list);
-    foreach ($list as $subnet) {
-        $subnet = trim($subnet);
-        if (address_in_subnet($clientip, $subnet)) {
-            $inlist = true;
-            break;
-        }
-    }
-    return $inlist;
+    return \core\ip_utils::is_ip_in_subnet_list($clientip, $list);
 }
 
 /**
@@ -9037,7 +9027,15 @@ function getremoteaddr($default='0.0.0.0') {
     if (!($variablestoskip & GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR)) {
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $forwardedaddresses = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
-            $address = $forwardedaddresses[0];
+
+            $forwardedaddresses = array_filter($forwardedaddresses, function($ip) {
+                global $CFG;
+                return !\core\ip_utils::is_ip_in_subnet_list($ip, $CFG->reverseproxyignore, ',');
+            });
+
+            // Multiple proxies can append values to this header including an
+            // untrusted original request header so we must only trust the last ip.
+            $address = end($forwardedaddresses);
 
             if (substr_count($address, ":") > 1) {
                 // Remove port and brackets from IPv6.
