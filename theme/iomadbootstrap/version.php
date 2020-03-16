@@ -28,5 +28,5 @@ defined('MOODLE_INTERNAL') || die;
 $plugin->version   = 2016111800;
 $plugin->requires  = 2016052300;
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release  = '3.6.9 (Build: 20200309)'; // Human-friendly version name
+$plugin->release  = '3.6.9+ (Build: 20200312)'; // Human-friendly version name
 $plugin->component = 'theme_iomadbootstrap';

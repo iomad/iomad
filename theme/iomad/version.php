@@ -24,7 +24,7 @@ defined('MOODLE_INTERNAL') || die;
 
 $plugin->version   = 2013112400;
 $plugin->requires  = 2013110500;
-$plugin->release  = '3.6.9 (Build: 20200309)'; // Human-friendly version name
+$plugin->release  = '3.6.9+ (Build: 20200312)'; // Human-friendly version name
 $plugin->component = 'theme_iomad';
 $plugin->dependencies = array(
     'theme_bootstrapbase'  => 2013110500,
