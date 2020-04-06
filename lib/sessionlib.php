@@ -109,10 +109,23 @@ function is_moodle_cookie_secure() {
  * @return void
  */
 function set_moodle_cookie($username) {
-    global $CFG;
+    global $CFG, $SESSION, $DB;
 
     if (NO_MOODLE_COOKIES) {
         return;
+    }
+
+    // IOMAD - add companyname to sessioncookie value.
+    $iomadcookie = "";
+    if (empty($SESSION->company)) {
+        if ($companyid = iomad::get_my_companyid(context_system::instance())) {
+            // Get the company record.
+            if ($company = $DB->get_record('company', array('id' => $companyid))) {
+                $iomadcookie = '_COMPANY_' . $companyid;
+            }
+        }
+    } else {
+        $iomadcookie = '_COMPANY_' . $SESSION->company->id;
     }
 
     if (empty($CFG->rememberusername)) {
@@ -125,7 +138,7 @@ function set_moodle_cookie($username) {
         return;
     }
 
-    $cookiename = 'MOODLEID1_'.$CFG->sessioncookie;
+    $cookiename = 'MOODLEID1_'.$CFG->sessioncookie.'_'.$iomadcookie;
 
     $cookiesecure = is_moodle_cookie_secure();
 
@@ -136,6 +149,7 @@ function set_moodle_cookie($username) {
         // Set username cookie for 60 days.
         setcookie($cookiename, rc4encrypt($username), time() + (DAYSECS * 60), $CFG->sessioncookiepath, $CFG->sessioncookiedomain, $cookiesecure, $CFG->cookiehttponly);
     }
+echo "cookiename = $cookiename</br>";
 }
 
 /**
