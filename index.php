@@ -62,8 +62,6 @@ if ($company = $DB->get_record('company', array('hostname' => $_SERVER["SERVER_N
     $hascompanybyurl = false;
 }
 
-echo "<pre>";print_r($SESSION);echo "</pre>";
-
 $hasmaintenanceaccess = has_capability('moodle/site:maintenanceaccess', context_system::instance());
 
 // If the site is currently under maintenance, then print a message.
