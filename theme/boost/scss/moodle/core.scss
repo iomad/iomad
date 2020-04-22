@@ -1397,6 +1397,8 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     text-transform: uppercase;
     padding-top: 1.2em;
     padding-bottom: 0.4em;
+    margin-bottom: 0.5rem;
+    font-size: 100%;
 }
 
 .choosercontainer #chooseform .option .typename,
@@ -2417,5 +2419,11 @@ $picker-emojis-per-row: 7 !default;
 
     > :first-child {
         margin-top: $spacer;
+    }
+}
+
+@each $color, $value in $theme-colors {
+    .alert-#{$color} a {
+        color: darken(theme-color-level($color, $alert-color-level), 10%);
     }
 }

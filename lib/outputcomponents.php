@@ -2089,12 +2089,10 @@ class html_writer {
      */
     public static function script($jscode, $url=null) {
         if ($jscode) {
-            $attributes = array('type'=>'text/javascript');
-            return self::tag('script', "\n//<![CDATA[\n$jscode\n//]]>\n", $attributes) . "\n";
+            return self::tag('script', "\n//<![CDATA[\n$jscode\n//]]>\n") . "\n";
 
         } else if ($url) {
-            $attributes = array('type'=>'text/javascript', 'src'=>$url);
-            return self::tag('script', '', $attributes) . "\n";
+            return self::tag('script', '', ['src' => $url]) . "\n";
 
         } else {
             return '';
@@ -3765,11 +3763,10 @@ class custom_menu extends custom_menu_item {
                 $setting = trim($setting);
                 if (!empty($setting)) {
                     switch ($i) {
-                        case 0:
+                        case 0: // Menu text.
                             $itemtext = ltrim($setting, '-');
-                            $itemtitle = $itemtext;
                             break;
-                        case 1:
+                        case 1: // URL.
                             try {
                                 $itemurl = new moodle_url($setting);
                             } catch (moodle_exception $exception) {
@@ -3778,10 +3775,10 @@ class custom_menu extends custom_menu_item {
                                 $itemurl = null;
                             }
                             break;
-                        case 2:
+                        case 2: // Title attribute.
                             $itemtitle = $setting;
                             break;
-                        case 3:
+                        case 3: // Language.
                             if (!empty($language)) {
                                 $itemlanguages = array_map('trim', explode(',', $setting));
                                 $itemvisible &= in_array($language, $itemlanguages);
