@@ -27,4 +27,4 @@ $plugin->version = 2016062006;
 $plugin->requires = 2016052300;
 $plugin->component = 'auth_iomadoidc';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release  = '3.7.5+ (Build: 20200312)'; // Human-friendly version name
+$plugin->release  = '3.7.5+ (Build: 20200417)'; // Human-friendly version name
