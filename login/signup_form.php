@@ -127,10 +127,10 @@ class login_signup_form extends moodleform implements renderable, templatable {
 
         // Iomad
         if (!empty($this->company)) {
-            $mform->addElement('hidden', 'id', $this->company->id);
+            $mform->addElement('hidden', 'companyid', $this->company->id);
             $mform->addElement('hidden', 'code', $this->company->shortname);
             $mform->addElement('hidden', 'departmentid', $this->company->deptid);
-            $mform->setType('id', PARAM_INT);
+            $mform->setType('companyid', PARAM_INT);
             $mform->setType('departmentid', PARAM_INT);
             $mform->setType('code', PARAM_CLEAN);
         }
@@ -159,6 +159,8 @@ class login_signup_form extends moodleform implements renderable, templatable {
      *         or an empty array if everything is OK (true allowed for backwards compatibility too).
      */
     public function validation($data, $files) {
+        global $CFG;
+
         $errors = parent::validation($data, $files);
 
         if (signup_captcha_enabled()) {
@@ -170,6 +172,12 @@ class login_signup_form extends moodleform implements renderable, templatable {
                 }
             } else {
                 $errors['recaptcha_element'] = get_string('missingrecaptchachallengefield');
+            }
+        }
+
+        if (!empty($this->company)) {
+            if ($CFG->local_iomad_signup_useemail) {
+                $data['username'] = $data['email'];
             }
         }
 
