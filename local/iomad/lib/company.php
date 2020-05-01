@@ -86,6 +86,28 @@ class company {
     }
 
     /**
+     * Return a list of instances of companies using userid
+     *
+     * Paramters -
+     *             $userid = int;
+     *
+     * Returns class object.
+     *
+     **/
+    public static function by_userid_list($userid) {
+        global $DB;
+
+        if ($companies = $DB->get_records('company_users', array('userid' => $userid), 'companyid DESC')) {
+            foreach ($companies as $company) {
+                $company_list[] = new company($company->companyid);
+            }
+            return $company_list;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Gets the company name for the current instance
      *
      * Returns text;
@@ -348,7 +370,6 @@ class company {
         $company = $DB->get_record('company', array('id' => $companyid));
         return $company->name;
     }
-
     /**
      * Gets the company record given a member
      *
@@ -3581,83 +3602,90 @@ class company {
         $courseid = $data['courseid'];
         $timecompleted = $data['timecreated'];
 
-        // Get the enrolment record as the completion record isn't fully formed at this point.
-        $enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                         JOIN {enrol} e ON (ue.enrolid = e.id)
-                                         WHERE ue.userid = :userid
-                                         AND e.courseid = :courseid
-                                         AND e.status = 0",
-                                         array('userid' => $userid,
-                                               'courseid' => $courseid));
+        $usercompanies = \company::by_userid_list($userid);
+        foreach ($usercompanies as $company){
 
-        // Do not send if this is already recorded.
-        if (!empty($enrolrec->timestart) &&
-            $DB->get_record_sql("SELECT id FROM {local_iomad_track}
-                                 WHERE userid=:userid
-                                 AND courseid = :courseid
-                                 AND timeenrolled = :timeenrolled
-                                 AND timecompleted IS NOT NULL",
-                                 array('userid' => $userid,
-                                       'courseid' => $courseid,
-                                       'timeenrolled' => $enrolrec->timestart))) {
-            return true;
-        }
+            // Get the enrolment record as the completion record isn't fully formed at this point.
+            $enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
+                                            JOIN {enrol} e ON (ue.enrolid = e.id)
+                                            WHERE ue.userid = :userid
+                                            AND e.courseid = :courseid
+                                            AND e.status = 0",
+                                            array('userid' => $userid,
+                                                'courseid' => $courseid));
 
-        // Need to make sure any certificate is created.
-        sleep(9);
+            // Do not send if this is already recorded.
+            if ($DB->get_record_sql("SELECT id FROM {local_iomad_track}
+                                    WHERE userid=:userid
+                                    AND courseid = :courseid
+                                    AND timeenrolled = :timeenrolled
+                                    AND companyid = :companyid
+                                    AND timecompleted IS NOT NULL",
+                                    array('userid' => $userid,
+                                        'courseid' => $courseid,
+                                        'timeenrolled' => $enrolrec->timestart,
+                                        'companyid' => $company->id ))) {
+                continue;
+            }
 
-        $course = $DB->get_record('course', array('id' => $courseid));
-        $user = $DB->get_record('user', array('id' => $userid));
-        $companyinfo = self::get_company_byuserid($userid);
-        $company = new company($companyinfo->id);
+            // Need to make sure any certificate is created.
+            sleep(9);
 
-        // Deal with attachment.
-        $trackinfos = $DB->get_records_sql('SELECT * FROM {local_iomad_track}
-                                          WHERE userid = :userid
-                                          AND courseid = :courseid
-                                          ORDER BY id DESC',
-                                          array('userid' => $userid, 'courseid' => $courseid), 0, 1);
-        $attachment = new stdclass();
-        $trackinfo = array_pop($trackinfos);
-        if ($trackfileinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $trackinfo->id))) {
-            $fileinfo = $DB->get_record('files', array('itemid' => $trackinfo->id, 'component' => 'local_iomad_track', 'filename' => $trackfileinfo->filename));
-            $filedir1 = substr($fileinfo->contenthash,0,2);
-            $filedir2 = substr($fileinfo->contenthash,2,2);
-            $attachment->filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $fileinfo->contenthash;
-            $attachment->filename = $trackfileinfo->filename;
-        } else {
-            $attachment = null;
-        }
+            $course = $DB->get_record('course', array('id' => $courseid));
+            $user = $DB->get_record('user', array('id' => $userid));
 
-        $complete = false;
-        if ($licenses = $DB->get_records_sql("SELECT * FROM {companylicense_users} clu
-                                              JOIN {companylicense} cl
-                                              ON (clu.licenseid = cl.id and cl.program = 1)
-                                              WHERE clu.userid = :userid
-                                              AND clu.licenseid = (
-                                                  SELECT licenseid FROM {companylicense_users}
-                                                  WHERE userid = :userid2
-                                                  AND licensecourseid = :courseid)",
-                                              array('userid' => $user->id, 'userid2' => $user->id, 'courseid' => $courseid))) {
-            foreach ($licenses as $license) {
-                if ($license->isusing && $DB->get_record_sql("SELECT id FROM {course_completions}
-                                                              WHERE userid = :userid
-                                                              AND course = :courseid
-                                                              AND timecompleted IS NOT NULL",
-                                                              array('courseid' => $license->licensecourseid,
-                                                                    'userid' => $user->id))) {
-                    $complete = true;
-                } else {
-                    $complete = false;
+            // Deal with attachment.
+            $trackinfos = $DB->get_records_sql('SELECT * FROM {local_iomad_track}
+                                            WHERE userid = :userid
+                                            AND courseid = :courseid
+                                            and companyid = :companyid
+                                            ORDER BY id DESC',
+                                            array('userid' => $userid,
+                                                    'courseid' => $courseid,
+                                                    'companyid' => $company->id
+                                                ), 0, 1);
+            $attachment = new stdclass();
+            $trackinfo = array_pop($trackinfos);
+            if ($trackfileinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $trackinfo->id))) {
+                $fileinfo = $DB->get_record('files', array('itemid' => $trackinfo->id, 'component' => 'local_iomad_track', 'filename' => $trackfileinfo->filename));
+                $filedir1 = substr($fileinfo->contenthash,0,2);
+                $filedir2 = substr($fileinfo->contenthash,2,2);
+                $attachment->filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $fileinfo->contenthash;
+                $attachment->filename = $trackfileinfo->filename;
+            } else {
+                $attachment = null;
+            }
+
+            $complete = false;
+            if ($licenses = $DB->get_records_sql("SELECT * FROM {companylicense_users} clu
+                                                JOIN {companylicense} cl
+                                                ON (clu.licenseid = cl.id and cl.program = 1)
+                                                WHERE clu.userid = :userid
+                                                AND clu.licenseid = (
+                                                    SELECT licenseid FROM {companylicense_users}
+                                                    WHERE userid = :userid2
+                                                    AND licensecourseid = :courseid)",
+                                                array('userid' => $user->id, 'userid2' => $user->id, 'courseid' => $courseid))) {
+                foreach ($licenses as $license) {
+                    if ($license->isusing && $DB->get_record_sql("SELECT id FROM {course_completions}
+                                                                WHERE userid = :userid
+                                                                AND course = :courseid
+                                                                AND timecompleted IS NOT NULL",
+                                                                array('courseid' => $license->licensecourseid,
+                                                                        'userid' => $user->id))) {
+                        $complete = true;
+                    } else {
+                        $complete = false;
+                    }
                 }
             }
-        }
-        if (!$complete) {
-            EmailTemplate::send('completion_course_user', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
-            $supervisortemplate = new EmailTemplate('completion_course_supervisor', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
-            $supervisortemplate->email_supervisor();
-        } else {
-            EmailTemplate::send('user_programcompleted', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+            if (!$complete) {
+                EmailTemplate::send('completion_course_user', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+                $supervisortemplate = new EmailTemplate('completion_course_supervisor', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+                $supervisortemplate->email_supervisor();
+            } else {
+                EmailTemplate::send('user_programcompleted', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+            }
         }
 
         return true;

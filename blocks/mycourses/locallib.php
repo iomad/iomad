@@ -41,8 +41,9 @@ function mycourses_get_my_completion($datefrom = 0) {
                                        JOIN {course} c ON (c.id = cc.courseid)
                                        WHERE cc.userid = :userid
                                        AND c.visible = 1
-                                       AND cc.timecompleted IS NOT NULL",
-                                       array('userid' => $USER->id));
+                                       AND cc.timecompleted IS NOT NULL
+                                       AND cc.companyid = :companyid",
+                                       array('userid' => $USER->id, "companyid" => $companyid));
     $myinprogress = $DB->get_records_sql("SELECT cc.id, cc.userid, cc.courseid as courseid, c.fullname as coursefullname, c.summary as coursesummary
                                           FROM {local_iomad_track} cc
                                           JOIN {course} c ON (c.id = cc.courseid)
@@ -51,8 +52,9 @@ function mycourses_get_my_completion($datefrom = 0) {
                                           WHERE cc.userid = :userid
                                           AND c.visible = 1
                                           AND cc.timecompleted IS NULL
-                                          AND ue.timestart != 0",
-                                          array('userid' => $USER->id));
+                                          AND ue.timestart != 0
+                                          AND cc.companyid = :companyid",
+                                          array('userid' => $USER->id, "companyid" => $companyid));
 
     // We dont care about these.  If you have enrolled then you are started.
     $mynotstartedenrolled = array();
