@@ -127,7 +127,7 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
     }
     $clientlogo = '';
     $companycss = '';
-    if ($companyid = iomad::is_company_user()) {
+    if ($companyid = \iomad::get_my_companyid(\context_system::instance())) {
         $context = context_system::instance();
         if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
             foreach ($files as $file) {
