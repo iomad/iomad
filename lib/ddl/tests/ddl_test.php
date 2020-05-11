@@ -1828,6 +1828,76 @@ class core_ddl_testcase extends database_driver_testcase {
         $this->assertFalse($dbman->table_exists('test_table1'));
     }
 
+    /**
+     * get_columns should return an empty array for ex-temptables.
+     */
+    public function test_leftover_temp_tables_columns() {
+        $DB = $this->tdb; // Do not use global $DB!
+        $dbman = $this->tdb->get_manager();
+
+        // Create temp table0.
+        $table0 = $this->tables['test_table0'];
+        $dbman->create_temp_table($table0);
+
+        $dbman->drop_table($table0);
+
+        // Get columns and perform some basic tests.
+        $columns = $DB->get_columns('test_table0');
+        $this->assertEquals([], $columns);
+    }
+
+    /**
+     * Deleting a temp table should not purge the whole cache
+     */
+    public function test_leftover_temp_tables_cache() {
+        $DB = $this->tdb; // Do not use global $DB!
+        $dbman = $this->tdb->get_manager();
+
+        // Create 2 temp tables.
+        $table0 = $this->tables['test_table0'];
+        $dbman->create_temp_table($table0);
+        $table1 = $this->tables['test_table1'];
+        $dbman->create_temp_table($table1);
+
+        // Create a normal table.
+        $table2 = new xmldb_table ('test_table2');
+        $table2->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table2->add_field('course', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table2->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table2->setComment("This is a test'n drop table. You can drop it safely");
+        $this->tables[$table2->getName()] = $table2;
+        $dbman->create_table($table2);
+
+        // Get columns for the tables, so that relevant caches are populated with their data.
+        $DB->get_columns('test_table0');
+        $DB->get_columns('test_table1');
+        $DB->get_columns('test_table2');
+
+        $dbman->drop_table($table0);
+
+        $rc = new ReflectionClass('moodle_database');
+        $rcm = $rc->getMethod('get_temp_tables_cache');
+        $rcm->setAccessible(true);
+        $metacachetemp = $rcm->invokeArgs($DB, []);
+
+        // Data of test_table0 should be removed from the cache.
+        $this->assertEquals(false, $metacachetemp->has('test_table0'));
+
+        // Data of test_table1 should be intact.
+        $this->assertEquals(true, $metacachetemp->has('test_table1'));
+
+        $rc = new ReflectionClass('moodle_database');
+        $rcm = $rc->getMethod('get_metacache');
+        $rcm->setAccessible(true);
+        $metacache = $rcm->invokeArgs($DB, []);
+
+        // Data of test_table2 should be intact.
+        $this->assertEquals(true, $metacache->has('test_table2'));
+
+        // Delete the leftover temp table.
+        $dbman->drop_table($table1);
+    }
+
     public function test_reset_sequence() {
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
@@ -2371,4 +2441,53 @@ class core_ddl_testcase extends database_driver_testcase {
         }
     */
 
+    /**
+     * Tests check_database_schema().
+     */
+    public function test_check_database_schema() {
+        global $CFG, $DB;
+
+        $dbmanager = $DB->get_manager();
+
+        // Create a table in the database we will be using to compare with a schema.
+        $table = new xmldb_table('test_check_db_schema');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('extracolumn', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->setComment("This is a test table, you can drop it safely.");
+        $dbmanager->create_table($table);
+
+        // Remove the column so it is not added to the schema and gets reported as an extra column.
+        $table->deleteField('extracolumn');
+
+        // Change the 'courseid' field to a float in the schema so it gets reported as different.
+        $table->deleteField('courseid');
+        $table->add_field('courseid', XMLDB_TYPE_NUMBER, '10, 2', null, XMLDB_NOTNULL, null, null);
+
+        // Add another column to the schema that won't be present in the database and gets reported as missing.
+        $table->add_field('missingcolumn', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Add another key to the schema that won't be present in the database and gets reported as missing.
+        $table->add_key('missingkey', XMLDB_KEY_FOREIGN, array('courseid'), 'course', array('id'));
+
+        $schema = new xmldb_structure('testschema');
+        $schema->addTable($table);
+
+        // Things we want to check for -
+        // 1. Changed columns.
+        // 2. Missing columns.
+        // 3. Missing indexes.
+        // 4. Extra columns.
+        $errors = $dbmanager->check_database_schema($schema)['test_check_db_schema'];
+        // Preprocess $errors to get rid of the non compatible (SQL-dialect dependent) parts.
+        array_walk($errors, function(&$error) {
+            $error = trim(strtok($error, PHP_EOL));
+        });
+        $this->assertCount(4, $errors);
+        $this->assertContains("column 'courseid' has incorrect type 'I', expected 'N'", $errors);
+        $this->assertContains("column 'missingcolumn' is missing", $errors);
+        $this->assertContains("Missing index 'missingkey' (not unique (courseid)).", $errors);
+        $this->assertContains("column 'extracolumn' is not expected (I)", $errors);
+    }
 }
