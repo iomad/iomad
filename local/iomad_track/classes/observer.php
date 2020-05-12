@@ -201,169 +201,166 @@ class observer {
                                          array('userid' => $userid,
                                                'courseid' => $courseid));
 
-        // Is this a duplicate event?
-        if (!empty($enrolrec->timestart) &&
-             $DB->get_record_sql("SELECT id FROM {local_iomad_track}
-                                 WHERE userid = :userid
-                                 AND courseid = :courseid
-                                 AND timeenrolled = :timeenrolled
-                                 AND timecompleted IS NOT NULL",
-                                 array('userid' => $userid, 'courseid' => $courseid, 'timeenrolled' => $enrolrec->timestart))) {
-
-            // It is so we don't record it.
-            return true;
-        }
-
         // Get the final grade for the course.
         if ($graderec = $DB->get_record_sql("SELECT gg.* FROM {grade_grades} gg
-                                         JOIN {grade_items} gi ON (gg.itemid = gi.id
-                                                                   AND gi.itemtype = 'course'
-                                                                   AND gi.courseid = :courseid)
-                                         WHERE gg.userid = :userid", array('courseid' => $courseid,
-                                                                           'userid' => $userid))) {
+                                        JOIN {grade_items} gi ON (gg.itemid = gi.id
+                                                                AND gi.itemtype = 'course'
+                                                                AND gi.courseid = :courseid)
+                                        WHERE gg.userid = :userid", array('courseid' => $courseid,
+                                                                        'userid' => $userid))) {
             $finalgrade = $graderec->finalgrade;
         } else {
             $finalgrade = 0;
         }
 
-        if (!$current = $DB->get_record('local_iomad_track', array('courseid' => $courseid, 'userid' => $userid, 'timecompleted' => null))) {
-            // For some reason we don't already have a record.
-            // Is the record broken?
-            $broken = false;
-            if (empty($comprec->timeenrolled)) {
-                $broken = true;
-                $comprec->timeenrolled = $enrolrec->timestart;
+        $courserec = $DB->get_record('course', array('id' => $courseid));
+
+        $usercompanies = \company::by_userid_list($userid);
+        foreach ($usercompanies as $usercompany){
+            // Is this a duplicate event?
+            if ($DB->get_record_sql("SELECT id FROM {local_iomad_track}
+                                    WHERE userid = :userid
+                                    AND courseid = :courseid
+                                    AND timeenrolled = :timeenrolled
+                                    AND companyid = :companyid
+                                    AND timecompleted IS NOT NULL",
+                                    array('userid' => $userid, 'courseid' => $courseid, 'companyid' => $usercompany->id, 'timeenrolled' => $enrolrec->timestart))) {
+
+                // It is so we don't record it.
+                continue;
             }
 
-            if (empty($comprec->timestarted)) {
-                $broken = true;
-                $comprec->timestarted = $enrolrec->timestart;
-            }
+            if (!$current = $DB->get_record('local_iomad_track', array('courseid' => $courseid, 'userid' => $userid, 'timecompleted' => null, 'companyid' => $usercompany->id))) {
 
-            if ($broken) {
-                // Update the completion record.
-                $DB->update_record('course_completions', $comprec);
-            }
+                // For some reason we don't already have a record.
+                // Is the record broken?
+                $broken = false;
+                if (empty($comprec->timeenrolled)) {
+                    $broken = true;
+                    $comprec->timeenrolled = $enrolrec->timestart;
+                }
 
-            // Get the rest of the data.
-            $usercompany = \company::by_userid($userid);
-            $companyrec = $DB->get_record('company', array('id' => $usercompany->id));
-            $userrec = $DB->get_record('user', array('id' => $userid));
-            $department = $DB->get_record_sql("SELECT d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid) WHERE cu.userid = :userid AND cu.companyid = :companyid", array('userid' => $userid, 'companyid' => $companyrec->id));
-            $courserec = $DB->get_record('course', array('id' => $courseid));
-            if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
-                // Its a licensed course, get the last license.
-                $licenserecs = $DB->get_records_sql("SELECT * FROM {companylicense_users}
-                                                     WHERE userid = :userid AND licensecourseid = :licensecourseid AND issuedate < :issuedate
-                                                     AND licenseid IN (SELECT id from {companylicense} WHERE companyid = :companyid)
-                                                     ORDER BY issuedate DESC",
-                                                     array('licensecourseid' => $courseid, 'userid' => $userid, 'companyid' => $companyrec->id, 'issuedate' => $comprec->timecompleted),
-                                                     0,1);
-                $licenserec = array_pop($licenserecs);
-                if ($license = $DB->get_record('companylicense', array('id' => $licenserec->licenseid))) {
-                    $licenseid = $license->id;
-                    $licensename = $license->name;
+                if (empty($comprec->timestarted)) {
+                    $broken = true;
+                    $comprec->timestarted = $enrolrec->timestart;
+                }
+
+                if ($broken) {
+                    // Update the completion record.
+                    $DB->update_record('course_completions', $comprec);
+                }
+
+                $companyrec = $DB->get_record('company', array('id' => $usercompany->id));
+                $userrec = $DB->get_record('user', array('id' => $userid));
+                $department = $DB->get_record_sql("SELECT d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid) WHERE cu.userid = :userid AND cu.companyid = :companyid", array('userid' => $userid, 'companyid' => $companyrec->id));
+                if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
+                    // Its a licensed course, get the last license.
+                    $licenserecs = $DB->get_records_sql("SELECT * FROM {companylicense_users}
+                                                        WHERE userid = :userid AND licensecourseid = :licensecourseid AND issuedate < :issuedate
+                                                        AND licenseid IN (SELECT id from {companylicense} WHERE companyid = :companyid)
+                                                        ORDER BY issuedate DESC",
+                                                        array('licensecourseid' => $courseid, 'userid' => $userid, 'companyid' => $companyrec->id, 'issuedate' => $comprec->timecompleted),
+                                                        0,1);
+                    $licenserec = array_pop($licenserecs);
+                    if ($license = $DB->get_record('companylicense', array('id' => $licenserec->licenseid))) {
+                        $licenseid = $license->id;
+                        $licensename = $license->name;
+                    } else {
+                        $licenseid = 0;
+                        $licensename = '';
+                    }
                 } else {
                     $licenseid = 0;
                     $licensename = '';
                 }
-            } else {
-                $licenseid = 0;
-                $licensename = '';
-            }
 
-            // Record the completion event.
-            $completion = new \StdClass();
-            $completion->courseid = $courseid;
-            $completion->userid = $userid;
-            $completion->timeenrolled = $enrolrec->timestart;
-            $completion->timestarted = $comprec->timestarted;
-            $completion->timecompleted = $comprec->timecompleted;
-            if (!empty($graderec->finalgrade)) {
-                $completion->finalscore = $graderec->finalgrade;
-            } else {
-                $completion->finalscore = 0;
-            }
-            $completion->coursename = $courserec->fullname;
-            $completion->companyid = $companyrec->id;
-            $completion->companyname = $companyrec->name;
-            $completion->departmentid = $department->id;
-            $completion->departmentname = $department->name;
-            $completion->firstname = $userrec->firstname;
-            $completion->lastname = $userrec->lastname;
-            $completion->licenseid = $licenseid;
-            $completion->licensename = $licensename;
-            $completion->modifiedtime = time();
-
-            // Deal with completion valid length.
-            if (!empty($offest)) {
-                $completion->timeexpires = $completion->timecompleted + $offset;
-            }
-
-            $trackid = $DB->insert_record('local_iomad_track', $completion);
-        } else {
-            $current->timecompleted = $comprec->timecompleted;
-            if (!empty($graderec->finalgrade)) {
-                $current->finalscore = $graderec->finalgrade;
-            } else {
-                $current->finalscore = 0;
-            }
-            $broken = false;
-            if (empty($current->timeenrolled)) {
-                if (empty($comprec->timeenrolled)) {
-                    $broken = true;
-                    // Need to get it from the enrolment record.
-                    $enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                                     JOIN {enrol} e ON (ue.enrolid = e.id)
-                                                     WHERE ue.userid = :userid
-                                                     AND e.courseid = :courseid
-                                                     AND e.status = 0",
-                                                     array('userid' => $userid,
-                                                           'courseid' => $courseid));
-                    $comprec->timeenrolled = $enrolrec->starttime;
+                // Record the completion event.
+                $completion = new \StdClass();
+                $completion->courseid = $courseid;
+                $completion->userid = $userid;
+                $completion->timeenrolled = $enrolrec->timestart;
+                $completion->timestarted = $comprec->timestarted;
+                $completion->timecompleted = $comprec->timecompleted;
+                if (!empty($graderec->finalgrade)) {
+                    $completion->finalscore = $graderec->finalgrade;
+                } else {
+                    $completion->finalscore = 0;
                 }
-                $current->timeenrolled = $comprec->timeenrolled;
-            }
+                $completion->coursename = $courserec->fullname;
+                $completion->companyid = $companyrec->id;
+                $completion->companyname = $companyrec->name;
+                $completion->departmentid = $department->id;
+                $completion->departmentname = $department->name;
+                $completion->firstname = $userrec->firstname;
+                $completion->lastname = $userrec->lastname;
+                $completion->licenseid = $licenseid;
+                $completion->licensename = $licensename;
+                $completion->modifiedtime = time();
 
-            if (empty($current->timestarted)) {
-                if (empty($comprec->timestarted)) {
-                    $broken = true;
-                    if (empty($enrolrec)) {
+                $trackid = $DB->insert_record('local_iomad_track', $completion);
+            } else {
+                $current->timecompleted = $comprec->timecompleted;
+                if (!empty($graderec->finalgrade)) {
+                    $current->finalscore = $graderec->finalgrade;
+                } else {
+                    $current->finalscore = 0;
+                }
+                $broken = false;
+                if (empty($current->timeenrolled)) {
+                    if (empty($comprec->timeenrolled)) {
+                        $broken = true;
                         // Need to get it from the enrolment record.
                         $enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                                         JOIN {enrol} e ON (ue.enrolid = e.id)
-                                                         WHERE ue.userid = :userid
-                                                         AND e.courseid = :courseid
-                                                         AND e.status = 0",
-                                                         array('userid' => $userid,
-                                                               'courseid' => $courseid));
+                                                        JOIN {enrol} e ON (ue.enrolid = e.id)
+                                                        WHERE ue.userid = :userid
+                                                        AND e.courseid = :courseid
+                                                        AND e.status = 0",
+                                                        array('userid' => $userid,
+                                                            'courseid' => $courseid));
+                        $comprec->timeenrolled = $enrolrec->starttime;
                     }
-                    $comprec->timestarted = $enrolrec->starttime;
+                    $current->timeenrolled = $comprec->timeenrolled;
                 }
-                $current->timestarted = $comprec->timestarted;
+
+                if (empty($current->timestarted)) {
+                    if (empty($comprec->timestarted)) {
+                        $broken = true;
+                        if (empty($enrolrec)) {
+                            // Need to get it from the enrolment record.
+                            $enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
+                                                            JOIN {enrol} e ON (ue.enrolid = e.id)
+                                                            WHERE ue.userid = :userid
+                                                            AND e.courseid = :courseid
+                                                            AND e.status = 0",
+                                                            array('userid' => $userid,
+                                                                'courseid' => $courseid));
+                        }
+                        $comprec->timestarted = $enrolrec->starttime;
+                    }
+                    $current->timestarted = $comprec->timestarted;
+                }
+
+                // Deal with completion valid length.
+                if (!empty($offest)) {
+                    $current->timeexpires = $current->timecompleted + $offset;
+                }
+
+                if ($broken) {
+                    // Update the completion record.
+                    $DB->update_record('course_completions', $comprec);
+                }
+
+                $current->modifiedtime = time();
+                $DB->update_record('local_iomad_track', $current);
+                $trackid = $current->id;
             }
 
-            if ($broken) {
-                // Update the completion record.
-                $DB->update_record('course_completions', $comprec);
+            // Debug
+            if (!PHPUNIT_TEST) {
+                mtrace('Iomad completion recorded for userid ' . $userid . ' in courseid ' . $courseid);
             }
-
-            // Deal with completion valid length.
-            if (!empty($offest)) {
-                $current->timeexpires = $current->timecompleted + $offset;
-            }
-
-            $current->modifiedtime = time();
-            $DB->update_record('local_iomad_track', $current);
-            $trackid = $current->id;
+            self::record_certificates($courseid, $userid, $trackid);
         }
-
-        // Debug
-        if (!PHPUNIT_TEST) {
-            mtrace('Iomad completion recorded for userid ' . $userid . ' in courseid ' . $courseid);
-        }
-
-        self::record_certificates($courseid, $userid, $trackid);
 
         return true;
     }
@@ -520,58 +517,62 @@ class observer {
         $timeenrolled = $event->timecreated;
         $modifiedtime = $event->timecreated;
 
+
         // Is this course a license course?
         if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
             // Ignore it we capture a different event for those.
             return true;
         }
 
-        // Check if there is already an entry for this.
-        if ($entry = $DB->get_record('local_iomad_track', array('userid' => $userid,
-                                                                'courseid' => $courseid,
-                                                                'timecompleted' => null))) {
-            // We already have an entry.  Change the issue time.
-            $entry->timeenrolled = $timeenrolled;
-            $entry->modifiedtime = $modifiedtime;
-            $DB->update_record('local_iomad_track', $entry);
-        } else {
-            // Create one.
-            if ($courserec = $DB->get_record('course', array('id' => $courseid))) {
-                if ($companies = $DB->get_records_sql("SELECT cu.* FROM {company_users} cu
-                                                      JOIN {company_course} cc on (cu.companyid = cc.companyid)
-                                                      WHERE cu.userid = :userid
-                                                      AND cc.courseid = :courseid
-                                                      ORDER BY cu.id DESC",
-                                                      array('userid' => $userid,
-                                                            'courseid' => $courseid))) {
-
-                    // Searching by company and allocated course.
-                    $company = array_shift($companies);
-                    $companyid = $company->companyid;
-                } else if ($companies = $DB->get_records_sql("SELECT cu.* FROM {company_users} cu
-                                                      WHERE cu.userid = :userid
-                                                      ORDER BY cu.id DESC",
-                                                      array('userid' => $userid))) {
-
-                    // Searching by company only as could be open shared course.
-                    $company = array_shift($companies);
-                    $companyid = $company->companyid;
-                } else {
-                    // Need a default.
-                    $companyid = 0;
-                }
-                $entry = array('userid' => $userid,
-                               'courseid' => $courseid,
-                               'coursename' => $courserec->fullname,
-                               'companyid' => $companyid,
-                               'timeenrolled' => $timeenrolled,
-                               'timestarted' => $timeenrolled,
-                               'modifiedtime' => $modifiedtime
-                               );
-                $DB->insert_record('local_iomad_track', $entry);
+        if ($courserec = $DB->get_record('course', array('id' => $courseid))) {
+            if ($companies = $DB->get_records_sql("SELECT cu.* FROM {company_users} cu
+                                                JOIN {company_course} cc on (cu.companyid = cc.companyid)
+                                                WHERE cu.userid = :userid
+                                                AND cc.courseid = :courseid
+                                                ORDER BY cu.id DESC",
+                                                array('userid' => $userid,
+                                                        'courseid' => $courseid))) {
+                // Searching by company and allocated course.
+            } else if ($companies = $DB->get_records_sql("SELECT cu.* FROM {company_users} cu
+                                                WHERE cu.userid = :userid
+                                                ORDER BY cu.id DESC",
+                                                array('userid' => $userid))) {
+                // Searching by company only as could be open shared course.
+            } else {
+                // Need a default.
+                $company = new stdobject();
+                $company->companyid = 0;
+                $companies = array($company);
             }
-        }
 
+            foreach($companies as $company) {
+                $companyid = $company->companyid;
+                error_log('company id:' . $companyid . "\n");
+                // Check if there is already an entry for this.
+                if ($entry = $DB->get_record('local_iomad_track', array('userid' => $userid,
+                    'courseid' => $courseid,
+                    'companyid' => $companyid,
+                    'timecompleted' => null))) {
+                    // We already have an entry.  Change the issue time.
+                    $entry->timeenrolled = $timeenrolled;
+                    $entry->modifiedtime = $modifiedtime;
+                    $DB->update_record('local_iomad_track', $entry);
+                    } 
+                else {
+
+                    $entry = array('userid' => $userid,
+                    'courseid' => $courseid,
+                    'coursename' => $courserec->fullname,
+                    'companyid' => $companyid,
+                    'timeenrolled' => $timeenrolled,
+                    'timestarted' => $timeenrolled,
+                    'modifiedtime' => $modifiedtime
+                    );
+                    $DB->insert_record('local_iomad_track', $entry);
+                }
+            }
+
+        }
         return true;
     }
 
