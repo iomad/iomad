@@ -128,26 +128,28 @@ function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $p
     $clientlogo = '';
     $companycss = '';
     if ($companyid = \iomad::get_my_companyid(\context_system::instance())) {
-        $context = context_system::instance();
-        if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
-            foreach ($files as $file) {
-                if ($file->filename != '.') {
-                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
+        if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+            $context = context_system::instance();
+            if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
+                foreach ($files as $file) {
+                    if ($file->filename != '.') {
+                        $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
+                    }
                 }
             }
-        }
-        company_user::load_company();
-        $companycss = ".header, .navbar { background: [[company:bgcolor_header]]; }
-                       .block .content { background: [[company:bgcolor_content]]; }";
-        foreach($USER->company as $key => $value) {
-            if (isset($value)) {
-                $companycss = preg_replace("/\[\[company:$key\]\]/", $value, $companycss);
+            company_user::load_company();
+            $companycss = ".header, .navbar { background: [[company:bgcolor_header]]; }
+                           .block .content { background: [[company:bgcolor_content]]; }";
+            foreach($USER->company as $key => $value) {
+                if (isset($value)) {
+                    $companycss = preg_replace("/\[\[company:$key\]\]/", $value, $companycss);
+                }
             }
+            $companycss .= iomad::get_company_customcss($companyid);
+            $companycss .= iomad::get_company_maincolor($companyid);
+            $companycss .= iomad::get_company_headingcolor($companyid);
+            $companycss .= iomad::get_company_linkcolor($companyid);
         }
-        $companycss .= iomad::get_company_customcss($companyid);
-        $companycss .= iomad::get_company_maincolor($companyid);
-        $companycss .= iomad::get_company_headingcolor($companyid);
-        $companycss .= iomad::get_company_linkcolor($companyid);
     }
 
     $return->heading = '<div id="sitelogo">' . 
