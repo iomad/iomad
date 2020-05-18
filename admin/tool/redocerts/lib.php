@@ -77,7 +77,14 @@ function do_redocerts($user = 0, $course = 0, $company = 0, $idnumber = 0, $from
         echo "<br>clearing id $track->id - $count out of $total </br>";
         local_iomad_track_delete_entry($track->id);
         echo "</br>Recreating Certificate</br>";
-        xmldb_local_iomad_track_record_certificates($track->courseid, $track->userid, $track->id);
+        
+        // Inform the user if the certificate has been generated or skipped
+        if(xmldb_local_iomad_track_record_certificates($track->courseid, $track->userid, $track->id)){
+            echo '<p>Certificate generated successfully.</p>';   
+        } else {
+            echo '<p>Certificate generation skipped - user has not completed the course.</p>';
+        }
+        // REMOVABLE NOTICE: I haven't used any the "Moodle way" of writing HTML, of course feel free to add that if you want. :)
     
         $count++;
     }
