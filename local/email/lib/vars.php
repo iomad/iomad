@@ -40,7 +40,7 @@ class EmailVars {
      * Sets up and retrieves the API objects
      *
      **/
-    public function __construct($company, $user, $course, $invoice, $classroom, $license, $sender, $approveuser, $nugget, $event) {
+    public function __construct($company, $user, $course, $invoice, $classroom, $license, $sender, $approveuser, $event) {
         $this->company =& $company;
         $this->user =& $user;
         $this->invoice =& $invoice;
