@@ -44,6 +44,16 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
      */
     public function __construct($forceloginflow = null) {
         global $STATEADDITIONALDATA;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
+        
         $loginflow = 'authcode';
 
         if (!empty($STATEADDITIONALDATA) && isset($STATEADDITIONALDATA['forceflow'])) {
@@ -52,7 +62,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
             if (!empty($forceloginflow) && is_string($forceloginflow)) {
                 $loginflow = $forceloginflow;
             } else {
-                $configuredloginflow = get_config('auth_iomadoidc', 'loginflow');
+                $configuredloginflow = get_config('auth_iomadoidc' . $postfix, 'loginflow');
                 if (!empty($configuredloginflow)) {
                     $loginflow = $configuredloginflow;
                 }
