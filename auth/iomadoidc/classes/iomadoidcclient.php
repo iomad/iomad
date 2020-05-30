@@ -128,7 +128,15 @@ class iomadoidcclient {
      * @return array Array of request parameters.
      */
     protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
-        global $SESSION;
+
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
 
         $nonce = 'N'.uniqid();
         $params = [
@@ -145,7 +153,7 @@ class iomadoidcclient {
             $params['prompt'] = 'login';
         }
 
-        $domainhint = get_config('auth_iomadoidc' . "_" . $SESSION->currenteditingcompany, 'domainhint');
+        $domainhint = get_config('auth_iomadoidc' . $postfix, 'domainhint');
         if (!empty($domainhint)) {
             $params['domain_hint'] = $domainhint;
         }
