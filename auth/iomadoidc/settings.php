@@ -21,9 +21,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-
-global $CFG;
 require_once(__DIR__.'/lib.php');
+// IOMAD
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
@@ -86,7 +85,7 @@ $settings->add(new admin_setting_configtextarea('auth_iomadoidc/userrestrictions
 
 $label = new lang_string('cfg_debugmode_key', 'auth_iomadoidc');
 $desc = new lang_string('cfg_debugmode_desc', 'auth_iomadoidc');
-$settings->add(new \admin_setting_configcheckbox('auth_iomadoidc/debugmode' . $postfix, $label, $desc, '0'));
+$settings->add(new \admin_setting_configcheckbox('auth_iomadoidc/debugmode', $label, $desc, '0'));
 
 $configkey = new lang_string('cfg_icon_key', 'auth_iomadoidc');
 $configdesc = new lang_string('cfg_icon_desc', 'auth_iomadoidc');

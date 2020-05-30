@@ -24,7 +24,7 @@
 namespace auth_iomadoidc\event;
 
 /**
- * Fired when a user uses OIDC to log in.
+ * Fired when a user uses IOMADOIDC to log in.
  */
 class user_loggedin extends \core\event\base {
     /**

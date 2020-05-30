@@ -24,7 +24,7 @@
 namespace auth_iomadoidc\event;
 
 /**
- * Event fired when a user authenticated with OIDC, but does not log in.
+ * Event fired when a user authenticated with IOMADOIDC, but does not log in.
  */
 class user_authed extends \core\event\base {
     /**

@@ -24,7 +24,7 @@
 namespace auth_iomadoidc\event;
 
 /**
- * Event fired when OIDC creates a new user.
+ * Event fired when IOMADOIDC creates a new user.
  */
 class user_created extends \core\event\base {
     /**

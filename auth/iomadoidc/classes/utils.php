@@ -29,7 +29,7 @@ namespace auth_iomadoidc;
 class utils {
 
     /**
-     * Process an OIDC JSON response.
+     * Process an IOMADOIDC JSON response.
      *
      * @param string $response The received JSON.
      * @return array The parsed JSON.

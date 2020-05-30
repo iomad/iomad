@@ -102,7 +102,7 @@ class iomadoidcclient {
     }
 
     /**
-     * Set OIDC endpoints.
+     * Set IOMADOIDC endpoints.
      *
      * @param array $endpoints Array of endpoints. Can have keys 'auth', and 'token'.
      */
@@ -124,11 +124,12 @@ class iomadoidcclient {
      *
      * @param bool $promptlogin Whether to prompt for login or use existing session.
      * @param array $stateparams Parameters to store as state.
-     * @param array $extraparams Additional parameters to send with the OIDC request.
+     * @param array $extraparams Additional parameters to send with the IOMADOIDC request.
      * @return array Array of request parameters.
      */
     protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         global $SESSION;
+
         $nonce = 'N'.uniqid();
         $params = [
             'response_type' => 'code',
@@ -177,7 +178,7 @@ class iomadoidcclient {
      *
      * @param bool $promptlogin Whether to prompt for login or use existing session.
      * @param array $stateparams Parameters to store as state.
-     * @param array $extraparams Additional parameters to send with the OIDC request.
+     * @param array $extraparams Additional parameters to send with the IOMADOIDC request.
      */
     public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         global $DB;

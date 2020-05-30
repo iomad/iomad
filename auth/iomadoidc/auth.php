@@ -106,9 +106,9 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     }
 
     /**
-     * Handle OIDC disconnection from Moodle account.
+     * Handle IOMADOIDC disconnection from Moodle account.
      *
-     * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
+     * @param bool $justremovetokens If true, just remove the stored IOMADOIDC tokens for the user, otherwise revert login methods.
      * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account to a
      *                                "linked" account.
      * @param \moodle_url $redirect Where to redirect if successful.
@@ -175,7 +175,32 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
      * @param string $password plain text password (with system magic quotes)
      */
     public function user_authenticated_hook(&$user, $username, $password) {
+        global $DB;
         if (!empty($user) && !empty($user->auth) && $user->auth === 'iomadoidc') {
+            $tokenrec = $DB->get_record('auth_iomadoidc_token', ['userid' => $user->id]);
+            if (!empty($tokenrec)) {
+                // If the token record username is out of sync (ie username changes), update it.
+                if ($tokenrec->username != $user->username) {
+                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec->id = $tokenrec->id;
+                    $updatedtokenrec->username = $user->username;
+                    $DB->update_record('auth_iomadoidc_token', $updatedtokenrec);
+                    $tokenrec = $updatedtokenrec;
+                }
+            } else {
+                // There should always be a token record here, so a failure here means
+                // the user's token record doesn't yet contain their userid.
+                $tokenrec = $DB->get_record('auth_iomadoidc_token', ['username' => $username]);
+                if (!empty($tokenrec)) {
+                    $tokenrec->userid = $user->id;
+                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec->id = $tokenrec->id;
+                    $updatedtokenrec->userid = $user->id;
+                    $DB->update_record('auth_iomadoidc_token', $updatedtokenrec);
+                    $tokenrec = $updatedtokenrec;
+                }
+            }
+
             $eventdata = [
                 'objectid' => $user->id,
                 'userid' => $user->id,

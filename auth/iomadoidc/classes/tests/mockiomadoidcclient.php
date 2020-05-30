@@ -45,7 +45,7 @@ class mockiomadoidcclient extends \auth_iomadoidc\iomadoidcclient {
      *
      * @param bool $promptlogin Whether to prompt for login or use existing session.
      * @param array $stateparams Parameters to store as state.
-     * @param array $extraparams Additional parameters to send with the OIDC request.
+     * @param array $extraparams Additional parameters to send with the IOMADOIDC request.
      * @return array Array of request parameters.
      */
     public function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
