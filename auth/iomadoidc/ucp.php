@@ -29,7 +29,7 @@ require_login();
 
 $action = optional_param('action', null, PARAM_TEXT);
 
-$iomadoidctoken = $DB->get_record('auth_iomadoidc_token', ['username' => $USER->username]);
+$iomadoidctoken = $DB->get_record('auth_iomadoidc_token', ['userid' => $USER->id]);
 $iomadoidcconnected = (!empty($iomadoidctoken)) ? true : false;
 
 $iomadoidcloginconnected = ($USER->auth === 'iomadoidc') ? true : false;

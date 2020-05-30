@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2016062006;
-$plugin->requires = 2016052300;
+$plugin->version = 2019052005;
+$plugin->requires = 2019052000;
+$plugin->release  = '3.7.6 (Build: 20200511)'; // Human-friendly version name
 $plugin->component = 'auth_iomadoidc';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release  = '3.7.6 (Build: 20200511)'; // Human-friendly version name
