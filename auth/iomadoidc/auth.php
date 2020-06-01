@@ -40,7 +40,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
      * Constructor.
      */
     public function __construct($forceloginflow = null) {
-        global $STATEADDITIONALDATA;
+        global $STATEADDITIONALDATA, $CFG;
 
         // IOMAD
         require_once($CFG->dirroot . '/local/iomad/lib/company.php');
