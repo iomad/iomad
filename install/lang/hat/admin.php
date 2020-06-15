@@ -30,8 +30,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['cannotcreatelangdir'] = 'Ii sáhte ráhkadit máhpa \'lang\'.';
-$string['cannotcreatetempdir'] = 'Ii sáhttán ráhkadit máhpa \'temp\\';
-$string['cannotsavemd5file'] = 'Ii sáhte vurket md5-fiilla.';
-$string['cannotsavezipfile'] = 'Ii sáhte vurket ZIP-fiilla.';
-$string['wrongzipfilename'] = 'Boasttu ZIP-fiilanamma.';
+$string['clianswerno'] = 'n';
+$string['cliansweryes'] = 'w';
+$string['cliyesnoprompt'] = 'Tape w (pou wi) oswa n (pou non)';
