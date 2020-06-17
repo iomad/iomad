@@ -596,7 +596,7 @@ function question_move_question_tags_to_new_context(array $questions, context $n
     $questionstagobjects = core_tag_tag::get_items_tags('core_question', 'question', $questionids);
 
     foreach ($questions as $question) {
-        $tagobjects = $questionstagobjects[$question->id];
+        $tagobjects = $questionstagobjects[$question->id] ?? [];
 
         foreach ($tagobjects as $tagobject) {
             $tagid = $tagobject->taginstanceid;
@@ -1718,8 +1718,11 @@ function question_has_capability_on($questionorid, $cap, $notused = -1) {
         try {
             $question = question_bank::load_question_data($questionid);
         } catch (Exception $e) {
-            // Let's log the exception for future debugging.
-            debugging($e->getMessage(), DEBUG_NORMAL, $e->getTrace());
+            // Let's log the exception for future debugging,
+            // but not during Behat, or we can't test these cases.
+            if (!defined('BEHAT_SITE_RUNNING')) {
+                debugging($e->getMessage(), DEBUG_NORMAL, $e->getTrace());
+            }
 
             // Well, at least we tried. Seems that we really have to read from DB.
             $question = $DB->get_record_sql('SELECT q.id, q.createdby, qc.contextid

@@ -1849,6 +1849,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 foreach ($ids as $id) {
 
                     //IOMAD strip out unwanted courses.
+                    // If a course is deleted after we got the cache entry it may not exist in the database anymore.
                     if (!empty($records[$id])) {
                         $courses[$id] = new core_course_list_element($records[$id]);
                     }
