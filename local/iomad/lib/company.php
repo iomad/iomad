@@ -3646,7 +3646,9 @@ class company {
         $data = $event->get_data();
         $userid = $data['relateduserid'];
         $courseid = $data['courseid'];
-        $timecompleted = $data['timecreated'];
+
+        // Get the completion record.
+        $completionrec = $DB->get_record('course_completions', array('userid' => $userid, 'course' => $courseid));
 
         // Get the enrolment record as the completion record isn't fully formed at this point.
         $enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
@@ -3663,12 +3665,10 @@ class company {
                                   WHERE userid=:userid
                                   AND courseid = :courseid
                                   AND timeenrolled = :timeenrolled
-                                  AND timecompleted < :timecompleted1
-                                  AND timecompleted > :timecompleted2",
+                                  AND timecompleted != :timecompleted",
                                   array('userid' => $userid,
                                         'courseid' => $courseid,
-                                        'timecompleted1' => $timecompleted + 5,
-                                        'timecompleted2' => $timecompleted - 300,
+                                        'timecompleted' => $completionrec->timecompleted,
                                         'timeenrolled' => $enrolrec->timestart))) {
             return true;
         }
