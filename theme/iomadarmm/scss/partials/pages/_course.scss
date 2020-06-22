@@ -1,0 +1,126 @@
+/*****************************************/
+/* coursepage */
+/*****************************************/
+
+.pagelayout-course {
+
+    #page-header {
+        margin-bottom: 15px;
+    }
+
+    #region-main {
+        background-color: transparent;
+        border: none;
+        padding: 0;
+        margin-top: 0;
+    }
+
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+
+        @include media-breakpoint-up(lg) {
+            margin-left: 15px;
+            margin-right: 15px;
+        }
+    }
+}
+
+.course-content {
+
+    ul {
+        @extend .clearfix;
+
+        &.section {
+            margin-left: 0;
+        }
+        ul.section {
+            width: 100%;
+            float: left;
+            padding: 0;
+
+            @include media-breakpoint-up(md) {
+                
+            }
+        }
+        li.section {
+            margin: 15px 0;
+            width: 100%;
+            float: left;
+            
+            &.main {
+                
+            }
+            .left {
+                padding: 0;
+            }
+            .summary {
+                margin-left: 0;
+            }
+        }
+
+        &.topics,
+        &.weeks {
+            li.section {
+                //padding: 30px;
+                
+                .left {
+                    padding: 0;
+                }
+                .summary {
+                    margin-left: 0;
+                }
+            }
+        }
+    }
+}
+
+.section {
+    .label {
+        .activity-wrapper,
+        .activity-wrapper:hover {
+            background: none !important;
+        }
+
+        .mod-indent-outer {
+            display: block;
+            padding-left: 0;
+        }
+    }
+    .activity {
+        .activity-label,
+        .activity-link {
+            display: none;
+        }
+        &.htm-tiles {
+            clear: none;
+            padding: 0 15px;
+            margin: 15px 0;
+        }
+        .activityinstance {
+            padding-right: 15px;
+            .inplaceeditable.inplaceeditingon {
+                display: block;
+                .editinstructions {
+                    margin: 0;
+                    background-color: $state-info-bg;
+                    color: $state-info-text;
+                    border: solid 1px $state-info-border;
+                    padding: 5px;
+                    white-space: initial;
+                }
+                input {
+                    width: 100%;
+                }
+            }
+        }
+        .contentafterlink {
+            margin-left: 0;
+        }
+    }
+}
+
+.editing .section .activity:hover, 
+.editing .section .activity.action-menu-shown {
+    background-color: transparent;
+}

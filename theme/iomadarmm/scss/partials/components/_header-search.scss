@@ -1,0 +1,54 @@
+// ------------------------------------------ \\
+// Search Form
+// ------------------------------------------ \\
+
+.htm-header__search {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    
+    @include media-breakpoint-up(lg) {
+        margin: 20px 0;
+    }
+
+    .search-input-form {
+        width: 100%;
+
+        @include media-breakpoint-up(lg) {
+            width: auto;
+        }
+    }
+
+    form {
+        width: 100%;
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin: 0;
+        }
+
+        .form-control {
+            width: calc(100% - 67px);
+            height: 40px;
+            border: none;
+
+            @include media-breakpoint-up(md) {
+                width: 400px;
+                height: 56px;
+            }
+        }
+
+        .btn {
+            height: 42px;
+            margin-left: -1px;
+            background: #73a6b7;
+            font-size: 25px;
+
+            @include media-breakpoint-up(md) {
+                height: 58px;
+            }
+        }
+    }
+}

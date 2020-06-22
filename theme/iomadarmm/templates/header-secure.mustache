@@ -1,0 +1,19 @@
+<header role="banner" class="pos-f-t bg-faded navbar-static-top moodle-has-zindex htm-header htm-secure-header {{#hasheaderlogo}}has-logo{{/hasheaderlogo}}">
+
+    <div class="container-fluid navbar-nav">
+        <div class="pull-left">
+            <!-- Drawer Toggle button -->
+            <!-- Logo -->
+            <span class="logo navbar-brand">
+                {{#hasheaderlogo}}
+                    <img src="{{headerlogo}}" alt="{{logo_alt}}">
+                {{/hasheaderlogo}}
+                {{^hasheaderlogo}}
+                    <h2 class="m-b-0">
+                        {{sitename}}
+                    </h2>
+                {{/hasheaderlogo}}
+            </span>
+        </div>
+    </div>
+</header>

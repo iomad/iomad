@@ -9,6 +9,9 @@ $bg-inverse-link-color: #fff !default;
     overflow-x: auto;
     overflow-y: visible;
     border: $card-border-width solid $card-border-color;
+    @if $enable-rounded {
+        @include border-radius($card-border-radius);
+    }
     padding: $card-spacer-x;
     background-color: $body-bg;
 }
@@ -1394,6 +1397,8 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     text-transform: uppercase;
     padding-top: 1.2em;
     padding-bottom: 0.4em;
+    margin-bottom: 0.5rem;
+    font-size: 100%;
 }
 
 .choosercontainer #chooseform .option .typename,
@@ -2169,7 +2174,7 @@ $switch-thumb-padding-double: ($switch-thumb-padding * 2) !default;
 $switch-focus-box-shadow: 0 0 0 $input-btn-focus-width rgba(map-get($theme-colors, 'primary'), .25);
 $switch-transition: .2s all !default;
 
-.switch {
+body:not(.behat-site) .switch {
     position: relative;
 
     input {
@@ -2259,6 +2264,20 @@ $switch-transition: .2s all !default;
     right: 0 !important; /* stylelint-disable-line declaration-no-important */
 }
 
+.overflow-hidden {
+    overflow: hidden !important; /* stylelint-disable-line declaration-no-important */
+}
+
+.text-break {
+    overflow-wrap: break-word !important; /* stylelint-disable-line declaration-no-important */
+}
+
 .z-index-1 {
     z-index: 1 !important; /* stylelint-disable-line declaration-no-important */
+}
+
+@each $color, $value in $theme-colors {
+    .alert-#{$color} a {
+        color: darken(theme-color-level($color, $alert-color-level), 10%);
+    }
 }

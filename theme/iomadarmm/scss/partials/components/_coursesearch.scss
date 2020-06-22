@@ -1,0 +1,62 @@
+.shortsearchbox {
+    display: block;
+    width: 100%;
+
+    fieldset {
+        display: block;
+        width: 100%;
+        text-align: left;
+        > label {
+            display: block;
+            @extend h3;
+        }
+
+        .form-control {
+            float: left;
+            height: 36px;
+            border-radius: 4px 0 0 4px;
+            border: none;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            width: calc(100% - 70px);
+        }
+
+        .btn {
+            float: left;
+            height: 37px;
+            width: 70px;
+            padding-top: 5px;
+            font-size: 1rem;
+            border-radius: 0 4px 4px 0;
+        }
+    }
+}
+
+.coursesearchbox {
+    width: 100%;
+
+    .form-control {
+        width: 100%;
+        height: 44px;
+        margin-bottom: 10px;
+        border-radius: 50px;
+
+        @include media-breakpoint-up(md) {
+            width: auto;
+            margin-left: 10px;
+            margin-right: -5px;
+            margin-bottom: 0;
+            border-radius: 50px 0 0 50px;
+        }
+    }
+
+    .btn {
+        width: 100%;
+        height: 44px;
+        border-radius: 50px;
+
+        @include media-breakpoint-up(md) {
+            width: auto;
+            border-radius: 0 50px 50px 0;
+        }
+    }
+}

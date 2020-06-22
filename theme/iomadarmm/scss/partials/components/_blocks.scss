@@ -1,0 +1,122 @@
+/*****************************************/
+/* Block regions */
+/*****************************************/
+
+[data-region="blocks-column"] {
+    float: none !important;
+
+    @include media-breakpoint-up(lg) {
+        padding-left: 15px;
+    }
+}
+
+.course-page-blocks {
+    display: flex;
+    width: 100%;
+    padding: 0;
+    border: none;
+
+    .block-region {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        padding: 30px 0;
+    }
+
+    .block {
+        flex: 0 0 100%;
+        max-width: 100%;
+
+        @include media-breakpoint-up(lg) {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+}
+
+/*****************************************/
+/* Blocks */
+/*****************************************/
+
+.block {
+    display: flex;
+    margin: 0 0 30px 0;
+    padding: 0 15px;
+    background: none !important;
+    
+    .card-block {
+        height: 100%;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    a {
+        color: $arm-blue;
+
+        &.btn {
+            color: #fff;
+        };
+    }
+}
+
+/**
+ * Blocks.
+ */
+.block-region .card-block {
+   
+
+    .card-title {
+        margin: 0;
+        color: $arm-gray-dark;
+        font-style: normal;
+        font-weight: 600;
+        letter-spacing: 0px;
+        line-height: 1.2em;
+        text-transform: none;
+        text-decoration: none;
+
+        @include font-size(24px);
+    }
+
+    .card-text {
+        padding: 15px;
+    }
+}
+
+/**
+ * Navigation.
+ */
+.block_navigation,
+.block_settings {
+    .block_tree .tree_item {
+        margin: ($spacer/2) 0;
+    }
+}
+
+/*****************************************/
+/* Calendar block */
+/*****************************************/
+
+.calendar-event-panel {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px;
+}
+
+/*****************************************/
+// Search block
+/*****************************************/
+
+.block_globalsearch  {
+    .searchform {
+        form {
+            fieldset {
+                
+            }
+        }
+    }
+}
+
+/*****************************************/

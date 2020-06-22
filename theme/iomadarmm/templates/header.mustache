@@ -1,0 +1,51 @@
+<header role="banner" class="navbar-static-top moodle-has-zindex htm-header {{#hasheaderlogo}}has-logo{{/hasheaderlogo}}">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-lg-4">
+                <!-- Nav Drawer Toggle -->
+                <div class="drawer-toggle" data-region="drawer-toggle">
+                    <button aria-expanded="{{#navdraweropen}}true{{/navdraweropen}}{{^navdraweropen}}false{{/navdraweropen}}" aria-controls="htm-drawer" type="button" class="btn btn-nav-toggle" data-action="toggle-drawer" data-side="left" data-preference="drawer-open-nav">
+                        <span aria-hidden="true">
+                            <span class="line"></span>
+                        </span>
+                        <span class="sr-only">{{#str}}expand, core{{/str}}</span>
+                    </button>
+                </div>
+                <!-- Theme Logo -->
+                <figure class="htm-header__logo">
+                    <!-- Logo -->
+                    <a href="{{{ config.wwwroot }}}" class="navbar-brand {{# output.should_display_navbar_logo }}has-logo{{/ output.should_display_navbar_logo }}
+                        {{^ output.should_display_navbar_logo }}
+                            hidden-sm-down
+                        {{/ output.should_display_navbar_logo }}
+                    ">
+                        <span class="logo">
+                            {{#hasheaderlogo}}
+                                <img src="{{headerlogo}}" alt="{{logo_alt}}">
+                            {{/hasheaderlogo}}
+                            {{^hasheaderlogo}}
+                                <h2 class="m-b-0">
+                                    {{sitename}}
+                                </h2>
+                            {{/hasheaderlogo}}
+                        </span>
+                    </a>
+                </figure>
+            </div>
+            <!-- Custom Menu -->
+            <nav class="col-xs-12 col-sm-4 col-lg-6 htm-header__nav__menu">
+                <!-- custom_menu -->
+                <div class="custom-menu">
+                    {{{ output.custom_menu }}}
+                </div>
+            </nav>
+            <!-- Usermenu -->
+            <div class="col-xs-12 col-sm-2 htm-header__usermenu">
+                <!-- navbar_plugin_output -->
+                {{{ output.navbar_plugin_output }}}
+                <!-- user_menu -->
+                {{{ output.user_menu }}}
+            </div>
+        </div>
+    </div>
+</header>

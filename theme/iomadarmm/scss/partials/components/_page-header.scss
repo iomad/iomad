@@ -1,0 +1,117 @@
+
+
+// Page Header
+.page-header {
+    background-color: $arm-gray-dark;
+
+    &__main {
+        position: relative;
+
+        &__content {
+            width: 100%;
+            padding: 70px 0 0 0;
+
+            h1 {
+                margin-bottom: 0;
+                color: $arm-gray-light;
+                font-weight: 700;
+                line-height: 68px;
+
+                &:after {
+                    display: block;
+                    width: 120px;
+                    height: 5px;
+                    margin: 20px 0 10px 0;
+                    background-color: $theme-brand-primary;
+                    content: '';
+                }
+
+
+                @include font-size(20px);
+                
+                @include media-breakpoint-up(md) {
+                    @include font-size(36px);
+                }
+
+                @include media-breakpoint-up(lg) {
+                    @include font-size(42px);
+                }
+            }
+
+            .page-context-header {
+                display: flex;
+                align-items: center;
+
+                .page-header-image {
+                    margin: 0 15px 0 0;
+                }
+            }
+        }
+    }
+
+    &__breadcrumbs {
+        padding: 5px 0 70px;
+        
+        .container {
+            display: flex;
+            align-items: center;
+            position: relative;
+
+            #page-navbar {
+                .breadcrumb {
+                    color: $arm-gray-light;
+                    
+                    &-item {
+                        a {
+                            color: $arm-gray-light;
+
+                            &:hover {
+                                color: $theme-brand-primary;
+                            }
+                        }
+
+                        &:first-child {
+                            a {
+                                color: $theme-brand-primary;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .context-header-settings-menu {
+                position: absolute;
+                //top: 20px;
+                right: 15px;
+
+                a.dropdown-toggle {
+                    color: $theme-brand-primary;
+                }
+            }
+
+            .breadcrumb-button {
+                margin-left: auto;
+                z-index: 1000;
+            }
+        }
+    }
+}
+
+// Dashboard page header
+#page-my-index {
+    .page-header {
+        .page-header__breadcrumbs {
+           
+            .breadcrumb-button {
+                margin-left: 0;
+
+                @include media-breakpoint-up(md) {
+                    position: absolute;
+                    top: -90px;
+                    right: 0;
+                }
+            }
+            
+        }
+    }
+}

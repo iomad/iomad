@@ -1,0 +1,59 @@
+.calendarwrapper[data-view="month"] {
+    .header {
+        .custom-select {
+            width: 100%;
+            margin-bottom: 15px;
+
+            @include media-breakpoint-up(md) {
+                width: auto;
+                margin-bottom: 15px;
+            }
+        }
+    }
+}
+
+.path-calendar {
+    .maincalendar {
+        .calendar-controls {
+            .current {
+                position: relative;
+                width: 100%;
+                @include media-breakpoint-up(md) {
+                    width: 33.33333%;
+                }
+            }
+            .previous,
+            .next {
+                position: relative;
+                width: 50%;
+                @include media-breakpoint-up(md) {
+                    width: 33.33333%;
+                }
+                .arrow {
+                    position: absolute;
+                    top: 50%;
+                    transform: translate(0, -50%);
+                }
+                .arrow_text {
+                    display: block;
+                }
+            }
+            .previous {
+                .arrow {
+                    left: 0;
+                }
+                .arrow_text {
+                    padding-left: 25px;
+                }
+            }
+            .next {
+                .arrow {
+                    right: 0;
+                }
+                .arrow_text {
+                    padding-right: 25px;
+                }
+            }
+        }
+    }
+}

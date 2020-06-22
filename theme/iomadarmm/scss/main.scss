@@ -1,0 +1,73 @@
+// Import the important stuff from partials/
+@import "partials/components/fonts";
+@import "partials/base";
+@import "partials/bsvars";
+
+
+// Import FontAwesome.
+@import "../../iomadboost/scss/fontawesome";
+
+// Import All of Bootstrap
+@import "../../iomadboost/scss/bootstrap";
+
+// Import Core moodle CSS
+@import "../../iomadboost/scss/moodle";
+
+
+
+
+@import "partials/util/mixins";
+@import "partials/util/flexbox";
+
+// Import all of our 3rd party styles in vendors/
+@import "vendors/fontawesome/fontawesome";
+@import "vendors/fontawesome/fa-solid.scss";
+@import "vendors/fontawesome/fa-brands.scss";
+@import "vendors/slick/slick";
+@import "vendors/slick/slick-theme";
+@import "vendors/scrollbar/scrollbar";
+
+// Import Components
+@import "partials/components/globals";
+@import "partials/components/typography";
+@import "partials/components/buttons";
+@import "partials/components/header";
+@import "partials/components/header-search";
+@import "partials/components/usermenu";
+@import "partials/components/popover-region";
+@import "partials/components/custom-menu";
+@import "partials/components/navdrawer";
+@import "partials/components/navigation";
+@import "partials/components/page";
+@import "partials/components/page-header";
+@import "partials/components/quicklinks";
+@import "partials/components/fpcontent";
+@import "partials/components/courseitem";
+@import "partials/components/announcements";
+@import "partials/components/blocks";
+@import "partials/components/footer";
+@import "partials/components/forms";
+@import "partials/components/tiles";
+@import "partials/components/logo-carousel";
+@import "partials/components/slider";
+@import "partials/components/coursesearch";
+@import "partials/components/course-management";
+@import "partials/components/card";
+
+// Import custom block styles
+@import "partials/components/blocks/myoverview";
+
+// Import custom modules styles
+@import "partials/components/modules/forum";
+
+@import "partials/components/dirty-fixes";
+
+
+// Import Pages
+@import 'partials/pages/calendar.scss';
+@import 'partials/pages/course.scss';
+@import 'partials/pages/dashboard.scss';
+@import 'partials/pages/frontpage.scss';
+@import 'partials/pages/login.scss';
+@import 'partials/pages/grade-report.scss';
+@import 'partials/pages/category.scss';

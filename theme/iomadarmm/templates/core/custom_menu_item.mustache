@@ -1,0 +1,40 @@
+{{#hasIomadBoostCM}}
+    {{^divider}}
+        {{#haschildren}}
+        <div class="dropdown nav-item">
+            <a class="dropdown-toggle nav-link" id="drop-down-{{uniqid}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">
+                {{{text}}}
+            </a>
+            <div class="dropdown-menu" aria-labelledby="drop-down-{{uniqid}}">
+                {{#children}}
+                    {{^divider}}
+                        <a class="dropdown-item" href="{{{url}}}" {{#title}}title="{{{title}}}"{{/title}}>{{{text}}}</a>
+                    {{/divider}}
+                    {{#divider}}
+                        <div class="dropdown-divider"></div>
+                    {{/divider}}
+                {{/children}}
+            </div>
+        </div>
+        {{/haschildren}}
+        {{^haschildren}}
+        <a class="nav-item nav-link" href="{{{url}}}" {{#title}}title="{{{title}}}"{{/title}}>{{{text}}}</a>
+        {{/haschildren}}
+    {{/divider}}
+{{/hasIomadBoostCM}}
+{{^hasIomadBoostCM}}
+    {{^divider}}
+        <a class="nav-item nav-link" href="{{{url}}}" {{#title}}title="{{{title}}}"{{/title}}>
+            {{#itemicon}}
+                <div class="dropdown-item-icon">
+                    <i class="fas fa-{{{itemicon}}}"></i>
+                </div>
+            {{/itemicon}}
+            {{#itemtext}}
+                <div class="dropdown-item-text">
+                    {{{itemtext}}}
+                </div>
+            {{/itemtext}}
+        </a>
+    {{/divider}}
+{{/hasIomadBoostCM}}

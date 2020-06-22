@@ -1,0 +1,150 @@
+#chat-input-area {
+    padding: 0 !important;
+
+    .generaltable {
+        margin-bottom: 0;
+    }
+}
+
+// IE11 paragraph text on quicklinks
+.ie11 {
+    .quicklink-item {
+        &__content {
+            p {
+                width: 100%;
+            }
+        }
+    }
+}
+
+
+.object-fit{
+    &__cover{      
+        object-fit: cover;      
+
+        
+    }
+}
+
+
+video {
+    width: 100%;
+            position: absolute;
+top: -50%;
+}
+  
+
+// Make user messages full width
+#user-notifications {
+    width: 100%;
+}
+
+// Fix action menu icon colour
+#region-main-settings-menu {
+    .moodle-actionmenu {
+        .dropdown {
+            a {
+                i {
+                    margin-right: 0;
+                    color: $body-color;
+                }
+            }
+        }
+    }
+}
+
+// Fixes the slider
+.carousel {
+    position: relative;
+  }
+  
+  .carousel-inner {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .carousel-item {
+    position: relative;
+    display: none;
+    align-items: center;
+    width: 100%;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .carousel-item.active,
+  .carousel-item-next,
+  .carousel-item-prev {
+    display: block;
+  }
+  
+  .carousel-item-next,
+  .carousel-item-prev {
+    position: absolute;
+    top: 0;
+  }
+
+// ------------------------------------------ \\
+// ie 11 fixes
+// ------------------------------------------ \\
+
+.ie11 {
+    height:auto;
+
+    .row {
+        width: 100%;
+    }
+
+    .htm-footer {
+        &__top {
+            display: flex;
+            width: 100%;
+        }
+    }
+
+    #page-content {
+        div[role="main"] {
+            position: relative;
+        }
+    }
+
+    // Login Page
+    
+
+    .content-wrapper {
+        display: flex;
+        width: 100%;
+
+        #page {
+            width: 100%;
+        }
+    }
+
+    .page-header {
+        &__breadcrumbs {
+            .breadcrumb-button {
+                
+            }
+        }
+    }
+
+    .usermenu {
+        .dropdown-menu {
+            z-index: 5100;
+        }
+    }
+}
+
+// ------------------------------------------ \\
+// Calendar page
+// ------------------------------------------ \\
+
+#page-calendar-view {
+    #region-main-box {
+        display: flex;
+        flex-wrap: wrap;
+    }
+}
+
+// ------------------------------------------ \\

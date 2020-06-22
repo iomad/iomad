@@ -1,0 +1,80 @@
+/*****************************************/
+/* Globals */
+/*****************************************/
+
+html {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    color: $gray;
+    background-image: $sitebackground;
+    background-size: $sitebackground-size;
+    background-repeat: $sitebackground-repeat;
+    background-position: $sitebackground-position;
+    background-attachment: $sitebackground-fixed;
+    background-color: #fff;
+}
+
+:target {
+    padding-top: 80px !important;
+    margin-top: 0 !important;
+}
+
+.yui-skin-sam .yui-layout.path-mod-chat-gui_ajax {
+    background-color: #f5f5f5;
+}
+
+body.pagelayout-embedded,
+body.pagelayout-popup {
+    background-image: none;
+}
+
+.pagelayout-embedded #page {
+    margin: 0 auto;
+}
+
+.breadcrumb-button.nonavbar {
+    margin-top: 10px;
+}
+
+/**
+ * User picture.
+ */
+.userpicture {
+    border-radius: 50%;
+}
+
+// ---------------------------------------------- \\
+// Wrappers
+// ---------------------------------------------- \\
+
+.wrapper {
+    padding: 110px 0;
+    margin-left: 0;
+    @include media-breakpoint-up(md) {
+        //margin-left: 60px;
+    }
+    &--white {
+        background-color: #fff;
+    }
+
+    &--gray-dark {
+        background-color: $arm-gray-darkest;
+    }
+}
+
+// ---------------------------------------------- \\
+// Container
+// ---------------------------------------------- \\
+
+.container {
+    @media (min-width: 1800px) {
+        max-width: 1640px;
+    }
+}
+
+// ---------------------------------------------- \\

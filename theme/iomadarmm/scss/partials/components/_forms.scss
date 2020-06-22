@@ -1,0 +1,17 @@
+/**
+ * Form styles.
+ */
+
+.form-group {
+    margin-top: ($spacer/2);
+}
+
+.form-inline .form-group {
+    margin-top: 0;
+}
+
+.form-autocomplete-selection {
+    & + input.form-control {
+        min-width: 235px;
+    }
+}

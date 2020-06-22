@@ -1,0 +1,167 @@
+// ---------------------------------------------- \\
+// Course List - Home
+// ---------------------------------------------- \\
+
+.courses {
+    margin-left: -15px;
+    margin-right: -15px;
+    @extend .d-flex; /* stylelint-disable-line */
+    @extend .flex-row; /* stylelint-disable-line */
+    @extend .flex-wrap; /* stylelint-disable-line */
+
+    .paging-morelink {
+        width: 100%;
+    }
+}
+
+.course-item {
+    margin: 15px 0;
+
+    &__inner {
+        position: relative;
+        height: 100%;
+
+        &__image {
+            margin-bottom: 0;
+
+            img {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        &__content {
+            padding: 0 30px;
+            
+            @include media-breakpoint-up(lg) {
+                padding: 0 100px;
+            }
+
+            h4 {
+                margin-top: 40px;
+                @include font-size(28px);
+
+                &:after {
+                    display: block;
+                    width: 100px;
+                    height: 3px;
+                    margin: 20px 0 0 0;
+                    background-color: $arm-blue;
+                    content: '';
+                }
+            }
+
+            p {
+                font-size: 14px;
+                line-height: 22px;
+            }
+
+            .no-overflow {
+                margin: 15px 0;
+                overflow: unset;
+            }
+            .course-btn-wrapper {
+
+                a.btn {
+                    display: inline-flex;
+                    align-items: center;
+                    margin-top: 20px;
+                    font-weight: bold;
+                    text-align: left;
+                    color: #fff;
+                    background: $arm-blue;
+                    border: none;
+                    border-radius: 50px;
+            
+                    @include transition(all, 0.15s, ease-in-out); /* stylelint-disable-line */
+  
+                    &:hover {
+                        color: #fff;
+                        background-color: $theme-brand-primary;
+                    }
+                }
+            }
+        }
+    }
+}
+/*
+// Activities
+
+.section.main {
+    margin: 0;
+    padding: 0;
+
+    .summary {
+        margin-bottom: 30px;
+        margin-left: 0;
+
+        h3 {
+            margin-bottom: 25px;
+        }
+    }
+
+    ul.section {
+        margin: 0;
+        padding: 0;
+
+        .label {
+            .mod-indent-outer {
+                padding-left: 0;
+            }
+        }
+
+        li.activity {
+            margin-bottom: 30px;
+
+            > div {
+                padding: 0;
+
+                .mod-indent-outer {
+                    margin: auto;
+                }
+            }
+
+            // No tiles
+            &.no-tiles {
+
+            }
+
+            // Has Tiles
+            &.has-tiles {
+                clear: none;
+
+                .activityinstance {
+                    text-align: center;
+
+                    .activity-icon {
+                        display: block;
+                        position: relative;
+                        width: 84px;
+                        height: 84px;
+                        margin: auto auto 20px auto;
+                        background-color: $brand-primary;
+                        border-radius: 50%;
+
+                        img {
+                            @include centraliser;
+
+                            width: 40px;
+                            max-width: 48px;
+                            height: auto;
+                            max-height: 48px;
+                            margin: auto;
+                        }
+                    }
+                }
+
+                &.label {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}
+*/
+
+// ---------------------------------------------- \\

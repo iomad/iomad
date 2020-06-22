@@ -1,0 +1,124 @@
+// ------------------------------------------ \\
+// Custom Menu
+// ------------------------------------------ \\
+
+.htm-header__nav__menu {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .custom-menu {
+        display: none;
+
+        @include media-breakpoint-up(lg) {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    a {
+        margin-left: 15px;
+        padding: 10px 14px;
+        color: #fff;
+        font-weight: 600;
+        text-transform: uppercase;
+
+        @include font-size(14px);
+
+        &:hover {
+            color: #95bcc8;
+        }
+    }
+}
+
+// ------------------------------------------ \\
+/* Breadcrumbs */
+// ------------------------------------------ \\
+
+#page-navbar {
+    display: flex;
+    flex-direction: row;
+
+    .breadcrumb-button {
+        margin-left: auto;
+    }
+
+}
+
+
+
+.breadcrumb-item {
+    width: 100%;
+    @include media-breakpoint-up(sm) {
+        width: auto;
+    }
+}
+
+// ------------------------------------------ \\
+/* Dropdown menus */
+// ------------------------------------------ \\
+
+.open > {
+    .dropdown-menu {
+        @extend .d-flex;
+        @extend .flex-row;
+        @extend .flex-wrap;
+    }
+}
+.dropdown-menu {
+    font-size: 14px;
+    background-color: #fff;
+    border-radius: 0;
+    border: none !important;
+    box-shadow: 0px 10px 28px 0px rgba(0,0,0,0.1);
+
+    .dropdown-item {
+        margin-left: 0;
+        color: #333;
+        text-transform: uppercase;
+        border: none;
+
+        &:last-child {
+            border-bottom: 0;
+        }
+        a {
+            color: $body-color;
+            padding: 8px 15px;
+
+            &:hover {
+                //color: $theme-brand-primary;
+                color: #95bcc8;
+                background-color: #f8f9fa;;
+            }
+        }
+    }
+    .dropdown-item-icon {
+        width: 25px;
+        float: left;
+    }
+    .dropdown-item-text {
+        width: calc(100% - 25px);
+    }
+    .dropdown-divider {
+        display: none;
+    }
+}
+
+.context-header-settings-menu {
+    .action-menu {
+        white-space: initial;
+    }
+    .dropdown-menu {
+        width: 260px;
+        .dropdown-item {
+            white-space: inherit;
+            padding: 0;
+        }
+    }
+}
+
+.dropdown-item-text {
+    display: inline-block;
+}

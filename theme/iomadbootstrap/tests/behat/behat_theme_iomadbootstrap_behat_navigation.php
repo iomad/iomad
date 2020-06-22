@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Navigation step definition overrides for the Iomad Bootstrap theme.
+ * Navigation step definition overrides for the IomadBootstrap theme.
  *
  * @package    theme_iomadbootstrap
  * @category   test
@@ -31,7 +31,7 @@ use Behat\Mink\Exception\ExpectationException as ExpectationException;
 use Behat\Mink\Exception\ElementNotFoundException as ElementNotFoundException;
 
 /**
- * Step definitions and overrides to navigate through the navigation tree nodes in the Iomad Bootstrap theme.
+ * Step definitions and overrides to navigate through the navigation tree nodes in the IomadBootstrap theme.
  *
  * @package    theme_iomadbootstrap
  * @category   test
@@ -217,7 +217,7 @@ class behat_theme_iomadbootstrap_behat_navigation extends behat_navigation {
         $menuxpath = "//section[contains(@class,'block_settings')]//div[@id='settingsnav']/ul[1]/li[1]";
 
         if ($mustexist) {
-            $exception = new ElementNotFoundException($this->getSession(), 'Page administration menu is not found');
+            $exception = new ElementNotFoundException($this->getSession(), 'Page administration menu');
             $this->find('xpath', $menuxpath, $exception);
 
         } else if (!$this->getSession()->getPage()->find('xpath', $menuxpath)) {

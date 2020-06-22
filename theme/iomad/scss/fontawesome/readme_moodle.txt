@@ -1,0 +1,6 @@
+Description of Font awesome import into Moodle
+
+Font awesome comes in 3 parts relating to Moodle.
+
+1. The font. Put the woff font in lib/fonts_core/fontawesome-webfont.woff. Update lib/thirdpartylibs.xml.
+2. SCSS. Replace the SCSS in this folder (/theme/iomad/scss/fontawesome). Update theme/iomad/thirdpartylibs.xml.

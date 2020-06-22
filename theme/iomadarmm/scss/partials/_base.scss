@@ -1,0 +1,263 @@
+/*****************************************/
+/* BASE */
+/*****************************************/
+
+//Theme settings vars
+$theme-sitewidth:               1140px !default;
+
+$theme-brand-primary:           #FFC700 !default; 
+$theme-brand-primary-dark:      darken($theme-brand-primary, 10) !default;
+
+$theme-brand-secondary:           #5490a3 !default; 
+$theme-brand-secondary-dark: darken($theme-brand-secondary, 10) !default;
+
+$theme-text-color:              #373a3c !default;
+
+$theme-link-color:              $theme-brand-primary !default;
+$theme-link-hover-color:        darken($theme-link-color, 10) !default;
+
+$theme-link-colour:              $theme-brand-primary !default;
+$theme-link-colour-hover:        darken($theme-link-color, 10) !default;
+
+$theme-content-background-color: #fff !default;
+$theme-page-background-color:   #f5f5f5 !default;
+
+$theme-footer-text-color: #fff !default;
+$theme-footer-link-color: #fff !default;
+$theme-footer-link-hover-color: #f5f5f5 !default;
+
+$theme-logo-carousel-logo-height: 95px !default;
+
+$theme-slider-height: 300px !default;
+
+$theme-quicklink-type: 'cover';
+$theme-quicklink-image-height: 94px;
+$theme-quicklink-image-width: 94px;
+
+$sitebackground:            none !default;
+$sitebackground-size:       100% !default;
+$sitebackground-repeat:     no-repeat !default;
+$sitebackground-position:   center center !default;
+$sitebackground-fixed:      fixed !default;
+
+$loginbackground: none !default;
+
+$sitebackground-image: none !default;
+$theme-sitebackground-image-size: 100% !default;
+$theme-sitebackground-image-repeat: none !default;
+$theme-sitebackground-image-position: left bottom !default;
+$theme-sitebackground-image-attachment: scroll !default;
+
+
+
+
+$footer-bgcolor:            #fff !default;
+
+
+// Colors
+$gray-dark:                 #1f1f1f !default;
+$gray:                      #333E48 !default;
+$gray-light:                #818a91 !default;
+$gray-lighter:              #eceeef !default;
+$gray-lightest:             #f7f7f9 !default;
+
+//Theme colours
+$brand-primary:             $theme-brand-primary !default;
+$brand-primary-dark:        $theme-brand-primary-dark !default;
+
+$arm-green:                 #95D600;
+$arm-blue:                  #00C1DE;
+$arm-blue-dark:             #0091BD;
+$arm-orange:                #F36C21;
+
+$arm-gray-darkest:         #333E48;
+$arm-gray-dark:            #46535F;
+$arm-gray:                 #7D868C;
+$arm-gray-light:           #E5ECEB;
+
+$brand-success:             #77b300 !default;
+$brand-warning:             #f80 !default;
+$brand-danger:              #ff4136 !default;
+$brand-inverse:             $gray-dark !default;
+$navbar-height:             60px !default;
+
+// Links
+//
+// Style anchor elements.
+
+$link-color:            $arm-blue !default;
+$link-decoration:       none !default;
+$link-hover-color:      $theme-link-hover-color !default;
+$link-hover-decoration: none !default;
+
+// Spacing
+$spacer:   1rem !default;
+$spacer-x: $spacer !default;
+$spacer-y: $spacer !default;
+$border-width: 1px !default;
+
+// Body
+$body-bg:    #f4f4f4 !default;
+$body-color: #3a3a3a !default;
+
+// Typography
+$font-family-sans-serif: 'Lato', sans-serif;
+$font-size-root: 0.8rem !default;
+$theme-site-font: $font-family-sans-serif;
+$theme-site-font-size: $font-size-root;
+
+// Tables
+$table-bg:                      transparent !default;
+$table-bg-accent:               #fafafa !default;
+$table-bg-hover:                lighten($brand-primary, 55%) !default;
+$table-bg-active:               $table-bg-hover !default;
+$table-border-color:            #f4f4f4 !default;
+
+// Dropdowns
+$dropdown-border-color:          #e2e2e2 !default;
+$dropdown-link-color:            rgba(0, 0, 0, .535) !default;
+
+// Navbar
+$navbar-light-color:                rgba(0, 0, 0, .535) !default;
+$navbar-light-hover-color:          $brand-primary !default;
+$navbar-light-active-color:         $brand-primary !default;
+
+// Cards
+
+$card-border-radius:       0 !default;
+$card-border-color:        rgba(238, 238, 238, 1) !default;
+
+$border-radius:             2px !default;
+
+// Cards
+$card-spacer-x:            15px !default;
+$card-spacer-y:            20px !default;
+$card-border-width:        0 !default;
+$card-border-radius:       $border-radius !default;
+$card-border-color:        rgba(238, 238, 238, 1) !default;
+$card-border-radius-inner: $card-border-radius !default;
+$card-cap-bg:              #f5f5f5 !default;
+$card-bg:                  #fff !default;
+
+$card-link-hover-color:    #fff !default;
+
+$card-img-overlay-padding: 1.25rem !default;
+
+$card-deck-margin:         .625rem !default;
+
+$card-columns-sm-up-column-gap: 1.25rem !default;
+
+// Breadcrumbs
+$breadcrumb-bg:                 transparent !default;
+$breadcrumb-padding-x:          0 !default;
+$breadcrumb-divider: "/" !default;
+$breadcrumb-divider-rtl: "/" !default;
+
+// Pagination
+
+$pagination-padding-x:                .75rem !default;
+$pagination-padding-y:                .5rem !default;
+$pagination-padding-x-sm:             .75rem !default;
+$pagination-padding-y-sm:             .275rem !default;
+$pagination-padding-x-lg:             1.5rem !default;
+$pagination-padding-y-lg:             .75rem !default;
+
+
+$pagination-color:                     $link-color !default;
+$pagination-bg:                        #fff !default;
+$pagination-border-width:              $border-width !default;
+$pagination-border-color:              #ddd !default;
+
+$pagination-hover-color:               $link-hover-color !default;
+$pagination-hover-bg:                  $gray-lighter !default;
+$pagination-hover-border:              #ddd !default;
+
+$pagination-active-color:              #fff !default;
+$pagination-active-bg:                 $brand-primary !default;
+$pagination-active-border:             $brand-primary !default;
+
+$pagination-disabled-color:            $gray-light !default;
+$pagination-disabled-bg:               #fff !default;
+$pagination-disabled-border:           #ddd !default;
+
+
+//Slipry vars 
+$color_high: #e24b70 !default;     // highlight colour
+$color_gray: #ccc !default;        // neutral colour
+$controls_size: 2.8em !default;    // size of the next/ prev buttons
+$pager_size: 1.2em !default;       // size of the pager bubbles
+$trans_ease: ease !default;        // easing for the transitions
+$mobile_break: 600px !default;     // breakpoint to use some special mobile styling
+$spinner_url: url([[pix:theme|sy-loader]]) !default;
+$arrows_url: url([[pix:theme|arrows]]) !default;
+
+// Grid breakpoints
+//
+// Define the minimum dimensions at which your layout will change,
+// adapting to different screen sizes, for use in media queries.
+
+$grid-breakpoints: (
+    xs: 0,
+    sm: 544px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px
+) !default;
+
+
+// Grid containers
+//
+// Define the maximum width of `.container` for different screen sizes.
+
+$container-max-widths: (
+  sm: 576px,
+  md: 720px,
+  lg: 940px,
+  xl: $theme-sitewidth
+) !default;
+
+// ********************************************** \\
+// HTM Variables
+// ********************************************** \\
+
+// ---------------------------------------------- \\
+// Header
+// ---------------------------------------------- \\
+
+
+
+// ---------------------------------------------- \\
+// Slider
+// ---------------------------------------------- \\
+
+// Slideshow Wrapper
+$slider-width: 100% !default;
+$slider-height: $theme-slider-height !default;
+$slider-padding: 0;
+$slider-background-colour: #f5f5f5;
+
+// Single slides
+$slide-width: 100% !default;
+$slide-height: 100% !default;
+$slide-button-padding: 15px 25px !default;
+$slide-overlay-color: transparent !default;
+$slide-overlay-opacity: 0.7 !default;
+$slide-title-colour: inherit !default;
+$slide-text-align: center !default;
+$slide-button-text-colour: $brand-primary !default;
+$slide-button-text-transform: uppercase !default;
+$slide-button-text-letter-spacing: 2px !default;
+$slide-button-text-font-weight: 300 !default;
+$slide-button-border: none !default;
+$slide-button-border-radius: 0 !default;
+$slide-button-background-colour: #fff !default;
+$slide-background-position: center center !default;
+$slide-background-size: cover !default;
+
+// ---------------------------------------------- \\
+// Quicklinks
+// ---------------------------------------------- \\
+
+$qlheight: 300px;
+
+// ---------------------------------------------- \\

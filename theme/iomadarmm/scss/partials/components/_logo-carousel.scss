@@ -1,0 +1,57 @@
+// ------------------------------------------ \\
+// Slider Styles
+// ------------------------------------------ \\
+
+.logo-carousel {
+    width: 100%;
+    max-width: 70%;
+    height: $theme-logo-carousel-logo-height;
+    margin: 0 auto;
+
+    .slick-prev,
+    .slick-next {
+        z-index: 2;
+        font-size: 16px;
+        &:before {
+            display: none;
+        }
+    }
+
+    .slick-prev {
+        left: -20px;
+        color: rgba(0, 0, 0, 0.7);
+    }
+
+    .slick-next {
+        right: -20px;
+        color: rgba(0, 0, 0, 0.7);
+        &:before {
+            content: '\f101';
+        }
+    }
+    .slick-track,
+    .slick-list,
+    figure,
+    a {
+        height: inherit;
+    }
+
+    .slick-slide {
+        text-align: center;
+        height: inherit;
+        .logo-img {
+            height: inherit;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+    }
+
+}
+
+// ------------------------------------------ \\
+// Individual slides
+// ------------------------------------------ \\
+
+
+// ------------------------------------------ \\

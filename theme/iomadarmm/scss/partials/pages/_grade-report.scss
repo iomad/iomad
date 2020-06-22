@@ -1,0 +1,11 @@
+#page-grade-report-grader-index {
+    #htm-drawer {
+        width: 0;
+        &:before {
+            width: 0;
+        }
+    }
+    .wrapper {
+        margin-left: 0;
+    }
+}

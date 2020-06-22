@@ -1,0 +1,109 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    Page footer.
+}}
+<footer id="page-footer" class="htm-footer">
+    <div class="htm-footer__top">
+        <div class="container">
+            
+
+            {{#footer}}
+                <h4>{{{social_title}}}</h4>
+            {{/footer}}
+            <ul class="social-links">
+                {{#smurls}}
+                    {{#profiles}}
+                        {{> theme_iomadarmm/sm_icon }}
+                    {{/profiles}}
+                {{/smurls}}
+            </ul>    
+        </div>
+    </div>
+    <div class="htm-footer__main">
+        <div class="container">
+            <!-- Footer Logo Top -->
+            <figure class="footer-logo footer-logo--top">
+                {{#footer}}
+                    <img src="{{{logoTop}}}" alt="Arm School Program">
+                {{/footer}}
+            </figure>
+            <div class="row">
+                <div class="col-md-6 col-lg-3 footer-widget">
+                    {{#footer}}
+                        {{#col_1_title}}
+                            <h4>{{{col_1_title}}}</h4>
+                        {{/col_1_title}}
+                        {{{col_1_text}}}
+                    {{/footer}}
+                </div>
+                <div class="col-md-6 col-lg-3 footer-widget">
+                    {{#footer}}
+                        {{#col_2_title}}
+                            <h4>{{{col_2_title}}}</h4>
+                        {{/col_2_title}}
+                        {{{col_2_text}}}
+                    {{/footer}}
+                </div>
+                <div class="col-md-6 col-lg-3 footer-widget">
+                    {{#footer}}
+                        {{#col_3_title}}
+                            <h4>{{{col_3_title}}}</h4>
+                        {{/col_3_title}}
+                        {{{col_3_text}}}
+                    {{/footer}}
+                </div>
+                <div class="col-md-6 col-lg-3 footer-widget">
+                    {{#footer}}
+                        {{#col_4_title}}
+                            <h4>{{{col_4_title}}}</h4>
+                        {{/col_4_title}}
+                        {{{col_4_text}}}
+                    {{/footer}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="htm-footer__bottom">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    {{#footer}}
+                        {{{bottom_text}}}
+                    {{/footer}}
+                </div>
+            </div>
+            <!-- Footer Bottom Logo -->
+            <figure class="footer-logo footer-logo--bottom">
+                {{#footer}}
+                    <img src="{{{logoBottom}}}" alt="Arm School Program">
+                {{/footer}}
+            </figure>
+            <!-- Footnote -->
+            <div class="footnote">
+                {{#footer}}
+                    {{{footnote}}}
+                {{/footer}}
+            </div>
+            {{# output.page_doc_link }}
+                <p class="helplink">{{{ output.page_doc_link }}}</p>
+            {{/ output.page_doc_link }}
+            {{{ output.standard_footer_html }}}
+            {{{ output.standard_end_of_body_html }}}
+        </div>
+    </div>
+</footer>

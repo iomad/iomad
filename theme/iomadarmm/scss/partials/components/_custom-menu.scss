@@ -1,0 +1,17 @@
+// ------------------------------------------ \\
+// Custom Menu
+// ------------------------------------------ \\
+
+.custom-menu-wrap {
+    position: relative;
+    float: right;
+    border-left: solid 1px #f5f5f5;
+    text-align: right;
+
+    #custom-menu-toggle {
+        padding: 20px 20px 19px;
+        float: left;
+        border: none;
+        background: transparent;
+    }
+}

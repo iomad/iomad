@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $THEME->name = 'iomadbootstrap';
 
-$THEME->sheets = ['iomad'];
+$THEME->sheets = [];
 
 $THEME->layouts = [
     // Most backwards compatible layout without the blocks - this is the layout used by default.
@@ -156,3 +156,4 @@ $THEME->scss = function($theme) {
     return theme_iomadbootstrap_get_main_scss_content($theme);
 };
 $THEME->usefallback = true;
+$THEME->iconsystem = '\\theme_iomadbootstrap\\output\\icon_system_fontawesome';

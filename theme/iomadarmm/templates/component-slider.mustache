@@ -1,0 +1,15 @@
+<div id="fpSlider" class="wrapper carousel {{type}}" data-ride="carousel">
+    
+    {{#showpager}}
+    <ol class="carousel-indicators">
+        {{> theme_iomadarmm/component-slider-pager}}
+    </ol>
+    {{/showpager}}
+    <div class="carousel-inner" role="listbox">
+        {{> theme_iomadarmm/component-slider-slide}}
+    </div>
+    {{#showcontrols}}
+        {{> theme_iomadarmm/component-slider-controls}}
+    {{/showcontrols}}
+    
+</div>

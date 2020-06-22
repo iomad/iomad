@@ -1,0 +1,22 @@
+<div id="htm-drawer" data-region="drawer" class="hidden-print moodle-has-zindex {{#navdraweropen}}open{{/navdraweropen}}" aria-hidden="{{#navdraweropen}}false{{/navdraweropen}}{{^navdraweropen}}true{{/navdraweropen}}" tabindex="-1">
+    <div class="container">
+        <div class="nav-close">
+            <div class="drawer-toggle">
+                <button id="nav-close" aria-expanded="true" type="button" class="btn btn-nav-toggle" style="position: relative;">
+                    <span aria-hidden="true">
+                        <span class="line"></span>
+                    </span>
+                    <span class="sr-only">{{#str}}expand, core{{/str}}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{> theme_iomadarmm/flat_navigation }}
+    <!-- Language form -->
+    {{# output.lang_menu }}
+    <div class="lang-wrapper m-t-1">
+        <span>Language select:</span>
+        {{{ output.lang_menu }}}
+    </div>
+    {{/ output.lang_menu }}
+</div>

@@ -1,0 +1,118 @@
+/*****************************************/
+/* Login page */
+/*****************************************/
+
+body#page-login-index {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+
+    #maincontent {
+        height: 0!important;
+    }
+
+    .login-image-wrapper {
+        flex: 0 0 100%;
+        @include media-breakpoint-up(md) {
+            max-width: 50%;
+        }
+        @include media-breakpoint-up(lg) {
+            max-width: calc(100% - 610px);
+        }
+
+        .login-image {
+            background-image: $loginbackground;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-color: lighten($theme-content-background-color, 10%);
+            height: 100%;
+            .login-logo {
+                display: block;
+                position: relative;
+                top: 130px;
+                margin: 0 auto;
+                padding: 2rem;
+                //margin-top: 130px;
+                width: 100%;
+                max-width: 736px;   
+            }
+        }
+    }
+
+    .login-wrap {
+        width: 100%;
+        @include media-breakpoint-up(md) {
+            max-width: 50%;
+        }
+        @include media-breakpoint-up(lg) {
+            max-width: 610px;
+        }
+        
+
+        .card {
+            min-height: 100vh;
+            padding: 30px;
+            color: #fff;
+            background-color: $arm-gray-dark;
+
+            h2,
+            h3 {
+                color: #fff;
+            }
+        }
+    }
+
+    .htm-footer {
+        margin-top: 100px;
+    }
+
+    // Login Form
+    #login {
+        padding: 0 0 30px 0;
+        
+        border-bottom: solid 3px $theme-brand-primary;
+
+        .form-control {
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        a {
+            color: #fff;
+        }
+
+        .forgetpass {
+            a {
+                text-decoration: underline;
+            }
+        }
+
+        .cookiesenabled {
+            .text-info {
+                color: #fff !important;
+            }
+        }
+
+        .btn {
+            width: 100%;
+
+            @include media-breakpoint-up(md) {
+                width: auto;
+            }
+        }
+    }
+
+    // Guestlogin form
+    #guestlogin {
+        .btn {
+            width: 100%;
+
+            @include media-breakpoint-up(md) {
+                width: auto;
+            }
+        }
+    }
+}

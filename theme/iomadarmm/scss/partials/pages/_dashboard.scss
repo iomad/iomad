@@ -1,0 +1,63 @@
+/*****************************************/
+/* Dashboard */
+/*****************************************/
+#page-my-index {
+    .block-region {
+        min-height: 50px;
+    }
+    &.editing {
+        .block-region {
+            background-color: #dff0d8;
+            border: dashed 1px #d0e9c6;
+            padding: 0 15px;
+        }
+        #region-main {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        #region-side-pre,
+        #region-side-post {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+    }
+    
+
+    #region-main {
+        background-color: transparent;
+        border: 0;
+        padding: 0;
+        margin-top: 0;
+    }
+
+    // Page Header 
+    .page-header {
+        h1 {
+            &:after {
+                display: none;
+            }
+        }
+
+        .page-header__breadcrumbs {
+            border: none;
+        }
+    }
+
+    // content
+    .content-wrapper {
+        padding-top: 0;
+    }
+}
+
+@include media-breakpoint-up(md) { /* stylelint-disable-line */
+    #page-my-index {
+        #region-side-pre {
+            width: calc(50% - 15px);
+            float: left;
+        }
+        #region-side-post {
+            width: calc(50% - 15px);
+            float: left;
+        }
+    }
+}

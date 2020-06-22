@@ -1,0 +1,23 @@
+.frontpage-content {
+    padding-top: 60px;
+    padding-left: 15px;
+    padding-right: 15px;
+    background-color: $arm-gray-darkest;
+
+    h2,
+    p {
+        color: $arm-gray-light;
+        text-align: center;
+    }
+
+    h2 {
+        &:after {
+            display: block;
+            width: 260px;
+            height: 3px;
+            margin: 40px auto;
+            background-color: $arm-green;
+            content: '';
+        }
+    }
+}
