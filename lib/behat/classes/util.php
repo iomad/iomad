@@ -32,8 +32,10 @@ require_once(__DIR__ . '/behat_config_manager.php');
 
 require_once(__DIR__ . '/../../filelib.php');
 require_once(__DIR__ . '/../../clilib.php');
+require_once(__DIR__ . '/../../csslib.php');
 
 use Behat\Mink\Session;
+use Behat\Mink\Exception\ExpectationException;
 
 /**
  * Init/reset utilities for Behat database and dataroot
@@ -128,6 +130,35 @@ class behat_util extends testing_util {
 
         // Stores the database contents for fast reset.
         self::store_database_state();
+    }
+
+    /**
+     * Build theme CSS.
+     */
+    public static function build_themes() {
+        global $CFG;
+        require_once("{$CFG->libdir}/outputlib.php");
+
+        $themenames = array_keys(\core_component::get_plugin_list('theme'));
+
+        // Load the theme configs.
+        $themeconfigs = array_map(function($themename) {
+            return \theme_config::load($themename);
+        }, $themenames);
+
+        // Build the list of themes and cache them in local cache.
+        $themes = theme_build_css_for_themes($themeconfigs, ['ltr'], true);
+
+        $framework = self::get_framework();
+        $storageroot = self::get_dataroot() . "/{$framework}/themedata";
+
+        foreach ($themes as $themename => $themedata) {
+            $dirname = "{$storageroot}/{$themename}";
+            check_dir_exists($dirname);
+            foreach ($themedata as $direction => $css) {
+                file_put_contents("{$dirname}/{$direction}.css", $css);
+            }
+        }
     }
 
     /**
@@ -375,6 +406,37 @@ class behat_util extends testing_util {
         // Initialise $CFG with default values. This is needed for behat cli process, so we don't have modified
         // $CFG values from the old run. @see set_config.
         initialise_cfg();
+    }
+
+    /**
+     * Restore theme CSS stored during behat setup.
+     */
+    public static function restore_saved_themes() {
+        global $CFG;
+
+        $themerev = theme_get_revision();
+
+        $framework = self::get_framework();
+        $storageroot = self::get_dataroot() . "/{$framework}/themedata";
+        $themenames = array_keys(\core_component::get_plugin_list('theme'));
+        $directions = ['ltr', 'rtl'];
+
+        $themeconfigs = array_map(function($themename) {
+            return \theme_config::load($themename);
+        }, $themenames);
+
+        foreach ($themeconfigs as $themeconfig) {
+            $themename = $themeconfig->name;
+            $themesubrev = theme_get_sub_revision_for_theme($themename);
+
+            $dirname = "{$storageroot}/{$themename}";
+            foreach ($directions as $direction) {
+                $cssfile = "{$dirname}/{$direction}.css";
+                if (file_exists($cssfile)) {
+                    $themeconfig->set_css_content_cache(file_get_contents($cssfile));
+                }
+            }
+        }
     }
 
     /**
