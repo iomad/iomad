@@ -9,6 +9,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="shortname" TYPE="char" LENGTH="25" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" COMMENT="to be use to tie companies together with external systems"/>
         <FIELD NAME="city" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="country" TYPE="char" LENGTH="2" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="maildisplay" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="2" SEQUENCE="false"/>
