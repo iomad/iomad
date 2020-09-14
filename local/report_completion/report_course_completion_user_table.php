@@ -251,4 +251,14 @@ class local_report_course_completion_user_table extends table_sql {
                     "'>$row->licensename</a>";
         }
     }
+
+    /**
+     * Parse the coursename column in case of multilang filter.
+     * @param object $row the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_coursename($row) {
+
+        return format_string($row->coursename, true, 1);
+    }
 }

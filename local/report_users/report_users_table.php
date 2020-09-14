@@ -151,5 +151,4 @@ class local_report_users_table extends table_sql {
             return;
         }
     }
-
 }
