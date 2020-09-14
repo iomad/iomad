@@ -30,7 +30,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['language'] = 'भाषा';
-$string['moodlelogo'] = 'Moodle लोगो';
-$string['next'] = 'अगला';
-$string['reload'] = 'सीमा से अधिक लादना';
+$string['language'] = 'زبان';
+$string['moodlelogo'] = 'لوگوی مودل (Moodle)';
+$string['next'] = 'بعدی';
+$string['previous'] = 'قبلی';
+$string['reload'] = 'بارگیری مجدد';
