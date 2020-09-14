@@ -1025,7 +1025,7 @@ class EmailTemplate {
             $replacement = "{" . $funcname . "}";
 
             if (stripos($templatestring, $replacement) !== false) {
-                $val = $vars->$funcname;
+                $val = format_string($vars->$funcname);
 
                 $templatestring = str_replace($replacement, $val, $templatestring);
             }
