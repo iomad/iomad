@@ -264,11 +264,11 @@ class EmailTemplate {
             $email = new stdClass;
             $email->templatename = $this->templatename;
             $email->modifiedtime = time();
-            $email->subject = format_string($this->subject(), true, 1);
+            $email->subject = $this->subject();
             if (!empty($this->template->signature)) {
-                $email->body = format_string($this->body() . get_string('signatureseparator', 'local_email') . $this->signature(), true, 1);
+                $email->body = $this->body() . get_string('signatureseparator', 'local_email') . $this->signature();
             } else {
-                $email->body = format_string($this->body(), true, 1);
+                $email->body = $this->body();
                 $this->template->signature = '';
             }
             $email->varsreplaced = 1;
@@ -480,9 +480,9 @@ class EmailTemplate {
             // Send the main email.
             if (!self::email_direct($user->email,
                                $supportuser,
-                               format_string($email->subject, true, 1),
-                               html_to_text(format_string($email->body, true, 1)),
-                               format_string($email->body, true, 1),
+                               $email->subject,
+                               html_to_text($email->body),
+                               $email->body,
                                $attachment)) {
                 return false;
             }
@@ -493,9 +493,9 @@ class EmailTemplate {
                     if ($touser = $DB->get_record('user', array('id' => $touserid, 'deleted' => 0, 'suspended' => 0))) {
                         if (!self::email_direct($touser->email,
                                            $supportuser,
-                                           format_string($email->subject, true, 1),
-                                           html_to_text(format_string($email->body, true, 1)),
-                                           format_string($email->body, true, 1),
+                                           $email->subject,
+                                           html_to_text($email->body),
+                                           $email->body,
                                            $attachment)) {
                             return false;
                         }
@@ -510,9 +510,9 @@ class EmailTemplate {
                     if ($ccuser = $DB->get_record('user', array('id' => $ccuserid, 'deleted' => 0, 'suspended' => 0))) {
                         if (!self::email_direct($ccuser->email,
                                            $supportuser,
-                                           format_string($email->subject, true, 1),
-                                           html_to_text(format_string($email->body, true, 1)),
-                                           format_string($email->body, true, 1),
+                                           $email->subject,
+                                           html_to_text($email->body),
+                                           $email->body,
                                            $attachment)) {
                             return false;
                         }
@@ -527,9 +527,9 @@ class EmailTemplate {
                     if (validate_email($toother)) {
                         if (!self::email_direct($toother,
                                                 $supportuser,
-                                                format_string($email->subject, true, 1),
-                                                html_to_text(format_string($email->body, true, 1)),
-                                                format_string($email->body, true, 1),
+                                                $email->subject,
+                                                html_to_text($email->body),
+                                                $email->body,
                                                 $attachment)) {
                             return false;
                         }
@@ -544,9 +544,9 @@ class EmailTemplate {
                     if (validate_email($ccother)) {
                         if (!self::email_direct($ccother,
                                                 $supportuser,
-                                                format_string($email->subject, true, 1),
-                                                html_to_text(format_string($email->body, true, 1)),
-                                                format_string($email->body, true, 1),
+                                                $email->subject,
+                                                html_to_text($email->body),
+                                                $email->body,
                                                 $attachment)) {
                             return false;
                         }
@@ -564,9 +564,9 @@ class EmailTemplate {
                             if ($managerrec = $DB->get_record('user', array('deleted' => 0, 'suspended' => 0, 'id' => $manager->userid))) {
                                 if (!self::email_direct($managerrec->email,
                                                         $supportuser,
-                                                        format_string($email->subject, true, 1),
-                                                        html_to_text(format_string($email->body, true, 1)),
-                                                        format_string($email->body, true, 1),
+                                                        $email->subject,
+                                                        html_to_text($email->body),
+                                                        $email->body,
                                                         $attachment)) {
                                     return false;
                                 }
@@ -583,9 +583,9 @@ class EmailTemplate {
                         foreach ($supervisors as $supervisor) {
                             if (!self::email_direct($supervisor,
                                                     $supportuser,
-                                                    format_string($email->subject, true, 1),
-                                                    html_to_text(format_string($email->body, true, 1)),
-                                                    format_string($email->body, true, 1),
+                                                    $email->subject,
+                                                    html_to_text($email->body),
+                                                    $email->body,
                                                     $attachment)) {
                                 return false;
                             }
@@ -703,15 +703,15 @@ class EmailTemplate {
         if (empty($this->attachment)) {
             self::email_direct($user->email,
                                $supportuser,
-                               format_string($email->subject, true, 1),
-                               html_to_text(format_string($email->body, true, 1)),
-                               format_string($email->body, true, 1));
+                               $email->subject,
+                               html_to_text($email->body),
+                               $email->body);
         } else {
             self::email_direct($user->email,
                                 $supportuser,
-                                format_string($email->subject, true, 1),
-                                html_to_text(format_string($email->body, true, 1)),
-                                format_string($email->body, true, 1),
+                                $email->subject,
+                                html_to_text($email->body),
+                                $email->body
                                 $this->attachment);
         }
 
@@ -732,8 +732,8 @@ class EmailTemplate {
         }
 
         $supportuser = new stdclass();
-        $subject = format_string($this->subject(), true, 1);
-        $body = format_string($this->body(), true, 1);
+        $subject = $this->subject();
+        $body = $this->body();
         if (isset($this->sender->id)) {
             $supportuser = self::get_user($this->sender->id);
         } else {
