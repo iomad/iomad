@@ -84,7 +84,7 @@ function quiz_add_instance($quiz) {
     $cmid = $quiz->coursemodule;
 
     // Process the options from the form.
-    $quiz->created = time();
+    $quiz->timecreated = time();
     $result = quiz_process_options($quiz);
     if ($result && is_string($result)) {
         return $result;
@@ -562,7 +562,7 @@ function quiz_user_complete($course, $user, $mod, $quiz) {
                     echo get_string('hidden', 'grades');
                 }
             }
-            echo ' - '.userdate($attempt->timemodified).'<br />';
+            echo ' - '.userdate($attempt->timefinish).'<br />';
         }
     } else {
         print_string('noattempts', 'quiz');
