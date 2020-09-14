@@ -709,7 +709,7 @@ class EmailTemplate {
                                 $supportuser,
                                 $email->subject,
                                 html_to_text($email->body),
-                                $email->body
+                                $email->body,
                                 $this->attachment);
         }
 
