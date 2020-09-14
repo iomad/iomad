@@ -2194,8 +2194,11 @@ function xmldb_main_upgrade($oldversion) {
             $DB->delete_records('competency_userevidencecomp', ['userevidenceid' => $userevidence->id]);
             $DB->delete_records('competency_userevidence', ['id' => $userevidence->id]);
 
-            $context = context_user::instance($userevidence->userid);
-            $fs->delete_area_files($context->id, 'core_competency', 'userevidence', $userevidence->id);
+            if ($record = $DB->get_record('context', ['contextlevel' => CONTEXT_USER, 'instanceid' => $userevidence->userid],
+                    '*', IGNORE_MISSING)) {
+                // Delete all orphaned user evidences files.
+                $fs->delete_area_files($record->id, 'core_competency', 'userevidence', $userevidence->userid);
+            }
         }
 
         $sql = "SELECT cp.id
@@ -2484,6 +2487,106 @@ function xmldb_main_upgrade($oldversion) {
         }
 
         upgrade_main_savepoint(true, 2020061500.02);
+    }
+
+    if ($oldversion < 2020061501.01) {
+        // Clean up completion criteria records referring to NULL course prerequisites.
+        $select = 'criteriatype = :type AND courseinstance IS NULL';
+        $params = ['type' => 8]; // COMPLETION_CRITERIA_TYPE_COURSE.
+
+        $DB->delete_records_select('course_completion_criteria', $select, $params);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2020061501.01);
+    }
+
+    if ($oldversion < 2020061501.04) {
+        // Restore and set the guest user if it has been previously removed via GDPR, or set to an nonexistent
+        // user account.
+        $currentguestuser = $DB->get_record('user', array('id' => $CFG->siteguest));
+
+        if (!$currentguestuser) {
+            if (!$guest = $DB->get_record('user', array('username' => 'guest', 'mnethostid' => $CFG->mnet_localhost_id))) {
+                // Create a guest user account.
+                $guest = new stdClass();
+                $guest->auth        = 'manual';
+                $guest->username    = 'guest';
+                $guest->password    = hash_internal_user_password('guest');
+                $guest->firstname   = get_string('guestuser');
+                $guest->lastname    = ' ';
+                $guest->email       = 'root@localhost';
+                $guest->description = get_string('guestuserinfo');
+                $guest->mnethostid  = $CFG->mnet_localhost_id;
+                $guest->confirmed   = 1;
+                $guest->lang        = $CFG->lang;
+                $guest->timemodified= time();
+                $guest->id = $DB->insert_record('user', $guest);
+            }
+            // Set the guest user.
+            set_config('siteguest', $guest->id);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2020061501.04);
+    }
+
+    if ($oldversion < 2020061501.09) {
+        // Delete all user evidence files from users that have been deleted.
+        $sql = "SELECT DISTINCT f.*
+                  FROM {files} f
+             LEFT JOIN {context} c ON f.contextid = c.id
+                 WHERE f.component = :component
+                   AND f.filearea = :filearea
+                   AND c.id IS NULL";
+        $stalefiles = $DB->get_records_sql($sql, ['component' => 'core_competency', 'filearea' => 'userevidence']);
+
+        $fs = get_file_storage();
+        foreach ($stalefiles as $stalefile) {
+            $fs->get_file_instance($stalefile)->delete();
+        }
+
+        upgrade_main_savepoint(true, 2020061501.09);
+    }
+
+    if ($oldversion < 2020061501.11) {
+
+        // Define field metadatasettings to be added to h5p_libraries.
+        $table = new xmldb_table('h5p_libraries');
+        $field = new xmldb_field('metadatasettings', XMLDB_TYPE_TEXT, null, null, null, null, null, 'coreminor');
+
+        // Conditionally launch add field metadatasettings.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Get installed library files that have no metadata settings value.
+        $params = [
+            'component' => 'core_h5p',
+            'filearea' => 'libraries',
+            'filename' => 'library.json',
+        ];
+        $sql = "SELECT l.id, f.id as fileid
+                  FROM {files} f
+             LEFT JOIN {h5p_libraries} l ON f.itemid = l.id
+                 WHERE f.component = :component
+                       AND f.filearea = :filearea
+                       AND f.filename = :filename";
+        $libraries = $DB->get_records_sql($sql, $params);
+
+        // Update metadatasettings field when the attribute is present in the library.json file.
+        $fs = get_file_storage();
+        foreach ($libraries as $library) {
+            $jsonfile = $fs->get_file_by_id($library->fileid);
+            $jsoncontent = json_decode($jsonfile->get_content());
+            if (isset($jsoncontent->metadataSettings)) {
+                unset($library->fileid);
+                $library->metadatasettings = json_encode($jsoncontent->metadataSettings);
+                $DB->update_record('h5p_libraries', $library);
+            }
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2020061501.11);
     }
 
     return true;
