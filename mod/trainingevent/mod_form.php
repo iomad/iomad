@@ -81,6 +81,11 @@ class mod_trainingevent_mod_form extends moodleform_mod {
                         get_string('both', 'trainingevent'),
                         get_string('enrolonly', 'trainingevent'));
         $mform->addElement('select', 'approvaltype', get_string('approvaltype', 'trainingevent'), $choices);
+        
+
+        $mform->addElement('text', 'coursecapacity', get_string('coursecapacity', 'trainingevent'), '');
+        $mform->setType('coursecapacity', PARAM_INT);
+        $mform->addHelpButton('coursecapacity', 'coursecapacity', 'trainingevent');
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();
@@ -123,6 +128,12 @@ class mod_trainingevent_mod_form extends moodleform_mod {
                                                       AND enddatetime < ".$data['enddatetime'])) {
             $errors['classroomid'] = get_string('chosenclassroomunavailable', 'trainingevent');
         }
+
+
+        if ($data['coursecapacity'] < 1) {
+            $errors['coursecapacity'] = get_string('coursecapacity_error', 'trainingevent');
+        }
+
         return $errors;
     }
 }

@@ -79,6 +79,13 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                                          AND module = ( SELECT id FROM {modules}
                                            WHERE name = 'trainingevent')", array('eventid' => $event->id));
 
+        if ($event->coursecapacity) {
+            $maxcapacity = $event->coursecapacity;
+        }
+        else {
+            $maxcapacity = $location->capacity;
+        }
+
         // What is the users approval level, if any?
         if ($manageruser = $DB->get_record('company_users', array('userid' => $USER->id))) {
             if ($manageruser->managertype == 2) {
@@ -243,7 +250,15 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                 $alreadyattending = $DB->count_records('trainingevent_users', array('trainingeventid' => $chosenevent->id));
                 $user = $DB->get_record('user', array('id' => $userid));
                 $course = $DB->get_record('course', array('id' => $event->course));
-                if ($alreadyattending < $chosenlocation->capacity) {
+
+                if ($event->coursecapacity) {
+                    $chosen_maxcapacity = $event->coursecapacity;
+                }
+                else {
+                    $chosen_maxcapacity = $chosenlocation->capacity;
+                }
+                
+                if ($alreadyattending < $chosen_maxcapacity) {
                     // What kind of event is this?
                     if ($chosenevent->approvaltype == 0 || $chosenevent->approvaltype == 4 || $myapprovallevel == "company" ||
                         ($chosenevent->approvaltype == 1 && $myapprovallevel == "department")) {
@@ -387,7 +402,8 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
             $alreadyattending = $DB->count_records('trainingevent_users', array('trainingeventid' => $event->id));
             $user = $DB->get_record('user', array('id' => $userid));
             $course = $DB->get_record('course', array('id' => $event->course));
-            if ($alreadyattending < $chosenlocation->capacity) {
+
+            if ($alreadyattending < $maxcapacity) {
                 // What kind of event is this?
                 if ($event->approvaltype == 0 || $event->approvaltype == 4 || $myapprovallevel == "company" ||
                     ($event->approvaltype == 1 && $myapprovallevel == "department")) {
@@ -544,7 +560,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
             $eventtable .= "<td>".$OUTPUT->single_button("$CFG->wwwroot/mod/trainingevent/view.php?id=$id&view=1",
                                                          get_string('viewattendees', 'trainingevent'))."</td>";
         }
-        if (has_capability('mod/trainingevent:add', $context) && $numattending < $location->capacity
+        if (has_capability('mod/trainingevent:add', $context) && $numattending < $maxcapacity
                             && time() < $event->startdatetime) {
             $eventtable .= "<td>".$OUTPUT->single_button(new moodle_url("/mod/trainingevent/searchusers.php",
                                                                         array('eventid' => $event->id)),
@@ -566,7 +582,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
         $eventtable .= "<tr><th>" . get_string('enddatetime', 'trainingevent') . "</th><td>" .
                         date($dateformat, $event->enddatetime) . "</td></tr>";
         $eventtable .= "<tr><th>" . get_string('capacity', 'trainingevent') . "</th><td>" .
-                        $attendancecount .get_string('of', 'trainingevent') . $location->capacity . "</td></tr>";
+                        $attendancecount .get_string('of', 'trainingevent') . $maxcapacity . "</td></tr>";
         $eventtable .= "</table>";
         $eventtable .= "<div>$event->intro</div>";
 
@@ -591,7 +607,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                     echo get_string('eventhaspassed', 'trainingevent');
                 }
             } else {
-                if ($numattending < $location->capacity) {
+                if ($numattending < $maxcapacity) {
                     if (time() < $event->startdatetime) {
                         if (!trainingevent_event_clashes($event, $USER->id)) {
                             if ($event->approvaltype == 0) {

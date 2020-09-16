@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/trainingevent/db" VERSION="20140123" COMMENT="XMLDB file for Moodle mod/trainingevent"
+<XMLDB PATH="mod/trainingevent/db" VERSION="20200916" COMMENT="XMLDB file for Moodle mod/trainingevent"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -16,6 +16,7 @@
         <FIELD NAME="enddatetime" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="classroomid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="approvaltype" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Sets what type of approval is required for accessing the training event."/>
+        <FIELD NAME="coursecapacity" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Used to override room capacity if a room can't fit the same number of users as usual for this trainingevent"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
