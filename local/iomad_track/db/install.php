@@ -169,44 +169,50 @@ function xmldb_local_iomad_track_record_certificates($courseid, $userid, $tracki
         return false;
     }
 
-    // Get the track info if there is one.
-    $trackinfo = $DB->get_record('local_iomad_track', array('id' => $trackid));
+    // Get the track info if the user has met the course completion criteria. 'timecompleted' will be populated when this happens.
+    $trackinfo = $DB->get_record_sql("SELECT * FROM {local_iomad_track} WHERE id = $trackid AND timecompleted IS NOT NULL LIMIT 1");
 
-    // Iterate over to find certs for given user
-    foreach ($certificates as $certificate) {
+	if($trackinfo){
+	    // Iterate over to find certs for given user
+	    foreach ($certificates as $certificate) {
 
-        // $cm contains checks for conditional activities et al
-        $cm = get_coursemodule_from_instance(CERTIFICATE, $certificate->id, $courseid);
-        $modinfo = new course_modinfo($course, $userid);
-        $cm = $modinfo->get_cm($cm->id);
+		// $cm contains checks for conditional activities et al
+		$cm = get_coursemodule_from_instance(CERTIFICATE, $certificate->id, $courseid);
+		$modinfo = new course_modinfo($course, $userid);
+		$cm = $modinfo->get_cm($cm->id);
 
-        // Find certificate issue record or create it (in cert lib.php)
-        $certissue_function = CERTIFICATE . '_get_issue';
-        $certissue = $certissue_function($course, $user, $certificate, $cm);
-        // Fix the issue date.
-        if (!empty($trackinfo->timecompleted)) {
-            $certissue->timecreated = $trackinfo->timecompleted;
-        }
+		// Find certificate issue record or create it (in cert lib.php)
+		$certissue_function = CERTIFICATE . '_get_issue';
+		$certissue = $certissue_function($course, $user, $certificate, $cm);
+		// Fix the issue date.
+		if (!empty($trackinfo->timecompleted)) {
+		    $certissue->timecreated = $trackinfo->timecompleted;
+		}
 
-        // Add the trackid.
-        $certissue->trackid = $trackid;
+		// Add the trackid.
+		$certissue->trackid = $trackid;
 
-        // Generate correct filename (same as certificate mod's view.php does)
-        $certname = rtrim($certificate->name, '.');
-        $filename = clean_filename("$certname.pdf");
+		// Generate correct filename (same as certificate mod's view.php does)
+		$certname = rtrim($certificate->name, '.');
+		$filename = clean_filename("$certname.pdf");
 
-	$certificate->finalscore = $trackinfo->finalscore;
-        // Create the certificate content (always create new so it's up to date)
-        $content = xmldb_local_iomad_track_create_certificate($certificate, $user, $cm, $course, $certissue);
+		$certificate->finalscore = $trackinfo->finalscore;
+		// Create the certificate content (always create new so it's up to date)
+		$content = xmldb_local_iomad_track_create_certificate($certificate, $user, $cm, $course, $certissue);
 
-        // Store certificate
-        xmldb_local_iomad_track_store_certificate($context->id, $filename, $trackid, $certificate, $content);
+		// Store certificate
+		xmldb_local_iomad_track_store_certificate($context->id, $filename, $trackid, $certificate, $content);
 
-        // Record all of above in local db table
-        xmldb_local_iomad_track_save_certificate($trackid, $filename);
+		// Record all of above in local db table
+		xmldb_local_iomad_track_save_certificate($trackid, $filename);
 
-        // Debugging
-        mtrace('local_iomad_track: certificate recorded for ' . $user->username . ' in course ' . $courseid . ' filename "' . $filename . '"');
-    }
+		// Debugging
+		mtrace('local_iomad_track: certificate recorded for ' . $user->username . ' in course ' . $courseid . ' filename "' . $filename . '"');
+	    	
+		return true;
+	    }
+	} else {
+		return false;
+	}
 }
 
