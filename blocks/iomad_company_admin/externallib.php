@@ -962,31 +962,50 @@ class block_iomad_company_admin_external extends external_api {
     public static function get_department_users($departmentids = array()) {
         global $CFG, $DB;
 
+        $params = array(
+            'departmentids' => $departmentids,
+        );
+
         // Validate parameters
-        $params = self::validate_parameters(self::get_department_users_parameters(), $departmentids);
+        $params = self::validate_parameters(self::get_department_users_parameters(), $params);
 
         // Get/check context/capability
         $context = context_system::instance();
         self::validate_context($context);
-        require_capability('block/iomad_company_admin:edit_users', $context);
+        require_capability('block/iomad_company_admin:editusers', $context);
+        $departmentinfo= array();
 
-        // Get course records
-        if (empty($departmentids)) {
-            return array();
-        } else {
-            $departmentinfo = array();
+        if (!empty($params['departmentids']))  {
+
             foreach ($departmentids as $departmentid) {
                 $departmentusers = $DB->get_records_sql("SELECT u.id, u.firstname, u.lastname, u.email, cu.companyid, cu.departmentid
                                                          FROM {user} u
                                                          JOIN {company_users} cu ON
                                                          (u.id = cu.userid)
                                                          WHERE cu.departmentid = :departmentid",
-                                                         array('departmentid' => $departmeentid));
-                $departmentinfo[$departmentid] = (array) $departmentusers;
-            }
-        }
+                                                         ['departmentid' => $departmentid]);
+                                                        
+        
+             foreach ($departmentusers as $departmentuser){
+                 $departmentinfo[]=  array('id' =>$departmentuser->id ,
+                                     'firstname'=> $departmentuser->firstname,
+                                     'lastname'=> $departmentuser->lastname,
+                                     'firstname'=> $departmentuser->firstname,
+                                     'email'=> $departmentuser->email,
+                                     'companyid'=> $departmentuser->companyid,
+                                     'departmentid'=> $departmentuser->departmentid
 
-        return $departmentinfo;
+        );
+
+           } }}
+        $result = array(
+            'users' => array_values($departmentinfo),
+        );
+       
+
+
+     return $result; 
+    
     }
 
    /**
@@ -1250,9 +1269,9 @@ class block_iomad_company_admin_external extends external_api {
 
         // Get course records
         if (empty($courseids)) {
-            $courses = $DB->get_records('iomad_course');
+            $courses = $DB->get_records('iomad_courses');
         } else {
-            $courses = $DB->get_records_list('iomad_course', 'id', $params['courseids']);
+            $courses = $DB->get_records_list('iomad_courses', 'id', $params['courseids']);
         }
 
         // convert to suitable format (I think)
