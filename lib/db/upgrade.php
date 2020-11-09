@@ -3948,5 +3948,49 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2019111804.08);
     }
 
+    if ($oldversion < 2019111805.09) {
+        // Delete orphaned course_modules_completion rows; these were not deleted properly
+        // by remove_course_contents function.
+        $DB->delete_records_subquery('course_modules_completion', 'id', 'id',
+               "SELECT cmc.id
+                  FROM {course_modules_completion} cmc
+             LEFT JOIN {course_modules} cm ON cm.id = cmc.coursemoduleid
+                 WHERE cm.id IS NULL");
+        upgrade_main_savepoint(true, 2019111805.09);
+    }
+
+    if ($oldversion < 2019111805.10) {
+        // Script to fix incorrect records of "hidden" field in existing grade items.
+        $sql = "SELECT cm.instance, cm.course
+                  FROM {course_modules} cm
+                  JOIN {modules} m ON m.id = cm.module
+                 WHERE m.name = :module AND cm.visible = :visible";
+        $hidequizlist = $DB->get_recordset_sql($sql, ['module' => 'quiz', 'visible' => 0]);
+
+        foreach ($hidequizlist as $hidequiz) {
+            $params = [
+                'itemmodule'    => 'quiz',
+                'courseid'      => $hidequiz->course,
+                'iteminstance'  => $hidequiz->instance,
+            ];
+
+            $DB->set_field('grade_items', 'hidden', 1, $params);
+        }
+        $hidequizlist->close();
+
+        upgrade_main_savepoint(true, 2019111805.10);
+    }
+
+    if ($oldversion < 2019111805.12) {
+        // Reset analytics model output dir if it's the default value.
+        $modeloutputdir = get_config('analytics', 'modeloutputdir');
+        if (strcasecmp($modeloutputdir, $CFG->dataroot . DIRECTORY_SEPARATOR . 'models') == 0) {
+            set_config('modeloutputdir', '', 'analytics');
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2019111805.12);
+    }
+
     return true;
 }

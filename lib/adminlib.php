@@ -1751,6 +1751,37 @@ abstract class admin_setting {
     }
 
     /**
+     * Set the required options flag on this admin setting.
+     *
+     * @param bool $enabled - One of self::OPTION_ENABLED or self::OPTION_DISABLED.
+     * @param bool $default - The default for the flag.
+     */
+    public function set_required_flag_options($enabled, $default) {
+        $this->set_flag_options($enabled, $default, 'required', new lang_string('required', 'core_admin'));
+    }
+
+    /**
+     * Is this option forced in config.php?
+     *
+     * @return bool
+     */
+    public function is_readonly(): bool {
+        global $CFG;
+
+        if (empty($this->plugin)) {
+            if (array_key_exists($this->name, $CFG->config_php_settings)) {
+                return true;
+            }
+        } else {
+            if (array_key_exists($this->plugin, $CFG->forced_plugin_settings)
+                and array_key_exists($this->name, $CFG->forced_plugin_settings[$this->plugin])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get the currently saved value for a setting flag
      *
      * @param admin_setting_flag $flag - One of the admin_setting_flag for this admin_setting.
@@ -2449,6 +2480,7 @@ class admin_setting_configtext extends admin_setting {
             'name' => $this->get_full_name(),
             'value' => $data,
             'forceltr' => $this->get_force_ltr(),
+            'readonly' => $this->is_readonly(),
         ];
         $element = $OUTPUT->render_from_template('core_admin/setting_configtext', $context);
 
@@ -2557,6 +2589,7 @@ class admin_setting_configtextarea extends admin_setting_configtext {
             'name' => $this->get_full_name(),
             'value' => $data,
             'forceltr' => $this->get_force_ltr(),
+            'readonly' => $this->is_readonly(),
         ];
         $element = $OUTPUT->render_from_template('core_admin/setting_configtextarea', $context);
 
@@ -2658,8 +2691,9 @@ class admin_setting_configpasswordunmask extends admin_setting_configtext {
             'id' => $this->get_id(),
             'name' => $this->get_full_name(),
             'size' => $this->size,
-            'value' => $data,
+            'value' => $this->is_readonly() ? null : $data,
             'forceltr' => $this->get_force_ltr(),
+            'readonly' => $this->is_readonly(),
         ];
         $element = $OUTPUT->render_from_template('core_admin/setting_configpasswordunmask', $context);
         return format_admin_setting($this, $this->visiblename, $element, $this->description, true, '', null, $query);
@@ -2764,7 +2798,7 @@ class admin_setting_configfile extends admin_setting_configtext {
             'value' => $data,
             'showvalidity' => !empty($data),
             'valid' => $data && file_exists($data),
-            'readonly' => !empty($CFG->preventexecpath),
+            'readonly' => !empty($CFG->preventexecpath) || $this->is_readonly(),
             'forceltr' => $this->get_force_ltr(),
         ];
 
@@ -2949,6 +2983,7 @@ class admin_setting_configcheckbox extends admin_setting {
             'no' => $this->no,
             'value' => $this->yes,
             'checked' => (string) $data === $this->yes,
+            'readonly' => $this->is_readonly(),
         ];
 
         $default = $this->get_defaultsetting();
@@ -3393,6 +3428,7 @@ class admin_setting_configselect extends admin_setting {
             ];
         }
         $context->options = $options;
+        $context->readonly = $this->is_readonly();
 
         $element = $OUTPUT->render_from_template($template, $context);
 
@@ -3551,6 +3587,7 @@ class admin_setting_configmultiselect extends admin_setting_configselect {
             ];
         }
         $context->options = $options;
+        $context->readonly = $this->is_readonly();
 
         if (is_null($default)) {
             $defaultinfo = NULL;
@@ -3641,6 +3678,7 @@ class admin_setting_configtime extends admin_setting {
         $context = (object) [
             'id' => $this->get_id(),
             'name' => $this->get_full_name(),
+            'readonly' => $this->is_readonly(),
             'hours' => array_map(function($i) use ($data) {
                 return [
                     'value' => $i,
@@ -3815,6 +3853,7 @@ class admin_setting_configduration extends admin_setting {
             'id' => $this->get_id(),
             'name' => $this->get_full_name(),
             'value' => $data['v'],
+            'readonly' => $this->is_readonly(),
             'options' => array_map(function($unit) use ($units, $data, $defaultunit) {
                 return [
                     'value' => $unit,
@@ -4865,6 +4904,36 @@ class admin_setting_langlist extends admin_setting_configtext {
     }
 
     /**
+     * Validate that each language identifier exists on the site
+     *
+     * @param string $data
+     * @return bool|string True if validation successful, otherwise error string
+     */
+    public function validate($data) {
+        $parentcheck = parent::validate($data);
+        if ($parentcheck !== true) {
+            return $parentcheck;
+        }
+
+        if ($data === '') {
+            return true;
+        }
+
+        // Normalize language identifiers.
+        $langcodes = array_map('trim', explode(',', $data));
+        foreach ($langcodes as $langcode) {
+            // If the langcode contains optional alias, split it out.
+            [$langcode, ] = preg_split('/\s*\|\s*/', $langcode, 2);
+
+            if (!get_string_manager()->translation_exists($langcode)) {
+                return get_string('invalidlanguagecode', 'error', $langcode);
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Save the new setting
      *
      * @param string $data The new setting
@@ -4874,6 +4943,66 @@ class admin_setting_langlist extends admin_setting_configtext {
         $return = parent::write_setting($data);
         get_string_manager()->reset_caches();
         return $return;
+    }
+}
+
+
+/**
+ * Allows to specify comma separated list of known country codes.
+ *
+ * This is a simple subclass of the plain input text field with added validation so that all the codes are actually
+ * known codes.
+ *
+ * @package     core
+ * @category    admin
+ * @copyright   2020 David Mudrák <david@moodle.com>
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class admin_setting_countrycodes extends admin_setting_configtext {
+
+    /**
+     * Construct the instance of the setting.
+     *
+     * @param string $name Name of the admin setting such as 'allcountrycodes' or 'myplugin/countries'.
+     * @param lang_string|string $visiblename Language string with the field label text.
+     * @param lang_string|string $description Language string with the field description text.
+     * @param string $defaultsetting Default value of the setting.
+     * @param int $size Input text field size.
+     */
+    public function __construct($name, $visiblename, $description, $defaultsetting = '', $size = null) {
+        parent::__construct($name, $visiblename, $description, $defaultsetting, '/^(?:\w+(?:,\w+)*)?$/', $size);
+    }
+
+    /**
+     * Validate the setting value before storing it.
+     *
+     * The value is first validated through custom regex so that it is a word consisting of letters, numbers or underscore; or
+     * a comma separated list of such words.
+     *
+     * @param string $data Value inserted into the setting field.
+     * @return bool|string True if the value is OK, error string otherwise.
+     */
+    public function validate($data) {
+
+        $parentcheck = parent::validate($data);
+
+        if ($parentcheck !== true) {
+            return $parentcheck;
+        }
+
+        if ($data === '') {
+            return true;
+        }
+
+        $allcountries = get_string_manager()->get_list_of_countries(true);
+
+        foreach (explode(',', $data) as $code) {
+            if (!isset($allcountries[$code])) {
+                return get_string('invalidcountrycode', 'core_error', $code);
+            }
+        }
+
+        return true;
     }
 }
 
@@ -10182,7 +10311,8 @@ class admin_setting_configcolourpicker extends admin_setting {
             'value' => $data,
             'icon' => $icon->export_for_template($OUTPUT),
             'haspreviewconfig' => !empty($this->previewconfig),
-            'forceltr' => $this->get_force_ltr()
+            'forceltr' => $this->get_force_ltr(),
+            'readonly' => $this->is_readonly(),
         ];
 
         $element = $OUTPUT->render_from_template('core_admin/setting_configcolourpicker', $context);
@@ -10794,7 +10924,7 @@ class admin_setting_searchsetupinfo extends admin_setting {
      * @return string
      */
     public function output_html($data, $query='') {
-        global $CFG, $OUTPUT;
+        global $CFG, $OUTPUT, $ADMIN;
 
         $return = '';
         $brtag = html_writer::empty_tag('br');
@@ -10856,9 +10986,13 @@ class admin_setting_searchsetupinfo extends admin_setting {
             $row[0] = '3. ' . get_string('setupsearchengine', 'admin');
             $row[1] = html_writer::tag('span', get_string('no'), array('class' => 'statuscritical'));
         } else {
-            $url = new moodle_url('/admin/settings.php?section=search' . $CFG->searchengine);
-            $row[0] = '3. ' . html_writer::tag('a', get_string('setupsearchengine', 'admin'),
-                            array('href' => $url));
+            if ($ADMIN->locate('search' . $CFG->searchengine)) {
+                $url = new moodle_url('/admin/settings.php?section=search' . $CFG->searchengine);
+                $row[0] = '3. ' . html_writer::link($url, get_string('setupsearchengine', 'core_admin'));
+            } else {
+                $row[0] = '3. ' . get_string('setupsearchengine', 'core_admin');
+            }
+
             // Check the engine status.
             $searchengine = \core_search\manager::search_engine_instance();
             try {
