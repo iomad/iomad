@@ -167,7 +167,8 @@ class core_course_external extends external_api {
             //retrieve sections
             $modinfo = get_fast_modinfo($course);
             $sections = $modinfo->get_section_info_all();
-            $coursenumsections = course_get_format($course)->get_last_section_number();
+            $courseformat = course_get_format($course);
+            $coursenumsections = $courseformat->get_last_section_number();
             $stealthmodules = array();   // Array to keep all the modules available but not visible in a course section/topic.
 
             $completioninfo = new completion_info($course);
@@ -384,20 +385,26 @@ class core_course_external extends external_api {
             // We didn't this before to be able to retrieve stealth activities.
             foreach ($coursecontents as $sectionnumber => $sectioncontents) {
                 $section = $sections[$sectionnumber];
-                // Show the section if the user is permitted to access it, OR if it's not available
-                // but there is some available info text which explains the reason & should display.
+                // Show the section if the user is permitted to access it OR
+                // if it's not available but there is some available info text which explains the reason & should display OR
+                // the course is configured to show hidden sections name.
                 $showsection = $section->uservisible ||
-                    ($section->visible && !$section->available &&
-                    !empty($section->availableinfo));
+                    ($section->visible && !$section->available && !empty($section->availableinfo)) ||
+                    (!$section->visible && empty($courseformat->get_course()->hiddensections));
 
                 if (!$showsection) {
                     unset($coursecontents[$sectionnumber]);
                     continue;
                 }
 
-                // Remove modules information if the section is not visible for the user.
+                // Remove section and modules information if the section is not visible for the user.
                 if (!$section->uservisible) {
                     $coursecontents[$sectionnumber]['modules'] = array();
+                    // Remove summary information if the section is completely hidden only,
+                    // even if the section is not user visible, the summary is always displayed among the availability information.
+                    if (!$section->visible) {
+                        $coursecontents[$sectionnumber]['summary'] = '';
+                    }
                 }
             }
 
@@ -611,6 +618,7 @@ class core_course_external extends external_api {
                     $courseinfo['customfields'][] = [
                         'type' => $data->get_type(),
                         'value' => $data->get_value(),
+                        'valueraw' => $data->get_data_controller()->get_value(),
                         'name' => $data->get_name(),
                         'shortname' => $data->get_shortname()
                     ];
@@ -735,6 +743,7 @@ class core_course_external extends external_api {
                                      'shortname' => new external_value(PARAM_ALPHANUMEXT, 'The shortname of the custom field'),
                                      'type'  => new external_value(PARAM_COMPONENT,
                                          'The type of the custom field - text, checkbox...'),
+                                     'valueraw' => new external_value(PARAM_RAW, 'The raw value of the custom field'),
                                      'value' => new external_value(PARAM_RAW, 'The value of the custom field')]
                                 ), 'Custom fields and associated values', VALUE_OPTIONAL),
                         ), 'course'
@@ -2489,6 +2498,7 @@ class core_course_external extends external_api {
                 $coursereturns['customfields'][] = [
                     'type' => $data->get_type(),
                     'value' => $data->get_value(),
+                    'valueraw' => $data->get_data_controller()->get_value(),
                     'name' => $data->get_name(),
                     'shortname' => $data->get_shortname()
                 ];
@@ -2640,6 +2650,7 @@ class core_course_external extends external_api {
                             'The shortname of the custom field - to be able to build the field class in the code'),
                         'type'  => new external_value(PARAM_ALPHANUMEXT,
                             'The type of the custom field - text field, checkbox...'),
+                        'valueraw' => new external_value(PARAM_RAW, 'The raw value of the custom field'),
                         'value' => new external_value(PARAM_RAW, 'The value of the custom field'),
                     )
                 ), 'Custom fields', VALUE_OPTIONAL),

@@ -54,6 +54,7 @@ defined('MOODLE_INTERNAL') || die;
 use moodle\mod\lti as lti;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
+use mod_lti\local\ltiopenid\jwks_helper;
 
 global $CFG;
 require_once($CFG->dirroot.'/mod/lti/OAuth.php');
@@ -126,7 +127,8 @@ function lti_get_jwt_claim_mapping() {
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
             'claim' => 'accept_copy_advice',
-            'isarray' => false
+            'isarray' => false,
+            'type' => 'boolean'
         ],
         'accept_media_types' => [
             'suffix' => 'dl',
@@ -138,7 +140,8 @@ function lti_get_jwt_claim_mapping() {
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
             'claim' => 'accept_multiple',
-            'isarray' => false
+            'isarray' => false,
+            'type' => 'boolean'
         ],
         'accept_presentation_document_targets' => [
             'suffix' => 'dl',
@@ -156,19 +159,22 @@ function lti_get_jwt_claim_mapping() {
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
             'claim' => 'accept_unsigned',
-            'isarray' => false
+            'isarray' => false,
+            'type' => 'boolean'
         ],
         'auto_create' => [
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
             'claim' => 'auto_create',
-            'isarray' => false
+            'isarray' => false,
+            'type' => 'boolean'
         ],
         'can_confirm' => [
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
             'claim' => 'can_confirm',
-            'isarray' => false
+            'isarray' => false,
+            'type' => 'boolean'
         ],
         'content_item_return_url' => [
             'suffix' => 'dl',
@@ -389,7 +395,7 @@ function lti_get_jwt_claim_mapping() {
         'tool_consumer_info_product_family_code' => [
             'suffix' => '',
             'group' => 'tool_platform',
-            'claim' => 'family_code',
+            'claim' => 'product_family_code',
             'isarray' => false
         ],
         'tool_consumer_info_version' => [
@@ -483,14 +489,14 @@ function lti_get_jwt_claim_mapping() {
             'isarray' => false
         ],
         'lis_outcome_service_url' => [
-            'suffix' => 'bos',
-            'group' => 'basicoutcomesservice',
+            'suffix' => 'bo',
+            'group' => 'basicoutcome',
             'claim' => 'lis_outcome_service_url',
             'isarray' => false
         ],
         'lis_result_sourcedid' => [
-            'suffix' => 'bos',
-            'group' => 'basicoutcomesservice',
+            'suffix' => 'bo',
+            'group' => 'basicoutcome',
             'claim' => 'lis_result_sourcedid',
             'isarray' => false
         ],
@@ -2720,7 +2726,11 @@ function lti_get_type_type_config($id) {
 function lti_prepare_type_for_save($type, $config) {
     if (isset($config->lti_toolurl)) {
         $type->baseurl = $config->lti_toolurl;
-        $type->tooldomain = lti_get_domain_from_url($config->lti_toolurl);
+        if (isset($config->lti_tooldomain)) {
+            $type->tooldomain = $config->lti_tooldomain;
+        } else {
+            $type->tooldomain = lti_get_domain_from_url($config->lti_toolurl);
+        }
     }
     if (isset($config->lti_description)) {
         $type->description = $config->lti_description;
@@ -3250,9 +3260,12 @@ function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce 
         $claim = LTI_JWT_CLAIM_PREFIX;
         if (array_key_exists($key, $claimmapping)) {
             $mapping = $claimmapping[$key];
+            $type = $mapping["type"] ?? "string";
             if ($mapping['isarray']) {
                 $value = explode(',', $value);
                 sort($value);
+            } else if ($type == 'boolean') {
+                $value = isset($value) && ($value == 'true');
             }
             if (!empty($mapping['suffix'])) {
                 $claim .= "-{$mapping['suffix']}";
@@ -3273,9 +3286,8 @@ function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce 
         }
     }
 
-    $privatekey = get_config('mod_lti', 'privatekey');
-    $kid = get_config('mod_lti', 'kid');
-    $jwt = JWT::encode($payload, $privatekey, 'RS256', $kid);
+    $privatekey = jwks_helper::get_private_key();
+    $jwt = JWT::encode($payload, $privatekey['key'], 'RS256', $privatekey['kid']);
 
     $newparms = array();
     $newparms['id_token'] = $jwt;
@@ -3820,6 +3832,7 @@ function lti_get_service_by_resource_id($services, $resourceid) {
 
 /**
  * Initializes an array with the scopes for services supported by the LTI module
+ * and authorized for this particular tool instance.
  *
  * @param object $type  LTI tool type
  * @param array  $typeconfig  LTI tool type configuration
@@ -3840,7 +3853,6 @@ function lti_get_permitted_service_scopes($type, $typeconfig) {
     }
 
     return $scopes;
-
 }
 
 /**
@@ -4165,9 +4177,14 @@ function serialise_tool_type(stdClass $type) {
  *
  * @param stdClass $proxy The tool proxy
  *
+ * @deprecated since Moodle 3.10
+ * @todo This will be finally removed for Moodle 4.2 as part of MDL-69976.
  * @return array An array of values representing this type
  */
 function serialise_tool_proxy(stdClass $proxy) {
+    $deprecatedtext = __FUNCTION__ . '() is deprecated. Please remove all references to this method.';
+    debugging($deprecatedtext, DEBUG_DEVELOPER);
+
     return array(
         'id' => $proxy->id,
         'name' => $proxy->name,
@@ -4455,3 +4472,4 @@ function lti_new_access_token($typeid, $scopes) {
     return $newtoken;
 
 }
+

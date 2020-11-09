@@ -43,7 +43,7 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
     /** @var $assertion2 to define json format for Open badge version 2 */
     protected $assertion2;
 
-    protected function setUp() {
+    protected function setUp(): void {
         global $DB, $CFG;
         $this->resetAfterTest(true);
         $CFG->enablecompletion = true;
@@ -199,15 +199,15 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $badge = new badge($this->badgeid);
         $old_status = $badge->status;
         $badge->set_status(BADGE_STATUS_ACTIVE);
-        $this->assertAttributeNotEquals($old_status, 'status', $badge);
-        $this->assertAttributeEquals(BADGE_STATUS_ACTIVE, 'status', $badge);
+        $this->assertNotEquals($old_status, $badge->status);
+        $this->assertEquals(BADGE_STATUS_ACTIVE, $badge->status);
     }
 
     public function test_delete_badge() {
         $badge = new badge($this->badgeid);
         $badge->delete();
         // We don't actually delete badges. We archive them.
-        $this->assertAttributeEquals(BADGE_STATUS_ARCHIVED, 'status', $badge);
+        $this->assertEquals(BADGE_STATUS_ARCHIVED, $badge->status);
     }
 
     /**
@@ -385,7 +385,7 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
 
         // Make sure the first user has no badges.
         $result = badges_get_user_badges($user1->id);
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertCount(0, $result);
 
         // Check that the second user has the expected 11 badges.
@@ -914,5 +914,522 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         // Try to remove an non-existent backpack.
         $result = badges_delete_site_backpack($backpack->id);
         $this->assertFalse($result);
+    }
+
+    /**
+     * Test to validate badges_save_backpack_credentials.
+     *
+     * @dataProvider save_backpack_credentials_provider
+     * @param  bool $addbackpack True if backpack data has to be created; false otherwise (empty data will be used then).
+     * @param  string|null  $mail  Backpack mail address.
+     * @param  string|null  $password  Backpack password.
+     */
+    public function test_save_backpack_credentials(bool $addbackpack = true, ?string $mail = null, ?string $password = null) {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $data = [];
+        if ($addbackpack) {
+            $data = new \stdClass();
+            $data->apiversion = OPEN_BADGES_V2P1;
+            $data->backpackapiurl = 'https://dc.imsglobal.org/obchost/ims/ob/v2p1';
+            $data->backpackweburl = 'https://dc.imsglobal.org';
+            badges_create_site_backpack($data);
+            $backpack = $DB->get_record('badge_external_backpack', ['backpackweburl' => $data->backpackweburl]);
+            $user = $this->getDataGenerator()->create_user();
+
+            $data = [
+                'externalbackpackid' => $backpack->id,
+                'userid' => $user->id,
+            ];
+
+            if (!empty($mail)) {
+                $data['backpackemail'] = $mail;
+            }
+            if (!empty($password)) {
+                $data['password'] = $password;
+            }
+        }
+
+        $return = badges_save_backpack_credentials((object) $data);
+        if (array_key_exists('userid', $data)) {
+            $record = $DB->get_record('badge_backpack', ['userid' => $user->id]);
+        } else {
+            $record = $DB->get_records('badge_backpack');
+        }
+
+        if (!empty($mail) && !empty($password)) {
+            // The backpack credentials are created if the given information is right.
+            $this->assertNotEmpty($record);
+            $this->assertEquals($data['externalbackpackid'], $return);
+        } else if ($addbackpack) {
+            // If no email and password are given, no backpack is created/modified.
+            $this->assertEmpty($record);
+            $this->assertEquals($data['externalbackpackid'], $return);
+        } else {
+            // There weren't fields to add to the backpack so no DB change is expected.
+            $this->assertEmpty($record);
+            $this->assertEquals(0, $return);
+        }
+
+        // Confirm the existing backpack credential can be updated (if it has been created).
+        if (!empty($record)) {
+            $data['backpackemail'] = 'modified_' . $mail;
+            $data['id'] = $record->id;
+            $return = badges_save_backpack_credentials((object) $data);
+            $record = $DB->get_record('badge_backpack', ['userid' => $user->id]);
+
+            $this->assertNotEmpty($record);
+            $this->assertEquals($data['backpackemail'], $record->email);
+            $this->assertEquals($data['externalbackpackid'], $return);
+        }
+    }
+
+    /**
+     * Data provider for test_create_backpack_credentials().
+     *
+     * @return array
+     */
+    public function save_backpack_credentials_provider(): array {
+        return [
+            'Empty fields' => [
+                false,
+            ],
+            'No backpack mail or password are defined' => [
+                true,
+            ],
+            'Both backpack mail and password are defined' => [
+                true, 'test@test.com', '1234',
+            ],
+            'Only backpack mail is defined (no password is given)' => [
+                true, 'test@test.com', null,
+            ],
+            'Only backpack password is defined (no mail is given)' => [
+                true, null, '1234'
+            ],
+        ];
+    }
+
+    /**
+     * Test badges_save_external_backpack.
+     *
+     * @dataProvider badges_save_external_backpack_provider
+     * @param  array $data  Backpack data to save.
+     * @param  bool $adduser True if a real user has to be used for creating the backpack; false otherwise.
+     * @param  bool $duplicates True if duplicates has to be tested too; false otherwise.
+     */
+    public function test_badges_save_external_backpack(array $data, bool $adduser, bool $duplicates) {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $userid = 0;
+        if ($adduser) {
+            $user = $this->getDataGenerator()->create_user();
+            $userid = $user->id;
+            $data['userid'] = $user->id;
+        }
+
+        $result = badges_save_external_backpack((object) $data);
+        $this->assertNotEquals(0, $result);
+        $record = $DB->get_record('badge_external_backpack', ['id' => $result]);
+        $this->assertEquals($record->backpackweburl, $data['backpackweburl']);
+        $this->assertEquals($record->backpackapiurl, $data['backpackapiurl']);
+
+        $record = $DB->get_record('badge_backpack', ['externalbackpackid' => $result]);
+        if (!array_key_exists('backpackemail', $data) && !array_key_exists('password', $data)) {
+            $this->assertEmpty($record);
+            $total = $DB->count_records('badge_backpack');
+            $this->assertEquals(0, $total);
+        } else {
+            $this->assertNotEmpty($record);
+            $this->assertEquals($record->userid, $userid);
+        }
+
+        if ($duplicates) {
+            // We shouldn't be able to insert multiple external_backpacks with the same values.
+            $this->expectException('dml_write_exception');
+            $result = badges_save_external_backpack((object)$data);
+        }
+    }
+
+    /**
+     * Provider for test_badges_save_external_backpack
+     *
+     * @return array
+     */
+    public function badges_save_external_backpack_provider() {
+        $data = [
+            'apiversion' => 2,
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+        ];
+        return [
+            'Test without user and auth details. Check duplicates too' => [
+                'data' => $data,
+                'adduser' => false,
+                'duplicates' => true,
+            ],
+            'Test without user and auth details. No duplicates' => [
+                'data' => $data,
+                'adduser' => false,
+                'duplicates' => false,
+            ],
+            'Test with user and without auth details' => [
+                'data' => $data,
+                'adduser' => true,
+                'duplicates' => false,
+            ],
+            'Test with user and without auth details. Check duplicates too' => [
+                'data' => $data,
+                'adduser' => true,
+                'duplicates' => true,
+            ],
+            'Test with empty backpackemail, password and id' => [
+                'data' => array_merge($data, [
+                    'backpackemail' => '',
+                    'password' => '',
+                    'id' => 0,
+                ]),
+                'adduser' => false,
+                'duplicates' => false,
+            ],
+            'Test with empty backpackemail, password and id but with user' => [
+                'data' => array_merge($data, [
+                    'backpackemail' => '',
+                    'password' => '',
+                    'id' => 0,
+                ]),
+                'adduser' => true,
+                'duplicates' => false,
+            ],
+            'Test with auth details but without user' => [
+                'data' => array_merge($data, [
+                    'backpackemail' => 'test@test.com',
+                    'password' => 'test',
+                ]),
+                'adduser' => false,
+                'duplicates' => false,
+            ],
+            'Test with auth details and user' => [
+                'data' => array_merge($data, [
+                    'backpackemail' => 'test@test.com',
+                    'password' => 'test',
+                ]),
+                'adduser' => true,
+                'duplicates' => false,
+            ],
+        ];
+    }
+
+    /**
+     * Test backpack creation/update with auth details provided
+     *
+     * @param boolean $isadmin
+     * @param boolean $updatetest
+     * @dataProvider badges_create_site_backpack_provider
+     */
+    public function test_badges_create_site_backpack($isadmin, $updatetest) {
+        global $DB;
+        $this->resetAfterTest();
+
+        $data = [
+            'apiversion' => 2,
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+        ];
+
+        $data['backpackemail'] = 'test@test.com';
+        $data['password'] = 'test';
+        if ($isadmin || $updatetest) {
+            $this->setAdminUser();
+            $backpack = badges_create_site_backpack((object) $data);
+        }
+
+        if ($isadmin) {
+            if ($updatetest) {
+                $record = $DB->get_record('badge_backpack', ['userid' => 0]);
+                $data['badgebackpack'] = $record->id;
+                $data['backpackapiurl'] = 'https://api.ca.badgr.io/v3';
+                badges_update_site_backpack($backpack, (object)$data);
+            }
+            $record = $DB->get_record('badge_external_backpack', ['id' => $backpack]);
+            $this->assertEquals($record->backpackweburl, $data['backpackweburl']);
+            $this->assertEquals($record->backpackapiurl, $data['backpackapiurl']);
+            $record = $DB->get_record('badge_backpack', ['userid' => 0]);
+            $this->assertNotEmpty($record);
+        } else {
+            $user = $this->getDataGenerator()->create_user();
+            $this->setUser($user);
+            $this->expectException('required_capability_exception');
+            if ($updatetest) {
+                $result = badges_update_site_backpack($backpack, (object) $data);
+            } else {
+                $result = badges_create_site_backpack((object)$data);
+            }
+        }
+    }
+
+    /**
+     * Provider for test_badges_(create/update)_site_backpack
+     */
+    public function badges_create_site_backpack_provider() {
+        return [
+            "Test as admin user - creation test" => [true, true],
+            "Test as admin user - update test" => [true, false],
+            "Test as normal user - creation test" => [false, true],
+            "Test as normal user - update test" => [false, false],
+        ];
+    }
+
+    /**
+     * Test the badges_open_badges_backpack_api with different backpacks
+     */
+    public function test_badges_open_badges_backpack_api() {
+        $this->resetAfterTest();
+
+        $data = [
+            'apiversion' => 2,
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+        ];
+
+        // Given a complete set of unique data, a new backpack and auth records should exist in the tables.
+        $data['backpackemail'] = 'test@test.com';
+        $data['password'] = 'test';
+        $backpack1 = badges_save_external_backpack((object) $data);
+        $data['backpackweburl'] = 'https://eu.badgr.io';
+        $data['backpackapiurl'] = 'https://api.eu.badgr.io/v2';
+        $data['apiversion'] = 2.1;
+        $backpack2 = badges_save_external_backpack((object) $data);
+
+        set_config('badges_site_backpack', $backpack2);
+        // The default response should check the default site backpack api version.
+        $this->assertEquals(2.1, badges_open_badges_backpack_api());
+        // Check the api version for the other backpack created.
+        $this->assertEquals(2, badges_open_badges_backpack_api($backpack1));
+        $this->assertEquals(2.1, badges_open_badges_backpack_api($backpack2));
+    }
+
+    /**
+     * Test the badges_get_site_backpack function
+     */
+    public function test_badges_get_site_backpack() {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $data = [
+            'apiversion' => '2',
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+        ];
+        $backpack1 = badges_save_external_backpack((object) $data);
+        $data2 = array_merge($data, [
+            'backpackapiurl' => 'https://api.eu.badgr.io/v2',
+            'backpackweburl' => 'https://eu.badgr.io',
+            'backpackemail' => 'test@test.com',
+            'password' => 'test',
+        ]);
+        $backpack2 = badges_save_external_backpack((object) $data2);
+        $data3 = array_merge($data2, [
+            'userid' => $user->id,
+            'externalbackpackid' => $backpack2,
+            'backpackemail' => 'test2@test.com'
+        ]);
+        // In the following case, the id returned below equals backpack2. So we aren't storing it.
+        badges_save_backpack_credentials((object) $data3);
+        unset($data3['userid']);
+
+        // Get a site back based on the id returned from creation and no user id provided.
+        $this->assertEquals($data, array_intersect($data, (array) badges_get_site_backpack($backpack1)));
+        $this->assertEquals($data2, array_intersect($data2, (array) badges_get_site_backpack($backpack2)));
+        $this->assertEquals($data2, array_intersect($data2, (array) badges_get_site_backpack($backpack2, 0)));
+        $this->assertEquals($data3, array_intersect($data3, (array) badges_get_site_backpack($backpack2, $user->id)));
+
+        // Non-existent user backpack should return only configuration details and not auth details.
+        $userbackpack = badges_get_site_backpack($backpack1, $user->id);
+        $this->assertNull($userbackpack->badgebackpack);
+        $this->assertNull($userbackpack->password);
+        $this->assertNull($userbackpack->backpackemail);
+    }
+
+    /**
+     * Test the badges_get_user_backpack function
+     */
+    public function test_badges_get_user_backpack() {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $data = [
+            'apiversion' => '2',
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+        ];
+        $backpack1 = badges_save_external_backpack((object) $data);
+        $data2 = array_merge($data, [
+            'backpackapiurl' => 'https://api.eu.badgr.io/v2',
+            'backpackweburl' => 'https://eu.badgr.io',
+            'backpackemail' => 'test@test.com',
+            'password' => 'test',
+        ]);
+        $backpack2 = badges_save_external_backpack((object) $data2);
+        $data3 = array_merge($data2, [
+            'userid' => $user->id,
+            'externalbackpackid' => $backpack2,
+            'backpackemail' => 'test2@test.com'
+        ]);
+        // In the following case, the id returned below equals backpack2. So we aren't storing it.
+        badges_save_backpack_credentials((object) $data3);
+        unset($data3['userid']);
+
+        // Currently logged in as admin.
+        $this->assertEquals($data2, array_intersect($data2, (array) badges_get_user_backpack()));
+        $this->assertEquals($data2, array_intersect($data2, (array) badges_get_user_backpack(0)));
+        $this->assertEquals($data3, array_intersect($data3, (array) badges_get_user_backpack($user->id)));
+
+        // Non-existent user backpack should return nothing.
+        $this->assertFalse(badges_get_user_backpack($backpack1, $user->id));
+
+        // Login as user.
+        $this->setUser($user);
+        $this->assertEquals($data3, array_intersect($data3, (array) badges_get_user_backpack()));
+    }
+
+    /**
+     * Test the badges_get_site_primary_backpack function
+     *
+     * @param boolean $withauth Testing with authentication or not.
+     * @dataProvider badges_get_site_primary_backpack_provider
+     */
+    public function test_badges_get_site_primary_backpack($withauth) {
+        $data = [
+            'apiversion' => '2',
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+        ];
+        if ($withauth) {
+            $data = array_merge($data, [
+                'backpackemail' => 'test@test.com',
+                'password' => 'test',
+            ]);
+        }
+        $backpack = badges_save_external_backpack((object) $data);
+
+        set_config('badges_site_backpack', $backpack);
+        $sitebackpack = badges_get_site_primary_backpack();
+        $this->assertEquals($backpack, $sitebackpack->id);
+
+        if ($withauth) {
+            $this->assertEquals($data, array_intersect($data, (array) $sitebackpack));
+            $this->assertEquals($data['password'], $sitebackpack->password);
+            $this->assertEquals($data['backpackemail'], $sitebackpack->backpackemail);
+        } else {
+            $this->assertNull($sitebackpack->badgebackpack);
+            $this->assertNull($sitebackpack->password);
+            $this->assertNull($sitebackpack->backpackemail);
+        }
+    }
+
+    /**
+     * Test the test_badges_get_site_primary_backpack function.
+     *
+     * @return array
+     */
+    public function badges_get_site_primary_backpack_provider() {
+        return [
+            "Test with auth details" => [true],
+            "Test without auth details" => [false],
+        ];
+    }
+
+    /**
+     * Test the Badgr URL generator function
+     *
+     * @param mixed $type Type corresponding to the badge entites
+     * @param string $expected Expected string result
+     * @dataProvider badgr_open_url_generator
+     */
+    public function test_badges_generate_badgr_open_url($type, $expected) {
+        $data = [
+            'apiversion' => '2',
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+            'backpackemail' => 'test@test.com',
+            'password' => 'test',
+        ];
+        $backpack2 = badges_save_external_backpack((object) $data);
+        $backpack = badges_get_site_backpack($backpack2);
+        $this->assertEquals($expected, badges_generate_badgr_open_url($backpack, $type, 123455));
+    }
+
+    /**
+     * Data provider for test_badges_generate_badgr_open_url
+     * @return array
+     */
+    public function badgr_open_url_generator() {
+        return [
+            'Badgr Assertion URL test' => [
+                OPEN_BADGES_V2_TYPE_ASSERTION, "https://api.ca.badgr.io/public/assertions/123455"
+            ],
+            'Badgr Issuer URL test' => [
+                OPEN_BADGES_V2_TYPE_ISSUER, "https://api.ca.badgr.io/public/issuers/123455"
+            ],
+            'Badgr Badge URL test' => [
+                OPEN_BADGES_V2_TYPE_BADGE, "https://api.ca.badgr.io/public/badges/123455"
+            ]
+        ];
+    }
+
+    /**
+     * Test badges_external_get_mapping function
+     *
+     * @param int $internalid The internal id of the mapping
+     * @param int $externalid The external / remote ref to the mapping
+     * @param mixed $expected The expected result from the function
+     * @param string|null $field The field we are passing to the function. Null if we don't want to pass anything.ss
+     *
+     * @dataProvider badges_external_get_mapping_provider
+     */
+    public function test_badges_external_get_mapping($internalid, $externalid, $expected, $field = null) {
+        $data = [
+            'apiversion' => '2',
+            'backpackapiurl' => 'https://api.ca.badgr.io/v2',
+            'backpackweburl' => 'https://ca.badgr.io',
+            'backpackemail' => 'test@test.com',
+            'password' => 'test',
+        ];
+        $backpack2 = badges_save_external_backpack((object) $data);
+        badges_external_create_mapping($backpack2, OPEN_BADGES_V2_TYPE_BADGE, $internalid, $externalid);
+        $expected = $expected == "id" ? $backpack2 : $expected;
+        if ($field) {
+            $this->assertEquals($expected, badges_external_get_mapping($backpack2, OPEN_BADGES_V2_TYPE_BADGE, $internalid, $field));
+        } else {
+            $this->assertEquals($expected, badges_external_get_mapping($backpack2, OPEN_BADGES_V2_TYPE_BADGE, $internalid));
+        }
+    }
+
+    /**
+     * Data provider for badges_external_get_mapping_provider
+     *
+     * @return array
+     */
+    public function badges_external_get_mapping_provider() {
+        return [
+            "Get the site backpack value" => [
+                1234, 4321, 'id', 'sitebackpackid'
+            ],
+            "Get the type of the mapping" => [
+                1234, 4321, OPEN_BADGES_V2_TYPE_BADGE, 'type'
+            ],
+            "Get the externalid of the mapping" => [
+                1234, 4321, 4321, 'externalid'
+            ],
+            "Get the externalid of the mapping without providing a param" => [
+                1234, 4321, 4321, null
+            ],
+            "Get the internalid of the mapping" => [
+                1234, 4321, 1234, 'internalid'
+            ]
+        ];
     }
 }

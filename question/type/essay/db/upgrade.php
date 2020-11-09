@@ -48,7 +48,7 @@ function xmldb_qtype_essay_upgrade($oldversion) {
     // Put any upgrade step following this.
 
     $dbman = $DB->get_manager();
-    if ($oldversion < 2021052501) {
+    if ($oldversion < 2020091600) {
 
         // Define field maxbytes to be added to qtype_essay_options.
         $table = new xmldb_table('qtype_essay_options');
@@ -61,7 +61,7 @@ function xmldb_qtype_essay_upgrade($oldversion) {
         }
 
         // Essay savepoint reached.
-        upgrade_plugin_savepoint(true, 2021052501, 'qtype', 'essay');
+        upgrade_plugin_savepoint(true, 2020091600, 'qtype', 'essay');
     }
     return true;
 }

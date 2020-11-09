@@ -92,8 +92,8 @@ class core_setuplib_testcase extends advanced_testcase {
         $exception     = new moodle_exception('generalexceptionmessage', 'error', '', $fixture, $fixture);
         $exceptioninfo = get_exception_info($exception);
 
-        $this->assertContains($expected, $exceptioninfo->message, 'Exception message does not contain system paths');
-        $this->assertContains($expected, $exceptioninfo->debuginfo, 'Exception debug info does not contain system paths');
+        $this->assertStringContainsString($expected, $exceptioninfo->message, 'Exception message does not contain system paths');
+        $this->assertStringContainsString($expected, $exceptioninfo->debuginfo, 'Exception debug info does not contain system paths');
     }
 
     public function test_localcachedir() {
@@ -204,6 +204,8 @@ class core_setuplib_testcase extends advanced_testcase {
     }
 
     public function test_get_request_storage_directory() {
+        $this->resetAfterTest(true);
+
         // Making a call to get_request_storage_directory should always give the same result.
         $firstdir = get_request_storage_directory();
         $seconddir = get_request_storage_directory();
@@ -230,6 +232,11 @@ class core_setuplib_testcase extends advanced_testcase {
         $fourthdir = get_request_storage_directory();
         $this->assertTrue(is_dir($fourthdir));
         $this->assertNotEquals($thirddir, $fourthdir);
+
+        $now = $this->setCurrentTimeStart();
+        set_config('localcachedirpurged', $now - 2);
+        purge_all_caches();
+        $this->assertTrue(is_dir($fourthdir));
     }
 
 

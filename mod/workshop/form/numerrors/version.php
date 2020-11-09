@@ -28,6 +28,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2021052500;
-$plugin->requires = 2021052500;  // Requires this Moodle version.
+$plugin->version  = 2020110900;
+$plugin->requires = 2020110300;  // Requires this Moodle version.
 $plugin->component = 'workshopform_numerrors';

@@ -63,7 +63,7 @@ function xmldb_folder_upgrade($oldversion) {
 
     // Automatically generated Moodle v3.9.0 release upgrade line.
     // Put any upgrade step following this.
-    if ($oldversion < 2021052501) {
+    if ($oldversion < 2020061501) {
 
         // Define field forcedownload to be added to folder.
         $table = new xmldb_table('folder');
@@ -75,7 +75,7 @@ function xmldb_folder_upgrade($oldversion) {
         }
 
         // Folder savepoint reached.
-        upgrade_mod_savepoint(true, 2021052501, 'folder');
+        upgrade_mod_savepoint(true, 2020061501, 'folder');
     }
 
     return true;

@@ -103,6 +103,15 @@ class memberships extends \mod_lti\local\ltiservice\service_base {
     }
 
     /**
+     * Get the scope(s) defined by this service.
+     *
+     * @return array
+     */
+    public function get_scopes() {
+        return [self::SCOPE_MEMBERSHIPS_READ];
+    }
+
+    /**
      * Get the JSON for members.
      *
      * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
@@ -447,7 +456,7 @@ class memberships extends \mod_lti\local\ltiservice\service_base {
                         $serviceurl = lti_ensure_url_is_https($serviceurl);
                     }
                     $basicoutcome->lis_outcome_service_url = $serviceurl;
-                    $message->{'https://purl.imsglobal.org/spec/lti-bos/claim/basicoutcomesservice'} = $basicoutcome;
+                    $message->{'https://purl.imsglobal.org/spec/lti-bo/claim/basicoutcome'} = $basicoutcome;
                 }
                 $member->message = [$message];
             }

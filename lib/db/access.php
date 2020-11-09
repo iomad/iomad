@@ -2676,4 +2676,42 @@ $capabilities = array(
             'editingteacher' => CAP_ALLOW,
         ]
     ],
+
+    // Allow users to download course content.
+    'moodle/course:downloadcoursecontent' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        )
+    ],
+
+    // Allow users to configure download course content functionality within a course, if the feature is available.
+    'moodle/course:configuredownloadcontent' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ),
+    ],
+
+    // Allow to manage payment accounts.
+    'moodle/payment:manageaccounts' => [
+        'captype' => 'write',
+        'riskbitmask' => RISK_PERSONAL | RISK_CONFIG | RISK_DATALOSS,
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [],
+    ],
+
+    // Allow to view payments.
+    'moodle/payment:viewpayments' => [
+        'captype' => 'read',
+        'riskbitmask' => RISK_PERSONAL,
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [],
+    ],
 );

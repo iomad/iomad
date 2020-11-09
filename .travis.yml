@@ -2,10 +2,9 @@
 # process (which uses our internal CI system) this file is here for the benefit
 # of community developers git clones - see MDL-51458.
 
-# We currently disable Travis notifications entirely until https://github.com/travis-ci/travis-ci/issues/4976
-# is fixed.
 notifications:
-  email: false
+  email:
+    if: env(MOODLE_EMAIL) != no
 
 language: php
 
@@ -214,7 +213,7 @@ before_script:
         # We need the official upstream for comparison
         git remote add upstream https://github.com/moodle/moodle.git;
 
-        git fetch upstream master;
+        git fetch upstream MOODLE_310_STABLE;
         export GIT_PREVIOUS_COMMIT="`git merge-base FETCH_HEAD $TRAVIS_COMMIT`";
         export GIT_COMMIT="$TRAVIS_COMMIT";
         export UPSTREAM_FETCH_HEAD=`git rev-parse FETCH_HEAD`

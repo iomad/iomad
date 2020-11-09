@@ -58,7 +58,7 @@ function xmldb_tool_usertours_upgrade($oldversion) {
     // Automatically generated Moodle v3.9.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2021052501) {
+    if ($oldversion < 2020082700) {
         // Clean up user preferences of deleted tours.
         $select = $DB->sql_like('name', ':lastcompleted') . ' OR ' . $DB->sql_like('name', ':requested');
         $params = [
@@ -76,7 +76,7 @@ function xmldb_tool_usertours_upgrade($oldversion) {
             }
         }
 
-        upgrade_plugin_savepoint(true, 2021052501, 'tool', 'usertours');
+        upgrade_plugin_savepoint(true, 2020082700, 'tool', 'usertours');
     }
 
     return true;

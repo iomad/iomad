@@ -49,13 +49,13 @@ function xmldb_book_upgrade($oldversion) {
     // Automatically generated Moodle v3.9.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2021052501) {
+    if ($oldversion < 2020100100) {
         $table = new xmldb_table('book_chapters');
         $index = new xmldb_index('bookid', XMLDB_INDEX_NOTUNIQUE, ['bookid']);
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
-        upgrade_mod_savepoint(true, 2021052501, 'book');
+        upgrade_mod_savepoint(true, 2020100100, 'book');
     }
 
     return true;

@@ -4306,6 +4306,9 @@ function delete_user(stdClass $user) {
     // Remove users customised pages.
     $DB->delete_records('my_pages', array('userid' => $user->id, 'private' => 1));
 
+    // Remove user's oauth2 refresh tokens, if present.
+    $DB->delete_records('oauth2_refresh_token', array('userid' => $user->id));
+
     // Delete user from $SESSION->bulk_users.
     if (isset($SESSION->bulk_users[$user->id])) {
         unset($SESSION->bulk_users[$user->id]);
@@ -5316,6 +5319,7 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
                     if ($cm->id) {
                         // Delete cm and its context - orphaned contexts are purged in cron in case of any race condition.
                         context_helper::delete_instance(CONTEXT_MODULE, $cm->id);
+                        $DB->delete_records('course_modules_completion', ['coursemoduleid' => $cm->id]);
                         $DB->delete_records('course_modules', array('id' => $cm->id));
                         rebuild_course_cache($cm->course, true);
                     }
@@ -5337,9 +5341,8 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     // Remove all data from availability and completion tables that is associated
     // with course-modules belonging to this course. Note this is done even if the
     // features are not enabled now, in case they were enabled previously.
-    $DB->delete_records_select('course_modules_completion',
-           'coursemoduleid IN (SELECT id from {course_modules} WHERE course=?)',
-           array($courseid));
+    $DB->delete_records_subquery('course_modules_completion', 'coursemoduleid', 'id',
+            'SELECT id from {course_modules} WHERE course = ?', [$courseid]);
 
     // Remove course-module data that has not been removed in modules' _delete_instance callbacks.
     $cms = $DB->get_records('course_modules', array('course' => $course->id));
@@ -5381,11 +5384,14 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     }
     unset($childcontexts);
 
-    // Remove all roles and enrolments by default.
+    // Remove roles and enrolments by default.
     if (empty($options['keep_roles_and_enrolments'])) {
         // This hack is used in restore when deleting contents of existing course.
+        // During restore, we should remove only enrolment related data that the user performing the restore has a
+        // permission to remove.
+        $userid = $options['userid'] ?? null;
+        enrol_course_delete($course, $userid);
         role_unassign_all(array('contextid' => $coursecontext->id, 'component' => ''), true);
-        enrol_course_delete($course);
         if ($showfeedback) {
             echo $OUTPUT->notification($strdeleted.get_string('type_enrol_plural', 'plugin'), 'notifysuccess');
         }
@@ -6321,10 +6327,9 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
             require_once($CFG->libdir.'/filelib.php');
             $mimetype = mimeinfo('type', $attachname);
 
-            $attachmentpath = $attachment;
-
             // Before doing the comparison, make sure that the paths are correct (Windows uses slashes in the other direction).
-            $attachpath = str_replace('\\', '/', $attachmentpath);
+            // The absolute (real) path is also fetched to ensure that comparisons to allowed paths are compared equally.
+            $attachpath = str_replace('\\', '/', realpath($attachment));
 
             // Add allowed paths to an array (also check if it's not empty).
             $allowedpaths = array_filter([
@@ -6332,16 +6337,17 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
                 $CFG->dataroot,
                 $CFG->dirroot,
                 $CFG->localcachedir,
-                $CFG->tempdir
+                $CFG->tempdir,
+                $CFG->localrequestdir,
             ]);
             // Set addpath to true.
             $addpath = true;
             // Check if attachment includes one of the allowed paths.
-            foreach ($allowedpaths as $tmpvar) {
+            foreach ($allowedpaths as $allowedpath) {
                 // Make sure both variables are normalised before comparing.
-                $temppath = str_replace('\\', '/', realpath($tmpvar));
+                $allowedpath = str_replace('\\', '/', realpath($allowedpath));
                 // Set addpath to false if the attachment includes one of the allowed paths.
-                if (strpos($attachpath, $temppath) === 0) {
+                if (strpos($attachpath, $allowedpath) === 0) {
                     $addpath = false;
                     break;
                 }
@@ -6350,10 +6356,10 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
             // If the attachment is a full path to a file in the multiple allowed paths, use it as is,
             // otherwise assume it is a relative path from the dataroot (for backwards compatibility reasons).
             if ($addpath == true) {
-                $attachmentpath = $CFG->dataroot . '/' . $attachmentpath;
+                $attachment = $CFG->dataroot . '/' . $attachment;
             }
 
-            $mail->addAttachment($attachmentpath, $attachname, 'base64', $mimetype);
+            $mail->addAttachment($attachment, $attachname, 'base64', $mimetype);
         }
     }
 
@@ -6392,6 +6398,19 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     }
     foreach ($tempreplyto as $values) {
         $mail->addReplyTo($values[0], $values[1]);
+    }
+
+    if (!empty($CFG->emaildkimselector)) {
+        $domain = substr(strrchr($mail->From, "@"), 1);
+        $pempath = "{$CFG->dataroot}/dkim/{$domain}/{$CFG->emaildkimselector}.private";
+        if (file_exists($pempath)) {
+            $mail->DKIM_domain      = $domain;
+            $mail->DKIM_private     = $pempath;
+            $mail->DKIM_selector    = $CFG->emaildkimselector;
+            $mail->DKIM_identity    = $mail->From;
+        } else {
+            debugging("Email DKIM selector chosen due to {$mail->From} but no certificate found at $pempath", DEBUG_DEVELOPER);
+        }
     }
 
     if ($mail->send()) {
@@ -9859,7 +9878,7 @@ function rename_to_unused_name(string $filepath, string $prefix = '_temp_') {
  * @return bool success, true also if dir does not exist
  */
 function remove_dir($dir, $contentonly=false) {
-    if (!file_exists($dir)) {
+    if (!is_dir($dir)) {
         // Nothing to do.
         return true;
     }

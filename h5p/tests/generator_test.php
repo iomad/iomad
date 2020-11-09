@@ -43,7 +43,7 @@ class generator_testcase extends \advanced_testcase {
     /**
      * Tests set up.
      */
-    protected function setUp() {
+    protected function setUp(): void {
         parent::setUp();
 
         autoloader::register();
@@ -227,7 +227,9 @@ class generator_testcase extends \advanced_testcase {
 
         $generator = $this->getDataGenerator()->get_plugin_generator('core_h5p');
 
-        $data = $generator->create_library_record('Library', 'Lib', 1, 2, 3, 'Semantics example', '/regex11/');
+        $data = $generator->create_library_record(
+            'Library', 'Lib', 1, 2, 3, 'Semantics example', '/regex11/', 'http://tutorial.org/', 'http://example.org/'
+        );
         unset($data->id);
 
         $expected = (object) [
@@ -244,6 +246,8 @@ class generator_testcase extends \advanced_testcase {
             'droplibrarycss' => '',
             'semantics' => 'Semantics example',
             'addto' => '/regex11/',
+            'tutorial' => 'http://tutorial.org/',
+            'example' => 'http://example.org/',
             'coremajor' => null,
             'coreminor' => null,
             'metadatasettings' => null,
