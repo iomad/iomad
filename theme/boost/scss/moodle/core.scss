@@ -164,11 +164,11 @@ input[type="radio"],
 input[type="file"],
 input[type="image"],
 .sr-only-focusable,
-a.dropdown-item,
 a.dropdown-toggle,
 .modal-dialog[tabindex="0"],
 .moodle-dialogue-base .closebutton,
-button.close {
+button.close,
+.form-autocomplete-selection {
     &.focus,
     &:focus {
         outline: 0;
@@ -179,6 +179,12 @@ button.close {
     }
 }
 
+// Accessible focus styling for autocomplete elements.
+.form-autocomplete-suggestions li[aria-selected=true] {
+    outline: 0;
+    box-shadow: $input-btn-focus-box-shadow;
+}
+
 // Safari does not allow custom styling of checkboxes.
 .safari {
     input[type="checkbox"],
@@ -187,19 +193,6 @@ button.close {
         &:focus {
             outline: auto;
         }
-    }
-}
-
-.usermenu,
-div.dropdown-item {
-    a,
-    a[role="button"] {
-        outline: 0;
-        box-shadow: none;
-    }
-    &:focus-within {
-        outline: 0;
-        box-shadow: $input-btn-focus-box-shadow;
     }
 }
 
@@ -2327,13 +2320,34 @@ $footer-link-color: $bg-inverse-link-color !default;
 }
 
 // Make links in a menu clickable anywhere in the row.
-.dropdown-item a {
-    display: block;
-    width: 100%;
-    color: $body-color;
-}
-.dropdown-item:active a {
-    color: $dropdown-link-active-color;
+.dropdown-item {
+    a {
+        display: block;
+        width: 100%;
+        color: $body-color;
+    }
+    &:active,
+    &:hover,
+    &:focus,
+    &:focus-within {
+        outline: 0;
+        background-color: $dropdown-link-hover-bg;
+        a {
+            color: $dropdown-link-active-color;
+        }
+    }
+    &[aria-current="true"] {
+        position: relative;
+        display: flex;
+        align-items: center;
+        &:before {
+            @include fa-icon();
+            content: $fa-var-circle;
+            position: absolute;
+            left: 0.4rem;
+            font-size: 0.7rem;
+        }
+    }
 }
 
 .competency-tree {
@@ -2385,12 +2399,6 @@ $footer-link-color: $bg-inverse-link-color !default;
     }
 }
 
-.open.atto_menu > .dropdown-menu {
-    display: block;
-}
-div.editor_atto_toolbar button .icon {
-    color: $gray-700;
-}
 .w-auto {
     width: auto;
 }
