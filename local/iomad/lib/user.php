@@ -948,7 +948,7 @@ class company_user {
                 if ($action == 'delete' || $action == 'revoke') {
                     if ($license->isusing == 0) {
                         $DB->delete_records('companylicense_users', array('id' => $license->id));
-                        company::update_license_usage($license->id);
+                        company::update_license_usage($license->licenseid);
                     } else {
                         $license->timecompleted = time();
                         $DB->update_record('companylicense_users', $license);
