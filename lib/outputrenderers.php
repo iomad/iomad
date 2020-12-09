@@ -333,7 +333,28 @@ class renderer_base {
      * @return moodle_url|false
      */
     public function get_logo_url($maxwidth = null, $maxheight = 200) {
-        global $CFG;
+        global $CFG, $DB, $SESSION;
+
+        // IOMAD
+        if (!empty($SESSION->currenteditingcompany)) {
+            $companyid = $SESSION->currenteditingcompany;
+            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+                $context = \context_system::instance();
+                $fs = get_file_storage();
+                $files = $fs->get_area_files($context->id, 'theme_iomad', 'companylogo', $companyid );
+                if ($files) {
+                    foreach ($files as $file) {
+                        $filename = $file->get_filename();
+                        $filepath = ((int) $maxwidth . 'x' . (int) $maxheight) . '/';
+                        if ($filename != '.') {
+                            return moodle_url::make_pluginfile_url(context_system::instance()->id, 'theme_iomad', 'companylogo', $filepath,
+                                                                  $companyid, "/$filename");
+                        }
+                    }
+                }
+            }
+        }
+
         $logo = get_config('core_admin', 'logo');
         if (empty($logo)) {
             return false;
@@ -346,6 +367,8 @@ class renderer_base {
         $filepath = ((int) $maxwidth . 'x' . (int) $maxheight) . '/';
 
         // Use $CFG->themerev to prevent browser caching when the file changes.
+        echo  "logo = " .moodle_url::make_pluginfile_url(context_system::instance()->id, 'core_admin', 'logo', $filepath,
+            theme_get_revision(), $logo); die;
         return moodle_url::make_pluginfile_url(context_system::instance()->id, 'core_admin', 'logo', $filepath,
             theme_get_revision(), $logo);
     }
@@ -357,8 +380,29 @@ class renderer_base {
      * @param int $maxheight The maximum height, or null when the maximum height does not matter.
      * @return moodle_url|false
      */
-    public function get_compact_logo_url($maxwidth = 100, $maxheight = 100) {
-        global $CFG;
+    public function get_compact_logo_url($maxwidth = 300, $maxheight = 300) {
+        global $CFG, $DB, $SESSION;
+
+        // IOMAD
+        if (!empty($SESSION->currenteditingcompany)) {
+            $companyid = $SESSION->currenteditingcompany;
+            if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+                $context = \context_system::instance();
+                $fs = get_file_storage();
+                $files = $fs->get_area_files($context->id, 'theme_iomad', 'companylogo', $companyid );
+                if ($files) {
+                    foreach ($files as $file) {
+                        $filename = $file->get_filename();
+                        $filepath = ((int) $maxwidth . 'x' . (int) $maxheight) . '/';
+                        if ($filename != '.') {
+                            return moodle_url::make_pluginfile_url(context_system::instance()->id, 'theme_iomad', 'companylogo', $filepath,
+                                                                  $companyid, "/$filename");
+                        }
+                    }
+                }
+            }
+        }
+
         $logo = get_config('core_admin', 'logocompact');
         if (empty($logo)) {
             return false;
