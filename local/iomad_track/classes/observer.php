@@ -568,7 +568,7 @@ class observer {
                                'coursename' => $courserec->fullname,
                                'companyid' => $companyid,
                                'timeenrolled' => $timeenrolled,
-                               'timestarted' => $timeenrolled,
+                               'timestarted' => 0, // Before access the course timestarted is null.
                                'modifiedtime' => $modifiedtime
                                );
                 $DB->insert_record('local_iomad_track', $entry);
@@ -731,6 +731,24 @@ class observer {
                               array('offset' => $offset,
                                      'courseid' => $courseid));
             }
+        }
+
+        return true;
+    }
+
+    /**
+     * Update the course timestarted for the enrolled users on table local_iomad_track.
+     * @param  object $event Evetdata
+     * @return bool true.
+     */
+    public static function course_viewed($event) {
+        global $DB;
+
+        $courseid = $event->courseid;
+        $userid = $event->userid;
+
+        if ($record = $DB->get_record('local_iomad_track', ['userid' => $userid, 'courseid' => $courseid, 'timestarted' => 0])) {
+            $DB->set_field('local_iomad_track', 'timestarted', time(), ['id' => $record->id]);
         }
 
         return true;
