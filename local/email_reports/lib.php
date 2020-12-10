@@ -34,9 +34,11 @@ function email_reports_cron() {
     $notcompletedsql = "SELECT lit.*, c.name AS companyname, ic.notifyperiod, u.firstname,u.lastname,u.username,u.email,u.lang
                         FROM {local_iomad_track} lit
                         JOIN {company} c ON (lit.companyid = c.id)
+                        JOIN {company_users} cu ON (lit.userid = cu.userid)
                         JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
                         JOIN {user} u ON (lit.userid = u.id)
                         WHERE ic.warncompletion > 0
+                        AND lit.timestarted > 0
                         AND lit.timecompleted IS NULL
                         AND lit.timeenrolled < " . $runtime . " - (ic.warncompletion * 86400)
                         AND u.deleted = 0
@@ -573,7 +575,7 @@ function email_reports_cron() {
     mtrace("sending to managers");
     // Email the managers
     // Get the companies from the list of users in the temp table.
-    $companysql = "SELECT DISTINCT lit.companyid 
+    $companysql = "SELECT DISTINCT lit.companyid
                         FROM {local_iomad_track} lit
                         JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
                         JOIN {user} u ON (lit.userid = u.id)
