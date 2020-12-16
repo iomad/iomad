@@ -42,7 +42,7 @@ class block_iomad_company_admin_editusers_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
+        $name = fullname($row, has_capability('moodle/site:viewfullnames', context_system::instance()));
         return $name;
     }
 
