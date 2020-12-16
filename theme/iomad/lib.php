@@ -37,27 +37,6 @@ function theme_iomad_css_tree_post_processor($tree, $theme) {
 }
 
 /**
- * Inject additional SCSS.
- *
- * @param theme_config $theme The theme config object.
- * @return string
- */
-function theme_iomad_get_extra_scss($theme) {
-    $content = '';
-    $imageurl = $theme->setting_file_url('backgroundimage', 'backgroundimage');
-
-    // Sets the background image, and its settings.
-    if (!empty($imageurl)) {
-        $content .= 'body { ';
-        $content .= "background-image: url('$imageurl'); background-size: cover;";
-        $content .= ' }';
-    }
-
-    // Always return the background image with the scss when we have it.
-    return !empty($theme->settings->scss) ? $theme->settings->scss . ' ' . $content : $content;
-}
-
-/**
  * Serves any files associated with the theme settings.
  *
  * @param stdClass $course
@@ -163,6 +142,7 @@ function theme_iomad_get_extra_scss($theme) {
     }
 
     if (!empty($theme->settings->navbardark)) {
+        $content .= file_get_contents($CFG->dirroot .
             '/theme/iomad/scss/iomad/navbar-dark.scss');
     } else {
         $content .= file_get_contents($CFG->dirroot .
@@ -182,33 +162,4 @@ function theme_iomad_get_extra_scss($theme) {
 function theme_iomad_get_precompiled_css() {
     global $CFG;
     return file_get_contents($CFG->dirroot . '/theme/iomad/style/moodle.css');
-}
-
-/**
- * Serves any files associated with the theme settings.
- *
- * @param stdClass $course
- * @param stdClass $cm
- * @param context $context
- * @param string $filearea
- * @param array $args
- * @param bool $forcedownload
- * @param array $options
- * @return bool
- */
-function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
-
-    $fs = get_file_storage();
-    $relativepath = implode('/', $args);
-    $filename = $args[1];
-    $itemid = $args[0];
-    if ($filearea == 'logo') {
-        $itemid = 0;
-    }
-
-    if (!$file = $fs->get_file($context->id, 'theme_iomad', $filearea, $itemid, '/', $filename) or $file->is_directory()) {
-        send_file_not_found();
-    }
-
-    send_stored_file($file, 0, 0, $forcedownload);
 }
