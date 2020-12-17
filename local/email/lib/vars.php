@@ -57,12 +57,19 @@ class EmailVars {
             }
         }
 
+        // Get the company wwwroot.
+        if (method_exists($this->company,'get_theme')) {
+            $wwwroot = $this->company->get_wwwroot();
+        } else {
+            $wwwroot = $CFG->wwwroot;
+        }
+
         $this->course =& $course;
         if (!empty($course->id)) {
-            $this->course->url = new moodle_url($this->company->get_wwwroot() .'/course/view.php', array('id' => $this->course->id));
+            $this->course->url = new moodle_url($wwwroot .'/course/view.php', array('id' => $this->course->id));
         }
         if (!empty($user->id)) {
-            $this->url = new moodle_url($this->company->get_wwwroot() .'/user/profile.php', array('id' => $this->user->id));
+            $this->url = new moodle_url($wwwroot .'/user/profile.php', array('id' => $this->user->id));
         }
         $this->site = get_site();
     }
@@ -196,7 +203,11 @@ class EmailVars {
         global $CFG;
 
         // Get the company wwwroot.
-        $wwwroot = $this->company->get_wwwroot();
+        if (method_exists($this->company,'get_theme')) {
+            $wwwroot = $this->company->get_wwwroot();
+        } else {
+            $wwwroot = $CFG->wwwroot;
+        }
 
         // Can we add the theme to the URL too?
         if (empty($CFG->allowthemechangeonurl)) {
