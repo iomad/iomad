@@ -951,6 +951,12 @@ class company {
             }
         }
 
+        // Deal with auto enrolments.
+        if ($CFG->local_iomad_signup_autoenrol) {
+            $user->companyid = $this->id;
+            $this->autoenrol($user);
+        }
+
         return true;
     }
 
