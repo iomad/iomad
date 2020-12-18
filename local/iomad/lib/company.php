@@ -893,6 +893,11 @@ class company {
     public function assign_user_to_company($userid, $departmentid = 0, $managertype = 0, $ws = false) {
         global $CFG, $DB;
 
+        // is the user valid?
+        if (!$user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0, 'suspended' => 0))) {
+            return false;
+        }
+
         // Were we passed a departmentid?
         if (!empty($departmentid)) {
             // Check its a department in this company.
