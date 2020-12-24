@@ -39,6 +39,8 @@ $lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmat
 $email  = optional_param('email', 0, PARAM_CLEAN);
 $showall = optional_param('showall', false, PARAM_BOOL);
 $usertype = optional_param('usertype', 'a', PARAM_ALPHANUM);
+$adminediting = optional_param('adminedit', -1, PARAM_BOOL);
+
 
 $params = array();
 
@@ -91,6 +93,11 @@ if ($showall) {
     $params['showall'] = $showall;
 }
 
+// Deal with edit buttons.
+if ($adminediting != -1) {
+    $SESSION->iomadeditingreports = $adminediting;
+}
+
 // Set the name for the page.
 $linktext = get_string('edit_users_title', 'block_iomad_company_admin');
 // Set the url.
@@ -112,6 +119,19 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'ini
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($linktext, $linkurl);
+
+if (iomad::has_capability('block/iomad_company_admin:company_manager', context_system::instance())) {
+    $url = clone($PAGE->url);
+    if (!empty($SESSION->iomadeditingreports)) {
+        $caption = get_string('turneditingoff');
+        $url->param('adminedit', 'off');
+    } else {
+        $caption = get_string('turneditingon');
+        $url->param('adminedit', 'on');
+    }
+    $buttons = $OUTPUT->single_button($url, $caption, 'get');
+    $PAGE->set_button($buttons);
+}
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
@@ -453,12 +473,6 @@ if ($confirmuser and confirm_sesskey()) {
 // Display the user filter form.
 $mform->display();
 
-
-
-
-
-
-
 // Build the table.
 // Do we have any additional reporting fields?
 $extrafields = array();
@@ -567,7 +581,7 @@ $selectsql = "DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", "c.id"
 $fromsql = "{user} u JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id AND cu.companyid = d.company) JOIN {company} c ON (cu.companyid = c.id AND d.company = c.id)";
 $wheresql = $searchinfo->sqlsearch . " $sqlsearch $companysql $managertypesql";
 $sqlparams = $params + array('companyid' => $companyid) + $searchinfo->searchparams;
-$countsql = "SELECT COUNT(DISTINCT u.id, c.id) FROM $fromsql WHERE $wheresql";
+$countsql = "SELECT COUNT(DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", "c.id")) . ") FROM $fromsql WHERE $wheresql";
 
 // Carry on with the user listing.
 if (!$showall) {
