@@ -1,2 +1,0 @@
-define ("tool_dataprivacy/events",[],function(){return{approve:"tool_dataprivacy-data_request:approve",bulkApprove:"tool_dataprivacy-data_request:bulk_approve",deny:"tool_dataprivacy-data_request:deny",bulkDeny:"tool_dataprivacy-data_request:bulk_deny",complete:"tool_dataprivacy-data_request:complete"}});
-//# sourceMappingURL=events.min.js.map
