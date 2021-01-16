@@ -1,0 +1,53 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_forum/social_discussion_list
+
+    Template which defines a forum post for sending in a single-post HTML email.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Example context (json):
+    {
+    }
+}}
+{{< mod_forum/discussion_list }}
+    {{$discussion_create_text}}
+        {{#str}}addanewdiscussion, forum{{/str}}
+    {{/discussion_create_text}}
+    {{$discussion_list_output}}
+       {{#posts}}
+           {{< mod_forum/forum_discussion_post }}
+               {{$footer}}
+                   <div class="link text-right">
+                       <a href="{{urls.discuss}}"
+                          aria-label="{{#str}} discusstopicname, forum, {{subject}} {{/str}}">
+                           {{#str}}discussthistopic, forum{{/str}}
+                       </a>&nbsp;({{#isreplyplural}}{{#str}} repliesmany, forum, {{discussionrepliescount}} {{/str}}{{/isreplyplural}}{{^isreplyplural}}{{#str}} repliesone, forum, {{discussionrepliescount}} {{/str}}{{/isreplyplural}}{{#discussionunreadscount}}
+                       <span class="sep">/</span>
+                       <span class="unread"><a href="{{urls.discuss}}#unread">{{#isunreadplural}}{{#str}} unreadpostsnumber, mod_forum, {{discussionunreadscount}} {{/str}}{{/isunreadplural}}{{^isunreadplural}}{{#str}} unreadpostsone, mod_forum {{/str}}{{/isunreadplural}}</a></span>{{/discussionunreadscount}})
+                   </div>
+               {{/footer}}
+               {{$replyoutput}}{{/replyoutput}}
+           {{/ mod_forum/forum_discussion_post }}
+       {{/posts}}
+    {{/discussion_list_output}}
+{{/ mod_forum/discussion_list }}

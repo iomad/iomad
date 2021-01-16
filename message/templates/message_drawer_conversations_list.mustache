@@ -1,0 +1,114 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_conversations_list
+
+    This template will render a list of conversations for the message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+{{#conversations}}
+    <a
+        href="#"
+        class="py-0 px-2 d-flex list-group-item list-group-item-action align-items-center"
+        data-conversation-id="{{id}}"
+        {{#userid}}
+            data-user-id="{{.}}"
+        {{/userid}}
+        role="button"
+    >
+        {{#imageurl}}
+            <img
+                class="rounded-circle align-self-start mt-2"
+                src="{{{.}}}"
+                alt="{{name}}"
+                aria-hidden="true"
+                style="height: 38px"
+            >
+        {{/imageurl}}
+        {{#showonlinestatus}}
+            <span class="contact-status {{#isonline}}online{{/isonline}}"></span>
+        {{/showonlinestatus}}
+        <div class="w-100 text-truncate ml-2 my-2">
+            <div class="d-flex">
+                <strong class="m-0 text-truncate">{{name}}</strong>
+                <span class="{{^isblocked}}hidden{{/isblocked}}" data-region="contact-icon-blocked">
+                    {{#pix}} t/block, core, {{#str}} contactblocked, message {{/str}} {{/pix}}
+                </span>
+                <span class="{{^ismuted}}hidden{{/ismuted}}" data-region="muted-icon-container">
+                    {{#pix}} i/muted, core {{/pix}}
+                </span>
+            </div>
+            {{#subname}}
+                <p class="m-0 text-truncate">{{.}}</p>
+            {{/subname}}
+            <p class="m-0 font-weight-light text-truncate last-message" data-region="last-message">
+                {{#sentfromcurrentuser}}
+                    {{#str}} you, core_message {{/str}}
+                {{/sentfromcurrentuser}}
+                {{^sentfromcurrentuser}}
+                    {{#lastsendername}}
+                        {{#str}} sender, core_message, {{.}} {{/str}}
+                    {{/lastsendername}}
+                {{/sentfromcurrentuser}}
+                <span class="text-muted">{{{lastmessage}}}</span>
+            </p>
+        </div>
+        <div class="d-flex align-self-stretch">
+            <div
+                class="px-2 py-1 small position-absolute position-right text-muted {{^lastmessagedate}}hidden{{/lastmessagedate}}"
+                data-region="last-message-date" aria-hidden="true"
+            >
+                {{#lastmessagedate}}
+                    {{#istoday}}
+                        {{#userdate}} {{.}}, {{#str}} strftimetime24, core_langconfig  {{/str}} {{/userdate}}
+                    {{/istoday}}
+                    {{^istoday}}
+                        {{#userdate}} {{.}}, {{#str}} strftimedatefullshort, core_langconfig  {{/str}} {{/userdate}}
+                    {{/istoday}}
+
+                {{/lastmessagedate}}
+            </div>
+            <div class="d-flex align-self-center align-items-center">
+                <span
+                    class="badge badge-pill badge-primary bg-primary {{^unreadcount}}hidden{{/unreadcount}}"
+                    data-region="unread-count"
+                    aria-label="{{#str}} unreadmessages, core_message, {{unreadcount}} {{/str}}"
+                >
+                    {{unreadcount}}
+                </span>
+
+                <div class="text-muted ml-auto">
+                    {{> core_message/message_drawer_icon_forward }}
+                </div>
+            </div>
+        </div>
+    </a>
+{{/conversations}}

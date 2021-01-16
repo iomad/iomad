@@ -1,0 +1,11 @@
+<?php
+{
+  "name": "moodle-availability_userpermit-form",
+  "builds": {
+    "moodle-availability_userpermit-form": {
+      "jsfiles": [
+        "form.js"
+      ]
+    }
+  }
+}

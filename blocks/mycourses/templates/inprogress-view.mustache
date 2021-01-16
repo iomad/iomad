@@ -1,0 +1,65 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_mycourses/inprogress-view
+
+    This template renders the inprogress view for the myoverview block.
+
+    Example context (json):
+    {}
+}}
+<div id="inprogress-view-{{uniqid}}" data-region="inprogress-view">
+   {{#inprogressview.courses}}
+        <div class="tab-content">
+            <div class="tab-pane active fade in" id="mycourses_inprogress_view">
+                    <div class="mycourselisting">
+                        <div class="courseimage">
+                            <a href="{{ url }}"><img class="imgresponsive" src="{{ image }}" class="courseimage"></a>
+                        </div>
+                        <div class="mycoursedetails">
+                            <div class="mycourseheading">
+                                <h4 class="title">
+                                    <a href="{{ url }}">{{ fullname }}</a>
+                                </h4>
+                            </div>
+                            <div class="mycoursesummary">
+                                {{ summary}}
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    {{/inprogressview.courses}}
+    {{^inprogressview.courses}}
+        <div class="text-xs-center text-center m-t-3">
+            <img class="empty-placeholder-image-lg"
+                src="{{nocourses}}"
+                alt="{{#str}} noinprogress, block_mycourses {{/str}}"
+                role="presentation">
+            <p class="text-muted m-t-1">{{#str}} noinprogress, block_mycourses {{/str}}</p>
+        </div>
+    {{/inprogressview.courses}}
+</div>
+{{#js}}
+require(['jquery', 'core/custom_interaction_events'], function($, customEvents) {
+    var root = $('#inprogress-view-{{uniqid}}');
+    customEvents.define(root, [customEvents.events.activate]);
+    root.on(customEvents.events.activate, '[data-toggle="btns"] > .btn', function() {
+        root.find('.btn.active').removeClass('active');
+    });
+});
+{{/js}}

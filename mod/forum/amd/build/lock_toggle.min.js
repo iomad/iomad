@@ -1,0 +1,2 @@
+define ("mod_forum/lock_toggle",["jquery","core/templates","core/notification","mod_forum/repository","mod_forum/selectors"],function(a,b,c,d,e){return{init:function registerEventListeners(b,f){b.on("click",e.lock.toggle,function(b){var e=a(this),g=e.data("forumid"),h=e.data("discussionid"),i=e.data("state");d.setDiscussionLockState(g,h,i).then(function(){return location.reload()}).catch(c.exception);if(f){b.preventDefault()}})}}});
+//# sourceMappingURL=lock_toggle.min.js.map

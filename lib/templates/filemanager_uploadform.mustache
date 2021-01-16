@@ -1,0 +1,52 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/filemanager_uploadform
+
+    This template renders the 'Upload file' repository.
+
+    Example context (json):
+    {}
+}}
+<div class="fp-upload-form">
+    <div class="fp-content-center">
+        <form enctype="multipart/form-data" method="POST" class="form">
+            <div class="fp-formset">
+                <div class="fp-file form-group">
+                    <label>{{#str}}attachment, repository{{/str}}</label>
+                    <div class="p-x-1">
+                        <input  type="file"/>
+                    </div>
+                </div>
+                <div class="fp-saveas form-group">
+                    <label>{{#str}}saveas, repository{{/str}}</label>
+                    <input type="text" class="form-control"/>
+                </div>
+                <div class="fp-setauthor form-group">
+                    <label>{{#str}}author, repository{{/str}}</label>
+                    <input type="text" class="form-control"/>
+                </div>
+                <div class="fp-setlicense form-group">
+                    {{>core/filemanager_chooselicense}}
+                </div>
+            </div>
+        </form>
+        <div class="mdl-align">
+            <button class="fp-upload-btn btn-primary btn">{{#str}}upload, repository{{/str}}</button>
+        </div>
+    </div>
+</div>

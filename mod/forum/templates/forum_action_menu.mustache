@@ -1,0 +1,94 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_forum/forum_action_menu
+
+    This template renders action menu for a forum discussion.
+
+    Context variables required for this template:
+    * capabilities Object - Uses the following attributes:
+      * manage boolean - Whether to render the lock action.
+      * favourite boolean - Whether to render the star/unstar action.
+      * pin boolean - Whether to render the star/unstar action.
+      * subscribe boolean - Whether to render the subscribe action.
+    * id int - The discussion ID.
+    * forumid int - The forum ID.
+    * istimelocked boolean - Whether this forum is time locked.
+    * settings Object - Uses the following attributes:
+      * excludetext boolean - Whether to show an icon only.
+      * togglemoreicon - Whether to show a toggle-more icon or not.
+
+    Example context (json):
+    {
+        "capabilities": {
+            "manage": true,
+            "favourite": true,
+            "pin": true,
+            "subscribe": true
+        },
+        "id": 1,
+        "forumid": 1,
+        "istimelocked": false,
+        "settings": {
+            "excludetext": false,
+            "togglemoreicon": false
+        }
+    }
+}}
+<div class="ml-auto dropdown">
+    <a href="#" class="{{^settings.excludetext}}dropdown-toggle{{/settings.excludetext}} btn btn-link {{#settings.togglemoreicon}}btn-icon colour-inherit text-decoration-none d-flex align-items-center justify-content-center{{/settings.togglemoreicon}}"
+        role="button"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        tabindex="0"
+        aria-controls="forum-action-menu-{{id}}-menu"
+        aria-label="{{#str}}togglediscussionmenu, mod_forum{{/str}}"
+        aria-expanded="false">
+        {{#settings.togglemoreicon}}
+            {{#pix}} i/menu, core{{/pix}}
+        {{/settings.togglemoreicon}}
+        {{^settings.togglemoreicon}}
+            {{#pix}} i/settings, core{{/pix}}
+        {{/settings.togglemoreicon}}
+        {{^settings.excludetext}}
+            {{#str}} settings, mod_forum {{/str}}
+        {{/settings.excludetext}}
+    </a>
+    <div class="dropdown-menu dropdown-menu-right"
+         aria-labelledby="forum-action-menu-{{id}}-menu"
+         data-rel="menu-content"
+         role="menu"
+         id="forum-action-menu-{{id}}-menu">
+        {{#capabilities.favourite}}
+            {{> mod_forum/discussion_favourite_toggle}}
+        {{/capabilities.favourite}}
+        {{#capabilities.pin}}
+            {{> mod_forum/discussion_pin_toggle}}
+        {{/capabilities.pin}}
+        {{#capabilities.manage}}
+            {{^istimelocked}}
+                {{> forum/discussion_lock_toggle }}
+            {{/istimelocked}}
+        {{/capabilities.manage}}
+        {{^settings.excludesubscription}}
+            {{> forum/discussion_subscription_toggle }}
+        {{/settings.excludesubscription}}
+        {{#unread}}
+            {{> forum/mark_as_read }}
+        {{/unread}}
+    </div>
+</div>

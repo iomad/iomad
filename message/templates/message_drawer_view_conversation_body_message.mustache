@@ -1,0 +1,95 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_view_conversation_body_message
+
+    This template will render a single message for the body of the conversation page
+    in the message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+<div
+    class="message clickable d-flex flex-column p-2 mx-1 position-relative {{#fromloggedinuser}}send {{/fromloggedinuser}}{{^fromloggedinuser}}received{{/fromloggedinuser}} rounded mb-2 mt-2"
+    data-region="message"
+    data-message-id="{{id}}"
+    role="checkbox"
+    aria-checked="false"
+    tabindex="0"
+>
+    <div class="tail position-absolute"></div>
+    <div class="d-flex align-items-center {{^fromloggedinuser}}pb-2{{/fromloggedinuser}}">
+        {{^fromloggedinuser}}
+        <div style="flex-shrink: 0">
+            <img
+                class="rounded-circle"
+                src="{{{userfrom.profileimageurl}}}"
+                alt="{{userfrom.fullname}}"
+                aria-hidden="true"
+                style="height: 30px"
+            >
+        </div>
+        <div class="text-truncate pl-2 pr-2">
+            <h6 class="text-truncate m-0 font-weight-bold">{{userfrom.fullname}}</h6>
+        </div>
+        {{/fromloggedinuser}}
+
+        <div
+            class="ml-auto small text-right time {{^formattedtime}}hidden{{/formattedtime}}"
+            style="flex-shrink: 0"
+            data-region="time-created"
+        >
+            {{formattedtime}}
+        </div>
+        <div
+            class="ml-auto small {{#formattedtime}}hidden{{/formattedtime}}"
+            {{#formattedtime}}aria-hidden="true"{{/formattedtime}}
+            {{^formattedtime}}aria-hidden="false"{{/formattedtime}}
+            data-region="loading-icon-container"
+        >
+            {{> core/loading }}
+        </div>
+        <div role="alert" class="text-danger hidden small" aria-hidden="true" data-region="error-message-container">
+            <div class="d-flex align-items-center">
+                {{#pix}} req, core {{/pix}}
+                <span class="ml-1" data-region="error-message"></span>
+            </div>
+        </div>
+        <button
+            class="ml-auto btn btn-link p-0 line-height-3 hidden"
+            aria-hidden="true"
+            data-region="retry-send"
+            title="{{#str}} retry, core {{/str}}"
+        >
+            <span class="text-primary small">{{#str}} retry, core {{/str}}</span>
+        </button>
+        <span class="hidden ml-2 small" data-region="not-selected-icon">{{#pix}} i/uncheckedcircle, core {{/pix}}</span>
+        <span class="hidden ml-2 small" data-region="selected-icon">{{#pix}} i/checkedcircle, core {{/pix}}</span>
+    </div>
+    <div dir="auto" align="initial" data-region="text-container">{{{text}}}</div>
+</div>

@@ -1,0 +1,23 @@
+/* Float the icons right to be placed next to the existing icons "messages" and "notifications". */
+header.navbar .localnavbarplus.nav-link {
+    float: right;
+    margin-right: 10px;
+}
+
+/* We don't need this margin for the first icon. */
+header.navbar .localnavbarplus.nav-link a:first-of-type > .icon {
+    margin-left: 0;
+}
+
+/* Do not display the icon if a user has disabled Javascript in his browser. */
+body:not(.jsenabled) #local_navbarplus_resetusertour {
+    display: none;
+}
+
+/* Style Font Awesome icons. */
+header.navbar .localnavbarplus i.fa {
+    color: rgba(0, 0, 0, .535);
+    font-size: 19px;
+    width: 19px;
+    height: 18px;
+}

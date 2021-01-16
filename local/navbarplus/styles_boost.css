@@ -1,0 +1,4 @@
+/* Needed to get same margin between Moodle pix icons and Font Awesome icons. */
+header.navbar .localnavbarplus > a > img {
+    margin-left: 0;
+}

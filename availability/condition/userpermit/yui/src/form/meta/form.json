@@ -1,0 +1,11 @@
+<?php
+{
+  "moodle-availability_userpermit-form": {
+    "requires": [
+        "base",
+        "node",
+        "event",
+        "moodle-core_availability-form"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "moodle-tool_dataprivacy",
+  "description": "The Data Privacy Plugin Tool for Moodle",
+  "devDependencies": {
+    "eslint": "4.6.1",
+    "eslint-plugin-promise": "3.5.0",
+    "grunt": "1.0.1",
+    "grunt-contrib-uglify": "1.0.1",
+    "grunt-contrib-watch": "1.0.0",
+    "grunt-eslint": "20.1.0",
+    "grunt-load-gruntfile": "0.0.2",
+    "semver": "5.3.0"
+  },
+  "engines": {
+    "node": "8.9"
+  }
+}

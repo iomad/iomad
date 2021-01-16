@@ -1,0 +1,64 @@
+/* Copyright 1999-2014. Parallels IP Holdings GmbH. All Rights Reserved. */
+html { font-size: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+html, body { border: 0; margin: 0; height: 100%; min-height: 100%; }
+body { color: #1e1e1e; font: 13px/1.231 arial, helvetica, sans-serif; background: #f5f5f5; }
+img { border: 0; vertical-align: middle; -ms-interpolation-mode: bicubic; }
+table { border-collapse: collapse; border-spacing: 0; }
+form { margin: 0; padding: 0; border: 0; }
+a, a:visited { color: #0050b4; }
+a:hover, a:active { outline: 0; color: #00a0ff; }
+hr { display: block; margin: .9em 0; padding: 0; height: 2px; border: 0; border-top: 1px solid #c8c8c8; box-shadow: inset 0 1px 0 #fff; }
+.lte7 hr { margin: .5em 0; }
+h1, h2 { margin: 10px 0 15px; padding: 0; font: italic 20px georgia, serif; color: #1e3c64; }
+h2 { margin: 0 0 5px; font-size: 17px; }
+h3 { margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 400; }
+p { margin: 0; padding: 0 0 12px; }
+ul { margin: 0; padding: 0; list-style: none; }
+li { padding: 0 0 8px 14px; background: url(../img/bullet.gif) 0 5px no-repeat; }
+#page { min-height: 100%; text-align: left; }
+.ie6 #page { height: 100%; }
+#wrapper { padding: 0 0 45px; }
+#top { border-bottom: 1px solid #fff; height: 50px; background: #646464 url(../img/top-bottom.png) repeat-x; }
+.product-logo { display: inline; float: left; margin: 0 20px; }
+.company-logo { display: inline; float: right; margin: 7px 20px 0; }
+#content { margin: auto; padding: 10px 0 0; width: 960px; text-shadow: 0 1px 0 #fff; }
+#footer-wrapper { position: relative; margin: -45px 0 0; height: 35px; padding: 10px 0 0; }
+#footer { border-top: 4px solid #bce1f8; padding: 0 20px; height: 31px; line-height: 30px; text-align: center; text-shadow: 0 -1px #000; font-size: 11px; color: #969696; background: #313131 url(../img/top-bottom.png) 0 -100px repeat-x; box-shadow: inset 0 1px 0 #1594ff; }
+#footer a, #footer a:visited, #footer a:hover, #footer a:active { color: #969696; text-decoration: none; }
+#footer a:hover, #footer a:active { text-decoration: underline; }
+#footer .separator { border-left: 1px solid #646464; margin: 0 10px; }
+.p-box, .test-box { border: 1px solid #7896aa; border-radius: 10px; margin: 0 0 10px; background: #efefef url(../img/p-box.png) repeat-x; background-clip: padding-box; box-shadow: inset 0 1px 0 #fff, 0 1px 0 #fff; }
+.p-box-wrap { padding: 10px 20px; }
+.p-box-page-info .p-box-wrap { padding-left: 230px; min-height: 168px; background: url(../img/globe.png) 20px 10px no-repeat; }
+.grid { white-space: nowrap; letter-spacing: -1em; font-size: 0; }
+.g-span { display: inline-block; width: 50%; vertical-align: top; white-space: normal; letter-spacing: 0; font-size: 13px; }
+.lte7 .g-span { display: inline; zoom: 1; }
+.g-span-1-2-wrap { padding: 0 5px 0 0; }
+.g-span-2-2-wrap { padding: 0 0 0 5px; }
+.p-box .g-span-wrap { overflow: hidden; }
+.p-box .g-span img { display: inline; float: left; margin: 0 10px 0 0; }
+.test-list { text-align: center; }
+.test-list li { display: inline; padding: 0; background: none; }
+.test-list .icon { display: inline-block; margin: 0 1px 5px; padding: 0; min-height: 32px; text-decoration: none; vertical-align: top; color: #000; cursor: pointer; background-position: 50% 0; background-repeat: no-repeat; }
+.lte7 .test-list .icon { display: inline; zoom: 1; }
+a.icon, a.icon:visited, a.icon:hover, a.icon:active { color: #000; text-decoration: none; }
+a.icon:hover, a.icon:active { color: #00a0ff; text-decoration: underline; }
+.icon span { display: block; padding: 36px 0 0; width: 80px; text-align: center; cursor: pointer; }
+.i-php { background-image: url(../img/icons/php.png); }
+.i-perl { background-image: url(../img/icons/perl.png); }
+.i-python { background-image: url(../img/icons/python.png); }
+.i-ssi { background-image: url(../img/icons/ssi.png); }
+.i-fcgi { background-image: url(../img/icons/fastcgi.png); }
+.i-aspnet { background-image: url(../img/icons/aspdotnet.png); }
+#content.test { width: 700px; }
+.pathbar { font-size: 11px; color: #787878; }
+.pathbar a { text-decoration: none; }
+.test-box-wrap { padding: 20px; }
+iframe { border: 1px solid #7896aa; }
+.test-data { text-align: left; background: #f5f5f5; }
+.test-data table { border: 0; border-collapse: collapse; width: 100%; }
+.test-data th, .test-data td { padding: 6px; height: 16px; vertical-align: top; color: #1e1e1e; }
+.test-data .subhead th { border-bottom: 1px solid #7896aa; text-align: left; white-space: nowrap; font-weight: 400; color: #000; background: #f5f5f5 url(../img/th.png) repeat-x; }
+.lte8 .test-data .subhead th:first-child { border-left-width: 0; }
+.test-data .normal { background-color: #fff; }
+.test-data .alt { background-color: #ebebeb; }

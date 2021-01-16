@@ -1,0 +1,5 @@
+// Background color change as of MDL-63042
+$dashboard-bg: darken($body-bg, 3%) !default;
+#page-my-index {
+    background-color: $dashboard-bg;
+}
