@@ -1,6 +1,0 @@
-          <INSTANCE>
-            <ID>[#mod_instance_id#]</ID>
-            <NAME>[#mod_name#]</NAME>
-            <INCLUDED>true</INCLUDED>
-            <USERINFO>false</USERINFO>
-          </INSTANCE>

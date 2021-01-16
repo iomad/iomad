@@ -1,9 +1,0 @@
-{
-    "moodle-mod_quiz-questionchooser": {
-        "requires": [
-            "moodle-core-chooserdialogue",
-            "moodle-mod_quiz-util",
-            "querystring-parse"
-        ]
-    }
-}

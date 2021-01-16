@@ -1,6 +1,0 @@
-<p>name: {{ license.name }}</p>
-<select id="licensecourseselector" name="licensecourses[]" multiple="multiple">
-    {{# courses }}
-        <option value="{{ id }}" {{# license.program }}selected disabled{{/ license.program }}>{{ fullname }}</option>
-    {{/ courses }}
-</select>

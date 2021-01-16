@@ -1,8 +1,0 @@
-{
-    "moodle-core-handlebars": {
-        "condition": {
-            "trigger": "handlebars",
-            "when": "after"
-        }
-    }
-}

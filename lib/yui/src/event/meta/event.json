@@ -1,7 +1,0 @@
-{
-    "moodle-core-event": {
-        "requires": [
-            "event-custom"
-        ]
-    }
-}
