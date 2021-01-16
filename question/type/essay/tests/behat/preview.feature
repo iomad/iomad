@@ -24,11 +24,11 @@ Feature: Preview Essay questions
       | Test questions   | essay | essay-003 | plain            |
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   @javascript @_switch_window
   Scenario: Preview an Essay question and submit a partially correct response.
-    When I choose "Preview" action for "essay-001" in the question bank
+    When I click on "Preview" "link" in the "essay-001" "table_row"
     And I switch to "questionpreview" window
     And I set the field "How questions behave" to "Immediate feedback"
     And I press "Start again with these options"
@@ -37,7 +37,7 @@ Feature: Preview Essay questions
 
   @javascript @_switch_window
   Scenario: Preview an Essay question and submit a partially correct response.
-    When I choose "Preview" action for "essay-002" in the question bank
+    When I click on "Preview" "link" in the "essay-002" "table_row"
     And I switch to "questionpreview" window
     And I set the field "How questions behave" to "Immediate feedback"
     And I press "Start again with these options"
@@ -47,7 +47,7 @@ Feature: Preview Essay questions
 
   @javascript @_switch_window
   Scenario: Preview an Essay question and submit a partially correct response.
-    When I choose "Preview" action for "essay-003" in the question bank
+    When I click on "Preview" "link" in the "essay-003" "table_row"
     And I switch to "questionpreview" window
     And I set the field "How questions behave" to "Immediate feedback"
     And I press "Start again with these options"

@@ -104,10 +104,8 @@ class mod_survey_external extends external_api {
                     }
 
                     // Format intro.
-                    $options = array('noclean' => true);
                     list($surveydetails['intro'], $surveydetails['introformat']) =
-                        external_format_text($survey->intro, $survey->introformat, $context->id, 'mod_survey', 'intro', null,
-                            $options);
+                        external_format_text($survey->intro, $survey->introformat, $context->id, 'mod_survey', 'intro', null);
                     $surveydetails['introfiles'] = external_util::get_area_files($context->id, 'mod_survey', 'intro', false,
                                                                                     false);
 

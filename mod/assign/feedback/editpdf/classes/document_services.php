@@ -38,14 +38,10 @@ use DOMDocument;
  */
 class document_services {
 
-    /** Compoment name */
-    const COMPONENT = "assignfeedback_editpdf";
     /** File area for generated pdf */
     const FINAL_PDF_FILEAREA = 'download';
     /** File area for combined pdf */
     const COMBINED_PDF_FILEAREA = 'combined';
-    /** File area for partial combined pdf */
-    const PARTIAL_PDF_FILEAREA = 'partial';
     /** File area for importing html */
     const IMPORT_HTML_FILEAREA = 'importhtml';
     /** File area for page images */
@@ -56,10 +52,6 @@ class document_services {
     const STAMPS_FILEAREA = 'stamps';
     /** Filename for combined pdf */
     const COMBINED_PDF_FILENAME = 'combined.pdf';
-    /**  Temporary place to save JPG Image to PDF file */
-    const TMP_JPG_TO_PDF_FILEAREA = 'tmp_jpg_to_pdf';
-    /**  Temporary place to save (Automatically) Rotated JPG FILE */
-    const TMP_ROTATED_JPG_FILEAREA = 'tmp_rotated_jpg';
     /** Hash of blank pdf */
     const BLANK_PDF_HASH = '4c803c92c71f21b423d13de570c8a09e0a31c718';
 
@@ -128,22 +120,22 @@ EOD;
      * @return string New html with no image tags.
      */
     protected static function strip_images($html) {
-        // Load HTML and suppress any parsing errors (DOMDocument->loadHTML() does not current support HTML5 tags).
         $dom = new DOMDocument();
-        libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml version="1.0" encoding="UTF-8" ?>' . $html);
-        libxml_clear_errors();
+        $dom->loadHTML("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" . $html);
+        $images = $dom->getElementsByTagName('img');
+        $i = 0;
 
-        // Find all img tags.
-        if ($imgnodes = $dom->getElementsByTagName('img')) {
-            // Replace img nodes with the img alt text without overriding DOM elements.
-            for ($i = ($imgnodes->length - 1); $i >= 0; $i--) {
-                $imgnode = $imgnodes->item($i);
-                $alt = ($imgnode->hasAttribute('alt')) ? ' [ ' . $imgnode->getAttribute('alt') . ' ] ' : ' ';
-                $textnode = $dom->createTextNode($alt);
+        for ($i = ($images->length - 1); $i >= 0; $i--) {
+            $node = $images->item($i);
 
-                $imgnode->parentNode->replaceChild($textnode, $imgnode);
+            if ($node->hasAttribute('alt')) {
+                $replacement = ' [ ' . $node->getAttribute('alt') . ' ] ';
+            } else {
+                $replacement = ' ';
             }
+
+            $text = $dom->createTextNode($replacement);
+            $node->parentNode->replaceChild($text, $node);
         }
         $count = 1;
         return str_replace("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>", "", $dom->saveHTML(), $count);
@@ -191,28 +183,9 @@ EOD;
                 $pluginfiles = $plugin->get_files($submission, $user);
                 foreach ($pluginfiles as $filename => $file) {
                     if ($file instanceof \stored_file) {
-                        $mimetype = $file->get_mimetype();
-                        // PDF File, no conversion required.
-                        if ($mimetype === 'application/pdf') {
+                        if ($file->get_mimetype() === 'application/pdf') {
                             $files[$filename] = $file;
-                        } else if ($plugin->allow_image_conversion() && $mimetype === "image/jpeg") {
-                            // Rotates image based on the EXIF value.
-                            list ($rotateddata, $size) = $file->rotate_image();
-                            if ($rotateddata) {
-                                $file = self::save_rotated_image_file($assignment, $userid, $attemptnumber,
-                                    $rotateddata, $filename);
-                            }
-                            // Save as PDF file if there is no available converter.
-                            if (!$converter->can_convert_format_to('jpg', 'pdf')) {
-                                $pdffile = self::save_jpg_to_pdf($assignment, $userid, $attemptnumber, $file, $size);
-                                if ($pdffile) {
-                                    $files[$filename] = $pdffile;
-                                }
-                            }
-                        }
-                        // The file has not been converted to PDF, try to convert it to PDF.
-                        if (!isset($files[$filename])
-                            && $convertedfile = $converter->start_conversion($file, 'pdf')) {
+                        } else if ($convertedfile = $converter->start_conversion($file, 'pdf')) {
                             $files[$filename] = $convertedfile;
                         }
                     } else if ($converter->can_convert_format_to('html', 'pdf')) {
@@ -291,19 +264,12 @@ EOD;
         $contextid = $assignment->get_context()->id;
         $component = 'assignfeedback_editpdf';
         $filearea = self::COMBINED_PDF_FILEAREA;
-        $partialfilearea = self::PARTIAL_PDF_FILEAREA;
         $itemid = $grade->id;
         $filepath = '/';
         $filename = self::COMBINED_PDF_FILENAME;
         $fs = get_file_storage();
 
-        $partialpdf = $fs->get_file($contextid, $component, $partialfilearea, $itemid, $filepath, $filename);
-        if (!empty($partialpdf)) {
-            $combinedpdf = $partialpdf;
-        } else {
-            $combinedpdf = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename);
-        }
-
+        $combinedpdf = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename);
         if ($combinedpdf && $submission) {
             if ($combinedpdf->get_timemodified() < $submission->timemodified) {
                 // The submission has been updated since the PDF was generated.
@@ -389,10 +355,9 @@ EOD;
      * @param int|\assign $assignment
      * @param int $userid
      * @param int $attemptnumber (-1 means latest attempt)
-     * @param bool $resetrotation check if need to reset page rotation information
      * @return array(stored_file)
      */
-    protected static function generate_page_images_for_attempt($assignment, $userid, $attemptnumber, $resetrotation = true) {
+    protected static function generate_page_images_for_attempt($assignment, $userid, $attemptnumber) {
         global $CFG;
 
         require_once($CFG->libdir . '/pdflib.php');
@@ -416,7 +381,6 @@ EOD;
 
         $tmpdir = \make_temp_directory('assignfeedback_editpdf/pageimages/' . self::hash($assignment, $userid, $attemptnumber));
         $combined = $tmpdir . '/' . self::COMBINED_PDF_FILENAME;
-
         $document->get_combined_file()->copy_content_to($combined); // Copy the file.
 
         $pdf = new pdf();
@@ -441,16 +405,6 @@ EOD;
         for ($i = 0; $i < $pagecount; $i++) {
             try {
                 $image = $pdf->get_image($i);
-                if (!$resetrotation) {
-                    $pagerotation = page_editor::get_page_rotation($grade->id, $i);
-                    $degree = !empty($pagerotation) ? $pagerotation->degree : 0;
-                    if ($degree != 0) {
-                        $filepath = $tmpdir . '/' . $image;
-                        $imageresource = imagecreatefrompng($filepath);
-                        $content = imagerotate($imageresource, $degree, 0);
-                        imagepng($content, $filepath);
-                    }
-                }
             } catch (\moodle_exception $e) {
                 // We catch only moodle_exception here as other exceptions indicate issue with setup not the pdf.
                 $image = pdf::get_error_image($tmpdir, $i);
@@ -458,12 +412,6 @@ EOD;
             $record->filename = basename($image);
             $files[$i] = $fs->create_file_from_pathname($record, $tmpdir . '/' . $image);
             @unlink($tmpdir . '/' . $image);
-            // Set page rotation default value.
-            if (!empty($files[$i])) {
-                if ($resetrotation) {
-                    page_editor::set_page_rotation($grade->id, $i, false, $files[$i]->get_pathnamehash());
-                }
-            }
         }
         $pdf->Close(); // PDF loaded and never saved/outputted needs to be closed.
 
@@ -531,7 +479,6 @@ EOD;
         $files = $fs->get_directory_files($contextid, $component, $filearea, $itemid, $filepath);
 
         $pages = array();
-        $resetrotation = false;
         if (!empty($files)) {
             $first = reset($files);
             $pagemodified = $first->get_timemodified();
@@ -555,12 +502,11 @@ EOD;
                 $fs->delete_area_files($contextid, $component, $filearea, $itemid);
                 page_editor::delete_draft_content($itemid);
                 $files = array();
-                $resetrotation = true;
             } else {
 
                 // Need to reorder the files following their name.
                 // because get_directory_files() return a different order than generate_page_images_for_attempt().
-                foreach ($files as $file) {
+                foreach($files as $file) {
                     // Extract the page number from the file name image_pageXXXX.png.
                     preg_match('/page([\d]+)\./', $file->get_filename(), $matches);
                     if (empty($matches) or !is_numeric($matches[1])) {
@@ -576,15 +522,13 @@ EOD;
             }
         }
 
-        $totalpagesforattempt = self::page_number_for_attempt($assignment, $userid, $attemptnumber, false);
-        // Here we are comparing the total number of images against the total number of pages from the combined PDF.
-        if (empty($pages) || count($pages) != $totalpagesforattempt) {
+        if (empty($pages)) {
             if ($readonly) {
                 // This should never happen, there should be a version of the pages available
                 // whenever we are requesting the readonly version.
                 throw new \moodle_exception('Could not find readonly pages for grade ' . $grade->id);
             }
-            $pages = self::generate_page_images_for_attempt($assignment, $userid, $attemptnumber, $resetrotation);
+            $pages = self::generate_page_images_for_attempt($assignment, $userid, $attemptnumber);
         }
 
         return $pages;
@@ -693,20 +637,7 @@ EOD;
         $allcomments = array();
 
         for ($i = 0; $i < $pagecount; $i++) {
-            $pagerotation = page_editor::get_page_rotation($grade->id, $i);
-            $pagemargin = $pdf->getBreakMargin();
-            $autopagebreak = $pdf->getAutoPageBreak();
-            if (empty($pagerotation) || !$pagerotation->isrotated) {
-                $pdf->copy_page();
-            } else {
-                $rotatedimagefile = $fs->get_file_by_hash($pagerotation->pathnamehash);
-                if (empty($rotatedimagefile)) {
-                    $pdf->copy_page();
-                } else {
-                    $pdf->add_image_page($rotatedimagefile);
-                }
-            }
-
+            $pdf->copy_page();
             $comments = page_editor::get_comments($grade->id, $i, false);
             $annotations = page_editor::get_annotations($grade->id, $i, false);
 
@@ -724,8 +655,6 @@ EOD;
                                      $annotation->path,
                                      $stamptmpdir);
             }
-            $pdf->SetAutoPageBreak($autopagebreak, $pagemargin);
-            $pdf->setPageMark();
         }
 
         if (!empty($allcomments)) {
@@ -748,6 +677,7 @@ EOD;
         $generatedpdf = $tmpdir . '/' . $filename;
         $pdf->save_pdf($generatedpdf);
 
+
         $record = new \stdClass();
 
         $record->contextid = $assignment->get_context()->id;
@@ -756,6 +686,7 @@ EOD;
         $record->itemid = $grade->id;
         $record->filepath = '/';
         $record->filename = $filename;
+
 
         // Only keep one current version of the generated pdf.
         $fs->delete_area_files($record->contextid, $record->component, $record->filearea, $record->itemid);
@@ -865,210 +796,6 @@ EOD;
 
         $fs = get_file_storage();
         return $fs->delete_area_files($contextid, $component, $filearea, $itemid);
-    }
-
-    /**
-     * Get All files in a File area
-     * @param int|\assign $assignment Assignment
-     * @param int $userid User ID
-     * @param int $attemptnumber Attempt Number
-     * @param string $filearea File Area
-     * @param string $filepath File Path
-     * @return array
-     */
-    private static function get_files($assignment, $userid, $attemptnumber, $filearea, $filepath = '/') {
-        $grade = $assignment->get_user_grade($userid, true, $attemptnumber);
-        $itemid = $grade->id;
-        $contextid = $assignment->get_context()->id;
-        $component = self::COMPONENT;
-        $fs = get_file_storage();
-        $files = $fs->get_directory_files($contextid, $component, $filearea, $itemid, $filepath);
-        return $files;
-    }
-
-    /**
-     * Save file.
-     * @param int|\assign $assignment Assignment
-     * @param int $userid User ID
-     * @param int $attemptnumber Attempt Number
-     * @param string $filearea File Area
-     * @param string $newfilepath File Path
-     * @param string $storedfilepath stored file path
-     * @return \stored_file
-     * @throws \file_exception
-     * @throws \stored_file_creation_exception
-     */
-    private static function save_file($assignment, $userid, $attemptnumber, $filearea, $newfilepath, $storedfilepath = '/') {
-        $grade = $assignment->get_user_grade($userid, true, $attemptnumber);
-        $itemid = $grade->id;
-        $contextid = $assignment->get_context()->id;
-
-        $record = new \stdClass();
-        $record->contextid = $contextid;
-        $record->component = self::COMPONENT;
-        $record->filearea = $filearea;
-        $record->itemid = $itemid;
-        $record->filepath = $storedfilepath;
-        $record->filename = basename($newfilepath);
-
-        $fs = get_file_storage();
-
-        $oldfile = $fs->get_file($record->contextid, $record->component, $record->filearea,
-            $record->itemid, $record->filepath, $record->filename);
-
-        $newhash = sha1($newfilepath);
-
-        // Delete old file if exists.
-        if ($oldfile && $newhash !== $oldfile->get_contenthash()) {
-            $oldfile->delete();
-        }
-
-        return $fs->create_file_from_pathname($record, $newfilepath);
-    }
-
-    /**
-     * This function rotate a page, and mark the page as rotated.
-     * @param int|\assign $assignment Assignment
-     * @param int $userid User ID
-     * @param int $attemptnumber Attempt Number
-     * @param int $index Index of Current Page
-     * @param bool $rotateleft To determine whether the page is rotated left or right.
-     * @return null|\stored_file return rotated File
-     * @throws \coding_exception
-     * @throws \file_exception
-     * @throws \moodle_exception
-     * @throws \stored_file_creation_exception
-     */
-    public static function rotate_page($assignment, $userid, $attemptnumber, $index, $rotateleft) {
-        $assignment = self::get_assignment_from_param($assignment);
-        $grade = $assignment->get_user_grade($userid, true, $attemptnumber);
-        // Check permission.
-        if (!$assignment->can_view_submission($userid)) {
-            print_error('nopermission');
-        }
-
-        $filearea = self::PAGE_IMAGE_FILEAREA;
-        $files = self::get_files($assignment, $userid, $attemptnumber, $filearea);
-        if (!empty($files)) {
-            foreach ($files as $file) {
-                preg_match('/' . pdf::IMAGE_PAGE . '([\d]+)\./', $file->get_filename(), $matches);
-                if (empty($matches) or !is_numeric($matches[1])) {
-                    throw new \coding_exception("'" . $file->get_filename()
-                        . "' file hasn't the expected format filename: image_pageXXXX.png.");
-                }
-                $pagenumber = (int)$matches[1];
-
-                if ($pagenumber == $index) {
-                    $source = imagecreatefromstring($file->get_content());
-                    $pagerotation = page_editor::get_page_rotation($grade->id, $index);
-                    $degree = empty($pagerotation) ? 0 : $pagerotation->degree;
-                    if ($rotateleft) {
-                        $content = imagerotate($source, 90, 0);
-                        $degree = ($degree + 90) % 360;
-                    } else {
-                        $content = imagerotate($source, -90, 0);
-                        $degree = ($degree - 90) % 360;
-                    }
-                    $filename = $matches[0].'png';
-                    $tmpdir = make_temp_directory(self::COMPONENT . '/' . self::PAGE_IMAGE_FILEAREA . '/'
-                        . self::hash($assignment, $userid, $attemptnumber));
-                    $tempfile = $tmpdir . '/' . time() . '_' . $filename;
-                    imagepng($content, $tempfile);
-
-                    $filearea = self::PAGE_IMAGE_FILEAREA;
-                    $newfile = self::save_file($assignment, $userid, $attemptnumber, $filearea, $tempfile);
-
-                    unlink($tempfile);
-                    rmdir($tmpdir);
-                    imagedestroy($source);
-                    imagedestroy($content);
-                    $file->delete();
-                    if (!empty($newfile)) {
-                        page_editor::set_page_rotation($grade->id, $pagenumber, true, $newfile->get_pathnamehash(), $degree);
-                    }
-                    return $newfile;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Convert jpg file to pdf file
-     * @param int|\assign $assignment Assignment
-     * @param int $userid User ID
-     * @param int $attemptnumber Attempt Number
-     * @param \stored_file $file file to save
-     * @param null|array $size size of image
-     * @return \stored_file
-     * @throws \file_exception
-     * @throws \stored_file_creation_exception
-     */
-    private static function save_jpg_to_pdf($assignment, $userid, $attemptnumber, $file, $size=null) {
-        // Temporary file.
-        $filename = $file->get_filename();
-        $tmpdir = make_temp_directory('assignfeedback_editpdf' . DIRECTORY_SEPARATOR
-            . self::TMP_JPG_TO_PDF_FILEAREA . DIRECTORY_SEPARATOR
-            . self::hash($assignment, $userid, $attemptnumber));
-        $tempfile = $tmpdir . DIRECTORY_SEPARATOR . $filename . ".pdf";
-        // Determine orientation.
-        $orientation = 'P';
-        if (!empty($size['width']) && !empty($size['height'])) {
-            if ($size['width'] > $size['height']) {
-                $orientation = 'L';
-            }
-        }
-        // Save JPG image to PDF file.
-        $pdf = new pdf();
-        $pdf->SetHeaderMargin(0);
-        $pdf->SetFooterMargin(0);
-        $pdf->SetMargins(0, 0, 0, true);
-        $pdf->setPrintFooter(false);
-        $pdf->setPrintHeader(false);
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-        $pdf->AddPage($orientation);
-        $pdf->SetAutoPageBreak(false);
-        // Width has to be define here to fit into A4 page. Otherwise the image will be inserted with original size.
-        if ($orientation == 'P') {
-            $pdf->Image('@' . $file->get_content(), 0, 0, 210);
-        } else {
-            $pdf->Image('@' . $file->get_content(), 0, 0, 297);
-        }
-        $pdf->setPageMark();
-        $pdf->save_pdf($tempfile);
-        $filearea = self::TMP_JPG_TO_PDF_FILEAREA;
-        $pdffile = self::save_file($assignment, $userid, $attemptnumber, $filearea, $tempfile);
-        if (file_exists($tempfile)) {
-            unlink($tempfile);
-            rmdir($tmpdir);
-        }
-        return $pdffile;
-    }
-
-    /**
-     * Save rotated image data to file.
-     * @param int|\assign $assignment Assignment
-     * @param int $userid User ID
-     * @param int $attemptnumber Attempt Number
-     * @param resource $rotateddata image data to save
-     * @param string $filename name of the image file
-     * @return \stored_file
-     * @throws \file_exception
-     * @throws \stored_file_creation_exception
-     */
-    private static function save_rotated_image_file($assignment, $userid, $attemptnumber, $rotateddata, $filename) {
-        $filearea = self::TMP_ROTATED_JPG_FILEAREA;
-        $tmpdir = make_temp_directory('assignfeedback_editpdf' . DIRECTORY_SEPARATOR
-            . $filearea . DIRECTORY_SEPARATOR
-            . self::hash($assignment, $userid, $attemptnumber));
-        $tempfile = $tmpdir . DIRECTORY_SEPARATOR . basename($filename);
-        imagejpeg($rotateddata, $tempfile);
-        $newfile = self::save_file($assignment, $userid, $attemptnumber, $filearea, $tempfile);
-        if (file_exists($tempfile)) {
-            unlink($tempfile);
-            rmdir($tmpdir);
-        }
-        return $newfile;
     }
 
 }

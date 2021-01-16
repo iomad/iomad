@@ -20,10 +20,6 @@
 // $Id$
 
 require_once('HTML/Common.php');
-/**
- * Static utility methods.
- */
-require_once('HTML/QuickForm/utils.php');
 
 /**
  * Base class for form elements
@@ -355,12 +351,8 @@ class HTML_QuickForm_element extends HTML_Common
         if (isset($values[$elementName])) {
             return $values[$elementName];
         } elseif (strpos($elementName, '[')) {
-            $keys = str_replace(
-                array('\\', '\'', ']', '['), array('\\\\', '\\\'', '', "']['"),
-                $elementName
-            );
-            $arrayKeys = explode("']['", $keys);
-            return HTML_QuickForm_utils::recursiveValue($values, $arrayKeys);
+            $myVar = "['" . str_replace(array(']', '['), array('', "']['"), $elementName) . "']";
+            return eval("return (isset(\$values$myVar)) ? \$values$myVar : null;");
         } else {
             return null;
         }
@@ -384,10 +376,6 @@ class HTML_QuickForm_element extends HTML_Common
         switch ($event) {
             case 'createElement':
                 static::__construct($arg[0], $arg[1], $arg[2], $arg[3], $arg[4]);
-                if ($caller->getAttribute('data-random-ids') && !$this->getAttribute('id')) {
-                    $this->_generateId();
-                    $this->updateAttributes(array('id' => $this->getAttribute('id') . '_' . random_string()));
-                }
                 break;
             case 'addElement':
                 $this->onQuickFormEvent('createElement', $arg, $caller);
@@ -495,12 +483,10 @@ class HTML_QuickForm_element extends HTML_Common
             if (!strpos($name, '[')) {
                 return array($name => $value);
             } else {
-                $keys = str_replace(
-                    array('\\', '\'', ']', '['), array('\\\\', '\\\'', '', "']['"),
-                    $name
-                );
-                $keysArray = explode("']['", $keys);
-                return HTML_QuickForm_utils::recursiveBuild($keysArray, $value);
+                $valueAry = array();
+                $myIndex  = "['" . str_replace(array(']', '['), array('', "']['"), $name) . "']";
+                eval("\$valueAry$myIndex = \$value;");
+                return $valueAry;
             }
         }
     }

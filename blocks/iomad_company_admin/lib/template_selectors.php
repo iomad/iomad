@@ -20,6 +20,7 @@ require_once(dirname(__FILE__) . '/../../../local/template_selector/lib.php');
  * base class for selecting templates of a company
  */
 abstract class company_template_selector_base extends template_selector_base {
+    const MAX_TEMPLATES_PER_PAGE = 200;
 
     protected $companyid;
 
@@ -66,7 +67,7 @@ class current_company_templates_selector extends company_template_selector_base 
     }
 
     public function find_templates($search) {
-        global $CFG, $DB;
+        global $DB, $CFG;
         // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'ct');
         $params['companyid'] = $this->companyid;
@@ -93,7 +94,7 @@ class current_company_templates_selector extends company_template_selector_base 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
                                      $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount >  $CFG->iomad_max_select_templates) {
+            if ($potentialmemberscount > company_template_selector_base::MAX_TEMPLATES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -153,7 +154,7 @@ class potential_company_templates_selector extends company_template_selector_bas
     }
 
     public function find_templates($search) {
-        global $CFG, $DB, $SITE;
+        global $DB, $SITE;
         // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'ct');
         $params['companyid'] = $this->companyid;
@@ -182,7 +183,7 @@ class potential_company_templates_selector extends company_template_selector_bas
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
-            if ($potentialmemberscount >  $CFG->iomad_max_select_templates) {
+            if ($potentialmemberscount > company_template_selector_base::MAX_TEMPLATES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }

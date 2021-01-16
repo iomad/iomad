@@ -42,8 +42,7 @@ class autogroup_form extends moodleform {
      * Form Definition
      */
     function definition() {
-        global $USER, $COURSE;
-        $coursecontext = context_course::instance($COURSE->id);
+        global $CFG, $COURSE;
 
         $mform =& $this->_form;
 
@@ -68,12 +67,6 @@ class autogroup_form extends moodleform {
         $mform->setType('number', PARAM_INT);
         $mform->addRule('number', null, 'numeric', null, 'client');
         $mform->addRule('number', get_string('required'), 'required', null, 'client');
-
-        // Enable group messaging for the groups to be auto-created.
-        if (\core_message\api::can_create_group_conversation($USER->id, $coursecontext)) {
-            $mform->addElement('selectyesno', 'enablemessaging', get_string('enablemessaging', 'group'));
-            $mform->addHelpButton('enablemessaging', 'enablemessaging', 'group');
-        }
 
         $mform->addElement('header', 'groupmembershdr', get_string('groupmembers', 'group'));
         $mform->setExpanded('groupmembershdr', true);

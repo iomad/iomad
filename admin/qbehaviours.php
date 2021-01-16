@@ -31,7 +31,7 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/tablelib.php');
 
 // Check permissions.
-require_login(null, false);
+require_login();
 $systemcontext = context_system::instance();
 require_capability('moodle/question:config', $systemcontext);
 
@@ -170,7 +170,7 @@ foreach ($sortedbehaviours as $behaviour => $behaviourname) {
     if ($version) {
         $row[] = $version;
     } else {
-        $row[] = html_writer::tag('span', get_string('nodatabase', 'admin'), array('class' => 'text-muted'));
+        $row[] = html_writer::tag('span', get_string('nodatabase', 'admin'), array('class' => 'disabled'));
     }
 
     // Other question types required by this one.

@@ -60,7 +60,14 @@ class enrol_manual_enrol_users_form extends moodleform {
         $mform = $this->_form;
         $mform->setDisableShortforms();
         $mform->disable_form_change_checker();
-        $periodmenu = enrol_get_period_list();
+        // Build the list of options for the enrolment period dropdown.
+        $unlimitedperiod = get_string('unlimited');
+        $periodmenu = array();
+        $periodmenu[''] = $unlimitedperiod;
+        for ($i=1; $i<=365; $i++) {
+            $seconds = $i * 86400;
+            $periodmenu[$seconds] = get_string('numdays', '', $i);
+        }
         // Work out the apropriate default settings.
         $defaultperiod = $instance->enrolperiod;
         if ($instance->enrolperiod > 0 && !isset($periodmenu[$instance->enrolperiod])) {
@@ -91,9 +98,7 @@ class enrol_manual_enrol_users_form extends moodleform {
             'ajax' => 'enrol_manual/form-potential-user-selector',
             'multiple' => true,
             'courseid' => $course->id,
-            'enrolid' => $instance->id,
-            'perpage' => $CFG->maxusersperpage,
-            'userfields' => implode(',', get_extra_user_fields($context))
+            'enrolid' => $instance->id
         );
         $mform->addElement('autocomplete', 'userlist', get_string('selectusers', 'enrol_manual'), array(), $options);
 
@@ -125,38 +130,18 @@ class enrol_manual_enrol_users_form extends moodleform {
         $mform->addElement('checkbox', 'recovergrades', get_string('recovergrades', 'enrol'));
         $mform->setAdvanced('recovergrades');
         $mform->setDefault('recovergrades', $CFG->recovergradesdefault);
+        $mform->addElement('select', 'duration', get_string('defaultperiod', 'enrol_manual'), $periodmenu);
+        $mform->setDefault('duration', $defaultperiod);
+        $mform->setAdvanced('duration');
         $mform->addElement('select', 'startdate', get_string('startingfrom'), $basemenu);
         $mform->setDefault('startdate', $extendbase);
         $mform->setAdvanced('startdate');
-        $mform->addElement('select', 'duration', get_string('enrolperiod', 'enrol'), $periodmenu);
-        $mform->setDefault('duration', $defaultperiod);
-        $mform->setAdvanced('duration');
-        $mform->disabledIf('duration', 'timeend[enabled]', 'checked', 1);
-        $mform->addElement('date_time_selector', 'timeend', get_string('enroltimeend', 'enrol'), ['optional' => true]);
-        $mform->setAdvanced('timeend');
+
         $mform->addElement('hidden', 'id', $course->id);
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'action', 'enrol');
         $mform->setType('action', PARAM_ALPHA);
         $mform->addElement('hidden', 'enrolid', $instance->id);
         $mform->setType('enrolid', PARAM_INT);
-    }
-
-    /**
-     * Validate the submitted form data.
-     *
-     * @param array $data array of ("fieldname"=>value) of submitted data
-     * @param array $files array of uploaded files "element_name"=>tmp_file_path
-     * @return array of "element_name"=>"error_description" if there are errors,
-     *         or an empty array if everything is OK (true allowed for backwards compatibility too).
-     */
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-        if (!empty($data['startdate']) && !empty($data['timeend'])) {
-            if ($data['startdate'] >= $data['timeend']) {
-                $errors['timeend'] = get_string('enroltimeendinvalid', 'enrol');
-            }
-        }
-        return $errors;
     }
 }

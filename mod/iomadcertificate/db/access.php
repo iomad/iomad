@@ -54,9 +54,6 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
         )
     ),
 

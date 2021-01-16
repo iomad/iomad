@@ -31,7 +31,8 @@ $enrol = required_param('store', PARAM_PLUGIN);
 $PAGE->set_url('/admin/tool/log/stores.php');
 $PAGE->set_context(context_system::instance());
 
-require_admin();
+require_login();
+require_capability('moodle/site:config', context_system::instance());
 require_sesskey();
 
 $all = \tool_log\log\manager::get_store_plugins();

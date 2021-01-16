@@ -38,7 +38,6 @@ defined('MOODLE_INTERNAL') || die();
  * @author    Russell Smith <mr-russ@smith2001.net>
  * @copyright 2016 Russell Smith
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @runClassInSeparateProcess
  */
 class core_session_redis_testcase extends advanced_testcase {
 
@@ -91,18 +90,9 @@ class core_session_redis_testcase extends advanced_testcase {
         $this->redis->close();
     }
 
-    public function test_normal_session_read_only() {
-        $sess = new \core\session\redis();
-        $sess->set_requires_write_lock(false);
-        $sess->init();
-        $this->assertSame('', $sess->handler_read('sess1'));
-        $this->assertTrue($sess->handler_close());
-    }
-
     public function test_normal_session_start_stop_works() {
         $sess = new \core\session\redis();
         $sess->init();
-        $sess->set_requires_write_lock(true);
         $this->assertTrue($sess->handler_open('Not used', 'Not used'));
         $this->assertSame('', $sess->handler_read('sess1'));
         $this->assertTrue($sess->handler_write('sess1', 'DATA'));
@@ -119,7 +109,6 @@ class core_session_redis_testcase extends advanced_testcase {
     public function test_session_blocks_with_existing_session() {
         $sess = new \core\session\redis();
         $sess->init();
-        $sess->set_requires_write_lock(true);
         $this->assertTrue($sess->handler_open('Not used', 'Not used'));
         $this->assertSame('', $sess->handler_read('sess1'));
         $this->assertTrue($sess->handler_write('sess1', 'DATA'));
@@ -131,7 +120,6 @@ class core_session_redis_testcase extends advanced_testcase {
 
         $sessblocked = new \core\session\redis();
         $sessblocked->init();
-        $sessblocked->set_requires_write_lock(true);
         $this->assertTrue($sessblocked->handler_open('Not used', 'Not used'));
 
         // Trap the error log and send it to stdOut so we can expect output at the right times.
@@ -154,7 +142,6 @@ class core_session_redis_testcase extends advanced_testcase {
     public function test_session_is_destroyed_when_it_does_not_exist() {
         $sess = new \core\session\redis();
         $sess->init();
-        $sess->set_requires_write_lock(true);
         $this->assertTrue($sess->handler_open('Not used', 'Not used'));
         $this->assertTrue($sess->handler_destroy('sess-destroy'));
         $this->assertSessionNoLocks();
@@ -163,7 +150,6 @@ class core_session_redis_testcase extends advanced_testcase {
     public function test_session_is_destroyed_when_we_have_it_open() {
         $sess = new \core\session\redis();
         $sess->init();
-        $sess->set_requires_write_lock(true);
         $this->assertTrue($sess->handler_open('Not used', 'Not used'));
         $this->assertSame('', $sess->handler_read('sess-destroy'));
         $this->assertTrue($sess->handler_destroy('sess-destroy'));
@@ -173,10 +159,8 @@ class core_session_redis_testcase extends advanced_testcase {
 
     public function test_multiple_sessions_do_not_interfere_with_each_other() {
         $sess1 = new \core\session\redis();
-        $sess1->set_requires_write_lock(true);
         $sess1->init();
         $sess2 = new \core\session\redis();
-        $sess2->set_requires_write_lock(true);
         $sess2->init();
 
         // Initialize session 1.
@@ -218,7 +202,6 @@ class core_session_redis_testcase extends advanced_testcase {
     public function test_multiple_sessions_work_with_a_single_instance() {
         $sess = new \core\session\redis();
         $sess->init();
-        $sess->set_requires_write_lock(true);
 
         // Initialize session 1.
         $this->assertTrue($sess->handler_open('Not used', 'Not used'));
@@ -239,7 +222,6 @@ class core_session_redis_testcase extends advanced_testcase {
     public function test_session_exists_returns_valid_values() {
         $sess = new \core\session\redis();
         $sess->init();
-        $sess->set_requires_write_lock(true);
 
         $this->assertTrue($sess->handler_open('Not used', 'Not used'));
         $this->assertSame('', $sess->handler_read('sess1'));
@@ -285,24 +267,6 @@ class core_session_redis_testcase extends advanced_testcase {
         $this->assertEquals(3, $DB->count_records('sessions'), 'Moodle handles session database, plugin must not change it.');
         $this->assertSessionNoLocks();
         $this->assertEmpty($this->redis->keys($this->keyprefix.'*'), 'There should be no session data left.');
-    }
-
-    public function test_exception_when_connection_attempts_exceeded() {
-        global $CFG;
-
-        $CFG->session_redis_port = 111111;
-        $actual = '';
-
-        $sess = new \core\session\redis();
-        try {
-            $sess->init();
-        } catch (RedisException $e) {
-            $actual = $e->getMessage();
-        }
-
-        $expected = 'Failed to connect (try 5 out of 5) to redis at ' . TEST_SESSION_REDIS_HOST . ':111111';
-        $this->assertDebuggingCalledCount(5);
-        $this->assertContains($expected, $actual);
     }
 
     /**

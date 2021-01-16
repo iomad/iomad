@@ -1,4 +1,4 @@
-.block_course_overview, section.block_myoverview {
+.block_course_overview {
     display:none;
 }
 
@@ -47,19 +47,4 @@ html.yui3-js-enabled body#page-my-index.format-site.path-my.gecko.dir-ltr.lang-e
 .block_mycourses .empty-placeholder-image-lg {
     width: 100px;
     height: 100px;
-}
-
-.block_mycourses .ml-auto.mt-auto.w-50.p-t-1 {
-    float: left;
-}
-.block_mycourses .certificatediv {
-    clear: both;
-}
-
-.progress {
-    background-color: #666;
-}
-
-.progress-bar {
-    background-color: green;
 }

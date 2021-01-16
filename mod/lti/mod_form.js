@@ -42,68 +42,62 @@
             this.urlCache = {};
             this.toolTypeCache = {};
 
+            this.addOptGroups();
+
             var updateToolMatches = function(){
                 self.updateAutomaticToolMatch(Y.one('#id_toolurl'));
                 self.updateAutomaticToolMatch(Y.one('#id_securetoolurl'));
             };
 
             var typeSelector = Y.one('#id_typeid');
-            if (typeSelector) {
-                this.addOptGroups();
+            typeSelector.on('change', function(e){
+                // Reset configuration fields when another preconfigured tool is selected.
+                self.resetToolFields();
 
-                typeSelector.on('change', function(e){
-                    // Reset configuration fields when another preconfigured tool is selected.
-                    self.resetToolFields();
+                updateToolMatches();
 
-                    updateToolMatches();
+                self.toggleEditButtons();
 
-                    self.toggleEditButtons();
+                if (self.getSelectedToolTypeOption().getAttribute('toolproxy')){
+                    var allowname = Y.one('#id_instructorchoicesendname');
+                    allowname.set('checked', !self.getSelectedToolTypeOption().getAttribute('noname'));
 
-                    if (self.getSelectedToolTypeOption().getAttribute('toolproxy')){
-                        var allowname = Y.one('#id_instructorchoicesendname');
-                        allowname.set('checked', !self.getSelectedToolTypeOption().getAttribute('noname'));
+                    var allowemail = Y.one('#id_instructorchoicesendemailaddr');
+                    allowemail.set('checked', !self.getSelectedToolTypeOption().getAttribute('noemail'));
 
-                        var allowemail = Y.one('#id_instructorchoicesendemailaddr');
-                        allowemail.set('checked', !self.getSelectedToolTypeOption().getAttribute('noemail'));
-
-                        var allowgrades = Y.one('#id_instructorchoiceacceptgrades');
-                        allowgrades.set('checked', !self.getSelectedToolTypeOption().getAttribute('nogrades'));
-                        self.toggleGradeSection();
-                    }
-                });
-
-                this.createTypeEditorButtons();
-
-                this.toggleEditButtons();
-            }
+                    var allowgrades = Y.one('#id_instructorchoiceacceptgrades');
+                    allowgrades.set('checked', !self.getSelectedToolTypeOption().getAttribute('nogrades'));
+                    self.toggleGradeSection();
+                }
+            });
 
             var contentItemButton = Y.one('[name="selectcontent"]');
-            if (contentItemButton) {
-                var contentItemUrl = contentItemButton.getAttribute('data-contentitemurl');
-                // Handle configure from link button click.
-                contentItemButton.on('click', function() {
-                    var contentItemId = self.getContentItemId();
-                    if (contentItemId) {
-                        // Get activity name and description values.
-                        var title = Y.one('#id_name').get('value').trim();
-                        var text = Y.one('#id_introeditor').get('value').trim();
+            var contentItemUrl = contentItemButton.getAttribute('data-contentitemurl');
+            // Handle configure from link button click.
+            contentItemButton.on('click', function() {
+                var contentItemId = self.getContentItemId();
+                if (contentItemId) {
+                    // Get activity name and description values.
+                    var title = Y.one('#id_name').get('value').trim();
+                    var text = Y.one('#id_introeditor').get('value').trim();
 
-                        // Set data to be POSTed.
-                        var postData = {
-                            id: contentItemId,
-                            course: self.settings.courseId,
-                            title: title,
-                            text: text
-                        };
+                    // Set data to be POSTed.
+                    var postData = {
+                        id: contentItemId,
+                        course: self.settings.courseId,
+                        title: title,
+                        text: text
+                    };
 
-                        require(['mod_lti/contentitem'], function(contentitem) {
-                            contentitem.init(contentItemUrl, postData, function() {
-                                M.mod_lti.editor.toggleGradeSection();
-                            });
-                        });
-                    }
-                });
-            }
+                    require(['mod_lti/contentitem'], function(contentitem) {
+                        contentitem.init(contentItemUrl, postData);
+                    });
+                }
+            });
+
+            this.createTypeEditorButtons();
+
+            this.toggleEditButtons();
 
             var textAreas = new Y.NodeList([
                 Y.one('#id_toolurl'),
@@ -125,9 +119,7 @@
             var allowgrades = Y.one('#id_instructorchoiceacceptgrades');
             allowgrades.on('change', this.toggleGradeSection, this);
 
-            if (typeSelector) {
-                updateToolMatches();
-            }
+            updateToolMatches();
         },
 
         toggleGradeSection: function(e) {
@@ -149,10 +141,6 @@
         },
 
         updateAutomaticToolMatch: function(field){
-            if (!field) {
-                return;
-            }
-
             var self = this;
 
             var toolurl = field;
@@ -538,20 +526,11 @@
          * @returns {number|boolean} The ID of the tool type if it supports Content-Item selection. False, otherwise.
          */
         getContentItemId: function() {
-            try {
-                var selected = this.getSelectedToolTypeOption();
-                if (selected.getAttribute('data-contentitem')) {
-                    return selected.getAttribute('data-id');
-                }
-                return false;
-            } catch (err) {
-                // Tool selector not available - check for hidden fields instead.
-                var content = Y.one('input[name="contentitem"]');
-                if (!content || !content.get('value')) {
-                    return false;
-                }
-                return Y.one('input[name="typeid"]').get('value');
+            var selected = this.getSelectedToolTypeOption();
+            if (selected.getAttribute('data-contentitem')) {
+                return selected.getAttribute('data-id');
             }
+            return false;
         },
 
         /**

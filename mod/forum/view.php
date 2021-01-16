@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,237 +16,219 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Displays the list of discussions in a forum.
- *
  * @package   mod_forum
- * @copyright 2019 Andrew Nicols <andrew@nicols.co.uk>
+ * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_forum\grades\forum_gradeitem;
+    require_once('../../config.php');
+    require_once('lib.php');
+    require_once($CFG->libdir.'/completionlib.php');
 
-require_once('../../config.php');
+    $id          = optional_param('id', 0, PARAM_INT);       // Course Module ID
+    $f           = optional_param('f', 0, PARAM_INT);        // Forum ID
+    $mode        = optional_param('mode', 0, PARAM_INT);     // Display mode (for single forum)
+    $showall     = optional_param('showall', '', PARAM_INT); // show all discussions on one page
+    $changegroup = optional_param('group', -1, PARAM_INT);   // choose the current group
+    $page        = optional_param('page', 0, PARAM_INT);     // which page to show
+    $search      = optional_param('search', '', PARAM_CLEAN);// search string
 
-$managerfactory = mod_forum\local\container::get_manager_factory();
-$legacydatamapperfactory = mod_forum\local\container::get_legacy_data_mapper_factory();
-$vaultfactory = mod_forum\local\container::get_vault_factory();
-$forumvault = $vaultfactory->get_forum_vault();
-$discussionvault = $vaultfactory->get_discussion_vault();
-$postvault = $vaultfactory->get_post_vault();
-$discussionlistvault = $vaultfactory->get_discussions_in_forum_vault();
-
-$cmid = optional_param('id', 0, PARAM_INT);
-$forumid = optional_param('f', 0, PARAM_INT);
-$mode = optional_param('mode', 0, PARAM_INT);
-$showall = optional_param('showall', '', PARAM_INT);
-$pageno = optional_param('page', 0, PARAM_INT);
-$search = optional_param('search', '', PARAM_CLEAN);
-$pageno = optional_param('p', $pageno, PARAM_INT);
-$pagesize = optional_param('s', 0, PARAM_INT);
-$sortorder = optional_param('o', null, PARAM_INT);
-
-if (!$cmid && !$forumid) {
-    print_error('missingparameter');
-}
-
-if ($cmid) {
-    $forum = $forumvault->get_from_course_module_id($cmid);
-    if (empty($forum)) {
-        throw new \moodle_exception('Unable to find forum with cmid ' . $cmid);
+    $params = array();
+    if ($id) {
+        $params['id'] = $id;
+    } else {
+        $params['f'] = $f;
     }
-} else {
-    $forum = $forumvault->get_from_id($forumid);
-    if (empty($forum)) {
-        throw new \moodle_exception('Unable to find forum with id ' . $forumid);
+    if ($page) {
+        $params['page'] = $page;
     }
-}
-
-if (!empty($showall)) {
-    // The user wants to see all discussions.
-    $pageno = 0;
-    $pagesize = 0;
-}
-
-$urlfactory = mod_forum\local\container::get_url_factory();
-$capabilitymanager = $managerfactory->get_capability_manager($forum);
-
-$url = $urlfactory->get_forum_view_url_from_forum($forum);
-$PAGE->set_url($url);
-
-$course = $forum->get_course_record();
-$coursemodule = $forum->get_course_module_record();
-$cm = \cm_info::create($coursemodule);
-
-require_course_login($course, true, $cm);
-
-$istypesingle = $forum->get_type() === 'single';
-$saveddisplaymode = get_user_preferences('forum_displaymode', $CFG->forum_displaymode);
-
-if ($mode) {
-    $displaymode = $mode;
-} else {
-    $displaymode = $saveddisplaymode;
-}
-
-if (get_user_preferences('forum_useexperimentalui', false)) {
-    if ($displaymode == FORUM_MODE_NESTED) {
-        $displaymode = FORUM_MODE_NESTED_V2;
+    if ($search) {
+        $params['search'] = $search;
     }
-} else {
-    if ($displaymode == FORUM_MODE_NESTED_V2) {
-        $displaymode = FORUM_MODE_NESTED;
+    $PAGE->set_url('/mod/forum/view.php', $params);
+
+    if ($id) {
+        if (! $cm = get_coursemodule_from_id('forum', $id)) {
+            print_error('invalidcoursemodule');
+        }
+        if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
+            print_error('coursemisconf');
+        }
+        if (! $forum = $DB->get_record("forum", array("id" => $cm->instance))) {
+            print_error('invalidforumid', 'forum');
+        }
+        if ($forum->type == 'single') {
+            $PAGE->set_pagetype('mod-forum-discuss');
+        }
+        // move require_course_login here to use forced language for course
+        // fix for MDL-6926
+        require_course_login($course, true, $cm);
+        $strforums = get_string("modulenameplural", "forum");
+        $strforum = get_string("modulename", "forum");
+    } else if ($f) {
+
+        if (! $forum = $DB->get_record("forum", array("id" => $f))) {
+            print_error('invalidforumid', 'forum');
+        }
+        if (! $course = $DB->get_record("course", array("id" => $forum->course))) {
+            print_error('coursemisconf');
+        }
+
+        if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
+            print_error('missingparameter');
+        }
+        // move require_course_login here to use forced language for course
+        // fix for MDL-6926
+        require_course_login($course, true, $cm);
+        $strforums = get_string("modulenameplural", "forum");
+        $strforum = get_string("modulename", "forum");
+    } else {
+        print_error('missingparameter');
     }
-}
 
-if ($displaymode != $saveddisplaymode) {
-    set_user_preference('forum_displaymode', $displaymode);
-}
+    if (!$PAGE->button) {
+        $PAGE->set_button(forum_search_form($course, $search));
+    }
 
-$PAGE->set_context($forum->get_context());
-$PAGE->set_title($forum->get_name());
-$PAGE->add_body_class('forumtype-' . $forum->get_type());
-$PAGE->set_heading($course->fullname);
-$PAGE->set_button(forum_search_form($course, $search));
+    $context = context_module::instance($cm->id);
+    $PAGE->set_context($context);
 
-if ($istypesingle && $displaymode == FORUM_MODE_NESTED_V2) {
-    $PAGE->add_body_class('nested-v2-display-mode reset-style');
-    $settingstrigger = $OUTPUT->render_from_template('mod_forum/settings_drawer_trigger', null);
-    $PAGE->add_header_action($settingstrigger);
-}
+    if (!empty($CFG->enablerssfeeds) && !empty($CFG->forum_enablerssfeeds) && $forum->rsstype && $forum->rssarticles) {
+        require_once("$CFG->libdir/rsslib.php");
 
-if (empty($cm->visible) && !has_capability('moodle/course:viewhiddenactivities', $forum->get_context())) {
-    redirect(
-        $urlfactory->get_course_url_from_forum($forum),
-        get_string('activityiscurrentlyhidden'),
-        null,
-        \core\output\notification::NOTIFY_WARNING
-    );
-}
+        $rsstitle = format_string($course->shortname, true, array('context' => context_course::instance($course->id))) . ': ' . format_string($forum->name);
+        rss_add_http_header($context, 'mod_forum', $forum, $rsstitle);
+    }
 
-if (!$capabilitymanager->can_view_discussions($USER)) {
-    redirect(
-        $urlfactory->get_course_url_from_forum($forum),
-        get_string('noviewdiscussionspermission', 'forum'),
-        null,
-        \core\output\notification::NOTIFY_WARNING
-    );
-}
+/// Print header.
 
-// Mark viewed and trigger the course_module_viewed event.
-$forumdatamapper = $legacydatamapperfactory->get_forum_data_mapper();
-$forumrecord = $forumdatamapper->to_legacy_object($forum);
-forum_view(
-    $forumrecord,
-    $forum->get_course_record(),
-    $forum->get_course_module_record(),
-    $forum->get_context()
-);
+    $PAGE->set_title($forum->name);
+    $PAGE->add_body_class('forumtype-'.$forum->type);
+    $PAGE->set_heading($course->fullname);
 
-// Return here if we post or set subscription etc.
-$SESSION->fromdiscussion = qualified_me();
+    // Some capability checks.
+    $courselink = new moodle_url('/course/view.php', ['id' => $cm->course]);
 
-if (!empty($CFG->enablerssfeeds) && !empty($CFG->forum_enablerssfeeds) && $forum->get_rss_type() && $forum->get_rss_articles()) {
-    require_once("{$CFG->libdir}/rsslib.php");
+    if (empty($cm->visible) and !has_capability('moodle/course:viewhiddenactivities', $context)) {
+        notice(get_string("activityiscurrentlyhidden"), $courselink);
+    }
 
-    $rsstitle = format_string($course->shortname, true, [
-            'context' => context_course::instance($course->id),
-        ]) . ': ' . format_string($forum->get_name());
-    rss_add_http_header($forum->get_context(), 'mod_forum', $forumrecord, $rsstitle);
-}
+    if (!has_capability('mod/forum:viewdiscussion', $context)) {
+        notice(get_string('noviewdiscussionspermission', 'forum'), $courselink);
+    }
 
-echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($forum->get_name()), 2);
+    // Mark viewed and trigger the course_module_viewed event.
+    forum_view($forum, $course, $cm, $context);
 
-if (!$istypesingle && !empty($forum->get_intro())) {
-    echo $OUTPUT->box(format_module_intro('forum', $forumrecord, $cm->id), 'generalbox', 'intro');
-}
+    echo $OUTPUT->header();
 
-if ($sortorder) {
-    set_user_preference('forum_discussionlistsortorder', $sortorder);
-}
+    echo $OUTPUT->heading(format_string($forum->name), 2);
+    if (!empty($forum->intro) && $forum->type != 'single' && $forum->type != 'teacher') {
+        echo $OUTPUT->box(format_module_intro('forum', $forum, $cm->id), 'generalbox', 'intro');
+    }
 
-$sortorder = get_user_preferences('forum_discussionlistsortorder', $discussionlistvault::SORTORDER_LASTPOST_DESC);
+/// find out current groups mode
+    groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/forum/view.php?id=' . $cm->id);
 
-// Fetch the current groupid.
-$groupid = groups_get_activity_group($cm, true) ?: null;
-$rendererfactory = mod_forum\local\container::get_renderer_factory();
-switch ($forum->get_type()) {
-    case 'single':
-        $forumgradeitem = forum_gradeitem::load_from_forum_entity($forum);
-        if ($capabilitymanager->can_grade($USER)) {
+    $SESSION->fromdiscussion = qualified_me();   // Return here if we post or set subscription etc
 
-            if ($forumgradeitem->is_grading_enabled()) {
-                $groupid = groups_get_activity_group($cm, true) ?: null;
-                $gradeobj = (object) [
-                    'contextid' => $forum->get_context()->id,
-                    'cmid' => $cmid,
-                    'name' => $forum->get_name(),
-                    'courseid' => $course->id,
-                    'coursename' => $course->shortname,
-                    'experimentaldisplaymode' => $displaymode == FORUM_MODE_NESTED_V2,
-                    'groupid' => $groupid,
-                    'gradingcomponent' => $forumgradeitem->get_grading_component_name(),
-                    'gradingcomponentsubtype' => $forumgradeitem->get_grading_component_subtype(),
-                    'sendstudentnotifications' => $forum->should_notify_students_default_when_grade_for_forum(),
-                ];
-                echo $OUTPUT->render_from_template('mod_forum/grades/grade_button', $gradeobj);
+
+/// Print settings and things across the top
+
+    // If it's a simple single discussion forum, we need to print the display
+    // mode control.
+    if ($forum->type == 'single') {
+        $discussion = NULL;
+        $discussions = $DB->get_records('forum_discussions', array('forum'=>$forum->id), 'timemodified ASC');
+        if (!empty($discussions)) {
+            $discussion = array_pop($discussions);
+        }
+        if ($discussion) {
+            if ($mode) {
+                set_user_preference("forum_displaymode", $mode);
             }
-        } else {
-            if ($forumgradeitem->is_grading_enabled()) {
-                $groupid = groups_get_activity_group($cm, true) ?: null;
-                $gradeobj = (object) [
-                    'contextid' => $forum->get_context()->id,
-                    'cmid' => $cmid,
-                    'name' => $forum->get_name(),
-                    'courseid' => $course->id,
-                    'coursename' => $course->shortname,
-                    'groupid' => $groupid,
-                    'userid' => $USER->id,
-                    'gradingcomponent' => $forumgradeitem->get_grading_component_name(),
-                    'gradingcomponentsubtype' => $forumgradeitem->get_grading_component_subtype(),
-                ];
-                echo $OUTPUT->render_from_template('mod_forum/grades/view_grade_button', $gradeobj);
+            $displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
+            forum_print_mode_form($forum->id, $displaymode, $forum->type);
+        }
+    }
+
+    if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
+        $a = new stdClass();
+        $a->blockafter = $forum->blockafter;
+        $a->blockperiod = get_string('secondstotime'.$forum->blockperiod);
+        echo $OUTPUT->notification(get_string('thisforumisthrottled', 'forum', $a));
+    }
+
+    if ($forum->type == 'qanda' && !has_capability('moodle/course:manageactivities', $context)) {
+        echo $OUTPUT->notification(get_string('qandanotify','forum'));
+    }
+
+    switch ($forum->type) {
+        case 'single':
+            if (!empty($discussions) && count($discussions) > 1) {
+                echo $OUTPUT->notification(get_string('warnformorepost', 'forum'));
             }
-        }
-        $discussion = $discussionvault->get_last_discussion_in_forum($forum);
-        $discussioncount = $discussionvault->get_count_discussions_in_forum($forum);
-        $hasmultiplediscussions = $discussioncount > 1;
-        $discussionsrenderer = $rendererfactory->get_single_discussion_list_renderer($forum, $discussion,
-            $hasmultiplediscussions, $displaymode);
-        $post = $postvault->get_from_id($discussion->get_first_post_id());
-        $orderpostsby = $displaymode == FORUM_MODE_FLATNEWEST ? 'created DESC' : 'created ASC';
-        $replies = $postvault->get_replies_to_post(
-                $USER,
-                $post,
-                $capabilitymanager->can_view_any_private_reply($USER),
-                $orderpostsby
-            );
-        echo $discussionsrenderer->render($USER, $post, $replies);
+            if (! $post = forum_get_post_full($discussion->firstpost)) {
+                print_error('cannotfindfirstpost', 'forum');
+            }
+            if ($mode) {
+                set_user_preference("forum_displaymode", $mode);
+            }
 
-        if (!$CFG->forum_usermarksread && forum_tp_is_tracked($forumrecord, $USER)) {
-            $postids = array_map(function($post) {
-                return $post->get_id();
-            }, array_merge([$post], array_values($replies)));
-            forum_tp_mark_posts_read($USER, $postids);
-        }
-        break;
-    case 'blog':
-        $discussionsrenderer = $rendererfactory->get_blog_discussion_list_renderer($forum);
-        // Blog forums always show discussions newest first.
-        echo $discussionsrenderer->render($USER, $cm, $groupid, $discussionlistvault::SORTORDER_CREATED_DESC,
-            $pageno, $pagesize);
+            $canreply    = forum_user_can_post($forum, $discussion, $USER, $cm, $course, $context);
+            $canrate     = has_capability('mod/forum:rate', $context);
+            $displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
 
-        if (!$CFG->forum_usermarksread && forum_tp_is_tracked($forumrecord, $USER)) {
-            $discussions = mod_forum_get_discussion_summaries($forum, $USER, $groupid, null, $pageno, $pagesize);
-            $firstpostids = array_map(function($discussion) {
-                return $discussion->get_first_post()->get_id();
-            }, array_values($discussions));
-            forum_tp_mark_posts_read($USER, $firstpostids);
-        }
-        break;
-    default:
-        $discussionsrenderer = $rendererfactory->get_discussion_list_renderer($forum);
-        echo $discussionsrenderer->render($USER, $cm, $groupid, $sortorder, $pageno, $pagesize, $displaymode);
-}
+            echo '&nbsp;'; // this should fix the floating in FF
+            forum_print_discussion($course, $cm, $forum, $discussion, $post, $displaymode, $canreply, $canrate);
+            break;
 
-echo $OUTPUT->footer();
+        case 'eachuser':
+            echo '<p class="mdl-align">';
+            if (forum_user_can_post_discussion($forum, null, -1, $cm)) {
+                print_string("allowsdiscussions", "forum");
+            } else {
+                echo '&nbsp;';
+            }
+            echo '</p>';
+            if (!empty($showall)) {
+                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cm);
+            } else {
+                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+            }
+            break;
+
+        case 'teacher':
+            if (!empty($showall)) {
+                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cm);
+            } else {
+                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+            }
+            break;
+
+        case 'blog':
+            echo '<br />';
+            if (!empty($showall)) {
+                forum_print_latest_discussions($course, $forum, 0, 'plain', 'd.pinned DESC, p.created DESC', -1, -1, -1, 0, $cm);
+            } else {
+                forum_print_latest_discussions($course, $forum, -1, 'plain', 'd.pinned DESC, p.created DESC', -1, -1, $page,
+                    $CFG->forum_manydiscussions, $cm);
+            }
+            break;
+
+        default:
+            echo '<br />';
+            if (!empty($showall)) {
+                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cm);
+            } else {
+                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+            }
+
+
+            break;
+    }
+
+    // Add the subscription toggle JS.
+    $PAGE->requires->yui_module('moodle-mod_forum-subscriptiontoggle', 'Y.M.mod_forum.subscriptiontoggle.init');
+
+    echo $OUTPUT->footer($course);

@@ -34,9 +34,7 @@ define('NO_SITEPOLICY_CHECK', true);
 // @codingStandardsIgnoreLine See the {@link page_viewalldoc} for the access control checks.
 require(__DIR__.'/../../../config.php');
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL); // A return URL.
-
-$viewallpage = new page_viewalldoc($returnurl);
+$viewallpage = new page_viewalldoc();
 
 $output = $PAGE->get_renderer('tool_policy');
 

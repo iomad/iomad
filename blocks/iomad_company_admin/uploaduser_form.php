@@ -55,6 +55,8 @@ class admin_uploaduser_form1 extends company_moodleform {
                          UU_ADDINC    => get_string('uuoptype_addinc', 'tool_uploaduser'),
                          UU_ADD_UPDATE => get_string('uuoptype_addupdate', 'tool_uploaduser'),
                          UU_UPDATE     => get_string('uuoptype_update', 'tool_uploaduser'));
+        // Redefining above choices
+        $choices = array(UU_ADDNEW => get_string('uuoptype_addnew', 'tool_uploaduser'));                         
         $mform->addElement('select', 'uutype', get_string('uuoptype', 'tool_uploaduser'), $choices);
 
         $this->add_action_buttons(false, get_string('uploadusers', 'tool_uploaduser'));
@@ -176,7 +178,7 @@ class admin_uploaduser_form2 extends company_moodleform {
 
         // Remove the company profile field from the form (this was added by the call to profile_definition
         // above but we don't want the user to edit this here).
-
+        
         // Hidden fields.
         $mform->addElement('hidden', 'iid');
         $mform->setType('iid', PARAM_INT);
@@ -255,7 +257,7 @@ class admin_uploaduser_form2 extends company_moodleform {
                                                    array('timestamp' => time(),
                                                          'companyid' => $this->selectedcompany));
             $licenses = array('0' => get_string('nolicense', 'block_iomad_company_admin')) + $foundlicenses;
-            list($mylicenseid, $mylicensecourse) = current($licenses);
+            list($mylicenseid, $mylicensecourse) = each($licenses);
             $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
                                         get_string('selectlicensecourse', 'block_iomad_company_admin') .
                                         "</div><div class='felement'>");
@@ -283,7 +285,7 @@ class admin_uploaduser_form2 extends company_moodleform {
                                                       $licensecourses, array('id' => 'licensecourseselector'));
             $licensecourseselect->setMultiple(true);
             $mform->addElement('html', '</div>');
-
+            
             if (!empty($mylicensedetails->program)) {
                 $licensecourseselect->setSelected($licensecourses);
             } else {
@@ -390,7 +392,7 @@ class admin_uploaduser_form2 extends company_moodleform {
                 $errors['licenseid'] = 'We need ' . $requiredcount . ' license slots and have ' . $free;
             }
         }
-
+    
         return $errors;
     }
 

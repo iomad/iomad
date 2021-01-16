@@ -138,7 +138,7 @@ abstract class database_driver_testcase extends base_testcase {
      * Runs the bare test sequence.
      * @return void
      */
-    public function runBare(): void {
+    public function runBare() {
         try {
             parent::runBare();
 

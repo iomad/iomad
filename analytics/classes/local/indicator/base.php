@@ -169,7 +169,10 @@ abstract class base extends \core_analytics\calculable {
 
             if (!is_null($calculatedvalue)) {
                 $notnulls[$sampleid] = $sampleid;
-                $this->validate_calculated_value($calculatedvalue);
+                if ($calculatedvalue > self::MAX_VALUE || $calculatedvalue < self::MIN_VALUE) {
+                    throw new \coding_exception('Calculated values should be higher than ' . self::MIN_VALUE .
+                        ' and lower than ' . self::MAX_VALUE . ' ' . $calculatedvalue . ' received');
+                }
             }
 
             $calculations[$sampleid] = $calculatedvalue;
@@ -178,20 +181,5 @@ abstract class base extends \core_analytics\calculable {
         $features = $this->to_features($calculations);
 
         return array($features, $newcalculations, $notnulls);
-    }
-
-    /**
-     * Validates the calculated value.
-     *
-     * @throws \coding_exception
-     * @param float $calculatedvalue
-     * @return true
-     */
-    protected function validate_calculated_value($calculatedvalue) {
-        if ($calculatedvalue > self::MAX_VALUE || $calculatedvalue < self::MIN_VALUE) {
-            throw new \coding_exception('Calculated values should be higher than ' . self::MIN_VALUE .
-                ' and lower than ' . self::MAX_VALUE . ' ' . $calculatedvalue . ' received');
-        }
-        return true;
     }
 }

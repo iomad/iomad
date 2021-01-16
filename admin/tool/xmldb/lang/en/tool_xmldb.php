@@ -23,7 +23,6 @@
  */
 
 $string['actual'] = 'Actual';
-$string['addpersistent'] = 'Add mandatory persistent fields';
 $string['aftertable'] = 'After table:';
 $string['back'] = 'Back';
 $string['backtomainview'] = 'Back to main';
@@ -34,7 +33,7 @@ $string['confirmdeleteindex'] = 'Are you absolutely sure that you want to delete
 $string['confirmdeletekey'] = 'Are you absolutely sure that you want to delete the key:';
 $string['confirmdeletetable'] = 'Are you absolutely sure that you want to delete the table:';
 $string['confirmdeletexmlfile'] = 'Are you absolutely sure that you want to delete the file:';
-$string['confirmcheckbigints'] = 'This functionality will search for <a href="https://tracker.moodle.org/browse/MDL-11038">potential wrong integer fields</a> in your Moodle server, generating (but not executing!) automatically the needed SQL statements to have all the integers in your DB properly defined.
+$string['confirmcheckbigints'] = 'This functionality will search for <a href="http://tracker.moodle.org/browse/MDL-11038">potential wrong integer fields</a> in your Moodle server, generating (but not executing!) automatically the needed SQL statements to have all the integers in your DB properly defined.
 
 Once generated you can copy such statements and execute them safely with your favourite SQL interface (don\'t forget to backup your data before doing that).
 
@@ -60,7 +59,7 @@ Once generated you can copy such statements and execute them safely with your fa
 It\'s highly recommended to be running the latest (+ version) available of your Moodle release before executing the search of missing indexes.
 
 This functionality doesn\'t perform any action against the DB (just reads from it), so can be safely executed at any moment.';
-$string['confirmcheckoraclesemantics'] = 'This functionality will search for <a href="https://tracker.moodle.org/browse/MDL-29322">Oracle varchar2 columns using BYTE semantics</a> in your Moodle server, generating (but not executing!) automatically the needed SQL statements to have all the columns converted to use CHAR semantics instead (better for cross-db compatibility and increased contents max. length).
+$string['confirmcheckoraclesemantics'] = 'This functionality will search for <a href="http://tracker.moodle.org/browse/MDL-29322">Oracle varchar2 columns using BYTE semantics</a> in your Moodle server, generating (but not executing!) automatically the needed SQL statements to have all the columns converted to use CHAR semantics instead (better for cross-db compatibility and increased contents max. length).
 
 Once generated you can copy such statements and execute them safely with your favourite SQL interface (don\'t forget to backup your data before doing that).
 
@@ -99,7 +98,6 @@ $string['edit_xml_file'] = 'Edit XML file';
 $string['enumvaluesincorrect'] = 'Incorrect values for enum field';
 $string['expected'] = 'Expected';
 $string['extensionrequired'] = 'Sorry - the PHP extension \'{$a}\' is required for this action. Please install the extension if you want to use this feature.';
-$string['extraindexesfound'] = 'Extra indexes found';
 $string['field'] = 'Field';
 $string['fieldnameempty'] = 'Name field empty';
 $string['fields'] = 'Fields';
@@ -141,7 +139,7 @@ $string['incorrecttablename'] = 'Incorrect table name';
 $string['key'] = 'Key';
 $string['keynameempty'] = 'The key name cannot be empty';
 $string['keys'] = 'Keys';
-$string['listreservedwords'] = 'List of reserved words<br />(used to keep <a href="https://docs.moodle.org/en/XMLDB_reserved_words" target="_blank">XMLDB reserved words</a> updated)';
+$string['listreservedwords'] = 'List of Reserved Words<br />(used to keep <a href="http://docs.moodle.org/en/XMLDB_reserved_words" target="_blank">XMLDB_reserved_words</a> updated)';
 $string['load'] = 'Load';
 $string['main_view'] = 'Main view';
 $string['masterprimaryuniqueordernomatch'] = 'The fields in your foreign key must be listed in the same order as they are listed in the UNIQUE KEY on the referenced table.';
@@ -157,8 +155,8 @@ $string['newtable'] = 'New table';
 $string['newtablefrommysql'] = 'New table from MySQL';
 $string['new_table_from_mysql'] = 'New table from MySQL';
 $string['nofieldsspecified'] = 'No fields specified';
-$string['nomasterprimaryuniquefound'] = 'The column(s) that your foreign key references must be included in a primary or unique KEY in the referenced table. Note that the column being in a UNIQUE INDEX is not good enough.';
-$string['nomissingorextraindexesfound'] = 'No missing or extra indexes have been found, so no further action is required.';
+$string['nomasterprimaryuniquefound'] = 'The column(s) that you foreign key references must be included in a primary or unique KEY in the referenced table. Note, the column being in a UNIQUE INDEX is not good enough.';
+$string['nomissingindexesfound'] = 'No missing indexes have been found, your DB doesn\'t need further actions.';
 $string['noreffieldsspecified'] = 'No reference fields specified';
 $string['noreftablespecified'] = 'Specified reference table not found';
 $string['noviolatedforeignkeysfound'] = 'No violated foreign keys found';
@@ -167,13 +165,9 @@ $string['nowrongintsfound'] = 'No wrong integers have been found, your DB doesn\
 $string['nowrongoraclesemanticsfound'] = 'No Oracle columns using BYTE semantics have been found, your DB doesn\'t need further actions.';
 $string['numberincorrectdecimals'] = 'Incorrect number of decimals for number field';
 $string['numberincorrectlength'] = 'Incorrect length for number field';
-$string['numberincorrectwholepart'] = 'Too big whole number part for number field';
 $string['pendingchanges'] = 'Note: You have performed changes to this file. They can be saved at any moment.';
 $string['pendingchangescannotbesaved'] = 'There are changes in this file but they cannot be saved! Please verify that both the directory and the "install.xml" within it have write permissions for the web server.';
 $string['pendingchangescannotbesavedreload'] = 'There are changes in this file but they cannot be saved! Please verify that both the directory and the "install.xml" within it have write permissions for the web server. Then reload this page and you should be able to save those changes.';
-$string['persistentfieldsconfirm'] = 'Do you want to add the following fields: ';
-$string['persistentfieldscomplete'] = 'The following fields have been added: ';
-$string['persistentfieldsexist'] = 'The following fields already exist: ';
 $string['pluginname'] = 'XMLDB editor';
 $string['primarykeyonlyallownotnullfields'] = 'Primary keys cannot be null';
 $string['reserved'] = 'Reserved';
@@ -216,13 +210,12 @@ $string['wronglengthforenum'] = 'Incorrect length for enum field';
 $string['wrongnumberofreffields'] = 'Wrong number of reference fields';
 $string['wrongreservedwords'] = 'Currently used reserved words<br />(note that table names aren\'t important if using $CFG->prefix)';
 $string['wrongoraclesemantics'] = 'Wrong Oracle BYTE semantics found';
-$string['yesextraindexesfound'] = 'The following additional indexes were found.';
 $string['yesmissingindexesfound'] = '<p>Some missing indexes have been found in your DB. Here are their details and the needed SQL statements to be executed with your favourite SQL interface to create all of them. Remember to backup your data first!</p>
 <p>After doing that, it\'s highly recommended to execute this utility again to check that no more missing indexes are found.</p>';
 $string['yeswrongdefaultsfound'] = '<p>Some inconsistent defaults have been found in your DB. Here are their details and the needed SQL statements to be executed with your favourite SQL interface to fix them all. Remember to backup your data first!</p>
 <p>After doing that, it\'s highly recommended to execute this utility again to check that no more inconsistent defaults are found.</p>';
-$string['yeswrongintsfound'] = '<p>Some wrong integers have been found in your DB. Here are their details and the needed SQL statements to be executed with your favourite SQL interface to fix them. Remember to backup your data first!</p>
-<p>After fixing them, it is highly recommended to execute this utility again to check that no more wrong integers are found.</p>';
-$string['yeswrongoraclesemanticsfound'] = '<p>Some Oracle columns using BYTE semantics have been found in your DB. Here are their details and the needed SQL statements to be executed with your favourite SQL interface to convert them all. Remember to backup your data first!</p>
+$string['yeswrongintsfound'] = '<p>Some wrong integers have been found in your DB. Here are their details and the needed SQL statements to be executed with your favourite SQL interface to create all them. Remember to backup your data first!</p>
+<p>After doing that, it\'s highly recommended to execute this utility again to check that no more wrong integers are found.</p>';
+$string['yeswrongoraclesemanticsfound'] = '<p>Some Oracle columns using BYTE semantics have been found in your DB. Here are their details and the needed SQL statements to be executed with your favourite SQL interface to create all them. Remember to backup your data first!</p>
 <p>After doing that, it\'s highly recommended to execute this utility again to check that no more wrong semantics are found.</p>';
 $string['privacy:metadata'] = 'The XMLDB editor plugin does not store any personal data.';

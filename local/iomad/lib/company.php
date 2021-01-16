@@ -14,51 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/iomad.php');
 require_once(dirname(__FILE__) . '/user.php');
 
 class company {
-
     public $id = 0;
-
-    protected $companyrecord = null;
 
     // These are the fields that will be retrieved by.
     public $cssfields = array('bgcolor_header', 'bgcolor_content');
 
     public function __construct($companyid) {
-        global $DB;
-
         $this->id = $companyid;
-        $this->companyrecord = $DB->get_record('company', ['id' => $this->id], '*', MUST_EXIST);
-    }
-
-    /**
-     * Get selected fields
-     * @param mixed fields string or array
-     * @return mixed string or object (if array)
-     */
-    public function get($fields) {
-        if (is_string($fields)) {
-            if (isset($this->companyrecord->$fields)) {
-                return $this->companyrecord->$fields;
-            } else {
-                throw new \Exception("Field not found in company record - " . $fields);
-            }
-        } else {
-            $result = new \stdClass;
-            foreach ($fields as $field) {
-                if (property_exists($this->companyrecord, $field)) {
-                    $result->$field = $this->companyrecord->$field;
-                } else {
-                    throw new \Exception("Field not found in company record - " . $field);
-                }
-            }
-            return $result;
-        }
     }
 
     /**
@@ -70,10 +37,10 @@ class company {
      * Returns class object.
      *
      **/
-    public static function by_userid($userid, $login = false) {
+    public static function by_userid($userid) {
         global $DB, $SESSION;
 
-        if (!$login && !empty($SESSION->currenteditingcompany)) {
+        if (!empty($SESSION->currenteditingcompany)) {
             return new company($SESSION->currenteditingcompany);
         } else {
             if ($companies = $DB->get_records('company_users', array('userid' => $userid), 'companyid DESC')) {
@@ -86,13 +53,34 @@ class company {
     }
 
     /**
+     * Gets the company DB record.
+     *
+     * Paramters -
+     *             $firelds = array();
+     *
+     * Returns - stdclass();
+     *
+     **/
+    public function get($fields = '*') {
+        global $DB;
+
+        if ( $this->id == 0 ) {
+            return '';
+        }
+        $companyrecord = $DB->get_record('company', array('id' => $this->id), $fields, MUST_EXIST);
+
+        return $companyrecord;
+    }
+
+    /**
      * Gets the company name for the current instance
      *
      * Returns text;
      *
      **/
     public function get_name() {
-        return $this->companyrecord->name;
+        $companyrecord = $this->get('Name');
+        return $companyrecord->name;
     }
 
     /**
@@ -115,41 +103,40 @@ class company {
         if (!$CFG->iomad_autoenrol_managers && iomad::has_capability('block/iomad_company_admin:assign_educator', $systemcontext)) {
             $returnarray['3'] = get_string('educator', 'block_iomad_company_admin');
         }
-        if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $systemcontext)) {
-            $returnarray['4'] = get_string('companyreporter', 'block_iomad_company_admin');
-        }
         return $returnarray;
     }
 
     /**
      * Gets the company short name for the current instance
      *
-     * @return string;
+     * Returns text;
      *
      **/
     public function get_shortname() {
-        return $this->companyrecord->shortname;
+        $companyrecord = $this->get('shortname');
+        return $companyrecord->shortname;
     }
 
     /**
      * Gets the company theme name for the current instance
      *
-     * @return string
+     * Returns text;
      *
      **/
     public function get_theme() {
-        return $this->companyrecord->theme;
+        $companyrecord = $this->get('theme');
+        return $companyrecord->theme;
     }
 
     /**
      * Gets the company parentid name for the current instance
      *
-     * @return mixed
+     * Returns int;
      *
      **/
     public function get_parentid() {
-        if (!empty($this->companyrecord->parentid)) {
-            return $this->companyrecord->parentid;
+        if ($companyrecord = $this->get('parentid')) {
+            return $companyrecord->parentid;
         } else {
             return false;
         }
@@ -158,7 +145,7 @@ class company {
     /**
      * Recurses up the company tree to get the parent company.
      *
-     * @return int
+     * Returns int;
      *
      **/
     public function get_topcompanyid() {
@@ -180,9 +167,9 @@ class company {
     /**
      * Gets the file path for the company logo for the current instance
      *
-     * @return string
+     * Returns text;
      *
-     */
+     **/
     public function get_logo_filename() {
         global $DB;
 
@@ -202,12 +189,13 @@ class company {
     /**
      * Gets the record set of all companies
      *
-     * @param int $page
-     * @param int $perpage
+     * Parameters -
+     *              $page = int;
+     *              $perpage = int;
      *
-     * @return array
+     * Returns array;
      *
-     */
+     **/
     public static function get_companies_rs($page=0, $perpage=0) {
         global $DB;
 
@@ -217,9 +205,9 @@ class company {
     /**
      * Creates an array of companies to be used in a Select menu
      *
-     * @return array
+     * Returns array;
      *
-     */
+     **/
     public static function get_companies_select($showsuspended=false) {
         global $DB, $USER;
 
@@ -257,9 +245,9 @@ class company {
     /**
      * Creates an array of child companies to be used in a Select menu
      *
-     * @return array
+     * Returns array;
      *
-     */
+     **/
     public function get_child_companies() {
         global $DB;
 
@@ -360,11 +348,11 @@ class company {
      **/
     public static function get_company_byuserid($userid) {
         global $DB;
-        $companies = (array) $DB->get_records_sql("SELECT c.* FROM {company_users} cu
-                                                   INNER JOIN {company} c ON cu.companyid = c.id
-                                                   WHERE cu.userid = :userid
-                                                   ORDER BY cu.id",
-                                                   array('userid' => $userid), 0, 1);
+        $companies = $DB->get_record_sql("SELECT c.* FROM {company_users} cu
+                                          INNER JOIN {company} c ON cu.companyid = c.id
+                                          WHERE cu.userid = :userid
+                                          ORDER BY cu.id",
+                                          array('userid' => $userid), 0, 1);
         return array_shift($companies);
     }
 
@@ -464,49 +452,6 @@ class company {
     }
 
     /**
-     * Get company email templates
-     *
-     **/
-    public static function get_email_templates($companyid = 0) {
-        global $DB;
-
-        $context = context_system::instance();
-        $templates = $DB->get_records_menu('email_templateset', array(), 'templatesetname', 'id,templatesetname');
-
-        // Add the default.
-        $templates = array(0 => get_string('none')) + $templates;
-
-        return $templates;
-    }
-
-    /**
-     * Apply company email templates
-     *
-     **/
-    public function apply_email_templates($templatesetid = 0) {
-        global $DB;
-
-        if (!empty($templatesetid)) {
-            $templates = $DB->get_records('email_templateset_templates', array('templateset' => $templatesetid));
-        } else {
-            return false;
-        }
-
-        // Insert the restrictions.
-        // Remove them first.
-        $DB->delete_records('email_template', array('companyid' => $this->id));
-
-        // Add the template.
-        foreach ($templates as $template) {
-            unset($template->templateset);
-            $template->companyid = $this->id;
-            $DB->insert_record('email_template', $template);
-        }
-
-        return true;
-    }
-
-    /**
      * Associates a course to a company
      *
      * Parameters -
@@ -540,50 +485,25 @@ class company {
                                                          'shared' => 0));
         }
         // Set up manager roles.
-        if (!$licensed) {
-            $companycoursenoneditorrole = $DB->get_record('role',
-                                               array('shortname' => 'companycoursenoneditor'));
-            $companycourseeditorrole = $DB->get_record('role',
-                                                        array('shortname' => 'companycourseeditor'));
-            if ($CFG->iomad_autoenrol_managers) {
-                // Enrol the managers as teacher types.
-                if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
-                                                             WHERE companyid = :companyid
-                                                             AND managertype != 0", array('companyid' => $this->id))) {
-                    foreach ($companymanagers as $companymanager) {
-                        if ($user = $DB->get_record('user', array('id' => $companymanager->userid,
-                                                                  'deleted' => 0)) ) {
-                            if ($DB->record_exists('course', array('id' => $course->id))) {
-                                if (!$own) {
-                                    // Not created by a company manager.
-                                    company_user::enrol($user, array($course->id), $this->id,
-                                                        $companycoursenoneditorrole->id);
-                                } else {
-                                    if ($companymanager->managertype == 2) {
-                                        // Assign the department manager course access role.
-                                        company_user::enrol($user, array($course->id), $this->id,
-                                                            $companycoursenoneditorrole->id);
-                                    } else {
-                                        // Assign the company manager course access role.
-                                        company_user::enrol($user, array($course->id), $this->id,
-                                                            $companycourseeditorrole->id);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                // Enrol the educators as teacher types.
-                if ($educators = $DB->get_records_sql("SELECT * FROM {company_users}
-                                                             WHERE companyid = :companyid
-                                                             AND educator != 0", array('companyid' => $this->id))) {
-                    foreach ($educators as $educator) {
-                        if ($user = $DB->get_record('user', array('id' => $educator->userid,
-                                                                  'deleted' => 0)) ) {
-                            if ($DB->record_exists('course', array('id' => $course->id))) {
-                                if ($DB->record_exists('iomad_courses', array('courseid' => $course->id, 'shared' => 1))) {
-                                    // Not created by a company manager.
+        if (!$licensed && $CFG->iomad_autoenrol_managers) {
+            if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
+                                                         WHERE companyid = :companyid
+                                                         AND managertype != 0", array('companyid' => $this->id))) {
+                $companycoursenoneditorrole = $DB->get_record('role',
+                                                   array('shortname' => 'companycoursenoneditor'));
+                $companycourseeditorrole = $DB->get_record('role',
+                                                            array('shortname' => 'companycourseeditor'));
+                foreach ($companymanagers as $companymanager) {
+                    if ($user = $DB->get_record('user', array('id' => $companymanager->userid,
+                                                              'deleted' => 0)) ) {
+                        if ($DB->record_exists('course', array('id' => $course->id))) {
+                            if (!$own) {
+                                // Not created by a company manager.
+                                company_user::enrol($user, array($course->id), $this->id,
+                                                    $companycoursenoneditorrole->id);
+                            } else {
+                                if ($companymanager->managertype == 2) {
+                                    // Assign the department manager course access role.
                                     company_user::enrol($user, array($course->id), $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
@@ -620,10 +540,6 @@ class company {
      **/
     public static function remove_course($course, $companyid, $departmentid=0) {
         global $DB;
-
-        $errors = false;
-        $transaction = $DB->start_delegated_transaction();
-
         if ($departmentid == 0) {
             // Deal with the company departments.
             $companydepartments = $DB->get_records('department', array ('company' => $companyid));
@@ -631,161 +547,21 @@ class company {
             if ($companycourse = $DB->get_record('company_created_courses',
                                                  array('companyid' => $companyid,
                                                        'courseid' => $course->id))) {
-                if (!$DB->delete_records('company_created_courses', array('id' => $companycourse->id))) {
-                    $errors=true;
-                }
+                $DB->delete_records('company_created_courses', array('id' => $companycourse->id));
             }
             // Check if its an unshared course in iomad.
             if ($DB->get_record('iomad_courses', array('courseid' => $course->id, 'shared' => 0))) {
-                if (!$DB->delete_records('iomad_courses', array('courseid' => $course->id, 'shared' => 0))) {
-                    $errors = true;
-                }
+                $DB->delete_records('iomad_courses', array('courseid' => $course->id, 'shared' => 0));
             }
-            if (!$DB->delete_records('company_course', array('companyid' => $companyid,
-                                                       'courseid' => $course->id))) {
-                $errors = true;
-            }
+            $DB->delete_records('company_course', array('companyid' => $companyid,
+                                                       'courseid' => $course->id));
         } else {
             // Put course in default company department.
             $companydepartment = self::get_company_parentnode($companyid);
-            if (!self::assign_course_to_department($companydepartment->id, $course->id, $companyid)) {
-                $errors = true;
-            }
+            self::assign_course_to_department($companydepartment->id, $course->id, $companyid);
         }
 
-        if ($errors) {
-            try {
-                throw new Exception('Could not delete course');
-            } catch (\Exception $e) {
-                $transaction->rollback(get_string('couldnotremovecoursefromcompany', 'block_iomad_company_admin'));
-            }
-            return false;
-        } else {
-            $transaction->allow_commit();
-            return true;
-        }
-    }
-
-    /**
-     * Deletes a course from a company
-     *
-     * Parameters -
-     *              $companyid = stdclass();
-     *              $courseid = int;
-     *              $destroy = boolean; True removes all entries from the {local_iomad_track} table
-     *
-     **/
-    public static function delete_course($companyid, $courseid, $destroy = false) {
-        global $DB, $USER, $CFG;
-
-        $errors = false;
-        $gone = false;
-        $transaction = $DB->start_delegated_transaction();
-
-        if (!$course = $DB->get_record('course', array('id' => $courseid))) {
-            try {
-                throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
-            } catch (\Exception $e) {
-                $transaction->rollback($e);
-            }
-            return false;
-        }
-
-        if (!$iomadcourse = $DB->get_record('iomad_courses', array('courseid' => $courseid))) {
-            try {
-                throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
-            } catch (\Exception $e) {
-                $transaction->rollback($e);
-            }
-            return false;
-        }
-
-        // Remove the course from the company.
-        if ($iomadcourse->shared != 1 && !self::remove_course($course, $companyid)) {
-            $errors = true;
-        }
-
-        // Remove the course from any licenses
-        if ($licenses = $DB->get_records_sql("SELECT cl.* FROM {companylicense} cl
-                                              JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
-                                              WHERE clc.courseid = :courseid
-                                              AND cl.companyid = :companyid",
-                                              array('courseid' => $courseid,
-                                                    'companyid' => $companyid))) {
-            foreach ($licenses as $license) {
-                // Delete anyone using the license for that course.
-                if (!$DB->delete_records('companylicense_users', array('licenseid' => $license->id, 'licensecourseid' => $courseid))) {
-                    $errors = true;
-                }
-                // Delete the course from the license.
-                if (!$DB->delete_records('companylicense_courses', array('licenseid' => $license->id, 'courseid' => $courseid))) {
-                    $errors = true;
-                }
-
-                // Fire an event for this.
-                $eventother = array('licenseid' => $license->id,
-                                    'parentid' => $license->parentid);
-
-                $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => context_system::instance(),
-                                                                                                'userid' => $USER->id,
-                                                                                                'objectid' => $license->id,
-                                                                                                'other' => $eventother));
-                $event->trigger();
-            }
-        }
-
-        // Is the course a shared course?
-        if ($iomadcourse->shared == 0) {
-            // Call the moodle course delete function.
-            if (!delete_course($courseid)) {
-                $errors = true;
-            }
-            if (!$DB->delete_records('iomad_courses', array('id' => $iomadcourse->id))) {
-                $errors = true;
-            }
-            $gone=true;
-        } else {
-            // Check if it belongs to a company now?
-            if (!$DB->get_records_sql("SELECT id FROM {company_courses}
-                                       WHERE courseid = :courseid
-                                       AND companyid != :companyid",
-                                       array('courseid' => $courseid,
-                                             'companyid' => $companyid))) {
-                // Call the moodle course delete function.
-                if (!delete_course($courseid)) {
-                    $errors = true;
-                }
-                if (!$DB->delete_records('iomad_courses', array('id' => $iomadcourse->id))) {
-                    $errors = true;
-                }
-                $gone = true;
-            }
-        }
-
-        // remove all entries from the {local_iomad_track_table} if destroy is true.
-        if ($destroy) {
-            if (!$gone) {
-                if (!$DB->delete_records('local_iomad_track', array('companyid' => $companyid, 'courseid' => $courseid))) {
-                    $errors = true;
-                }
-            } else {
-                if (!$DB->delete_records('local_iomad_track', array('courseid' => $courseid))) {
-                    $errors = true;
-                }
-            }
-        }
-
-        if ($errors) {
-            try {
-                throw new Exception('Could not delete course');
-            } catch (\Exception $e) {
-                $transaction->rollback($e);
-            }
-            return false;
-        } else {
-            $transaction->allow_commit();
-            return true;
-        }
+        return true;
     }
 
     /**
@@ -822,7 +598,7 @@ class company {
 
         $sql = " SELECT u.id, u.id AS mid
                 FROM
-                    {company_users} cu
+	                {company_users} cu
                     INNER JOIN {user} u ON (cu.userid = u.id)
                 WHERE u.deleted = 0
                       AND cu.managertype = 0";
@@ -848,7 +624,7 @@ class company {
 
         $sql = " SELECT u.id, u.id AS mid
                 FROM
-                    {company_users} cu
+	                {company_users} cu
                     INNER JOIN {user} u ON (cu.userid = u.id)
                 WHERE u.deleted = 0
                 AND cu.companyid = :companyid";
@@ -868,7 +644,7 @@ class company {
      *
      **/
     public function assign_user_to_company($userid, $departmentid = 0, $managertype = 0, $ws = false) {
-        global $CFG, $DB;
+        global $DB;
 
         // Were we passed a departmentid?
         if (!empty($departmentid)) {
@@ -889,17 +665,9 @@ class company {
             $managertype = 0;
         }
 
-        // if this is the only company, set the theme and any company profile info.
+        // if this is the only company, set the theme.
         if (!$DB->get_records('company_users', array('userid' => $userid))) {
             $DB->set_field('user', 'theme', $this->get_theme(), array('id' => $userid));
-            if (!empty($CFG->iomad_sync_institution)) {
-                $institution = $this->get('shortname');
-                $DB->set_field('user', 'institution', $institution, array('id' => $userid));
-            }
-            if (!empty($CFG->iomad_sync_department)) {
-                $deptrec = $DB->get_record('department', array('id' => $departmentid));
-                $DB->set_field('user', 'department', $deptrec->name, array('id' => $userid));
-            }
         }
 
         // Create the record.
@@ -915,477 +683,13 @@ class company {
         }
 
         // Moving a user.
-        if ($CFG->iomad_autoenrol_managers && $managertype > 0 ) {
-            $educator = true;
-        } else {
-            $educator = false;
-        }
-        if(!self::upsert_company_user($userid, $this->id, $departmentid, $managertype, $educator, $ws)) {
+        if (!$DB->insert_record('company_users', $userrecord)) {
             if ($ws) {
                 return false;
             } else {
                 print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
             }
         }
-
-        return true;
-    }
-
-
-    public static function upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator=false, $ws=false) {
-        global $DB, $CFG;
-
-        $assign = [
-            'companyid'=>$companyid,
-            'userid'=>$userid];
-
-        $success = true;
-        $company = new company($companyid);
-        $managertypes = $company->get_managertypes();
-
-        // Is this a real user?
-        if (!$userrec = $DB->get_record('user', array('id' => $userid))) {
-            return false;
-        }
-
-        // Get the system context.
-        $systemcontext = context_system::instance();
-
-        // Get the manager roles.
-        $companymanagerrole = $DB->get_record('role', array('shortname' => 'companymanager'));
-        $departmentmanagerrole = $DB->get_record('role', array('shortname' => 'companydepartmentmanager'));
-        $companycoursenoneditorrole = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
-        $companycourseeditorrole = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
-        $companyreporterrole = $DB->get_record('role', array('shortname' => 'companyreporter'));
-
-        // Get the full company tree as we may need it.
-        $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
-        $companytree = $topcompany->get_child_companies_recursive();
-        $parentcompanies = $company->get_parent_companies_recursive();
-        $companytree[$topcompanyid] = $topcompanyid;
-
-        if (!$user=$DB->get_record('company_users', $assign)) {
-            if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
-                $assign['educator'] = 1;
-            } else {
-                $assign['educator'] = $educator;
-            }
-
-            $success = $DB->insert_record('company_users',
-                array_merge($assign,['managertype'=>$managertype,'departmentid'=>$departmentid]));
-            if ($managertype == 1 &&
-                       $DB->get_records_sql('SELECT id FROM {company_users}
-                                            WHERE
-                                            userid = :userid
-                                            AND managertype = :roletype
-                                            AND companyid != :companyid', array('userid' => $userid,
-                                                              'roletype' => 1,
-                                                              'companyid' => $companyid))) {
-                // We have a company manager from another company.
-                // Deal with company courses.
-                if ($CFG->iomad_autoenrol_managers && $companycourses = $DB->get_records('company_course',
-                                                        array('companyid' => $companyid))) {
-                    foreach ($companycourses as $companycourse) {
-                        if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            if ($DB->record_exists('company_created_courses',
-                                                    array('companyid' => $companycourse->companyid,
-                                                          'courseid' => $companycourse->courseid))) {
-                                company_user::enrol($userid,
-                                                    array($companycourse->courseid),
-                                                    $companycourse->companyid,
-                                                    $companycourseeditorrole->id);
-                            } else {
-                                company_user::enrol($userid,
-                                                    array($companycourse->courseid),
-                                                    $companycourse->companyid,
-                                                    $companycoursenoneditorrole->id);
-                            }
-                        }
-                    }
-                    // External company managers don't go down the child company tree.
-                } else if ($managertype == 1) {
-                    // Give them the company manager role.
-                    role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
-                    role_assign($companymanagerrole->id, $userid, $systemcontext->id);
-
-                    // Deal with course permissions.
-                    if ($CFG->iomad_autoenrol_managers && $companycourses = $DB->get_records('company_course',
-                                                            array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                // If its a company created course then assign the editor role to the user.
-                                if ($DB->record_exists('company_created_courses',
-                                                        array ('companyid' => $companyid,
-                                                               'courseid' => $companycourse->courseid))) {
-                                    company_user::unenrol($userid,
-                                                          array($companycourse->courseid),
-                                                                $companycourse->companyid);
-                                    company_user::enrol($userid, array($companycourse->courseid),
-                                                        $companycourse->companyid,
-                                                        $companycourseeditorrole->id);
-
-                                } else {
-                                     company_user::enrol($userid, array($companycourse->courseid),
-                                                         $companycourse->companyid,
-                                                         $companycoursenoneditorrole->id);
-                                }
-                            }
-                        }
-                    }
-
-                    $companycount = $DB->count_records_select('company_users', "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                                                            array('userid' => $userid));
-                    if ($companycount == 0) {
-                        // Fire an email for this.
-                        EmailTemplate::send('user_promoted',
-                                       array('company' => $company->companyrecord,
-                                             'user' => $userrec));
-                    }
-                } else if ($managertype == 2) {
-                    // Give them the department manager role.
-                    role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
-                    role_assign($departmentmanagerrole->id, $userid, $systemcontext->id);
-
-                    // Deal with company course roles.
-                    if ($CFG->iomad_autoenrol_managers && $companycourses = $DB->get_records('company_course',
-                         array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                company_user::unenrol($userid, array($companycourse->courseid),
-                                                      $companycourse->companyid);
-                                company_user::enrol($userid, array($companycourse->courseid),
-                                                    $companycourse->companyid,
-                                                    $companycoursenoneditorrole->id);
-                            }
-                        }
-                    }
-
-                    $companycount = $DB->count_records_select('company_users', "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                                                            array('userid' => $userid));
-                    if ($companycount == 0) {
-                        // Fire an email for this.
-                        EmailTemplate::send('user_promoted',
-                                       array('company' => $company->companyrecord,
-                                             'user' => $userrec));
-                    }
-                } else if ($managertype == 4 ) {
-                    // Give them the company reporter role.
-                    role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
-                    role_assign($companyreporterrole->id, $userid, $systemcontext->id);
-
-                    // Deal with course permissions.
-                    if ($CFG->iomad_autoenrol_managers &&
-                        $companycourses = $DB->get_records('company_course',
-                                                            array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                company_user::unenrol($userid,
-                                                      array($companycourse->courseid),
-                                                            $companycourse->companyid);
-                            }
-                        }
-                    }
-                }
-                if ($educator == 1 && !$CFG->iomad_autoenrol_managers ) {
-                    // Deal with company course roles.
-                    if ($companycourses = $DB->get_records('company_course',
-                         array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                // If its a company created course then assign the editor role to the user.
-                                if ($DB->record_exists('company_created_courses',
-                                                        array ('companyid' => $companyid,
-                                                               'courseid' => $companycourse->courseid))) {
-                                    company_user::unenrol($userid,
-                                                          array($companycourse->courseid),
-                                                                $companycourse->companyid);
-                                    company_user::enrol($userid, array($companycourse->courseid),
-                                                        $companycourse->companyid,
-                                                        $companycourseeditorrole->id);
-
-                                } else {
-                                     company_user::enrol($userid, array($companycourse->courseid),
-                                                         $companycourse->companyid,
-                                                         $companycoursenoneditorrole->id);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            $s = [];
-            if($user->departmentid != $departmentid) {
-                $s['departmentid'] = $departmentid;
-            }
-            if($user->managertype != $managertype && $managertype != 3) {
-                $s['managertype'] = $managertype;
-            }
-            if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
-                $s['educator'] = 1;
-            } else if ($CFG->iomad_autoenrol_managers) {
-                $s['educator'] = 0;
-            } else if ($managertype == 3) {
-                $s['educator'] = $educator;
-            } else {
-                $s['educator'] = $educator;
-            }
-
-            // Deal with any management role changes.
-            if ($managertype != 0) {
-                if ($managertype == 1) {
-                    // Give them the company manager role.
-                    role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
-                    role_assign($companymanagerrole->id, $userid, $systemcontext->id);
-
-                    // Deal with course permissions.
-                    if ($CFG->iomad_autoenrol_managers && $companycourses = $DB->get_records('company_course',
-                                                            array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                // If its a company created course then assign the editor role to the user.
-                                if ($DB->record_exists('company_created_courses',
-                                                        array ('companyid' => $companyid,
-                                                               'courseid' => $companycourse->courseid))) {
-                                    company_user::unenrol($userid,
-                                                          array($companycourse->courseid),
-                                                                $companycourse->companyid);
-                                    company_user::enrol($userid, array($companycourse->courseid),
-                                                        $companycourse->companyid,
-                                                        $companycourseeditorrole->id);
-
-                                } else {
-                                     company_user::enrol($userid, array($companycourse->courseid),
-                                                         $companycourse->companyid,
-                                                         $companycoursenoneditorrole->id);
-                                }
-                            }
-                        }
-                    }
-
-                    if ($user->managertype == 0) {
-                        $companycount = $DB->count_records_select('company_users', "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                                                                array('userid' => $userid));
-                        if ($companycount == 0) {
-                            // Fire an email for this.
-                            EmailTemplate::send('user_promoted',
-                                           array('company' => $company->companyrecord,
-                                                 'user' => $userrec));
-                        }
-                    }
-                } else if ($managertype == 2) {
-                    // Give them the department manager role.
-                    role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
-                    role_assign($departmentmanagerrole->id, $userid, $systemcontext->id);
-
-                    // Deal with company course roles.
-                    if ($CFG->iomad_autoenrol_managers && $companycourses = $DB->get_records('company_course',
-                         array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                company_user::unenrol($userid, array($companycourse->courseid),
-                                                      $companycourse->companyid);
-                                company_user::enrol($userid, array($companycourse->courseid),
-                                                    $companycourse->companyid,
-                                                    $companycoursenoneditorrole->id);
-                            }
-                        }
-                    }
-                    if ($user->managertype == 0) {
-                        // Fire an email for this.
-                        EmailTemplate::send('user_promoted',
-                                       array('company' => $company->companyrecord,
-                                             'user' => $userrec));
-                    }
-                } else if ($managertype == 3 && !$CFG->iomad_autoenrol_managers) {
-                    // Deal with company course roles.
-                    if ($CFG->iomad_autoenrol_managers && $companycourses = $DB->get_records('company_course',
-                         array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                if ($educator) {
-                                    // If its a company created course then assign the editor role to the user.
-                                    if ($DB->record_exists('company_created_courses',
-                                                            array ('companyid' => $companyid,
-                                                                   'courseid' => $companycourse->courseid))) {
-                                        company_user::unenrol($userid,
-                                                              array($companycourse->courseid),
-                                                                    $companycourse->companyid);
-                                        company_user::enrol($userid, array($companycourse->courseid),
-                                                            $companycourse->companyid,
-                                                            $companycourseeditorrole->id);
-
-                                    } else {
-                                         company_user::enrol($userid, array($companycourse->courseid),
-                                                             $companycourse->companyid,
-                                                             $companycoursenoneditorrole->id);
-                                    }
-                                } else {
-                                    if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                        company_user::unenrol($userid,
-                                                              array($companycourse->courseid),
-                                                                    $companycourse->companyid);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else if ($managertype == 4 ) {
-                    // Give them the company reporter role.
-                    role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
-                    role_assign($companyreporterrole->id, $userid, $systemcontext->id);
-
-                    // Deal with course permissions.
-                    if ($CFG->iomad_autoenrol_managers &&
-                        ($user->managertype == 1 || $user->managertype == 2) &&
-                        $companycourses = $DB->get_records('company_course',
-                                                            array('companyid' => $companyid))) {
-                        foreach ($companycourses as $companycourse) {
-                            if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                company_user::unenrol($userid,
-                                                      array($companycourse->courseid),
-                                                            $companycourse->companyid);
-                            }
-                        }
-                    }
-                }
-                if ($managertype == 1 || $user->managertype == 1) {
-                    // Deal with child companies.
-                    foreach ($company->get_child_companies_recursive() as $childcompany) {
-                        // get the top level department of the child company.
-                        $childdepartment = self::get_company_parentnode($childcompany->id);
-                        self::upsert_company_user($userid,$childcompany->id,$childdepartment->id,$managertype, $educator);
-                    }
-                }
-            }
-            if ($user->managertype != 0 && $managertype == 0) {
-                // Demoting a manager to a user.
-                // Deal with company course roles.
-                if ($CFG->iomad_autoenrol_managers &&
-                    $companycourses = $DB->get_records('company_course', array('companyid' => $companyid))) {
-                    foreach ($companycourses as $companycourse) {
-                        if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            company_user::unenrol($userid, array($companycourse->courseid),
-                                                  $companycourse->companyid);
-                        }
-                    }
-                }
-                if ($DB->get_records_sql("SELECT id FROM {company_users}
-                                          WHERE userid = :userid
-                                          AND companyid NOT IN
-                                          (" . join(',', array_keys($companytree)) .")
-                                          AND managertype = 1",
-                                          array('userid' => $userid,
-                                                'companyid' => $companyid))) {
-                    // Remove the user from this company.
-                    $DB->delete_records('company_users', (array) $user);
-
-                    // Create an event for this.
-                    $eventother = array('companyname' => $company->get_name(),
-                                        'companyid' => $company->id,
-                                        'usertype' => $managertype,
-                                        'usertypename' => $managertypes[$managertype]);
-                    $event = \block_iomad_company_admin\event\company_user_unassigned::create(array('context' => $systemcontext,
-                                                                                                    'objectid' => $company->id,
-                                                                                                    'userid' => $userid,
-                                                                                                    'other' => $eventother));
-
-                    $event->trigger();
-                    return true;
-                } else {
-                    role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
-                }
-                if ($user->managertype == 1) {
-                    // Deal with child companies.
-                    $childcompanies = $company->get_child_companies_recursive();
-                    foreach ($childcompanies as $childcompany) {
-                        // get the top level department of the child company.
-                        $childdepartment = self::get_company_parentnode($childcompany->id);
-                        self::upsert_company_user($userid,$childcompany->id, $childdepartment->id, $managertype, $educator);
-                        $DB->delete_records('company_users', array('companyid' => $childcompany->id, 'userid' => $userid));
-                    }
-                }
-
-                if ($user->managertype == 1 || $user->managertype == 2) {
-                    $companycount = $DB->count_records_select('company_users', "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                                                  array('userid' => $userid));
-                    if ($companycount == 1) {
-                        // Fire an email for this.
-                        EmailTemplate::send('admin_deleted',
-                                       array('company' => $company->companyrecord,
-                                             'user' => $userrec));
-                    }
-                }
-            }
-            if ($educator && $user->educator != 1 &&
-                 !$CFG->iomad_autoenrol_managers &&
-                 $companycourses = $DB->get_records('company_course', array('companyid' => $companyid))) {
-                foreach ($companycourses as $companycourse) {
-                    if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                        // If its a company created course then assign the editor role to the user.
-                        if ($DB->record_exists('company_created_courses',
-                                                array ('companyid' => $companyid,
-                                                       'courseid' => $companycourse->courseid))) {
-                            company_user::unenrol($userid,
-                                                  array($companycourse->courseid),
-                                                        $companycourse->companyid);
-                            company_user::enrol($userid, array($companycourse->courseid),
-                                                $companycourse->companyid,
-                                                $companycourseeditorrole->id);
-
-                        } else {
-                             company_user::enrol($userid, array($companycourse->courseid),
-                                                 $companycourse->companyid,
-                                                 $companycoursenoneditorrole->id);
-                        }
-                    }
-                }
-            }
-
-            if (!$educator && $user->educator == 1 &&
-                 !$CFG->iomad_autoenrol_managers &&
-                 $companycourses = $DB->get_records('company_course', array('companyid' => $companyid))) {
-                foreach ($companycourses as $companycourse) {
-                    if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                        company_user::unenrol($userid,
-                                              array($companycourse->courseid),
-                                                    $companycourse->companyid);
-                    }
-                }
-            }
-
-            // Are we updating the user record?
-            if(count($s)) {
-                $s['id'] = $user->id;
-                $success = $DB->update_record('company_users', array_merge($assign,$s));
-            }
-        }
-        if(!$success) {
-            print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
-        }
-
-        // Create an event for this.
-        $eventother = array('companyname' => $company->get_name(),
-                            'companyid' => $company->id,
-                            'usertype' => $managertype,
-                            'usertypename' => $managertypes[$managertype]);
-        $event = \block_iomad_company_admin\event\company_user_assigned::create(array('context' => $systemcontext,
-                                                                                      'objectid' => $company->id,
-                                                                                      'userid' => $userid,
-                                                                                      'other' => $eventother));
-        // Fire the event.
-        $event->trigger();
-
-        if($ws) return $success;
 
         return true;
     }
@@ -1398,9 +702,7 @@ class company {
      *
      **/
     public function unassign_user_from_company($userid, $ws = false) {
-        global $CFG, $DB;
-
-        $timestamp = time();
+        global $DB;
 
         // Moving a user.
         if (!$userrecord = $DB->get_record('company_users', array('companyid' => $this->id,
@@ -1410,134 +712,6 @@ class company {
             } else {
                 print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
             }
-        }
-
-        // Deal with company courses
-        if ($companycourses = $this->get_menu_courses(true, false, false, false)) {
-            foreach ($companycourses as $courseid => $name) {
-                $coursecontext = \context_course::instance($courseid);
-                if (is_enrolled($coursecontext, $userid, '', true)) {
-                    // Clear down the user from the course.
-                    company_user::delete_user_course($userid, $courseid, 'autodelete');
-                }
-            }
-        }
-
-        // Get licenses which are reusable and can be removed.
-        if ($reusablelicenses = $DB->get_records_sql("SELECT clu.*
-                                                      FROM {companylicense_users} clu
-                                                      JOIN {companylicense} cl ON (clu.licenseid = cl.id)
-                                                      WHERE cl.companyid = :companyid 
-                                                      AND (cl.type = 1 OR cl.type = 3)
-                                                      AND cl.expirydate > :timestamp
-                                                      AND clu.userid = :userid",
-                                                      array('timestamp' => $timestamp,
-                                                            'userid' => $userid,
-                                                            'companyid' => $this->id))) {
-            foreach ($reusablelicenses as $reusablelicense) {
-                $DB->delete_records('companylicense_users', array('id' => $reusablelicense->id));
-
-                // Fire the license deleted event.
-                $eventother = array('licenseid' => $reusablelicense->licenseid,
-                                    'duedate' => 0);
-                $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($reusablelicense->licensecourseid),
-                                                                                                'objectid' => $reusablelicense->licenseid,
-                                                                                                'courseid' => $reusablelicense->licensecourseid,
-                                                                                                'userid' => $reusablelicense->userid,
-                                                                                                'other' => $eventother));
-                $event->trigger();
-
-                // Update the license usage.
-                self::update_license_usage($reusablelicense->licenseid);
-            }
-        }
-
-        // Get licenses which are unused, non-program and can be removed.
-        if ($nonprogramlicenses = $DB->get_records_sql("SELECT clu.*
-                                                        FROM {companylicense_users} clu
-                                                        JOIN {companylicense} cl ON (clu.licenseid = cl.id)
-                                                        WHERE cl.companyid = :companyid
-                                                        AND (cl.type = 0 OR cl.type = 2)
-                                                        AND cl.program = 0
-                                                        AND clu.isusing = 0
-                                                        AND cl.expirydate > :timestamp
-                                                        AND clu.userid = :userid",
-                                                        array('timestamp' => $timestamp,
-                                                              'userid' => $userid,
-                                                              'companyid' => $this->id))) {
-            foreach ($nonprogramlicenses as $nonprogramlicense) {
-                $DB->delete_records('companylicense_users', array('id' => $nonprogramlicense->id));
-
-                // Fire the license deleted event.
-                $eventother = array('licenseid' => $nonprogramlicense->licenseid,
-                                    'duedate' => 0);
-                $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($nonprogramlicense->licensecourseid),
-                                                                                                'objectid' => $nonprogramlicense->licenseid,
-                                                                                                'courseid' => $nonprogramlicense->licensecourseid,
-                                                                                                'userid' => $nonprogramlicense->userid,
-                                                                                                'other' => $eventother));
-                $event->trigger();
-
-                // Update the license usage.
-                self::update_license_usage($nonprogramlicense->licenseid);
-            }
-        }
-
-        // Deal with program licenses.
-        if ($programlicenses = $DB->get_records_sql("SELECT cl.*
-                                                     FROM {companylicense} cl
-                                                     JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
-                                                     WHERE cl.companyid = :companyid
-                                                     AND cl.program = 1
-                                                     AND clu.userid = :userid
-                                                     AND cl.expirydate > :timestamp
-                                                     GROUP BY cl.id",
-                                                     array('timestamp' => $timestamp,
-                                                           'userid' => $userid,
-                                                           'companyid' => $this->id))) {
-
-            foreach ($programlicenses as $programlicense) {
-                // Check if there is a used course here
-                if ($DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id, 'isusing' => 1))) {
-                    continue;
-                } else {
-                    $licenserecords = $DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id));
-
-                    foreach ($licenserecords as $licenserecord) {
-                        // Fire the license deleted event.
-                        $eventother = array('licenseid' => $licenserecord->licenseid,
-                                            'duedate' => 0);
-                        $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($licenserecord->licensecourseid),
-                                                                                                        'objectid' => $licenserecord->licenseid,
-                                                                                                        'courseid' => $licenserecord->licensecourseid,
-                                                                                                        'userid' => $licenserecord->userid,
-                                                                                                        'other' => $eventother));
-                        $event->trigger();
-                    }
-
-                    // Update the license usage.
-                    self::update_license_usage($programlicense->id);
-                }
-            }
-        }
-
-        // Deal with any course reminders.
-        $DB->set_field('local_iomad_track', 'notstartedstop', true, array('userid' => $userid, 'companyid' => $this->id));
-        $DB->set_field('local_iomad_track', 'completedstop', true, array('userid' => $userid, 'companyid' => $this->id));
-        $DB->set_field('local_iomad_track', 'expiredstop', true, array('userid' => $userid, 'companyid' => $this->id));
-        $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('userid' => $userid, 'companyid' => $this->id));
-
-        // Are they something other than an ordinary user?
-        if ($userrecord->managertype > 0) {
-            // Deal with that.
-            self::upsert_company_user($userid, $this->id, $userrecord->departmentid, 0, 0, $ws);
-        }
-
-        if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
-            $user = $DB->get_record('user', array('id' => $userid));
-            iomad_commerce::delete_user($user->username, $this->id);
         }
 
         // Delete the record.
@@ -1677,24 +851,13 @@ class company {
     public function get_userlevel($user) {
 
         global $DB;
-
-        // Get the system context.
-        $systemcontext = context_system::instance();
-
-        // Can the user see the whole department tree?
-        if (is_siteadmin() ||
-            iomad::has_capability('block/iomad_company_admin:edit_all_departments', $systemcontext) ||
-            iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext) ||
-            iomad::has_capability('block/iomad_company_admin:company_add_child', $systemcontext)) {
+        if (is_siteadmin()) {
             return self::get_company_parentnode($this->id);
         }
-
-        // If not, get the department the user is assigned to in this company.
         if ($userdepartment = $DB->get_record('company_users', array('userid' => $user->id, 'companyid' => $this->id))) {
             $userlevel = $DB->get_record('department', array('id' => $userdepartment->departmentid));
             return $userlevel;
         } else {
-            // User doesn't exist in this company.
             return false;
         }
     }
@@ -1732,7 +895,12 @@ class company {
         foreach(explode(',', $supervisor->data) as $testemail) {
             // Is it a valid email address?
             if (validate_email($testemail)) {
-                $emaillist[$testemail] = $testemail;
+                // Are we diverting everything??
+                if (empty($CFG->divertallemailsto)) {
+                    $emaillist[$testemail] = $testemail;
+                } else {
+                    $emaillist[$CFG->divertallemailsto] = $CFG->divertallemailsto;
+                }
             }
         }
 
@@ -1789,6 +957,7 @@ class company {
         if (isset($parent->id) && $parent->id == $ignorecurrentbranch) {
             return $parent;
         }
+
 
         $returnarray = $parent;
         // Check to see if its the top node.
@@ -2105,54 +1274,6 @@ class company {
     }
 
     /**
-     * Gets a list of the company managers for the company
-     *
-     * Returns array of objects
-     *
-     **/
-    public function get_managers() {
-        global $DB;
-
-        $parentsql = "";
-        if ($parentslist = $this->get_parent_companies_recursive()) {
-            $parentsql = "AND u.id NOT IN (
-                          SELECT userid FROM {company_users}
-                          WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-        }
-
-        // Get the managers in that list of departments.
-        $managers = $DB->get_records_sql("SELECT u.* FROM {user} u
-                                          JOIN {company_users} cu ON (u.id = cu.userid)
-                                          WHERE cu.managertype = 1
-                                          AND cu.companyid = :companyid
-                                          $parentsql",
-                                          array('companyid' => $this->id));
-        //  return them.
-        return $managers;
-    }
-
-    /**
-     * Gets a list of the company managers for the company
-     *
-     * Returns an array to be used by a form select.
-     *
-     **/
-    public function get_managers_select() {
-
-        // Set up the initial array.
-        $managerlist = array('0' => get_string('none'));
-
-        // Get any company managers.
-        if ($managers = $this->get_managers()) {
-            foreach ($managers as $manager) {
-                $managerlist[$manager->id] = fullname($manager);
-            }
-        }
-
-        return $managerlist;
-    }
-
-    /**
      * Gets a list of the managers for that user
      *
      * Parameters -
@@ -2167,23 +1288,17 @@ class company {
 
         // Get the users department.
         $usercompanyinfo = $DB->get_record('company_users', array('userid' => $userid));
-
-        // Set the initial return array.
-
-        $managers = array();
         // Get the list of parent departments.
-        if ($userdepartment = self::get_departmentbyid($usercompanyinfo->departmentid)) {
-            $departmentlist = self::get_parentdepartments($userdepartment);
-            self::get_parents_list($departmentlist, $departments);
+        $userdepartment = self::get_departmentbyid($usercompanyinfo->departmentid);
+        $departmentlist = self::get_parentdepartments($userdepartment);
+        self::get_parents_list($departmentlist, $departments);
 
-            // Get the managers in that list of departments.
-            $managers = $DB->get_records_sql("SELECT userid FROM {company_users}
-                                              WHERE managertype = :managertype
-                                              AND userid != :userid
-                                              AND departmentid IN (".implode(',', array_keys($departments)).")",
-                                              array('managertype' => $managertype, 'userid' => $USER->id));
-        }
-
+        // Get the managers in that list of departments.
+        $managers = $DB->get_records_sql("SELECT userid FROM {company_users}
+                                          WHERE managertype = :managertype
+                                          AND userid != :userid
+                                          AND departmentid IN (".implode(',', array_keys($departments)).")",
+                                          array('managertype' => $managertype, 'userid' => $USER->id));
         //  return them.
         return $managers;
     }
@@ -2248,11 +1363,8 @@ class company {
         $userrecord['departmentid'] = $departmentid;
         $userrecord['userid'] = $userid;
 
-        // We need the company.
-        $departmentrec = $DB->get_record('department', array('id' => $departmentid));
-
         // Moving a user.
-        if ($currentuser = $DB->get_record('company_users', array('userid' => $userid, 'companyid' => $departmentrec->company))) {
+        if ($currentuser = $DB->get_record('company_users', array('userid' => $userid))) {
             $currentuser->departmentid = $departmentid;
             if ($ws && !empty($managertype)) {
                 $currentuser->managertype = $managertype;
@@ -2560,31 +1672,14 @@ class company {
      * Returns array()
      *
      **/
-    public static function get_courses_by_license($licenseid, $visible = true) {
+    public static function get_courses_by_license($licenseid) {
         global $DB;
-
-        if ($visible) {
-            $visiblesql = " AND c.visible = 1 ";
-        } else {
-            $visiblesql = "";
-        }
-        if ($courseids = $DB->get_records_sql("SELECT c.id
-                                              FROM {course} c
-                                              JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
-                                              WHERE clc.licenseid = :licenseid
-                                              $visiblesql
-                                              ORDER BY c.fullname",
-                                              array('licenseid' => $licenseid))) {
+        if ($courseids = $DB->get_records('companylicense_courses', array('licenseid' => $licenseid),
+                                                                           null, 'courseid')) {
             $sql = "SELECT id, fullname FROM {course} WHERE id IN (".
                       implode(',', array_keys($courseids)).
                    ") ";
             if ($courses = $DB->get_records_sql($sql)) {
-
-                // Format multi-language course full name
-                foreach ($courses as $key => $course) {
-                    $courses[$key]->fullname = format_string($course->fullname, true, 1);
-                }
-
                 return $courses;
             } else {
                 return array();
@@ -2633,6 +1728,7 @@ class company {
         }
     }
 
+
     /** Check if a license is in a child company.
      *
      * Parameters -
@@ -2662,7 +1758,7 @@ class company {
         return false;
     }
 
-    public function get_menu_courses($shared = false, $licensed = false, $groups = false, $default = true, $onlylicensed = false) {
+    public function get_menu_courses($shared = false, $licensed = false, $groups = false, $default = true) {
         global $DB;
 
         // Deal with license option.
@@ -2676,16 +1772,6 @@ class company {
         } else {
             $licensesql = "";
             $sharedlicsql = "";
-        }
-
-        if ($onlylicensed) {
-            $onlylicensedsql = "c.id IN (
-                             SELECT courseid FROM {iomad_courses}
-                             WHERE licensed = 1
-                           )
-                           AND";
-        } else {
-            $onlylicensedsql = "";
         }
 
         // Deal with shared option.
@@ -2717,7 +1803,6 @@ class company {
                                                  WHERE
                                                  $groupsql
                                                  $licensesql
-                                                 $onlylicensedsql
                                                  c.id IN (
                                                      SELECT courseid FROM {company_course}
                                                      WHERE companyid = :companyid
@@ -2726,11 +1811,6 @@ class company {
                                                  ORDER BY c.fullname",
                                                  array('companyid' => $this->id,
                                                        'companyid2' => $this->id));
-
-        // Take care of multilanguage
-        foreach ($retcourses as $courseid => $course) {
-            $retcourses[$courseid] = format_string($course, true, 1);
-        }
 
         // Add a default entry and return the courses.
         if ($default) {
@@ -2755,57 +1835,6 @@ class company {
         return array('0' => get_string('noselection', 'form')) + $retgroups;
     }
 
-    /**
-     * Check if a user can use a license to access a course..
-     *
-     * Parameters -
-     *              $licenseid = int;
-     *              $courseid = int;
-     *              $userid = int;
-     *
-     **/
-    public static function license_ok_to_use($licenseid, $courseid, $userid) {
-        global $DB, $CFG;
-
-        // Check if the course is associated to any learning path.
-        if (!$DB->get_records('iomad_learningpathcourse', array('course' => $courseid))) {
-            return true;
-        }
-
-        // Check if the license is associated to a learning path.
-        if (!$learningpath = $DB->get_record_sql("SELECT lp.* FROM {iomad_learningpath} lp
-                                                  JOIN {iomad_learningpathuser} lpu ON (lp.id = lpu.pathid)
-                                                  WHERE lp.licenseid = :licenseid
-                                                  AND lpu.userid = :userid",
-                                                  array('licenseid' => $licenseid, 'userid' => $userid))) {
-            return true;
-        }
-
-        // Check if the group is sequenced.
-        if (!$groupinfo = $DB->get_record_sql("SELECT lpc.* FROM {iomad_learninpathcourse}
-                                 JOIN {iomad_learningpathgroup} lpg ON (lpc.groupid = lpg.id)
-                                 WHERE lpc.courseid = :courseid
-                                 AND lpc.path = :path
-                                 AND lpg.sequence = 1",
-                                 array('courseid' => $courseid, 'path' => $learningpath->id))) {
-            return true;
-        }
-
-        // Check if the user has met all the conditions.
-        $groupcourses = $DB->get_records('iomad_learningpathcourse', array('groupid' => $groupinfo->groupid), 'sequence ASC');
-        foreach ($groupcourses as $groupcourse) {
-            // Is this the next course?
-            if ($groupcourse->courseid == $courseid) {
-                return true;
-            }
-            // If not, is it completed?
-            if ($DB->get_record('local_iomad_track', array('userid' => $userid, 'courseid' => $courseid, 'licenseid' => $licenseid, 'timecompleted' => null))) {
-                return false;
-            }
-        }
-        // Default return true.
-        return true;
-    }
 
     // Shared course stuff.
 
@@ -2822,6 +1851,7 @@ class company {
     public static function create_company_course_group($companyid, $courseid, $groupdata = null) {
         global $CFG, $DB;
         require_once($CFG->dirroot.'/group/lib.php');
+
 
         // Creates a company group within a shared course.
         $company = $DB->get_record('company', array('id' => $companyid));
@@ -2931,14 +1961,9 @@ class company {
      *              $companyid = int;
      *
      **/
-    public static function add_user_to_shared_course($courseid, $userid, $companyid, $groupid = 0, $clear = false) {
+    public static function add_user_to_shared_course($courseid, $userid, $companyid, $groupid = 0) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/group/lib.php');
-
-        if (!empty($clear)) {
-            // Clear the user from all groups.
-            self::remove_user_from_shared_course($courseid, $userid, $companyid);
-        }
 
         // Adds a user to a shared course.
         if (empty($groupid)) {
@@ -3172,78 +2197,6 @@ class company {
     }
 
     /**
-     * Terminates a company's contract,
-     * removing all course access and licenses for
-     * all of their users.
-     *
-     **/
-    public function terminate() {
-        global $DB;
-
-        $runtime = time();
-
-        try {
-            $transaction = $DB->start_delegated_transaction();
-
-            // Update all of the company licenes to have an end-date of now.
-            $DB->set_field('companylicense', 'expirydate', time(), array('companyid' => $this->id));
-
-            // Get the company users.
-            $users = $this->get_all_user_ids();
-
-            // Update the users.
-            foreach ($users as $userid) {
-                if ($user = $DB->get_record('user', array('id' => $userid))) {
-                    // Does the user belong to another company?
-                    if ($DB->count_records('company_users', array('userid' => $userid)) > 1 ) {
-                        // Belongs to more than one company.  Skip.
-                        continue;
-                    }
-                    // Terminate all of their enrolments.
-                    $usercourses = enrol_get_users_courses($userid);
-                    foreach ($usercourses as $courseid => $usercourse) {
-                        company_user::delete_user_course($userid, $courseid, 'autodelete');
-                    }
-                }
-            }
-
-            // Set the companyterminated field for the company.
-            $DB->set_field('company', 'companyterminated', true, array('id' => $this->id));
-
-            // Deal with local_iomad_track lines too.
-            $DB->set_field('local_iomad_track', 'timeenrolled', $runtime, array('companyid' => $this->id, 'timeenrolled' => null));
-            $DB->set_field('local_iomad_track', 'timestarted', $runtime, array('companyid' => $this->id, 'timestarted' => null));
-            $DB->set_field('local_iomad_track', 'timecompleted', $runtime, array('companyid' => $this->id, 'timecompleted' => null));
-
-            // Deal with child companies.
-            $childcompanies = $this->get_child_companies_recursive();
-            if (!empty($childcompanies)) {
-                foreach ($childcompanies as $childcomprec) {
-
-                    $childcompany = new company($childcomprec->id);
-                    $childcompany->terminate();
-                }
-            }
-
-            // All OK commit the transaction.
-            $transaction->allow_commit();
-            return true;
-
-            // Create an event for this.  This handles the actual lifting.
-            $eventother = array('companyid' => $company->id);
-            $event = \block_iomad_company_admin\event\company_terminated::create(array('context' => context_system::instance(),
-                                                                                       'objectid' => $company->id,
-                                                                                       'userid' => $USER->id,
-                                                                                       'other' => $eventother));
-            $event->trigger();
-
-        } catch(Exception $e) {
-            $transaction->rollback($e);
-            return false;
-        }
-    }
-
-    /**
      * Enables or disables ecommerce for a company.
      *
      * Parameters -
@@ -3251,17 +2204,10 @@ class company {
      *
      **/
     public function ecommerce($ecommerce) {
-        global $CFG, $DB;
+        global $DB;
 
         // Set the ecommerce field for the company.
         $DB->set_field('company', 'ecommerce', $ecommerce, array('id' => $this->id));
-
-        // Do we have to update it on the external site?
-        if (!empty($ecommerce) && $CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            // Let's set up the adhoc task.
-            $task = new \block_iomad_company_admin\task\companyenableshop();
-            $task->queue_task($this->id);
-        }
     }
 
     /**
@@ -3323,49 +2269,6 @@ class company {
     }
 
     /**
-     * Checks number of new users to be added to the company won't bring it about the maximum.
-     *
-     * Parameters -
-     *              $new = int;
-     *
-     * Returns boolean.
-     *
-     **/
-    public function check_usercount($new = 0) {
-        global $DB, $USER;
-
-        // Get the company maximum.
-        if (empty($this->companyrecord->maxusers)) {
-            return true;
-        } else {
-            // Get the current number of users.
-            // Deal with any parent companies.
-            // all companies?
-            if ($parentslist = $this->get_parent_companies_recursive()) {
-                $companysql = " AND u.id NOT IN (
-                                SELECT userid FROM {company_users}
-                                WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-            } else {
-                $companysql = "";
-            }
-
-            $usercount = $DB->count_records_sql("SELECT COUNT(u.id) FROM
-                                                 {company_users} cu
-                                                 JOIN {user} u ON (cu.userid = u.id)
-                                                 WHERE cu.companyid = :companyid
-                                                 AND u.deleted = 0
-                                                 AND u.suspended = 0
-                                                 $companysql",
-                                                 array('companyid' => $this->id));
-            if ($usercount + $new > $this->companyrecord->maxusers) {
-                return false;
-            } else {
-                return true;
-            }
-        }
-    }
-
-    /**
      * Checks that the USER can edit a userid in a companyid.
      *
      * Parameters -
@@ -3383,6 +2286,7 @@ class company {
             return false;
         }
 
+        $context = context_system::instance();
         $context = context_system::instance();
         // If current user is a site admin or they have appropriate capabilities then they can.
         if (is_siteadmin($USER->id) ||
@@ -3573,164 +2477,7 @@ class company {
                                                             'templateid' => $templateid));
     }
 
-    /**
-     * checks if it is OK use an email template.
-     *
-     **/
-    public function email_template_is_enabled($templatename, $managertype = 0) {
-        global $DB;
-
-        if ($DB->get_records('email_template', array('companyid' => $this->id, 'name' => $templatename, 'disabled' => 0, 'disabledmanager' => 0, 'disabledsupervisor' => 0))) {
-            // Fully enabled for the company.
-            return true;
-        }
-
-        if ($managertype == 0) {
-            if ($DB->get_records('email_template', array('companyid' => $this->id, 'name' => $templatename, 'disabled' => 1))) {
-                // Disabled for the company.
-                return false;
-            }
-        }
-
-        if ($managertype == 1) {
-            if ($DB->get_records('email_template', array('companyid' => $this->id, 'name' => $templatename, 'disabledmanager' => 1))) {
-                // Disabled for the company.
-                return false;
-            }
-        }
-
-        if ($managertype == 2) {
-            if ($DB->get_records('email_template', array('companyid' => $this->id, 'name' => $templatename, 'disabledsupervisor' => 1))) {
-                // Disabled for the company.
-                return false;
-            }
-        }
-
-        // default is true as the template may not have been defined outside of defaults.
-        return true;
-    }
-
     /***  Event Handlers  ***/
-
-    /**
-     * Triggered via company_created event.
-     *
-     * @param \core\event\company_created $event
-     * @return bool true on success.
-     */
-    public static function company_created(\block_iomad_company_admin\event\company_created $event) {
-        global $CFG, $DB, $USER;
-
-        $companyid = $event->other['companyid'];
-        if (!$company = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            // Fire off the payload to the external site.
-            if (empty($CFG->commerce_admin_enableall) && empty($company->ecommerce)) {
-                return true;
-            }
-
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
-            iomad_commerce::update_company($company, $company);
-        }
-
-        return true;
-    }
-
-    /**
-     * Triggered via company_suspended event.
-     *
-     * @param \block_iomad_company_user\event\company_suspended $event
-     * @return bool true on success.
-     */
-    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->other['companyid'];
-
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $suspendcompany = new company($companyid);
-        $suspendcompany->suspend(true);
-
-        // Get the company managers.
-        $managers = $DB->get_records('company_users', array('companyid' => $companyid, 'managertype' => 1));
-        foreach ($managers as $manager) {
-            $user = $DB->get_record('user', array('id' => $manager->userid));
-            EmailTemplate::send('company_suspended',
-                                 array('company' => $suspendcompany,
-                                       'user' => $user));
-        }
-
-        return true;
-    }
-
-    /**
-     * Triggered via company_unsuspended event.
-     *
-     * @param \block_iomad_company_user\event\company_unsuspended $event
-     * @return bool true on success.
-     */
-    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->other['companyid'];
-
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $suspendcompany = new company($companyid);
-        $suspendcompany->suspend(false);
-
-        // Get the company managers.
-        $managers = $DB->get_records('company_users', array('companyid' => $companyid, 'managertype' => 1));
-        foreach ($managers as $manager) {
-            $user = $DB->get_record('user', array('id' => $manager->userid));
-            EmailTemplate::send('company_unsuspended',
-                                 array('company' => $suspendcompany,
-                                       'user' => $user));
-        }
-
-        return true;
-    }
-
-    /**
-     * Triggered via company_updated event.
-     *
-     * @param \core\event\company_updated $event
-     * @return bool true on success.
-     */
-    public static function company_updated(\block_iomad_company_admin\event\company_updated $event) {
-        global $CFG, $DB;
-
-        $companyid = $event->other['companyid'];
-        if (!$company = $DB->get_record('company', array('id' => $companyid))) {
-            return;
-        }
-
-        $oldcompany = json_decode( $event->other['oldcompany']);
-
-        if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
-            iomad_commerce::update_company($company, $oldcompany);
-        }
-
-        // Check if the company name has changed.
-        if ($company->name != $oldcompany->name) {
-            $coursecat = $DB->get_record('course_categories', array('id' => $company->category),'*',MUST_EXIST);
-            $coursecat->name = $company->name;
-            $DB->update_record('course_categories', $coursecat);
-            fix_course_sortorder();
-        }
-
-        return true;
-    }
 
     /**
      * Triggered via competency_framework_created event.
@@ -3786,303 +2533,146 @@ class company {
     }
 
     /**
+     * Triggered via course_deleted event.
+     *
+     * @param \core\event\course_deleted $event
+     * @return bool true on success.
+     */
+    public static function course_deleted(\core\event\course_deleted $event) {
+        global $DB;
+
+        // Clear everything from the iomad_courses table.
+        $DB->delete_records('iomad_courses', array('courseid' => $event->courseid));
+
+        // Remove the course from company allocation tables.
+        $DB->delete_records('company_course', array('courseid' => $event->courseid));
+
+        // Remove the course from company created course tables.
+        $DB->delete_records('company_created_courses', array('courseid' => $event->courseid));
+
+        // Remove the course from company shared courses tables.
+        $DB->delete_records('company_shared_courses', array('courseid' => $event->courseid));
+
+        // Deal with licenses allocations.
+        $DB->delete_records('companylicense_users', array('licensecourseid' => $event->courseid));
+        $courselicenses = $DB->get_records('//companylicense_courses', array('courseid' => $event->courseid));
+        foreach ($courselicenses as $courselicense) {
+            // Delete the course from the license.
+            $DB->delete_record('companylicense_courses', array('id' => $courselicense->id));
+            // Does the license have any courses left?
+            if ($DB->get_records('companylicense_courses', array('licensid' => $courselicense->licenseid))) {
+                self::update_license_usage($courselicense->licenseid);
+            } else {
+                // Delete the license.  It no longer is valid.
+                $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Triggered via course_completed event.
      *
      * @param \core\event\course_completed $event
      * @return bool true on success.
      */
-    public static function course_completed(\core\event\course_completed $event) {
+    public static function course_completed_supervisor(\core\event\course_completed $event) {
         global $DB, $CFG;
 
         $data = $event->get_data();
         $userid = $data['relateduserid'];
         $courseid = $data['courseid'];
-
-        // Get the completion record.
-        $completionrec = $DB->get_record('course_completions', array('userid' => $userid, 'course' => $courseid));
-
-        // Get the enrolment record as the completion record isn't fully formed at this point.
-        if (!$enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                         JOIN {enrol} e ON (ue.enrolid = e.id)
-                                         WHERE ue.userid = :userid
-                                         AND e.courseid = :courseid
-                                         AND e.status = 0",
-                                         array('userid' => $userid,
-                                               'courseid' => $courseid))) {
-            // User isn't enrolled. Not sure why we got this.
-            return true;
-        }
-
-        // Do not send if this is already recorded.
-        if (!empty($enrolrec->timestart) &&
-            ( $DB->get_record_sql("SELECT id FROM {local_iomad_track}
-                                    WHERE userid=:userid
-                                    AND courseid = :courseid
-                                    AND timeenrolled = :timeenrolled
-                                    AND timecompleted IS NOT NULL",
-                                    array('userid' => $userid,
-                                          'courseid' => $courseid,
-                                          'timeenrolled' => $enrolrec->timestart))
-            && $DB->get_record_sql("SELECT id FROM {local_iomad_track}
-                                    WHERE userid=:userid
-                                    AND courseid = :courseid
-                                    AND timeenrolled = :timeenrolled
-                                    AND timecompleted != :timecompleted",
-                                    array('userid' => $userid,
-                                          'courseid' => $courseid,
-                                          'timecompleted' => $completionrec->timecompleted,
-                                          'timeenrolled' => $enrolrec->timestart)))) {
-            return true;
-        }
+        $timecompleted = $data['timecreated'];
+        // Need to make sure any certificate is created.
+        sleep(9);
 
         $course = $DB->get_record('course', array('id' => $courseid));
         $user = $DB->get_record('user', array('id' => $userid));
-        $companyinfo = self::get_company_byuserid($userid);
-        $company = new company($companyinfo->id);
+        $company = self::get_company_byuserid($userid);
 
-        // Deal with attachment.
-        $trackinfos = $DB->get_records_sql('SELECT * FROM {local_iomad_track}
-                                          WHERE userid = :userid
-                                          AND courseid = :courseid
-                                          ORDER BY id DESC',
-                                          array('userid' => $userid, 'courseid' => $courseid), 0, 1);
-        $attachment = new stdclass();
-        $trackinfo = array_pop($trackinfos);
-        if ($trackfileinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $trackinfo->id))) {
-            $fileinfo = $DB->get_record('files', array('itemid' => $trackinfo->id, 'component' => 'local_iomad_track', 'filename' => $trackfileinfo->filename));
-            $filedir1 = substr($fileinfo->contenthash,0,2);
-            $filedir2 = substr($fileinfo->contenthash,2,2);
-            $attachment->filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $fileinfo->contenthash;
-            $attachment->filename = $trackfileinfo->filename;
-        } else {
-            $attachment = null;
-        }
+        $supervisortemplate = new EmailTemplate('completion_course_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
-        $complete = false;
-        if ($licenses = $DB->get_records_sql("SELECT * FROM {companylicense_users} clu
-                                              JOIN {companylicense} cl
-                                              ON (clu.licenseid = cl.id and cl.program = 1)
-                                              WHERE clu.userid = :userid
-                                              AND clu.licenseid = (
-                                                  SELECT licenseid FROM {companylicense_users}
-                                                  WHERE userid = :userid2
-                                                  AND licensecourseid = :courseid)",
-                                              array('userid' => $user->id, 'userid2' => $user->id, 'courseid' => $courseid))) {
-            foreach ($licenses as $license) {
-                if ($license->isusing && $DB->get_record_sql("SELECT id FROM {course_completions}
-                                                              WHERE userid = :userid
-                                                              AND course = :courseid
-                                                              AND timecompleted IS NOT NULL",
-                                                              array('courseid' => $license->licensecourseid,
-                                                                    'userid' => $user->id))) {
-                    $complete = true;
-                } else {
-                    $complete = false;
+        // Do we have a supervisor?
+        if ($supervisoremails = self::get_usersupervisor($userid)) {
+            foreach ($supervisoremails as $supervisoremail) {
+                // Get the user info.
+                if ($userinfo = $DB->get_record('user', array('id' => $userid, 'deleted' => 0, 'suspended' => 0))) {
+                    if ($courseinfo = $DB->get_record('course', array('id' => $courseid))) {
+                        // We have to do this manually as the normal Moodle functions require a proper registered user.
+                        $params = new stdclass();
+                        $params->fullname = $courseinfo->fullname;
+                        $params->firstname = $userinfo->firstname;
+                        $params->lastname = $userinfo->lastname;
+                        $params->date = date('d-m-Y', time());
+                        $mail = get_mailer();
+
+                        $supportuser = core_user::get_support_user();
+                        if (!empty($CFG->supportemail)) {
+                            $supportuser->email = $CFG->supportemail;
+                        }
+                        if ($CFG->supportname) {
+                            $supportuser->firstname = $CFG->supportname;
+                        }
+
+                        $subject = get_string('completion_course_supervisor_subject', 'block_iomad_company_admin', $params);
+                        $messagetext = get_string('completion_course_supervisor_body', 'block_iomad_company_admin', $params);
+
+                        $mail->Sender = $supportuser->firstname;
+                        $mail->From     = $CFG->noreplyaddress;
+                        $mail->FromName = $supportuser->firstname;
+                        if (empty($CFG->divertallemailsto)) {
+                            $mail->Subject = substr($subject, 0, 900);
+                        } else {
+                            $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
+                        }
+
+                        $mail->addAddress($supervisoremail, '');
+
+                        // Add the certificate attachment.
+                        // need to pause to make sure the other events create it.
+                        $trackinfos = $DB->get_records_sql('SELECT * FROM {local_iomad_track}
+                                                          WHERE userid = :userid
+                                                          AND courseid = :courseid
+                                                          ORDER BY id DESC',
+                                                          array('userid' => $userid, 'courseid' => $courseid), 0, 1);
+                        $trackinfo = array_pop($trackinfos);
+                        if ($trackfileinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $trackinfo->id))) {
+                            $fileinfo = $DB->get_record('files', array('itemid' => $trackinfo->id, 'component' => 'local_iomad_track', 'filename' => $trackfileinfo->filename));
+                            $filedir1 = substr($fileinfo->contenthash,0,2);
+                            $filedir2 = substr($fileinfo->contenthash,2,2);
+                            $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $fileinfo->contenthash;
+                            $mimetype = mimeinfo('type', $trackfileinfo->filename);
+                            $mail->addAttachment($filepath, $trackfileinfo->filename, 'base64', $mimetype);
+                        }
+                        // Set word wrap.
+                        $mail->WordWrap = 79;
+
+                        $mail->Body =  "\n$messagetext\n";
+                        if (empty($CFG->noemailever)) {
+                            $mail->send();
+                        }
+
+                    }
                 }
             }
         }
-        if (!$complete) {
-            EmailTemplate::send('completion_course_user', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
-            $supervisortemplate = new EmailTemplate('completion_course_supervisor', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
-            $supervisortemplate->email_supervisor();
-        } else {
-            EmailTemplate::send('user_programcompleted', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
-        }
 
-        return true;
-    }
-
-    /**
-     * Triggered via user_created event.
-     *
-     * @param \core\event\user_created $event
-     * @return bool true on success.
-     */
-    public static function user_created(\core\event\user_created $event) {
-        global $DB, $CFG;
-
-        $userid = $event->objectid;
-        $user = $DB->get_record('user', array('id' => $userid));
-        $user->manager = 'no';
-
-        if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            if ($company = self::by_userid($userid)) {
-                if (empty($CFG->commerce_admin_enableall) && empty($company->companyrecord->ecommerce)) {
-                    return true;
-                }
-                if (empty($user->company)) {
-                    $user->company = $company->get_name();
+        // Email the company managers.
+        if ($mymanagers = self::get_my_managers($userid, 1)) {
+            foreach ($mymanagers as $managerid) {
+                // Get the user info.
+                if ($managerinfo = $DB->get_record('user', array('id' => $managerid->userid, 'deleted' => 0, 'suspended' => 0))) {
+                    if ($userinfo = $DB->get_record('user', array('id' => $userid, 'deleted' => 0, 'suspended' => 0))) {
+                        if ($courseinfo = $DB->get_record('course', array('id' => $courseid))) {
+                            $courseinfo->reporttext = fullname($userinfo) . ' has completed ' . $courseinfo->fullname . ' in ' . $company->name .
+                                                       ' on ' . date($CFG->iomad_date_format, $timecompleted) . "\n";
+                            EmailTemplate::send('course_completed_manager', array('course' => $courseinfo, 'user' => $managerinfo, 'company' => $company));
+                        }
+                    }
                 }
             }
-
-            // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
-            iomad_commerce::update_user($user, $company->id);
         }
-
-        return true;
-    }
-
-    /**
-     * Triggered via user_updated event.
-     *
-     * @param \core\event\user_updated $event
-     * @return bool true on success.
-     */
-    public static function user_updated(\core\event\user_updated $event) {
-        global $DB, $CFG;
-
-        $userid = $event->relateduserid;
-        $user = $DB->get_record('user', array('id' => $userid));
-        $company = self::get_company_byuserid($user->id);
-        if (empty($company)) {
-            return true;
-        }
-
-        if ($DB->get_record('company_users', array('userid'=> $user->id, 'companyid' => $company->id, 'managertype' => 1))) {
-            $user->manager = 'yes';
-            $user->country = $company->country;
-            $user->city = $company->city;
-            $user->adress = "";
-        } else {
-            $user->manager = 'no';
-        }
-        $user->company = $company->name;
-
-        if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            if (empty($CFG->commerce_admin_enableall) && empty($company->ecommerce)) {
-                return true;
-            }
-            if (empty($user->company)) {
-                $user->company = $company->get_name();
-            }
-
-            // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
-            iomad_commerce::update_user($user, $company->id);
-        }
-
-        return true;
-    }
-
-    /**
-     * Triggered via user_suspended event.
-     *
-     * @param \core\event\user_suspended $event
-     * @return bool true on success.
-     */
-    public static function user_suspended(\core\event\user_suspended $event) {
-        global $DB;
-
-        $userid = $event->objectid;
-        $timestamp = time();
-
-        $usercompany = self::by_userid($userid);
-        $usercompanyrec = $DB->get_record('company_users', array('userid' => $userid, 'companyid' => $usercompany->id));
-        $user = $DB->get_record('user', array('id' => $userid));
-        EmailTemplate::send('user_suspended',
-                             array('company' => $usercompany,
-                                   'user' => $user));
-
-        return true;
-    }
-
-    /**
-     * Triggered via user_suspended event.
-     *
-     * @param \core\event\user_suspended $event
-     * @return bool true on success.
-     */
-    public static function user_unsuspended(\core\event\user_unsuspended $event) {
-        global $DB;
-
-        $userid = $event->objectid;
-        $timestamp = time();
-
-        $usercompany = self::by_userid($userid);
-        $usercompanyrec = $DB->get_record('company_users', array('userid' => $userid, 'companyid' => $usercompany->id));
-        $user = $DB->get_record('user', array('id' => $userid));
-        EmailTemplate::send('user_unsuspended',
-                             array('company' => $usercompany,
-                                   'user' => $user));
-
-        return true;
-    }
-
-    /**
-     * Triggered via user_enrolment_created event.
-     *
-     * @param \core\event\user_enrolment_created $event
-     * @return bool true on success.
-     */
-    public static function user_enrolment_created(\core\event\user_enrolment_created $event) {
-        global $DB, $CFG;
-
-        $userid = $event->relateduserid;
-        $timestamp = $event->timecreated;
-        $courseid = $event->courseid;
-
-        // Is this a shared course?
-        if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'shared' => 0))) {
-            // It's not - return.
-            return true;
-        }
-
-        // Does this course have groups?
-        if (!$DB->get_record('course', array('id' => $courseid, 'groupmode' => 1))) {
-            // It doesn't - return.
-            return true;
-        }
-
-        // Does the user have a company?
-        $companyrec = self::get_company_byuserid($userid);
-        if (empty($companyrec->id)) {
-            // It doesn't - return.
-            return true;
-        }
-
-        // Add the user to the appropriate course group.
-        self::add_user_to_shared_course($courseid, $userid, $companyrec->id);
-
-        return true;
-    }
-
-    /**
-     * Triggered via user_licensed_used event.
-     *
-     * @param \block_iomad_company_admin\event\user_license_used $event
-     * @return bool true on success.
-     */
-    public static function user_license_used(\block_iomad_company_admin\event\user_license_used $event) {
-        global $DB, $CFG;
-
-        $userid = $event->userid;
-        $timestamp = $event->timecreated;
-        $courseid = $event->courseid;
-        $licenserecordid = $event->objectid;
-        $licenseid = $event->other['licenseid'];
-
-        // Does this record exist?
-        if (!$userlicenserecord = $DB->get_record('companylicense_users', array('id' => $licenserecordid))) {
-            // It's not - return.
-            return true;
-        }
-
-        // Does this record exist?
-        if (!$licenserecord = $DB->get_record('companylicense', array('id' => $licenseid))) {
-            // It's not - return.
-            return true;
-        }
-
-        // Does this license allocation have a specified group?
-        if (empty($userlicenserecord->groupid)) {
-            // It doesn't - return.
-            return true;
-        }
-
-        // Add the user to the specific groupid.
-        self::add_user_to_shared_course($courseid, $userid, $licenserecord->companyid, $userlicenserecord->groupid, true);
-
         return true;
     }
 
@@ -4093,23 +2683,104 @@ class company {
      * @return bool true on success.
      */
     public static function user_deleted(\core\event\user_deleted $event) {
-        global $DB, $CFG;
+        global $DB;
 
         $userid = $event->objectid;
         $timestamp = time();
 
+        // Get licenses which are reusable and can be removed.
+        if ($reusablelicenses = $DB->get_records_sql("SELECT clu.*
+                                                      FROM {companylicense_users} clu
+                                                      JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                                      WHERE cl.type = 1
+                                                      AND cl.expirydate > :timestamp
+                                                      AND clu.userid = :userid",
+                                                      array('timestamp' => $timestamp,
+                                                            'userid' => $userid))) {
+            foreach ($reusablelicenses as $reusablelicense) {
+                $DB->delete_records('companylicense_users', array('id' => $reusablelicense->id));
 
-        $usercompanies = $DB->get_records('company_users', array('userid' => $userid));
+                // Fire the license deleted event.
+                $eventother = array('licenseid' => $reusablelicense->licenseid,
+                                    'duedate' => 0);
+                $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($reusablelicense->licensecourseid),
+                                                                                                'objectid' => $reusablelicense->licenseid,
+                                                                                                'courseid' => $reusablelicense->licensecourseid,
+                                                                                                'userid' => $reusablelicense->userid,
+                                                                                                'other' => $eventother));
+                $event->trigger();
 
-        foreach ($usercompanies as $usercompany) {
-            $company = new company($usercompany->companyid);
-            $company->unassign_user_from_company($userid);
-
-            $user = $DB->get_record('user', array('id' => $userid));
-            EmailTemplate::send('user_deleted',
-                                 array('company' => $usercompany,
-                                       'user' => $user));
+                // Update the license usage.
+                self::update_license_usage($reusablelicense->licenseid);
+            }
         }
+
+        // Get licenses which are unused, non-program and can be removed.
+        if ($nonprogramlicenses = $DB->get_records_sql("SELECT clu.*
+                                                        FROM {companylicense_users} clu
+                                                        JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+                                                        WHERE cl.type = 0
+                                                        AND cl.program = 0
+                                                        AND clu.isusing = 0
+                                                        AND cl.expirydate > :timestamp
+                                                        AND clu.userid = :userid",
+                                                        array('timestamp' => $timestamp,
+                                                              'userid' => $userid))) {
+            foreach ($nonprogramlicenses as $nonprogramlicense) {
+                $DB->delete_records('companylicense_users', array('id' => $nonprogramlicense->id));
+
+                // Fire the license deleted event.
+                $eventother = array('licenseid' => $nonprogramlicense->licenseid,
+                                    'duedate' => 0);
+                $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($nonprogramlicense->licensecourseid),
+                                                                                                'objectid' => $nonprogramlicense->licenseid,
+                                                                                                'courseid' => $nonprogramlicense->licensecourseid,
+                                                                                                'userid' => $nonprogramlicense->userid,
+                                                                                                'other' => $eventother));
+                $event->trigger();
+
+                // Update the license usage.
+                self::update_license_usage($nonprogramlicense->licenseid);
+            }
+        }
+
+        // Deal with program licenses.
+        if ($programlicenses = $DB->get_records_sql("SELECT cl.*
+                                                     FROM {companylicense} cl
+                                                     JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
+                                                     WHERE clu.userid = :userid
+                                                     AND cl.expirydate > :timestamp
+                                                     GROUP BY cl.id",
+                                                     array('timestamp' => $timestamp,
+                                                           'userid' => $userid))) {
+
+            foreach ($programlicenses as $programlicense) {
+                // Check if there is a used course here
+                if ($DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id, 'isusing' => 1))) {
+                    continue;
+                } else {
+                    $licencerecords = $DB->get_records('companylicense_users', array('userid' => $userid, 'licenseid' => $programlicense->id));
+
+                    foreach ($licenserecords as $licenserecord) {
+                        // Fire the license deleted event.
+                        $eventother = array('licenseid' => $licenserecord->licenseid,
+                                            'duedate' => 0);
+                        $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => context_course::instance($licenserecord->licensecourseid),
+                                                                                                        'objectid' => $licenserecord->licenseid,
+                                                                                                        'courseid' => $licenserecord->licensecourseid,
+                                                                                                        'userid' => $licenserecord->userid,
+                                                                                                        'other' => $eventother));
+                        $event->trigger();
+                    }
+
+                    // Update the license usage.
+                    self::update_license_usage($programlicense->id);
+                }
+            }
+        }
+
+        // Remove the user from any company.
+        $DB->delete_records('company_users', array('userid' => $userid));
 
         return true;
     }
@@ -4121,31 +2792,21 @@ class company {
      * @return bool true on success.
      */
     public static function company_user_assigned(\block_iomad_company_admin\event\company_user_assigned $event) {
-        global $DB, $CFG;
-
-        $companyid = $event->objectid;
-        $userid = $event->userid;
-        $company = new company($companyid);
-        $companyrec = $DB->get_record('company', array('id' => $companyid));
-        $user = $DB->get_record('user', array('id' => $userid));
+        global $DB;
 
         // We only care if its a company manager.
-        if ($event->other['usertype'] == 1) {
-            $childcompanies = $company->get_child_companies_recursive();
-
-            foreach ($childcompanies as $child) {
-                $childcompany = new company($child->id);
-                $childcompany->assign_user_to_company($userid, 0, $event->other['usertype'], true);
-            }
+        if ($event->other['usertype'] != 1) {
+            return true;
         }
+        $companyid = $event->objectid;
+        $userid = $event->userid;
 
-        if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
-            if (empty($CFG->commerce_admin_enableall) && empty($company->companyrecord->ecommerce)) {
-                return true;
-            }
-            // Fire off the payload to the external site.
-            require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
-            iomad_commerce::assign_user($user, $companyrec->name, $companyrec->id);
+        $company = new company($companyid);
+        $childcompanies = $company->get_child_companies_recursive();
+
+        foreach ($childcompanies as $child) {
+            $childcompany = new company($child->id);
+            $childcompany->assign_user_to_company($userid, 0, $event->other['usertype'], true);
         }
 
         return true;
@@ -4216,9 +2877,7 @@ class company {
 
         if (!$noemail) {
         // Send out the email.
-            $company = new company($licenserecord->companyid);
             EmailTemplate::send('license_allocated', array('course' => $course,
-                                                           'company' => $company,
                                                            'user' => $user,
                                                            'due' => $duedate,
                                                            'license' => $license));
@@ -4229,57 +2888,57 @@ class company {
 
         // Is this an immediate license?
         if (!empty($licenserecord->instant)) {
-            if (self::license_ok_to_use($licenseid, $courseid, $userid)) {
-                if ($instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'license'))) {
-                    // Enrol the user on the course.
-                    $enrol = enrol_get_plugin('license');
+            if ($instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'license'))) {
+                // Enrol the user on the course.
+                $enrol = enrol_get_plugin('license');
 
-                    // Enrol the user in the course.
-                    // Is the license available yet?
-                    if (!empty($licenserecord->startdate) && $licenserecord->startdate > time()) {
-                        // If not set up the enrolment from when it is.
-                        $timestart = $licenserecord->startdate;
+                // Enrol the user in the course.
+                // Is the license available yet?
+                if (!empty($licenserecord->startdate) && $licenserecord->startdate > time()) {
+                    // If not set up the enrolment from when it is.
+                    $timestart = $licenserecord->startdate;
+                } else {
+                    // Otherwise start it now.
+                    $timestart = time();
+                }
+
+                if ($licenserecord->type == 0 || $licenserecord->type == 2) {
+                    // Set the timeend to be time start + the valid length for the license in days.
+                    $timeend = $timestart + ($licenserecord->validlength * 24 * 60 * 60 );
+                } else {
+                    // Set the timeend to be when the license runs out.
+                    $timeend = $licenserecord->expirydate;
+                }
+
+                if ($licenserecord->type < 2) {
+                    $enrol->enrol_user($instance, $user->id, $instance->roleid, $timestart, $timeend);
+                } else {
+                    // Educator role.
+                    if ($DB->get_record('iomad_courses', array('courseid' => $course->id, 'shared' => 0))) {
+                        // Not shared.
+                        $role = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
                     } else {
-                        // Otherwise start it now.
-                        $timestart = time();
+                        // Shared.
+                        $role = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
                     }
+                    $enrol->enrol_user($instance, $user->id, $role->id, $timestart, $timeend);
+                }
 
-                    if ($licenserecord->type == 0 || $licenserecord->type == 2) {
-                        // Set the timeend to be time start + the valid length for the license in days.
-                        $timeend = $timestart + ($licenserecord->validlength * 24 * 60 * 60 );
-                    } else {
-                        // Set the timeend to be when the license runs out.
-                        $timeend = $licenserecord->expirydate;
-                    }
+                // Get the userlicense record.
+                $userlicense = $DB->get_record('companylicense_users', array('id' => $userlicid));
 
-                    if ($licenserecord->type < 2) {
-                        $enrol->enrol_user($instance, $user->id, $instance->roleid, $timestart, $timeend);
-                    } else {
-                        // Educator role.
-                        if ($DB->get_record('iomad_courses', array('courseid' => $course->id, 'shared' => 0))) {
-                            // Not shared.
-                            $role = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
-                        } else {
-                            // Shared.
-                            $role = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
-                        }
-                        $enrol->enrol_user($instance, $user->id, $role->id, $timestart, $timeend);
-                    }
-
-                    // Get the userlicense record.
+                // Add the user to the appropriate course group.
+                if (!empty($course->groupmode)) {
                     $userlicense = $DB->get_record('companylicense_users', array('id' => $userlicid));
+                    self::add_user_to_shared_course($instance->courseid, $user->id, $license->companyid, $userlicense->groupid);
+                }
 
-                    // Update the userlicense record to mark it as in use.
-                    $DB->set_field('companylicense_users', 'isusing', 1, array('id' => $userlicense->id));
+                // Update the userlicense record to mark it as in use.
+                $DB->set_field('companylicense_users', 'isusing', 1, array('id' => $userlicense->id));
 
-                    // Fire an event to record this
-                    $eventother = array('licenseid' => $licenseid);
-                    $event = \block_iomad_company_admin\event\user_license_used::create(array('context' => \context_course::instance($courseid),
-                                                                                              'objectid' => $userlicense->id,
-                                                                                              'courseid' => $instance->courseid,
-                                                                                              'userid' => $user->id,
-                                                                                              'other' => $eventother));
-                    $event->trigger();
+                // Send welcome.
+                if ($instance->customint4) {
+                    $enrol->email_welcome_message($instance, $user);
                 }
             }
         }
@@ -4295,8 +2954,6 @@ class company {
      */
     public static function user_license_unassigned(\block_iomad_company_admin\event\user_license_unassigned $event) {
         global $DB, $CFG, $PAGE;
-
-        require_once($CFG->dirroot . '/enrol/locallib.php');
 
         $userid = $event->userid;
         $licenseid = $event->other['licenseid'];
@@ -4364,26 +3021,9 @@ class company {
             return;
         }
 
-        // Deal with the human allocation.
-        if (empty($licenserecord->program)) {
-            $DB->set_field('companylicense', 'humanallocation', $licenserecord->allocation, array('id' => $licenseid));
-        } else {
-            $coursecount = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
-            $DB->set_field('companylicense', 'humanallocation', $licenserecord->allocation / $coursecount, array('id' => $licenserecord->id));
-        }
-
         // Update the license usage.
         if (!empty($parentid)) {
             self::update_license_usage($parentid);
-        }
-
-        // Get the company managers.
-        $company = new company($licenserecord->companyid);
-        $managers = $company->get_managers();
-        foreach ($managers as $manager) {
-            // Fire the email.
-            EmailTemplate::send('company_licenseassigned', array('user' => $manager, 'company' => $company));
-
         }
 
         return true;
@@ -4491,15 +3131,14 @@ class company {
         if (!empty($licenserecord->type)) {
             // This is a subscription license.
             // Update the enrolment end
-            if ($enrolments = $DB->get_records_sql("SELECT ue.id FROM {enrol} e
-                                                    JOIN {user_enrolments} ue ON (e.id = ue.enrolid)
+            if ($enrolments = $DB->get_records_sql("SELECT e.id FROM {enrol} e
                                                     JOIN {companylicense_courses} clc ON (e.courseid = clc.courseid AND e.status = 0)
-                                                    JOIN {companylicense_users} clu ON (ue.userid = clu.userid AND clu.licenseid = clc.licenseid)
                                                     WHERE clc.licenseid = :licenseid",
                                                     array('licenseid' => $licenseid))) {
                 foreach ($enrolments as $enrolid) {
-                    $DB->set_field('user_enrolments', 'timeend', $licenserecord->expirydate,
-                                  array('id' => $enrolid->id));
+                    $DB->execute("UPDATE {user_enrolments} SET timeend = :timeend
+                                  WHERE enrolid = :enrolid",
+                                  array('timeend' => $licenserecord->expirydate, 'enrolid' => $enrolid->id));
                 }
             }
         }
@@ -4507,6 +3146,9 @@ class company {
         // Deal with any children.
         if ($children = $DB->get_records('companylicense', array('parentid' => $licenseid))) {
             foreach ($children as $child) {
+                // Get the courses.
+                 $oldcourses = $DB->get_records('companylicense_courses', array('licenseid' => $child->id), null, 'courseid');
+
                 // Clear down all of them initially.
                 $DB->delete_records('companylicense_courses', array('licenseid' => $child->id));
                 if (!empty($currentcourses)) {
@@ -4522,15 +3164,8 @@ class company {
                     $new = count($currentcourses);
                     if ($old != $new) {
                         $allocation = $child->allocation / $old * $new;
-                        $child->allocation = $allocation;
+                        $DB->set_field('companylicense', 'allocation', $allocation, array('id' => $child->id));
                     }
-                }
-
-                // Deal with the human allocation.
-                if (empty($child->program)) {
-                    $child->humanallocation  = $child->allocation;
-                } else {
-                    $child->humanallocation  = $child->allocation / $new;
                 }
 
                 // Did we change anything else about the license?
@@ -4581,6 +3216,48 @@ class company {
     }
 
     /**
+     * Triggered via company_suspended event.
+     *
+     * @param \block_iomad_company_user\event\company_suspended $event
+     * @return bool true on success.
+     */
+    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
+        global $DB, $CFG;
+
+        $companyid = $event->other['companyid'];
+
+        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
+            return;
+        }
+
+        $suspendcompany = new company($companyid);
+        $suspendcompany->suspend(true);
+
+        return true;
+    }
+
+    /**
+     * Triggered via company_unsuspended event.
+     *
+     * @param \block_iomad_company_user\event\company_unsuspended $event
+     * @return bool true on success.
+     */
+    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
+        global $DB, $CFG;
+
+        $companyid = $event->other['companyid'];
+
+        if (empty($companyid) || !$companyrecord = $DB->get_record('company', array('id' => $companyid))) {
+            return;
+        }
+
+        $suspendcompany = new company($companyid);
+        $suspendcompany->suspend(false);
+
+        return true;
+    }
+
+    /**
      * Triggered via user_course_expired event.
      *
      * @param \block_iomad_company_user\event\company_license_created $event
@@ -4608,14 +3285,8 @@ class company {
     public static function send_supervisor_warning_email($user, $course) {
         global $DB, $CFG;
 
-        $companyinfo = self::get_company_byuserid($user->id);
-        $company = new company($companyinfo->id);
-        $template = new EmailTemplate('completion_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
-
-        // Is this enabled for this company?
-        if (!$company->email_template_is_enabled('completion_warn_supervisor', 2)) {
-            return true;
-        }
+        $company = self::get_company_byuserid($user->id);
+        $supervisortemplate = new EmailTemplate('completion_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
@@ -4634,17 +3305,16 @@ class company {
                     $supportuser->firstname = $CFG->supportname;
                 }
 
-                $subject = $user->email . ": " . $template->subject();
-                $messagetext = $template->body();
+                $subject = get_string('completion_warn_supervisor_subject', 'block_iomad_company_admin', $params);
+                $messagetext = get_string('completion_warn_supervisor_body', 'block_iomad_company_admin', $params);
 
-                $mail->Sender = $CFG->noreplyaddress;
+                $mail->Sender = $supportuser->firstname;
                 $mail->FromName = $supportuser->firstname;
                 $mail->From     = $CFG->noreplyaddress;
                 if (empty($CFG->divertallemailsto)) {
                     $mail->Subject = substr($subject, 0, 900);
                 } else {
-                    $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
-                    $supervisoremail = $CFG->divertallemailsto;
+                    $mail->Subject = substr('[DIVERTED ' . $user->email . '] ' . $subject, 0, 900);
                 }
 
                 $mail->addAddress($supervisoremail, '');
@@ -4653,8 +3323,6 @@ class company {
                 $mail->WordWrap = 79;
 
                 $mail->Body =  "\n$messagetext\n";
-                $mail->IsHTML();
-
                 if (empty($CFG->noemailever)) {
                     $mail->send();
                 }
@@ -4664,71 +3332,7 @@ class company {
     }
 
     /**
-     * Send a user's supervisor a warning email that a user hasn't started a course.
-     *
-     * @param user object
-     * @param course object
-     * @return bool true on success.
-     */
-    public static function send_supervisor_not_started_warning_email($user, $course) {
-        global $DB, $CFG;
-
-        $companyinfo = self::get_company_byuserid($user->id);
-        $company = new company($companyinfo->id);
-        $template = new EmailTemplate('course_not_started_warning', array('course' => $course, 'user' => $user, 'company' => $company));
-
-        // Is this enabled for this company?
-        if (!$company->email_template_is_enabled('course_not_started_warning', 2)) {
-            return true;
-        }
-
-        // Do we have a supervisor?
-        if ($supervisoremails = self::get_usersupervisor($user->id)) {
-            foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
-                $params->fullname = $course->fullname;
-                $params->firstname = $user->firstname;
-                $params->lastname = $user->lastname;
-                $mail = get_mailer();
-
-                $supportuser = core_user::get_support_user();
-                if (!empty($CFG->supportemail)) {
-                    $supportuser->email = $CFG->supportemail;
-                }
-                if ($CFG->supportname) {
-                    $supportuser->firstname = $CFG->supportname;
-                }
-
-                $subject = $user->email . ": " . $template->subject();
-                $messagetext = $template->body();
-
-                $mail->Sender = $CFG->noreplyaddress;
-                $mail->FromName = $supportuser->firstname;
-                $mail->From     = $CFG->noreplyaddress;
-                if (empty($CFG->divertallemailsto)) {
-                    $mail->Subject = substr($subject, 0, 900);
-                } else {
-                    $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
-                    $supervisoremail = $CFG->divertallemailsto;
-                }
-
-                $mail->addAddress($supervisoremail, '');
-
-                // Set word wrap.
-                $mail->WordWrap = 79;
-
-                $mail->Body =  "\n$messagetext\n";
-                $mail->IsHTML();
-                if (empty($CFG->noemailever)) {
-                    $mail->send();
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Send a user's supervisor a warning email that a user's training is expiring.
+     * Send a user's supervisor a warning email that a user hasn't completed a course.
      *
      * @param user object
      * @param course object
@@ -4737,14 +3341,8 @@ class company {
     public static function send_supervisor_expiry_warning_email($user, $course) {
         global $DB, $CFG;
 
-        $companyinfo = self::get_company_byuserid($user->id);
-        $company = new company($companyinfo->id);
+        $company = self::get_company_byuserid($user->id);
         $supervisortemplate = new EmailTemplate('completion_expiry_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
-
-        // Is this enabled for this company?
-        if (!$company->email_template_is_enabled('completion_expiry_warn_supervisor', 2)) {
-            return true;
-        }
 
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
@@ -4763,17 +3361,16 @@ class company {
                     $supportuser->firstname = $CFG->supportname;
                 }
 
-                $subject = $user->email . ": " . $template->subject();
-                $messagetext = $template->body();
+                $subject = get_string('completion_expiry_warn_supervisor_subject', 'block_iomad_company_admin', $params);
+                $messagetext = get_string('completion_expiry_warn_supervisor_body', 'block_iomad_company_admin', $params);
 
-                $mail->Sender = $CFG->noreplyaddress;
-                $mail->FromName = $supportuser->firstname;
+                $mail->Sender = $supportuser->firstname;
                 $mail->From     = $CFG->noreplyaddress;
+                $mail->FromName = $supportuser->firstname;
                 if (empty($CFG->divertallemailsto)) {
                     $mail->Subject = substr($subject, 0, 900);
                 } else {
-                    $mail->Subject = substr('[DIVERTED ' . $supervisoremail . '] ' . $subject, 0, 900);
-                    $supervisoremail = $CFG->divertallemailsto;
+                    $mail->Subject = substr('[DIVERTED ' . $user->email . '] ' . $subject, 0, 900);
                 }
 
                 $mail->addAddress($supervisoremail, '');
@@ -4782,8 +3379,6 @@ class company {
                 $mail->WordWrap = 79;
 
                 $mail->Body =  "\n$messagetext\n";
-                $mail->IsHTML();
-
                 if (empty($CFG->noemailever)) {
                     $mail->send();
                 }

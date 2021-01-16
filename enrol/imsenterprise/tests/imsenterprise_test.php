@@ -372,12 +372,13 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
      * Add new course without a category.
      */
     public function test_course_add_default_category() {
-        global $DB;
+        global $DB, $CFG;
+        require_once($CFG->libdir.'/coursecatlib.php');
 
         $this->imsplugin->set_config('createnewcategories', false);
 
         // Delete the default category, to ensure the plugin handles this gracefully.
-        $defaultcat = core_course_category::get_default();
+        $defaultcat = coursecat::get_default();
         $defaultcat->delete_full(false);
 
         // Create an course with the IMS plugin without a category.
@@ -780,7 +781,7 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
         $this->assertFalse((boolean)$subcatid);
 
         // Check course was put in default category.
-        $defaultcat = core_course_category::get_default();
+        $defaultcat = coursecat::get_default();
         $dbcourse = $DB->get_record('course', array('idnumber' => $course1->idnumber), '*', MUST_EXIST);
         $this->assertEquals($dbcourse->category, $defaultcat->id);
 
@@ -948,7 +949,7 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
         $this->assertFalse($catid);
 
         // Check course was put in default category.
-        $defaultcat = core_course_category::get_default();
+        $defaultcat = coursecat::get_default();
         $dbcourse = $DB->get_record('course', array('idnumber' => $course->idnumber), '*', MUST_EXIST);
         $this->assertEquals($dbcourse->category, $defaultcat->id);
 

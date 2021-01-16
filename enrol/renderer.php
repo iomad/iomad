@@ -41,7 +41,7 @@ class core_enrol_renderer extends plugin_renderer_base {
                             'value'    => $button->label,
                             'disabled' => $button->disabled ? 'disabled' : null,
                             'title'    => $button->tooltip,
-                            'class'    => 'btn btn-secondary my-1');
+                            'class'    => 'btn btn-secondary m-y-1');
 
         if ($button->actions) {
             $id = html_writer::random_id('single_button');
@@ -353,8 +353,7 @@ class course_enrolment_table extends html_table implements renderable {
      * @var array
      */
     protected static $sortablefields = array('firstname', 'lastname', 'firstnamephonetic', 'lastnamephonetic', 'middlename',
-            'alternatename', 'username', 'idnumber', 'email', 'phone1', 'phone2',
-            'institution', 'department', 'lastaccess', 'lastcourseaccess');
+            'alternatename', 'idnumber', 'email', 'phone1', 'phone2', 'institution', 'department', 'lastaccess', 'lastcourseaccess' );
 
     /**
      * Constructs the table
@@ -370,7 +369,7 @@ class course_enrolment_table extends html_table implements renderable {
         $this->sort           = optional_param(self::SORTVAR, self::DEFAULTSORT, PARAM_ALPHANUM);
         $this->sortdirection  = optional_param(self::SORTDIRECTIONVAR, self::DEFAULTSORTDIRECTION, PARAM_ALPHA);
 
-        $this->attributes = array('class' => 'userenrolment table-striped');
+        $this->attributes = array('class'=>'userenrolment');
         if (!in_array($this->sort, self::$sortablefields)) {
             $this->sort = self::DEFAULTSORT;
         }
@@ -681,7 +680,6 @@ class course_enrolment_other_users_table extends course_enrolment_table {
             $this->manager->get_moodlepage()->requires->strings_for_js(array(
                     'ajaxoneuserfound',
                     'ajaxxusersfound',
-                    'ajaxxmoreusersfound',
                     'ajaxnext25',
                     'enrol',
                     'enrolmentoptions',

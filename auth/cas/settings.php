@@ -45,20 +45,6 @@ if ($ADMIN->fulltree) {
         $settings->add(new admin_setting_heading('auth_cas/casserversettings',
                 new lang_string('auth_cas_server_settings', 'auth_cas'), ''));
 
-        // Authentication method name.
-        $settings->add(new admin_setting_configtext('auth_cas/auth_name',
-                get_string('auth_cas_auth_name', 'auth_cas'),
-                get_string('auth_cas_auth_name_description', 'auth_cas'),
-                get_string('auth_cas_auth_service', 'auth_cas'),
-                PARAM_RAW_TRIMMED));
-
-        // Authentication method logo.
-        $opts = array('accepted_types' => array('.png', '.jpg', '.gif', '.webp', '.tiff', '.svg'));
-        $settings->add(new admin_setting_configstoredfile('auth_cas/auth_logo',
-                 get_string('auth_cas_auth_logo', 'auth_cas'),
-                 get_string('auth_cas_auth_logo_description', 'auth_cas'), 'logo', 0, $opts));
-
-
         // Hostname.
         $settings->add(new admin_setting_configtext('auth_cas/hostname',
                 get_string('auth_cas_hostname_key', 'auth_cas'),
@@ -239,9 +225,9 @@ if ($ADMIN->fulltree) {
                 get_string('auth_ldap_memberattribute', 'auth_ldap'), '', PARAM_RAW));
 
         // Member attribute uses dn.
-        $settings->add(new admin_setting_configselect('auth_cas/memberattribute_isdn',
+        $settings->add(new admin_setting_configtext('auth_cas/memberattribute_isdn',
                 get_string('auth_ldap_memberattribute_isdn_key', 'auth_ldap'),
-                get_string('auth_ldap_memberattribute_isdn', 'auth_ldap'), 0, $yesno));
+                get_string('auth_ldap_memberattribute_isdn', 'auth_ldap'), '', PARAM_RAW));
 
         // Object class.
         $settings->add(new admin_setting_configtext('auth_cas/objectclass',

@@ -49,8 +49,7 @@ abstract class grade_report {
 
     /**
      * The context.
-     *
-     * @var context $context
+     * @var int $context
      */
     public $context;
 
@@ -367,20 +366,16 @@ abstract class grade_report {
     protected function setup_groups() {
         // find out current groups mode
         if ($this->groupmode = groups_get_course_groupmode($this->course)) {
-            if (empty($this->gpr->groupid)) {
-                $this->currentgroup = groups_get_course_group($this->course, true);
-            } else {
-                $this->currentgroup = $this->gpr->groupid;
-            }
+            $this->currentgroup = groups_get_course_group($this->course, true);
             $this->group_selector = groups_print_course_menu($this->course, $this->pbarurl, true);
 
             if ($this->groupmode == SEPARATEGROUPS and !$this->currentgroup and !has_capability('moodle/site:accessallgroups', $this->context)) {
                 $this->currentgroup = -2; // means can not access any groups at all
             }
+
             if ($this->currentgroup) {
-                if ($group = groups_get_group($this->currentgroup)) {
-                    $this->currentgroupname = $group->name;
-                }
+                $group = groups_get_group($this->currentgroup);
+                $this->currentgroupname     = $group->name;
                 $this->groupsql             = " JOIN {groups_members} gm ON gm.userid = u.id ";
                 $this->groupwheresql        = " AND gm.groupid = :gr_grpid ";
                 $this->groupwheresql_params = array('gr_grpid'=>$this->currentgroup);
@@ -417,8 +412,8 @@ abstract class grade_report {
         $matrix = array('up' => 'desc', 'down' => 'asc', 'move' => 'desc');
         $strsort = $this->get_lang_string('sort' . $matrix[$direction]);
 
-        $arrow = $OUTPUT->pix_icon($pix[$direction], '', '', ['class' => 'sorticon']);
-        return html_writer::link($sortlink, $arrow, ['title' => $strsort, 'aria-label' => $strsort]);
+        $arrow = $OUTPUT->pix_icon($pix[$direction], $strsort, '', array('class' => 'sorticon'));
+        return html_writer::link($sortlink, $arrow, array('title'=>$strsort));
     }
 
     /**

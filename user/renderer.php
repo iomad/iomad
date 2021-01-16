@@ -43,6 +43,7 @@ class core_user_renderer extends plugin_renderer_base {
      * @return string html output
      */
     public function user_search($url, $firstinitial, $lastinitial, $usercount, $totalcount, $heading = null) {
+        global $OUTPUT;
 
         if ($firstinitial !== 'all') {
             set_user_preference('ifirst', $firstinitial);
@@ -59,13 +60,13 @@ class core_user_renderer extends plugin_renderer_base {
         $content .= html_writer::start_tag('div');
 
         // Search utility heading.
-        $content .= $this->output->heading($heading.get_string('labelsep', 'langconfig').$usercount.'/'.$totalcount, 3);
+        $content .= $OUTPUT->heading($heading.get_string('labelsep', 'langconfig').$usercount.'/'.$totalcount, 3);
 
         // Initials bar.
         $prefixfirst = 'sifirst';
         $prefixlast = 'silast';
-        $content .= $this->output->initials_bar($firstinitial, 'firstinitial', get_string('firstname'), $prefixfirst, $url);
-        $content .= $this->output->initials_bar($lastinitial, 'lastinitial', get_string('lastname'), $prefixlast, $url);
+        $content .= $OUTPUT->initials_bar($firstinitial, 'firstinitial', get_string('firstname'), $prefixfirst, $url);
+        $content .= $OUTPUT->initials_bar($lastinitial, 'lastinitial', get_string('lastname'), $prefixlast, $url);
 
         $content .= html_writer::end_tag('div');
         $content .= html_writer::tag('div', '&nbsp;');
@@ -110,7 +111,6 @@ class core_user_renderer extends plugin_renderer_base {
 
     /**
      * Renders the unified filter element for the course participants page.
-     * @deprecated since Moodle 3.9 MDL-68612 - Please use participants_filter() instead.
      *
      * @param stdClass $course The course object.
      * @param context $context The context object.
@@ -121,8 +121,6 @@ class core_user_renderer extends plugin_renderer_base {
     public function unified_filter($course, $context, $filtersapplied, $baseurl = null) {
         global $CFG, $DB, $USER;
 
-        debugging('core_user_renderer->unified_filter() is deprecated. Please use participants_filter() instead.', DEBUG_DEVELOPER);
-
         require_once($CFG->dirroot . '/enrol/locallib.php');
         require_once($CFG->dirroot . '/lib/grouplib.php');
         $manager = new course_enrolment_manager($this->page, $course);
@@ -130,14 +128,9 @@ class core_user_renderer extends plugin_renderer_base {
         $filteroptions = [];
 
         // Filter options for role.
-        $roleseditable = has_capability('moodle/role:assign', $context);
-        $roles = get_viewable_roles($context);
-        if ($roleseditable) {
-            $roles += get_assignable_roles($context, ROLENAME_ALIAS);
-        }
-
+        $roles = role_fix_names(get_profile_roles($context), $context, ROLENAME_ALIAS, true);
         $criteria = get_string('role');
-        $roleoptions = $this->format_filter_option(USER_FILTER_ROLE, $criteria, -1, get_string('noroles', 'role'));
+        $roleoptions = [];
         foreach ($roles as $id => $role) {
             $roleoptions += $this->format_filter_option(USER_FILTER_ROLE, $criteria, $id, $role);
         }
@@ -147,11 +140,6 @@ class core_user_renderer extends plugin_renderer_base {
         if (has_capability('moodle/site:accessallgroups', $context) || $course->groupmode != SEPARATEGROUPS) {
             // List all groups if the user can access all groups, or we are in visible group mode or no groups mode.
             $groups = $manager->get_all_groups();
-            if (!empty($groups)) {
-                // Add 'No group' option, to enable filtering users without any group.
-                $nogroup[USERSWITHOUTGROUP] = (object)['name' => get_string('nogroup', 'group')];
-                $groups = $nogroup + $groups;
-            }
         } else {
             // Otherwise, just list the groups the user belongs to.
             $groups = groups_get_all_groups($course->id, $USER->id);
@@ -260,20 +248,6 @@ class core_user_renderer extends plugin_renderer_base {
         $context = $indexpage->export_for_template($this->output);
 
         return $this->output->render_from_template('core_user/unified_filter', $context);
-    }
-
-    /**
-     * Render the data required for the participants filter on the course participants page.
-     *
-     * @param context $context The context of the course being displayed
-     * @param string $tableregionid The table to be updated by this filter
-     * @return string
-     */
-    public function participants_filter(context $context, string $tableregionid): string {
-        $renderable = new \core_user\output\participants_filter($context, $tableregionid);
-        $templatecontext = $renderable->export_for_template($this->output);
-
-        return $this->output->render_from_template('core_user/participantsfilter', $templatecontext);
     }
 
     /**

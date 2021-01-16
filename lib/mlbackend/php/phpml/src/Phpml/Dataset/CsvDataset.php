@@ -11,32 +11,36 @@ class CsvDataset extends ArrayDataset
     /**
      * @var array
      */
-    protected $columnNames = [];
+    protected $columnNames;
 
     /**
+     * @param string $filepath
+     * @param int    $features
+     * @param bool   $headingRow
+     * @param string $delimiter
+     *
      * @throws FileException
      */
-    public function __construct(string $filepath, int $features, bool $headingRow = true, string $delimiter = ',', int $maxLineLength = 0)
+    public function __construct(string $filepath, int $features, bool $headingRow = true, string $delimiter = ',')
     {
         if (!file_exists($filepath)) {
-            throw new FileException(sprintf('File "%s" missing.', basename($filepath)));
+            throw FileException::missingFile(basename($filepath));
         }
 
-        $handle = fopen($filepath, 'rb');
-        if ($handle === false) {
-            throw new FileException(sprintf('File "%s" can\'t be open.', basename($filepath)));
+        if (false === $handle = fopen($filepath, 'rb')) {
+            throw FileException::cantOpenFile(basename($filepath));
         }
 
         if ($headingRow) {
-            $data = fgetcsv($handle, $maxLineLength, $delimiter);
-            $this->columnNames = array_slice((array) $data, 0, $features);
+            $data = fgetcsv($handle, 1000, $delimiter);
+            $this->columnNames = array_slice($data, 0, $features);
         } else {
             $this->columnNames = range(0, $features - 1);
         }
 
         $samples = $targets = [];
-        while (($data = fgetcsv($handle, $maxLineLength, $delimiter)) !== false) {
-            $samples[] = array_slice((array) $data, 0, $features);
+        while (($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
+            $samples[] = array_slice($data, 0, $features);
             $targets[] = $data[$features];
         }
 
@@ -45,7 +49,10 @@ class CsvDataset extends ArrayDataset
         parent::__construct($samples, $targets);
     }
 
-    public function getColumnNames(): array
+    /**
+     * @return array
+     */
+    public function getColumnNames()
     {
         return $this->columnNames;
     }

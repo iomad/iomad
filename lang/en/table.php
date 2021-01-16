@@ -23,5 +23,11 @@
  */
 
 $string['downloadas'] = 'Download table data as';
-$string['missingrequiredfields'] = 'One or more required filters were missing ({$a})';
-$string['privacy:metadata'] = 'The Table API does not currently store any user data';
+
+// Deprecated since Moodle 3.1.
+$string['downloadcsv'] = 'Comma separated values text file';
+$string['downloadexcel'] = 'Excel spreadsheet';
+$string['downloadods'] = 'OpenDocument spreadsheet';
+$string['downloadoptions'] = 'Select download options';
+$string['downloadtsv'] = 'Tab separated values text file';
+$string['downloadxhtml'] = 'Unpaged XHTML document';

@@ -31,7 +31,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['admindirname'] = 'Admin mapa';
-$string['availablelangs'] = 'Popis dostupnih jezičnih paketa';
+$string['availablelangs'] = 'Popis dostupnih jezika';
 $string['chooselanguagehead'] = 'Odaberite jezik';
 $string['chooselanguagesub'] = 'Molimo odaberite jezik instalacije. Ovaj jezik će biti korišten kao zadani jezik sustava, a kasnije to možete lagano promijeniti.';
 $string['clialreadyconfigured'] = 'Datoteka config.php već postoji. Upotrijebite naredbu admin/cli/install_database.php ako želite nastaviti instalaciju.';
@@ -68,7 +68,7 @@ $string['pathsroparentdataroot'] = 'Nije moguće zapisivati podatke u nadređenu
 $string['pathssubadmindir'] = 'Manji broj webhosting tvrtki koristi /admin kao posebni URL za Vaš pristup upravljanju vašim hosting paketom. Nažalost, to rezultira konfliktom sa standardnom lokacijom za Moodle administratorsku stranicu. Navedenu lokaciju unutar Moodle sustava možete preimenovati. Na primjer: <br /> <br /><em>moodleadmin</em><br /> <br />
 Ovo će promijeniti administratorsku poveznicu na Moodle sustavu u novu vrijednost.';
 $string['pathssubdataroot'] = 'Mora postojati mapa u koju Moodle može pohraniti prenešene datoteke. Korisnik pod kojim je pokrenut web server (obično \'nobody\' ili \'apache\') bi morao imati mogućnost čitanja/pisanja podataka u toj mapi, ali oni ne bi trebali biti dostupni direktno preko weba. Instalacijska skripta će pokušati stvoriti navedenu mapu ako ista ne postoji.';
-$string['pathssubdirroot'] = '<p>Puna putanja (PATH) do Moodle instalacije.</p>';
+$string['pathssubdirroot'] = 'Puna putanja (PATH) do Moodle instalacije.';
 $string['pathssubwwwroot'] = 'Unesite punu web adresu putem koje će se pristupati vašem Moodle sustavu.
 Moodle sustavu NIJE MOGUĆE pristupiti preko više URL-ova, odaberite onaj koji vam najviše odgovara.
 Ako vaš poslužitelj ima višestruke javne adrese, onda morate postaviti tzv. permanent redirect na sve osim ove adrese.
@@ -85,5 +85,5 @@ $string['welcomep30'] = 'Ova inačica <strong>{$a->installername}</strong> uklju
 $string['welcomep40'] = 'Ovaj paket obuhvaća i <strong>Moodle {$a->moodlerelease} ({$a->moodleversion})</strong>.';
 $string['welcomep50'] = 'Korištenje svih aplikacija u ovom paketu je uređeno licencama pod kojima su izdane. Cijeli paket <strong>{$a->installername}</strong> je rješenje <a href="http://www.opensource.org/docs/definition_plain.html">otvorenog koda</a> distribuirano pod <a href="http://www.gnu.org/copyleft/gpl.html">GPL</a> licencom.';
 $string['welcomep60'] = 'Sljedeće stranice će vas voditi kroz postupak instalacije i podešavanja sustava <em>Moodle</em> na poslužitelju. Možete prihvatiti zadane postavke ili promijeniti iste sukladno vašim potrebama.';
-$string['welcomep70'] = 'Kliknite na "Next" gumb kako biste započeli <strong>Moodle</strong> instalaciju.';
+$string['welcomep70'] = 'Kliknite na "Next" gumb kako bi započeli <strong>Moodle</strong> instalaciju.';
 $string['wwwroot'] = 'Web adresa';

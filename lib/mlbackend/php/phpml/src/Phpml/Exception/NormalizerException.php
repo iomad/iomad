@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Phpml\Exception;
 
-use Exception;
-
-class NormalizerException extends Exception
+class NormalizerException extends \Exception
 {
+    /**
+     * @return NormalizerException
+     */
+    public static function unknownNorm()
+    {
+        return new self('Unknown norm supplied.');
+    }
 }

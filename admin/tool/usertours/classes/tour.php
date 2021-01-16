@@ -357,15 +357,6 @@ class tour {
     }
 
     /**
-     * The link to duplicate this tour.
-     *
-     * @return  moodle_url
-     */
-    public function get_duplicate_link() {
-        return helper::get_duplicate_tour_link($this->id);
-    }
-
-    /**
      * The link to remove this tour.
      *
      * @return  moodle_url
@@ -557,9 +548,8 @@ class tour {
 
         // Remove the configuration for the tour.
         $DB->delete_records('tool_usertours_tours', array('id' => $this->id));
-        helper::reset_tour_sortorder();
 
-        $this->remove_user_preferences();
+        helper::reset_tour_sortorder();
 
         return null;
     }
@@ -584,16 +574,6 @@ class tour {
         cache::notify_step_change($this->get_id());
 
         return $this;
-    }
-
-    /**
-     * Remove stored user preferences for the tour
-     */
-    protected function remove_user_preferences(): void {
-        global $DB;
-
-        $DB->delete_records('user_preferences', ['name' => self::TOUR_LAST_COMPLETED_BY_USER . $this->get_id()]);
-        $DB->delete_records('user_preferences', ['name' => self::TOUR_REQUESTED_BY_USER . $this->get_id()]);
     }
 
     /**
@@ -676,9 +656,11 @@ class tour {
      * @return  $this
      */
     public function mark_major_change() {
-        // Clear old reset and completion notes.
-        $this->remove_user_preferences();
+        global $DB;
 
+        // Clear old reset and completion notes.
+        $DB->delete_records('user_preferences', ['name' => self::TOUR_LAST_COMPLETED_BY_USER . $this->get_id()]);
+        $DB->delete_records('user_preferences', ['name' => self::TOUR_REQUESTED_BY_USER . $this->get_id()]);
         $this->set_config('majorupdatetime', time());
         $this->persist();
 

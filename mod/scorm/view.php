@@ -66,22 +66,23 @@ $contextmodule = context_module::instance($cm->id);
 
 $launch = false; // Does this automatically trigger a launch based on skipview.
 if (!empty($scorm->popup)) {
+    $orgidentifier = '';
+
     $scoid = 0;
     $orgidentifier = '';
 
     $result = scorm_get_toc($USER, $scorm, $cm->id, TOCFULLURL);
     // Set last incomplete sco to launch first.
     if (!empty($result->sco->id)) {
-        $sco = $result->sco;
+        $scoid = $result->sco->id;
     } else {
-        $sco = scorm_get_sco($scorm->launch, SCO_ONLY);
-    }
-    if (!empty($sco)) {
-        $scoid = $sco->id;
-        if (($sco->organization == '') && ($sco->launch == '')) {
-            $orgidentifier = $sco->identifier;
-        } else {
-            $orgidentifier = $sco->organization;
+        if ($sco = scorm_get_sco($scorm->launch, SCO_ONLY)) {
+            if (($sco->organization == '') && ($sco->launch == '')) {
+                $orgidentifier = $sco->identifier;
+            } else {
+                $orgidentifier = $sco->organization;
+            }
+            $scoid = $sco->id;
         }
     }
 

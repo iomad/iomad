@@ -85,7 +85,7 @@ class external extends external_api {
             } catch (Exception $e) {
                 $warnings[] = array(
                     'item' => 'context',
-                    'itemid' => $contextinfo['instanceid'],
+                    'itemid' => $context['instanceid'],
                     'warningcode' => $e->getCode(),
                     'message' => $e->getMessage(),
                 );

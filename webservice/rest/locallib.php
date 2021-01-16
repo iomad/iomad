@@ -49,19 +49,6 @@ class webservice_rest_server extends webservice_base_server {
     }
 
     /**
-     * Set the request format to.
-     */
-    public function set_rest_format(): void {
-        // Get GET and POST parameters.
-        $methodvariables = array_merge($_GET, $_POST);
-
-        // Retrieve REST format parameter - 'xml' (default) or 'json'.
-        $restformatisset = isset($methodvariables['moodlewsrestformat'])
-                && (($methodvariables['moodlewsrestformat'] == 'xml' || $methodvariables['moodlewsrestformat'] == 'json'));
-        $this->restformat = $restformatisset ? $methodvariables['moodlewsrestformat'] : 'xml';
-    }
-
-    /**
      * This method parses the $_POST and $_GET superglobals and looks for
      * the following information:
      *  1/ user authentication - username+password or token (wsusername, wspassword and wstoken parameters)
@@ -77,7 +64,11 @@ class webservice_rest_server extends webservice_base_server {
 
         // Get GET and POST parameters.
         $methodvariables = array_merge($_GET, $_POST);
-        $this->set_rest_format();
+
+        // Retrieve REST format parameter - 'xml' (default) or 'json'.
+        $restformatisset = isset($methodvariables['moodlewsrestformat'])
+                && (($methodvariables['moodlewsrestformat'] == 'xml' || $methodvariables['moodlewsrestformat'] == 'json'));
+        $this->restformat = $restformatisset ? $methodvariables['moodlewsrestformat'] : 'xml';
         unset($methodvariables['moodlewsrestformat']);
 
         if ($this->authmethod == WEBSERVICE_AUTHMETHOD_USERNAME) {
@@ -159,9 +150,7 @@ class webservice_rest_server extends webservice_base_server {
         if ($this->restformat == 'json') {
             $errorobject = new stdClass;
             $errorobject->exception = get_class($ex);
-            if (isset($ex->errorcode)) {
-                $errorobject->errorcode = $ex->errorcode;
-            }
+            $errorobject->errorcode = $ex->errorcode;
             $errorobject->message = $ex->getMessage();
             if (debugging() and isset($ex->debuginfo)) {
                 $errorobject->debuginfo = $ex->debuginfo;
@@ -170,10 +159,8 @@ class webservice_rest_server extends webservice_base_server {
         } else {
             $error = '<?xml version="1.0" encoding="UTF-8" ?>'."\n";
             $error .= '<EXCEPTION class="'.get_class($ex).'">'."\n";
-            if (isset($ex->errorcode)) {
-                $error .= '<ERRORCODE>' . htmlspecialchars($ex->errorcode, ENT_COMPAT, 'UTF-8')
-                        . '</ERRORCODE>' . "\n";
-            }
+            $error .= '<ERRORCODE>' . htmlspecialchars($ex->errorcode, ENT_COMPAT, 'UTF-8')
+                    . '</ERRORCODE>' . "\n";
             $error .= '<MESSAGE>'.htmlspecialchars($ex->getMessage(), ENT_COMPAT, 'UTF-8').'</MESSAGE>'."\n";
             if (debugging() and isset($ex->debuginfo)) {
                 $error .= '<DEBUGINFO>'.htmlspecialchars($ex->debuginfo, ENT_COMPAT, 'UTF-8').'</DEBUGINFO>'."\n";

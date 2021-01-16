@@ -65,10 +65,9 @@ class page_nopermission implements renderable, templatable {
     /**
      * Prepare the page for rendering.
      *
-     * @param array $versionids int[] List of policy version ids that were checked.
      * @param int $behalfid The userid to consent policies as (such as child's id).
      */
-    public function __construct(array $versionids, $behalfid) {
+    public function __construct($behalfid) {
         global $USER;
 
         $behalfid = $behalfid ?: $USER->id;
@@ -80,7 +79,7 @@ class page_nopermission implements renderable, templatable {
 
         if (!empty($USER->id)) {
             // For existing users, it's needed to check if they have the capability for accepting policies.
-            $this->haspermissionagreedocs = api::can_accept_policies($versionids, $this->behalfid);
+            $this->haspermissionagreedocs = api::can_accept_policies($this->behalfid);
         }
 
         $this->policies = api::list_current_versions(policy_version::AUDIENCE_LOGGEDIN);

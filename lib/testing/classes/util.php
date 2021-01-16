@@ -676,7 +676,6 @@ abstract class testing_util {
                     $mysqlsequences[$table] = $info->auto_increment;
                 }
             }
-            $rs->close();
         }
 
         foreach ($data as $table => $records) {
@@ -813,7 +812,6 @@ abstract class testing_util {
         }
 
         make_temp_directory('');
-        make_backup_temp_directory('');
         make_cache_directory('');
         make_localcache_directory('');
         // Purge all data from the caches. This is required for consistency between tests.
@@ -926,11 +924,12 @@ abstract class testing_util {
 
             if (defined('BEHAT_SITE_RUNNING')) {
                 $tablesupdatedfile = self::get_tables_updated_by_scenario_list_path();
-                $tablesupdated = @json_decode(file_get_contents($tablesupdatedfile), true);
-                if (!isset($tablesupdated[$table])) {
+                if ($tablesupdated = @json_decode(file_get_contents($tablesupdatedfile), true)) {
                     $tablesupdated[$table] = true;
-                    @file_put_contents($tablesupdatedfile, json_encode($tablesupdated, JSON_PRETTY_PRINT));
+                } else {
+                    $tablesupdated[$table] = true;
                 }
+                @file_put_contents($tablesupdatedfile, json_encode($tablesupdated, JSON_PRETTY_PRINT));
             }
         }
     }

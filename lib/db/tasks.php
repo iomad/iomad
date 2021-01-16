@@ -150,10 +150,10 @@ $tasks = array(
         'month' => '*'
     ),
     array(
-        'classname' => 'core\task\grade_history_cleanup_task',
+        'classname' => 'core\task\events_cron_task',
         'blocking' => 0,
         'minute' => '*',
-        'hour' => '0',
+        'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
@@ -213,16 +213,7 @@ $tasks = array(
         'month' => '*'
     ),
     array(
-        'classname' => 'core\task\question_preview_cleanup_task',
-        'blocking' => 0,
-        'minute' => '*',
-        'hour' => '*',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*'
-    ),
-    array(
-        'classname' => 'core\task\question_stats_cleanup_task',
+        'classname' => 'core\task\question_cron_task',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',
@@ -268,15 +259,6 @@ $tasks = array(
     ),
     array(
         'classname' => 'core\task\badges_cron_task',
-        'blocking' => 0,
-        'minute' => '*/5',
-        'hour' => '*',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*'
-    ),
-    array(
-        'classname' => 'core\task\badges_message_task',
         'blocking' => 0,
         'minute' => '*/5',
         'hour' => '*',
@@ -380,24 +362,6 @@ $tasks = array(
         'minute' => '42',
         'hour' => '*',
         'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*'
-    ),
-    array(
-        'classname' => 'core\task\task_log_cleanup_task',
-        'blocking' => 0,
-        'minute' => 'R',
-        'hour' => 'R',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*'
-    ),
-    array(
-        'classname' => 'core\task\h5p_get_content_types_task',
-        'blocking' => 0,
-        'minute' => 'R',
-        'hour' => 'R',
-        'day' => '1',
         'dayofweek' => '*',
         'month' => '*'
     ),

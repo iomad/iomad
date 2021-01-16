@@ -16,7 +16,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2020121000;   // The (date) version of this plugin.
-$plugin->requires = 2019052000;   // Requires this Moodle version. (2.8)
-$plugin->release  = '3.9.2 (Build: 20200914)'; // Human-friendly version name
+$plugin->version  = 2017080800;   // The (date) version of this plugin.
+$plugin->requires = 2014111000;   // Requires this Moodle version. (2.8)
 $plugin->component = 'local_iomad_track';

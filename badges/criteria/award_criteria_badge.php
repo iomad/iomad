@@ -112,7 +112,7 @@ class award_criteria_badge extends award_criteria {
             if ($this->id !== 0) {
                 $selected = array_keys($this->params);
             }
-            $settings = array('multiple' => 'multiple', 'size' => 20, 'class' => 'selectbadge', 'required' => 'required');
+            $settings = array('multiple' => 'multiple', 'size' => 20, 'class' => 'selectbadge');
             $mform->addElement('select', 'badge_badges', get_string('addbadge', 'badges'), $select, $settings);
             $mform->addRule('badge_badges', get_string('requiredbadge', 'badges'), 'required');
             $mform->addHelpButton('badge_badges', 'addbadge', 'badges');
@@ -243,6 +243,7 @@ class award_criteria_badge extends award_criteria {
         if ($this->method == BADGE_CRITERIA_AGGREGATION_ANY) {
             // User has received ANY of the required badges.
             $join = " LEFT JOIN {badge_issued} bi2 ON bi2.userid = u.id";
+            $where = "AND (";
             $i = 0;
             foreach ($this->params as $param) {
                 if ($i == 0) {
@@ -253,10 +254,7 @@ class award_criteria_badge extends award_criteria {
                 $params['badgeid'.$i] = $param['badge'];
                 $i++;
             }
-            // MDL-66032 Do not create expression if there are no badges in criteria.
-            if (!empty($where)) {
-                $where = ' AND (' . $where . ') ';
-            }
+            $where .= ") ";
             return array($join, $where, $params);
         } else {
             // User has received ALL of the required badges.

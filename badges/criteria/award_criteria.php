@@ -69,22 +69,18 @@ define('BADGE_CRITERIA_TYPE_COURSESET', 5);
 define('BADGE_CRITERIA_TYPE_PROFILE', 6);
 
 /*
- * Badge completion criteria type
- * Criteria type constant, primarily for storing criteria type in the database.
+ * Criteria type constant to class name mapping
  */
-define('BADGE_CRITERIA_TYPE_BADGE', 7);
-
-/*
- * Cohort criteria type
- * Criteria type constant, primarily for storing criteria type in the database.
- */
-define('BADGE_CRITERIA_TYPE_COHORT', 8);
-
-/*
- * Competency criteria type
- * Criteria type constant, primarily for storing criteria type in the database.
- */
-define('BADGE_CRITERIA_TYPE_COMPETENCY', 9);
+global $BADGE_CRITERIA_TYPES;
+$BADGE_CRITERIA_TYPES = array(
+    BADGE_CRITERIA_TYPE_OVERALL   => 'overall',
+    BADGE_CRITERIA_TYPE_ACTIVITY  => 'activity',
+    BADGE_CRITERIA_TYPE_MANUAL    => 'manual',
+    BADGE_CRITERIA_TYPE_SOCIAL    => 'social',
+    BADGE_CRITERIA_TYPE_COURSE    => 'course',
+    BADGE_CRITERIA_TYPE_COURSESET => 'courseset',
+    BADGE_CRITERIA_TYPE_PROFILE   => 'profile'
+);
 
 /**
  * Award criteria abstract definition
@@ -151,17 +147,13 @@ abstract class award_criteria {
      * @return award_criteria
      */
     public static function build($params) {
-        global $CFG;
+        global $CFG, $BADGE_CRITERIA_TYPES;
 
-        require_once($CFG->libdir . '/badgeslib.php');
-
-        $types = badges_list_criteria(false);
-
-        if (!isset($params['criteriatype']) || !isset($types[$params['criteriatype']])) {
+        if (!isset($params['criteriatype']) || !isset($BADGE_CRITERIA_TYPES[$params['criteriatype']])) {
             print_error('error:invalidcriteriatype', 'badges');
         }
 
-        $class = 'award_criteria_' . $types[$params['criteriatype']];
+        $class = 'award_criteria_' . $BADGE_CRITERIA_TYPES[$params['criteriatype']];
         require_once($CFG->dirroot . '/badges/criteria/' . $class . '.php');
 
         return new $class($params);
@@ -204,8 +196,7 @@ abstract class award_criteria {
             $mform->addGroup($parameter, 'param_' . $prefix . $param['id'], '', array(' '), false);
         } else {
             $parameter[] =& $mform->createElement('advcheckbox', $prefix . $param['id'], '', $param['name'], null, array(0, $param['id']));
-            $parameter[] =& $mform->createElement('static', 'break_start_' . $param['id'], null,
-                '<div class="ml-3 mt-1 w-100 align-items-center">');
+            $parameter[] =& $mform->createElement('static', 'break_start_' . $param['id'], null, '<div style="margin-left: 3em;">');
 
             if (in_array('grade', $this->optional_params)) {
                 $parameter[] =& $mform->createElement('static', 'mgrade_' . $param['id'], null, get_string('mingrade', 'badges'));
@@ -487,14 +478,5 @@ abstract class award_criteria {
                 }
             }
         }
-    }
-
-    /**
-     * Allow some specific criteria types to be disabled based on config.
-     *
-     * @return boolean
-     */
-    public static function is_enabled() {
-        return true;
     }
 }

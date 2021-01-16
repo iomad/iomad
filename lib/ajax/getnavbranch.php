@@ -26,7 +26,6 @@
  */
 
 define('AJAX_SCRIPT', true);
-define('READ_ONLY_SESSION', true);
 
 /** Include config */
 require_once(__DIR__ . '/../../config.php');

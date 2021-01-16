@@ -180,7 +180,7 @@ CAS_ProxiedService_Abstract implements CAS_ProxiedService_Http
     /**
      * The response status code.
      *
-     * @var int $_responseStatusCode;
+     * @var string $_responseStatusCode;
      */
     private $_responseStatusCode = '';
 
@@ -266,7 +266,7 @@ CAS_ProxiedService_Abstract implements CAS_ProxiedService_Http
      *
      * @param array $responseHeaders response header to extract a redirect from
      *
-     * @return string|null
+     * @return string or null
      */
     protected function getRedirectUrl(array $responseHeaders)
     {

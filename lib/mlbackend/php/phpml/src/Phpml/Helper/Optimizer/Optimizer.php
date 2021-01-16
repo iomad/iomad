@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Phpml\Helper\Optimizer;
 
-use Closure;
-use Phpml\Exception\InvalidArgumentException;
-
 abstract class Optimizer
 {
     /**
@@ -14,7 +11,7 @@ abstract class Optimizer
      *
      * @var array
      */
-    protected $theta = [];
+    protected $theta;
 
     /**
      * Number of dimensions
@@ -25,6 +22,8 @@ abstract class Optimizer
 
     /**
      * Inits a new instance of Optimizer for the given number of dimensions
+     *
+     * @param int $dimensions
      */
     public function __construct(int $dimensions)
     {
@@ -33,14 +32,23 @@ abstract class Optimizer
         // Inits the weights randomly
         $this->theta = [];
         for ($i = 0; $i < $this->dimensions; ++$i) {
-            $this->theta[] = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) + 0.1;
+            $this->theta[] = rand() / (float) getrandmax();
         }
     }
 
-    public function setTheta(array $theta): self
+    /**
+     * Sets the weights manually
+     *
+     * @param array $theta
+     *
+     * @return $this
+     *
+     * @throws \Exception
+     */
+    public function setInitialTheta(array $theta)
     {
-        if (count($theta) !== $this->dimensions) {
-            throw new InvalidArgumentException(sprintf('Number of values in the weights array should be %s', $this->dimensions));
+        if (count($theta) != $this->dimensions) {
+            throw new \Exception("Number of values in the weights array should be $this->dimensions");
         }
 
         $this->theta = $theta;
@@ -51,6 +59,10 @@ abstract class Optimizer
     /**
      * Executes the optimization with the given samples & targets
      * and returns the weights
+     *
+     * @param array    $samples
+     * @param array    $targets
+     * @param \Closure $gradientCb
      */
-    abstract public function runOptimization(array $samples, array $targets, Closure $gradientCb): array;
+    abstract protected function runOptimization(array $samples, array $targets, \Closure $gradientCb);
 }

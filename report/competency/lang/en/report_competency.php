@@ -27,6 +27,5 @@ $string['coursecompetencybreakdownsummary'] = 'A report of all the students in t
 $string['notrated'] = 'Not rated';
 $string['pluginname'] = 'Competency breakdown';
 $string['rating'] = 'Rating';
-$string['filtermodule'] = 'Competencies linked to "{$a}"';
 $string['usercompetencysummary'] = 'User competency summary';
 $string['privacy:metadata'] = 'The Competency breakdown plugin does not store any personal data.';

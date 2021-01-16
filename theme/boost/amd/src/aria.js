@@ -20,7 +20,7 @@
  * @copyright  2018 Damyon Wiese <damyon@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/pending'], function($, Pending) {
+define(['jquery'], function($) {
     return {
         init: function() {
             // Drop downs from bootstrap don't support keyboard accessibility by default.
@@ -35,7 +35,7 @@ define(['jquery', 'core/pending'], function($, Pending) {
                 };
 
             // Special handling for "up" keyboard control.
-            $('[data-toggle="dropdown"]').keydown(function(e) {
+            $('[data-toggle="dropdown"]').keydown(function (e) {
                 var trigger = e.which || e.keyCode,
                     expanded;
 
@@ -65,11 +65,10 @@ define(['jquery', 'core/pending'], function($, Pending) {
 
             // Special handling for navigation keys when menu is open.
             var shiftFocus = function(element) {
-                var delayedFocus = function(pendingPromise) {
+                var delayedFocus = function() {
                     $(this).focus();
-                    pendingPromise.resolve();
                 }.bind(element);
-                setTimeout(delayedFocus, 50, new Pending('core/aria:delayed-focus'));
+                setTimeout(delayedFocus, 50);
             };
 
             $('.dropdown').on('shown.bs.dropdown', function(e) {
@@ -93,15 +92,13 @@ define(['jquery', 'core/pending'], function($, Pending) {
                     shiftFocus(foundMenuItem);
                 }
             });
-            // Search for menu items by finding the first item that has
-            // text starting with the typed character (case insensitive).
-            $('.dropdown [role="menu"] [role="menuitem"]').keypress(function(e) {
+            // Search for menu items.
+            $('.dropdown [role="menu"] [role="menuitem"]').keypress(function (e) {
                 var trigger = String.fromCharCode(e.which || e.keyCode),
                     menu = $(e.target).closest('[role="menu"]'),
                     i = 0,
                     menuItems = false,
-                    item,
-                    itemText;
+                    item;
 
                 if (!menu) {
                     return;
@@ -114,8 +111,8 @@ define(['jquery', 'core/pending'], function($, Pending) {
                 trigger = trigger.toLowerCase();
                 for (i = 0; i < menuItems.length; i++) {
                     item = $(menuItems[i]);
-                    itemText = item.text().trim().toLowerCase();
-                    if (itemText.indexOf(trigger) == 0) {
+                    if ((item.text().trim().indexOf(trigger) == 0) ||
+                            (item.text().trim().indexOf(trigger.toUpperCase()) == 0)) {
                         shiftFocus(item);
                         break;
                     }
@@ -123,7 +120,7 @@ define(['jquery', 'core/pending'], function($, Pending) {
             });
 
             // Keyboard navigation for arrow keys, home and end keys.
-            $('.dropdown [role="menu"] [role="menuitem"]').keydown(function(e) {
+            $('.dropdown [role="menu"] [role="menuitem"]').keydown(function (e) {
                 var trigger = e.which || e.keyCode,
                     next = false,
                     menu = $(e.target).closest('[role="menu"]'),
@@ -136,41 +133,38 @@ define(['jquery', 'core/pending'], function($, Pending) {
                 if (!menuItems) {
                     return;
                 }
-                // Down key.
+                // Down.
                 if (trigger == 40) {
                     for (i = 0; i < menuItems.length - 1; i++) {
                         if (menuItems[i] == e.target) {
                             next = menuItems[i + 1];
-                            break;
                         }
                     }
                     if (!next) {
                         // Wrap to first item.
-                        next = menuItems[0];
+                        trigger = 36;
                     }
-
-                } else if (trigger == 38) {
-                    // Up key.
+                }
+                // Up.
+                if (trigger == 38) {
                     for (i = 1; i < menuItems.length; i++) {
                         if (menuItems[i] == e.target) {
                             next = menuItems[i - 1];
-                            break;
                         }
                     }
                     if (!next) {
                         // Wrap to last item.
-                        next = menuItems[menuItems.length - 1];
+                        trigger = 35;
                     }
-
-                } else if (trigger == 36) {
-                    // Home key.
+                }
+                // Home.
+                if (trigger == 36) {
                     next = menuItems[0];
-
-                } else if (trigger == 35) {
-                    // End key.
+                }
+                // End.
+                if (trigger == 35) {
                     next = menuItems[menuItems.length - 1];
                 }
-                // Variable next is set if we do want to act on the keypress.
                 if (next) {
                     e.preventDefault();
                     shiftFocus(next);
@@ -183,17 +177,6 @@ define(['jquery', 'core/pending'], function($, Pending) {
                 if (trigger) {
                     shiftFocus(trigger);
                 }
-            });
-
-            // After page load, focus on any element with special autofocus attribute.
-            window.addEventListener("load", () => {
-                const alerts = document.querySelectorAll('[data-aria-autofocus="true"][role="alert"]');
-                Array.prototype.forEach.call(alerts, autofocusElement => {
-                    // According to the specification an role="alert" region is only read out on change to the content
-                    // of that region.
-                    autofocusElement.innerHTML += ' ';
-                    autofocusElement.removeAttribute('data-aria-autofocus');
-                });
             });
         }
     };

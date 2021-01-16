@@ -29,7 +29,9 @@ require_once($CFG->libdir.'/adminlib.php');
 
 $action = optional_param('action', '', PARAM_ALPHANUMEXT);
 
+$syscontext = context_system::instance();
 
+require_login();
 admin_externalpage_setup('toolunsuproles'); // checks permissions specified in settings.php
 
 if ($action === 'delete') {
@@ -100,9 +102,9 @@ if (!$problems) {
         $count = $problem->racount;
         $edit = array();
         $aurl = new moodle_url('/admin/roles/define.php', array('roleid'=>$problem->roleid, 'action'=>'edit'));
-        $edit[] = html_writer::link($aurl, $OUTPUT->pix_icon('t/edit', get_string('edit')));
+        $edit[] = html_writer::link($aurl, $OUTPUT->pix_icon('t/edit', 'core', get_string('edit')));
         $aurl = new moodle_url($PAGE->url, array('roleid'=>$problem->roleid, 'contextlevel'=>$problem->contextlevel, 'action'=>'delete'));
-        $edit[] = html_writer::link($aurl, $OUTPUT->pix_icon('t/delete', get_string('delete')));
+        $edit[] = html_writer::link($aurl, $OUTPUT->pix_icon('t/delete', 'core', get_string('delete')));
         $data[] = array($levelname, $rolename, $count, implode('&nbsp;', $edit));
     }
     $table = new html_table();

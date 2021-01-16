@@ -82,8 +82,7 @@ class grade_export_form extends moodleform {
         }
 
         $mform->addElement('advcheckbox', 'export_feedback', get_string('exportfeedback', 'grades'));
-        $exportfeedback = isset($CFG->grade_export_exportfeedback) ? $CFG->grade_export_exportfeedback : 0;
-        $mform->setDefault('export_feedback', $exportfeedback);
+        $mform->setDefault('export_feedback', 0);
         $coursecontext = context_course::instance($COURSE->id);
         if (has_capability('moodle/course:viewsuspendedusers', $coursecontext)) {
             $mform->addElement('advcheckbox', 'export_onlyactive', get_string('exportonlyactive', 'grades'));

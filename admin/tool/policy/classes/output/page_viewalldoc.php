@@ -48,15 +48,12 @@ use tool_policy\policy_version;
  */
 class page_viewalldoc implements renderable, templatable {
 
-    /** @var string Return url */
-    private $returnurl;
-
     /**
      * Prepare the page for rendering.
      *
      */
-    public function __construct($returnurl) {
-        $this->returnurl = $returnurl;
+    public function __construct() {
+
         $this->prepare_global_page_access();
         $this->prepare_policies();
     }
@@ -66,7 +63,14 @@ class page_viewalldoc implements renderable, templatable {
      *
      */
     protected function prepare_policies() {
-        $this->policies = api::list_current_versions();
+        global $USER;
+
+        if (isguestuser() || empty($USER->id)) {
+            $audience = policy_version::AUDIENCE_GUESTS;
+        } else {
+            $audience = policy_version::AUDIENCE_LOGGEDIN;
+        }
+        $this->policies = api::list_current_versions($audience);
     }
 
     /**
@@ -102,13 +106,9 @@ class page_viewalldoc implements renderable, templatable {
         ];
 
         $data->policies = array_values($this->policies);
-        if (!empty($this->returnurl)) {
-            $data->returnurl = $this->returnurl;
-        }
 
         array_walk($data->policies, function($item, $key) {
             $item->policytypestr = get_string('policydoctype'.$item->type, 'tool_policy');
-            $item->policyaudiencestr = get_string('policydocaudience'.$item->audience, 'tool_policy');
         });
 
         return $data;

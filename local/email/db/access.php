@@ -18,51 +18,26 @@ $capabilities = array(
 
     'local/email:list' => array(
         'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_SYSTEM
     ),
 
     'local/email:edit' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_SYSTEM
     ),
 
     'local/email:delete' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_SYSTEM
     ),
 
     'local/email:add' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_SYSTEM
     ),
 
     'local/email:send' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'local/email:templateset_list' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'contextlevel' => CONTEXT_SYSTEM
+    )
 );

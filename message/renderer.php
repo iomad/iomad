@@ -37,43 +37,13 @@ defined('MOODLE_INTERNAL') || die();
 class core_message_renderer extends plugin_renderer_base {
 
     /**
-     * Display the interface to manage both message outputs and default message outputs
-     *
-     * @param  array $allprocessors  array of objects containing all message processors
-     * @param  array $processors  array of objects containing active message processors
-     * @param  array $providers   array of objects containing message providers
-     * @param  stdClass $preferences object containing current preferences
-     * @return string The text to render
-     */
-    public function manage_messageoutput_settings($allprocessors, $processors, $providers, $preferences) {
-        $output = html_writer::start_tag('form', array('id' => 'defaultmessageoutputs', 'method' => 'post'));
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
-
-        // Add message output processors enabled/disabled and settings.
-        $output .= $this->heading(get_string('messageoutputs', 'message'));
-        $output .= $this->manage_messageoutputs($allprocessors);
-
-        // Add active message output processors settings.
-        $output .= $this->heading(get_string('managemessageoutputs', 'message'));
-        $output .= $this->manage_defaultmessageoutputs($processors, $providers, $preferences);
-
-        $output .= html_writer::start_tag('div', array('class' => 'form-buttons'));
-        $output .= html_writer::empty_tag('input',
-            array('type' => 'submit', 'value' => get_string('savechanges', 'admin'), 'class' => 'form-submit btn btn-primary')
-        );
-        $output .= html_writer::end_tag('div');
-        $output .= html_writer::end_tag('form');
-
-        return $output;
-    }
-
-    /**
      * Display the interface to manage message outputs
      *
      * @param  array  $processors array of objects containing message processors
      * @return string The text to render
      */
     public function manage_messageoutputs($processors) {
+        global $CFG;
         // Display the current workflows
         $table = new html_table();
         $table->attributes['class'] = 'admintable generaltable';
@@ -91,21 +61,28 @@ class core_message_renderer extends plugin_renderer_base {
             $row = new html_table_row();
             $row->attributes['class'] = 'messageoutputs';
 
+            // Name
             $name = new html_table_cell(get_string('pluginname', 'message_'.$processor->name));
+
+            // Enable
             $enable = new html_table_cell();
+            $enable->attributes['class'] = 'mdl-align';
             if (!$processor->available) {
-                $enable->text = html_writer::nonempty_tag('span', get_string('outputnotavailable', 'message'),
-                    array('class' => 'error')
-                );
+                $enable->text = html_writer::nonempty_tag('span', get_string('outputnotavailable', 'message'), array('class' => 'error'));
+            } else if (!$processor->configured) {
+                $enable->text = html_writer::nonempty_tag('span', get_string('outputnotconfigured', 'message'), array('class' => 'error'));
+            } else if ($processor->enabled) {
+                $url = new moodle_url('/admin/message.php', array('disable' => $processor->id, 'sesskey' => sesskey()));
+                $enable->text = html_writer::link($url, $this->output->pix_icon('t/hide', get_string('outputenabled', 'message')));
             } else {
-                $enable->text = html_writer::checkbox($processor->name, $processor->id, $processor->enabled, '',
-                    array('id' => $processor->name)
-                );
+                $row->attributes['class'] = 'dimmed_text';
+                $url = new moodle_url('/admin/message.php', array('enable' => $processor->id, 'sesskey' => sesskey()));
+                $enable->text = html_writer::link($url, $this->output->pix_icon('t/show', get_string('outputdisabled', 'message')));
             }
             // Settings
             $settings = new html_table_cell();
             if ($processor->available && $processor->hassettings) {
-                $settingsurl = new moodle_url('/admin/settings.php', array('section' => 'messagesetting'.$processor->name));
+                $settingsurl = new moodle_url('settings.php', array('section' => 'messagesetting'.$processor->name));
                 $settings->text = html_writer::link($settingsurl, get_string('settings', 'message'));
             }
 
@@ -120,15 +97,20 @@ class core_message_renderer extends plugin_renderer_base {
      *
      * @param  array $processors  array of objects containing message processors
      * @param  array $providers   array of objects containing message providers
-     * @param  stdClass $preferences object containing current preferences
+     * @param  array $preferences array of objects containing current preferences
      * @return string The text to render
      */
     public function manage_defaultmessageoutputs($processors, $providers, $preferences) {
+        global $CFG;
+
         // Prepare list of options for dropdown menu
         $options = array();
         foreach (array('disallowed', 'permitted', 'forced') as $setting) {
             $options[$setting] = get_string($setting, 'message');
         }
+
+        $output = html_writer::start_tag('form', array('id'=>'defaultmessageoutputs', 'method'=>'post'));
+        $output .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'sesskey', 'value'=>sesskey()));
 
         // Display users outputs table
         $table = new html_table();
@@ -177,7 +159,7 @@ class core_message_renderer extends plugin_renderer_base {
                         $preference = $processor->name.'_provider_'.$preferencebase;
                         if ($providerdisabled) {
                             $select = MESSAGE_DISALLOWED;
-                        } else if (property_exists($preferences, $preference)) {
+                        } else if (array_key_exists($preference, $preferences)) {
                             $select = $preferences->{$preference};
                         }
                         // dropdown menu
@@ -192,7 +174,7 @@ class core_message_renderer extends plugin_renderer_base {
                             $checked = true;
                         } else if ($select == 'permitted') {
                             $preference = 'message_provider_'.$preferencebase;
-                            if (property_exists($preferences, $preference)) {
+                            if (array_key_exists($preference, $preferences)) {
                                 $checked = (int)in_array($processor->name, explode(',', $preferences->{$preference}));
                             }
                         }
@@ -213,7 +195,11 @@ class core_message_renderer extends plugin_renderer_base {
             $table->data[] = $row;
         }
 
-        $output = html_writer::table($table);
+        $output .= html_writer::table($table);
+        $output .= html_writer::start_tag('div', array('class' => 'form-buttons'));
+        $output .= html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('savechanges','admin'), 'class' => 'form-submit'));
+        $output .= html_writer::end_tag('div');
+        $output .= html_writer::end_tag('form');
         return $output;
     }
 
@@ -241,8 +227,6 @@ class core_message_renderer extends plugin_renderer_base {
      * @return string The text to render
      */
     public function render_user_message_preferences($user) {
-        global $CFG;
-
         // Filter out enabled, available system_configured and user_configured processors only.
         $readyprocessors = array_filter(get_message_processors(), function($processor) {
             return $processor->enabled &&
@@ -259,29 +243,7 @@ class core_message_renderer extends plugin_renderer_base {
         $notificationlistoutput = new \core_message\output\preferences\message_notification_list($readyprocessors,
             $providers, $preferences, $user);
         $context = $notificationlistoutput->export_for_template($this);
-
-        // Get the privacy settings options for being messaged.
-        $privacysetting = \core_message\api::get_user_privacy_messaging_preference($user->id);
-        $choices = array();
-        $choices[] = [
-            'value' => \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS,
-            'text' => get_string('contactableprivacy_onlycontacts', 'message'),
-            'checked' => ($privacysetting == \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS)
-        ];
-        $choices[] = [
-            'value' => \core_message\api::MESSAGE_PRIVACY_COURSEMEMBER,
-            'text' => get_string('contactableprivacy_coursemember', 'message'),
-            'checked' => ($privacysetting == \core_message\api::MESSAGE_PRIVACY_COURSEMEMBER)
-        ];
-        if (!empty($CFG->messagingallusers)) {
-            // Add the MESSAGE_PRIVACY_SITE option when site-wide messaging between users is enabled.
-            $choices[] = [
-                'value' => \core_message\api::MESSAGE_PRIVACY_SITE,
-                'text' => get_string('contactableprivacy_site', 'message'),
-                'checked' => ($privacysetting == \core_message\api::MESSAGE_PRIVACY_SITE)
-            ];
-        }
-        $context['privacychoices'] = $choices;
+        $context['blocknoncontacts'] = get_user_preferences('message_blocknoncontacts', '', $user->id) ? true : false;
 
         return $this->render_from_template('message/message_preferences', $context);
     }

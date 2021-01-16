@@ -91,7 +91,7 @@ class comprep{
     public static function getcompanyusers( $companyid ) {
         global $DB;
 
-        if (! $dataids = $DB->get_records('company_users', array('companyid' => $companyid))) {
+        if (! $dataids = $DB->get_records('company_users', array('company_id' => $companyid))) {
             return array();
         }
 

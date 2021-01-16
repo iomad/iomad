@@ -544,31 +544,25 @@ function enrol_add_course_navigation(navigation_node $coursenode, $course) {
 /**
  * Returns list of courses current $USER is enrolled in and can access
  *
- * The $fields param is a list of field names to ADD so name just the fields you really need,
- * which will be added and uniq'd.
+ * - $fields is an array of field names to ADD
+ *   so name the fields you really need, which will
+ *   be added and uniq'd
  *
  * If $allaccessible is true, this will additionally return courses that the current user is not
  * enrolled in, but can access because they are open to the user for other reasons (course view
  * permission, currently viewing course as a guest, or course allows guest access without
  * password).
  *
- * @param string|array $fields Extra fields to be returned (array or comma-separated list).
- * @param string|null $sort Comma separated list of fields to sort by, defaults to respecting navsortmycoursessort.
- * Allowed prefixes for sort fields are: "ul" for the user_lastaccess table, "c" for the courses table,
- * "ue" for the user_enrolments table.
+ * @param string|array $fields
+ * @param string $sort
  * @param int $limit max number of courses
  * @param array $courseids the list of course ids to filter by
  * @param bool $allaccessible Include courses user is not enrolled in, but can access
- * @param int $offset Offset the result set by this number
- * @param array $excludecourses IDs of hidden courses to exclude from search
  * @return array
  */
-function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $courseids = [], $allaccessible = false,
-    $offset = 0, $excludecourses = []) {
+function enrol_get_my_courses($fields = null, $sort = 'visible DESC,sortorder ASC',
+          $limit = 0, $courseids = [], $allaccessible = false) {
     global $DB, $USER, $CFG;
-
-    // Re-Arrange the course sorting according to the admin settings.
-    $sort = enrol_get_courses_sortingsql($sort);
 
     // Guest account does not have any enrolled courses.
     if (!$allaccessible && (isguestuser() or !isloggedin())) {
@@ -590,7 +584,7 @@ function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $coursei
     } else if (is_array($fields)) {
         $fields = array_unique(array_merge($basefields, $fields));
     } else {
-        throw new coding_exception('Invalid $fields parameter in enrol_get_my_courses()');
+        throw new coding_exception('Invalid $fileds parameter in enrol_get_my_courses()');
     }
     if (in_array('*', $fields)) {
         $fields = array('*');
@@ -598,32 +592,17 @@ function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $coursei
 
     $orderby = "";
     $sort    = trim($sort);
-    $sorttimeaccess = false;
-    $allowedsortprefixes = array('c', 'ul', 'ue');
     if (!empty($sort)) {
         $rawsorts = explode(',', $sort);
         $sorts = array();
         foreach ($rawsorts as $rawsort) {
             $rawsort = trim($rawsort);
-            if (preg_match('/^ul\.(\S*)\s(asc|desc)/i', $rawsort, $matches)) {
-                if (strcasecmp($matches[2], 'asc') == 0) {
-                    $sorts[] = 'COALESCE(ul.' . $matches[1] . ', 0) ASC';
-                } else {
-                    $sorts[] = 'COALESCE(ul.' . $matches[1] . ', 0) DESC';
-                }
-                $sorttimeaccess = true;
-            } else if (strpos($rawsort, '.') !== false) {
-                $prefix = explode('.', $rawsort);
-                if (in_array($prefix[0], $allowedsortprefixes)) {
-                    $sorts[] = trim($rawsort);
-                } else {
-                    throw new coding_exception('Invalid $sort parameter in enrol_get_my_courses()');
-                }
-            } else {
-                $sorts[] = 'c.'.trim($rawsort);
+            if (strpos($rawsort, 'c.') === 0) {
+                $rawsort = substr($rawsort, 2);
             }
+            $sorts[] = trim($rawsort);
         }
-        $sort = implode(',', $sorts);
+        $sort = 'c.'.implode(',c.', $sorts);
         $orderby = "ORDER BY $sort";
     }
 
@@ -642,17 +621,8 @@ function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $coursei
     $params['contextlevel'] = CONTEXT_COURSE;
     $wheres = implode(" AND ", $wheres);
 
-    $timeaccessselect = "";
-    $timeaccessjoin = "";
-
     if (!empty($courseids)) {
         list($courseidssql, $courseidsparams) = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
-        $wheres = sprintf("%s AND c.id %s", $wheres, $courseidssql);
-        $params = array_merge($params, $courseidsparams);
-    }
-
-    if (!empty($excludecourses)) {
-        list($courseidssql, $courseidsparams) = $DB->get_in_or_equal($excludecourses, SQL_PARAMS_NAMED, 'param', false);
         $wheres = sprintf("%s AND c.id %s", $wheres, $courseidssql);
         $params = array_merge($params, $courseidsparams);
     }
@@ -663,20 +633,14 @@ function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $coursei
         $courseidsql .= "
                 SELECT DISTINCT e.courseid
                   FROM {enrol} e
-                  JOIN {user_enrolments} ue ON (ue.enrolid = e.id AND ue.userid = :userid1)
+                  JOIN {user_enrolments} ue ON (ue.enrolid = e.id AND ue.userid = :userid)
                  WHERE ue.status = :active AND e.status = :enabled AND ue.timestart < :now1
                        AND (ue.timeend = 0 OR ue.timeend > :now2)";
-        $params['userid1'] = $USER->id;
+        $params['userid'] = $USER->id;
         $params['active'] = ENROL_USER_ACTIVE;
         $params['enabled'] = ENROL_INSTANCE_ENABLED;
         $params['now1'] = round(time(), -2); // Improves db caching.
         $params['now2'] = $params['now1'];
-
-        if ($sorttimeaccess) {
-            $params['userid2'] = $USER->id;
-            $timeaccessselect = ', ul.timeaccess as lastaccessed';
-            $timeaccessjoin = "LEFT JOIN {user_lastaccess} ul ON (ul.courseid = c.id AND ul.userid = :userid2)";
-        }
     }
 
     // When including non-enrolled but accessible courses...
@@ -737,15 +701,14 @@ function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $coursei
 
     // Note: we can not use DISTINCT + text fields due to Oracle and MS limitations, that is why
     // we have the subselect there.
-    $sql = "SELECT $coursefields $ccselect $timeaccessselect
+    $sql = "SELECT $coursefields $ccselect
               FROM {course} c
               JOIN ($courseidsql) en ON (en.courseid = c.id)
-           $timeaccessjoin
            $ccjoin
              WHERE $wheres
           $orderby";
 
-    $courses = $DB->get_records_sql($sql, $params, $offset, $limit);
+    $courses = $DB->get_records_sql($sql, $params, 0, $limit);
 
     // preload contexts and check visibility
     foreach ($courses as $id=>$course) {
@@ -800,41 +763,6 @@ function enrol_get_course_info_icons($course, array $instances = NULL) {
 }
 
 /**
- * Returns SQL ORDER arguments which reflect the admin settings to sort my courses.
- *
- * @param string|null $sort SQL ORDER arguments which were originally requested (optionally).
- * @return string SQL ORDER arguments.
- */
-function enrol_get_courses_sortingsql($sort = null) {
-    global $CFG;
-
-    // Prepare the visible SQL fragment as empty.
-    $visible = '';
-    // Only create a visible SQL fragment if the caller didn't already pass a sort order which contains the visible field.
-    if ($sort === null || strpos($sort, 'visible') === false) {
-        // If the admin did not explicitly want to have shown and hidden courses sorted as one list, we will sort hidden
-        // courses to the end of the course list.
-        if (!isset($CFG->navsortmycourseshiddenlast) || $CFG->navsortmycourseshiddenlast == true) {
-            $visible = 'visible DESC, ';
-        }
-    }
-
-    // Only create a sortorder SQL fragment if the caller didn't already pass one.
-    if ($sort === null) {
-        // If the admin has configured a course sort order, we will use this.
-        if (!empty($CFG->navsortmycoursessort)) {
-            $sort = $CFG->navsortmycoursessort . ' ASC';
-
-            // Otherwise we will fall back to the sortorder sorting.
-        } else {
-            $sort = 'sortorder ASC';
-        }
-    }
-
-    return $visible . $sort;
-}
-
-/**
  * Returns course enrolment detailed information.
  *
  * @param object $course
@@ -860,19 +788,19 @@ function enrol_get_course_description_texts($course) {
 
 /**
  * Returns list of courses user is enrolled into.
+ * (Note: use enrol_get_all_users_courses if you want to use the list wihtout any cap checks )
  *
- * Note: Use {@link enrol_get_all_users_courses()} if you need the list without any capability checks.
+ * - $fields is an array of fieldnames to ADD
+ *   so name the fields you really need, which will
+ *   be added and uniq'd
  *
- * The $fields param is a list of field names to ADD so name just the fields you really need,
- * which will be added and uniq'd.
- *
- * @param int $userid User whose courses are returned, defaults to the current user.
- * @param bool $onlyactive Return only active enrolments in courses user may see.
- * @param string|array $fields Extra fields to be returned (array or comma-separated list).
- * @param string|null $sort Comma separated list of fields to sort by, defaults to respecting navsortmycoursessort.
+ * @param int $userid
+ * @param bool $onlyactive return only active enrolments in courses user may see
+ * @param string|array $fields
+ * @param string $sort
  * @return array
  */
-function enrol_get_users_courses($userid, $onlyactive = false, $fields = null, $sort = null) {
+function enrol_get_users_courses($userid, $onlyactive = false, $fields = NULL, $sort = 'visible DESC,sortorder ASC') {
     global $DB;
 
     $courses = enrol_get_all_users_courses($userid, $onlyactive, $fields, $sort);
@@ -895,31 +823,7 @@ function enrol_get_users_courses($userid, $onlyactive = false, $fields = null, $
     }
 
     return $courses;
-}
 
-/**
- * Returns list of roles per users into course.
- *
- * @param int $courseid Course id.
- * @return array Array[$userid][$roleid] = role_assignment.
- */
-function enrol_get_course_users_roles(int $courseid) : array {
-    global $DB;
-
-    $context = context_course::instance($courseid);
-
-    $roles = array();
-
-    $records = $DB->get_recordset('role_assignments', array('contextid' => $context->id));
-    foreach ($records as $record) {
-        if (isset($roles[$record->userid]) === false) {
-            $roles[$record->userid] = array();
-        }
-        $roles[$record->userid][$record->roleid] = $record;
-    }
-    $records->close();
-
-    return $roles;
 }
 
 /**
@@ -973,22 +877,19 @@ function enrol_user_sees_own_courses($user = null) {
 }
 
 /**
- * Returns list of courses user is enrolled into without performing any capability checks.
+ * Returns list of courses user is enrolled into without any capability checks
+ * - $fields is an array of fieldnames to ADD
+ *   so name the fields you really need, which will
+ *   be added and uniq'd
  *
- * The $fields param is a list of field names to ADD so name just the fields you really need,
- * which will be added and uniq'd.
- *
- * @param int $userid User whose courses are returned, defaults to the current user.
- * @param bool $onlyactive Return only active enrolments in courses user may see.
- * @param string|array $fields Extra fields to be returned (array or comma-separated list).
- * @param string|null $sort Comma separated list of fields to sort by, defaults to respecting navsortmycoursessort.
+ * @param int $userid
+ * @param bool $onlyactive return only active enrolments in courses user may see
+ * @param string|array $fields
+ * @param string $sort
  * @return array
  */
-function enrol_get_all_users_courses($userid, $onlyactive = false, $fields = null, $sort = null) {
+function enrol_get_all_users_courses($userid, $onlyactive = false, $fields = NULL, $sort = 'visible DESC,sortorder ASC') {
     global $DB;
-
-    // Re-Arrange the course sorting according to the admin settings.
-    $sort = enrol_get_courses_sortingsql($sort);
 
     // Guest account does not have any courses
     if (isguestuser($userid) or empty($userid)) {
@@ -1011,7 +912,7 @@ function enrol_get_all_users_courses($userid, $onlyactive = false, $fields = nul
     } else if (is_array($fields)) {
         $fields = array_unique(array_merge($basefields, $fields));
     } else {
-        throw new coding_exception('Invalid $fields parameter in enrol_get_all_users_courses()');
+        throw new coding_exception('Invalid $fileds parameter in enrol_get_my_courses()');
     }
     if (in_array('*', $fields)) {
         $fields = array('*');
@@ -1089,35 +990,20 @@ function enrol_user_delete($user) {
 
 /**
  * Called when course is about to be deleted.
- * If a user id is passed, only enrolments that the user has permission to un-enrol will be removed,
- * otherwise all enrolments in the course will be removed.
- *
  * @param stdClass $course
- * @param int|null $userid
  * @return void
  */
-function enrol_course_delete($course, $userid = null) {
+function enrol_course_delete($course) {
     global $DB;
 
-    $context = context_course::instance($course->id);
     $instances = enrol_get_instances($course->id, false);
     $plugins = enrol_get_plugins(true);
-
-    if ($userid) {
-        // If the user id is present, include only course enrolment instances which allow manual unenrolment and
-        // the given user have a capability to perform unenrolment.
-        $instances = array_filter($instances, function($instance) use ($userid, $plugins, $context) {
-            $unenrolcap = "enrol/{$instance->enrol}:unenrol";
-            return $plugins[$instance->enrol]->allow_unenrol($instance) &&
-                has_capability($unenrolcap, $context, $userid);
-        });
-    }
-
     foreach ($instances as $instance) {
         if (isset($plugins[$instance->enrol])) {
             $plugins[$instance->enrol]->delete_instance($instance);
         }
         // low level delete in case plugin did not do it
+        $DB->delete_records('user_enrolments', array('enrolid'=>$instance->id));
         $DB->delete_records('role_assignments', array('itemid'=>$instance->id, 'component'=>'enrol_'.$instance->enrol));
         $DB->delete_records('user_enrolments', array('enrolid'=>$instance->id));
         $DB->delete_records('enrol', array('id'=>$instance->id));
@@ -1390,7 +1276,7 @@ function is_enrolled(context $context, $user = null, $withcapability = '', $only
  * @param string|array $capability optional, may include a capability name, or array of names.
  *      If an array is provided then this is the equivalent of a logical 'OR',
  *      i.e. the user needs to have one of these capabilities.
- * @param int $group optional, 0 indicates no current group and USERSWITHOUTGROUP users without any group; otherwise the group id
+ * @param int $group optional, 0 indicates no current group, otherwise the group id
  * @param bool $onlyactive consider only active enrolments in enabled plugins and time restrictions
  * @param bool $onlysuspended inverse of onlyactive, consider only suspended enrolments
  * @param int $enrolid The enrolment ID. If not 0, only users enrolled using this enrolment method will be returned.
@@ -1415,12 +1301,9 @@ function get_enrolled_with_capabilities_join(context $context, $prefix = '', $ca
     }
 
     if ($group) {
-        $groupjoin = groups_get_members_join($group, $uid, $context);
+        $groupjoin = groups_get_members_join($group, $uid);
         $joins[] = $groupjoin->joins;
         $params = array_merge($params, $groupjoin->params);
-        if (!empty($groupjoin->wheres)) {
-            $wheres[] = $groupjoin->wheres;
-        }
     }
 
     $joins = implode("\n", $joins);
@@ -1438,7 +1321,7 @@ function get_enrolled_with_capabilities_join(context $context, $prefix = '', $ca
  *
  * @param context $context
  * @param string $withcapability
- * @param int $groupid 0 means ignore groups, USERSWITHOUTGROUP without any group and any other value limits the result by group id
+ * @param int $groupid 0 means ignore groups, any other value limits the result by group id
  * @param bool $onlyactive consider only active enrolments in enabled plugins and time restrictions
  * @param bool $onlysuspended inverse of onlyactive, consider only suspended enrolments
  * @param int $enrolid The enrolment ID. If not 0, only users enrolled using this enrolment method will be returned.
@@ -1564,7 +1447,7 @@ function get_enrolled_join(context $context, $useridcolumn, $onlyactive = false,
  *
  * @param context $context
  * @param string $withcapability
- * @param int $groupid 0 means ignore groups, USERSWITHOUTGROUP without any group and any other value limits the result by group id
+ * @param int $groupid 0 means ignore groups, any other value limits the result by group id
  * @param string $userfields requested user record fields
  * @param string $orderby
  * @param int $limitfrom return a subset of records, starting at this point (optional, required if $limitnum is set).
@@ -1608,7 +1491,7 @@ function count_enrolled_users(context $context, $withcapability = '', $groupid =
     $capjoin = get_enrolled_with_capabilities_join(
             $context, '', $withcapability, $groupid, $onlyactive);
 
-    $sql = "SELECT COUNT(DISTINCT u.id)
+    $sql = "SELECT count(u.id)
               FROM {user} u
             $capjoin->joins
              WHERE $capjoin->wheres AND u.deleted = 0";
@@ -1704,7 +1587,7 @@ function enrol_get_course_users($courseid = false, $onlyactive = false, $usersfi
 
     $sql = "SELECT ue.id AS ueid, ue.status AS uestatus, ue.enrolid AS ueenrolid, ue.timestart AS uetimestart,
              ue.timeend AS uetimeend, ue.modifierid AS uemodifierid, ue.timecreated AS uetimecreated,
-             ue.timemodified AS uetimemodified, e.status AS estatus,
+             ue.timemodified AS uetimemodified,
              u.* FROM {user_enrolments} ue
               JOIN {enrol} e ON e.id = ue.enrolid
               JOIN {user} u ON ue.userid = u.id
@@ -1739,33 +1622,6 @@ function enrol_get_course_users($courseid = false, $onlyactive = false, $usersfi
     }
 
     return $DB->get_records_sql($sql . ' ' . implode(' AND ', $conditions), $params);
-}
-
-/**
- * Get the list of options for the enrolment period dropdown
- *
- * @return array List of options for the enrolment period dropdown
- */
-function enrol_get_period_list() {
-    $periodmenu = [];
-    $periodmenu[''] = get_string('unlimited');
-    for ($i = 1; $i <= 365; $i++) {
-        $seconds = $i * DAYSECS;
-        $periodmenu[$seconds] = get_string('numdays', '', $i);
-    }
-    return $periodmenu;
-}
-
-/**
- * Calculate duration base on start time and end time
- *
- * @param int $timestart Time start
- * @param int $timeend Time end
- * @return float|int Calculated duration
- */
-function enrol_calculate_duration($timestart, $timeend) {
-    $duration = floor(($timeend - $timestart) / DAYSECS) * DAYSECS;
-    return $duration;
 }
 
 /**
@@ -2039,7 +1895,8 @@ abstract class enrol_plugin {
                     );
             $event->trigger();
             // Check if course contacts cache needs to be cleared.
-            core_course_category::user_enrolment_changed($courseid, $ue->userid,
+            require_once($CFG->libdir . '/coursecatlib.php');
+            coursecat::user_enrolment_changed($courseid, $ue->userid,
                     $ue->status, $ue->timestart, $ue->timeend);
         }
 
@@ -2116,9 +1973,7 @@ abstract class enrol_plugin {
         $ue->modifierid = $USER->id;
         $ue->timemodified = time();
         $DB->update_record('user_enrolments', $ue);
-
-        // User enrolments have changed, so mark user as dirty.
-        mark_user_dirty($userid);
+        context_course::instance($instance->courseid)->mark_dirty(); // reset enrol caches
 
         // Invalidate core_access cache for get_suspended_userids.
         cache_helper::invalidate_by_definition('core', 'suspended_userids', array(), array($instance->courseid));
@@ -2135,7 +1990,8 @@ abstract class enrol_plugin {
                 );
         $event->trigger();
 
-        core_course_category::user_enrolment_changed($instance->courseid, $ue->userid,
+        require_once($CFG->libdir . '/coursecatlib.php');
+        coursecat::user_enrolment_changed($instance->courseid, $ue->userid,
                 $ue->status, $ue->timestart, $ue->timeend);
     }
 
@@ -2215,12 +2071,12 @@ abstract class enrol_plugin {
                     )
                 );
         $event->trigger();
-
-        // User enrolments have changed, so mark user as dirty.
-        mark_user_dirty($userid);
+        // reset all enrol caches
+        $context->mark_dirty();
 
         // Check if courrse contacts cache needs to be cleared.
-        core_course_category::user_enrolment_changed($courseid, $ue->userid, ENROL_USER_SUSPENDED);
+        require_once($CFG->libdir . '/coursecatlib.php');
+        coursecat::user_enrolment_changed($courseid, $ue->userid, ENROL_USER_SUSPENDED);
 
         // reset current user enrolment caching
         if ($userid == $USER->id) {

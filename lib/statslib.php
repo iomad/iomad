@@ -987,24 +987,18 @@ function stats_get_base_daily($time=0) {
 function stats_get_base_weekly($time=0) {
     global $CFG;
 
-    $datetime = new DateTime();
-    $datetime->setTimestamp(stats_get_base_daily($time));
+    $time = stats_get_base_daily($time);
     $startday = $CFG->calendar_startwday;
 
     core_date::set_default_server_timezone();
     $thisday = date('w', $time);
 
-    $days = 0;
-
     if ($thisday > $startday) {
-        $days = $thisday - $startday;
+        $time = $time - (($thisday - $startday) * 60*60*24);
     } else if ($thisday < $startday) {
-        $days = 7 + $thisday - $startday;
+        $time = $time - ((7 + $thisday - $startday) * 60*60*24);
     }
-
-    $datetime->sub(new DateInterval("P{$days}D"));
-
-    return $datetime->getTimestamp();
+    return $time;
 }
 
 /**
@@ -1196,13 +1190,11 @@ function stats_get_parameters($time,$report,$courseid,$mode,$roleid=0) {
         break;
 
     case STATS_REPORT_USER_VIEW:
-        $param->fields = 'timeend, SUM(statsreads) AS line1, SUM(statswrites) AS line2, SUM(statsreads+statswrites) AS line3';
-        $param->fieldscomplete = true;
+        $param->fields = 'statsreads as line1, statswrites as line2, statsreads+statswrites as line3';
         $param->line1 = get_string('statsuserreads');
         $param->line2 = get_string('statsuserwrites');
         $param->line3 = get_string('statsuseractivity');
         $param->stattype = 'activity';
-        $param->extras = "GROUP BY timeend";
         break;
 
     // ******************** STATS_MODE_RANKED ******************** //
@@ -1412,7 +1404,6 @@ function stats_get_report_options($courseid,$mode) {
             $sql = 'SELECT r.id, r.name, r.shortname FROM {role} r JOIN {stats_daily} s ON s.roleid = r.id
                  WHERE s.courseid = :courseid GROUP BY r.id, r.name, r.shortname';
             if ($roles = $DB->get_records_sql($sql, array('courseid' => $courseid))) {
-                $roles = array_intersect_key($roles, get_viewable_roles($context));
                 foreach ($roles as $role) {
                     $reportoptions[STATS_REPORT_ACTIVITYBYROLE.$role->id] = get_string('statsreport'.STATS_REPORT_ACTIVITYBYROLE).
                         ' ' . role_get_name($role, $context);

@@ -26,10 +26,9 @@ namespace core_userkey\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
-use core_privacy\local\metadata\collection;
-use core_privacy\local\request\transform;
-use core_privacy\local\request\writer;
-use core_privacy\local\request\userlist;
+use \core_privacy\local\metadata\collection;
+use \core_privacy\local\request\transform;
+use \core_privacy\local\request\writer;
 
 /**
  * Privacy class for requesting user data.
@@ -39,11 +38,9 @@ use core_privacy\local\request\userlist;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements
-        \core_privacy\local\metadata\provider,
+    \core_privacy\local\metadata\provider,
 
-        \core_privacy\local\request\subsystem\plugin_provider,
-        \core_privacy\local\request\shared_userlist_provider
-    {
+    \core_privacy\local\request\subsystem\plugin_provider {
 
     /**
      * Returns meta data about this system.
@@ -63,41 +60,6 @@ class provider implements
             ], 'privacy:metadata:user_private_key');
 
         return $collection;
-    }
-
-    /**
-     * Get the list of users within a specific context for this system.
-     *
-     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
-     * @param context $context The context.
-     * @param string $script The unique target identifier.
-     * @param int $instance The instance ID.
-     */
-    public static function get_user_contexts_with_script(userlist $userlist, \context $context, string $script,
-                                                         int $instance = null) {
-        if (!$context instanceof \context_user) {
-            return;
-        }
-
-        $params = [
-            'userid' => $context->instanceid,
-            'script' => $script
-        ];
-
-        $whereinstance = '';
-
-        if (!empty($instance)) {
-            $params['instance'] = $instance;
-            $whereinstance = ' AND k.instance = :instance';
-        }
-
-        $sql = "SELECT k.userid
-                  FROM {user_private_key} k
-                 WHERE k.script = :script
-                       AND k.userid = :userid
-                       {$whereinstance}";
-
-        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**

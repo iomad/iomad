@@ -402,6 +402,7 @@ class api {
      * @return bool
      */
     public static function is_enabled() {
-        return is_enabled_auth('oauth2');
+        $plugininfo = \core_plugin_manager::instance()->get_plugin_info('auth_oauth2');
+        return $plugininfo->is_enabled();
     }
 }

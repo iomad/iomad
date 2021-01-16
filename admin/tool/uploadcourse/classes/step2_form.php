@@ -57,8 +57,8 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
             'maxlength="100" size="20"');
         $mform->setType('options[shortnametemplate]', PARAM_RAW);
         $mform->addHelpButton('options[shortnametemplate]', 'shortnametemplate', 'tool_uploadcourse');
-        $mform->hideIf('options[shortnametemplate]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_CREATE_OR_UPDATE);
-        $mform->hideIf('options[shortnametemplate]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_UPDATE_ONLY);
+        $mform->disabledIf('options[shortnametemplate]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_CREATE_OR_UPDATE);
+        $mform->disabledIf('options[shortnametemplate]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_UPDATE_ONLY);
 
         // Restore file is not in the array options on purpose, because formslib can't handle it!
         $contextid = $this->_customdata['contextid'];
@@ -73,8 +73,8 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
 
         $mform->addElement('selectyesno', 'options[reset]', get_string('reset', 'tool_uploadcourse'));
         $mform->setDefault('options[reset]', 0);
-        $mform->hideIf('options[reset]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_CREATE_NEW);
-        $mform->hideIf('options[reset]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_CREATE_ALL);
+        $mform->disabledIf('options[reset]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_CREATE_NEW);
+        $mform->disabledIf('options[reset]', 'options[mode]', 'eq', tool_uploadcourse_processor::MODE_CREATE_ALL);
         $mform->disabledIf('options[reset]', 'options[allowresets]', 'eq', 0);
         $mform->addHelpButton('options[reset]', 'reset', 'tool_uploadcourse');
 
@@ -82,7 +82,7 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
         $mform->addElement('header', 'defaultheader', get_string('defaultvalues', 'tool_uploadcourse'));
         $mform->setExpanded('defaultheader', true);
 
-        $displaylist = core_course_category::make_categories_list('moodle/course:create');
+        $displaylist = coursecat::make_categories_list('moodle/course:create');
         $mform->addElement('select', 'defaults[category]', get_string('coursecategory'), $displaylist);
         $mform->addHelpButton('defaults[category]', 'coursecategory');
 
@@ -93,11 +93,11 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
         $mform->addHelpButton('defaults[visible]', 'coursevisibility');
         $mform->setDefault('defaults[visible]', $courseconfig->visible);
 
-        $mform->addElement('date_time_selector', 'defaults[startdate]', get_string('startdate'));
+        $mform->addElement('date_selector', 'defaults[startdate]', get_string('startdate'));
         $mform->addHelpButton('defaults[startdate]', 'startdate');
         $mform->setDefault('defaults[startdate]', time() + 3600 * 24);
 
-        $mform->addElement('date_time_selector', 'defaults[enddate]', get_string('enddate'), array('optional' => true));
+        $mform->addElement('date_selector', 'defaults[enddate]', get_string('enddate'), array('optional' => true));
         $mform->addHelpButton('defaults[enddate]', 'enddate');
 
         $courseformats = get_sorted_course_formats(true);
@@ -173,10 +173,6 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
             $mform->addHelpButton('defaults[enablecompletion]', 'enablecompletion', 'completion');
         }
 
-        // Add custom fields to the form.
-        $handler = \core_course\customfield\course_handler::create();
-        $handler->instance_form_definition($mform, 0, 'defaultvaluescustomfieldcategory', 'tool_uploadcourse');
-
         // Hidden fields.
         $mform->addElement('hidden', 'importid');
         $mform->setType('importid', PARAM_INT);
@@ -185,10 +181,6 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
         $mform->setType('previewrows', PARAM_INT);
 
         $this->add_action_buttons(true, get_string('uploadcourses', 'tool_uploadcourse'));
-
-        // Prepare custom fields data.
-        $data = (object) $data;
-        $handler->instance_form_before_set_data($data);
 
         $this->set_data($data);
     }
@@ -227,9 +219,6 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
             $enddate = $format->get_default_course_enddate($mform, array('startdate' => 'defaults[startdate]'));
             $mform->setDefault('defaults[enddate]', $enddate);
         }
-
-        // Tweak the form with values provided by custom fields in use.
-        \core_course\customfield\course_handler::create()->instance_form_definition_after_data($mform);
     }
 
     /**
@@ -247,9 +236,6 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
         if ($errorcode = course_validate_dates($data['defaults'])) {
             $errors['defaults[enddate]'] = get_string($errorcode, 'error');
         }
-
-        // Custom fields validation.
-        array_merge($errors, \core_course\customfield\course_handler::create()->instance_form_validation($data, $files));
 
         return $errors;
     }

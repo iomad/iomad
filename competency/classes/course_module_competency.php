@@ -192,8 +192,8 @@ class course_module_competency extends persistent {
         $sql = 'SELECT COUNT(comp.id)
                   FROM {' . self::TABLE . '} coursemodulecomp
                   JOIN {' . competency::TABLE . '} comp
-                    ON coursemodulecomp.competencyid = comp.id
-                 WHERE coursemodulecomp.cmid = ? ';
+                    ON coursecomp.competencyid = comp.id
+                 WHERE coursecomp.cmid = ? ';
         $params = array($cmid);
 
         $results = $DB->count_records_sql($sql, $params);

@@ -38,13 +38,10 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
         this._filters = [];
         this._users = [];
         this._filteredUsers = [];
-        this._lastXofYUpdate = 0;
-        this._firstLoadUsers = true;
 
         // Get the current user list from a webservice.
         this._loadAllUsers();
 
-        // We do not allow navigation while ajax requests are pending.
         // Attach listeners to the select and arrow buttons.
 
         this._region.find('[data-action="previous-user"]').on('click', this._handlePreviousUser.bind(this));
@@ -59,7 +56,7 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
         var toggleLink = this._region.find('[data-region="user-filters"]');
         var configPanel = $(document.getElementById(toggleLink.attr('aria-controls')));
 
-        configPanel.on('change', 'select', this._filterChanged.bind(this));
+        configPanel.on('change', '[type="checkbox"]', this._filterChanged.bind(this));
 
         var userid = $('[data-region="grading-navigation-panel"]').data('first-userid');
         if (userid) {
@@ -70,6 +67,8 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
                 autocomplete.enhance('[data-action=change-user]', false, 'mod_assign/participant_selector', s);
             }
         ).fail(notification.exception);
+
+        // We do not allow navigation while ajax requests are pending.
 
         $(document).bind("start-loading-user", function() {
             this._isLoading = true;
@@ -94,44 +93,23 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
     /** @type {JQuery} JQuery node for the page region containing the user navigation. */
     GradingNavigation.prototype._region = null;
 
-    /** @type {String} Last active filters */
-    GradingNavigation.prototype._lastFilters = '';
-
     /**
      * Load the list of all users for this assignment.
      *
      * @private
      * @method _loadAllUsers
-     * @return {Boolean} True if the user list was fetched.
      */
     GradingNavigation.prototype._loadAllUsers = function() {
         var select = this._region.find('[data-action=change-user]');
         var assignmentid = select.attr('data-assignmentid');
         var groupid = select.attr('data-groupid');
 
-        var filterPanel = this._region.find('[data-region="configure-filters"]');
-        var filter = filterPanel.find('select[name="filter"]').val();
-        var workflowFilter = filterPanel.find('select[name="workflowfilter"]');
-        if (workflowFilter) {
-            filter += ',' + workflowFilter.val();
-        }
-        var markerFilter = filterPanel.find('select[name="markerfilter"]');
-        if (markerFilter) {
-            filter += ',' + markerFilter.val();
-        }
-
-        if (this._lastFilters == filter) {
-            return false;
-        }
-        this._lastFilters = filter;
-
         ajax.call([{
             methodname: 'mod_assign_list_participants',
-            args: {assignid: assignmentid, groupid: groupid, filter: '', onlyids: true, tablesort: true},
+            args: {assignid: assignmentid, groupid: groupid, filter: '', onlyids: true},
             done: this._usersLoaded.bind(this),
             fail: notification.exception
         }]);
-        return true;
     };
 
     /**
@@ -142,14 +120,13 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
      * @param {Array} users
      */
     GradingNavigation.prototype._usersLoaded = function(users) {
-        this._firstLoadUsers = false;
         this._filteredUsers = this._users = users;
         if (this._users.length) {
             // Position the configure filters panel under the link that expands it.
             var toggleLink = this._region.find('[data-region="user-filters"]');
             var configPanel = $(document.getElementById(toggleLink.attr('aria-controls')));
 
-            configPanel.find('select[name="filter"]').trigger('change');
+            configPanel.find('[type="checkbox"]').trigger('change');
         } else {
             this._selectNoUser();
         }
@@ -177,71 +154,34 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
     };
 
     /**
-     * Close the configure filters panel if a click is detected outside of it.
-     *
-     * @private
-     * @method _updateFilterPreference
-     * @param {Number} userId The current user id.
-     * @param {Array} filterList The list of current filter values.
-     * @param {Array} preferenceNames The names of the preferences to update
-     * @return {Promise} Resolved when all the preferences are updated.
-     */
-    GradingNavigation.prototype._updateFilterPreferences = function(userId, filterList, preferenceNames) {
-        var preferences = [],
-            i = 0;
-
-        if (filterList.length == 0 || this._firstLoadUsers) {
-            // Nothing to update.
-            var deferred = $.Deferred();
-            deferred.resolve();
-            return deferred;
-        }
-        // General filter.
-        // Set the user preferences to the current filters.
-        for (i = 0; i < filterList.length; i++) {
-            var newValue = filterList[i];
-            if (newValue == 'none') {
-                newValue = '';
-            }
-
-            preferences.push({
-                userid: userId,
-                name: preferenceNames[i],
-                value: newValue
-            });
-        }
-
-        return ajax.call([{
-            methodname: 'core_user_set_user_preferences',
-            args: {
-                preferences: preferences
-            }
-        }])[0];
-    };
-    /**
      * Turn a filter on or off.
      *
      * @private
      * @method _filterChanged
      * @param {Event} event
      */
-    GradingNavigation.prototype._filterChanged = function() {
-        // There are 3 types of filter right now.
-        var filterPanel = this._region.find('[data-region="configure-filters"]');
-        var filters = filterPanel.find('select');
-        var preferenceNames = [];
+    GradingNavigation.prototype._filterChanged = function(event) {
+        var name = $(event.target).attr('name');
+        var key = name.split('_').pop();
+        var enabled = $(event.target).prop('checked');
 
-        this._filters = [];
-        filters.each(function(idx, ele) {
-            var element = $(ele);
-            this._filters.push(element.val());
-            preferenceNames.push('assign_' + element.prop('name'));
-        }.bind(this));
+        if (enabled) {
+            if (this._filters.indexOf(key) == -1) {
+                this._filters[this._filters.length] = key;
+            }
+        } else {
+            var index = this._filters.indexOf(key);
+            if (index != -1) {
+                this._filters.splice(index, 1);
+            }
+        }
 
         // Update the active filter string.
         var filterlist = [];
-        filterPanel.find('option:checked').each(function(idx, ele) {
-            filterlist[filterlist.length] = $(ele).text();
+        this._region.find('[data-region="configure-filters"]').find('[type="checkbox"]').each(function(idx, ele) {
+            if ($(ele).prop('checked')) {
+                filterlist[filterlist.length] = $(ele).closest('label').text();
+            }
         });
         if (filterlist.length) {
             this._region.find('[data-region="user-filters"] span').text(filterlist.join(', '));
@@ -251,29 +191,50 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
             }.bind(this)).fail(notification.exception);
         }
 
+        // Filter the options in the select box that do not match the current filters.
+
         var select = this._region.find('[data-action=change-user]');
-        var currentUserID = select.data('currentuserid');
-        this._updateFilterPreferences(currentUserID, this._filters, preferenceNames).done(function() {
-            // Reload the list of users to apply the new filters.
-            if (!this._loadAllUsers()) {
-                var userid = parseInt(select.attr('data-selected'));
-                var foundIndex = 0;
-                // Search the returned users for the current selection.
-                $.each(this._filteredUsers, function(index, user) {
-                    if (userid == user.id) {
-                        foundIndex = index;
+        var userid = select.attr('data-selected');
+        var foundIndex = 0;
+
+        this._filteredUsers = [];
+
+        $.each(this._users, function(index, user) {
+            var show = true;
+            $.each(this._filters, function(filterindex, filter) {
+                if (filter == "submitted") {
+                    if (user.submitted == "0") {
+                        show = false;
                     }
-                });
-
-                if (this._filteredUsers.length) {
-                    this._selectUserById(this._filteredUsers[foundIndex].id);
-                } else {
-                    this._selectNoUser();
+                } else if (filter == "notsubmitted") {
+                    if (user.submitted == "1") {
+                        show = false;
+                    }
+                } else if (filter == "requiregrading") {
+                    if (user.requiregrading == "0") {
+                        show = false;
+                    }
+                } else if (filter == "grantedextension") {
+                    if (user.grantedextension == "0") {
+                        show = false;
+                    }
                 }
+            });
 
+            if (show) {
+                this._filteredUsers[this._filteredUsers.length] = user;
+                if (userid == user.id) {
+                    foundIndex = (this._filteredUsers.length - 1);
+                }
             }
-        }.bind(this)).fail(notification.exception);
-        this._refreshCount();
+        }.bind(this));
+
+        if (this._filteredUsers.length) {
+            this._selectUserById(this._filteredUsers[foundIndex].id);
+        } else {
+            this._selectNoUser();
+        }
+        this._triggerNextUserEvent();
     };
 
     /**
@@ -436,28 +397,6 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
     };
 
     /**
-     * Set count string. This method only sets the value for the last time it was ever called to deal
-     * with promises that return in a non-predictable order.
-     *
-     * @private
-     * @method _setCountString
-     * @param {Number} x
-     * @param {Number} y
-     */
-    GradingNavigation.prototype._setCountString = function(x, y) {
-        var updateNumber = 0;
-        this._lastXofYUpdate++;
-        updateNumber = this._lastXofYUpdate;
-
-        var param = {x: x, y: y};
-        str.get_string('xofy', 'mod_assign', param).done(function(s) {
-            if (updateNumber == this._lastXofYUpdate) {
-                this._region.find('[data-region="user-count-summary"]').text(s);
-            }
-        }.bind(this)).fail(notification.exception);
-    };
-
-    /**
      * Rebuild the x of y string.
      *
      * @private
@@ -484,19 +423,11 @@ define(['jquery', 'core/notification', 'core/str', 'core/form-autocomplete',
             if (count) {
                 currentIndex += 1;
             }
-            this._setCountString(currentIndex, count);
-            // Update window URL
-            if (currentIndex > 0) {
-                var url = new URL(window.location);
-                if (parseInt(url.searchParams.get('blindid')) > 0) {
-                    var newid = this._filteredUsers[currentIndex - 1].recordid;
-                    url.searchParams.set('blindid', newid);
-                } else {
-                    url.searchParams.set('userid', userid);
-                }
-                // We do this so a browser refresh will return to the same user.
-                window.history.replaceState({}, "", url);
-            }
+            var param = {x: currentIndex, y: count};
+
+            str.get_string('xofy', 'mod_assign', param).done(function(s) {
+                this._region.find('[data-region="user-count-summary"]').text(s);
+            }.bind(this)).fail(notification.exception);
         }
     };
 

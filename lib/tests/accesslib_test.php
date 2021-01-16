@@ -196,6 +196,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         // Prevent the capability for this user role.
         assign_capability($capability, CAP_PROHIBIT, $role->id, $coursecontext);
+        $coursecontext->mark_dirty();
         $this->assertFalse(has_capability($capability, $coursecontext, $user->id));
 
         // Again, we seed the cache first by checking initial enrolment,
@@ -340,9 +341,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         $user = $this->getDataGenerator()->create_user();
         $course = $this->getDataGenerator()->create_course();
-        $contactroles = preg_split('/,/', $CFG->coursecontact);
-        $roleid = reset($contactroles);
-        role_assign($roleid, $user->id, context_course::instance($course->id));
+        role_assign($CFG->coursecontact, $user->id, context_course::instance($course->id));
         $this->assertTrue(has_coursecontact_role($user->id));
     }
 
@@ -368,7 +367,7 @@ class core_accesslib_testcase extends advanced_testcase {
      * Test adding of capabilities to roles.
      */
     public function test_assign_capability() {
-        global $DB, $USER;
+        global $DB;
 
         $this->resetAfterTest();
 
@@ -408,40 +407,34 @@ class core_accesslib_testcase extends advanced_testcase {
         $permission = $DB->get_record('role_capabilities', array('contextid'=>$frontcontext->id, 'roleid'=>$student->id, 'capability'=>'moodle/backup:backupcourse'));
         $this->assertEmpty($permission);
 
-        // Test event triggered.
-        $sink = $this->redirectEvents();
-        $capability = 'moodle/backup:backupcourse';
-        assign_capability($capability, CAP_ALLOW, $student->id, $syscontext);
-        $events = $sink->get_events();
-        $sink->close();
-        $this->assertCount(1, $events);
-        $event = $events[0];
-        $this->assertInstanceOf('\core\event\capability_assigned', $event);
-        $this->assertSame('role_capabilities', $event->objecttable);
-        $this->assertEquals($student->id, $event->objectid);
-        $this->assertEquals($syscontext->id, $event->contextid);
-        $other = ['capability' => $capability, 'oldpermission' => CAP_INHERIT, 'permission' => CAP_ALLOW];
-        $this->assertEquals($other, $event->other);
-        $description = "The user id '$USER->id' assigned the '$capability' capability for " .
-            "role '$student->id' with 'Allow' permission";
-        $this->assertEquals($description, $event->get_description());
+        // Test event trigger.
+        $rolecapabilityevent = \core\event\role_capabilities_updated::create(array('context' => $syscontext,
+                                                                                  'objectid' => $student->id,
+                                                                                  'other' => array('name' => $student->shortname)
+                                                                                 ));
+        $expectedlegacylog = array(SITEID, 'role', 'view', 'admin/roles/define.php?action=view&roleid=' . $student->id,
+                            $student->shortname, '', $user->id);
+        $rolecapabilityevent->set_legacy_logdata($expectedlegacylog);
+        $rolecapabilityevent->add_record_snapshot('role', $student);
 
-        // Test if the event has different description when updating the capability permission.
         $sink = $this->redirectEvents();
-        assign_capability($capability, CAP_PROHIBIT, $student->id, $syscontext, true);
+        $rolecapabilityevent->trigger();
         $events = $sink->get_events();
         $sink->close();
-        $event = $events[0];
-        $description = "The user id '$USER->id' changed the '$capability' capability permission for " .
-            "role '$student->id' from 'Allow' to 'Prohibit'";
-        $this->assertEquals($description, $event->get_description());
+        $event = array_pop($events);
+
+        $this->assertInstanceOf('\core\event\role_capabilities_updated', $event);
+        $expectedurl = new moodle_url('/admin/roles/define.php', array('action' => 'view', 'roleid' => $student->id));
+        $this->assertEquals($expectedurl, $event->get_url());
+        $this->assertEventLegacyLogData($expectedlegacylog, $event);
+        $this->assertEventContextNotUsed($event);
     }
 
     /**
      * Test removing of capabilities from roles.
      */
     public function test_unassign_capability() {
-        global $DB, $USER;
+        global $DB;
 
         $this->resetAfterTest();
 
@@ -469,22 +462,6 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertTrue($result);
         $this->assertFalse($DB->record_exists('role_capabilities', array('contextid'=>$syscontext->id, 'roleid'=>$manager->id, 'capability'=>'moodle/backup:backupcourse')));
         $this->assertFalse($DB->record_exists('role_capabilities', array('contextid'=>$frontcontext->id, 'roleid'=>$manager->id, 'capability'=>'moodle/backup:backupcourse')));
-
-        // Test event triggered.
-        $sink = $this->redirectEvents();
-        $capability = 'moodle/backup:backupcourse';
-        unassign_capability($capability, CAP_ALLOW, $manager->id);
-        $events = $sink->get_events();
-        $sink->close();
-        $this->assertCount(1, $events);
-        $event = $events[0];
-        $this->assertInstanceOf('\core\event\capability_unassigned', $event);
-        $this->assertSame('role_capabilities', $event->objecttable);
-        $this->assertEquals($manager->id, $event->objectid);
-        $this->assertEquals($syscontext->id, $event->contextid);
-        $this->assertEquals($capability, $event->other['capability']);
-        $description = "The user id id '$USER->id' has unassigned the '$capability' capability for role '$manager->id'";
-        $this->assertEquals($description, $event->get_description());
     }
 
     /**
@@ -751,13 +728,8 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         $allroles = get_all_roles();
-        $this->assertIsArray($allroles);
-        $initialrolescount = count($allroles);
-        $this->assertTrue($initialrolescount >= 8); // There are 8 roles is standard install.
-        $rolenames = array_column($allroles, 'shortname');
-        foreach (get_role_archetypes() as $archetype) {
-            $this->assertContains($archetype, $rolenames);
-        }
+        $this->assertInternalType('array', $allroles);
+        $this->assertCount(8, $allroles); // There are 8 roles is standard install.
 
         $role = reset($allroles);
         $role = (array)$role;
@@ -779,8 +751,8 @@ class core_accesslib_testcase extends advanced_testcase {
         $renames = $DB->get_records_menu('role_names', array('contextid'=>$coursecontext->id), '', 'roleid, name');
 
         $allroles = get_all_roles($coursecontext);
-        $this->assertIsArray($allroles);
-        $this->assertCount($initialrolescount + 1, $allroles);
+        $this->assertInternalType('array', $allroles);
+        $this->assertCount(9, $allroles);
         $role = reset($allroles);
         $role = (array)$role;
 
@@ -813,18 +785,18 @@ class core_accesslib_testcase extends advanced_testcase {
     public function test_get_archetype_roles() {
         $this->resetAfterTest();
 
-        // New install should have at least 1 role for each archetype.
+        // New install should have 1 role for each archetype.
         $archetypes = get_role_archetypes();
         foreach ($archetypes as $archetype) {
             $roles = get_archetype_roles($archetype);
-            $this->assertGreaterThanOrEqual(1, count($roles));
+            $this->assertCount(1, $roles);
             $role = reset($roles);
             $this->assertSame($archetype, $role->archetype);
         }
 
         create_role('New student role', 'student2', 'New student description', 'student');
         $roles = get_archetype_roles('student');
-        $this->assertGreaterThanOrEqual(2, count($roles));
+        $this->assertCount(2, $roles);
     }
 
     /**
@@ -847,11 +819,8 @@ class core_accesslib_testcase extends advanced_testcase {
         $renames = $DB->get_records_menu('role_names', array('contextid'=>$coursecontext->id), '', 'roleid, name');
 
         foreach ($allroles as $role) {
-            if (in_array($role->shortname, get_role_archetypes())) {
-                // Standard roles do not have a set name.
-                $this->assertSame('', $role->name);
-            }
             // Get localised name from lang pack.
+            $this->assertSame('', $role->name);
             $name = role_get_name($role, null, ROLENAME_ORIGINAL);
             $this->assertNotEmpty($name);
             $this->assertNotEquals($role->shortname, $name);
@@ -949,9 +918,6 @@ class core_accesslib_testcase extends advanced_testcase {
 
             $result = get_default_role_archetype_allows('switch', $archetype);
             $this->assertInternalType('array', $result);
-
-            $result = get_default_role_archetype_allows('view', $archetype);
-            $this->assertInternalType('array', $result);
         }
 
         $result = get_default_role_archetype_allows('assign', '');
@@ -961,9 +927,6 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertSame(array(), $result);
 
         $result = get_default_role_archetype_allows('switch', '');
-        $this->assertSame(array(), $result);
-
-        $result = get_default_role_archetype_allows('view', '');
         $this->assertSame(array(), $result);
 
         $result = get_default_role_archetype_allows('assign', 'wrongarchetype');
@@ -977,16 +940,12 @@ class core_accesslib_testcase extends advanced_testcase {
         $result = get_default_role_archetype_allows('switch', 'wrongarchetype');
         $this->assertSame(array(), $result);
         $this->assertDebuggingCalled();
-
-        $result = get_default_role_archetype_allows('view', 'wrongarchetype');
-        $this->assertSame(array(), $result);
-        $this->assertDebuggingCalled();
     }
 
     /**
      * Test allowing of role assignments.
      */
-    public function test_core_role_set_assign_allowed() {
+    public function test_allow_assign() {
         global $DB, $CFG;
 
         $this->resetAfterTest();
@@ -995,15 +954,11 @@ class core_accesslib_testcase extends advanced_testcase {
         $student = $DB->get_record('role', array('shortname'=>'student'), '*', MUST_EXIST);
 
         $this->assertFalse($DB->record_exists('role_allow_assign', array('roleid'=>$otherid, 'allowassign'=>$student->id)));
-        core_role_set_assign_allowed($otherid, $student->id);
+        allow_assign($otherid, $student->id);
         $this->assertTrue($DB->record_exists('role_allow_assign', array('roleid'=>$otherid, 'allowassign'=>$student->id)));
 
         // Test event trigger.
-        $allowroleassignevent = \core\event\role_allow_assign_updated::create([
-            'context' => context_system::instance(),
-            'objectid' => $otherid,
-            'other' => ['targetroleid' => $student->id]
-        ]);
+        $allowroleassignevent = \core\event\role_allow_assign_updated::create(array('context' => context_system::instance()));
         $sink = $this->redirectEvents();
         $allowroleassignevent->trigger();
         $events = $sink->get_events();
@@ -1019,7 +974,7 @@ class core_accesslib_testcase extends advanced_testcase {
     /**
      * Test allowing of role overrides.
      */
-    public function test_core_role_set_override_allowed() {
+    public function test_allow_override() {
         global $DB, $CFG;
 
         $this->resetAfterTest();
@@ -1028,15 +983,11 @@ class core_accesslib_testcase extends advanced_testcase {
         $student = $DB->get_record('role', array('shortname'=>'student'), '*', MUST_EXIST);
 
         $this->assertFalse($DB->record_exists('role_allow_override', array('roleid'=>$otherid, 'allowoverride'=>$student->id)));
-        core_role_set_override_allowed($otherid, $student->id);
+        allow_override($otherid, $student->id);
         $this->assertTrue($DB->record_exists('role_allow_override', array('roleid'=>$otherid, 'allowoverride'=>$student->id)));
 
         // Test event trigger.
-        $allowroleassignevent = \core\event\role_allow_override_updated::create([
-            'context' => context_system::instance(),
-            'objectid' => $otherid,
-            'other' => ['targetroleid' => $student->id]
-        ]);
+        $allowroleassignevent = \core\event\role_allow_override_updated::create(array('context' => context_system::instance()));
         $sink = $this->redirectEvents();
         $allowroleassignevent->trigger();
         $events = $sink->get_events();
@@ -1052,7 +1003,7 @@ class core_accesslib_testcase extends advanced_testcase {
     /**
      * Test allowing of role switching.
      */
-    public function test_core_role_set_switch_allowed() {
+    public function test_allow_switch() {
         global $DB, $CFG;
 
         $this->resetAfterTest();
@@ -1061,15 +1012,11 @@ class core_accesslib_testcase extends advanced_testcase {
         $student = $DB->get_record('role', array('shortname'=>'student'), '*', MUST_EXIST);
 
         $this->assertFalse($DB->record_exists('role_allow_switch', array('roleid'=>$otherid, 'allowswitch'=>$student->id)));
-        core_role_set_switch_allowed($otherid, $student->id);
+        allow_switch($otherid, $student->id);
         $this->assertTrue($DB->record_exists('role_allow_switch', array('roleid'=>$otherid, 'allowswitch'=>$student->id)));
 
         // Test event trigger.
-        $allowroleassignevent = \core\event\role_allow_switch_updated::create([
-            'context' => context_system::instance(),
-            'objectid' => $otherid,
-            'other' => ['targetroleid' => $student->id]
-        ]);
+        $allowroleassignevent = \core\event\role_allow_switch_updated::create(array('context' => context_system::instance()));
         $sink = $this->redirectEvents();
         $allowroleassignevent->trigger();
         $events = $sink->get_events();
@@ -1077,39 +1024,6 @@ class core_accesslib_testcase extends advanced_testcase {
         $event = array_pop($events);
         $this->assertInstanceOf('\core\event\role_allow_switch_updated', $event);
         $mode = 'switch';
-        $baseurl = new moodle_url('/admin/roles/allow.php', array('mode' => $mode));
-        $expectedlegacylog = array(SITEID, 'role', 'edit allow ' . $mode, str_replace($CFG->wwwroot . '/', '', $baseurl));
-        $this->assertEventLegacyLogData($expectedlegacylog, $event);
-    }
-
-    /**
-     * Test allowing of role switching.
-     */
-    public function test_core_role_set_view_allowed() {
-        global $DB, $CFG;
-
-        $this->resetAfterTest();
-
-        $otherid = create_role('Other role', 'other', 'Some other role', '');
-        $student = $DB->get_record('role', array('shortname' => 'student'), '*', MUST_EXIST);
-
-        $this->assertFalse($DB->record_exists('role_allow_view', array('roleid' => $otherid, 'allowview' => $student->id)));
-        core_role_set_view_allowed($otherid, $student->id);
-        $this->assertTrue($DB->record_exists('role_allow_view', array('roleid' => $otherid, 'allowview' => $student->id)));
-
-        // Test event trigger.
-        $allowroleassignevent = \core\event\role_allow_view_updated::create([
-            'context' => context_system::instance(),
-            'objectid' => $otherid,
-            'other' => ['targetroleid' => $student->id]
-        ]);
-        $sink = $this->redirectEvents();
-        $allowroleassignevent->trigger();
-        $events = $sink->get_events();
-        $sink->close();
-        $event = array_pop($events);
-        $this->assertInstanceOf('\core\event\role_allow_view_updated', $event);
-        $mode = 'view';
         $baseurl = new moodle_url('/admin/roles/allow.php', array('mode' => $mode));
         $expectedlegacylog = array(SITEID, 'role', 'edit allow ' . $mode, str_replace($CFG->wwwroot . '/', '', $baseurl));
         $this->assertEventLegacyLogData($expectedlegacylog, $event);
@@ -1220,39 +1134,6 @@ class core_accesslib_testcase extends advanced_testcase {
                 $this->assertSame("$name ($rolecounts[$roleid])", $nameswithcounts[$roleid]);
             }
         }
-    }
-
-    /**
-     * Test user count of assignable roles in context where users are assigned the role via different components.
-     */
-    public function test_get_assignable_roles_distinct_usercount() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-
-        $this->setAdminUser();
-
-        $course = $this->getDataGenerator()->create_course();
-        $context = \context_course::instance($course->id);
-
-        $user1 = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-
-        $studentrole = $DB->get_record('role', ['shortname' => 'student']);
-
-        // Assign each user the student role in course.
-        role_assign($studentrole->id, $user1->id, $context->id);
-        role_assign($studentrole->id, $user2->id, $context->id);
-
-        list($rolenames, $rolecounts, $nameswithcounts) = get_assignable_roles($context, ROLENAME_SHORT, true);
-        $this->assertEquals(2, $rolecounts[$studentrole->id]);
-
-        // Assign first user the student role in course again (this time via 'enrol_self' component).
-        role_assign($studentrole->id, $user1->id, $context->id, 'enrol_self', 1);
-
-        // There are still only two distinct users.
-        list($rolenames, $rolecounts, $nameswithcounts) = get_assignable_roles($context, ROLENAME_SHORT, true);
-        $this->assertEquals(2, $rolecounts[$studentrole->id]);
     }
 
     /**
@@ -1407,74 +1288,6 @@ class core_accesslib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test getting of all overridable roles.
-     */
-    public function test_get_viewable_roles_course() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-        role_assign($teacherrole->id, $teacher->id, $coursecontext);
-
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'), '*', MUST_EXIST);
-        $studentrolerename = (object) array('roleid' => $studentrole->id, 'name' => 'Učitel', 'contextid' => $coursecontext->id);
-        $DB->insert_record('role_names', $studentrolerename);
-
-        // By default teacher can see student.
-        $this->setUser($teacher);
-        $viewableroles = get_viewable_roles($coursecontext);
-        $this->assertContains($studentrolerename->name, array_values($viewableroles));
-        // Remove view permission.
-        $DB->delete_records('role_allow_view', array('roleid' => $teacherrole->id, 'allowview' => $studentrole->id));
-        $viewableroles = get_viewable_roles($coursecontext);
-        // Teacher can no longer see student role.
-        $this->assertNotContains($studentrolerename->name, array_values($viewableroles));
-        // Allow again teacher to view student.
-        core_role_set_view_allowed($teacherrole->id, $studentrole->id);
-        // Teacher can now see student role.
-        $viewableroles = get_viewable_roles($coursecontext);
-        $this->assertContains($studentrolerename->name, array_values($viewableroles));
-    }
-
-    /**
-     * Test getting of all overridable roles.
-     */
-    public function test_get_viewable_roles_system() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $context = context_system::instance();
-
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-        role_assign($teacherrole->id, $teacher->id, $context);
-
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'), '*', MUST_EXIST);
-        $studentrolename = role_get_name($studentrole, $context);
-
-        // By default teacher can see student.
-        $this->setUser($teacher);
-        $viewableroles = get_viewable_roles($context);
-        $this->assertContains($studentrolename, array_values($viewableroles));
-        // Remove view permission.
-        $DB->delete_records('role_allow_view', array('roleid' => $teacherrole->id, 'allowview' => $studentrole->id));
-        $viewableroles = get_viewable_roles($context);
-        // Teacher can no longer see student role.
-        $this->assertNotContains($studentrolename, array_values($viewableroles));
-        // Allow again teacher to view student.
-        core_role_set_view_allowed($teacherrole->id, $studentrole->id);
-        // Teacher can now see student role.
-        $viewableroles = get_viewable_roles($context);
-        $this->assertContains($studentrolename, array_values($viewableroles));
-    }
-
-    /**
      * Test we have context level defaults.
      */
     public function test_get_default_contextlevels() {
@@ -1548,8 +1361,14 @@ class core_accesslib_testcase extends advanced_testcase {
         $allroles = get_all_roles();
         $expected = array($id2=>$allroles[$id2]);
 
-        foreach (get_roles_for_contextlevels(CONTEXT_COURSE) as $roleid) {
-            $expected[$roleid] = $roleid;
+        foreach (get_role_archetypes() as $archetype) {
+            $defaults = get_default_contextlevels($archetype);
+            if (in_array(CONTEXT_COURSE, $defaults)) {
+                $roles = get_archetype_roles($archetype);
+                foreach ($roles as $role) {
+                    $expected[$role->id] = $role;
+                }
+            }
         }
 
         $roles = get_default_enrol_roles($coursecontext);
@@ -1734,8 +1553,6 @@ class core_accesslib_testcase extends advanced_testcase {
         $user4 = $this->getDataGenerator()->create_user();
         role_assign($managerrole->id, $user4->id, $coursecontext->id);
 
-        $this->setAdminUser();
-
         $roles = get_user_roles_in_course($user1->id, $course->id);
         $this->assertEquals(1, preg_match_all('/,/', $roles, $matches));
         $this->assertTrue(strpos($roles, role_get_name($teacherrole, $coursecontext)) !== false);
@@ -1877,169 +1694,6 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertFalse(has_capability('moodle/site:approvecourse', $coursecontext, 0));
         $this->assertFalse(has_any_capability($sca, $coursecontext, 0));
         $this->assertFalse(has_all_capabilities($sca, $coursecontext, 0));
-    }
-
-    /**
-     * Test that assigning a fake cap does not return.
-     */
-    public function test_fake_capability() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-
-        $fakecapname = 'moodle/fake:capability';
-
-        role_assign($teacherrole->id, $teacher->id, $coursecontext);
-        $admin = $DB->get_record('user', array('username' => 'admin'));
-
-        // Test a capability which does not exist.
-        // Note: Do not use assign_capability because it will not allow fake caps.
-        $DB->insert_record('role_capabilities', (object) [
-            'contextid' => $coursecontext->id,
-            'roleid' => $teacherrole->id,
-            'capability' => $fakecapname,
-            'permission' => CAP_ALLOW,
-            'timemodified' => time(),
-            'modifierid' => 0,
-        ]);
-
-        // Check `has_capability`.
-        $this->assertFalse(has_capability($fakecapname, $coursecontext, $teacher));
-        $this->assertDebuggingCalled("Capability \"{$fakecapname}\" was not found! This has to be fixed in code.");
-        $this->assertFalse(has_capability($fakecapname, $coursecontext, $admin));
-        $this->assertDebuggingCalled("Capability \"{$fakecapname}\" was not found! This has to be fixed in code.");
-
-        // Check `get_with_capability_sql` (with uses `get_with_capability_join`).
-        list($sql, $params) = get_with_capability_sql($coursecontext, $fakecapname);
-        $users = $DB->get_records_sql($sql, $params);
-
-        $this->assertFalse(array_key_exists($teacher->id, $users));
-        $this->assertFalse(array_key_exists($admin->id, $users));
-
-        // Check `get_users_by_capability`.
-        $users = get_users_by_capability($coursecontext, $fakecapname);
-
-        $this->assertFalse(array_key_exists($teacher->id, $users));
-        $this->assertFalse(array_key_exists($admin->id, $users));
-    }
-
-    /**
-     * Test that assigning a fake cap does not return.
-     */
-    public function test_fake_capability_assign() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-
-        $capability = 'moodle/fake:capability';
-
-        role_assign($teacherrole->id, $teacher->id, $coursecontext);
-        $admin = $DB->get_record('user', array('username' => 'admin'));
-
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage("Capability '{$capability}' was not found! This has to be fixed in code.");
-        assign_capability($capability, CAP_ALLOW, $teacherrole->id, $coursecontext);
-    }
-
-    /**
-     * Test that assigning a fake cap does not return.
-     */
-    public function test_fake_capability_unassign() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-
-        $capability = 'moodle/fake:capability';
-
-        role_assign($teacherrole->id, $teacher->id, $coursecontext);
-        $admin = $DB->get_record('user', array('username' => 'admin'));
-
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage("Capability '{$capability}' was not found! This has to be fixed in code.");
-        unassign_capability($capability, CAP_ALLOW, $teacherrole->id, $coursecontext);
-    }
-
-    /**
-     * Test that the caching in get_role_definitions() and get_role_definitions_uncached()
-     * works as intended.
-     */
-    public function test_role_definition_caching() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        // Get some role ids.
-        $authenticatedrole = $DB->get_record('role', array('shortname' => 'user'), '*', MUST_EXIST);
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'), '*', MUST_EXIST);
-        $emptyroleid = create_role('No capabilities', 'empty', 'A role with no capabilties');
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-
-        // Instantiate the cache instance, since that does DB queries (get_config)
-        // and we don't care about those.
-        cache::make('core', 'roledefs');
-
-        // One database query is not necessarily one database read, it seems. Find out how many.
-        $startdbreads = $DB->perf_get_reads();
-        $rs = $DB->get_recordset('user');
-        $rs->close();
-        $readsperquery = $DB->perf_get_reads() - $startdbreads;
-
-        // Now load some role definitions, and check when it queries the database.
-
-        // Load the capabilities for two roles. Should be one query.
-        $startdbreads = $DB->perf_get_reads();
-        get_role_definitions([$authenticatedrole->id, $studentrole->id]);
-        $this->assertEquals(1 * $readsperquery, $DB->perf_get_reads() - $startdbreads);
-
-        // Load the capabilities for same two roles. Should not query the DB.
-        $startdbreads = $DB->perf_get_reads();
-        get_role_definitions([$authenticatedrole->id, $studentrole->id]);
-        $this->assertEquals(0 * $readsperquery, $DB->perf_get_reads() - $startdbreads);
-
-        // Include a third role. Should do one DB query.
-        $startdbreads = $DB->perf_get_reads();
-        get_role_definitions([$authenticatedrole->id, $studentrole->id, $emptyroleid]);
-        $this->assertEquals(1 * $readsperquery, $DB->perf_get_reads() - $startdbreads);
-
-        // Repeat call. No DB queries.
-        $startdbreads = $DB->perf_get_reads();
-        get_role_definitions([$authenticatedrole->id, $studentrole->id, $emptyroleid]);
-        $this->assertEquals(0 * $readsperquery, $DB->perf_get_reads() - $startdbreads);
-
-        // Alter a role.
-        role_change_permission($studentrole->id, $coursecontext, 'moodle/course:tag', CAP_ALLOW);
-
-        // Should now know to do one query.
-        $startdbreads = $DB->perf_get_reads();
-        get_role_definitions([$authenticatedrole->id, $studentrole->id]);
-        $this->assertEquals(1 * $readsperquery, $DB->perf_get_reads() - $startdbreads);
-
-        // Now clear the in-memory cache, and verify that it does not query the DB.
-        // Cannot use accesslib_clear_all_caches_for_unit_testing since that also
-        // clears the MUC cache.
-        global $ACCESSLIB_PRIVATE;
-        $ACCESSLIB_PRIVATE->cacheroledefs = array();
-
-        // Get all roles. Should not need the DB.
-        $startdbreads = $DB->perf_get_reads();
-        get_role_definitions([$authenticatedrole->id, $studentrole->id, $emptyroleid]);
-        $this->assertEquals(0 * $readsperquery, $DB->perf_get_reads() - $startdbreads);
     }
 
     /**
@@ -2504,40 +2158,6 @@ class core_accesslib_testcase extends advanced_testcase {
 
     }
 
-    /**
-     * Test that enrolled users SQL does not return any values for users
-     * without a group when $context is not a valid course context.
-     */
-    public function test_get_enrolled_sql_userswithoutgroup() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $systemcontext = context_system::instance();
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $user1 = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-
-        $this->getDataGenerator()->enrol_user($user1->id, $course->id);
-        $this->getDataGenerator()->enrol_user($user2->id, $course->id);
-
-        $group = $this->getDataGenerator()->create_group(array('courseid' => $course->id));
-        groups_add_member($group, $user1);
-
-        $enrolled   = get_enrolled_users($coursecontext);
-        $this->assertCount(2, $enrolled);
-
-        // Get users without any group on the course context.
-        $enrolledwithoutgroup = get_enrolled_users($coursecontext, '', USERSWITHOUTGROUP);
-        $this->assertCount(1, $enrolledwithoutgroup);
-        $this->assertFalse(isset($enrolledwithoutgroup[$user1->id]));
-
-        // Get users without any group on the system context (it should throw an exception).
-        $this->expectException('coding_exception');
-        get_enrolled_users($systemcontext, '', USERSWITHOUTGROUP);
-    }
-
     public function get_enrolled_sql_provider() {
         return array(
             array(
@@ -2728,7 +2348,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $testcourses = array();
         $testpages = array();
         $testblocks = array();
-        $allroles = $DB->get_records_menu('role', array(), 'id', 'shortname, id');
+        $allroles = $DB->get_records_menu('role', array(), 'id', 'archetype, id');
 
         $systemcontext = context_system::instance();
         $frontpagecontext = context_course::instance(SITEID);
@@ -2749,6 +2369,8 @@ class core_accesslib_testcase extends advanced_testcase {
             $bi = $generator->create_block('online_users', array('parentcontextid'=>$usercontext->id));
             $testblocks[] = $bi->id;
         }
+        // Deleted user - should be ignored everywhere, can not have context.
+        $generator->create_user(array('deleted'=>1));
 
         // Add block to frontpage.
         $bi = $generator->create_block('online_users', array('parentcontextid'=>$frontpagecontext->id));
@@ -2935,17 +2557,12 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals(array($systemcontext->id=>$systemcontext), $systemcontext->get_parent_contexts(true));
         $this->assertEquals(array(), $systemcontext->get_parent_context_ids());
         $this->assertEquals(array($systemcontext->id), $systemcontext->get_parent_context_ids(true));
-        $this->assertEquals(array(), $systemcontext->get_parent_context_paths());
-        $this->assertEquals(array($systemcontext->id => $systemcontext->path), $systemcontext->get_parent_context_paths(true));
 
         $this->assertEquals($systemcontext, $frontpagecontext->get_parent_context());
         $this->assertEquals(array($systemcontext->id=>$systemcontext), $frontpagecontext->get_parent_contexts());
         $this->assertEquals(array($frontpagecontext->id=>$frontpagecontext, $systemcontext->id=>$systemcontext), $frontpagecontext->get_parent_contexts(true));
         $this->assertEquals(array($systemcontext->id), $frontpagecontext->get_parent_context_ids());
         $this->assertEquals(array($frontpagecontext->id, $systemcontext->id), $frontpagecontext->get_parent_context_ids(true));
-        $this->assertEquals(array($systemcontext->id => $systemcontext->path), $frontpagecontext->get_parent_context_paths());
-        $expected = array($systemcontext->id => $systemcontext->path, $frontpagecontext->id => $frontpagecontext->path);
-        $this->assertEquals($expected, $frontpagecontext->get_parent_context_paths(true));
 
         $this->assertFalse($systemcontext->get_parent_context());
         $frontpagecontext = context_course::instance($SITE->id);
@@ -3130,7 +2747,7 @@ class core_accesslib_testcase extends advanced_testcase {
         assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $CFG->defaultfrontpageroleid, $frontpagepagecontext, true);
         assign_capability('mod/page:view', CAP_PREVENT, $allroles['guest'], $frontpagepagecontext, true);
         assign_capability('mod/page:view', CAP_ALLOW, $allroles['user'], $frontpagepagecontext, true);
-        assign_capability('mod/page:view', CAP_ALLOW, $allroles['student'], $frontpagepagecontext, true);
+        assign_capability('moodle/page:view', CAP_ALLOW, $allroles['student'], $frontpagepagecontext, true);
 
         assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $CFG->defaultuserroleid, $frontpagecontext, true);
         assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $CFG->defaultfrontpageroleid, $frontpagecontext, true);
@@ -3418,7 +3035,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $context = context_course::instance($course->id);
         $this->assertEquals($categorycontext, $context->get_parent_context());
         $dirty = get_cache_flags('accesslib/dirtycontexts', time()-2);
-        $this->assertFalse(isset($dirty[$oldpath]));
+        $this->assertTrue(isset($dirty[$oldpath]));
         $this->assertTrue(isset($dirty[$context->path]));
 
 
@@ -3444,7 +3061,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $DB->delete_records('cache_flags', array());
         $context->delete(); // Should delete also linked blocks.
         $dirty = get_cache_flags('accesslib/dirtycontexts', time()-2);
-        $this->assertFalse(isset($dirty[$context->path]));
+        $this->assertTrue(isset($dirty[$context->path]));
         $this->assertFalse($DB->record_exists('context', array('id'=>$context->id)));
         $this->assertFalse($DB->record_exists('context', array('id'=>$bicontext->id)));
         $this->assertFalse($DB->record_exists('context', array('contextlevel'=>CONTEXT_MODULE, 'instanceid'=>$testpages[4])));
@@ -3464,7 +3081,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $DB->delete_records('cache_flags', array());
         context_helper::delete_instance(CONTEXT_COURSE, $lastcourse);
         $dirty = get_cache_flags('accesslib/dirtycontexts', time()-2);
-        $this->assertFalse(isset($dirty[$coursecontext->path]));
+        $this->assertTrue(isset($dirty[$coursecontext->path]));
         $this->assertEquals(0, context_inspection::test_context_cache_size());
         $this->assertFalse($DB->record_exists('context', array('contextlevel'=>CONTEXT_COURSE, 'instanceid'=>$lastcourse)));
         context_course::instance($lastcourse);
@@ -3558,88 +3175,6 @@ class core_accesslib_testcase extends advanced_testcase {
     }
 
     /**
-     * Helper that verifies a list of capabilities, as returned by
-     * $context->get_capabilities() contains certain capabilities.
-     *
-     * @param array $expected a list of capability names
-     * @param array $actual a list of capability info from $context->get_capabilities().
-     */
-    protected function assert_capability_list_contains($expected, $actual) {
-        $actualnames = [];
-        foreach ($actual as $cap) {
-            $actualnames[$cap->name] = $cap->name;
-        }
-        $this->assertArraySubset(array_combine($expected, $expected), $actualnames);
-    }
-
-    /**
-     * Test that context_system::get_capabilities returns capabilities relevant to all modules.
-     */
-    public function test_context_module_caps_returned_by_get_capabilities_in_sys_context() {
-        $actual = context_system::instance()->get_capabilities();
-
-        // Just test a few representative capabilities.
-        $expectedcapabilities = ['moodle/site:accessallgroups', 'moodle/site:viewfullnames',
-                'repository/upload:view', 'atto/recordrtc:recordaudio'];
-
-        $this->assert_capability_list_contains($expectedcapabilities, $actual);
-    }
-
-    /**
-     * Test that context_coursecat::get_capabilities returns capabilities relevant to all modules.
-     */
-    public function test_context_module_caps_returned_by_get_capabilities_in_course_cat_context() {
-        $this->resetAfterTest(true);
-        $generator = $this->getDataGenerator();
-        $cat = $generator->create_category();
-
-        $actual = context_coursecat::instance($cat->id)->get_capabilities();
-
-        // Just test a few representative capabilities.
-        $expectedcapabilities = ['moodle/site:accessallgroups', 'moodle/site:viewfullnames',
-                'repository/upload:view', 'atto/recordrtc:recordaudio'];
-
-        $this->assert_capability_list_contains($expectedcapabilities, $actual);
-    }
-
-    /**
-     * Test that context_course::get_capabilities returns capabilities relevant to all modules.
-     */
-    public function test_context_module_caps_returned_by_get_capabilities_in_course_context() {
-        $this->resetAfterTest(true);
-        $generator = $this->getDataGenerator();
-        $cat = $generator->create_category();
-        $course = $generator->create_course(['category' => $cat->id]);
-
-        $actual = context_course::instance($course->id)->get_capabilities();
-
-        // Just test a few representative capabilities.
-        $expectedcapabilities = ['moodle/site:accessallgroups', 'moodle/site:viewfullnames',
-                'repository/upload:view', 'atto/recordrtc:recordaudio'];
-
-        $this->assert_capability_list_contains($expectedcapabilities, $actual);
-    }
-
-    /**
-     * Test that context_module::get_capabilities returns capabilities relevant to all modules.
-     */
-    public function test_context_module_caps_returned_by_get_capabilities_mod_context() {
-        $this->resetAfterTest(true);
-        $generator = $this->getDataGenerator();
-        $cat = $generator->create_category();
-        $course = $generator->create_course(['category' => $cat->id]);
-        $page = $generator->create_module('page', ['course' => $course->id]);
-
-        $actual = context_module::instance($page->cmid)->get_capabilities();
-
-        // Just test a few representative capabilities.
-        $expectedcapabilities = ['moodle/site:accessallgroups', 'moodle/site:viewfullnames',
-                'repository/upload:view', 'atto/recordrtc:recordaudio'];
-
-        $this->assert_capability_list_contains($expectedcapabilities, $actual);
-    }
-
-    /**
      * Test updating of role capabilities during upgrade
      */
     public function test_update_capabilities() {
@@ -3648,8 +3183,8 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
 
         $froncontext = context_course::instance($SITE->id);
-        $student = $DB->get_record('role', array('shortname'=>'student'));
-        $teacher = $DB->get_record('role', array('shortname'=>'teacher'));
+        $student = $DB->get_record('role', array('archetype'=>'student'));
+        $teacher = $DB->get_record('role', array('archetype'=>'teacher'));
 
         $existingcaps = $DB->get_records('capabilities', array(), 'id', 'name, captype, contextlevel, component, riskbitmask');
 
@@ -3798,56 +3333,9 @@ class core_accesslib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test fetching users by capability.
+     * Test updating of role capabilities during upgrade
+     * @return void
      */
-    public function test_get_users_by_capability() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'), '*', MUST_EXIST);
-        $student = $this->getDataGenerator()->create_user();
-        $guest = $DB->get_record('user', array('username' => 'guest'));
-
-        role_assign($teacherrole->id, $teacher->id, $coursecontext);
-        role_assign($studentrole->id, $student->id, $coursecontext);
-        $admin = $DB->get_record('user', array('username' => 'admin'));
-
-        // Note: Here are used default capabilities, the full test is in permission evaluation below,
-        // use two capabilities that teacher has and one does not, none of them should be allowed for not-logged-in user.
-        $this->assertTrue($DB->record_exists('capabilities', array('name' => 'moodle/backup:backupcourse')));
-        $this->assertTrue($DB->record_exists('capabilities', array('name' => 'moodle/site:approvecourse')));
-
-        $users = get_users_by_capability($coursecontext, 'moodle/backup:backupcourse');
-
-        $this->assertTrue(array_key_exists($teacher->id, $users));
-        $this->assertFalse(array_key_exists($admin->id, $users));
-        $this->assertFalse(array_key_exists($student->id, $users));
-        $this->assertFalse(array_key_exists($guest->id, $users));
-
-        $users = get_users_by_capability($coursecontext, 'moodle/site:approvecourse');
-
-        $this->assertFalse(array_key_exists($teacher->id, $users));
-        $this->assertFalse(array_key_exists($admin->id, $users));
-        $this->assertFalse(array_key_exists($student->id, $users));
-        $this->assertFalse(array_key_exists($guest->id, $users));
-
-        // Test role override.
-        assign_capability('moodle/backup:backupcourse', CAP_PROHIBIT, $teacherrole->id, $coursecontext, true);
-        assign_capability('moodle/backup:backupcourse', CAP_ALLOW, $studentrole->id, $coursecontext, true);
-
-        $users = get_users_by_capability($coursecontext, 'moodle/backup:backupcourse');
-
-        $this->assertFalse(array_key_exists($teacher->id, $users));
-        $this->assertFalse(array_key_exists($admin->id, $users));
-        $this->assertTrue(array_key_exists($student->id, $users));
-        $this->assertFalse(array_key_exists($guest->id, $users));
-    }
-
     public function test_get_with_capability_sql() {
         global $DB;
 
@@ -3887,83 +3375,16 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertFalse(array_key_exists($guest->id, $users));
 
         // Test role override.
-        assign_capability('moodle/backup:backupcourse', CAP_PROHIBIT, $teacherrole->id, $coursecontext, true);
-        assign_capability('moodle/backup:backupcourse', CAP_ALLOW, $studentrole->id, $coursecontext, true);
+        assign_capability('moodle/site:backupcourse', CAP_PROHIBIT, $teacherrole->id, $coursecontext, true);
+        assign_capability('moodle/site:backupcourse', CAP_ALLOW, $studentrole->id, $coursecontext, true);
 
-        list($sql, $params) = get_with_capability_sql($coursecontext, 'moodle/backup:backupcourse');
+        list($sql, $params) = get_with_capability_sql($coursecontext, 'moodle/site:backupcourse');
         $users = $DB->get_records_sql($sql, $params);
 
         $this->assertFalse(array_key_exists($teacher->id, $users));
         $this->assertFalse(array_key_exists($admin->id, $users));
         $this->assertTrue(array_key_exists($student->id, $users));
         $this->assertFalse(array_key_exists($guest->id, $users));
-    }
-
-
-    /**
-     * Get the test cases for {@link test_get_with_capability_join_when_overrides_present()}.
-     *
-     * The particular capabilties used here do not really matter. What is important is
-     * that they are capabilities which the Student roles has by default, but the
-     * authenticated suser role does not.
-     *
-     * @return array
-     */
-    public function get_get_with_capability_join_override_cases() {
-        return [
-                'no overrides' => [true, []],
-                'one override' => [true, ['moodle/course:viewscales']],
-                'both overrides' => [false, ['moodle/course:viewscales', 'moodle/question:flag']],
-        ];
-    }
-
-    /**
-     * Test get_with_capability_join.
-     *
-     * @dataProvider get_get_with_capability_join_override_cases
-     *
-     * @param bool $studentshouldbereturned whether, with this combination of capabilities, the student should be in the results.
-     * @param array $capabilitiestoprevent capabilities to override to prevent in the course context.
-     */
-    public function test_get_with_capability_join_when_overrides_present(
-            bool $studentshouldbereturned, array $capabilitiestoprevent) {
-        global $DB;
-        $this->resetAfterTest();
-        $generator = $this->getDataGenerator();
-
-        // Create a course.
-        $category = $generator->create_category();
-        $course = $generator->create_course(['category' => $category->id]);
-
-        // Create a user.
-        $student = $generator->create_user();
-        $studentrole = $DB->get_record('role', ['shortname' => 'student'], '*', MUST_EXIST);
-        $generator->enrol_user($student->id, $course->id, $studentrole->id);
-
-        // This test assumes that by default the student roles has the two
-        // capabilities. Check this now in case the role definitions are every changed.
-        $coursecontext = context_course::instance($course->id);
-        $this->assertTrue(has_capability('moodle/course:viewscales', $coursecontext, $student));
-        $this->assertTrue(has_capability('moodle/question:flag', $coursecontext, $student));
-
-        // We test cases where there are a varying number of prevent overrides.
-        foreach ($capabilitiestoprevent as $capability) {
-            role_change_permission($studentrole->id, $coursecontext, $capability, CAP_PREVENT);
-        }
-
-        // So now, assemble our query using the method under test, and verify that it returns the student.
-        $sqljoin = get_with_capability_join($coursecontext,
-                ['moodle/course:viewscales', 'moodle/question:flag'], 'u.id');
-
-        $users = $DB->get_records_sql("SELECT u.*
-                  FROM {user} u
-                       {$sqljoin->joins}
-                 WHERE {$sqljoin->wheres}", $sqljoin->params);
-        if ($studentshouldbereturned) {
-            $this->assertEquals([$student->id], array_keys($users));
-        } else {
-            $this->assertEmpty($users);
-        }
     }
 
     /**
@@ -3990,7 +3411,7 @@ class core_accesslib_testcase extends advanced_testcase {
         create_role('Custom role', 'customrole', 'Custom course role');
         $customrole = $DB->get_record('role', array('shortname' => 'customrole'), '*', MUST_EXIST);
         set_role_contextlevels($customrole->id, [CONTEXT_COURSE]);
-        core_role_set_assign_allowed($teacherrole->id, $customrole->id); // Allow teacher to assign the role in the course.
+        allow_assign($teacherrole->id, $customrole->id); // Allow teacher to assign the role in the course.
 
         // Set the site policy 'profileroles' to show student, teacher and non-editing teacher roles (i.e. not the custom role).
         $neteacherrole = $DB->get_record('role', array('shortname' => 'teacher'), '*', MUST_EXIST);
@@ -4101,440 +3522,6 @@ class core_accesslib_testcase extends advanced_testcase {
         set_config('profileroles', "");
         $this->setUser($user2);
         $this->assertEquals($expectedteacher, get_profile_roles($coursecontext));
-    }
-
-    /**
-     * Data provider for is_parent_of context checks.
-     *
-     * @return  array
-     */
-    public function is_parent_of_provider(): array {
-        $provideboth = function(string $desc, string $contextpath, string $testpath, bool $expected): array {
-            return [
-                "includeself: true; {$desc}" => [
-                    $contextpath,
-                    $testpath,
-                    true,
-                    $expected,
-                ],
-                "includeself: false; {$desc}" => [
-                    $contextpath,
-                    $testpath,
-                    false,
-                    $expected,
-                ],
-            ];
-        };
-
-        return array_merge(
-            [
-                'includeself: true, testing self' => [
-                    '/1/4/17/291/1001/17105',
-                    '/1/4/17/291/1001/17105',
-                    true,
-                    true,
-                ],
-                'includeself: false, testing self' => [
-                    '/1/4/17/291/1001/17105',
-                    '/1/4/17/291/1001/17105',
-                    false,
-                    false,
-                ],
-            ],
-            $provideboth(
-                'testing parent',
-                '/1/4/17/291/1001/17105',
-                '/1/4/17/291/1001',
-                false
-            ),
-            $provideboth(
-                'testing child',
-                '/1/4/17/291/1001',
-                '/1/4/17/291/1001/17105',
-                true
-            ),
-            $provideboth(
-                'testing grandchild',
-                '/1',
-                '/1/4/17/291/1001/17105',
-                true
-            )
-        );
-    }
-
-    /**
-     * Ensure that the is_parent_of() function works as anticipated.
-     *
-     * @dataProvider is_parent_of_provider
-     * @param   string $contextpath The path of the context being compared with
-     * @param   string $testpath The path of the context being compared
-     * @param   bool $testself Whether to check the current context
-     * @param   bool $expected The expected result
-     */
-    public function test_is_parent_of(string $contextpath, string $testpath, bool $testself, bool $expected): void {
-        $context = $this->getMockBuilder(\context::class)
-            ->disableOriginalConstructor()
-            ->setMethods([
-                'get_url',
-                'get_capabilities',
-            ])
-            ->getMock();
-
-        $rcp = new ReflectionProperty($context, '_path');
-        $rcp->setAccessible(true);
-        $rcp->setValue($context, $contextpath);
-
-        $comparisoncontext = $this->getMockBuilder(\context::class)
-            ->disableOriginalConstructor()
-            ->setMethods([
-                'get_url',
-                'get_capabilities',
-            ])
-            ->getMock();
-
-        $rcp = new ReflectionProperty($comparisoncontext, '_path');
-        $rcp->setAccessible(true);
-        $rcp->setValue($comparisoncontext, $testpath);
-
-        $this->assertEquals($expected, $context->is_parent_of($comparisoncontext, $testself));
-    }
-
-    /**
-     * Data provider for is_child_of context checks.
-     *
-     * @return  array
-     */
-    public function is_child_of_provider(): array {
-        $provideboth = function(string $desc, string $contextpath, string $testpath, bool $expected): array {
-            return [
-                "includeself: true; {$desc}" => [
-                    $contextpath,
-                    $testpath,
-                    true,
-                    $expected,
-                ],
-                "includeself: false; {$desc}" => [
-                    $contextpath,
-                    $testpath,
-                    false,
-                    $expected,
-                ],
-            ];
-        };
-
-        return array_merge(
-            [
-                'includeself: true, testing self' => [
-                    '/1/4/17/291/1001/17105',
-                    '/1/4/17/291/1001/17105',
-                    true,
-                    true,
-                ],
-                'includeself: false, testing self' => [
-                    '/1/4/17/291/1001/17105',
-                    '/1/4/17/291/1001/17105',
-                    false,
-                    false,
-                ],
-            ],
-            $provideboth(
-                'testing child',
-                '/1/4/17/291/1001/17105',
-                '/1/4/17/291/1001',
-                true
-            ),
-            $provideboth(
-                'testing parent',
-                '/1/4/17/291/1001',
-                '/1/4/17/291/1001/17105',
-                false
-            ),
-            $provideboth(
-                'testing grandchild',
-                '/1/4/17/291/1001/17105',
-                '/1',
-                true
-            ),
-            $provideboth(
-                'testing grandparent',
-                '/1',
-                '/1/4/17/291/1001/17105',
-                false
-            )
-        );
-    }
-
-    /**
-     * Ensure that the is_child_of() function works as anticipated.
-     *
-     * @dataProvider is_child_of_provider
-     * @param   string $contextpath The path of the context being compared with
-     * @param   string $testpath The path of the context being compared
-     * @param   bool $testself Whether to check the current context
-     * @param   bool $expected The expected result
-     */
-    public function test_is_child_of(string $contextpath, string $testpath, bool $testself, bool $expected): void {
-        $context = $this->getMockBuilder(\context::class)
-            ->disableOriginalConstructor()
-            ->setMethods([
-                'get_url',
-                'get_capabilities',
-            ])
-            ->getMock();
-
-        $rcp = new ReflectionProperty($context, '_path');
-        $rcp->setAccessible(true);
-        $rcp->setValue($context, $contextpath);
-
-        $comparisoncontext = $this->getMockBuilder(\context::class)
-            ->disableOriginalConstructor()
-            ->setMethods([
-                'get_url',
-                'get_capabilities',
-            ])
-            ->getMock();
-
-        $rcp = new ReflectionProperty($comparisoncontext, '_path');
-        $rcp->setAccessible(true);
-        $rcp->setValue($comparisoncontext, $testpath);
-
-        $this->assertEquals($expected, $context->is_child_of($comparisoncontext, $testself));
-    }
-
-    /**
-     * Ensure that the get_parent_contexts() function limits the number of queries it performs.
-     */
-    public function test_get_parent_contexts_preload() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        /*
-         * Given the following data structure:
-         * System
-         * - Category
-         * --- Category
-         * ----- Category
-         * ------- Category
-         * --------- Course
-         * ----------- Activity (Forum)
-         */
-
-        $contexts = [];
-
-        $cat1 = $this->getDataGenerator()->create_category();
-        $cat2 = $this->getDataGenerator()->create_category(['parent' => $cat1->id]);
-        $cat3 = $this->getDataGenerator()->create_category(['parent' => $cat2->id]);
-        $cat4 = $this->getDataGenerator()->create_category(['parent' => $cat3->id]);
-        $course = $this->getDataGenerator()->create_course(['category' => $cat4->id]);
-        $forum = $this->getDataGenerator()->create_module('forum', ['course' => $course->id]);
-
-        $modcontext = context_module::instance($forum->cmid);
-
-        context_helper::reset_caches();
-
-        // There should only be a single DB query.
-        $predbqueries = $DB->perf_get_reads();
-
-        $parents = $modcontext->get_parent_contexts();
-        // Note: For some databases There is one read, plus one FETCH, plus one CLOSE.
-        // These all show as reads, when there has actually only been a single query.
-        $this->assertLessThanOrEqual(3, $DB->perf_get_reads() - $predbqueries);
-    }
-
-    /**
-     * Ensure that get_with_capability_sql and get_with_capability_join respect context locking.
-     */
-    public function test_get_with_capability_sql_locked() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $generator = $this->getDataGenerator();
-
-        $cat1 = $generator->create_category();
-        $cat2 = $generator->create_category();
-        $cat1course1 = $generator->create_course(['category' => $cat1->id]);
-        $cat1course1forum = $generator->create_module('forum', ['course' => $cat1course1]);
-
-        $contexts = (object) [
-            'system' => \context_system::instance(),
-            'cat1' => \context_coursecat::instance($cat1->id),
-            'cat2' => \context_coursecat::instance($cat2->id),
-            'cat1course1' => \context_course::instance($cat1course1->id),
-            'cat1course1forum' => \context_module::instance($cat1course1forum->cmid),
-        ];
-
-        // Test with the 'mod/forum:startdiscussion' capability.
-        $caput = 'mod/forum:startdiscussion';
-
-        // Create a test user.
-        $uut = $generator->create_and_enrol($cat1course1, 'teacher');
-
-        // Initially the user will be returned by get_users_by_capability.
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        // Freezing the forum will remove the user.
-        set_config('contextlocking', 1);
-        $contexts->cat1course1forum->set_locked(true);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayNotHasKey($uut->id, $users);
-
-        // But not if context locking is disabled.
-        set_config('contextlocking', 0);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        $contexts->cat1course1forum->set_locked(false);
-
-        // Freezing the course will have the same effect.
-        set_config('contextlocking', 1);
-        $contexts->cat1course1->set_locked(true);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayNotHasKey($uut->id, $users);
-
-        // But not if context locking is disabled.
-        set_config('contextlocking', 0);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        $contexts->cat1course1->set_locked(false);
-
-        // Freezing the category will have the same effect.
-        set_config('contextlocking', 1);
-        $contexts->cat1->set_locked(true);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayNotHasKey($uut->id, $users);
-
-        // But not if context locking is disabled.
-        set_config('contextlocking', 0);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        $contexts->cat1->set_locked(false);
-
-        // Freezing an unrelated category will have no effect.
-        set_config('contextlocking', 1);
-        $contexts->cat2->set_locked(true);
-        list($sql, $params) = get_with_capability_sql($contexts->cat1course1forum, $caput);
-        $users = $DB->get_records_sql($sql, $params);
-        $this->assertArrayHasKey($uut->id, $users);
-    }
-
-    /**
-     * Ensure that get_users_by_capability respects context freezing.
-     */
-    public function test_get_users_by_capability_locked() {
-        $this->resetAfterTest();
-
-        $generator = $this->getDataGenerator();
-
-        $cat1 = $generator->create_category();
-        $cat2 = $generator->create_category();
-        $cat1course1 = $generator->create_course(['category' => $cat1->id]);
-        $cat1course1forum = $generator->create_module('forum', ['course' => $cat1course1]);
-
-        $contexts = (object) [
-            'system' => \context_system::instance(),
-            'cat1' => \context_coursecat::instance($cat1->id),
-            'cat2' => \context_coursecat::instance($cat2->id),
-            'cat1course1' => \context_course::instance($cat1course1->id),
-            'cat1course1forum' => \context_module::instance($cat1course1forum->cmid),
-        ];
-
-        // Test with the 'mod/forum:startdiscussion' capability.
-        $caput = 'mod/forum:startdiscussion';
-
-        // Create a test user.
-        $uut = $generator->create_and_enrol($cat1course1, 'teacher');
-
-        // Initially the user will be returned by get_users_by_capability.
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        // Freezing the forum will remove the user.
-        set_config('contextlocking', 1);
-        $contexts->cat1course1forum->set_locked(true);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayNotHasKey($uut->id, $users);
-
-        // But not if context locking is disabled.
-        set_config('contextlocking', 0);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        $contexts->cat1course1forum->set_locked(false);
-
-        // Freezing the course will have the same effect.
-        set_config('contextlocking', 1);
-        $contexts->cat1course1->set_locked(true);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayNotHasKey($uut->id, $users);
-
-        // But not if context locking is disabled.
-        set_config('contextlocking', 0);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        $contexts->cat1course1->set_locked(false);
-
-        // Freezing the category will have the same effect.
-        set_config('contextlocking', 1);
-        $contexts->cat1->set_locked(true);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayNotHasKey($uut->id, $users);
-
-        // But not if context locking is disabled.
-        set_config('contextlocking', 0);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayHasKey($uut->id, $users);
-
-        $contexts->cat1->set_locked(false);
-
-        // Freezing an unrelated category will have no effect.
-        set_config('contextlocking', 1);
-        $contexts->cat2->set_locked(true);
-        $users = get_users_by_capability($contexts->cat1course1forum, $caput);
-        $this->assertArrayHasKey($uut->id, $users);
-    }
-
-    /**
-     * Test require_all_capabilities.
-     */
-    public function test_require_all_capabilities() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'), '*', MUST_EXIST);
-        $teacher = $this->getDataGenerator()->create_user();
-        role_assign($teacherrole->id, $teacher->id, $coursecontext);
-
-        // Note: Here are used default capabilities, the full test is in permission evaluation bellow,
-        // use two capabilities that teacher has and one does not, none of them should be allowed for not-logged-in user.
-        $this->assertTrue($DB->record_exists('capabilities', array('name' => 'moodle/backup:backupsection')));
-        $this->assertTrue($DB->record_exists('capabilities', array('name' => 'moodle/backup:backupcourse')));
-
-        $sca = array('moodle/backup:backupsection', 'moodle/backup:backupcourse');
-
-        $this->setUser($teacher);
-        require_all_capabilities($sca, $coursecontext);
-        require_all_capabilities($sca, $coursecontext, $teacher);
-
-        // Guest users should not have any of these perms.
-        $this->setUser(0);
-        $this->expectException(\required_capability_exception::class);
-        require_all_capabilities($sca, $coursecontext);
     }
 }
 

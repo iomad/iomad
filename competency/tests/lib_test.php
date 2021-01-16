@@ -40,12 +40,12 @@ global $CFG;
 class core_competency_lib_testcase extends advanced_testcase {
 
     public function test_comment_add_user_competency() {
-        global $DB, $PAGE;
+        global $DB;
         $this->resetAfterTest();
         $dg = $this->getDataGenerator();
         $lpg = $dg->get_plugin_generator('core_competency');
 
-        $u1 = $dg->create_user(['picture' => 1]);
+        $u1 = $dg->create_user();
         $u2 = $dg->create_user();
         $u3 = $dg->create_user();
         $reviewerroleid = $dg->create_role();
@@ -96,14 +96,6 @@ class core_competency_lib_testcase extends advanced_testcase {
         $this->assertEquals(FORMAT_MOODLE, $message->fullmessageformat);
         $this->assertEquals($expectedurl->out(false), $message->contexturl);
         $this->assertEquals($expectedurlname, $message->contexturlname);
-        // Test customdata.
-        $customdata = json_decode($message->customdata);
-        $this->assertObjectHasAttribute('notificationiconurl', $customdata);
-        $this->assertContains('tokenpluginfile.php', $customdata->notificationiconurl);
-        $userpicture = new \user_picture($u1);
-        $userpicture->size = 1; // Use f1 size.
-        $userpicture->includetoken = $u2->id;
-        $this->assertEquals($userpicture->get_url($PAGE)->out(false), $customdata->notificationiconurl);
 
         // Reviewer posts a comment for the user competency being in two plans. Owner is messaged.
         $this->setUser($u2);
@@ -226,9 +218,6 @@ class core_competency_lib_testcase extends advanced_testcase {
         $message = array_pop($messages);
         $this->assertEquals(core_user::get_noreply_user()->id, $message->useridfrom);
         $this->assertEquals($u1->id, $message->useridto);
-        // Test customdata.
-        $customdata = json_decode($message->customdata);
-        $this->assertObjectHasAttribute('notificationiconurl', $customdata);
 
         // Post a comment in a plan with reviewer. The reviewer is messaged.
         $p1->set('reviewerid', $u2->id);

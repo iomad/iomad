@@ -43,7 +43,6 @@ $string['creategrouping'] = 'Create grouping';
 $string['creategroupinselectedgrouping'] = 'Create group in grouping';
 $string['createingrouping'] = 'Grouping of auto-created groups';
 $string['createorphangroup'] = 'Create orphan group';
-$string['csvdelimiter'] = 'CSV delimiter';
 $string['databaseupgradegroups'] = 'Groups version is now {$a}';
 $string['defaultgrouping'] = 'Default grouping';
 $string['defaultgroupingname'] = 'Grouping';
@@ -58,9 +57,6 @@ $string['deleteselectedgroup'] = 'Delete selected group';
 $string['editgroupingsettings'] = 'Edit grouping settings';
 $string['editgroupsettings'] = 'Edit group settings';
 $string['editusersgroupsa'] = 'Edit groups for "{$a}"';
-$string['enablemessaging'] = 'Group messaging';
-$string['enablemessaging_help'] = 'If enabled, group members can send messages to the others in their group via the messaging drawer.';
-$string['encoding'] = 'Encoding';
 $string['enrolmentkey'] = 'Enrolment key';
 $string['enrolmentkey_help'] = 'An enrolment key enables access to the course to be restricted to only those who know the key. If a group enrolment key is specified, then not only will entering that key let the user into the course, but it will also automatically make them a member of this group.
 
@@ -126,7 +122,7 @@ $string['groupnotamember'] = 'Sorry, you are not a member of that group';
 $string['groups'] = 'Groups';
 $string['groupscount'] = 'Groups ({$a})';
 $string['groupsettingsheader'] = 'Groups';
-$string['groupsgroupings'] = 'Groups & groupings';
+$string['groupsgroupings'] = 'Groups &amp; groupings';
 $string['groupsinselectedgrouping'] = 'Groups in:';
 $string['groupsnone'] = 'No groups';
 $string['groupsonly'] = 'Groups only';
@@ -142,7 +138,7 @@ $string['importgroups_help'] = 'Groups may be imported via text file. The format
 * Each record is a series of data separated by commas
 * The first record contains a list of fieldnames defining the format of the rest of the file
 * Required fieldname is groupname
-* Optional fieldnames are groupidnumber, description, enrolmentkey, groupingname, enablemessaging';
+* Optional fieldnames are description, enrolmentkey, picture, hidepicture';
 $string['importgroups_link'] = 'group/import';
 $string['includeonlyactiveenrol'] = 'Include only active enrolments';
 $string['includeonlyactiveenrol_help'] = 'If enabled, suspended users will not be included in groups.';
@@ -165,8 +161,8 @@ $string['nogroupsassigned'] = 'No groups assigned';
 $string['nopermissionforcreation'] = 'Can\'t create group "{$a}" as you don\'t have the required permissions';
 $string['nosmallgroups'] = 'Prevent last small group';
 $string['notingroup'] = 'Ignore users in groups';
-$string['notingrouping'] = 'Not in a grouping';
-$string['notingrouplist'] = 'Not in a group';
+$string['notingrouping'] = '[Not in a grouping]';
+$string['notingrouplist'] = '[Not in a group]';
 $string['nousersinrole'] = 'There are no suitable users in the selected role';
 $string['number'] = 'Group/member count';
 $string['numgroups'] = 'Number of groups';
@@ -177,7 +173,6 @@ $string['overview'] = 'Overview';
 $string['potentialmembers'] = 'Potential members: {$a}';
 $string['potentialmembs'] = 'Potential members';
 $string['printerfriendly'] = 'Printer-friendly display';
-$string['privacy:metadata:core_message'] = 'The group conversations';
 $string['privacy:metadata:groups'] = 'A record of group membership.';
 $string['privacy:metadata:groups:groupid'] = 'The ID of the group.';
 $string['privacy:metadata:groups:timeadded'] = 'The timestamp indicating when the user was added to the group.';
@@ -198,4 +193,3 @@ $string['toomanygroups'] = 'Insufficient users to populate this number of groups
 $string['usercount'] = 'User count';
 $string['usercounttotal'] = 'User count ({$a})';
 $string['usergroupmembership'] = 'Selected user\'s membership:';
-$string['memberofgroup'] = 'Group member of: {$a}';

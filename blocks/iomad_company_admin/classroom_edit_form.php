@@ -133,11 +133,10 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
 // Get the form data.
@@ -156,14 +155,12 @@ if ($mform->is_cancelled()) {
         $data->companyid = $companyid;
         $classroomid = $DB->insert_record('classroom', $data);
         $data->id = $classroomid;
-        $message = get_string('classroomaddedok', 'block_iomad_company_admin');
     } else {
         $data->id = $classroomid;
         $DB->update_record('classroom', $data);
-        $message = get_string('classroomupdatedok', 'block_iomad_company_admin');
     }
 
-    redirect($templatelist, $message, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($templatelist);
 }
 
 echo $OUTPUT->header();

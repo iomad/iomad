@@ -23,40 +23,30 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/ajax', 'core/templates', 'core/str'], function($, Ajax, Templates, Str) {
+define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
 
     return /** @alias module:enrol_manual/form-potential-user-selector */ {
 
         processResults: function(selector, results) {
             var users = [];
-            if ($.isArray(results)) {
-                $.each(results, function(index, user) {
-                    users.push({
-                        value: user.id,
-                        label: user._label
-                    });
+            $.each(results, function(index, user) {
+                users.push({
+                    value: user.id,
+                    label: user._label
                 });
-                return users;
-
-            } else {
-                return results;
-            }
+            });
+            return users;
         },
 
         transport: function(selector, query, success, failure) {
             var promise;
             var courseid = $(selector).attr('courseid');
-            var userfields = $(selector).attr('userfields').split(',');
             if (typeof courseid === "undefined") {
                 courseid = '1';
             }
             var enrolid = $(selector).attr('enrolid');
             if (typeof enrolid === "undefined") {
                 enrolid = '';
-            }
-            var perpage = parseInt($(selector).attr('perpage'));
-            if (isNaN(perpage)) {
-                perpage = 100;
             }
 
             promise = Ajax.call([{
@@ -67,7 +57,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str'], function($, Ajax, 
                     search: query,
                     searchanywhere: true,
                     page: 0,
-                    perpage: perpage + 1
+                    perpage: 30
                 }
             }]);
 
@@ -75,38 +65,30 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str'], function($, Ajax, 
                 var promises = [],
                     i = 0;
 
-                if (results.length <= perpage) {
-                    // Render the label.
+                // Render the label.
+                $.each(results, function(index, user) {
+                    var ctx = user,
+                        identity = [];
+                    $.each(['idnumber', 'email', 'phone1', 'phone2', 'department', 'institution'], function(i, k) {
+                        if (typeof user[k] !== 'undefined' && user[k] !== '') {
+                            ctx.hasidentity = true;
+                            identity.push(user[k]);
+                        }
+                    });
+                    ctx.identity = identity.join(', ');
+                    promises.push(Templates.render('enrol_manual/form-user-selector-suggestion', ctx));
+                });
+
+                // Apply the label to the results.
+                return $.when.apply($.when, promises).then(function() {
+                    var args = arguments;
                     $.each(results, function(index, user) {
-                        var ctx = user,
-                            identity = [];
-                        $.each(userfields, function(i, k) {
-                            if (typeof user[k] !== 'undefined' && user[k] !== '') {
-                                ctx.hasidentity = true;
-                                identity.push(user[k]);
-                            }
-                        });
-                        ctx.identity = identity.join(', ');
-                        promises.push(Templates.render('enrol_manual/form-user-selector-suggestion', ctx));
+                        user._label = args[i];
+                        i++;
                     });
-
-                    // Apply the label to the results.
-                    return $.when.apply($.when, promises).then(function() {
-                        var args = arguments;
-                        $.each(results, function(index, user) {
-                            user._label = args[i];
-                            i++;
-                        });
-                        success(results);
-                        return;
-                    });
-
-                } else {
-                    return Str.get_string('toomanyuserstoshow', 'core', '>' + perpage).then(function(toomanyuserstoshow) {
-                        success(toomanyuserstoshow);
-                        return;
-                    });
-                }
+                    success(results);
+                    return;
+                });
 
             }).fail(failure);
         }

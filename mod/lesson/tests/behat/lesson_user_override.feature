@@ -1,4 +1,4 @@
-@mod @mod_lesson
+@mod @mod_lesson @javascript
 Feature: Lesson user override
   In order to grant a student special access to a lesson
   As a teacher
@@ -18,6 +18,10 @@ Feature: Lesson user override
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
       | student2 | C1 | student |
+    And the following "groups" exist:
+      | name    | course | idnumber |
+      | Group 1 | C1     | G1       |
+      | Group 2 | C1     | G2       |
     And the following "activities" exist:
       | activity | name             | intro                   | course | idnumber |
       | lesson   | Test lesson name | Test lesson description | C1     | lesson1  |
@@ -37,12 +41,9 @@ Feature: Lesson user override
       | id_response_editor_1 | Wrong |
       | id_jumpto_1          | This page |
     And I press "Save page"
-    And I log out
 
   @javascript
   Scenario: Add, modify then delete a user override
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "User overrides" in current page administration
     And I press "Add user override"
@@ -65,10 +66,7 @@ Feature: Lesson user override
     And I press "Continue"
     And I should not see "Sam1 Student1"
 
-  @javascript
   Scenario: Duplicate a user override
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "User overrides" in current page administration
     And I press "Add user override"
@@ -90,10 +88,7 @@ Feature: Lesson user override
     And I should see "Tuesday, 1 January 2030, 8:00"
     And I should see "Sam2 Student2"
 
-  @javascript
   Scenario: Allow a single user to have re-take the lesson
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
@@ -132,10 +127,7 @@ Feature: Lesson user override
     And I follow "Test lesson name"
     And I should see "You are not allowed to retake this lesson."
 
-  @javascript
   Scenario: Allow a single user to have a different password
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
@@ -180,10 +172,7 @@ Feature: Lesson user override
     And I set the field "userpassword" to "moodle_rules"
     And I press "Continue"
 
-  @javascript
   Scenario: Allow a user to have a different due date
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
@@ -201,7 +190,7 @@ Feature: Lesson user override
       | id_deadline_enabled | 1 |
       | deadline[day]       | 1 |
       | deadline[month]     | January |
-      | deadline[year]      | 2030 |
+      | deadline[year]      | 2020 |
       | deadline[hour]      | 08 |
       | deadline[minute]    | 00 |
     And I press "Save"
@@ -210,7 +199,6 @@ Feature: Lesson user override
     And I log in as "student2"
     And I am on "Course 1" course homepage
     And I follow "Test lesson"
-    And I wait until the page is ready
     Then I should see "This lesson closed on Saturday, 1 January 2000, 8:00"
     And I should not see "Cat is an amphibian"
     And I log out
@@ -219,17 +207,14 @@ Feature: Lesson user override
     And I follow "Test lesson"
     And I should see "Cat is an amphibian"
 
-  @javascript
   Scenario: Allow a user to have a different start date
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
       | id_available_enabled | 1 |
       | available[day]       | 1 |
       | available[month]     | January |
-      | available[year]      | 2030 |
+      | available[year]      | 2020 |
       | available[hour]      | 08 |
       | available[minute]    | 00 |
     And I press "Save and display"
@@ -249,8 +234,7 @@ Feature: Lesson user override
     And I log in as "student2"
     And I am on "Course 1" course homepage
     And I follow "Test lesson"
-    And I wait until the page is ready
-    Then I should see "This lesson will be open on Tuesday, 1 January 2030, 8:00"
+    Then  I should see "This lesson will be open on Wednesday, 1 January 2020, 8:00"
     And I should not see "Cat is an amphibian"
     And I log out
     And I log in as "student1"
@@ -258,10 +242,7 @@ Feature: Lesson user override
     And I follow "Test lesson"
     And I should see "Cat is an amphibian"
 
-  @javascript
   Scenario: Allow a single user to have multiple attempts at each question
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
     When I follow "Test lesson name"
     And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
@@ -299,109 +280,3 @@ Feature: Lesson user override
     And I press "Submit"
     Then I press "Continue"
     And I should see "Congratulations - end of lesson reached"
-
-  Scenario: Override a user when teacher is in no group, and does not have accessallgroups permission, and the activity's group mode is 'separate groups'
-    Given the following "permission overrides" exist:
-      | capability                  | permission | role           | contextlevel | reference |
-      | moodle/site:accessallgroups | Prevent    | editingteacher | Course       | C1        |
-    And the following "activities" exist:
-      | activity | name     | intro                | course | idnumber | groupmode |
-      | lesson   | Lesson 2 | Lesson 2 description | C1     | lesson2  | 1         |
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Lesson 2"
-    And I navigate to "User overrides" in current page administration
-    Then I should see "No groups you can access."
-    And the "Add user override" "button" should be disabled
-
-  Scenario: A teacher without accessallgroups permission should only be able to add user override for their group-mates, when the activity's group mode is 'separate groups'
-    Given the following "permission overrides" exist:
-      | capability                  | permission | role           | contextlevel | reference |
-      | moodle/site:accessallgroups | Prevent    | editingteacher | Course       | C1        |
-    And the following "activities" exist:
-      | activity | name     | intro                | course | idnumber | groupmode |
-      | lesson   | Lesson 2 | Lesson 2 description | C1     | lesson2  | 1         |
-    And the following "groups" exist:
-      | name    | course | idnumber |
-      | Group 1 | C1     | G1       |
-      | Group 2 | C1     | G2       |
-    And the following "group members" exist:
-      | user     | group |
-      | teacher1 | G1    |
-      | student1 | G1    |
-      | student2 | G2    |
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Lesson 2"
-    And I navigate to "User overrides" in current page administration
-    And I press "Add user override"
-    Then the "Override user" select box should contain "Sam1 Student1, student1@example.com"
-    And the "Override user" select box should not contain "Sam2 Student2, student2@example.com"
-
-  @javascript
-  Scenario: A teacher without accessallgroups permission should only be able to see the user override for their group-mates, when the activity's group mode is 'separate groups'
-    Given the following "permission overrides" exist:
-      | capability                  | permission | role           | contextlevel | reference |
-      | moodle/site:accessallgroups | Prevent    | editingteacher | Course       | C1        |
-    And the following "activities" exist:
-      | activity | name     | intro                | course | idnumber | groupmode |
-      | lesson   | Lesson 2 | Lesson 2 description | C1     | lesson2  | 1         |
-    And the following "groups" exist:
-      | name    | course | idnumber |
-      | Group 1 | C1     | G1       |
-      | Group 2 | C1     | G2       |
-    And the following "group members" exist:
-      | user     | group |
-      | teacher1 | G1    |
-      | student1 | G1    |
-      | student2 | G2    |
-    And I log in as "admin"
-    And I am on "Course 1" course homepage
-    And I follow "Lesson 2"
-    And I navigate to "User overrides" in current page administration
-    And I press "Add user override"
-    And I set the following fields to these values:
-      | Override user       | Student1 |
-      | id_deadline_enabled | 1        |
-      | deadline[day]       | 1        |
-      | deadline[month]     | January  |
-      | deadline[year]      | 2020     |
-      | deadline[hour]      | 08       |
-      | deadline[minute]    | 00       |
-    And I press "Save and enter another override"
-    And I set the following fields to these values:
-      | Override user       | Student2 |
-      | id_deadline_enabled | 1        |
-      | deadline[day]       | 1        |
-      | deadline[month]     | January  |
-      | deadline[year]      | 2020     |
-      | deadline[hour]      | 08       |
-      | deadline[minute]    | 00       |
-    And I press "Save"
-    And I log out
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Lesson 2"
-    And I navigate to "User overrides" in current page administration
-    Then I should see "Student1" in the ".generaltable" "css_element"
-    And I should not see "Student2" in the ".generaltable" "css_element"
-
-  @javascript
-  Scenario: Create a user override when the lesson is not available to the student
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I follow "Test lesson name"
-    And I navigate to "Edit settings" in current page administration
-    And I expand all fieldsets
-    And I set the field "Availability" to "Hide from students"
-    And I click on "Save and display" "button"
-    When I navigate to "User overrides" in current page administration
-    And I press "Add user override"
-    And I set the following fields to these values:
-      | Override user              | Student1 |
-      | Maximum number of attempts | 2 |
-    And I press "Save"
-    Then I should see "This override is inactive"
-    And "Edit" "icon" should exist in the "Sam1 Student1" "table_row"
-    And "copy" "icon" should exist in the "Sam1 Student1" "table_row"
-    And "Delete" "icon" should exist in the "Sam1 Student1" "table_row"

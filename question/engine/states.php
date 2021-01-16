@@ -72,8 +72,7 @@ abstract class question_state {
 
     /**
      * Get all the states in an array.
-     *
-     * @return question_state[] of question_state objects.
+     * @return of question_state objects.
      */
     public static function get_all() {
         $states = array();
@@ -88,7 +87,7 @@ abstract class question_state {
      * Get all the states in an array.
      * @param string $summarystate one of the four summary states
      * inprogress, needsgrading, manuallygraded or autograded.
-     * @return array of the corresponding states.
+     * @return arrau of the corresponding states.
      */
     public static function get_all_for_summary_state($summarystate) {
         $states = array();

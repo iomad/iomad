@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+
 /**
  * Unit tests for format_text defined in weblib.php.
  *

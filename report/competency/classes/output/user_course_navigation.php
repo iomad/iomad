@@ -28,7 +28,6 @@ use renderer_base;
 use templatable;
 use context_course;
 use core_user\external\user_summary_exporter;
-use core_course\external\course_module_summary_exporter;
 use stdClass;
 
 /**
@@ -46,9 +45,6 @@ class user_course_navigation implements renderable, templatable {
     /** @var courseid */
     protected $courseid;
 
-    /** @var moduleid */
-    protected $moduleid;
-
     /** @var baseurl */
     protected $baseurl;
 
@@ -57,13 +53,11 @@ class user_course_navigation implements renderable, templatable {
      *
      * @param int $userid
      * @param int $courseid
-     * @param int $moduleid
      * @param string $baseurl
      */
-    public function __construct($userid, $courseid, $baseurl, $moduleid) {
+    public function __construct($userid, $courseid, $baseurl) {
         $this->userid = $userid;
         $this->courseid = $courseid;
-        $this->moduleid = $moduleid;
         $this->baseurl = $baseurl;
     }
 
@@ -81,11 +75,6 @@ class user_course_navigation implements renderable, templatable {
         $data = new stdClass();
         $data->userid = $this->userid;
         $data->courseid = $this->courseid;
-        $data->moduleid = $this->moduleid;
-        if (empty($data->moduleid)) {
-            // Moduleid is optional.
-            $data->moduleid = 0;
-        }
         $data->baseurl = $this->baseurl;
         $data->groupselector = '';
 
@@ -118,25 +107,6 @@ class user_course_navigation implements renderable, templatable {
                 $data->users[] = $user;
             }
             $data->hasusers = true;
-
-            $data->hasmodules = true;
-            $data->modules = array();
-            $empty = (object)['id' => 0, 'name' => get_string('nofiltersapplied')];
-            $data->modules[] = $empty;
-
-            $modinfo = get_fast_modinfo($this->courseid);
-            foreach ($modinfo->get_cms() as $cm) {
-                if ($cm->uservisible) {
-                    $exporter = new course_module_summary_exporter(null, ['cm' => $cm]);
-                    $module = $exporter->export($output);
-                    if ($module->id == $this->moduleid) {
-                        $module->selected = true;
-                    }
-                    $data->modules[] = $module;
-                    $data->hasmodules = true;
-                }
-            }
-
         } else {
             $data->users = array();
             $data->hasusers = false;

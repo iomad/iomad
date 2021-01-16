@@ -172,9 +172,7 @@ class database extends handler {
             }
             if (!$this->recordid) {
                 // Lock session if exists and not already locked.
-                if ($this->requires_write_lock()) {
-                    $this->database->get_session_lock($record->id, $this->acquiretimeout);
-                }
+                $this->database->get_session_lock($record->id, $this->acquiretimeout);
                 $this->recordid = $record->id;
             }
         } catch (\dml_sessionwait_exception $ex) {

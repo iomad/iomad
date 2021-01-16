@@ -38,7 +38,7 @@ define('COHORT_WITH_NOTENROLLED_MEMBERS_ONLY', 23);
  * @return int new cohort id
  */
 function cohort_add_cohort($cohort) {
-    global $DB, $CFG;
+    global $DB;
 
     if (!isset($cohort->name)) {
         throw new coding_exception('Missing cohort name in cohort_add_cohort().');
@@ -57,12 +57,6 @@ function cohort_add_cohort($cohort) {
     }
     if (empty($cohort->component)) {
         $cohort->component = '';
-    }
-    if (empty($CFG->allowcohortthemes) && isset($cohort->theme)) {
-        unset($cohort->theme);
-    }
-    if (empty($cohort->theme) || empty($CFG->allowcohortthemes)) {
-        $cohort->theme = '';
     }
     if (!isset($cohort->timecreated)) {
         $cohort->timecreated = time();
@@ -89,14 +83,10 @@ function cohort_add_cohort($cohort) {
  * @return void
  */
 function cohort_update_cohort($cohort) {
-    global $DB, $CFG;
+    global $DB;
     if (property_exists($cohort, 'component') and empty($cohort->component)) {
         // prevent NULLs
         $cohort->component = '';
-    }
-    // Only unset the cohort theme if allowcohortthemes is enabled to prevent the value from being overwritten.
-    if (empty($CFG->allowcohortthemes) && isset($cohort->theme)) {
-        unset($cohort->theme);
     }
     $cohort->timemodified = time();
     $DB->update_record('cohort', $cohort);
@@ -138,7 +128,7 @@ function cohort_delete_cohort($cohort) {
  * Somehow deal with cohorts when deleting course category,
  * we can not just delete them because they might be used in enrol
  * plugins or referenced in external systems.
- * @param  stdClass|core_course_category $category
+ * @param  stdClass|coursecat $category
  * @return void
  */
 function cohort_delete_category($category) {
@@ -489,47 +479,6 @@ function cohort_get_all_cohorts($page = 0, $perpage = 25, $search = '') {
 }
 
 /**
- * Get all the cohorts where the given user is member of.
- *
- * @param int $userid
- * @return array Array
- */
-function cohort_get_user_cohorts($userid) {
-    global $DB;
-
-    $sql = 'SELECT c.*
-              FROM {cohort} c
-              JOIN {cohort_members} cm ON c.id = cm.cohortid
-             WHERE cm.userid = ? AND c.visible = 1';
-    return $DB->get_records_sql($sql, array($userid));
-}
-
-/**
- * Get the user cohort theme.
- *
- * If the user is member of one cohort, will return this cohort theme (if defined).
- * If the user is member of 2 or more cohorts, will return the theme if all them have the same
- * theme (null themes are ignored).
- *
- * @param int $userid
- * @return string|null
- */
-function cohort_get_user_cohort_theme($userid) {
-    $cohorts = cohort_get_user_cohorts($userid);
-    $theme = null;
-    foreach ($cohorts as $cohort) {
-        if (!empty($cohort->theme)) {
-            if (null === $theme) {
-                $theme = $cohort->theme;
-            } else if ($theme != $cohort->theme) {
-                return null;
-            }
-        }
-    }
-    return $theme;
-}
-
-/**
  * Returns list of contexts where cohorts are present but current user does not have capability to view/manage them.
  *
  * This function is called from {@link cohort_get_all_cohorts()} to ensure correct pagination in rare cases when user
@@ -558,7 +507,6 @@ function cohort_get_invisible_contexts() {
             $excludedcontexts[] = $ctx->id;
         }
     }
-    $records->close();
     return $excludedcontexts;
 }
 
@@ -618,20 +566,4 @@ function core_cohort_inplace_editable($itemtype, $itemid, $newvalue) {
     } else if ($itemtype === 'cohortidnumber') {
         return \core_cohort\output\cohortidnumber::update($itemid, $newvalue);
     }
-}
-
-/**
- * Returns a list of valid themes which can be displayed in a selector.
- *
- * @return array as (string)themename => (string)get_string_theme
- */
-function cohort_get_list_of_themes() {
-    $themes = array();
-    $allthemes = get_list_of_themes();
-    foreach ($allthemes as $key => $theme) {
-        if (empty($theme->hidefromselector)) {
-            $themes[$key] = get_string('pluginname', 'theme_'.$theme->name);
-        }
-    }
-    return $themes;
 }

@@ -65,12 +65,6 @@ class engine extends \core_search\engine {
      */
     const HIGHLIGHT_END = '@@HI_E@@';
 
-    /** @var float Boost value for matching course in location-ordered searches */
-    const COURSE_BOOST = 1;
-
-    /** @var float Boost value for matching context (in addition to course boost) */
-    const CONTEXT_BOOST = 0.5;
-
     /**
      * @var \SolrClient
      */
@@ -107,13 +101,6 @@ class engine extends \core_search\engine {
     protected $skippeddocs = 0;
 
     /**
-     * Solr server major version.
-     *
-     * @var int
-     */
-    protected $solrmajorversion = null;
-
-    /**
      * Initialises the search engine configuration.
      *
      * @return void
@@ -132,12 +119,12 @@ class engine extends \core_search\engine {
      * Prepares a Solr query, applies filters and executes it returning its results.
      *
      * @throws \core_search\engine_exception
-     * @param  \stdClass $filters Containing query and filters.
-     * @param  \stdClass $accessinfo Information about areas user can access.
+     * @param  stdClass  $filters Containing query and filters.
+     * @param  array     $usercontexts Contexts where the user has access. True if the user can access all contexts.
      * @param  int       $limit The maximum number of results to return.
      * @return \core_search\document[] Results or false if no results
      */
-    public function execute_query($filters, $accessinfo, $limit = 0) {
+    public function execute_query($filters, $usercontexts, $limit = 0) {
         global $USER;
 
         if (empty($limit)) {
@@ -148,12 +135,7 @@ class engine extends \core_search\engine {
         $client = $this->get_search_client();
 
         // Create the query object.
-        $query = $this->create_user_query($filters, $accessinfo);
-
-        // If the query cannot have results, return none.
-        if (!$query) {
-            return [];
-        }
+        $query = $this->create_user_query($filters, $usercontexts);
 
         // We expect good match rates, so for our first get, we will get a small number of records.
         // This significantly speeds solr response time for first few pages.
@@ -260,11 +242,11 @@ class engine extends \core_search\engine {
     /**
      * Prepares a new query object with needed limits, filters, etc.
      *
-     * @param \stdClass $filters Containing query and filters.
-     * @param \stdClass $accessinfo Information about contexts the user can access
-     * @return \SolrDisMaxQuery|null Query object or null if they can't get any results
+     * @param stdClass  $filters Containing query and filters.
+     * @param array     $usercontexts Contexts where the user has access. True if the user can access all contexts.
+     * @return SolrDisMaxQuery
      */
-    protected function create_user_query($filters, $accessinfo) {
+    protected function create_user_query($filters, $usercontexts) {
         global $USER;
 
         // Let's keep these changes internal.
@@ -272,7 +254,7 @@ class engine extends \core_search\engine {
 
         $query = new \SolrDisMaxQuery();
 
-        $this->set_query($query, self::replace_underlines($data->q));
+        $this->set_query($query, $data->q);
         $this->add_fields($query);
 
         // Search filters applied, we don't cache these filters as we don't want to pollute the cache with tmp filters
@@ -286,12 +268,6 @@ class engine extends \core_search\engine {
         }
         if (!empty($data->courseids)) {
             $query->addFilterQuery('{!cache=false}courseid:(' . implode(' OR ', $data->courseids) . ')');
-        }
-        if (!empty($data->groupids)) {
-            $query->addFilterQuery('{!cache=false}groupid:(' . implode(' OR ', $data->groupids) . ')');
-        }
-        if (!empty($data->userids)) {
-            $query->addFilterQuery('{!cache=false}userid:(' . implode(' OR ', $data->userids) . ')');
         }
 
         if (!empty($data->timestart) or !empty($data->timeend)) {
@@ -316,10 +292,10 @@ class engine extends \core_search\engine {
         // And finally restrict it to the context where the user can access, we want this one cached.
         // If the user can access all contexts $usercontexts value is just true, we don't need to filter
         // in that case.
-        if (!$accessinfo->everything && is_array($accessinfo->usercontexts)) {
+        if ($usercontexts && is_array($usercontexts)) {
             // Join all area contexts into a single array and implode.
             $allcontexts = array();
-            foreach ($accessinfo->usercontexts as $areaid => $areacontexts) {
+            foreach ($usercontexts as $areaid => $areacontexts) {
                 if (!empty($data->areaids) && !in_array($areaid, $data->areaids)) {
                     // Skip unused areas.
                     continue;
@@ -331,41 +307,9 @@ class engine extends \core_search\engine {
             }
             if (empty($allcontexts)) {
                 // This means there are no valid contexts for them, so they get no results.
-                return null;
+                return array();
             }
             $query->addFilterQuery('contextid:(' . implode(' OR ', $allcontexts) . ')');
-        }
-
-        if (!$accessinfo->everything && $accessinfo->separategroupscontexts) {
-            // Add another restriction to handle group ids. If there are any contexts using separate
-            // groups, then results in that context will not show unless you belong to the group.
-            // (Note: Access all groups is taken care of earlier, when computing these arrays.)
-
-            // This special exceptions list allows for particularly pig-headed developers to create
-            // multiple search areas within the same module, where one of them uses separate
-            // groups and the other uses visible groups. It is a little inefficient, but this should
-            // be rare.
-            $exceptions = '';
-            if ($accessinfo->visiblegroupscontextsareas) {
-                foreach ($accessinfo->visiblegroupscontextsareas as $contextid => $areaids) {
-                    $exceptions .= ' OR (contextid:' . $contextid . ' AND areaid:(' .
-                            implode(' OR ', $areaids) . '))';
-                }
-            }
-
-            if ($accessinfo->usergroups) {
-                // Either the document has no groupid, or the groupid is one that the user
-                // belongs to, or the context is not one of the separate groups contexts.
-                $query->addFilterQuery('(*:* -groupid:[* TO *]) OR ' .
-                        'groupid:(' . implode(' OR ', $accessinfo->usergroups) . ') OR ' .
-                        '(*:* -contextid:(' . implode(' OR ', $accessinfo->separategroupscontexts) . '))' .
-                        $exceptions);
-            } else {
-                // Either the document has no groupid, or the context is not a restricted one.
-                $query->addFilterQuery('(*:* -groupid:[* TO *]) OR ' .
-                        '(*:* -contextid:(' . implode(' OR ', $accessinfo->separategroupscontexts) . '))' .
-                        $exceptions);
-            }
         }
 
         if ($this->file_indexing_enabled()) {
@@ -377,16 +321,6 @@ class engine extends \core_search\engine {
         } else {
             // Make sure we only get text files, in case the index has pre-existing files.
             $query->addFilterQuery('type:'.\core_search\manager::TYPE_TEXT);
-        }
-
-        // If ordering by location, add in boost for the relevant course or context ids.
-        if (!empty($filters->order) && $filters->order === 'location') {
-            $coursecontext = $filters->context->get_course_context();
-            $query->addBoostQuery('courseid', $coursecontext->instanceid, self::COURSE_BOOST);
-            if ($filters->context->contextlevel !== CONTEXT_COURSE) {
-                // If it's a block or activity, also add a boost for the specific context id.
-                $query->addBoostQuery('contextid', $filters->context->id, self::CONTEXT_BOOST);
-            }
         }
 
         return $query;
@@ -433,10 +367,7 @@ class engine extends \core_search\engine {
             $query->addField($key);
             if ($dismax && !empty($field['mainquery'])) {
                 // Add fields the main query should be run against.
-                // Due to a regression in the PECL solr extension, https://bugs.php.net/bug.php?id=72740,
-                // a boost value is required, even if it is optional; to avoid boosting one among other fields,
-                // the explicit boost value will be the default one, for every field.
-                $query->addQueryField($key, 1);
+                $query->addQueryField($key);
             }
         }
     }
@@ -754,23 +685,6 @@ class engine extends \core_search\engine {
     }
 
     /**
-     * Replaces underlines at edges of words in the content with spaces.
-     *
-     * For example '_frogs_' will become 'frogs', '_frogs and toads_' will become 'frogs and toads',
-     * and 'frogs_and_toads' will be left as 'frogs_and_toads'.
-     *
-     * The reason for this is that for italic content_to_text puts _italic_ underlines at the start
-     * and end of the italicised phrase (not between words). Solr treats underlines as part of the
-     * word, which means that if you search for a word in italic then you can't find it.
-     *
-     * @param string $str String to replace
-     * @return string Replaced string
-     */
-    protected static function replace_underlines(string $str): string {
-        return preg_replace('~\b_|_\b~', '', $str);
-    }
-
-    /**
      * Adds a text document to the search engine.
      *
      * @param array $doc
@@ -778,14 +692,6 @@ class engine extends \core_search\engine {
      */
     protected function add_solr_document($doc) {
         $solrdoc = new \SolrInputDocument();
-
-        // Replace underlines in the content with spaces. The reason for this is that for italic
-        // text, content_to_text puts _italic_ underlines. Solr treats underlines as part of the
-        // word, which means that if you search for a word in italic then you can't find it.
-        if (array_key_exists('content', $doc)) {
-            $doc['content'] = self::replace_underlines($doc['content']);
-        }
-
         foreach ($doc as $field => $value) {
             $solrdoc->addField($field, $value);
         }
@@ -980,9 +886,6 @@ class engine extends \core_search\engine {
 
         $url = $this->get_connection_url('/update/extract');
 
-        // Return results as XML.
-        $url->param('wt', 'xml');
-
         // This will prevent solr from automatically making fields for every tika output.
         $url->param('uprefix', 'ignored_');
 
@@ -1168,18 +1071,6 @@ class engine extends \core_search\engine {
             return $configured;
         }
 
-        // As part of the above we have already checked that we can contact the server. For pages
-        // where performance is important, we skip doing a full schema check as well.
-        if ($this->should_skip_schema_check()) {
-            return true;
-        }
-
-        // Update schema if required/possible.
-        $schemalatest = $this->check_latest_schema();
-        if ($schemalatest !== true) {
-            return $schemalatest;
-        }
-
         // Check that the schema is already set up.
         try {
             $schema = new \search_solr\schema();
@@ -1228,18 +1119,12 @@ class engine extends \core_search\engine {
      * @return int
      */
     public function get_solr_major_version() {
-        if ($this->solrmajorversion !== null) {
-            return $this->solrmajorversion;
-        }
-
         // We should really ping first the server to see if the specified indexname is valid but
         // we want to minimise solr server requests as they are expensive. system() emits a warning
         // if it can not connect to the configured index in the configured server.
         $systemdata = @$this->get_search_client()->system();
         $solrversion = $systemdata->getResponse()->offsetGet('lucene')->offsetGet('solr-spec-version');
-        $this->solrmajorversion = intval(substr($solrversion, 0, strpos($solrversion, '.')));
-
-        return $this->solrmajorversion;
+        return intval(substr($solrversion, 0, strpos($solrversion, '.')));
     }
 
     /**
@@ -1285,13 +1170,7 @@ class engine extends \core_search\engine {
 
         if ($CFG->proxyhost && !is_proxybypass('http://' . $this->config->server_hostname . '/')) {
             $options['proxy_host'] = $CFG->proxyhost;
-            if (!empty($CFG->proxyport)) {
-                $options['proxy_port'] = $CFG->proxyport;
-            }
-            if (!empty($CFG->proxyuser) && !empty($CFG->proxypassword)) {
-                $options['proxy_login'] = $CFG->proxyuser;
-                $options['proxy_password'] = $CFG->proxypassword;
-            }
+            $options['proxy_port'] = $CFG->proxyport;
         }
 
         if (!class_exists('\SolrClient')) {
@@ -1379,106 +1258,5 @@ class engine extends \core_search\engine {
         $url .= '/solr/' . $this->config->indexname . '/' . ltrim($path, '/');
 
         return new \moodle_url($url);
-    }
-
-    /**
-     * Solr includes group support in the execute_query function.
-     *
-     * @return bool True
-     */
-    public function supports_group_filtering() {
-        return true;
-    }
-
-    protected function update_schema($oldversion, $newversion) {
-        // Construct schema.
-        $schema = new schema();
-        $cansetup = $schema->can_setup_server();
-        if ($cansetup !== true) {
-            return $cansetup;
-        }
-
-        switch ($newversion) {
-            // This version just requires a setup call to add new fields.
-            case 2017091700:
-                $setup = true;
-                break;
-
-            // If we don't know about the schema version we might not have implemented the
-            // change correctly, so return.
-            default:
-                return get_string('schemaversionunknown', 'search');
-        }
-
-        if ($setup) {
-            $schema->setup();
-        }
-
-        return true;
-    }
-
-    /**
-     * Solr supports sort by location within course contexts or below.
-     *
-     * @param \context $context Context that the user requested search from
-     * @return array Array from order name => display text
-     */
-    public function get_supported_orders(\context $context) {
-        $orders = parent::get_supported_orders($context);
-
-        // If not within a course, no other kind of sorting supported.
-        $coursecontext = $context->get_course_context(false);
-        if ($coursecontext) {
-            // Within a course or activity/block, support sort by location.
-            $orders['location'] = get_string('order_location', 'search',
-                    $context->get_context_name());
-        }
-
-        return $orders;
-    }
-
-    /**
-     * Solr supports search by user id.
-     *
-     * @return bool True
-     */
-    public function supports_users() {
-        return true;
-    }
-
-    /**
-     * Solr supports deleting the index for a context.
-     *
-     * @param int $oldcontextid Context that has been deleted
-     * @return bool True to indicate that any data was actually deleted
-     * @throws \core_search\engine_exception
-     */
-    public function delete_index_for_context(int $oldcontextid) {
-        $client = $this->get_search_client();
-        try {
-            $client->deleteByQuery('contextid:' . $oldcontextid);
-            $client->commit(true);
-            return true;
-        } catch (\Exception $e) {
-            throw new \core_search\engine_exception('error_solr', 'search_solr', '', $e->getMessage());
-        }
-    }
-
-    /**
-     * Solr supports deleting the index for a course.
-     *
-     * @param int $oldcourseid
-     * @return bool True to indicate that any data was actually deleted
-     * @throws \core_search\engine_exception
-     */
-    public function delete_index_for_course(int $oldcourseid) {
-        $client = $this->get_search_client();
-        try {
-            $client->deleteByQuery('courseid:' . $oldcourseid);
-            $client->commit(true);
-            return true;
-        } catch (\Exception $e) {
-            throw new \core_search\engine_exception('error_solr', 'search_solr', '', $e->getMessage());
-        }
     }
 }

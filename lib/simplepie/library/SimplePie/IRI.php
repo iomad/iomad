@@ -211,8 +211,10 @@ class SimplePie_IRI
 		{
 			return $this->normalization[$this->scheme][$name];
 		}
-
-		return $return;
+		else
+		{
+			return $return;
+		}
 	}
 
 	/**
@@ -223,7 +225,14 @@ class SimplePie_IRI
 	 */
 	public function __isset($name)
 	{
-		return method_exists($this, 'get_' . $name) || isset($this->$name);
+		if (method_exists($this, 'get_' . $name) || isset($this->$name))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -347,8 +356,10 @@ class SimplePie_IRI
 				$target->scheme_normalization();
 				return $target;
 			}
-
-			return false;
+			else
+			{
+				return false;
+			}
 		}
 	}
 
@@ -385,9 +396,11 @@ class SimplePie_IRI
 			}
 			return $match;
 		}
-
-		// This can occur when a paragraph is accidentally parsed as a URI
-		return false;
+		else
+		{
+			// This can occur when a paragraph is accidentally parsed as a URI
+			return false;
+		}
 	}
 
 	/**
@@ -791,7 +804,7 @@ class SimplePie_IRI
 	public function set_iri($iri, $clear_cache = false)
 	{
 		static $cache;
-		if ($clear_cache)
+		if ($clear_cache) 
 		{
 			$cache = null;
 			return;
@@ -817,28 +830,30 @@ class SimplePie_IRI
 				 $return) = $cache[$iri];
 			return $return;
 		}
-
-		$parsed = $this->parse_iri((string) $iri);
-		if (!$parsed)
+		else
 		{
-			return false;
+			$parsed = $this->parse_iri((string) $iri);
+			if (!$parsed)
+			{
+				return false;
+			}
+
+			$return = $this->set_scheme($parsed['scheme'])
+				&& $this->set_authority($parsed['authority'])
+				&& $this->set_path($parsed['path'])
+				&& $this->set_query($parsed['query'])
+				&& $this->set_fragment($parsed['fragment']);
+
+			$cache[$iri] = array($this->scheme,
+								 $this->iuserinfo,
+								 $this->ihost,
+								 $this->port,
+								 $this->ipath,
+								 $this->iquery,
+								 $this->ifragment,
+								 $return);
+			return $return;
 		}
-
-		$return = $this->set_scheme($parsed['scheme'])
-			&& $this->set_authority($parsed['authority'])
-			&& $this->set_path($parsed['path'])
-			&& $this->set_query($parsed['query'])
-			&& $this->set_fragment($parsed['fragment']);
-
-		$cache[$iri] = array($this->scheme,
-							 $this->iuserinfo,
-							 $this->ihost,
-							 $this->port,
-							 $this->ipath,
-							 $this->iquery,
-							 $this->ifragment,
-							 $return);
-		return $return;
 	}
 
 	/**
@@ -900,40 +915,42 @@ class SimplePie_IRI
 
 			return $return;
 		}
-
-		$remaining = $authority;
-		if (($iuserinfo_end = strrpos($remaining, '@')) !== false)
-		{
-			$iuserinfo = substr($remaining, 0, $iuserinfo_end);
-			$remaining = substr($remaining, $iuserinfo_end + 1);
-		}
 		else
 		{
-			$iuserinfo = null;
-		}
-		if (($port_start = strpos($remaining, ':', strpos($remaining, ']'))) !== false)
-		{
-			if (($port = substr($remaining, $port_start + 1)) === false)
+			$remaining = $authority;
+			if (($iuserinfo_end = strrpos($remaining, '@')) !== false)
+			{
+				$iuserinfo = substr($remaining, 0, $iuserinfo_end);
+				$remaining = substr($remaining, $iuserinfo_end + 1);
+			}
+			else
+			{
+				$iuserinfo = null;
+			}
+			if (($port_start = strpos($remaining, ':', strpos($remaining, ']'))) !== false)
+			{
+				if (($port = substr($remaining, $port_start + 1)) === false)
+				{
+					$port = null;
+				}
+				$remaining = substr($remaining, 0, $port_start);
+			}
+			else
 			{
 				$port = null;
 			}
-			$remaining = substr($remaining, 0, $port_start);
+
+			$return = $this->set_userinfo($iuserinfo) &&
+					  $this->set_host($remaining) &&
+					  $this->set_port($port);
+
+			$cache[$authority] = array($this->iuserinfo,
+									   $this->ihost,
+									   $this->port,
+									   $return);
+
+			return $return;
 		}
-		else
-		{
-			$port = null;
-		}
-
-		$return = $this->set_userinfo($iuserinfo) &&
-				  $this->set_host($remaining) &&
-				  $this->set_port($port);
-
-		$cache[$authority] = array($this->iuserinfo,
-								   $this->ihost,
-								   $this->port,
-								   $return);
-
-		return $return;
 	}
 
 	/**
@@ -1033,9 +1050,11 @@ class SimplePie_IRI
 			$this->scheme_normalization();
 			return true;
 		}
-
-		$this->port = null;
-		return false;
+		else
+		{
+			$this->port = null;
+			return false;
+		}
 	}
 
 	/**
@@ -1047,7 +1066,7 @@ class SimplePie_IRI
 	public function set_path($ipath, $clear_cache = false)
 	{
 		static $cache;
-		if ($clear_cache)
+		if ($clear_cache) 
 		{
 			$cache = null;
 			return;
@@ -1166,7 +1185,7 @@ class SimplePie_IRI
 		{
 			$iri .= $this->ipath;
 		}
-        elseif (!empty($this->normalization[$this->scheme]['ipath']) && $iauthority !== null && $iauthority !== '')
+		elseif (!empty($this->normalization[$this->scheme]['ipath']) && $iauthority !== null && $iauthority !== '')
 		{
 			$iri .= $this->normalization[$this->scheme]['ipath'];
 		}
@@ -1210,14 +1229,16 @@ class SimplePie_IRI
 			{
 				$iauthority .= $this->ihost;
 			}
-            if ($this->port !== null && $this->port !== 0)
+			if ($this->port !== null)
 			{
 				$iauthority .= ':' . $this->port;
 			}
 			return $iauthority;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -1230,7 +1251,7 @@ class SimplePie_IRI
 		$iauthority = $this->get_iauthority();
 		if (is_string($iauthority))
 			return $this->to_uri($iauthority);
-
-		return $iauthority;
+		else
+			return $iauthority;
 	}
 }

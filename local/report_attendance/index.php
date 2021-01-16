@@ -34,7 +34,7 @@ iomad::require_capability('local/report_attendance:view', $context);
 
 // Url stuff.
 $url = new moodle_url('/local/report_attendance/index.php');
-$dashboardurl = new moodle_url('/my');
+$dashboardurl = new moodle_url('/local/iomad_dashboard/index.php');
 
 // Page stuff:.
 $strcompletion = get_string('pluginname', 'local_report_attendance');
@@ -54,17 +54,20 @@ $company = new company($companyid);
 $parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
-// Work out where the user sits in the company department tree.
-$userlevel = $company->get_userlevel($USER);
-$userhierarchylevel = $userlevel->id;
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments',
+                    context_system::instance()) ||
+    !empty($SESSION->currenteditingcompany)) {
+    $userhierarchylevel = $parentlevel->id;
+} else {
+    $userlevel = $company->get_userlevel($USER);
+    $userhierarchylevel = $userlevel->id;
+}
 if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
 
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($strcompletion, $url);
+// Set the url.
+company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
 
 // Create data for form.
 $customdata = null;
@@ -81,13 +84,15 @@ if (empty($dodownload)) {
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }
+    }   
 } else {
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }
+    }   
 }
+
+
 
 // Get the courses which have the classroom module in them.
 $courses = attendancerep::courseselectlist($companyid);
@@ -147,7 +152,7 @@ if (!empty($courseid)) {
             if (!empty($allowedusers) &&
                 $users = $DB->get_records_sql('SELECT userid AS id FROM {trainingevent_users}
                                                WHERE trainingeventid='.$event->id.'
-                                               AND userid IN ('.$allowedlist.') AND waitlisted=0' )) {
+                                               AND userid IN ('.$allowedlist.')')) {
                 foreach ($users as $user) {
                     $fulluserdata = $DB->get_record('user', array('id' => $user->id));
                     $fulluserdata->department = company_user::get_department_name($user->id);
@@ -181,7 +186,7 @@ if (!empty($courseid)) {
         echo "\"".get_string('fullname')."\",\"". get_string('email')."\"\n";
         if ($users = $DB->get_records_sql('SELECT userid AS id FROM {trainingevent_users}
                                            WHERE trainingeventid='.$event->id.'
-                                           AND userid IN ('.$allowedlist.') AND waitlisted=0')) {
+                                           AND userid IN ('.$allowedlist.')')) {
             foreach ($users as $user) {
                 $fulluserdata = $DB->get_record('user', array('id' => $user->id));
                 $fulluserdata->department = company_user::get_department_name($user->id);

@@ -30,9 +30,8 @@ if ($ADMIN->fulltree) {
     require_once($CFG->dirroot.'/auth/shibboleth/classes/admin_setting_special_idp_configtextarea.php');
 
     // Introductory explanation.
-    $readmeurl = (new moodle_url('/auth/shibboleth/README.txt'))->out();
     $settings->add(new admin_setting_heading('auth_shibboleth/pluginname', '',
-            new lang_string('auth_shibbolethdescription', 'auth_shibboleth', $readmeurl)));
+            new lang_string('auth_shibbolethdescription', 'auth_shibboleth')));
 
     // Username.
     $settings->add(new admin_setting_configtext('auth_shibboleth/user_attribute', get_string('username'),
@@ -41,7 +40,7 @@ if ($ADMIN->fulltree) {
     // COnvert Data configuration file.
     $settings->add(new admin_setting_configfile('auth_shibboleth/convert_data',
             get_string('auth_shib_convert_data', 'auth_shibboleth'),
-            get_string('auth_shib_convert_data_description', 'auth_shibboleth', $readmeurl), ''));
+            get_string('auth_shib_convert_data_description', 'auth_shibboleth'), ''));
 
     // WAYF.
     $settings->add(new auth_shibboleth_admin_setting_special_wayf_select());
@@ -63,11 +62,6 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('auth_shibboleth/login_name',
             get_string('auth_shib_auth_method', 'auth_shibboleth'),
             get_string('auth_shib_auth_method_description', 'auth_shibboleth'), 'Shibboleth Login', PARAM_RAW_TRIMMED));
-
-    // Authentication method logo.
-    $settings->add(new admin_setting_configstoredfile('auth_shibboleth/auth_logo',
-                get_string('auth_shib_auth_logo', 'auth_shibboleth'),
-                get_string('auth_shib_auth_logo_description', 'auth_shibboleth'), 'logo', 0, ['accepted_types' => ['image']]));
 
     // Login directions.
     $settings->add(new admin_setting_configtextarea('auth_shibboleth/auth_instructions',

@@ -84,14 +84,7 @@ if ($deletesection) {
     }
 }
 
-$editoroptions = array(
-    'context'   => $context,
-    'maxfiles'  => EDITOR_UNLIMITED_FILES,
-    'maxbytes'  => $CFG->maxbytes,
-    'trusttext' => false,
-    'noclean'   => true,
-    'subdirs'   => true
-);
+$editoroptions = array('context'=>$context ,'maxfiles' => EDITOR_UNLIMITED_FILES, 'maxbytes'=>$CFG->maxbytes, 'trusttext'=>false, 'noclean'=>true);
 
 $courseformat = course_get_format($course);
 $defaultsectionname = $courseformat->get_default_section_name($section);

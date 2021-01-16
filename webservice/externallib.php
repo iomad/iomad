@@ -77,7 +77,6 @@ class core_webservice_external extends external_api {
                       array('serviceshortnames'=>$serviceshortnames));
 
         $context = context_user::instance($USER->id);
-        $systemcontext = context_system::instance();
 
         $userpicture = new user_picture($USER);
         $userpicture->size = 1; // Size f1.
@@ -85,7 +84,7 @@ class core_webservice_external extends external_api {
 
         // Site information.
         $siteinfo =  array(
-            'sitename' => external_format_string($SITE->fullname, $systemcontext),
+            'sitename' => $SITE->fullname,
             'siteurl' => $CFG->wwwroot,
             'username' => $USER->username,
             'firstname' => $USER->firstname,
@@ -168,7 +167,7 @@ class core_webservice_external extends external_api {
 
         // Retrieve some advanced features. Only enable/disable ones (bool).
         $advancedfeatures = array("usecomments", "usetags", "enablenotes", "messaging", "enableblogs",
-                                    "enablecompletion", "enablebadges", "messagingallusers");
+                                    "enablecompletion", "enablebadges");
         foreach ($advancedfeatures as $feature) {
             if (isset($CFG->{$feature})) {
                 $siteinfo['advancedfeatures'][] = array(
@@ -206,13 +205,6 @@ class core_webservice_external extends external_api {
         } else {
             $siteinfo['usercalendartype'] = $USER->calendartype;
         }
-        $siteinfo['userissiteadmin'] = is_siteadmin();
-
-        // User key, to avoid using the WS token for fetching assets.
-        $siteinfo['userprivateaccesskey'] = get_user_key('core_files', $USER->id);
-
-        // Current theme.
-        $siteinfo['theme'] = clean_param($PAGE->theme->name, PARAM_THEME);  // We always clean to avoid problem with old sites.
 
         return $siteinfo;
     }
@@ -276,13 +268,9 @@ class core_webservice_external extends external_api {
                 'userhomepage' => new external_value(PARAM_INT,
                                                         'the default home page for the user: 0 for the site home, 1 for dashboard',
                                                         VALUE_OPTIONAL),
-                'userprivateaccesskey'  => new external_value(PARAM_ALPHANUM, 'Private user access key for fetching files.',
-                    VALUE_OPTIONAL),
                 'siteid'  => new external_value(PARAM_INT, 'Site course ID', VALUE_OPTIONAL),
                 'sitecalendartype'  => new external_value(PARAM_PLUGIN, 'Calendar type set in the site.', VALUE_OPTIONAL),
                 'usercalendartype'  => new external_value(PARAM_PLUGIN, 'Calendar typed used by the user.', VALUE_OPTIONAL),
-                'userissiteadmin'  => new external_value(PARAM_BOOL, 'Whether the user is a site admin or not.', VALUE_OPTIONAL),
-                'theme'  => new external_value(PARAM_THEME, 'Current theme for the user.', VALUE_OPTIONAL),
             )
         );
     }

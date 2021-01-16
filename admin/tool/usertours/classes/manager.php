@@ -79,11 +79,6 @@ class manager {
     const ACTION_VIEWTOUR = 'viewtour';
 
     /**
-     * @var ACTION_DUPLICATETOUR     The action to duplicate the tour.
-     */
-    const ACTION_DUPLICATETOUR = 'duplicatetour';
-
-    /**
      * @var ACTION_NEWSTEP The action to create a new step.
      */
     const ACTION_NEWSTEP = 'newstep';
@@ -139,27 +134,12 @@ class manager {
     const CONFIG_SHIPPED_VERSION = 'shipped_version';
 
     /**
-     * Helper method to initialize admin page, setting appropriate extra URL parameters
-     *
-     * @param string $action
-     */
-    protected function setup_admin_externalpage(string $action): void {
-        admin_externalpage_setup('tool_usertours/tours', '', array_filter([
-            'action' => $action,
-            'id' => optional_param('id', 0, PARAM_INT),
-            'tourid' => optional_param('tourid', 0, PARAM_INT),
-            'direction' => optional_param('direction', 0, PARAM_INT),
-        ]));
-    }
-
-    /**
      * This is the entry point for this controller class.
      *
      * @param   string  $action     The action to perform.
      */
     public function execute($action) {
-        $this->setup_admin_externalpage($action);
-
+        admin_externalpage_setup('tool_usertours/tours');
         // Add the main content.
         switch($action) {
             case self::ACTION_NEWTOUR:
@@ -181,10 +161,6 @@ class manager {
 
             case self::ACTION_VIEWTOUR:
                 $this->view_tour(required_param('id', PARAM_INT));
-                break;
-
-            case self::ACTION_DUPLICATETOUR:
-                $this->duplicate_tour(required_param('id', PARAM_INT));
                 break;
 
             case self::ACTION_HIDETOUR:
@@ -281,7 +257,7 @@ class manager {
                 'title' => get_string('importtour', 'tool_usertours'),
             ],
             (object) [
-                'link'  => new \moodle_url('https://archive.moodle.net/tours'),
+                'link'  => new \moodle_url('https://moodle.net/tours'),
                 'linkproperties' => [
                         'target' => '_blank',
                     ],
@@ -511,39 +487,6 @@ class manager {
     }
 
     /**
-     * Duplicate an existing tour.
-     *
-     * @param   int         $tourid     The ID of the tour to duplicate.
-     */
-    protected function duplicate_tour($tourid) {
-        $tour = helper::get_tour($tourid);
-
-        $export = $tour->to_record();
-        // Remove the id.
-        unset($export->id);
-
-        // Set the version.
-        $export->version = get_config('tool_usertours', 'version');
-
-        $export->name = get_string('duplicatetour_name', 'tool_usertours', $export->name);
-
-        // Step export.
-        $export->steps = [];
-        foreach ($tour->get_steps() as $step) {
-            $record = $step->to_record();
-            unset($record->id);
-            unset($record->tourid);
-
-            $export->steps[] = $record;
-        }
-
-        $exportstring = json_encode($export);
-        $newtour = self::import_tour_from_json($exportstring);
-
-        redirect($newtour->get_view_link());
-    }
-
-    /**
      * Show the tour.
      *
      * @param   int         $tourid     The ID of the tour to display.
@@ -754,7 +697,7 @@ class manager {
     }
 
     /**
-     * Move a tour up or down and redirect once complete.
+     * Move a tour up or down.
      *
      * @param   int     $id     The tour to move.
      */
@@ -764,26 +707,6 @@ class manager {
         $direction = required_param('direction', PARAM_INT);
 
         $tour = tour::instance($id);
-        self::_move_tour($tour, $direction);
-
-        redirect(helper::get_list_tour_link());
-    }
-
-    /**
-     * Move a tour up or down.
-     *
-     * @param   tour    $tour   The tour to move.
-     *
-     * @param   int     $direction
-     */
-    protected static function _move_tour(tour $tour, $direction) {
-        // We can't move the first tour higher, nor the last tour any lower.
-        if (($tour->is_first_tour() && $direction == helper::MOVE_UP) ||
-                ($tour->is_last_tour() && $direction == helper::MOVE_DOWN)) {
-
-            return;
-        }
-
         $currentsortorder   = $tour->get_sortorder();
         $targetsortorder    = $currentsortorder + $direction;
 
@@ -799,6 +722,8 @@ class manager {
 
         $tour->set_sortorder($targetsortorder);
         $tour->persist();
+
+        redirect(helper::get_list_tour_link());
     }
 
     /**
@@ -860,18 +785,8 @@ class manager {
         // the format filename => version. The version value needs to
         // be increased if the tour has been updated.
         $shippedtours = [
-        ];
-
-        // These are tours that we used to ship but don't ship any longer.
-        // We do not remove them, but we do disable them.
-        $unshippedtours = [
-            // Formerly included in Moodle 3.2.0.
             'boost_administrator.json' => 1,
             'boost_course_view.json' => 1,
-
-            // Formerly included in Moodle 3.6.0.
-            '36_dashboard.json' => 3,
-            '36_messaging.json' => 3,
         ];
 
         $existingtourrecords = $DB->get_recordset('tool_usertours_tours');
@@ -898,22 +813,12 @@ class manager {
                         unset($shippedtours[$filename]);
                     }
                 }
-
-                if (isset($unshippedtours[$filename])) {
-                    if ($version <= $unshippedtours[$filename]) {
-                        $tour = tour::instance($tour->get_id());
-                        $tour->set_enabled(tour::DISABLED);
-                        $tour->persist();
-                    }
-                }
             }
         }
+
         $existingtourrecords->close();
 
-        // Ensure we correct the sortorder in any existing tours, prior to adding latest shipped tours.
-        helper::reset_tour_sortorder();
-
-        foreach (array_reverse($shippedtours) as $filename => $version) {
+        foreach ($shippedtours as $filename => $version) {
             $filepath = $CFG->dirroot . "/{$CFG->admin}/tool/usertours/tours/" . $filename;
             $tourjson = file_get_contents($filepath);
             $tour = self::import_tour_from_json($tourjson);
@@ -923,11 +828,6 @@ class manager {
             $tour->set_config(self::CONFIG_SHIPPED_TOUR, true);
             $tour->set_config(self::CONFIG_SHIPPED_FILENAME, $filename);
             $tour->set_config(self::CONFIG_SHIPPED_VERSION, $version);
-
-            // Bump new tours to the top of the list.
-            while ($tour->get_sortorder() > 0) {
-                self::_move_tour($tour, helper::MOVE_UP);
-            }
 
             if (defined('BEHAT_SITE_RUNNING') || (defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
                 // Disable this tour if this is behat or phpunit.

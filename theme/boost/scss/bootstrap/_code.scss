@@ -1,19 +1,24 @@
+// Inline and block code styles
+code,
+kbd,
+pre,
+samp {
+  font-family: $font-family-monospace;
+}
+
 // Inline code
 code {
-  @include font-size($code-font-size);
+  padding: $code-padding-y $code-padding-x;
+  font-size: $code-font-size;
   color: $code-color;
-  word-wrap: break-word;
-
-  // Streamline the style when inside anchors to avoid broken underline and more
-  a > & {
-    color: inherit;
-  }
+  background-color: $code-bg;
+  @include border-radius($border-radius);
 }
 
 // User input typically entered via keyboard
 kbd {
-  padding: $kbd-padding-y $kbd-padding-x;
-  @include font-size($kbd-font-size);
+  padding: $code-padding-y $code-padding-x;
+  font-size: $code-font-size;
   color: $kbd-color;
   background-color: $kbd-bg;
   @include border-radius($border-radius-sm);
@@ -21,7 +26,7 @@ kbd {
 
   kbd {
     padding: 0;
-    @include font-size(100%);
+    font-size: 100%;
     font-weight: $nested-kbd-font-weight;
     @include box-shadow(none);
   }
@@ -30,14 +35,18 @@ kbd {
 // Blocks of code
 pre {
   display: block;
-  @include font-size($code-font-size);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: $code-font-size;
   color: $pre-color;
 
   // Account for some code outputs that place code tags in pre tags
   code {
-    @include font-size(inherit);
+    padding: 0;
+    font-size: inherit;
     color: inherit;
-    word-break: normal;
+    background-color: transparent;
+    border-radius: 0;
   }
 }
 

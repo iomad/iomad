@@ -29,7 +29,6 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/default.php');
 require_once($CFG->dirroot . '/mod/quiz/report/overview/report.php');
-require_once($CFG->dirroot . '/mod/quiz/report/overview/tests/helpers.php');
 
 
 /**
@@ -87,12 +86,6 @@ class quiz_overview_report_testcase extends advanced_testcase {
         // about duplicate records. So this is really a test that an extra
         // student enrolment does not cause duplicate records in this query.
         $generator->enrol_user($student2->id, $course->id, null, 'self');
-
-        // Also create a user who should not appear in the reports,
-        // because they have a role with neither 'mod/quiz:attempt'
-        // nor 'mod/quiz:reviewmyattempts'.
-        $tutor = $generator->create_user();
-        $generator->enrol_user($tutor->id, $course->id, 'teacher');
 
         // The test data.
         $timestamp = 1234567890;
@@ -161,8 +154,7 @@ class quiz_overview_report_testcase extends advanced_testcase {
         $context = context_module::instance($quiz->cmid);
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $qmsubselect = quiz_report_qm_filter_select($quiz);
-        $studentsjoins = get_enrolled_with_capabilities_join($context, '',
-                array('mod/quiz:attempt', 'mod/quiz:reviewmyattempts'));
+        $studentsjoins = get_enrolled_with_capabilities_join($context);
         $empty = new \core\dml\sql_join();
 
         // Set the options.
@@ -262,56 +254,6 @@ class quiz_overview_report_testcase extends advanced_testcase {
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
         $quiz = $quizgenerator->create_instance(['course' => SITEID, 'grade' => $grade]);
         $this->assertEquals($expected, quiz_overview_report::get_bands_count_and_width($quiz));
-    }
-
-    /**
-     * Test delete_selected_attempts function.
-     */
-    public function test_delete_selected_attempts() {
-        $this->resetAfterTest(true);
-
-        $timestamp = 1234567890;
-        $timestart = $timestamp + 3600;
-
-        // Create a course and a quiz.
-        $generator = $this->getDataGenerator();
-        $course = $generator->create_course();
-        $quizgenerator = $generator->get_plugin_generator('mod_quiz');
-        $quiz = $quizgenerator->create_instance([
-                'course' => $course->id,
-                'grademethod' => QUIZ_GRADEHIGHEST,
-                'grade' => 100.0,
-                'sumgrades' => 10.0,
-                'attempts' => 10
-        ]);
-
-        // Add one question.
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $cat = $questiongenerator->create_question_category();
-        $q = $questiongenerator->create_question('essay', 'plain', ['category' => $cat->id]);
-        quiz_add_quiz_question($q->id, $quiz, 0 , 10);
-
-        // Create student and enrol them in the course.
-        // Note: we create two enrolments, to test the problem reported in MDL-67942.
-        $student = $generator->create_user();
-        $generator->enrol_user($student->id, $course->id);
-        $generator->enrol_user($student->id, $course->id, null, 'self');
-
-        $context = context_module::instance($quiz->cmid);
-        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
-        $allowedjoins = get_enrolled_with_capabilities_join($context, '', ['mod/quiz:attempt', 'mod/quiz:reviewmyattempts']);
-        $quizattemptsreport = new testable_quiz_attempts_report();
-
-        // Create the new attempt and initialize the question sessions.
-        $quizobj = quiz::create($quiz->id, $student->id);
-        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        $attempt = quiz_create_attempt($quizobj, 1, null, $timestart, false, $student->id);
-        $attempt = quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timestamp);
-        $attempt = quiz_attempt_save_started($quizobj, $quba, $attempt);
-
-        // Delete the student's attempt.
-        $quizattemptsreport->delete_selected_attempts($quiz, $cm, [$attempt->id], $allowedjoins);
     }
 
 }

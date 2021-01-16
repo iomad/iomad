@@ -97,15 +97,12 @@ class auth_db_testcase extends advanced_testcase {
                 break;
 
             case 'mssql':
-                set_config('type', 'mssqlnative', 'auth_db');
-                set_config('sybasequoting', '1', 'auth_db');
-
-                // The native sqlsrv driver uses a comma as separator between host and port.
-                $dbhost = $CFG->dbhost;
-                if (!empty($dboptions['dbport'])) {
-                    $dbhost .= ',' . $dboptions['dbport'];
+                if (get_class($DB) == 'mssql_native_moodle_database') {
+                    set_config('type', 'mssql_n', 'auth_db');
+                } else {
+                    set_config('type', 'mssqlnative', 'auth_db');
                 }
-                set_config('host', $dbhost, 'auth_db');
+                set_config('sybasequoting', '1', 'auth_db');
                 break;
 
             default:

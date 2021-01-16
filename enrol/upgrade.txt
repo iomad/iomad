@@ -1,41 +1,6 @@
 This files describes API changes in /enrol/* - plugins,
 information provided here is intended especially for developers.
 
-=== 3.8 ===
-
-* Function enrol_manual_plugin::enrol_cohort now return the number of enrolled cohort users.
-
-=== 3.7 ===
-
-* Functions get_potential_users() and search_other_users() now return more information to avoid extra count query:
-  - users: List of user objects returned by the query.
-  - moreusers: True if there are still more users, otherwise is False.
-  - totalusers: Number users matching the search. (This element only exists if the function is called with $returnexactcount param set to true).
-* enrolledusercount is now optional in the return value of get_users_courses() for performance reasons. This is controlled with the new
-  optional returnusercount parameter (default true).
-* External function core_enrol_external::get_users_courses now returns a new field "completionusertracked" that indicates if the
-  given user is being tracked for completion.
-
-=== 3.6 ===
-
-* External function core_enrol_external::get_users_courses now return more information to avoid multiple queries to build the
-  user dashboard:
-  - displayname: Course display name for lists.
-  - marker: Course section active marker.
-  - completed: Whether the given user completed the course or not.
-  - lastaccess: Last time the user accessed the course.
-  - overviewfiles: Course overview files.
-  - completionhascriteria: Whether completion criteria is set for the course.
-  - isfavourite: Whether the user marked the course as favourite.
-  - hidden: Whether the user hide the course from the dashboard.
-* External functions core_enrol_external::get_enrolled_users and core_enrol_external::get_enrolled_users_with_capability now return
-  the last access time for the users in the given course.
-
-=== 3.5 ===
-
-* Default sorting in enrol_get_my_courses(), enrol_get_all_users_courses() and enrol_get_users_courses() now respects
-  the site setting "navsortmycoursessort" and should be consistently used when displaying the courses in the UI.
-
 === 3.4 ===
 
 * render_course_enrolment_users_table method has been removed from the renderer. The enrolled users page is now

@@ -116,83 +116,6 @@ class mod_feedback_privacy_testcase extends provider_testcase {
     }
 
     /**
-     * Test getting the users in a context.
-     */
-    public function test_get_users_in_context() {
-        global $DB;
-        $dg = $this->getDataGenerator();
-        $fg = $dg->get_plugin_generator('mod_feedback');
-        $component = 'mod_feedback';
-
-        $c1 = $dg->create_course();
-        $c2 = $dg->create_course();
-        $cm0 = $dg->create_module('feedback', ['course' => SITEID]);
-        $cm1a = $dg->create_module('feedback', ['course' => $c1, 'anonymous' => FEEDBACK_ANONYMOUS_NO]);
-        $cm1b = $dg->create_module('feedback', ['course' => $c1]);
-        $cm2 = $dg->create_module('feedback', ['course' => $c2]);
-
-        $u1 = $dg->create_user();
-        $u2 = $dg->create_user();
-
-        foreach ([$cm0, $cm1a, $cm1b, $cm2] as $feedback) {
-            $i1 = $fg->create_item_numeric($feedback);
-            $i2 = $fg->create_item_multichoice($feedback);
-            $answers = ['numeric_' . $i1->id => '1', 'multichoice_' . $i2->id => [1]];
-
-            if ($feedback == $cm1b) {
-                $this->create_submission_with_answers($feedback, $u2, $answers);
-            } else {
-                $this->create_submission_with_answers($feedback, $u1, $answers);
-            }
-        }
-
-        // Unsaved submission for u2 in cm1a.
-        $feedback = $cm1a;
-        $i1 = $fg->create_item_numeric($feedback);
-        $i2 = $fg->create_item_multichoice($feedback);
-        $answers = ['numeric_' . $i1->id => '1', 'multichoice_' . $i2->id => [1]];
-        $this->create_tmp_submission_with_answers($feedback, $u2, $answers);
-
-        // Only u1 in cm0.
-        $context = context_module::instance($cm0->cmid);
-        $userlist = new \core_privacy\local\request\userlist($context, $component);
-        provider::get_users_in_context($userlist);
-
-        $this->assertCount(1, $userlist);
-        $this->assertEquals([$u1->id], $userlist->get_userids());
-
-        $context = context_module::instance($cm1a->cmid);
-        $userlist = new \core_privacy\local\request\userlist($context, $component);
-        provider::get_users_in_context($userlist);
-
-        // Two submissions in cm1a: saved for u1, unsaved for u2.
-        $this->assertCount(2, $userlist);
-
-        $expected = [$u1->id, $u2->id];
-        $actual = $userlist->get_userids();
-        sort($expected);
-        sort($actual);
-
-        $this->assertEquals($expected, $actual);
-
-        // Only u2 in cm1b.
-        $context = context_module::instance($cm1b->cmid);
-        $userlist = new \core_privacy\local\request\userlist($context, $component);
-        provider::get_users_in_context($userlist);
-
-        $this->assertCount(1, $userlist);
-        $this->assertEquals([$u2->id], $userlist->get_userids());
-
-        // Only u1 in cm2.
-        $context = context_module::instance($cm2->cmid);
-        $userlist = new \core_privacy\local\request\userlist($context, $component);
-        provider::get_users_in_context($userlist);
-
-        $this->assertCount(1, $userlist);
-        $this->assertEquals([$u1->id], $userlist->get_userids());
-    }
-
-    /**
      * Test deleting user data.
      */
     public function test_delete_data_for_user() {
@@ -244,66 +167,6 @@ class mod_feedback_privacy_testcase extends provider_testcase {
         $this->assert_feedback_data_for_user($cm2a, $u1);
         $this->assert_feedback_tmp_data_for_user($cm2a, $u1);
 
-    }
-
-    /**
-     * Test deleting data within a context for an approved userlist.
-     */
-    public function test_delete_data_for_users() {
-        global $DB;
-        $dg = $this->getDataGenerator();
-        $fg = $dg->get_plugin_generator('mod_feedback');
-
-        $c1 = $dg->create_course();
-        $c2 = $dg->create_course();
-        $cm0 = $dg->create_module('feedback', ['course' => SITEID]);
-        $cm1 = $dg->create_module('feedback', ['course' => $c1, 'anonymous' => FEEDBACK_ANONYMOUS_NO]);
-        $cm2 = $dg->create_module('feedback', ['course' => $c2]);
-        $context0 = context_module::instance($cm0->cmid);
-        $context1 = context_module::instance($cm1->cmid);
-
-        $u1 = $dg->create_user();
-        $u2 = $dg->create_user();
-
-        // Create a bunch of data.
-        foreach ([$cm0, $cm1, $cm2] as $feedback) {
-            $i1 = $fg->create_item_numeric($feedback);
-            $i2 = $fg->create_item_multichoice($feedback);
-            $answers = ['numeric_' . $i1->id => '1', 'multichoice_' . $i2->id => [1]];
-
-            $this->create_submission_with_answers($feedback, $u1, $answers);
-            $this->create_tmp_submission_with_answers($feedback, $u1, $answers);
-
-            $this->create_submission_with_answers($feedback, $u2, $answers);
-            $this->create_tmp_submission_with_answers($feedback, $u2, $answers);
-        }
-
-        // Delete u1 from cm0, ensure u2 data is retained.
-        $approveduserlist = new core_privacy\local\request\approved_userlist($context0, 'mod_feedback', [$u1->id]);
-        provider::delete_data_for_users($approveduserlist);
-
-        $this->assert_no_feedback_data_for_user($cm0, $u1);
-        $this->assert_feedback_data_for_user($cm0, $u2);
-        $this->assert_feedback_tmp_data_for_user($cm0, $u2);
-
-        // Ensure cm1 unaffected by cm1 deletes.
-        $this->assert_feedback_data_for_user($cm1, $u1);
-        $this->assert_feedback_tmp_data_for_user($cm1, $u1);
-        $this->assert_feedback_data_for_user($cm1, $u2);
-        $this->assert_feedback_tmp_data_for_user($cm1, $u2);
-
-        // Delete u1 and u2 from cm1, ensure no data is retained.
-        $approveduserlist = new core_privacy\local\request\approved_userlist($context1, 'mod_feedback', [$u1->id, $u2->id]);
-        provider::delete_data_for_users($approveduserlist);
-
-        $this->assert_no_feedback_data_for_user($cm1, $u1);
-        $this->assert_no_feedback_data_for_user($cm1, $u2);
-
-        // Ensure cm2 is unaffected by any of the deletes.
-        $this->assert_feedback_data_for_user($cm2, $u1);
-        $this->assert_feedback_tmp_data_for_user($cm2, $u1);
-        $this->assert_feedback_data_for_user($cm2, $u2);
-        $this->assert_feedback_tmp_data_for_user($cm2, $u2);
     }
 
     /**
@@ -524,18 +387,22 @@ class mod_feedback_privacy_testcase extends provider_testcase {
      * @return void
      */
     protected function create_submission_with_answers($feedback, $user, $answers, $submissioncount = 1) {
-        global $DB;
+        global $DB, $USER;
+        $origuser = $USER;
+        $this->setUser($user);
 
         $modinfo = get_fast_modinfo($feedback->course);
         $cm = $modinfo->get_cm($feedback->cmid);
 
-        $feedbackcompletion = new mod_feedback_completion($feedback, $cm, $feedback->course, false, null, null, $user->id);
+        $feedbackcompletion = new mod_feedback_completion($feedback, $cm, $feedback->course);
         $feedbackcompletion->save_response_tmp((object) $answers);
         $feedbackcompletion->save_response();
         $this->assertEquals($submissioncount, $DB->count_records('feedback_completed', ['feedback' => $feedback->id,
             'userid' => $user->id]));
         $this->assertEquals(count($answers), $DB->count_records('feedback_value', [
             'completed' => $feedbackcompletion->get_completed()->id]));
+
+        $this->setUser($origuser);
     }
 
     /**
@@ -547,15 +414,19 @@ class mod_feedback_privacy_testcase extends provider_testcase {
      * @return void
      */
     protected function create_tmp_submission_with_answers($feedback, $user, $answers) {
-        global $DB;
+        global $DB, $USER;
+        $origuser = $USER;
+        $this->setUser($user);
 
         $modinfo = get_fast_modinfo($feedback->course);
         $cm = $modinfo->get_cm($feedback->cmid);
 
-        $feedbackcompletion = new mod_feedback_completion($feedback, $cm, $feedback->course, false, null, null, $user->id);
+        $feedbackcompletion = new mod_feedback_completion($feedback, $cm, $feedback->course);
         $feedbackcompletion->save_response_tmp((object) $answers);
         $this->assertEquals(1, $DB->count_records('feedback_completedtmp', ['feedback' => $feedback->id, 'userid' => $user->id]));
         $this->assertEquals(2, $DB->count_records('feedback_valuetmp', [
             'completed' => $feedbackcompletion->get_current_completed_tmp()->id]));
+
+        $this->setUser($origuser);
     }
 }

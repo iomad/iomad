@@ -179,9 +179,6 @@ function install_helpbutton($url, $title='') {
  * @return string
  */
 function install_db_validate($database, $dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions) {
-    if (!preg_match('/^[a-z_]*$/', $prefix)) {
-        return get_string('invaliddbprefix', 'install');
-    }
     try {
         try {
             $database->connect($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions);
@@ -346,13 +343,18 @@ function install_print_header($config, $stagename, $heading, $stagetext, $stagec
           <meta http-equiv="expires" content="0" />';
 
     echo '</head><body class="notloggedin">
-            <div id="page" class="mt-0 container stage'.$config->stage.'">
+            <div id="page" class="stage'.$config->stage.'">
                 <div id="page-header">
                     <div id="header" class=" clearfix">
                         <h1 class="headermain">'.get_string('installation','install').'</h1>
                         <div class="headermenu">&nbsp;</div>
                     </div>
-                    <div class="bg-light p-3 mb-3"><h3 class="m-0">'.$stagename.'</h3></div>
+                    <div class="navbar clearfix">
+                        <nav class="breadcrumb-nav">
+                            <ul class="breadcrumb"><li class="first">'.$stagename.'</li></ul>
+                        </nav>
+                        <div class="navbutton">&nbsp;</div>
+                    </div>
                 </div>
           <!-- END OF HEADER -->
           <div id="installdiv">';
@@ -383,9 +385,9 @@ function install_print_footer($config, $reload=false) {
     global $CFG;
 
     if ($config->stage > INSTALL_WELCOME) {
-        $first = '<input type="submit" id="previousbutton" class="btn btn-secondary flex-grow-0 ml-auto" name="previous" value="&laquo; '.s(get_string('previous')).'" />';
+        $first = '<input type="submit" id="previousbutton" name="previous" value="&laquo; '.s(get_string('previous')).'" />';
     } else {
-        $first = '<input type="submit" id="previousbutton" class="btn btn-secondary flex-grow-0  ml-auto" name="next" value="'.s(get_string('reload')).'" />';
+        $first = '<input type="submit" id="previousbutton" name="next" value="'.s(get_string('reload')).'" />';
         $first .= '<script type="text/javascript">
 //<![CDATA[
     var first = document.getElementById("previousbutton");
@@ -396,12 +398,12 @@ function install_print_footer($config, $reload=false) {
     }
 
     if ($reload) {
-        $next = '<input type="submit" id="nextbutton" class="btn btn-primary ml-1 flex-grow-0 mr-auto" name="next" value="'.s(get_string('reload')).'" />';
+        $next = '<input type="submit" id="nextbutton" class="btn btn-primary" name="next" value="'.s(get_string('reload')).'" />';
     } else {
-        $next = '<input type="submit" id="nextbutton" class="btn btn-primary ml-1 flex-grow-0 mr-auto" name="next" value="'.s(get_string('next')).' &raquo;" />';
+        $next = '<input type="submit" id="nextbutton" class="btn btn-primary" name="next" value="'.s(get_string('next')).' &raquo;" />';
     }
 
-    echo '</fieldset><div id="nav_buttons" class="mb-3 btn-group w-100 flex-row-reverse">'.$next.$first.'</div>';
+    echo '</fieldset><fieldset id="nav_buttons">'.$first.$next.'</fieldset>';
 
     $homelink  = '<div class="sitelink">'.
        '<a title="Moodle '. $CFG->target_release .'" href="http://docs.moodle.org/en/Administrator_documentation" onclick="this.target=\'_blank\'">'.
@@ -508,7 +510,8 @@ function install_cli_database(array $options, $interactive) {
     // log in as admin - we need do anything when applying defaults
     \core\session\manager::set_user(get_admin());
 
-    // Apply all default settings.
+    // apply all default settings, do it twice to fill all defaults - some settings depend on other setting
+    admin_apply_default_settings(NULL, true);
     admin_apply_default_settings(NULL, true);
     set_config('registerauth', '');
 

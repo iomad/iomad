@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="moodle-atto_multilang2" default="behat_test">
+
+    <property name="workspace.dir" value="${env.JENKINS_HOME}/jobs/${phing.project.name}/workspace"/>
+    <property name="moodle.git" value="${workspace.dir}/moodle/"/>
+    <property name="parameter.version" value=""/>
+    <property name="version.dir" value="${workspace.dir}/target/${parameter.version}"/>
+    <property name="config.path" value="${env.JENKINS_HOME}/moodle-config/config-${parameter.version}.php"/>
+    <property name="atto_multilang2.install.path" value="${version.dir}/lib/editor/atto/plugins/multilang2"/>
+    <property name="behat.wwwroot" value="/var/www/html/behat_${parameter.version}"/>
+    <property name="behat.dataroot" value="/var/behat_${parameter.version}"/>
+    <property name="behat.yml" value="${behat.dataroot}/behat/behat.yml"/>
+    <property name="selenium.version" value="2.48.2"/>
+    <property name="selenium.path" value="${env.JENKINS_HOME}/selenium/selenium-server-standalone-${selenium.version}.jar"/>
+    <property name="error.code" value="1"/>
+    <property name="success.code" value="0"/>
+
+    <property name="shifter.exec" value="shifter --recursive"/>
+    <property name="shifter.dir" value="yui/src/button/"/>
+    <property name="shifter.success" value="Success linting building with Shifter."/>
+    <property name="shifter.fail" value="${line.separator}Shifter build failed:${line.separator}"/>
+
+    <target name="shifter">
+        <exec command="${shifter.exec}" dir="${shifter.dir}" returnProperty="shifter.status" outputProperty="shifter.output"/>
+        <if>
+            <not>
+                <equals arg1="${shifter.status}" arg2="${success.code}"/>
+            </not>
+            <then>
+                <fail message="${shifter.fail} ${shifter.output}"/>
+            </then>
+        </if>
+
+        <echo msg="${shifter.success}"/>
+    </target>
+
+    <target name="moodle_pull">
+        <mkdir dir="${moodle.git}"/>
+        <exec command="git init" dir="${moodle.git}"/>
+        <exec command="git remote add origin https://github.com/moodle/moodle.git" dir="${moodle.git}"/>
+        <exec command="git pull --all" dir="${moodle.git}" outputProperty="moodle_pull.output"/>
+        <echo msg="${moodle_pull.output}"/>
+    </target>
+
+    <target name="moodle_install" depends="moodle_pull">
+        <exec command="git checkout ${parameter.version}" dir="${moodle.git}" outputProperty="moodle_install.checkout.output"/>
+        <echo msg="${moodle_install.checkout.output}"/>
+        <exec command="cp -r ./* ${version.dir}" dir="${moodle.git}"/>
+        <exec command="cp ${config.path} config.php" dir="${version.dir}"/>
+    </target>
+
+    <target name="atto_multilang2_install" depends="moodle_install">
+        <copy todir="${atto_multilang2.install.path}">
+            <fileset dir="${workspace.dir}/moodle-atto_multilang2/">
+                <exclude name="build.xml"/>
+                <exclude name=".git/"/>
+                <exclude name=".gitmodules"/>
+                <exclude name="moodle-javascript_style_checker/"/>
+                <exclude name="README.md"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="behat_init" depends="atto_multilang2_install">
+        <exec command="php admin/tool/behat/cli/init.php" dir="${version.dir}"/>
+        <exec command="rm --recursive ${behat.wwwroot}/*"/>
+        <copy todir="${behat.wwwroot}">
+            <fileset dir="${version.dir}"/>
+        </copy>
+        <copy file="${config.path}" tofile="${behat.wwwroot}/config.php"/>
+    </target>
+
+    <!-- This kills both Selenium and xvfb are killed. The "killall" command is a dirty workaround to issue #11, but no other way has been found to make the tests work properly. -->
+    <target name="selenium_kill" depends="behat_init">
+        <exec command="killall -v xvfb-run"/>
+        <exec command="curl -s http://localhost:4444/selenium-server/driver/?cmd=shutDownSeleniumServer"/>
+    </target>
+
+    <target name="selenium_start" depends="selenium_kill">
+        <exec command="xvfb-run -a java -jar ${selenium.path} &gt; /dev/null &amp;" outputProperty="selenium.output"/>
+    </target>
+
+    <target name="behat_test" depends="selenium_start">
+        <exec command="vendor/bin/behat --config ${behat.yml} --tags @atto_multilang2" dir="${version.dir}" returnProperty="behat.status" outputProperty="behat.output"/>
+        <if>
+            <equals arg1="${behat.status}" arg2="${error.code}"/>
+            <then>
+                <fail message="${behat.output}"/>
+            </then>
+        </if>
+
+        <echo msg="${behat.output}"/>
+    </target>
+
+</project>
+

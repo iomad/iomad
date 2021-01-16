@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
  * Base class for unit tests for enrol_meta.
  *
@@ -22,13 +21,10 @@
  * @copyright  2018 Carlos Escobedo <carlos@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die();
-
-use core_privacy\local\request\writer;
-use core_privacy\local\request\approved_contextlist;
-use enrol_meta\privacy\provider;
-
+use \core_privacy\local\request\writer;
+use \core_privacy\local\request\approved_contextlist;
+use \enrol_meta\privacy\provider;
 /**
  * Unit tests for the enrol_meta implementation of the privacy API.
  *
@@ -36,7 +32,6 @@ use enrol_meta\privacy\provider;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enrol_meta_privacy_testcase extends \core_privacy\tests\provider_testcase {
-
     /**
      * Enable enrol_meta plugin.
      */
@@ -46,7 +41,6 @@ class enrol_meta_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $enabled = array_keys($enabled);
         set_config('enrol_plugins_enabled', implode(',', $enabled));
     }
-
     /**
      * Test getting the context for the user ID related to this plugin.
      */
@@ -117,7 +111,6 @@ class enrol_meta_privacy_testcase extends \core_privacy\tests\provider_testcase 
             }
         }
     }
-
     /**
      * Test for provider::delete_data_for_all_users_in_context().
      */
@@ -157,7 +150,6 @@ class enrol_meta_privacy_testcase extends \core_privacy\tests\provider_testcase 
                                      WHERE g.courseid = ?", [$course1->id])
         );
     }
-
     /**
      * Test for provider::delete_data_for_user().
      */
@@ -202,101 +194,5 @@ class enrol_meta_privacy_testcase extends \core_privacy\tests\provider_testcase 
                                           JOIN {groups} g ON gm.groupid = g.id
                                          WHERE g.courseid = ?", [$course1->id])
         );
-    }
-
-    /**
-     * Test for provider::delete_data_for_users().
-     */
-    public function test_delete_data_for_users() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $metaplugin = enrol_get_plugin('meta');
-
-        $user1 = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $user3 = $this->getDataGenerator()->create_user();
-
-        $course1 = $this->getDataGenerator()->create_course();
-        $course2 = $this->getDataGenerator()->create_course();
-
-        $group1 = $this->getDataGenerator()->create_group(array('courseid' => $course1->id));
-
-        $this->enable_plugin();
-        $metaplugin->add_instance($course1, array('customint1' => $course2->id, 'customint2' => $group1->id));
-
-        $this->getDataGenerator()->enrol_user($user1->id, $course2->id, 'student');
-        $this->getDataGenerator()->enrol_user($user2->id, $course2->id, 'student');
-        $this->getDataGenerator()->enrol_user($user3->id, $course2->id, 'student');
-
-        $this->assertEquals(
-                3,
-                $DB->count_records_sql("SELECT COUNT(gm.id)
-                                      FROM {groups_members} gm
-                                      JOIN {groups} g ON gm.groupid = g.id
-                                     WHERE g.courseid = ?", [$course1->id])
-        );
-
-        $coursecontext1 = context_course::instance($course1->id);
-
-        $approveduserlist = new \core_privacy\local\request\approved_userlist($coursecontext1, 'enrol_meta',
-                [$user1->id, $user2->id]);
-        provider::delete_data_for_users($approveduserlist);
-
-        // Check we have 1 user in groups because we have deleted user1 and user2.
-        $this->assertEquals(
-                1,
-                $DB->count_records_sql("SELECT COUNT(gm.id)
-                                          FROM {groups_members} gm
-                                          JOIN {groups} g ON gm.groupid = g.id
-                                         WHERE g.courseid = ?", [$course1->id])
-        );
-    }
-
-    /**
-     * Test for provider::get_users_in_context().
-     */
-    public function test_get_users_in_context() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $metaplugin = enrol_get_plugin('meta');
-
-        $course1 = $this->getDataGenerator()->create_course();
-        $course2 = $this->getDataGenerator()->create_course();
-
-        $user1 = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $user3 = $this->getDataGenerator()->create_user();
-
-        $group1 = $this->getDataGenerator()->create_group(array('courseid' => $course1->id));
-
-        $this->enable_plugin();
-        $metaplugin->add_instance($course1, array('customint1' => $course2->id, 'customint2' => $group1->id));
-
-        $this->getDataGenerator()->enrol_user($user1->id, $course2->id, 'student');
-        $this->getDataGenerator()->enrol_user($user2->id, $course2->id, 'student');
-
-        // Check if user1 is enrolled into course1 in group 1.
-        $this->assertTrue(groups_is_member($group1->id, $user1->id));
-        $this->assertTrue($DB->record_exists('groups_members',
-                array(
-                    'groupid' => $group1->id,
-                    'userid' => $user1->id,
-                    'component' => 'enrol_meta'
-                )
-        ));
-
-        $context = \context_course::instance($course1->id);
-
-        $userlist = new \core_privacy\local\request\userlist($context, 'enrol_meta');
-        \enrol_meta\privacy\provider::get_users_in_context($userlist);
-
-        $this->assertEquals(
-                [$user1->id, $user2->id],
-                $userlist->get_userids(),
-                '', 0.0, 10, true);
     }
 }

@@ -32,8 +32,6 @@ use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\transform;
 use core_privacy\local\request\writer;
 use core_badges\privacy\provider;
-use core_privacy\local\request\approved_userlist;
-use core_badges\helper;
 
 require_once($CFG->libdir . '/badgeslib.php');
 
@@ -143,7 +141,7 @@ class core_badges_privacy_testcase extends provider_testcase {
         $b1 = $this->create_badge();
         $b2 = $this->create_badge(['type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
 
-        helper::create_fake_backpack(['userid' => $u1->id]);
+        $this->create_backpack(['userid' => $u1->id]);
         $this->create_manual_award(['recipientid' => $u2->id, 'badgeid' => $b1->id]);
         $this->create_issued(['badgeid' => $b2->id, 'userid' => $u3->id]);
 
@@ -183,8 +181,8 @@ class core_badges_privacy_testcase extends provider_testcase {
         $b2 = $this->create_badge(['usercreated' => $u2->id, 'usermodified' => $u1->id,
             'type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
 
-        helper::create_fake_backpack(['userid' => $u1->id]);
-        helper::create_fake_backpack(['userid' => $u2->id]);
+        $this->create_backpack(['userid' => $u1->id]);
+        $this->create_backpack(['userid' => $u2->id]);
         $this->create_manual_award(['recipientid' => $u1->id, 'badgeid' => $b1->id]);
         $this->create_manual_award(['recipientid' => $u2->id, 'badgeid' => $b1->id, 'issuerid' => $u1->id]);
         $this->create_issued(['badgeid' => $b2->id, 'userid' => $u1->id]);
@@ -241,8 +239,8 @@ class core_badges_privacy_testcase extends provider_testcase {
         $b2 = $this->create_badge(['usercreated' => $u2->id, 'usermodified' => $u1->id,
             'type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id]);
 
-        helper::create_fake_backpack(['userid' => $u1->id]);
-        helper::create_fake_backpack(['userid' => $u2->id]);
+        $this->create_backpack(['userid' => $u1->id]);
+        $this->create_backpack(['userid' => $u2->id]);
         $this->create_manual_award(['recipientid' => $u1->id, 'badgeid' => $b1->id]);
         $this->create_manual_award(['recipientid' => $u2->id, 'badgeid' => $b1->id, 'issuerid' => $u1->id]);
         $this->create_issued(['badgeid' => $b2->id, 'userid' => $u1->id]);
@@ -307,25 +305,21 @@ class core_badges_privacy_testcase extends provider_testcase {
         $u2ctx = context_user::instance($u2->id);
 
         $b1 = $this->create_badge(['usercreated' => $u3->id]);
-        $this->endorse_badge(['badgeid' => $b1->id]);
-        $this->align_badge(['badgeid' => $b1->id], ' (1)');
-        $this->align_badge(['badgeid' => $b1->id], ' (2)');
         $b2 = $this->create_badge(['type' => BADGE_TYPE_COURSE, 'courseid' => $c1->id, 'usermodified' => $u3->id]);
-        $this->relate_badge($b1->id, $b2->id);
         $b3 = $this->create_badge();
         $b3crit = $this->create_criteria_manual($b3->id);
         $b4 = $this->create_badge();
 
         // Create things for user 2, to check it's not exported it.
         $this->create_issued(['badgeid' => $b4->id, 'userid' => $u2->id]);
-        helper::create_fake_backpack(['userid' => $u2->id, 'email' => $u2->email]);
+        $this->create_backpack(['userid' => $u2->id, 'email' => $u2->email]);
         $this->create_manual_award(['badgeid' => $b1->id, 'recipientid' => $u2->id, 'issuerid' => $u3->id]);
 
         // Create a set of stuff for u1.
         $this->create_issued(['badgeid' => $b1->id, 'userid' => $u1->id, 'uniquehash' => 'yoohoo']);
         $this->create_manual_award(['badgeid' => $b2->id, 'recipientid' => $u1->id, 'issuerid' => $u3->id]);
         $b3crit->mark_complete($u1->id);
-        helper::create_fake_backpack(['userid' => $u1->id, 'email' => $u1->email]);
+        $this->create_backpack(['userid' => $u1->id, 'email' => $u1->email]);
 
         // Check u1.
         writer::reset();
@@ -338,45 +332,12 @@ class core_badges_privacy_testcase extends provider_testcase {
         $path = [get_string('badges', 'core_badges'), "{$b1->name} ({$b1->id})"];
         $data = writer::with_context($u1ctx)->get_data($path);
         $this->assertEquals($b1->name, $data->name);
-        $this->assertEquals($b1->version, $data->version);
-        $this->assertEquals($b1->language, $data->language);
-        $this->assertEquals($b1->imageauthorname, $data->imageauthorname);
-        $this->assertEquals($b1->imageauthoremail, $data->imageauthoremail);
-        $this->assertEquals($b1->imageauthorurl, $data->imageauthorurl);
-        $this->assertEquals($b1->imagecaption, $data->imagecaption);
         $this->assertNotEmpty($data->issued);
         $this->assertEmpty($data->manual_award);
         $this->assertEmpty($data->criteria_met);
         $this->assertFalse(isset($data->course));
         $this->assertEquals('yoohoo', $data->issued['unique_hash']);
         $this->assertNull($data->issued['expires_on']);
-
-        $this->assertNotEmpty($data->endorsement);
-        $this->assertNotEmpty($data->endorsement['issuername']);
-        $this->assertNotEmpty($data->endorsement['issuerurl']);
-        $this->assertNotEmpty($data->endorsement['issueremail']);
-        $this->assertNotEmpty($data->endorsement['claimid']);
-        $this->assertNotEmpty($data->endorsement['claimcomment']);
-        $this->assertNotEmpty($data->endorsement['dateissued']);
-
-        $this->assertNotEmpty($data->related_badge);
-        $this->assertNotEmpty($data->related_badge[0]);
-        $this->assertEquals($data->related_badge[0]['badgeid'], $b2->id);
-        $this->assertEquals($data->related_badge[0]['badgename'], $b2->name);
-
-        $this->assertNotEmpty($data->alignment);
-        $this->assertNotEmpty($data->alignment[0]);
-        $this->assertNotEmpty($data->alignment[0]['targetname']);
-        $this->assertNotEmpty($data->alignment[0]['targeturl']);
-        $this->assertNotEmpty($data->alignment[0]['targetdescription']);
-        $this->assertNotEmpty($data->alignment[0]['targetframework']);
-        $this->assertNotEmpty($data->alignment[0]['targetcode']);
-        $this->assertNotEmpty($data->alignment[1]);
-        $this->assertNotEmpty($data->alignment[1]['targetname']);
-        $this->assertNotEmpty($data->alignment[1]['targeturl']);
-        $this->assertNotEmpty($data->alignment[1]['targetdescription']);
-        $this->assertNotEmpty($data->alignment[1]['targetframework']);
-        $this->assertNotEmpty($data->alignment[1]['targetcode']);
 
         $path = [get_string('badges', 'core_badges'), "{$b2->name} ({$b2->id})"];
         $data = writer::with_context($u1ctx)->get_data($path);
@@ -439,177 +400,6 @@ class core_badges_privacy_testcase extends provider_testcase {
     }
 
     /**
-     * Test that only users within a user, system and course context are fetched.
-     */
-    public function test_get_users_in_context() {
-        $component = 'core_badges';
-
-        // Create course1.
-        $course1 = $this->getDataGenerator()->create_course();
-        $coursecontext1 = context_course::instance($course1->id);
-        // Create course2.
-        $course2 = $this->getDataGenerator()->create_course();
-        $coursecontext2 = context_course::instance($course2->id);
-        // Create user1.
-        $user1 = $this->getDataGenerator()->create_user();
-        $usercontext1 = context_user::instance($user1->id);
-        // Create user2.
-        $user2 = $this->getDataGenerator()->create_user();
-        $usercontext2 = context_user::instance($user2->id);
-        // Create user3.
-        $user3 = $this->getDataGenerator()->create_user();
-        $usercontext3 = context_user::instance($user3->id);
-
-        // The list of users in usercontext1 should not return anything yet (related data still haven't been created).
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(0, $userlist1);
-        // The list of users in coursecontext1 should not return anything yet (related data still haven't been created).
-        $userlist2 = new \core_privacy\local\request\userlist($coursecontext1, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(0, $userlist2);
-        // The list of users in systemcontext should not return anything yet (related data still haven't been created).
-        $systemcontext = context_system::instance();
-        $userlist3 = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist3);
-        $this->assertCount(0, $userlist3);
-
-        // Assert that we find contexts where we created/modified a badge.
-        $this->create_badge(['usercreated' => $user1->id, 'usermodified' => $user2->id]);
-        $badge1 = $this->create_badge(['usercreated' => $user2->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $course1->id]);
-        $badge2 = $this->create_badge(['usercreated' => $user3->id, 'usermodified' => $user1->id]);
-
-        $this->create_manual_award(['recipientid' => $user2->id, 'issuerid' => $user1->id, 'badgeid' => $badge1->id]);
-        $this->create_manual_award(['recipientid' => $user3->id, 'issuerid' => $user2->id, 'badgeid' => $badge1->id]);
-        $this->create_manual_award(['recipientid' => $user1->id, 'issuerid' => $user2->id, 'badgeid' => $badge2->id]);
-
-        helper::create_fake_backpack(['userid' => $user2->id]);
-        $this->create_issued(['badgeid' => $badge2->id, 'userid' => $user3->id]);
-
-        $crit = $this->create_criteria_manual($badge1->id);
-        $crit->mark_complete($user3->id);
-
-        // The list of users for user context should return user1 and user2.
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(2, $userlist1);
-        $this->assertTrue(in_array($user1->id, $userlist1->get_userids()));
-        $this->assertTrue(in_array($user2->id, $userlist1->get_userids()));
-
-        // The list of users for course context should return user2.
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(1, $userlist2);
-        $this->assertTrue(in_array($user2->id, $userlist2->get_userids()));
-
-        // The list of users for system context should return user1, user2 and user3.
-        provider::get_users_in_context($userlist3);
-        $this->assertCount(3, $userlist3);
-        $this->assertTrue(in_array($user1->id, $userlist3->get_userids()));
-        $this->assertTrue(in_array($user2->id, $userlist3->get_userids()));
-        $this->assertTrue(in_array($user3->id, $userlist3->get_userids()));
-    }
-
-    /**
-     * Test that data for users in approved userlist is deleted.
-     */
-    public function test_delete_data_for_users() {
-        $component = 'core_badges';
-
-        // Create course1.
-        $course1 = $this->getDataGenerator()->create_course();
-        $coursecontext1 = context_course::instance($course1->id);
-        // Create course2.
-        $course2 = $this->getDataGenerator()->create_course();
-        $coursecontext2 = context_course::instance($course2->id);
-        // Create user1.
-        $user1 = $this->getDataGenerator()->create_user();
-        $usercontext1 = context_user::instance($user1->id);
-        // Create user2.
-        $user2 = $this->getDataGenerator()->create_user();
-        $usercontext2 = context_user::instance($user2->id);
-        // Create user3.
-        $user3 = $this->getDataGenerator()->create_user();
-        $usercontext3 = context_user::instance($user3->id);
-
-        $this->create_badge(['usercreated' => $user1->id, 'usermodified' => $user2->id]);
-        $badge1 = $this->create_badge(['usercreated' => $user2->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $course1->id]);
-        $badge2 = $this->create_badge(['usercreated' => $user3->id, 'type' => BADGE_TYPE_COURSE, 'courseid' => $course2->id,
-            'usermodified' => $user1->id]);
-
-        $this->create_manual_award(['recipientid' => $user2->id, 'issuerid' => $user1->id, 'badgeid' => $badge1->id]);
-        $this->create_manual_award(['recipientid' => $user3->id, 'issuerid' => $user2->id, 'badgeid' => $badge1->id]);
-        $this->create_manual_award(['recipientid' => $user1->id, 'issuerid' => $user2->id, 'badgeid' => $badge2->id]);
-
-        helper::create_fake_backpack(['userid' => $user2->id]);
-        $this->create_issued(['badgeid' => $badge2->id, 'userid' => $user3->id]);
-
-        $crit = $this->create_criteria_manual($badge1->id);
-        $crit->mark_complete($user3->id);
-
-        // The list of users for usercontext2 context should return users.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext2, $component);
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(2, $userlist1);
-        $this->assertTrue(in_array($user1->id, $userlist1->get_userids()));
-        $this->assertTrue(in_array($user2->id, $userlist1->get_userids()));
-
-        // The list of users for coursecontext2 context should return users.
-        $userlist2 = new \core_privacy\local\request\userlist($coursecontext2, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(2, $userlist2);
-        $this->assertTrue(in_array($user1->id, $userlist2->get_userids()));
-        $this->assertTrue(in_array($user3->id, $userlist2->get_userids()));
-
-        // The list of users for system context should return users.
-        $systemcontext = context_system::instance();
-        $userlist3 = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist3);
-        $this->assertCount(2, $userlist3);
-        $this->assertTrue(in_array($user1->id, $userlist3->get_userids()));
-        $this->assertTrue(in_array($user2->id, $userlist3->get_userids()));
-
-        // Delete the data for user1 in usercontext2.
-        $approvedlist = new approved_userlist($usercontext2, $component, [$user1->id]);
-        // Delete using delete_data_for_user. No data for users in usercontext2 should be removed.
-        provider::delete_data_for_users($approvedlist);
-        // The list of users for usercontext2 context should still return user1, user2.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext2, $component);
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(2, $userlist1);
-        $this->assertTrue(in_array($user1->id, $userlist1->get_userids()));
-        $this->assertTrue(in_array($user2->id, $userlist1->get_userids()));
-
-        // Delete the data for user2 in usercontext2.
-        $approvedlist = new approved_userlist($usercontext2, $component, [$user2->id]);
-        // Delete using delete_data_for_user. The user data in usercontext2 should be removed.
-        provider::delete_data_for_users($approvedlist);
-        // The list of users for usercontext2 context should not return any users.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext2, $component);
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(0, $userlist1);
-
-        // The list of users for coursecontext2 context should return the previous users.
-        $userlist2 = new \core_privacy\local\request\userlist($coursecontext2, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(2, $userlist2);
-
-        // The list of users for system context should return the previous users.
-        $systemcontext = context_system::instance();
-        $userlist3 = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist3);
-        $this->assertCount(2, $userlist3);
-
-        // Make sure data is only deleted in the user context, nothing in course or system.
-        // Convert $userlist2 into an approved_contextlist.
-        $approvedlist = new approved_userlist($coursecontext2, $component, $userlist2->get_userids());
-        provider::delete_data_for_users($approvedlist);
-
-        // The list of users for coursecontext2 context should still return the user data.
-        $userlist2 = new \core_privacy\local\request\userlist($coursecontext2, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(2, $userlist2);
-    }
-
-    /**
      * Create a badge.
      *
      * @param array $params Parameters.
@@ -636,12 +426,6 @@ class core_badges_privacy_testcase extends provider_testcase {
             'attachment' => 1,
             'notification' => 0,
             'status' => BADGE_STATUS_ACTIVE,
-            'version' => OPEN_BADGES_V2,
-            'language' => 'en',
-            'imageauthorname' => 'Image author',
-            'imageauthoremail' => 'author@example.com',
-            'imageauthorurl' => 'http://image.example.com/',
-            'imagecaption' => 'Image caption'
         ], $params);
         $record->id = $DB->insert_record('badge', $record);
 
@@ -649,63 +433,22 @@ class core_badges_privacy_testcase extends provider_testcase {
     }
 
     /**
-     * Relate a badge.
-     *
-     * @param int $badgeid The badge ID.
-     * @param int $relatedbadgeid The related badge ID.
-     * @return object
-     */
-    protected function relate_badge(int $badgeid, int $relatedbadgeid) {
-        global $DB;
-        $record = (object) [
-            'badgeid' => $badgeid,
-            'relatedbadgeid' => $relatedbadgeid
-        ];
-        $record->id = $DB->insert_record('badge_related', $record);
-
-        return $record;
-    }
-
-    /**
-     * Align a badge.
+     * Create a backpack.
      *
      * @param array $params Parameters.
      * @return object
      */
-    protected function align_badge(array $params = [], $suffix = '') {
+    protected function create_backpack(array $params = []) {
         global $DB;
         $record = (object) array_merge([
-            'badgeid' => null,
-            'targetname' => "Alignment name" . $suffix,
-            'targeturl' => "http://issuer-url.domain.co.nz",
-            'targetdescription' => "Description" . $suffix,
-            'targetframework' => "Framework" . $suffix,
-            'targetcode' => "Code . $suffix"
+            'userid' => null,
+            'email' => 'test@example.com',
+            'backpackurl' => "http://here.there.com",
+            'backpackuid' => "12345",
+            'autosync' => 0,
+            'password' => '',
         ], $params);
-        $record->id = $DB->insert_record('badge_alignment', $record);
-
-        return $record;
-    }
-
-    /**
-     * Endorse a badge.
-     *
-     * @param array $params Parameters.
-     * @return object
-     */
-    protected function endorse_badge(array $params = []) {
-        global $DB;
-        $record = (object) array_merge([
-            'badgeid' => null,
-            'issuername' => "External issuer name",
-            'issuerurl' => "http://issuer-url.domain.co.nz",
-            'issueremail' => "issuer@example.com",
-            'claimid' => "Claim ID",
-            'claimcomment' => "Claim comment",
-            'dateissued' => time()
-        ], $params);
-        $record->id = $DB->insert_record('badge_endorsement', $record);
-
+        $record->id = $DB->insert_record('badge_backpack', $record);
         return $record;
     }
 

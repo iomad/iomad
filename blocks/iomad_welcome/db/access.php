@@ -32,8 +32,8 @@ $capabilities = array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'legacy' => array(
+            'manager' => CAP_ALLOW
+        )
     )
 );

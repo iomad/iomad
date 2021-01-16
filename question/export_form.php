@@ -58,7 +58,7 @@ class question_export_form extends moodleform {
             if (get_string_manager()->string_exists('pluginname_help', 'qformat_' . $shortname)) {
                 $separator .= $OUTPUT->help_icon('pluginname', 'qformat_' . $shortname);
             }
-            $separator .= '<div class="w-100"></div>';
+            $separator .= '<br>';
             $separators[] = $separator;
         }
 
@@ -69,8 +69,7 @@ class question_export_form extends moodleform {
         // Export options.
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        $mform->addElement('questioncategory', 'category', get_string('exportcategory', 'question'),
-                array('contexts' => $contexts, 'top' => true));
+        $mform->addElement('questioncategory', 'category', get_string('exportcategory', 'question'), compact('contexts'));
         $mform->setDefault('category', $defaultcategory);
         $mform->addHelpButton('category', 'exportcategory', 'question');
 

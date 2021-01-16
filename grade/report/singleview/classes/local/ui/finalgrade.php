@@ -161,20 +161,18 @@ class finalgrade extends grade_attribute_format implements unique_value, be_disa
         }
 
         if ($errorstr) {
-            $user = get_complete_user_data('id', $userid);
+            $user = $DB->get_record('user', array('id' => $userid), 'id, firstname, alternatename, lastname');
             $gradestr = new stdClass;
-            if (has_capability('moodle/site:viewfullnames', \context_course::instance($gradeitem->courseid))) {
-                $gradestr->username = fullname($user, true);
+            if (!empty($user->alternatename)) {
+                $gradestr->username = $user->alternatename . ' (' . $user->firstname . ') ' . $user->lastname;
             } else {
-                $gradestr->username = fullname($user);
+                $gradestr->username = $user->firstname . ' ' . $user->lastname;
             }
             $gradestr->itemname = $this->grade->grade_item->get_name();
             $errorstr = get_string($errorstr, 'grades', $gradestr);
-            return $errorstr;
         }
 
-        // Only update grades if there are no errors.
         $gradeitem->update_final_grade($userid, $finalgrade, 'singleview', $feedback, FORMAT_MOODLE);
-        return '';
+        return $errorstr;
     }
 }

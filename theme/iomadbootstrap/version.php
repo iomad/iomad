@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of The Bootstrap Moodle theme
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,17 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * IomadBootstrap theme.
+ * Theme version info
  *
  * @package    theme_iomadbootstrap
- * @copyright  2018 Bas Brands
+ * @copyright  2016 Bas Brands, www.basbrands.nl
+ * @authors    Bas Brands, David Scotson
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This line protects the file from being accessed by a URL directly.
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->version = 2019111800;
-$plugin->requires = 2019111200;
+$plugin->version   = 2016111800;
+$plugin->requires  = 2016052300;
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release = '3.1.0';
 $plugin->component = 'theme_iomadbootstrap';
-$plugin->dependencies = array('theme_boost' => 2019111200);

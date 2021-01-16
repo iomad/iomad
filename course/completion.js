@@ -20,8 +20,8 @@ M.core_completion.init = function(Y) {
             var current = args.state.get('value');
             var modulename = args.modulename.get('value'),
                 altstr,
-                iconkey,
-                button = args.image.get('parentNode');
+                iconkey;
+
 
             if (current == 1) {
                 altstr = M.util.get_string('completion-alt-manual-y', 'completion', modulename);
@@ -35,10 +35,7 @@ M.core_completion.init = function(Y) {
 
             require(['core/templates', 'core/notification'], function(Templates, Notification) {
                 Templates.renderPix(iconkey, 'core', altstr).then(function(html) {
-                    var id = button.get('id'),
-                        postFocus = '$(document.getElementById("' + id + '")).focus();';
-
-                    Templates.replaceNode(args.image.getDOMNode(), html, postFocus);
+                    Templates.replaceNode(args.image.getDOMNode(), html, '');
                 }).catch(Notification.exception);
             });
         }

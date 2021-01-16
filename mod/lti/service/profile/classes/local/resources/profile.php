@@ -83,15 +83,13 @@ class profile extends \mod_lti\local\ltiservice\resource_base {
 
         $version = service_base::LTI_VERSION2P0;
         $params = $this->parse_template();
-        if (optional_param('lti_version', service_base::LTI_VERSION2P0, PARAM_ALPHANUMEXT) != $version) {
-            $ok = false;
+        $ok = $this->get_service()->check_tool_proxy($params['tool_proxy_id']);
+        if (!$ok) {
+            $response->set_code(404);
+        } else if (optional_param('lti_version', '', PARAM_ALPHANUMEXT) != $version) {
             $response->set_code(400);
         } else {
-            $toolproxy = lti_get_tool_proxy_from_guid($params['tool_proxy_id']);
-            $ok = $toolproxy !== false;
-        }
-        if ($ok) {
-            $this->get_service()->set_tool_proxy($toolproxy);
+            $toolproxy = $this->get_service()->get_tool_proxy();
             $response->set_content_type($this->formats[0]);
 
             $servicepath = $this->get_service()->get_service_path();
@@ -113,12 +111,7 @@ class profile extends \mod_lti\local\ltiservice\resource_base {
                         $formats = implode("\", \"", $resource->get_formats());
                         $methods = implode("\", \"", $resource->get_methods());
                         $capabilityofferedarr = array_merge($capabilityofferedarr, $resource->get_variables());
-                        $template = $resource->get_path();
-                        if (!empty($template)) {
-                            $path = $servicepath . preg_replace('/[\(\)]/', '', $template);
-                        } else {
-                            $path = $resource->get_endpoint();
-                        }
+                        $path = $servicepath . preg_replace('/\{?.*\}$/', '', $resource->get_path());
                         $serviceoffered .= <<< EOD
 {$sep}
     {
@@ -207,6 +200,17 @@ EOD;
     }
 
     /**
+     * Get the resource fully qualified endpoint.
+     *
+     * @return string
+     */
+    public function get_endpoint() {
+
+        return parent::get_endpoint() . '?lti_version=' . service_base::LTI_VERSION2P0;
+
+    }
+
+    /**
      * Parse a value for custom parameter substitution variables.
      *
      * @param string $value String to be parsed
@@ -214,7 +218,7 @@ EOD;
      * @return string
      */
     public function parse_value($value) {
-        if (!empty($this->get_service()->get_tool_proxy()) && (strpos($value, '$ToolConsumerProfile.url') !== false)) {
+        if (strpos($value, '$ToolConsumerProfile.url') !== false) {
             $value = str_replace('$ToolConsumerProfile.url', $this->get_endpoint(), $value);
         }
         return $value;

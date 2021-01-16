@@ -291,14 +291,14 @@ class xmldb_index extends xmldb_object {
         // The fields
         $indexfields = $this->getFields();
         if (!empty($indexfields)) {
-            $result .= "['".  implode("', '", $indexfields) . "']";
+            $result .= 'array(' . "'".  implode("', '", $indexfields) . "')";
         } else {
             $result .= 'null';
         }
         // Hints
         $hints = $this->getHints();
         if (!empty($hints)) {
-            $result .= ", ['".  implode("', '", $hints) . "']";
+            $result .= ', array(' . "'".  implode("', '", $hints) . "')";
         }
 
         // Return result
@@ -338,7 +338,7 @@ class xmldb_index extends xmldb_object {
      */
     public function validateDefinition(xmldb_table $xmldb_table=null) {
         if (!$xmldb_table) {
-            return 'Invalid xmldb_index->validateDefinition() call, $xmldb_table is required.';
+            return 'Invalid xmldb_index->validateDefinition() call, $xmldb_table si required.';
         }
 
         $total = 0;

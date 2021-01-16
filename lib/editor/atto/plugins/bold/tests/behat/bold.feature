@@ -15,7 +15,7 @@ Feature: Atto bold button
     And I set the field "Text editor" to "Plain text area"
     And I press "Save changes"
     And I click on "Edit profile" "link" in the "region-main" "region"
-    Then I should see "<strong>Badger</strong>"
+    Then I should see "<b>Badger</b>"
 
   @javascript
   Scenario: Unbold some text
@@ -31,5 +31,5 @@ Feature: Atto bold button
     And I set the field "Text editor" to "Plain text area"
     And I press "Save changes"
     And I click on "Edit profile" "link" in the "region-main" "region"
-    Then I should not see "<strong>Mouse</strong>"
+    Then I should not see "<b>Mouse</b>"
     And I should see "Mouse"

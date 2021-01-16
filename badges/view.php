@@ -95,7 +95,7 @@ if ($totalcount) {
         echo $OUTPUT->box(get_string('error:notifycoursedate', 'badges'), 'generalbox notifyproblem');
     }
 
-    $badges             = new \core_badges\output\badge_collection($records);
+    $badges             = new badge_collection($records);
     $badges->sort       = $sortby;
     $badges->dir        = $sorthow;
     $badges->page       = $page;
@@ -106,32 +106,6 @@ if ($totalcount) {
 } else {
     echo $output->notification(get_string('nobadges', 'badges'));
 }
-
-// Display "Manage badges" button to users with proper capabilities.
-$isfrontpage = (empty($courseid) || $courseid == $SITE->id);
-if ($isfrontpage) {
-    $context = context_system::instance();
-} else {
-    $context = context_course::instance($courseid);
-}
-$canmanage = has_any_capability(array('moodle/badges:viewawarded',
-                                      'moodle/badges:createbadge',
-                                      'moodle/badges:awardbadge',
-                                      'moodle/badges:configurecriteria',
-                                      'moodle/badges:configuremessages',
-                                      'moodle/badges:configuredetails',
-                                      'moodle/badges:deletebadge'), $context);
-if ($canmanage) {
-    echo $output->single_button(new moodle_url('/badges/index.php', array('type' => $type, 'id' => $courseid)),
-        get_string('managebadges', 'badges'));
-}
-
-// Display "Add new badge" button to users with capability to create badges.
-if (has_capability('moodle/badges:createbadge', $PAGE->context)) {
-    echo $output->single_button(new moodle_url('newbadge.php', array('type' => $type, 'id' => $courseid)),
-        get_string('newbadge', 'badges'));
-}
-
 // Trigger event, badge listing viewed.
 $eventparams = array('context' => $PAGE->context, 'other' => $eventotherparams);
 $event = \core\event\badge_listing_viewed::create($eventparams);

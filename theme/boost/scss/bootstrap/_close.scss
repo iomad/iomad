@@ -1,22 +1,17 @@
 .close {
   float: right;
-  @include font-size($close-font-size);
+  font-size: ($font-size-base * 1.5);
   font-weight: $close-font-weight;
   line-height: 1;
   color: $close-color;
   text-shadow: $close-text-shadow;
-  opacity: .5;
+  opacity: .2;
 
-  // Override <a>'s hover style
-  @include hover() {
+  @include hover-focus {
     color: $close-color;
     text-decoration: none;
-  }
-
-  &:not(:disabled):not(.disabled) {
-    @include hover-focus() {
-      opacity: .75;
-    }
+    cursor: pointer;
+    opacity: .5;
   }
 }
 
@@ -25,16 +20,12 @@
 // If you want the anchor version, it requires `href="#"`.
 // See https://developer.mozilla.org/en-US/docs/Web/Events/click#Safari_Mobile
 
-// stylelint-disable-next-line selector-no-qualifying-type
+// scss-lint:disable QualifyingElement
 button.close {
   padding: 0;
-  background-color: transparent;
+  cursor: pointer;
+  background: transparent;
   border: 0;
+  -webkit-appearance: none;
 }
-
-// Future-proof disabling of clicks on `<a>` elements
-
-// stylelint-disable-next-line selector-no-qualifying-type
-a.close.disabled {
-  pointer-events: none;
-}
+// scss-lint:enable QualifyingElement

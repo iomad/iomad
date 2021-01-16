@@ -68,7 +68,7 @@ class data_field_radiobutton extends data_field_base {
                 continue; // skip empty lines
             }
             $str .= '<input type="radio" id="field_'.$this->field->id.'_'.$i.'" name="field_' . $this->field->id . '" ';
-            $str .= 'value="' . s($radio) . '" class="mod-data-input mr-1" ';
+            $str .= 'value="' . s($radio) . '" class="mod-data-input m-r-1" ';
 
             if ($content == $radio) {
                 // Selected by user.
@@ -103,8 +103,7 @@ class data_field_radiobutton extends data_field_base {
         }
         $return = html_writer::label(get_string('fieldtypelabel', "datafield_" . $this->type),
             'menuf_' . $this->field->id, false, array('class' => 'accesshide'));
-        $return .= html_writer::select($options, 'f_'.$this->field->id, $value,
-            array('' => 'choosedots'), array('class' => 'custom-select'));
+        $return .= html_writer::select($options, 'f_'.$this->field->id, $value, null, array('class' => 'custom-select'));
         return $return;
     }
 

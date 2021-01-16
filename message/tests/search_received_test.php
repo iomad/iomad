@@ -273,7 +273,7 @@ class message_received_search_testcase extends advanced_testcase {
             $this->assertEquals(\core_search\manager::ACCESS_DENIED, $searcharea->check_access($messageid));
         }
 
-        \core_message\api::delete_message($user2->id, $message->id);
+        message_delete_message($message, $user2->id);
         $this->assertEquals(\core_search\manager::ACCESS_DELETED, $searcharea->check_access($messageid));
 
         $this->setUser($user3);
@@ -335,31 +335,5 @@ class message_received_search_testcase extends advanced_testcase {
         $doc = $searcharea->get_document($message);
 
         $this->assertFalse($doc);
-    }
-
-    /**
-     * Test document icon.
-     */
-    public function test_get_doc_icon() {
-        $searcharea = \core_search\manager::get_search_area($this->messagereceivedareaid);
-
-        $document = $this->getMockBuilder('\core_search\document')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $result = $searcharea->get_doc_icon($document);
-
-        $this->assertEquals('t/message', $result->get_name());
-        $this->assertEquals('moodle', $result->get_component());
-    }
-
-    /**
-     * Test assigned search categories.
-     */
-    public function test_get_category_names() {
-        $searcharea = \core_search\manager::get_search_area($this->messagereceivedareaid);
-
-        $expected = ['core-users'];
-        $this->assertEquals($expected, $searcharea->get_category_names());
     }
 }

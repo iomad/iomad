@@ -37,7 +37,6 @@ use core_privacy\local\request\transform;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
-    use \tool_log\helper\reader;
 
     /**
      * Returns an event from a standard record.
@@ -50,7 +49,7 @@ class helper {
         $extra = ['origin' => $data->origin, 'ip' => $data->ip, 'realuserid' => $data->realuserid];
         $data = (array) $data;
         $id = $data['id'];
-        $data['other'] = self::decode_other($data['other']);
+        $data['other'] = unserialize($data['other']);
         if ($data['other'] === false) {
             $data['other'] = [];
         }
@@ -85,7 +84,7 @@ class helper {
         } else {
             $name = $record->eventname;
             $description = "Unknown event ({$name})";
-            $other = \tool_log\helper\reader::decode_other($record->other);
+            $other = unserialize($record->other);
         }
 
         $realuserid = $record->realuserid;
@@ -100,8 +99,8 @@ class helper {
             'name' => $name,
             'description' => $description,
             'timecreated' => transform::datetime($record->timecreated),
+            'ip' => $record->ip,
             'origin' => static::transform_origin($record->origin),
-            'ip' => $isauthor ? $record->ip : '',
             'other' => $other ? $other : []
         ];
 

@@ -42,8 +42,7 @@ abstract class qtype_ddmarker_shape {
     }
     public function inside_width_height($widthheight) {
         foreach ($this->outlying_coords_to_test() as $coordsxy) {
-            if ($coordsxy[0] < 0 || $coordsxy[0] > $widthheight[0] ||
-                    $coordsxy[1] < 0 || $coordsxy[1] > $widthheight[1]) {
+            if ($coordsxy[0] > $widthheight[0] || $coordsxy[1] > $widthheight[1]) {
                 return false;
             }
         }
@@ -154,7 +153,6 @@ abstract class qtype_ddmarker_shape {
         foreach ($shapes as $shape) {
             $shapearray[$shape::name()] = $shape::human_readable_name();
         }
-        $shapearray['0'] = '';
         asort($shapearray);
         return $shapearray;
     }
@@ -237,7 +235,7 @@ class qtype_ddmarker_shape_rectangle extends qtype_ddmarker_shape {
 
     }
     protected function outlying_coords_to_test() {
-        return [[$this->xleft, $this->ytop], [$this->xleft + $this->width, $this->ytop + $this->height]];
+        return array($this->xleft + $this->width, $this->ytop + $this->height);
     }
     public function is_point_in_shape($xy) {
         return $this->is_point_in_bounding_box($xy, array($this->xleft, $this->ytop),
@@ -297,8 +295,7 @@ class qtype_ddmarker_shape_circle extends qtype_ddmarker_shape {
     }
 
     protected function outlying_coords_to_test() {
-        return [[$this->xcentre - $this->radius, $this->ycentre - $this->radius],
-                [$this->xcentre + $this->radius, $this->ycentre + $this->radius]];
+        return array($this->xcentre + $this->radius, $this->ycentre + $this->radius);
     }
 
     public function is_point_in_shape($xy) {

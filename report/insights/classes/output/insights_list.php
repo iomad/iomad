@@ -87,36 +87,12 @@ class insights_list implements \renderable, \templatable {
     public function export_for_template(\renderer_base $output) {
         global $PAGE;
 
-        $target = $this->model->get_target();
-
         $data = new \stdClass();
-        $data->modelid = $this->model->get_id();
-        $data->contextid = $this->context->id;
-
-        $targetname = $target->get_name();
-        $data->insightname = format_string($targetname);
-
-        $targetinfostr = $targetname->get_identifier() . 'info';
-        if (get_string_manager()->string_exists($targetinfostr, $targetname->get_component())) {
-            $data->insightdescription = get_string($targetinfostr, $targetname->get_component());
-        }
-
-        $data->showpredictionheading = true;
-        if (!$target->is_linear()) {
-            $nclasses = count($target::get_classes());
-            $nignoredclasses = count($target->ignored_predicted_classes());
-            if ($nclasses - $nignoredclasses <= 1) {
-                // Hide the prediction heading if there is only 1 class displayed. Otherwise it is redundant with the insight name.
-                $data->showpredictionheading = false;
-            }
-        }
+        $data->insightname = format_string($this->model->get_target()->get_name());
 
         $total = 0;
 
         if ($this->model->uses_insights()) {
-
-            $target->add_bulk_actions_js();
-
             $predictionsdata = $this->model->get_predictions($this->context, true, $this->page, $this->perpage);
 
             if (!$this->model->is_static()) {
@@ -130,31 +106,24 @@ class insights_list implements \renderable, \templatable {
             if ($predictionsdata) {
                 list($total, $predictions) = $predictionsdata;
 
-                if ($predictions) {
-                    // No bulk actions if no predictions.
-                    $data->bulkactions = actions_exporter::add_bulk_actions($target, $output, $predictions, $this->context);
-                }
-
-                $data->multiplepredictions = count($predictions) > 1 ? true : false;
-
                 foreach ($predictions as $prediction) {
                     $predictedvalue = $prediction->get_prediction_data()->prediction;
 
                     // Only need to fill this data once.
                     if (!isset($predictionvalues[$predictedvalue])) {
                         $preddata = array();
-                        $preddata['predictiondisplayvalue'] = $target->get_display_value($predictedvalue);
+                        $preddata['predictiondisplayvalue'] = $this->model->get_target()->get_display_value($predictedvalue);
                         list($preddata['style'], $preddata['outcomeicon']) =
-                            insight::get_calculation_display($target, floatval($predictedvalue), $output);
+                            insight::get_calculation_display($this->model->get_target(), floatval($predictedvalue), $output);
                         $predictionvalues[$predictedvalue] = $preddata;
                     }
 
-                    $insightrenderable = new \report_insights\output\insight($prediction, $this->model, true, $this->context);
+                    $insightrenderable = new \report_insights\output\insight($prediction, $this->model, true);
                     $insights[$predictedvalue][] = $insightrenderable->export_for_template($output);
                 }
 
                 // Order predicted values.
-                if ($target->is_linear()) {
+                if ($this->model->get_target()->is_linear()) {
                     // During regression what we will be interested on most of the time is in low values so let's show them first.
                     ksort($predictionvalues);
                 } else {
@@ -165,17 +134,6 @@ class insights_list implements \renderable, \templatable {
                 // Ok, now we have all the data we want, put it into a format that mustache can handle.
                 foreach ($predictionvalues as $key => $prediction) {
                     if (isset($insights[$key])) {
-
-                        $toggleall = new \core\output\checkbox_toggleall('insight-bulk-action-' . $key, true, [
-                            'id' => 'id-toggle-all-' . $key,
-                            'name' => 'toggle-all-' . $key,
-                            'label' => get_string('selectall'),
-                            'labelclasses' => 'sr-only',
-                            'checked' => false
-                        ]);
-                        $prediction['checkboxtoggleall'] = $output->render($toggleall);
-
-                        $prediction['predictedvalue'] = $key;
                         $prediction['insights'] = $insights[$key];
                     }
 
@@ -199,8 +157,6 @@ class insights_list implements \renderable, \templatable {
             $data->noinsights = $notification->export_for_template($output);
         }
 
-        $url = $PAGE->url;
-
         if ($this->othermodels) {
 
             $options = array();
@@ -209,15 +165,14 @@ class insights_list implements \renderable, \templatable {
             }
 
             // New moodle_url instance returned by magic_get_url.
+            $url = $PAGE->url;
             $url->remove_params('modelid');
             $modelselector = new \single_select($url, 'modelid', $options, '',
                 array('' => get_string('selectotherinsights', 'report_insights')));
             $data->modelselector = $modelselector->export_for_template($output);
         }
 
-        // Add the 'perpage' parameter to the url which is later used to generate the pagination links.
-        $url->param('perpage', $this->perpage);
-        $data->pagingbar = $output->render(new \paging_bar($total, $this->page, $this->perpage, $url));
+        $data->pagingbar = $output->render(new \paging_bar($total, $this->page, $this->perpage, $PAGE->url));
 
         return $data;
     }

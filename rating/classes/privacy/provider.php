@@ -25,7 +25,6 @@
 namespace core_rating\privacy;
 
 use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\userlist;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -46,9 +45,7 @@ class provider implements
         // as a result.
 
         // The ratings subsystem provides a data service to other components.
-        \core_privacy\local\request\subsystem\plugin_provider,
-        \core_privacy\local\request\shared_userlist_provider
-    {
+        \core_privacy\local\request\subsystem\plugin_provider {
 
     /**
      * Returns metadata about the ratings subsystem.
@@ -129,41 +126,26 @@ class provider implements
     /**
      * Get the SQL required to find all submission items where this user has had any involvements.
      *
-     * If possible an inner join should be used.
-     *
      * @param   string          $alias      The name of the table alias to use.
      * @param   string          $component  The na eof the component to fetch ratings for.
      * @param   string          $ratingarea The rating area to fetch results for.
      * @param   string          $itemidjoin The right-hand-side of the JOIN ON clause.
      * @param   int             $userid     The ID of the user being stored.
-     * @param   bool            $innerjoin  Whether to use an inner join (preferred)
      * @return  \stdClass
      */
-    public static function get_sql_join($alias, $component, $ratingarea, $itemidjoin, $userid, $innerjoin = false) {
+    public static function get_sql_join($alias, $component, $ratingarea, $itemidjoin, $userid) {
         static $count = 0;
         $count++;
 
-        $userwhere = '';
+        // Join the rating table with the specified alias and the relevant join params.
+        $join = "LEFT JOIN {rating} {$alias} ON ";
+        $join .= "{$alias}.userid = :ratinguserid{$count} AND ";
+        $join .= "{$alias}.component = :ratingcomponent{$count} AND ";
+        $join .= "{$alias}.ratingarea = :ratingarea{$count} AND ";
+        $join .= "{$alias}.itemid = {$itemidjoin}";
 
-        if ($innerjoin) {
-            // Join the rating table with the specified alias and the relevant join params.
-            $join = "JOIN {rating} {$alias} ON ";
-            $join .= "{$alias}.itemid = {$itemidjoin}";
-
-            $userwhere .= "{$alias}.userid = :ratinguserid{$count} AND ";
-            $userwhere .= "{$alias}.component = :ratingcomponent{$count} AND ";
-            $userwhere .= "{$alias}.ratingarea = :ratingarea{$count}";
-        } else {
-            // Join the rating table with the specified alias and the relevant join params.
-            $join = "LEFT JOIN {rating} {$alias} ON ";
-            $join .= "{$alias}.userid = :ratinguserid{$count} AND ";
-            $join .= "{$alias}.component = :ratingcomponent{$count} AND ";
-            $join .= "{$alias}.ratingarea = :ratingarea{$count} AND ";
-            $join .= "{$alias}.itemid = {$itemidjoin}";
-
-            // Match against the specified user.
-            $userwhere = "{$alias}.id IS NOT NULL";
-        }
+        // Match against the specified user.
+        $userwhere = "{$alias}.id IS NOT NULL";
 
         $params = [
             'ratingcomponent' . $count  => $component,
@@ -231,30 +213,5 @@ class provider implements
         $DB->delete_records_select('rating',
             'contextid = :contextid AND component = :component AND ratingarea = :ratingarea AND itemid ' . $itemidstest,
             $params);
-    }
-
-    /**
-     * Add the list of users who have rated in the specified constraints.
-     *
-     * @param   userlist    $userlist The userlist to add the users to.
-     * @param   string      $alias An alias prefix to use for rating selects to avoid interference with your own sql.
-     * @param   string      $component The component to check.
-     * @param   string      $area The rating area to check.
-     * @param   string      $insql The SQL to use in a sub-select for the itemid query.
-     * @param   array       $params The params required for the insql.
-     */
-    public static function get_users_in_context_from_sql(
-            userlist $userlist, string $alias, string $component, string $area, string $insql, $params) {
-        // Discussion authors.
-        $sql = "SELECT {$alias}.userid
-                  FROM {rating} {$alias}
-                 WHERE {$alias}.component = :{$alias}component
-                   AND {$alias}.ratingarea = :{$alias}ratingarea
-                   AND {$alias}.itemid IN ({$insql})";
-
-        $params["{$alias}component"] = $component;
-        $params["{$alias}ratingarea"] = $area;
-
-        $userlist->add_from_sql('userid', $sql, $params);
     }
 }

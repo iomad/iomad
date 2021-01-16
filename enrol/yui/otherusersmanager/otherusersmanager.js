@@ -160,9 +160,8 @@ YUI.add('moodle-enrol-otherusersmanager', function(Y) {
             this._loadingNode.addClass(CSS.HIDDEN);
         },
         processSearchResults : function(tid, outcome, args) {
-            var result;
             try {
-                result = Y.JSON.parse(outcome.responseText);
+                var result = Y.JSON.parse(outcome.responseText);
                 if (result.error) {
                     return new M.core.ajaxException(result);
                 }
@@ -187,26 +186,18 @@ YUI.add('moodle-enrol-otherusersmanager', function(Y) {
             }
             this.set(USERCOUNT, count);
             if (!args.append) {
-                var usersstr = '';
-                if (this.get(USERCOUNT) === 1) {
-                    usersstr = M.util.get_string('ajaxoneuserfound', 'enrol');
-                } else if (result.response.moreusers) {
-                    usersstr = M.util.get_string('ajaxxmoreusersfound', 'enrol', this.get(USERCOUNT));
-                } else {
-                    usersstr = M.util.get_string('ajaxxusersfound', 'enrol', this.get(USERCOUNT));
-                }
-
+                var usersstr = (result.response.totalusers == '1')?M.util.get_string('ajaxoneuserfound', 'enrol'):M.util.get_string('ajaxxusersfound','enrol', result.response.totalusers);
                 var content = Y.Node.create('<div class="'+CSS.SEARCHRESULTS+'"></div>')
                     .append(Y.Node.create('<div class="'+CSS.TOTALUSERS+'">'+usersstr+'</div>'))
                     .append(usersnode);
-                if (result.response.moreusers) {
+                if (result.response.totalusers > (this.get(PAGE)+1)*25) {
                     var fetchmore = Y.Node.create('<div class="'+CSS.MORERESULTS+'"><a href="#">'+M.util.get_string('ajaxnext25', 'enrol')+'</a></div>');
                     fetchmore.on('click', this.getUsers, this, true);
                     content.append(fetchmore)
                 }
                 this.setContent(content);
             } else {
-                if (!result.response.moreusers) {
+                if (result.response.totalusers <= (this.get(PAGE)+1)*25) {
                     this.get(BASE).one('.'+CSS.MORERESULTS).remove();
                 }
             }

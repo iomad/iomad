@@ -21,13 +21,13 @@ Feature: Outcome grading
     And the following config values are set as admin:
       | enableoutcomes | 1 |
     And I log in as "admin"
-    And I navigate to "Grades > Scales" in site administration
+    And I navigate to "Scales" node in "Site administration > Grades"
     And I press "Add a new scale"
     And I set the following fields to these values:
       | Name | Test Scale |
       | Scale | Disappointing, Excellent, Good, Very good, Excellent |
     And I press "Save changes"
-    And I navigate to "Grades > Outcomes" in site administration
+    And I navigate to "Outcomes" node in "Site administration > Grades"
     And I press "Add a new outcome"
     And I set the following fields to these values:
       | Full name | Outcome Test |
@@ -35,7 +35,7 @@ Feature: Outcome grading
       | Scale | Test Scale |
     And I press "Save changes"
     And I am on "Course 1" course homepage
-    And I navigate to "Outcomes" in current page administration
+    And I navigate to "Outcomes" node in "Course administration"
     And I set the field "Available standard outcomes" to "Outcome Test"
     And I click on "#add" "css_element"
     And I log out
@@ -65,7 +65,7 @@ Feature: Outcome grading
     And I set the following fields to these values:
       | Outcome Test: | Excellent |
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration
@@ -113,7 +113,7 @@ Feature: Outcome grading
       | Outcome Test: | Excellent |
       | Apply grades and feedback to entire group | Yes |
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration
@@ -125,7 +125,7 @@ Feature: Outcome grading
       | Outcome Test: | Disappointing |
       | Apply grades and feedback to entire group | No |
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration

@@ -34,14 +34,20 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | TF1      | 1    | 0               |
       | TF2      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
 
     Then I should see "First question"
     And I should see "This question cannot be attempted until the previous question has been completed."
     And I should not see "Second question"
     And I log out
-    And I am on the "Quiz 1 > student > Attempt 1" "mod_quiz > Attempt review" page logged in as "teacher"
+    And I log in as "teacher"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
+    And I follow "Attempts: 1"
+    And I follow "Review attempt"
     And I should see "First question"
     And I should see "This question cannot be attempted until the previous question has been completed."
     And I should not see "Second question"
@@ -62,7 +68,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | TF1      | 1    | 0               |
       | TF2      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Check"
@@ -87,7 +95,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | TF1      | 1    | 0               |
       | TF2      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     And I press "Finish attempt ..."
     And I press "Submit all and finish"
@@ -110,7 +120,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | TF1      | 1    | 0               |
       | TF2      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
 
     Then I should see "First question"
@@ -134,7 +146,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | heading   | firstslot | shuffle |
       | Section 1 | 1         | 1       |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
 
     Then I should see "First question"
@@ -159,7 +173,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | Section 1 | 1         | 1       |
       | Section 2 | 2         | 0       |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     And I press "Next page"
 
@@ -180,7 +196,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | TF1      | 1    | 1               |
       | TF2      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
 
     Then I should see "First question"
@@ -201,7 +219,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | Story    | 1    | 0               |
       | TF2      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
 
     Then I should see "First question"
@@ -222,7 +242,9 @@ Feature: Attempt a quiz where some questions require that the previous question 
       | Info     | 1    | 0               |
       | TF1      | 1    | 1               |
 
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
 
     Then I should see "Read me"

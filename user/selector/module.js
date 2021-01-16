@@ -77,7 +77,7 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
 
             // Replace the Clear submit button with a clone that is not a submit button.
             var clearbtn = Y.one('#' + this.name + '_clearbutton');
-            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" class="btn btn-secondary mx-1"/>');
+            this.clearbutton = Y.Node.create('<input type="button" value="' + clearbtn.get('value') + '" class="btn btn-secondary m-x-1"/>');
             clearbtn.replace(Y.Node.getDOMNode(this.clearbutton));
             this.clearbutton.set('id', this.name + "_clearbutton");
             this.clearbutton.on('click', this.handle_clear, this);
@@ -244,17 +244,17 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
          */
         output_group : function(groupname, users, selectedusers, processsingle) {
             var optgroup = Y.Node.create('<optgroup></optgroup>');
-            this.listbox.append(optgroup);
-
             var count = 0;
             for (var key in users) {
                 var user = users[key];
                 var option = Y.Node.create('<option value="' + user.id + '">' + user.name + '</option>');
                 if (user.disabled) {
-                    option.setAttribute('disabled', 'disabled');
+                    option.set('disabled', true);
                 } else if (selectedusers === true || selectedusers[user.id]) {
-                    option.setAttribute('selected', 'selected');
+                    option.set('selected', true);
                     delete selectedusers[user.id];
+                } else {
+                    option.set('selected', false);
                 }
                 optgroup.append(option);
                 if (user.infobelow) {
@@ -268,12 +268,13 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
             if (count > 0) {
                 optgroup.set('label', groupname + ' (' + count + ')');
                 if (processsingle && count === 1 && this.get_option('autoselectunique') && option.get('disabled') == false) {
-                    option.setAttribute('selected', 'selected');
+                    option.set('selected', true);
                 }
             } else {
                 optgroup.set('label', groupname);
                 optgroup.append(Y.Node.create('<option disabled="disabled">\u00A0</option>'));
             }
+            this.listbox.append(optgroup);
         },
         /**
          * Replace

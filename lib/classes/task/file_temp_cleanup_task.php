@@ -38,13 +38,13 @@ class file_temp_cleanup_task extends scheduled_task {
     }
 
     /**
-     * Do the job, given the target directory.
-     *
-     * @param string $tmpdir The directory hosting the candidate stale temp files.
+     * Do the job.
+     * Throw exceptions on errors (the job will be retried).
      */
-    protected function execute_on($tmpdir) {
+    public function execute() {
         global $CFG;
 
+        $tmpdir = $CFG->tempdir;
         // Default to last weeks time.
         $time = time() - ($CFG->tempdatafoldercleanup * 3600);
 
@@ -68,7 +68,7 @@ class file_temp_cleanup_task extends scheduled_task {
         // Now loop through again and remove old files and directories.
         for ($iter->rewind(); $iter->valid(); $iter->next()) {
             $node = $iter->getRealPath();
-            if (!isset($modifieddateobject[$node]) || !is_readable($node)) {
+            if (!is_readable($node)) {
                 continue;
             }
 
@@ -96,23 +96,4 @@ class file_temp_cleanup_task extends scheduled_task {
         }
     }
 
-    /**
-     * Do the job.
-     * Throw exceptions on errors (the job will be retried).
-     */
-    public function execute() {
-        global $CFG;
-
-        // The directories hosting the candidate stale temp files eventually are $CFG->tempdir and $CFG->backuptempdir.
-
-        // Do the job on each of the directories above.
-        // Let's start with $CFG->tempdir.
-        $this->execute_on($CFG->tempdir);
-
-        // Run on $CFG->backuptempdir too, if different from the default one, '$CFG->tempdir/backup'.
-        if (realpath(dirname($CFG->backuptempdir)) !== realpath($CFG->tempdir)) {
-            // The $CFG->backuptempdir setting is different from the default '$CFG->tempdir/backup'.
-            $this->execute_on($CFG->backuptempdir);
-        }
-    }
 }

@@ -72,7 +72,7 @@ foreach($users as $user) {
     $table->data[] = array (
         '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.SITEID.'">'.$user->fullname.'</a>',
 //        $user->username,
-        s($user->email),
+        $user->email,
         $user->city,
         $user->country,
         $user->lastaccess ? format_time(time() - $user->lastaccess) : $strnever

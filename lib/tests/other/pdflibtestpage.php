@@ -56,7 +56,7 @@ if ($getpdf) {
     $doc->setPrintHeader(true);
     $doc->setHeaderMargin(10);
     $doc->setHeaderFont(array($fontfamily, 'b', 10));
-    $doc->setHeaderData('pix/moodlelogo.png', 40, $SITE->fullname, $CFG->wwwroot);
+    $doc->setHeaderData('pix/moodlelogo-med.png', 40, $SITE->fullname, $CFG->wwwroot);
 
     $doc->setPrintFooter(true);
     $doc->setFooterMargin(10);
@@ -104,7 +104,7 @@ if ($getpdf) {
         }
         $list[] = $f;
     }
-    $c .= implode(', ', $list);
+    $c .= implode($list, ', ');
     $c .= '<p><i><small>Note: * Standard core fonts are not embedded in PDF files, PDF viewers are using local fonts.</small></i></p>';
 
     $c .= '<h3>Installed languages and their alphabets</h3>';

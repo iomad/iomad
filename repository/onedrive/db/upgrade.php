@@ -24,21 +24,14 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool result
  */
 function xmldb_repository_onedrive_upgrade($oldversion) {
-    global $CFG;
+    global $DB;
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
+    $dbman = $DB->get_manager();
+
+    // Automatically generated Moodle v3.3.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.7.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.8.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.9.0 release upgrade line.
+    // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
     return true;

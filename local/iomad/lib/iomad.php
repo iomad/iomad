@@ -23,7 +23,7 @@ require_once($CFG->dirroot.'/lib/formslib.php');
 class iomad {
 
     /**
-     * Gets the current users company ID depending on
+     * Gets the current users company ID depending on 
      * if the user is an admin and editing a company or is a
      * company user tied to a company.
      * @param $context - stdclass()
@@ -32,7 +32,7 @@ class iomad {
     public static function get_my_companyid($context, $required=true) {
         global $SESSION, $USER;
         // are we logged in?
-        if (empty($USER->id) && empty($SESSION->currenteditingcompany)) {
+        if (empty($USER->id)) {
             return -1;
         }
 
@@ -42,11 +42,8 @@ class iomad {
         } else if (self::is_company_user()) {
             $companyid = self::companyid();
         } else if (self::has_capability('block/iomad_company_admin:edit_departments', $context) && $required) {
-            if (!empty($SESSION->company->id)) {
-                return $SESSION->company->id;
-            } else {
-                redirect(new moodle_url('/my'), get_string('pleaseselect', 'block_iomad_company_admin'));
-            }
+            redirect(new moodle_url('/local/iomad_dashboard/index.php'),
+                                     get_string('pleaseselect', 'block_iomad_company_admin'));
         } else {
             $companyid = 0;
         }
@@ -149,9 +146,10 @@ class iomad {
         if (!isset($USER->company->id)) {
             if (self::is_company_user()) {
                 $company = company::by_userid($USER->id);
-                $fields = ['id', 'shortname', 'name'];
-                if ($company->cssfields) {
-                    $fields = array_merge($fields, $company->cssfields);
+                $fields = 'id, shortname, name';
+                $cssfields = implode(',', $company->cssfields);
+                if ($cssfields) {
+                    $fields .= ', ' . $cssfields;
                 }
 
                 $USER->company = $company->get( $fields );
@@ -164,7 +162,7 @@ class iomad {
      * Get the company Custom CSS given an ID.
      *
      * Parameters = $companyid = int;
-     *
+     * 
      * Returns text;
      **/
      public static function get_company_customcss($companyid) {
@@ -181,7 +179,7 @@ class iomad {
       * Get the company main colour given an ID.
       *
       * Parameters = $companyid = int;
-      *
+      * 
       * Returns text;
       **/
      public static function get_company_maincolor($companyid) {
@@ -198,7 +196,7 @@ class iomad {
       * Get the company heading colour given an ID.
       *
       * Parameters = $companyid = int;
-      *
+      * 
       * Returns text;
       **/
      public static function get_company_headingcolor($companyid) {
@@ -215,7 +213,7 @@ class iomad {
       * Get the company link colour given an ID.
       *
       * Parameters = $companyid = int;
-      *
+      * 
       * Returns text;
       **/
      public static function get_company_linkcolor($companyid) {
@@ -329,42 +327,6 @@ class iomad {
         return;
     }
 
-    /**
-     * IOMAD:
-     * Filter profile field categories to only show 'company' categories for the
-     * current user. All other pass through as normal
-     * @param array $categories list of category objects
-     * @return array filtered list of categories
-     */
-    public static function iomad_filter_profile_categories( $categories, $userid = 0 ) {
-        global $DB, $USER;
-
-        if (empty($userid)) {
-            $user = $USER;
-        } else {
-            $user = $DB->get_record('user', array('id' => $userid));
-            $user->company = company::get_company_byuserid($userid);
-        }
-
-        $iomadcategories = array();
-        foreach ($categories as $id => $category) {
-
-            // Try to find category in company list.
-            if ($company = $DB->get_record( 'company', array('profileid' => $id) ) ) {
-
-                // If this is not the user's company then do not include.
-                if (!empty( $user->company->id )) {
-                    if ($user->company->id == $company->id) {
-                        $iomadcategories[ $id ] = $category;
-                    }
-                }
-            } else {
-                $iomadcategories[ $id ] = $category;
-            }
-        }
-
-        return $iomadcategories;
-    }
 
     /**
      * IOMAD:
@@ -383,7 +345,6 @@ class iomad {
 
         if (empty($userid)) {
             $user = $USER;
-            $user->company = company::get_company_byuserid($USER->id);
         } else {
             $user = $DB->get_record('user', array('id' => $userid));
             $user->company = company::get_company_byuserid($userid);
@@ -396,22 +357,13 @@ class iomad {
             if ($company = $DB->get_record( 'company', array('category' => $id) ) ) {
 
                 // If this is not the user's company then do not include.
-                if (!empty( $user->company->id )) {
+                if (!empty( $user->company )) {
                     if ($user->company->id == $company->id) {
                         $iomadcategories[ $id ] = $category;
                     }
                 }
             } else {
-                // Is this a sub category?
-                $categoryrec = $DB->get_record('course_categories', array('id' => $id));
-                if ($categoryrec->parent == 0) {
-                    $iomadcategories[ $id ] = $category;
-                } else {
-                    // Is this company category in the path?
-                    if (true === strpos($categoryrec->path, "/".$user->company->category."/")) {
-                        $iomadcategories[ $id ] = $category;
-                    }
-                }
+                $iomadcategories[ $id ] = $category;
             }
         }
 
@@ -434,21 +386,21 @@ class iomad {
         }
         $context = context_system::instance();
         $mycompanyid = self::get_my_companyid($context);
-
+        
         $iomadcourses = array();
         foreach ($courses as $id => $course) {
             // Try to find category in company list.
             if ($DB->get_record( 'company_course', array('courseid' => $id,
                                                          'companyid' => $mycompanyid) ) ) {
                 // Include as tied to company.
-                $iomadcourses[ $id ] = $course;
+                $iomadcoursess[ $id ] = $course;
             } else if ($DB->get_record( 'iomad_courses', array('courseid' => $id,
                                                               'shared' => 1) ) ) {
                 // Include as open shared.
-                $iomadcourses[ $id ] = $course;
+                $iomadcoursess[ $id ] = $course;
             } else if (!$DB->get_records('company_course', array('courseid' => $id))) {
                 // Include as not a companycourse.
-                $iomadcourses[ $id ] = $course;
+                $iomadcoursess[ $id ] = $course;
             }
         }
 
@@ -622,17 +574,8 @@ class iomad {
         $perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page?
         $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
         $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
-        $compfrom = optional_param_array('compfromraw', null, PARAM_INT);
-        $compto = optional_param_array('comptoraw', null, PARAM_INT);
-        $loginfrom = optional_param_array('loginfromraw', null, PARAM_INT);
-        $loginto = optional_param_array('logintoraw', null, PARAM_INT);
-        $emailfrom = optional_param_array('emailfromraw', null, PARAM_INT);
-        $emailto = optional_param_array('emailtoraw', null, PARAM_INT);
-        $licenseuseage = optional_param('licenseusage', 0, PARAM_INT);
-        $licenseallocatedfrom = optional_param_array('licenseallocatedfromraw', null, PARAM_INT);
-        $licenseallocatedto = optional_param_array('licenseallocatedtoraw', null, PARAM_INT);
-        $licenseunallocatedfrom = optional_param_array('licenseunallocatedfromraw', null, PARAM_INT);
-        $licenseunallocatedto = optional_param_array('licenseunallocatedtoraw', null, PARAM_INT);
+        $compfromraw = optional_param('compfrom', null, PARAM_RAW);
+        $comptoraw = optional_param('compto', null, PARAM_RAW);
 
         // Process the params.
         $paramlist = array('firstname',
@@ -640,13 +583,7 @@ class iomad {
                            'email',
                            'search',
                            'compfrom',
-                           'compto',
-                           'licenseusage',
-                           'licenseallocatedfrom',
-                           'licenseallocatedto',
-                           'licenseunallocatedfrom',
-                           'licenseunallocatedto',
-                           );
+                           'compto');
         //  Get the company additional optional user parameter names.
         $fieldnames = array();
         $idlist = array();
@@ -776,96 +713,21 @@ class iomad {
         }
         if (!empty($params['compfrom'])) {
             $params['courseid2'] = $params['courseid'];
-            if ($compfromids = $DB->get_records_sql("SELECT id FROM {local_iomad_track}
-                                                     WHERE (courseid = :courseid
+            if ($compfromids = $DB->get_records_sql("SELECT userid FROM {course_completions}
+                                                     WHERE (course = :courseid
                                                      AND timecompleted < :compfrom
                                                      AND timecompleted IS NOT NULL)
                                                      OR (
-                                                     courseid = :courseid2
+                                                     course = :courseid2
                                                      AND timecompleted IS NULL)", $params)) {
-                $sqlsearch .= " AND lit.id NOT IN (".implode(',', array_keys($compfromids)).") ";
+                $sqlsearch .= " AND u.id NOT IN (".implode(',', array_keys($compfromids)).") ";
             }
         }
 
         if (!empty($params['compto'])) {
-            if ($comptoids = $DB->get_records_sql("SELECT id FROM {local_iomad_track}
-                                                   WHERE courseid = :courseid AND timecompleted > :compto", $params)) {
-                $sqlsearch .= " AND lit.id NOT IN (".implode(',', array_keys($comptoids)).") ";
-            }
-        }
-
-        if (!empty($params['emailfrom'])) {
-            $sqlsearch .= " AND e.sent > :emailfrom ";
-            $searchparams['emailfrom'] = $params['emailfrom'];
-        }
-
-        if (!empty($params['emailto'])) {
-            $sqlsearch .= " AND e.sent < :emailto ";
-            $searchparams['emailto'] = $params['emailto'];
-        }
-
-        if (!empty($params['loginfrom'])) {
-            $sqlsearch .= " AND url.lastlogin > :loginfrom ";
-            $searchparams['loginfrom'] = $params['loginfrom'];
-        }
-
-        if (!empty($params['loginto'])) {
-            $sqlsearch .= " AND url.lastlogin < :loginto ";
-            $searchparams['loginto'] = $params['loginto'];
-        }
-
-        if (!empty($params['licenseallocatedfrom'])) {
-            if ($licallocfromids = $DB->get_records_sql("SELECT id FROM {local_report_user_lic_allocs}
-                                                     WHERE issuedate > :licenseallocatedfrom
-                                                     AND action = 1
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (".implode(',', array_keys($licallocfromids)).") ";
-            } else {
-                $sqlsearch .= " AND 1 = 2 ";
-            }
-        }
-
-        if (!empty($params['licenseallocatedto'])) {
-            if ($licalloctoids = $DB->get_records_sql("SELECT id FROM {local_report_user_lic_allocs}
-                                                     WHERE issuedate < :licenseallocatedto
-                                                     AND action = 1
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (".implode(',', array_keys($licalloctoids)).") ";
-            } else {
-                $sqlsearch .= " AND 1 = 2 ";
-            }
-        }
-
-        if (!empty($params['licenseunallocatedfrom'])) {
-            if ($licunallocfromids = $DB->get_records_sql("SELECT id FROM {local_report_user_lic_allocs}
-                                                     WHERE issuedate > :licenseunallocatedfrom
-                                                     AND action = 0
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (".implode(',', array_keys($licunallocfromids)).") ";
-            } else {
-                $sqlsearch .= " AND 1 = 2 ";
-            }
-        }
-
-        if (!empty($params['licenseunallocatedto'])) {
-            if ($licunalloctoids = $DB->get_records_sql("SELECT id FROM {local_report_user_lic_allocs}
-                                                     WHERE issuedate < :licenseunallocatedto
-                                                     AND action = 0
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (".implode(',', array_keys($licunalloctoids)).") ";
-            } else {
-                $sqlsearch .= " AND 1 = 2 ";
-            }
-        }
-
-        if (!empty($params['licenseusage'])) {
-            $params['licenseusage']--;
-            if ($licunalloctoids = $DB->get_records_sql("SELECT id FROM {local_report_user_lic_allocs}
-                                                     WHERE action = :licenseusage
-                                                     ", $params)) {
-                $sqlsearch .= " AND urla.id IN (".implode(',', array_keys($licunalloctoids)).") ";
-            } else {
-                $sqlsearch .= " AND 1 = 2 ";
+            if ($comptoids = $DB->get_records_sql("SELECT userid FROM {course_completions}
+                                                   WHERE course = :courseid AND timecompleted > :compto", $params)) {
+                $sqlsearch .= " AND u.id NOT IN (".implode(',', array_keys($comptoids)).") ";
             }
         }
 
@@ -996,11 +858,12 @@ class iomad {
         return $returnarr;
     }
 
-    /**
+    /** 
      * Get users into temporary table
      */
     private static function populate_temporary_users($temptablename, $searchinfo) {
         global $DB;
+
 
         // Create a temporary table to hold the userids.
         $dbman = $DB->get_manager();
@@ -1058,7 +921,7 @@ class iomad {
         } else {
             $completionsql = "";
         }
-
+                
         // Get the user details.
         $shortname = addslashes($course->shortname);
         $countsql = "SELECT u.id ";
@@ -1133,12 +996,12 @@ class iomad {
         } else {
             $completionsql = "";
         }
-
+                
         // Get the user details.
-        $countsql = "SELECT" . $DB->sql_concat('co.id', 'u.id'). "AS id ";
+        $countsql = "SELECT CONCAT(co.id, u.id) AS id ";
         $selectsql = "
-                SELECT ".
-                $DB->sql_concat('co.id', 'u.id')." AS id,
+                SELECT
+                CONCAT(co.id, u.id) AS id, 
                 u.id AS uid,
                 u.firstname AS firstname,
                 u.lastname AS lastname,
@@ -1383,19 +1246,19 @@ class iomad {
             $showsuspendedsql = "AND u.suspended = 0";
         } else {
             $showsuspendedsql = "";
-        }
+        }                
 
         if (!$showused) {
             $showusedsql = "AND clu.isusing = 0";
         } else {
             $showusedsql = "";
-        }
+        }                
 
         // Get the user details.
         $countsql = "SELECT clu.id AS id ";
         $selectsql = "
                 SELECT
-                clu.id AS id,
+                clu.id AS id, 
                 u.id AS uid,
                 u.firstname AS firstname,
                 u.lastname AS lastname,
@@ -1441,9 +1304,9 @@ class iomad {
     public static function get_companies_listing($sort='name', $dir='ASC', $page=0, $recordsperpage=0,
                            $search='', $firstinitial='', $lastinitial='', $extraselect='', array $extraparams = null) {
         global $DB;
-
+    
         $params = array();
-
+    
         if (!empty($search)) {
             $search = trim($search);
             $select .= " AND (". $DB->sql_like("name", ':search1', false, false).
@@ -1453,23 +1316,23 @@ class iomad {
             $params['search2'] = "%$search%";
             $params['search3'] = "$search";
         }
-
+    
         if ($extraselect) {
             $select = $extraselect;
             $params = $params + (array)$extraparams;
         }
-
+    
         if ($sort) {
             $sort = " ORDER BY $sort $dir";
         }
-
+    
         // Warning: will return UNCONFIRMED USERS!
-        return $DB->get_records_sql("SELECT *, 0 as depth
+        return $DB->get_records_sql("SELECT *
                                      FROM {company}
                                      WHERE $select $sort",
                                      $params, $page, $recordsperpage);
     }
-
+    
     /**
      * Get user completion info for a course
      *
@@ -1494,19 +1357,19 @@ class iomad {
             $showsuspendedsql = "AND u.suspended = 0";
         } else {
             $showsuspendedsql = "";
-        }
+        }                
 
         if (!$showused) {
             $showusedsql = "AND clu.isusing = 0";
         } else {
             $showusedsql = "";
-        }
+        }                
 
         // Get the user details.
         $shortname = addslashes($course->shortname);
-        $countsql = "SELECT " . $DB->sql_concat('clu.id', 'u.id', 'clu.isusing') . " AS id";
-        $selectsql = "SELECT ".
-                $DB->sql_concat('clu.id', 'u.id'). " AS id,
+        $countsql = "SELECT CONCAT(clu.id, u.id, clu.isusing) AS id";
+        $selectsql = "SELECT
+                CONCAT(clu.id, u.id) AS id, 
                 u.id AS uid,
                 u.firstname AS firstname,
                 u.lastname AS lastname,
@@ -1520,7 +1383,7 @@ class iomad {
                 d.name AS department,
                 cl.name AS licensename ";
         $fromsql = " FROM {user} u, {companylicense_users} clu, {department} d, {company_users} du, {".$temptablename."} tt, {companylicense} cl
-
+                     
                     WHERE $searchinfo->sqlsearch
                     AND tt.userid = u.id
                     AND clu.licensecourseid = $courseid
@@ -1559,7 +1422,7 @@ class iomad {
      */
     private static function has_capability_in_accessdata($companyid, $capability, context $context, array &$accessdata) {
         global $CFG, $DB;
-
+    
         // Build $paths as a list of current + all parent "paths" with order bottom-to-top
         $path = $context->path;
         $paths = array($path);
@@ -1570,10 +1433,10 @@ class iomad {
             }
             $paths[] = $path;
         }
-
+    
         $roles = array();
         $switchedrole = false;
-
+    
         // Find out if role switched
         if (!empty($accessdata['rsw'])) {
             // From the bottom up...
@@ -1586,7 +1449,7 @@ class iomad {
                 }
             }
         }
-
+    
         if (!$switchedrole) {
             // get all users roles in this context and above
             foreach ($paths as $path) {
@@ -1597,7 +1460,7 @@ class iomad {
                 }
             }
         }
-
+    
         // Now find out what access is given to each role, going bottom-->up direction
         $rdefs = get_role_definitions(array_keys($roles));
         $allowed = false;
@@ -1626,12 +1489,12 @@ class iomad {
             }
             $allowed = ($allowed or $roles[$roleid] === CAP_ALLOW);
         }
-
+    
         return $allowed;
     }
-
+    
     /**
-     * IOMAD version
+     * IOMAD version 
      * @param unknown $capability
      * @param context $context
      * @param int $companyid (optional) check for different company (and right to access same).
@@ -1639,13 +1502,13 @@ class iomad {
      */
     public static function has_capability($capability, context $context, $companyid = 0) {
         global $USER, $DB;
-
+        
         // If original version says no then it's no.
         // (We also rely on this doing a bunch of sanity checks, so we don't have to)
         if (!has_capability($capability, $context)) {
             return false;
         }
-
+        
         // If this is the admin then we'll believe it
         if (is_siteadmin()) {
             return true;
@@ -1657,22 +1520,22 @@ class iomad {
                 return false;
             }
         } else {
-
+        
             // Get user's current company. If no company then it must be true.
             if (!$companyid = self::companyid()) {
                 return true;
             }
         }
-
+        
         // Probably need to get accessdata (again), so...
         if (!isset($USER->access)) {
             load_all_capabilities();
         }
         $access =& $USER->access;
-
+        
         return self::has_capability_in_accessdata($companyid, $capability, $context, $access);
     }
-
+    
     /**
      * Iomad version of require_capability
      * @param unknown $capability
@@ -1685,7 +1548,7 @@ class iomad {
             throw new required_capability_exception($context, $capability, 'nopermissions', 'local_iomad');
         }
     }
-
+    
     /**
      * Get IOMAD documentation link.
      */
@@ -1702,7 +1565,7 @@ class iomad {
 
         if ($rurl['host'] !=  $wwwroot['host']) {
             if ($companyrec = $DB->get_record('company', array('hostname' => $rurl['host']))) {
-                $redirecturl = new moodle_url($CFG->wwwroot . '/login/index.php',
+                $redirecturl = new moodle_url($CFG->wwwroot . '/local/iomad_signup/login.php',
                                               array('id' => $companyrec->id,
                                                     'code' => $companyrec->shortname));
                 redirect($redirecturl);

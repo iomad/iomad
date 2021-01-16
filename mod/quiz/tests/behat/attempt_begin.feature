@@ -29,7 +29,9 @@ Feature: The various checks that may happen when an attept is started
     And quiz "Quiz 1" contains the following questions:
       | question | page |
       | TF1      | 1    |
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     Then I should see "Text of the first question"
 
@@ -41,10 +43,12 @@ Feature: The various checks that may happen when an attept is started
     And quiz "Quiz 1" contains the following questions:
       | question | page |
       | TF1      | 1    |
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     Then I should see "To attempt this quiz you need to know the quiz password" in the "Start attempt" "dialogue"
-    And I should see "Your attempt will have a time limit of 1 hour. When you " in the "Start attempt" "dialogue"
+    And I should see "The quiz has a time limit of 1 hour. Time will " in the "Start attempt" "dialogue"
     And I set the field "Quiz password" to "Frog"
     And I click on "Start attempt" "button" in the "Start attempt" "dialogue"
     And I should see "Text of the first question"
@@ -57,7 +61,9 @@ Feature: The various checks that may happen when an attept is started
     And quiz "Quiz 1" contains the following questions:
       | question | page |
       | TF1      | 1    |
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     And I click on "Cancel" "button" in the "Start attempt" "dialogue"
     Then I should see "Quiz 1 description"
@@ -71,13 +77,15 @@ Feature: The various checks that may happen when an attept is started
     And quiz "Quiz 1" contains the following questions:
       | question | page |
       | TF1      | 1    |
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     And I set the field "Quiz password" to "Toad"
     And I click on "Start attempt" "button" in the "Start attempt" "dialogue"
     Then I should see "Quiz 1 description"
     And I should see "To attempt this quiz you need to know the quiz password"
-    And I should see "Your attempt will have a time limit of 1 hour. When you "
+    And I should see "The quiz has a time limit of 1 hour. Time will "
     And I should see "The password entered was incorrect"
     And I set the field "Quiz password" to "Frog"
     # On Mac/FF tab key is needed as text field in dialogue and page have same id.
@@ -93,13 +101,15 @@ Feature: The various checks that may happen when an attept is started
     And quiz "Quiz 1" contains the following questions:
       | question | page |
       | TF1      | 1    |
-    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    When I log in as "student"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
     And I press "Attempt quiz now"
     And I set the field "Quiz password" to "Toad"
     And I click on "Start attempt" "button" in the "Start attempt" "dialogue"
     And I should see "Quiz 1 description"
     And I should see "To attempt this quiz you need to know the quiz password"
-    And I should see "Your attempt will have a time limit of 1 hour. When you "
+    And I should see "The quiz has a time limit of 1 hour. Time will "
     And I should see "The password entered was incorrect"
     And I set the field "Quiz password" to "Frog"
     # On Mac/FF tab key is needed as text field in dialogue and page have same id.

@@ -39,8 +39,7 @@ Feature: Teachers can reset wiki pages, tags and files
     And I upload "lib/tests/fixtures/empty.txt" file to "Files" filemanager
     And I press "Save changes"
     And I should see "empty.txt"
-    And I am on "Course 1" course homepage
-    And I navigate to "Reset" in current page administration
+    And I navigate to "Reset" node in "Course administration"
 
   Scenario: Reset page, tags and files
     And I set the following fields to these values:

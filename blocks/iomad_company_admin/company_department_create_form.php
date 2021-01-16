@@ -149,15 +149,14 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
-// get output renderer
+// get output renderer                                                                                                                                                                                         
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $departmentlist);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $departmentlist);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
@@ -173,8 +172,7 @@ if ($moveid && confirm_sesskey() && $confirm == md5($moveid)) {
                                $movefullname,
                                $moveshortname,
                                $moveparent);
-    $redirectmessage = get_string('departmentupdatedok', 'block_iomad_company_admin');
-    redirect($departmentlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($departmentlist);
     die;
 }
 
@@ -207,7 +205,6 @@ if ($editform->is_cancelled()) {
                                    $createdata->fullname,
                                    $createdata->shortname,
                                    $createdata->deptid);
-        $redirectmessage = get_string('departmentcreatedok', 'block_iomad_company_admin');
     } else {
         // We are editing a current department.
         // Check if we are moving this department.
@@ -219,7 +216,6 @@ if ($editform->is_cancelled()) {
                                        $createdata->fullname,
                                        $createdata->shortname,
                                        $createdata->deptid);
-            $redirectmessage = get_string('departmentupdatedok', 'block_iomad_company_admin');
         } else {
             $parentdept = $DB->get_record('department', array('id' => $createdata->deptid));
             echo $output->header();
@@ -238,18 +234,18 @@ if ($editform->is_cancelled()) {
         }
     }
 
-    redirect($departmentlist, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($departmentlist);
     die;
 } else {
     // Javascript for fancy select.
-    // Parameter is name of proper select form element.
+    // Parameter is name of proper select form element. 
     $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', '', $departmentid));
 
     echo $output->header();
     // Check the department is valid.
     if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
-    }
+    }   
 
     $editform->display();
 

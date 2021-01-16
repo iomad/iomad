@@ -38,8 +38,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
-
 if ($ADMIN->fulltree) {
     $dir = dirname(__FILE__);
     require_once($dir .'/lib.php');
@@ -47,27 +45,13 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('commerce_enable_external',
                                                     get_string('useexternalshop', 'block_iomad_commerce'),
                                                     get_string('useexternalshop_help', 'block_iomad_commerce'),
-                                                    0));
+                                                    1));
 
     $settings->add(new admin_setting_configtext('commerce_externalshop_url',
                                             get_string('commerce_externalshop_url', 'block_iomad_commerce'),
                                             get_string('commerce_externalshop_url', 'block_iomad_commerce'),
                                             '',
                                             PARAM_TEXT));
-
-    if (!empty($companyid)) {
-        $settings->add(new admin_setting_configtext('commerce_externalshop_url' . "_$companyid",
-                                                get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
-                                                get_string('commerce_externalshop_url_company', 'block_iomad_commerce'),
-                                                '',
-                                                PARAM_TEXT));
-    }
-
-    $settings->add(new admin_setting_configtext('commerce_externalshop_link_timeout',
-                                            get_string('commerce_externalshop_link_timeout', 'block_iomad_commerce'),
-                                            get_string('commerce_externalshop_link_timeout', 'block_iomad_commerce'),
-                                            30,
-                                            PARAM_INT));
 
     $settings->add(new admin_setting_configtext('commerce_admin_firstname',
                                             get_string('commerce_admin_firstname', 'block_iomad_commerce'),
@@ -94,18 +78,6 @@ if ($ADMIN->fulltree) {
                                                     get_string('opentoallcompanies', 'block_iomad_commerce'),
                                                     get_string('opentoallcompanies_help', 'block_iomad_commerce'),
                                                     1));
-
-    $settings->add(new admin_setting_configtext('commerce_admin_default_license_access_length',
-                                            get_string('commerce_default_license_access_length', 'block_iomad_commerce'),
-                                            get_string('commerce_default_license_access_length_help', 'block_iomad_commerce'),
-                                            30,
-                                            PARAM_INT));
-
-    $settings->add(new admin_setting_configtext('commerce_admin_default_license_shelf_life',
-                                            get_string('commerce_admin_default_license_shelf_life', 'block_iomad_commerce'),
-                                            get_string('commerce_admin_default_license_shelf_life_help', 'block_iomad_commerce'),
-                                            365,
-                                            PARAM_INT));
 
     $pp = get_payment_providers();
     foreach ($pp as $p) {

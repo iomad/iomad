@@ -1,62 +1,12 @@
 This files describes API changes in /mod/* - activity modules,
 information provided here is intended especially for developers.
 
-=== 3.9 ===
-
-* The callback get_shortcuts() is now deprecated. Please use get_course_content_items and get_all_content_items instead.
-  See source code examples in get_course_content_items() and get_all_content_items() in mod/lti/lib.php for details.
-* When creating the calendar events and setting the event description to match the module intro description, the filters
-  must not be applied on the passed description text. Doing so leads to loosing some expected text filters features and
-  causes unnecessarily early theme and output initialisation in unit tests. If your activity creates calendar events,
-  you probably have code like:
-    ```
-    $event->description = format_module_intro('quiz', $quiz, $cmid);
-    ```
-  You need to change it to:
-    ```
-    $event->description = format_module_intro('quiz', $quiz, $cmid, false);
-    $event->format = FORMAT_HTML;
-    ```
-  Even this is still technically wrong. Content should normally only be formatted just before it is output. Ideally, we
-  should pass the raw description text, format and have a way to copy the embedded files; or provide another way for the
-  calendar to call the right format_text() later. The calendar API does not allow us to do these things easily at the
-  moment. Therefore, this compromise approach is used. The false parameter added ensures that text filters are not run
-  at this time which is important. And the format must be set to HTML, because otherwise it would use the current user's
-  preferred editor default format.
-* Related to the above and to help with detecting the problematic places in contributed 3rd party modules, the
-  testing_module_generator::create_instance() now throws coding_exception if creating a module instance initialised the
-  theme and output as a side effect.
-
-=== 3.8 ===
-
-* The final deprecation of xxx_print_overview() callback means that this function will no longer be called.
-* Activities which define multiple grade items must now describe the mapping of the gradeitem's itemnumber to a
-  meaningful name in a class implementing \core_grades\local\gradeitem\itemnumber_mapping located in
-  \mod_name\grades\gradeitems (located in mod/[mod_name]/classes/grades/gradeitems.php).
-
-=== 3.6 ===
-
-* The final deprecation of xxx_get_types() callback means that this function will no longer be called.
-  Please use get_shortcuts() instead.
-* lti_get_shortcuts has been deprecated. Please use get_shortcuts() instead to add items to the activity chooser.
-* Now, when mod_<modname>_core_calendar_is_event_visible or mod_<modname>_core_calendar_provide_event_action callback functions
-  are called, the userid of the requesting user is also passed to them.
-* The following functions have been finally deprecated and can not be used anymore:
-    - update_module_button()
-* The final deprecation of xxx_delete_course callback means that this function will no longer be called.
-  Please use the observer for event \core\event\course_content_deleted instead.
-
-=== 3.5 ===
+=== 3.4.3 ===
 
 * There is a new privacy API that every subsystem and plugin has to implement so that the site can become GDPR
   compliant. Activity modules use this API to report what information they store or process regarding users, and provide
   ability to export and delete personal data. See https://docs.moodle.org/dev/Privacy_API for guidelines on how to
   implement the privacy API in your activity module.
-* Backup directory now can be outside of temp directory. Use make_backup_temp_directory($name) instead of
-  make_temp_directory('/backup/'.$name)
-* Modules that provide their own interactive content and call cm_info::set_content() from [MODULENAME]_cm_info_view()
-  callback should format all user input and call set_content() with parameter $isformatted=true . Otherwise
-  scripts will be cleaned on the course page in case of $CFG->forceclean=1. See example in mod_folder.
 
 === 3.4 ===
 
@@ -77,14 +27,13 @@ information provided here is intended especially for developers.
   - isexternalfile (if is a file reference to a external repository)
   - repositorytype (the repository name in case is a external file)
   Those fields are VALUE_OPTIONAL for backwards compatibility.
-* The block_course_overview has been removed and the related core module
-*_print_overview functions have been deprecated.
+* The block_course_overview has been removed and the related core module *_print_overview functions have been deprecated.
 * The block_myoverview has replaced block_course_overview to provide better information to students. To support this,
   actions can now be attached to calendar events. Documentation for the following new API callbacks introduced in
   MDL-55611 can be found at https://docs.moodle.org/dev/Calendar_API. The 3 new callbacks are:
   - mod_<modname>_core_calendar_is_event_visible
   - mod_<modname>_core_calendar_provide_event_action
-  - mod_<modname>_core_calendar_event_action_shows_item_count
+  - mod_<modname>_core_calendar_event_action_show_items_acount
 * Changes to the moodleform_mod class and its usage (MDL-58138):
   - the get_data() method has been overriden. The implementation calls parent::get_data() and a new data_postprocessing() method
   - new data_postprocessing() method added. Mods can override this in their mod_form subclass to modify the submit data. Previously

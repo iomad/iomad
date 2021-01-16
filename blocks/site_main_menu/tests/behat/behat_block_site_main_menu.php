@@ -114,8 +114,12 @@ class behat_block_site_main_menu extends behat_base {
     protected function get_site_menu_activity_element($element, $selectortype, $activityname) {
         $activitynode = $this->get_site_menu_activity_node($activityname);
 
-        $exception = new ElementNotFoundException($this->getSession(), "'{$element}' '{$selectortype}' in '${activityname}'");
-        return $this->find($selectortype, $element, $exception, $activitynode);
+        // Transforming to Behat selector/locator.
+        list($selector, $locator) = $this->transform_selector($selectortype, $element);
+        $exception = new ElementNotFoundException($this->getSession(), '"' . $element . '" "' .
+            $selectortype . '" in "' . $activityname . '" ');
+
+        return $this->find($selector, $locator, $exception, $activitynode);
     }
 
     /**

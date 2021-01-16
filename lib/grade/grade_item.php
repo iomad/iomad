@@ -304,14 +304,7 @@ class grade_item extends grade_object {
         $this->aggregationcoef = grade_floatval($this->aggregationcoef);
         $this->aggregationcoef2 = grade_floatval($this->aggregationcoef2);
 
-        $result = parent::update($source);
-
-        if ($result) {
-            $event = \core\event\grade_item_updated::create_from_grade_item($this);
-            $event->trigger();
-        }
-
-        return $result;
+        return parent::update($source);
     }
 
     /**
@@ -407,13 +400,8 @@ class grade_item extends grade_object {
      * @return bool success
      */
     public function delete($source=null) {
-        global $DB;
-
-        $transaction = $DB->start_delegated_transaction();
         $this->delete_all_grades($source);
-        $success = parent::delete($source);
-        $transaction->allow_commit();
-        return $success;
+        return parent::delete($source);
     }
 
     /**
@@ -423,10 +411,6 @@ class grade_item extends grade_object {
      * @return bool
      */
     public function delete_all_grades($source=null) {
-        global $DB;
-
-        $transaction = $DB->start_delegated_transaction();
-
         if (!$this->is_course_item()) {
             $this->force_regrading();
         }
@@ -437,51 +421,7 @@ class grade_item extends grade_object {
             }
         }
 
-        // Delete all the historical files.
-        // We only support feedback files for modules atm.
-        if ($this->is_external_item()) {
-            $fs = new file_storage();
-            $fs->delete_area_files($this->get_context()->id, GRADE_FILE_COMPONENT, GRADE_HISTORY_FEEDBACK_FILEAREA);
-        }
-
-        $transaction->allow_commit();
-
         return true;
-    }
-
-    /**
-     * Duplicate grade item.
-     *
-     * @return grade_item The duplicate grade item
-     */
-    public function duplicate() {
-        // Convert current object to array.
-        $copy = (array) $this;
-
-        if (empty($copy["id"])) {
-            throw new moodle_exception('invalidgradeitemid');
-        }
-
-        // Remove fields that will be either unique or automatically filled.
-        $removekeys = array();
-        $removekeys[] = 'id';
-        $removekeys[] = 'idnumber';
-        $removekeys[] = 'timecreated';
-        $removekeys[] = 'sortorder';
-        foreach ($removekeys as $key) {
-            unset($copy[$key]);
-        }
-
-        // Addendum to name.
-        $copy["itemname"] = get_string('duplicatedgradeitem', 'grades', $copy["itemname"]);
-
-        // Create new grade item.
-        $gradeitem = new grade_item($copy);
-
-        // Insert grade item into database.
-        $gradeitem->insert();
-
-        return $gradeitem;
     }
 
     /**
@@ -532,10 +472,6 @@ class grade_item extends grade_object {
         if (parent::insert($source)) {
             // force regrading of items if needed
             $this->force_regrading();
-
-            $event = \core\event\grade_item_created::create_from_grade_item($this);
-            $event->trigger();
-
             return $this->id;
 
         } else {
@@ -727,7 +663,9 @@ class grade_item extends grade_object {
             if ($category_array && array_key_exists($this->categoryid, $category_array)) {
                 $category = $category_array[$this->categoryid];
                 //call set_hidden on the category regardless of whether it is hidden as its parent might be hidden
-                $category->set_hidden($hidden, false);
+                //if($category->is_hidden()) {
+                    $category->set_hidden($hidden, false);
+                //}
             }
         }
     }
@@ -1778,13 +1716,9 @@ class grade_item extends grade_object {
      * @param string $feedback Optional teacher feedback
      * @param int $feedbackformat A format like FORMAT_PLAIN or FORMAT_HTML
      * @param int $usermodified The ID of the user making the modification
-     * @param int $timemodified Optional parameter to set the time modified, if not present current time.
      * @return bool success
      */
-    public function update_final_grade($userid, $finalgrade = false,
-                                       $source = null, $feedback = false,
-                                       $feedbackformat = FORMAT_MOODLE,
-                                       $usermodified = null, $timemodified = null) {
+    public function update_final_grade($userid, $finalgrade=false, $source=NULL, $feedback=false, $feedbackformat=FORMAT_MOODLE, $usermodified=null) {
         global $USER, $CFG;
 
         $result = true;
@@ -1850,8 +1784,8 @@ class grade_item extends grade_object {
 
         $gradechanged = false;
         if (empty($grade->id)) {
-            $grade->timecreated = null;   // Hack alert - date submitted - no submission yet.
-            $grade->timemodified = $timemodified ?? time(); // Hack alert - date graded.
+            $grade->timecreated  = null;   // hack alert - date submitted - no submission yet
+            $grade->timemodified = time(); // hack alert - date graded
             $result = (bool)$grade->insert($source);
 
             // If the grade insert was successful and the final grade was not null then trigger a user_graded event.
@@ -1875,7 +1809,7 @@ class grade_item extends grade_object {
                 return $result;
             }
 
-            $grade->timemodified = $timemodified ?? time(); // Hack alert - date graded.
+            $grade->timemodified = time(); // hack alert - date graded
             $result = $grade->update($source);
 
             // If the grade update was successful and the actual grade has changed then trigger a user_graded event.
@@ -1930,19 +1864,9 @@ class grade_item extends grade_object {
      * @param int $dategraded A timestamp of when the student's work was graded
      * @param int $datesubmitted A timestamp of when the student's work was submitted
      * @param grade_grade $grade A grade object, useful for bulk upgrades
-     * @param array $feedbackfiles An array identifying the location of files we want to copy to the gradebook feedback area.
-     *        Example -
-     *        [
-     *            'contextid' => 1,
-     *            'component' => 'mod_xyz',
-     *            'filearea' => 'mod_xyz_feedback',
-     *            'itemid' => 2
-     *        ];
      * @return bool success
      */
-    public function update_raw_grade($userid, $rawgrade = false, $source = null, $feedback = false,
-            $feedbackformat = FORMAT_MOODLE, $usermodified = null, $dategraded = null, $datesubmitted=null,
-            $grade = null, array $feedbackfiles = []) {
+    public function update_raw_grade($userid, $rawgrade=false, $source=NULL, $feedback=false, $feedbackformat=FORMAT_MOODLE, $usermodified=null, $dategraded=null, $datesubmitted=null, $grade=null) {
         global $USER;
 
         $result = true;
@@ -2005,7 +1929,6 @@ class grade_item extends grade_object {
         if ($feedback !== false and !$grade->is_overridden()) {
             $grade->feedback       = $feedback;
             $grade->feedbackformat = $feedbackformat;
-            $grade->feedbackfiles  = $feedbackfiles;
         }
 
         // update final grade if possible
@@ -2545,34 +2468,5 @@ class grade_item extends grade_object {
         if (!empty($CFG->enableavailability) && class_exists('\availability_grade\callbacks')) {
             \availability_grade\callbacks::grade_item_changed($this->courseid);
         }
-    }
-
-    /**
-     * Helper function to get the accurate context for this grade column.
-     *
-     * @return context
-     */
-    public function get_context() {
-        if ($this->itemtype == 'mod') {
-            $modinfo = get_fast_modinfo($this->courseid);
-            // Sometimes the course module cache is out of date and needs to be rebuilt.
-            if (!isset($modinfo->instances[$this->itemmodule][$this->iteminstance])) {
-                rebuild_course_cache($this->courseid, true);
-                $modinfo = get_fast_modinfo($this->courseid);
-            }
-            // Even with a rebuilt cache the module does not exist. This means the
-            // database is in an invalid state - we will log an error and return
-            // the course context but the calling code should be updated.
-            if (!isset($modinfo->instances[$this->itemmodule][$this->iteminstance])) {
-                mtrace(get_string('moduleinstancedoesnotexist', 'error'));
-                $context = \context_course::instance($this->courseid);
-            } else {
-                $cm = $modinfo->instances[$this->itemmodule][$this->iteminstance];
-                $context = \context_module::instance($cm->id);
-            }
-        } else {
-            $context = \context_course::instance($this->courseid);
-        }
-        return $context;
     }
 }

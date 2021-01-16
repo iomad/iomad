@@ -74,7 +74,7 @@ class memcached extends handler {
         if (empty($this->savepath)) {
             $this->servers = array();
         } else {
-            $this->servers = self::connection_string_to_memcache_servers($this->savepath);
+            $this->servers = util::connection_string_to_memcache_servers($this->savepath);
         }
 
         if (empty($CFG->session_memcached_prefix)) {
@@ -101,8 +101,6 @@ class memcached extends handler {
      * @return bool success
      */
     public function start() {
-        ini_set('memcached.sess_locking', $this->requires_write_lock() ? '1' : '0');
-
         // NOTE: memcached before 2.2.0 expires session locks automatically after max_execution_time,
         //       this leads to major difference compared to other session drivers that timeout
         //       and stop the second request execution instead.
@@ -150,6 +148,7 @@ class memcached extends handler {
         ini_set('session.save_handler', 'memcached');
         ini_set('session.save_path', $this->savepath);
         ini_set('memcached.sess_prefix', $this->prefix);
+        ini_set('memcached.sess_locking', '1'); // Locking is required!
         ini_set('memcached.sess_lock_expire', $this->lockexpire);
 
         if (version_compare($version, '3.0.0-dev') >= 0) {
@@ -269,33 +268,4 @@ class memcached extends handler {
         }
     }
 
-    /**
-     * Convert a connection string to an array of servers.
-     *
-     * "abc:123, xyz:789" to
-     *  [
-     *      ['abc', '123'],
-     *      ['xyz', '789'],
-     *  ]
-     *
-     * @param   string  $str save_path value containing memcached connection string
-     * @return  array[]
-     */
-    protected static function connection_string_to_memcache_servers(string $str) : array {
-        $servers = [];
-        $parts   = explode(',', $str);
-        foreach ($parts as $part) {
-            $part = trim($part);
-            $pos  = strrpos($part, ':');
-            if ($pos !== false) {
-                $host = substr($part, 0, $pos);
-                $port = substr($part, ($pos + 1));
-            } else {
-                $host = $part;
-                $port = 11211;
-            }
-            $servers[] = [$host, $port];
-        }
-        return $servers;
-    }
 }

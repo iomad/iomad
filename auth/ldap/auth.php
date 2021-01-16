@@ -164,15 +164,17 @@ class auth_plugin_ldap extends auth_plugin_base {
         //
         $key = sesskey();
         if (!empty($this->config->ntlmsso_enabled) && $key === $password) {
-            $sessusername = get_cache_flag($this->pluginconfig.'/ntlmsess', $key);
+            $cf = get_cache_flags($this->pluginconfig.'/ntlmsess');
             // We only get the cache flag if we retrieve it before
             // it expires (AUTH_NTLMTIMEOUT seconds).
-            if (empty($sessusername)) {
+            if (!isset($cf[$key]) || $cf[$key] === '') {
                 return false;
             }
 
+            $sessusername = $cf[$key];
             if ($username === $sessusername) {
                 unset($sessusername);
+                unset($cf);
 
                 // Check that the user is inside one of the configured LDAP contexts
                 $validuser = false;
@@ -545,9 +547,7 @@ class auth_plugin_ldap extends auth_plugin_base {
         // Save any custom profile field information
         profile_save_data($user);
 
-        $userinfo = $this->get_userinfo($user->username);
-        $this->update_user_record($user->username, false, false, $this->is_user_suspended((object) $userinfo));
-
+        $this->update_user_record($user->username);
         // This will also update the stored hash to the latest algorithm
         // if the existing hash is using an out-of-date algorithm (or the
         // legacy md5 algorithm).
@@ -668,8 +668,6 @@ class auth_plugin_ldap extends auth_plugin_base {
     function sync_users($do_updates=true) {
         global $CFG, $DB;
 
-        require_once($CFG->dirroot . '/user/profile/lib.php');
-
         print_string('connectingldap', 'auth_ldap');
         $ldapconnection = $this->ldap_connect();
 
@@ -691,7 +689,6 @@ class auth_plugin_ldap extends auth_plugin_base {
         ////
         // prepare some data we'll need
         $filter = '(&('.$this->config->user_attribute.'=*)'.$this->config->objectclass.')';
-        $servercontrols = array();
 
         $contexts = explode(';', $this->config->contexts);
 
@@ -699,8 +696,8 @@ class auth_plugin_ldap extends auth_plugin_base {
             array_push($contexts, $this->config->create_context);
         }
 
-        $ldappagedresults = ldap_paged_results_supported($this->config->ldap_version, $ldapconnection);
-        $ldapcookie = '';
+        $ldap_pagedresults = ldap_paged_results_supported($this->config->ldap_version, $ldapconnection);
+        $ldap_cookie = '';
         foreach ($contexts as $context) {
             $context = trim($context);
             if (empty($context)) {
@@ -708,62 +705,23 @@ class auth_plugin_ldap extends auth_plugin_base {
             }
 
             do {
-                if ($ldappagedresults) {
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        // Before 7.3, use this function that was deprecated in PHP 7.4.
-                        ldap_control_paged_result($ldapconnection, $this->config->pagesize, true, $ldapcookie);
-                    } else {
-                        // PHP 7.3 and up, use server controls.
-                        $servercontrols = array(array(
-                            'oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => array(
-                                'size' => $this->config->pagesize, 'cookie' => $ldapcookie)));
-                    }
+                if ($ldap_pagedresults) {
+                    ldap_control_paged_result($ldapconnection, $this->config->pagesize, true, $ldap_cookie);
                 }
                 if ($this->config->search_sub) {
                     // Use ldap_search to find first user from subtree.
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        $ldapresult = ldap_search($ldapconnection, $context, $filter, array($this->config->user_attribute));
-                    } else {
-                        $ldapresult = ldap_search($ldapconnection, $context, $filter, array($this->config->user_attribute),
-                            0, -1, -1, LDAP_DEREF_NEVER, $servercontrols);
-                    }
+                    $ldap_result = ldap_search($ldapconnection, $context, $filter, array($this->config->user_attribute));
                 } else {
                     // Search only in this context.
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        $ldapresult = ldap_list($ldapconnection, $context, $filter, array($this->config->user_attribute));
-                    } else {
-                        $ldapresult = ldap_list($ldapconnection, $context, $filter, array($this->config->user_attribute),
-                            0, -1, -1, LDAP_DEREF_NEVER, $servercontrols);
-                    }
+                    $ldap_result = ldap_list($ldapconnection, $context, $filter, array($this->config->user_attribute));
                 }
-                if (!$ldapresult) {
+                if(!$ldap_result) {
                     continue;
                 }
-                if ($ldappagedresults) {
-                    // Get next server cookie to know if we'll need to continue searching.
-                    $ldapcookie = '';
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        // Before 7.3, use this function that was deprecated in PHP 7.4.
-                        $pagedresp = ldap_control_paged_result_response($ldapconnection, $ldapresult, $ldapcookie);
-                        // Function ldap_control_paged_result_response() does not overwrite $ldapcookie if it fails, by
-                        // setting this to null we avoid an infinite loop.
-                        if ($pagedresp === false) {
-                            $ldapcookie = null;
-                        }
-                    } else {
-                        // Get next cookie from controls.
-                        ldap_parse_result($ldapconnection, $ldapresult, $errcode, $matcheddn,
-                            $errmsg, $referrals, $controls);
-                        if (isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'])) {
-                            $ldapcookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
-                        }
-                    }
+                if ($ldap_pagedresults) {
+                    ldap_control_paged_result_response($ldapconnection, $ldap_result, $ldap_cookie);
                 }
-                if ($entry = @ldap_first_entry($ldapconnection, $ldapresult)) {
+                if ($entry = @ldap_first_entry($ldapconnection, $ldap_result)) {
                     do {
                         $value = ldap_get_values_len($ldapconnection, $entry, $this->config->user_attribute);
                         $value = core_text::convert($value[0], $this->config->ldapencoding, 'utf-8');
@@ -771,13 +729,13 @@ class auth_plugin_ldap extends auth_plugin_base {
                         $this->ldap_bulk_insert($value);
                     } while ($entry = ldap_next_entry($ldapconnection, $entry));
                 }
-                unset($ldapresult); // Free mem.
-            } while ($ldappagedresults && $ldapcookie !== null && $ldapcookie != '');
+                unset($ldap_result); // Free mem.
+            } while ($ldap_pagedresults && $ldap_cookie !== null && $ldap_cookie != '');
         }
 
         // If LDAP paged results were used, the current connection must be completely
         // closed and a new one created, to work without paged results from here on.
-        if ($ldappagedresults) {
+        if ($ldap_pagedresults) {
             $this->ldap_close(true);
             $ldapconnection = $this->ldap_connect();
         }
@@ -788,9 +746,7 @@ class auth_plugin_ldap extends auth_plugin_base {
         $count = $DB->count_records_sql('SELECT COUNT(username) AS count, 1 FROM {tmp_extuser}');
         if ($count < 1) {
             print_string('didntgetusersfromldap', 'auth_ldap');
-            $dbman->drop_table($table);
-            $this->ldap_close();
-            return false;
+            exit;
         } else {
             print_string('gotcountrecordsfromldap', 'auth_ldap', $count);
         }
@@ -900,9 +856,7 @@ class auth_plugin_ldap extends auth_plugin_base {
 
                 foreach ($users as $user) {
                     echo "\t"; print_string('auth_dbupdatinguser', 'auth_db', array('name'=>$user->username, 'id'=>$user->id));
-                    $userinfo = $this->get_userinfo($user->username);
-                    if (!$this->update_user_record($user->username, $updatekeys, true,
-                            $this->is_user_suspended((object) $userinfo))) {
+                    if (!$this->update_user_record($user->username, $updatekeys, true)) {
                         echo ' - '.get_string('skipped');
                     }
                     echo "\n";
@@ -965,7 +919,8 @@ class auth_plugin_ldap extends auth_plugin_base {
                 }
 
                 // Save custom profile fields.
-                $this->update_user_record($user->username, $this->get_profile_keys(true), false);
+                $updatekeys = $this->get_profile_keys(true);
+                $this->update_user_record($user->username, $updatekeys, false);
 
                 // Add roles if needed.
                 $this->sync_roles($euser);
@@ -981,6 +936,111 @@ class auth_plugin_ldap extends auth_plugin_base {
         $this->ldap_close();
 
         return true;
+    }
+
+    /**
+     * Update a local user record from an external source.
+     * This is a lighter version of the one in moodlelib -- won't do
+     * expensive ops such as enrolment.
+     *
+     * If you don't pass $updatekeys, there is a performance hit and
+     * values removed from LDAP won't be removed from moodle.
+     *
+     * @param string $username username
+     * @param boolean $updatekeys true to update the local record with the external LDAP values.
+     * @param bool $triggerevent set false if user_updated event should not be triggered.
+     *             This will not affect user_password_updated event triggering.
+     * @return stdClass|bool updated user record or false if there is no new info to update.
+     */
+    function update_user_record($username, $updatekeys = false, $triggerevent = false) {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot.'/user/profile/lib.php');
+
+        // Just in case check text case
+        $username = trim(core_text::strtolower($username));
+
+        // Get the current user record
+        $user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id));
+        if (empty($user)) { // trouble
+            error_log($this->errorlogtag.get_string('auth_dbusernotexist', 'auth_db', '', $username));
+            print_error('auth_dbusernotexist', 'auth_db', '', $username);
+            die;
+        }
+
+        // Protect the userid from being overwritten
+        $userid = $user->id;
+
+        $needsupdate = false;
+
+        if ($newinfo = $this->get_userinfo($username)) {
+            $newinfo = truncate_userinfo($newinfo);
+
+            if (empty($updatekeys)) { // all keys? this does not support removing values
+                $updatekeys = array_keys($newinfo);
+            }
+
+            if (!empty($updatekeys)) {
+                $newuser = new stdClass();
+                $newuser->id = $userid;
+                // The cast to int is a workaround for MDL-53959.
+                $newuser->suspended = (int)$this->is_user_suspended((object) $newinfo);
+                // Get all custom fields.
+                $profilefields = (array) profile_user_record($user->id, false);
+                $newprofilefields = [];
+
+                foreach ($updatekeys as $key) {
+                    if (isset($newinfo[$key])) {
+                        $value = $newinfo[$key];
+                    } else {
+                        $value = '';
+                    }
+
+                    if (!empty($this->config->{'field_updatelocal_' . $key})) {
+                        if (preg_match('/^profile_field_(.*)$/', $key, $match)) {
+                            // Custom field.
+                            $field = $match[1];
+                            $currentvalue = isset($profilefields[$field]) ? $profilefields[$field] : null;
+                            $newprofilefields[$field] = $value;
+                        } else {
+                            // Standard field.
+                            $currentvalue = isset($user->$key) ? $user->$key : null;
+                            $newuser->$key = $value;
+                        }
+                    }
+
+                    // Only update if it's changed.
+                    if ($currentvalue !== $value) {
+                        $needsupdate = true;
+                    }
+                }
+            }
+
+            if ($needsupdate) {
+                user_update_user($newuser, false, $triggerevent);
+
+                // Now, save the profile fields if the user has any.
+                if ($fields = $DB->get_records('user_info_field')) {
+                    foreach ($fields as $field) {
+                        if (isset($newprofilefields[$field->shortname])) {
+                            $conditions = array('fieldid' => $field->id, 'userid' => $newuser->id);
+                            $id = $DB->get_field('user_info_data', 'id', $conditions);
+                            $data = $newprofilefields[$field->shortname];
+                            if ($id) {
+                                $DB->set_field('user_info_data', 'data', $data, array('id' => $id));
+                            } else {
+                                $record = array('fieldid' => $field->id, 'userid' => $newuser->id, 'data' => $data);
+                                $DB->insert_record('user_info_data', $record);
+                            }
+                        }
+                    }
+                }
+
+                return $DB->get_record('user', array('id' => $userid, 'deleted' => 0));
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1229,18 +1289,9 @@ class auth_plugin_ldap extends auth_plugin_base {
                     $nuvalue = core_text::convert($newvalue, 'utf-8', $this->config->ldapencoding);
                     empty($nuvalue) ? $nuvalue = array() : $nuvalue;
                     $ouvalue = core_text::convert($oldvalue, 'utf-8', $this->config->ldapencoding);
-                    foreach ($ldapkeys as $ldapkey) {
-                        // Skip update if $ldapkey does not exist in LDAP.
-                        if (!isset($user_entry[$ldapkey][0])) {
-                            $success = false;
-                            error_log($this->errorlogtag.get_string('updateremfailfield', 'auth_ldap',
-                                                                     array('ldapkey' => $ldapkey,
-                                                                            'key' => $key,
-                                                                            'ouvalue' => $ouvalue,
-                                                                            'nuvalue' => $nuvalue)));
-                            continue;
-                        }
 
+                    foreach ($ldapkeys as $ldapkey) {
+                        $ldapkey   = $ldapkey;
                         $ldapvalue = $user_entry[$ldapkey][0];
                         if (!$ambiguous) {
                             // Skip update if the values already match
@@ -1539,7 +1590,6 @@ class auth_plugin_ldap extends auth_plugin_base {
         if ($filter == '*') {
            $filter = '(&('.$this->config->user_attribute.'=*)'.$this->config->objectclass.')';
         }
-        $servercontrols = array();
 
         $contexts = explode(';', $this->config->contexts);
         if (!empty($this->config->create_context)) {
@@ -1556,54 +1606,20 @@ class auth_plugin_ldap extends auth_plugin_base {
 
             do {
                 if ($ldap_pagedresults) {
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        // Before 7.3, use this function that was deprecated in PHP 7.4.
-                        ldap_control_paged_result($ldapconnection, $this->config->pagesize, true, $ldap_cookie);
-                    } else {
-                        // PHP 7.3 and up, use server controls.
-                        $servercontrols = array(array(
-                            'oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => array(
-                                'size' => $this->config->pagesize, 'cookie' => $ldap_cookie)));
-                    }
+                    ldap_control_paged_result($ldapconnection, $this->config->pagesize, true, $ldap_cookie);
                 }
                 if ($this->config->search_sub) {
                     // Use ldap_search to find first user from subtree.
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        $ldap_result = ldap_search($ldapconnection, $context, $filter, array($this->config->user_attribute));
-                    } else {
-                        $ldap_result = ldap_search($ldapconnection, $context, $filter, array($this->config->user_attribute),
-                            0, -1, -1, LDAP_DEREF_NEVER, $servercontrols);
-                    }
+                    $ldap_result = ldap_search($ldapconnection, $context, $filter, array($this->config->user_attribute));
                 } else {
                     // Search only in this context.
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        $ldap_result = ldap_list($ldapconnection, $context, $filter, array($this->config->user_attribute));
-                    } else {
-                        $ldap_result = ldap_list($ldapconnection, $context, $filter, array($this->config->user_attribute),
-                            0, -1, -1, LDAP_DEREF_NEVER, $servercontrols);
-                    }
+                    $ldap_result = ldap_list($ldapconnection, $context, $filter, array($this->config->user_attribute));
                 }
                 if(!$ldap_result) {
                     continue;
                 }
                 if ($ldap_pagedresults) {
-                    // Get next server cookie to know if we'll need to continue searching.
-                    $ldap_cookie = '';
-                    // TODO: Remove the old branch of code once PHP 7.3.0 becomes required (Moodle 4.1).
-                    if (version_compare(PHP_VERSION, '7.3.0', '<')) {
-                        // Before 7.3, use this function that was deprecated in PHP 7.4.
-                        ldap_control_paged_result_response($ldapconnection, $ldap_result, $ldap_cookie);
-                    } else {
-                        // Get next cookie from controls.
-                        ldap_parse_result($ldapconnection, $ldap_result, $errcode, $matcheddn,
-                            $errmsg, $referrals, $controls);
-                        if (isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'])) {
-                            $ldap_cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
-                        }
-                    }
+                    ldap_control_paged_result_response($ldapconnection, $ldap_result, $ldap_cookie);
                 }
                 $users = ldap_get_entries_moodle($ldapconnection, $ldap_result);
                 // Add found users to list.
@@ -1795,15 +1811,15 @@ class auth_plugin_ldap extends auth_plugin_base {
         global $CFG, $USER, $SESSION;
 
         $key = sesskey();
-        $username = get_cache_flag($this->pluginconfig.'/ntlmsess', $key);
-        if (empty($username)) {
+        $cf = get_cache_flags($this->pluginconfig.'/ntlmsess');
+        if (!isset($cf[$key]) || $cf[$key] === '') {
             return false;
         }
+        $username   = $cf[$key];
 
         // Here we want to trigger the whole authentication machinery
         // to make sure no step is bypassed...
-        $reason = null;
-        $user = authenticate_user_login($username, $key, false, $reason, false);
+        $user = authenticate_user_login($username, $key);
         if ($user) {
             complete_user_login($user);
 
@@ -2160,97 +2176,41 @@ class auth_plugin_ldap extends auth_plugin_base {
     }
 
     /**
-     * Test a DN
-     *
-     * @param resource $ldapconn
-     * @param string $dn The DN to check for existence
-     * @param string $message The identifier of a string as in get_string()
-     * @param string|object|array $a An object, string or number that can be used
-     *      within translation strings as in get_string()
-     * @return true or a message in case of error
-     */
-    private function test_dn($ldapconn, $dn, $message, $a = null) {
-        $ldapresult = @ldap_read($ldapconn, $dn, '(objectClass=*)', array());
-        if (!$ldapresult) {
-            if (ldap_errno($ldapconn) == 32) {
-                // No such object.
-                return get_string($message, 'auth_ldap', $a);
-            }
-
-            $a = array('code' => ldap_errno($ldapconn), 'subject' => $a, 'message' => ldap_error($ldapconn));
-            return get_string('diag_genericerror', 'auth_ldap', $a);
-        }
-
-        return true;
-    }
-
-    /**
      * Test if settings are correct, print info to output.
      */
     public function test_settings() {
         global $OUTPUT;
 
         if (!function_exists('ldap_connect')) { // Is php-ldap really there?
-            echo $OUTPUT->notification(get_string('auth_ldap_noextension', 'auth_ldap'), \core\output\notification::NOTIFY_ERROR);
+            echo $OUTPUT->notification(get_string('auth_ldap_noextension', 'auth_ldap'));
             return;
         }
 
         // Check to see if this is actually configured.
-        if (empty($this->config->host_url)) {
+        if ((isset($this->config->host_url)) && ($this->config->host_url !== '')) {
+
+            try {
+                $ldapconn = $this->ldap_connect();
+                // Try to connect to the LDAP server.  See if the page size setting is supported on this server.
+                $pagedresultssupported = ldap_paged_results_supported($this->config->ldap_version, $ldapconn);
+            } catch (Exception $e) {
+
+                // If we couldn't connect and get the supported options, we can only assume we don't support paged results.
+                $pagedresultssupported = false;
+            }
+
+            // Display paged file results.
+            if ((!$pagedresultssupported)) {
+                echo $OUTPUT->notification(get_string('pagedresultsnotsupp', 'auth_ldap'), \core\output\notification::NOTIFY_INFO);
+            } else if ($ldapconn) {
+                // We were able to connect successfuly.
+                echo $OUTPUT->notification(get_string('connectingldapsuccess', 'auth_ldap'), \core\output\notification::NOTIFY_SUCCESS);
+            }
+
+        } else {
             // LDAP is not even configured.
-            echo $OUTPUT->notification(get_string('ldapnotconfigured', 'auth_ldap'), \core\output\notification::NOTIFY_ERROR);
-            return;
+            echo $OUTPUT->notification(get_string('ldapnotconfigured', 'auth_ldap'), \core\output\notification::NOTIFY_INFO);
         }
-
-        if ($this->config->ldap_version != 3) {
-            echo $OUTPUT->notification(get_string('diag_toooldversion', 'auth_ldap'), \core\output\notification::NOTIFY_WARNING);
-        }
-
-        try {
-            $ldapconn = $this->ldap_connect();
-        } catch (Exception $e) {
-            echo $OUTPUT->notification($e->getMessage(), \core\output\notification::NOTIFY_ERROR);
-            return;
-        }
-
-        // Display paged file results.
-        if (!ldap_paged_results_supported($this->config->ldap_version, $ldapconn)) {
-            echo $OUTPUT->notification(get_string('pagedresultsnotsupp', 'auth_ldap'), \core\output\notification::NOTIFY_INFO);
-        }
-
-        // Check contexts.
-        foreach (explode(';', $this->config->contexts) as $context) {
-            $context = trim($context);
-            if (empty($context)) {
-                echo $OUTPUT->notification(get_string('diag_emptycontext', 'auth_ldap'), \core\output\notification::NOTIFY_WARNING);
-                continue;
-            }
-
-            $message = $this->test_dn($ldapconn, $context, 'diag_contextnotfound', $context);
-            if ($message !== true) {
-                echo $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING);
-            }
-        }
-
-        // Create system role mapping field for each assignable system role.
-        $roles = get_ldap_assignable_role_names();
-        foreach ($roles as $role) {
-            foreach (explode(';', $this->config->{$role['settingname']}) as $groupdn) {
-                if (empty($groupdn)) {
-                    continue;
-                }
-
-                $role['group'] = $groupdn;
-                $message = $this->test_dn($ldapconn, $groupdn, 'diag_rolegroupnotfound', $role);
-                if ($message !== true) {
-                    echo $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING);
-                }
-            }
-        }
-
-        $this->ldap_close(true);
-        // We were able to connect successfuly.
-        echo $OUTPUT->notification(get_string('connectingldapsuccess', 'auth_ldap'), \core\output\notification::NOTIFY_SUCCESS);
     }
 
     /**
@@ -2272,11 +2232,10 @@ class auth_plugin_ldap extends auth_plugin_base {
                 }
             }
         }
-
         if ($this->config->suspended_attribute && $this->config->sync_suspended) {
             $updatekeys[] = 'suspended';
         }
 
         return $updatekeys;
     }
-}
+} // End of the class

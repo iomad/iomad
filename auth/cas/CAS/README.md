@@ -4,16 +4,11 @@ phpCAS
 phpCAS is an authentication library that allows PHP applications to easily authenticate
 users via a Central Authentication Service (CAS) server.
 
-Please see the wiki website for more information:
+Please see the phpCAS website for more information:
 
 https://wiki.jasig.org/display/CASC/phpCAS
 
-Api documentation can be found here:
-
-https://apereo.github.io/phpCAS/
-
-
-[![Build Status](https://travis-ci.org/apereo/phpCAS.png)](https://travis-ci.org/apereo/phpCAS)
+[![Build Status](https://travis-ci.org/Jasig/phpCAS.png)](https://travis-ci.org/Jasig/phpCAS)
 
 
 LICENSE

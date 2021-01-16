@@ -75,9 +75,6 @@ abstract class quiz_attempts_report_table extends table_sql {
     /** @var bool whether to include the column with checkboxes to select each attempt. */
     protected $includecheckboxes;
 
-    /** @var string The toggle group name for the checkboxes in the checkbox column. */
-    protected $togglegroup = 'quiz-attempts';
-
     /**
      * Constructor
      * @param string $uniqueid
@@ -111,17 +108,8 @@ abstract class quiz_attempts_report_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_checkbox($attempt) {
-        global $OUTPUT;
-
         if ($attempt->attempt) {
-            $checkbox = new \core\output\checkbox_toggleall($this->togglegroup, false, [
-                'id' => "attemptid_{$attempt->attempt}",
-                'name' => 'attemptid[]',
-                'value' => $attempt->attempt,
-                'label' => get_string('selectattempt', 'quiz'),
-                'labelclasses' => 'accesshide',
-            ]);
-            return $OUTPUT->render($checkbox);
+            return '<input type="checkbox" name="attemptid[]" value="'.$attempt->attempt.'" />';
         } else {
             return '';
         }
@@ -385,13 +373,8 @@ abstract class quiz_attempts_report_table extends table_sql {
 
     /**
      * Get any fields that might be needed when sorting on date for a particular slot.
-     *
-     * Note: these values are only used for sorting. The values displayed are taken
-     * from $this->lateststeps loaded in load_extra_data().
-     *
      * @param int $slot the slot for the column we want.
      * @param string $alias the table alias for latest state information relating to that slot.
-     * @return string definitions of extra fields to add to the SELECT list of the query.
      */
     protected function get_required_latest_state_fields($slot, $alias) {
         return '';
@@ -626,6 +609,22 @@ abstract class quiz_attempts_report_table extends table_sql {
         }
 
         echo '<div id="commands">';
+        echo '<a id="checkattempts" href="#">' .
+                get_string('selectall', 'quiz') . '</a> / ';
+        echo '<a id="uncheckattempts" href="#">' .
+                get_string('selectnone', 'quiz') . '</a> ';
+        $PAGE->requires->js_amd_inline("
+        require(['jquery'], function($) {
+            $('#checkattempts').click(function(e) {
+                $('#attemptsform').find('input:checkbox').prop('checked', true);
+                e.preventDefault();
+            });
+            $('#uncheckattempts').click(function(e) {
+                $('#attemptsform').find('input:checkbox').prop('checked', false);
+                e.preventDefault();
+            });
+        });");
+        echo '&nbsp;&nbsp;';
         $this->submit_buttons();
         echo '</div>';
 
@@ -640,51 +639,10 @@ abstract class quiz_attempts_report_table extends table_sql {
     protected function submit_buttons() {
         global $PAGE;
         if (has_capability('mod/quiz:deleteattempts', $this->context)) {
-            $deletebuttonparams = [
-                'type'  => 'submit',
-                'class' => 'btn btn-secondary mr-1',
-                'id'    => 'deleteattemptsbutton',
-                'name'  => 'delete',
-                'value' => get_string('deleteselected', 'quiz_overview'),
-                'data-action' => 'toggle',
-                'data-togglegroup' => $this->togglegroup,
-                'data-toggle' => 'action',
-                'disabled' => true
-            ];
-            echo html_writer::empty_tag('input', $deletebuttonparams);
+            echo '<input type="submit" class="btn btn-secondary m-r-1" id="deleteattemptsbutton" name="delete" value="' .
+                    get_string('deleteselected', 'quiz_overview') . '"/>';
             $PAGE->requires->event_handler('#deleteattemptsbutton', 'click', 'M.util.show_confirm_dialog',
                     array('message' => get_string('deleteattemptcheck', 'quiz')));
         }
-    }
-
-    /**
-     * Generates the contents for the checkbox column header.
-     *
-     * It returns the HTML for a master \core\output\checkbox_toggleall component that selects/deselects all quiz attempts.
-     *
-     * @param string $columnname The name of the checkbox column.
-     * @return string
-     */
-    public function checkbox_col_header(string $columnname) {
-        global $OUTPUT;
-
-        // Make sure to disable sorting on this column.
-        $this->no_sorting($columnname);
-
-        // Build the select/deselect all control.
-        $selectallid = $this->uniqueid . '-selectall-attempts';
-        $selectalltext = get_string('selectall', 'quiz');
-        $deselectalltext = get_string('selectnone', 'quiz');
-        $mastercheckbox = new \core\output\checkbox_toggleall($this->togglegroup, true, [
-            'id' => $selectallid,
-            'name' => $selectallid,
-            'value' => 1,
-            'label' => $selectalltext,
-            'labelclasses' => 'accesshide',
-            'selectall' => $selectalltext,
-            'deselectall' => $deselectalltext,
-        ]);
-
-        return $OUTPUT->render($mastercheckbox);
     }
 }

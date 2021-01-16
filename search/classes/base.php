@@ -175,7 +175,8 @@ abstract class base {
         list($componentname, $varname) = $this->get_config_var_name();
 
         $config = [];
-        $settingnames = self::get_settingnames();
+        $settingnames = array('_enabled', '_indexingstart', '_indexingend', '_lastindexrun',
+                '_docsignored', '_docsprocessed', '_recordsprocessed', '_partial');
         foreach ($settingnames as $name) {
             $config[$varname . $name] = get_config($componentname, $varname . $name);
         }
@@ -185,16 +186,6 @@ abstract class base {
             $config[$varname . '_enabled'] = 1;
         }
         return $config;
-    }
-
-    /**
-     * Return a list of all required setting names.
-     *
-     * @return array
-     */
-    public static function get_settingnames() {
-        return array('_enabled', '_indexingstart', '_indexingend', '_lastindexrun',
-            '_docsignored', '_docsprocessed', '_recordsprocessed', '_partial');
     }
 
     /**
@@ -294,14 +285,6 @@ abstract class base {
      * The default implementation returns false, indicating that this facility is not supported and
      * the older get_recordset_by_timestamp function should be used.
      *
-     * This function must accept all possible values for the $context parameter. For example, if
-     * you are implementing this function for the forum module, it should still operate correctly
-     * if called with the context for a glossary module, or for the HTML block. (In these cases
-     * where it will not return any data, it may return null.)
-     *
-     * The $context parameter can also be null or the system context; both of these indicate that
-     * all data, without context restriction, should be returned.
-     *
      * @param int $modifiedfrom Return only records modified after this date
      * @param \context|null $context Context (null means no context restriction)
      * @return \moodle_recordset|null|false Recordset / null if no results / false if not supported
@@ -309,19 +292,6 @@ abstract class base {
      */
     public function get_document_recordset($modifiedfrom = 0, \context $context = null) {
         return false;
-    }
-
-    /**
-     * Checks if get_document_recordset is supported for this search area.
-     *
-     * For many uses you can simply call get_document_recordset and see if it returns false, but
-     * this function is useful when you don't want to actually call the function right away.
-     */
-    public function supports_get_document_recordset() {
-        // Easiest way to check this is simply to see if the class has overridden the default
-        // function.
-        $method = new \ReflectionMethod($this, 'get_document_recordset');
-        return $method->getDeclaringClass()->getName() !== self::class;
     }
 
     /**
@@ -348,19 +318,6 @@ abstract class base {
      * @return \core_search\document
      */
     abstract public function get_document($record, $options = array());
-
-    /**
-     * Returns the document title to display.
-     *
-     * Allow to customize the document title string to display.
-     *
-     * @param \core_search\document $doc
-     * @return string Document title to display in the search results page
-     */
-    public function get_document_display_title(\core_search\document $doc) {
-
-        return $doc->get('title');
-    }
 
     /**
      * Return the context info required to index files for
@@ -516,38 +473,5 @@ abstract class base {
         }
 
         return [$sql, $params];
-    }
-
-    /**
-     * Gets a list of all contexts to reindex when reindexing this search area. The list should be
-     * returned in an order that is likely to be suitable when reindexing, for example with newer
-     * contexts first.
-     *
-     * The default implementation simply returns the system context, which will result in
-     * reindexing everything in normal date order (oldest first).
-     *
-     * @return \Iterator Iterator of contexts to reindex
-     */
-    public function get_contexts_to_reindex() {
-        return new \ArrayIterator([\context_system::instance()]);
-    }
-
-    /**
-     * Returns an icon instance for the document.
-     *
-     * @param \core_search\document $doc
-     * @return \core_search\document_icon
-     */
-    public function get_doc_icon(document $doc) : document_icon {
-        return new document_icon('i/empty');
-    }
-
-    /**
-     * Returns a list of category names associated with the area.
-     *
-     * @return array
-     */
-    public function get_category_names() {
-        return [manager::SEARCH_AREA_CATEGORY_OTHER];
     }
 }

@@ -808,75 +808,6 @@ class core_filelib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test avoid file merging when working with draft areas.
-     */
-    public function test_ignore_file_merging_in_draft_area() {
-        global $USER, $DB;
-
-        $this->resetAfterTest(true);
-
-        $generator = $this->getDataGenerator();
-        $user = $generator->create_user();
-        $usercontext = context_user::instance($user->id);
-        $USER = $DB->get_record('user', array('id' => $user->id));
-
-        $repositorypluginname = 'user';
-
-        $args = array();
-        $args['type'] = $repositorypluginname;
-        $repos = repository::get_instances($args);
-        $userrepository = reset($repos);
-        $this->assertInstanceOf('repository', $userrepository);
-
-        $fs = get_file_storage();
-        $syscontext = context_system::instance();
-
-        $filecontent = 'User file content';
-
-        // Create a user private file.
-        $userfilerecord = new stdClass;
-        $userfilerecord->contextid = $usercontext->id;
-        $userfilerecord->component = 'user';
-        $userfilerecord->filearea  = 'private';
-        $userfilerecord->itemid    = 0;
-        $userfilerecord->filepath  = '/';
-        $userfilerecord->filename  = 'userfile.txt';
-        $userfilerecord->source    = 'test';
-        $userfile = $fs->create_file_from_string($userfilerecord, $filecontent);
-        $userfileref = $fs->pack_reference($userfilerecord);
-        $contenthash = $userfile->get_contenthash();
-
-        $filerecord = array(
-            'contextid' => $syscontext->id,
-            'component' => 'core',
-            'filearea'  => 'phpunit',
-            'itemid'    => 0,
-            'filepath'  => '/',
-            'filename'  => 'test.txt',
-        );
-        // Create a file reference.
-        $fileref = $fs->create_file_from_reference($filerecord, $userrepository->id, $userfileref);
-        $this->assertCount(2, $fs->get_area_files($usercontext->id, 'user', 'private'));    // 2 because includes the '.' file.
-
-        // Save using empty draft item id, all files will be deleted.
-        file_save_draft_area_files(0, $usercontext->id, 'user', 'private', 0);
-        $this->assertCount(0, $fs->get_area_files($usercontext->id, 'user', 'private'));
-
-        // Create a file again.
-        $userfile = $fs->create_file_from_string($userfilerecord, $filecontent);
-        $this->assertCount(2, $fs->get_area_files($usercontext->id, 'user', 'private'));
-
-        // Save without merge.
-        file_save_draft_area_files(IGNORE_FILE_MERGE, $usercontext->id, 'user', 'private', 0);
-        $this->assertCount(2, $fs->get_area_files($usercontext->id, 'user', 'private'));
-        // Save again, this time including some inline text.
-        $inlinetext = 'Some text <img src="@@PLUGINFILE@@/file.png">';
-        $text = file_save_draft_area_files(IGNORE_FILE_MERGE, $usercontext->id, 'user', 'private', 0, null, $inlinetext);
-        $this->assertCount(2, $fs->get_area_files($usercontext->id, 'user', 'private'));
-        $this->assertEquals($inlinetext, $text);
-    }
-
-    /**
      * Tests the strip_double_headers function in the curl class.
      */
     public function test_curl_strip_double_headers() {
@@ -1060,16 +991,14 @@ EOF;
         $options = $curl->get_options();
         $this->assertNotEmpty($options);
 
-        $moodlebot = \core_useragent::get_moodlebot_useragent();
-
         $curl->call_apply_opt($options);
-        $this->assertTrue(in_array("User-Agent: $moodlebot", $curl->header));
+        $this->assertTrue(in_array('User-Agent: MoodleBot/1.0', $curl->header));
         $this->assertFalse(in_array('User-Agent: Test/1.0', $curl->header));
 
         $options['CURLOPT_USERAGENT'] = 'Test/1.0';
         $curl->call_apply_opt($options);
         $this->assertTrue(in_array('User-Agent: Test/1.0', $curl->header));
-        $this->assertFalse(in_array("User-Agent: $moodlebot", $curl->header));
+        $this->assertFalse(in_array('User-Agent: MoodleBot/1.0', $curl->header));
 
         $curl->set_option('CURLOPT_USERAGENT', 'AnotherUserAgent/1.0');
         $curl->call_apply_opt();
@@ -1084,7 +1013,7 @@ EOF;
 
         $curl->unset_option('CURLOPT_USERAGENT');
         $curl->call_apply_opt();
-        $this->assertTrue(in_array("User-Agent: $moodlebot", $curl->header));
+        $this->assertTrue(in_array('User-Agent: MoodleBot/1.0', $curl->header));
 
         // Finally, test it via exttests, to ensure the agent is sent properly.
         // Matching.
@@ -1117,92 +1046,6 @@ EOF;
 
         // Now undo.
         $options = array('reverse' => true);
-        $finaltext = file_rewrite_pluginfile_urls($finaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-
-        // Compare the final text is the same that the original.
-        $this->assertEquals($originaltext, $finaltext);
-    }
-
-    /**
-     * Test file_rewrite_pluginfile_urls with includetoken.
-     */
-    public function test_file_rewrite_pluginfile_urls_includetoken() {
-        global $USER, $CFG;
-
-        $CFG->slasharguments = true;
-
-        $this->resetAfterTest();
-
-        $syscontext = context_system::instance();
-        $originaltext = 'Fake test with an image <img src="@@PLUGINFILE@@/image.png">';
-        $options = ['includetoken' => true];
-
-        // Rewrite the content. This will generate a new token.
-        $finaltext = file_rewrite_pluginfile_urls(
-                $originaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-
-        $token = get_user_key('core_files', $USER->id);
-        $expectedurl = new \moodle_url("/tokenpluginfile.php/{$token}/{$syscontext->id}/user/private/0/image.png");
-        $expectedtext = "Fake test with an image <img src=\"{$expectedurl}\">";
-        $this->assertEquals($expectedtext, $finaltext);
-
-        // Do it again - the second time will use an existing token.
-        $finaltext = file_rewrite_pluginfile_urls(
-                $originaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-        $this->assertEquals($expectedtext, $finaltext);
-
-        // Now undo.
-        $options['reverse'] = true;
-        $finaltext = file_rewrite_pluginfile_urls($finaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-
-        // Compare the final text is the same that the original.
-        $this->assertEquals($originaltext, $finaltext);
-
-        // Now indicates a user different than $USER.
-        $user = $this->getDataGenerator()->create_user();
-        $options = ['includetoken' => $user->id];
-
-        // Rewrite the content. This will generate a new token.
-        $finaltext = file_rewrite_pluginfile_urls(
-                $originaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-
-        $token = get_user_key('core_files', $user->id);
-        $expectedurl = new \moodle_url("/tokenpluginfile.php/{$token}/{$syscontext->id}/user/private/0/image.png");
-        $expectedtext = "Fake test with an image <img src=\"{$expectedurl}\">";
-        $this->assertEquals($expectedtext, $finaltext);
-    }
-
-    /**
-     * Test file_rewrite_pluginfile_urls with includetoken with slasharguments disabled..
-     */
-    public function test_file_rewrite_pluginfile_urls_includetoken_no_slashargs() {
-        global $USER, $CFG;
-
-        $CFG->slasharguments = false;
-
-        $this->resetAfterTest();
-
-        $syscontext = context_system::instance();
-        $originaltext = 'Fake test with an image <img src="@@PLUGINFILE@@/image.png">';
-        $options = ['includetoken' => true];
-
-        // Rewrite the content. This will generate a new token.
-        $finaltext = file_rewrite_pluginfile_urls(
-                $originaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-
-        $token = get_user_key('core_files', $USER->id);
-        $expectedurl = new \moodle_url("/tokenpluginfile.php");
-        $expectedurl .= "?token={$token}&file=/{$syscontext->id}/user/private/0/image.png";
-        $expectedtext = "Fake test with an image <img src=\"{$expectedurl}\">";
-        $this->assertEquals($expectedtext, $finaltext);
-
-        // Do it again - the second time will use an existing token.
-        $finaltext = file_rewrite_pluginfile_urls(
-                $originaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
-        $this->assertEquals($expectedtext, $finaltext);
-
-        // Now undo.
-        $options['reverse'] = true;
         $finaltext = file_rewrite_pluginfile_urls($finaltext, 'pluginfile.php', $syscontext->id, 'user', 'private', 0, $options);
 
         // Compare the final text is the same that the original.
@@ -1580,92 +1423,6 @@ EOF;
         foreach ($draftfiles as $file) {
             $this->assertContains($file->get_filename(), $expected);
         }
-    }
-
-    /**
-     * Test that all files in the draftarea are returned.
-     */
-    public function test_file_get_all_files_in_draftarea() {
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $filerecord = ['filename' => 'basepic.jpg'];
-        $file = self::create_draft_file($filerecord);
-
-        $secondrecord = [
-            'filename' => 'infolder.jpg',
-            'filepath' => '/assignment/',
-            'itemid' => $file->get_itemid()
-        ];
-        $file = self::create_draft_file($secondrecord);
-
-        $thirdrecord = [
-            'filename' => 'deeperfolder.jpg',
-            'filepath' => '/assignment/pics/',
-            'itemid' => $file->get_itemid()
-        ];
-        $file = self::create_draft_file($thirdrecord);
-
-        $fourthrecord = [
-            'filename' => 'differentimage.jpg',
-            'filepath' => '/secondfolder/',
-            'itemid' => $file->get_itemid()
-        ];
-        $file = self::create_draft_file($fourthrecord);
-
-        // This record has the same name as the last record, but it's in a different folder.
-        // Just checking this is also returned.
-        $fifthrecord = [
-            'filename' => 'differentimage.jpg',
-            'filepath' => '/assignment/pics/',
-            'itemid' => $file->get_itemid()
-        ];
-        $file = self::create_draft_file($fifthrecord);
-
-        $allfiles = file_get_all_files_in_draftarea($file->get_itemid());
-        $this->assertCount(5, $allfiles);
-        $this->assertEquals($filerecord['filename'], $allfiles[0]->filename);
-        $this->assertEquals($secondrecord['filename'], $allfiles[1]->filename);
-        $this->assertEquals($thirdrecord['filename'], $allfiles[2]->filename);
-        $this->assertEquals($fourthrecord['filename'], $allfiles[3]->filename);
-        $this->assertEquals($fifthrecord['filename'], $allfiles[4]->filename);
-    }
-
-    public function test_file_copy_file_to_file_area() {
-        // Create two files in different draft areas but owned by the same user.
-        global $USER;
-        $this->resetAfterTest(true);
-        $this->setAdminUser();
-
-        $filerecord = ['filename'  => 'file1.png', 'itemid' => file_get_unused_draft_itemid()];
-        $file1 = self::create_draft_file($filerecord);
-        $filerecord = ['filename'  => 'file2.png', 'itemid' => file_get_unused_draft_itemid()];
-        $file2 = self::create_draft_file($filerecord);
-
-        // Confirm one file in each draft area.
-        $fs = get_file_storage();
-        $usercontext = context_user::instance($USER->id);
-        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $file1->get_itemid(), 'itemid', 0);
-        $this->assertCount(1, $draftfiles);
-        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $file2->get_itemid(), 'itemid', 0);
-        $this->assertCount(1, $draftfiles);
-
-        // Create file record.
-        $filerecord = [
-            'component' => $file2->get_component(),
-            'filearea' => $file2->get_filearea(),
-            'itemid' => $file2->get_itemid(),
-            'contextid' => $file2->get_contextid(),
-            'filepath' => '/',
-            'filename' => $file2->get_filename()
-        ];
-
-        // Copy file2 into file1's draft area.
-        file_copy_file_to_file_area($filerecord, $file2->get_filename(), $file1->get_itemid());
-        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $file1->get_itemid(), 'itemid', 0);
-        $this->assertCount(2, $draftfiles);
-        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $file2->get_itemid(), 'itemid', 0);
-        $this->assertCount(1, $draftfiles);
     }
 }
 

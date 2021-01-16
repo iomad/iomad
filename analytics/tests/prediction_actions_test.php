@@ -55,24 +55,22 @@ class analytics_prediction_actions_testcase extends advanced_testcase {
 
         $this->resetAfterTest(true);
 
-        $this->course1 = $this->getDataGenerator()->create_course();
-        $this->course2 = $this->getDataGenerator()->create_course();
-        $this->context = \context_course::instance($this->course1->id);
+        $course1 = $this->getDataGenerator()->create_course();
+        $course2 = $this->getDataGenerator()->create_course();
+        $this->context = \context_course::instance($course1->id);
 
         $this->teacher1 = $this->getDataGenerator()->create_user();
         $this->teacher2 = $this->getDataGenerator()->create_user();
-        $this->teacher3 = $this->getDataGenerator()->create_user();
 
-        $this->getDataGenerator()->enrol_user($this->teacher1->id, $this->course1->id, 'editingteacher');
-        $this->getDataGenerator()->enrol_user($this->teacher2->id, $this->course1->id, 'editingteacher');
-        $this->getDataGenerator()->enrol_user($this->teacher3->id, $this->course1->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($this->teacher1->id, $course1->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($this->teacher2->id, $course1->id, 'editingteacher');
 
         // The only relevant fields are modelid, contextid and sampleid. I'm cheating and setting
         // contextid as the course context so teachers can access these predictions.
         $pred = new \stdClass();
         $pred->modelid = $this->model->get_id();
         $pred->contextid = $this->context->id;
-        $pred->sampleid = $this->course1->id;
+        $pred->sampleid = $course1->id;
         $pred->rangeindex = 1;
         $pred->prediction = 1;
         $pred->predictionscore = 1;
@@ -80,7 +78,7 @@ class analytics_prediction_actions_testcase extends advanced_testcase {
         $pred->timecreated = time();
         $DB->insert_record('analytics_predictions', $pred);
 
-        $pred->sampleid = $this->course2->id;
+        $pred->sampleid = $course2->id;
         $DB->insert_record('analytics_predictions', $pred);
     }
 
@@ -98,17 +96,11 @@ class analytics_prediction_actions_testcase extends advanced_testcase {
         $prediction = reset($predictions);
         $prediction->action_executed(\core_analytics\prediction::ACTION_FIXED, $this->model->get_target());
 
-        $recordset = $this->model->get_prediction_actions($this->context);
-        $this->assertCount(1, $recordset);
-        $recordset->close();
         $this->assertEquals(1, $DB->count_records('analytics_prediction_actions'));
         $action = $DB->get_record('analytics_prediction_actions', array('userid' => $this->teacher2->id));
         $this->assertEquals(\core_analytics\prediction::ACTION_FIXED, $action->actionname);
 
-        $prediction->action_executed(\core_analytics\prediction::ACTION_INCORRECTLY_FLAGGED, $this->model->get_target());
-        $recordset = $this->model->get_prediction_actions($this->context);
-        $this->assertCount(2, $recordset);
-        $recordset->close();
+        $prediction->action_executed(\core_analytics\prediction::ACTION_NOT_USEFUL, $this->model->get_target());
         $this->assertEquals(2, $DB->count_records('analytics_prediction_actions'));
     }
 
@@ -116,7 +108,6 @@ class analytics_prediction_actions_testcase extends advanced_testcase {
      * test_get_predictions
      */
     public function test_get_predictions() {
-        global $DB;
 
         // Already logged in as admin.
         list($ignored, $predictions) = $this->model->get_predictions($this->context, true);
@@ -130,15 +121,9 @@ class analytics_prediction_actions_testcase extends advanced_testcase {
         list($ignored, $predictions) = $this->model->get_predictions($this->context, false);
         $this->assertCount(2, $predictions);
 
-        // Teacher 2 flags a prediction (it doesn't matter which one).
+        // Teacher 2 flags a prediction (it doesn't matter which one) as fixed.
         $prediction = reset($predictions);
         $prediction->action_executed(\core_analytics\prediction::ACTION_FIXED, $this->model->get_target());
-        $prediction->action_executed(\core_analytics\prediction::ACTION_NOT_APPLICABLE, $this->model->get_target());
-        $prediction->action_executed(\core_analytics\prediction::ACTION_INCORRECTLY_FLAGGED, $this->model->get_target());
-
-        $recordset = $this->model->get_prediction_actions($this->context);
-        $this->assertCount(3, $recordset);
-        $recordset->close();
 
         list($ignored, $predictions) = $this->model->get_predictions($this->context, true);
         $this->assertCount(1, $predictions);
@@ -151,17 +136,5 @@ class analytics_prediction_actions_testcase extends advanced_testcase {
         $this->assertCount(2, $predictions);
         list($ignored, $predictions) = $this->model->get_predictions($this->context, false);
         $this->assertCount(2, $predictions);
-
-        $recordset = $this->model->get_prediction_actions($this->context);
-        $this->assertCount(3, $recordset);
-        $recordset->close();
-
-        // Trying with a deleted course.
-        $DB->delete_records('course', ['id' => $this->course2->id]);
-        $this->setUser($this->teacher3);
-        list($ignored, $predictions) = $this->model->get_predictions($this->context);
-        $this->assertCount(1, $predictions);
-        reset($predictions)->action_executed(\core_analytics\prediction::ACTION_FIXED, $this->model->get_target());
-        $this->assertEmpty($this->model->get_predictions($this->context));
     }
 }

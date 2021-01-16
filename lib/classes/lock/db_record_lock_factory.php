@@ -103,7 +103,7 @@ class db_record_lock_factory implements lock_factory {
      * to duplicates in a clustered environment (especially on VMs due to poor time precision).
      */
     protected function generate_unique_token() {
-        return \core\uuid::generate();
+        return generate_uuid();
     }
 
     /**
@@ -120,17 +120,15 @@ class db_record_lock_factory implements lock_factory {
         $giveuptime = $now + $timeout;
         $expires = $now + $maxlifetime;
 
-        $resourcekey = $this->type . '_' . $resource;
-
-        if (!$this->db->record_exists('lock_db', array('resourcekey' => $resourcekey))) {
+        if (!$this->db->record_exists('lock_db', array('resourcekey' => $resource))) {
             $record = new \stdClass();
-            $record->resourcekey = $resourcekey;
+            $record->resourcekey = $resource;
             $result = $this->db->insert_record('lock_db', $record);
         }
 
         $params = array('expires' => $expires,
                         'token' => $token,
-                        'resourcekey' => $resourcekey,
+                        'resourcekey' => $resource,
                         'now' => $now);
         $sql = 'UPDATE {lock_db}
                    SET
@@ -145,10 +143,10 @@ class db_record_lock_factory implements lock_factory {
             $params['now'] = $now;
             $this->db->execute($sql, $params);
 
-            $countparams = array('owner' => $token, 'resourcekey' => $resourcekey);
+            $countparams = array('owner' => $token, 'resourcekey' => $resource);
             $result = $this->db->count_records('lock_db', $countparams);
             $locked = $result === 1;
-            if (!$locked && $timeout > 0) {
+            if (!$locked) {
                 usleep(rand(10000, 250000)); // Sleep between 10 and 250 milliseconds.
             }
             // Try until the giveup time.

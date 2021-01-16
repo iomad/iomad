@@ -89,10 +89,10 @@ class core_question_renderer extends plugin_renderer_base {
 
         $output = '';
         $output .= html_writer::start_tag('div', array(
-            'id' => $qa->get_outer_question_div_unique_id(),
+            'id' => 'q' . $qa->get_slot(),
             'class' => implode(' ', array(
                 'que',
-                $qa->get_question(false)->get_type_name(),
+                $qa->get_question()->qtype->name(),
                 $qa->get_behaviour_name(),
                 $qa->get_state_class($options->correctness && $qa->has_marks()),
             ))
@@ -118,7 +118,7 @@ class core_question_renderer extends plugin_renderer_base {
                 array('class' => 'comment clearfix'));
         $output .= html_writer::nonempty_tag('div',
                 $this->response_history($qa, $behaviouroutput, $qtoutput, $options),
-                array('class' => 'history clearfix border p-2'));
+                array('class' => 'history clearfix'));
 
         $output .= html_writer::end_tag('div');
         $output .= html_writer::end_tag('div');
@@ -156,15 +156,15 @@ class core_question_renderer extends plugin_renderer_base {
      * @return HTML fragment.
      */
     protected function number($number) {
-        if (trim($number) === '') {
-            return '';
-        }
         $numbertext = '';
-        if (trim($number) === 'i') {
-            $numbertext = get_string('information', 'question');
-        } else {
+        if (is_numeric($number)) {
             $numbertext = get_string('questionx', 'question',
                     html_writer::tag('span', $number, array('class' => 'qno')));
+        } else if ($number == 'i') {
+            $numbertext = get_string('information', 'question');
+        }
+        if (!$numbertext) {
+            return '';
         }
         return html_writer::tag('h3', $numbertext, array('class' => 'no'));
     }
@@ -323,23 +323,21 @@ class core_question_renderer extends plugin_renderer_base {
         if ($flagged) {
             $icon = 'i/flagged';
             $alt = get_string('flagged', 'question');
-            $label = get_string('clickunflag', 'question');
         } else {
             $icon = 'i/unflagged';
             $alt = get_string('notflagged', 'question');
-            $label = get_string('clickflag', 'question');
         }
         $attributes = array(
             'src' => $this->image_url($icon),
             'alt' => $alt,
-            'class' => 'questionflagimage',
         );
         if ($id) {
             $attributes['id'] = $id;
         }
         $img = html_writer::empty_tag('img', $attributes);
-        $img .= html_writer::span($label);
-
+        if ($flagged) {
+            $img .= ' ' . get_string('flagged', 'question');
+        }
         return $img;
     }
 
@@ -355,7 +353,7 @@ class core_question_renderer extends plugin_renderer_base {
         if ($params['returnurl'] instanceof moodle_url) {
             $params['returnurl'] = $params['returnurl']->out_as_local_url(false);
         }
-        $params['id'] = $qa->get_question_id();
+        $params['id'] = $qa->get_question()->id;
         $editurl = new moodle_url('/question/question.php', $params);
 
         return html_writer::tag('div', html_writer::link(

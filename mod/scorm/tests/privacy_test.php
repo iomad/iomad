@@ -27,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 
 use mod_scorm\privacy\provider;
 use core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\writer;
 use core_privacy\tests\provider_testcase;
 
@@ -70,28 +69,6 @@ class mod_scorm_testcase extends provider_testcase {
     }
 
     /**
-     * Test getting the user IDs for the context related to this plugin.
-     */
-    public function test_get_users_in_context() {
-        $this->resetAfterTest(true);
-        $this->setAdminUser();
-        $this->scorm_setup_test_scenario_data();
-        $component = 'mod_scorm';
-
-        $userlist = new \core_privacy\local\request\userlist($this->context, $component);
-        provider::get_users_in_context($userlist);
-
-        // Students 1 and 2 have attempts in the SCORM context, student 0 does not.
-        $this->assertCount(2, $userlist);
-
-        $expected = [$this->student1->id, $this->student2->id];
-        $actual = $userlist->get_userids();
-        sort($expected);
-        sort($actual);
-        $this->assertEquals($expected, $actual);
-    }
-
-    /**
      * Test that data is exported correctly for this plugin.
      */
     public function test_export_user_data() {
@@ -102,18 +79,11 @@ class mod_scorm_testcase extends provider_testcase {
         // Validate exported data for student0 (without any AICC/SCORM attempt).
         $this->setUser($this->student0);
         $writer = writer::with_context($this->context);
-
         $this->export_context_data_for_user($this->student0->id, $this->context, 'mod_scorm');
-        $subcontextattempt1 = [
-            get_string('myattempts', 'scorm'),
-            get_string('attempt', 'scorm'). " 1"
-        ];
-        $subcontextaicc = [
-            get_string('myaiccsessions', 'scorm')
-        ];
-        $data = $writer->get_data($subcontextattempt1);
+        $data = $writer->get_related_data([], 'attempt-1');
         $this->assertEmpty($data);
-        $data = $writer->get_data($subcontextaicc);
+        $this->export_context_data_for_user($this->student0->id, $this->context, 'mod_scorm');
+        $data = $writer->get_related_data([], 'aiccsession');
         $this->assertEmpty($data);
 
         // Validate exported data for student1.
@@ -122,28 +92,17 @@ class mod_scorm_testcase extends provider_testcase {
         $writer = writer::with_context($this->context);
         $this->assertFalse($writer->has_any_data());
         $this->export_context_data_for_user($this->student1->id, $this->context, 'mod_scorm');
-
-        $data = $writer->get_data([]);
-        $this->assertEquals('SCORM1', $data->name);
-
-        $data = $writer->get_data($subcontextattempt1);
+        $data = $writer->get_related_data([], 'attempt-1');
         $this->assertCount(1, (array) $data);
         $this->assertCount(2, (array) reset($data));
-        $subcontextattempt2 = [
-            get_string('myattempts', 'scorm'),
-            get_string('attempt', 'scorm'). " 2"
-        ];
-        $data = $writer->get_data($subcontextattempt2);
+        $data = $writer->get_related_data([], 'attempt-2');
         $this->assertCount(2, (array) reset($data));
         // The student1 has only 2 scoes_track attempts.
-        $subcontextattempt3 = [
-            get_string('myattempts', 'scorm'),
-            get_string('attempt', 'scorm'). " 3"
-        ];
-        $data = $writer->get_data($subcontextattempt3);
+        $data = $writer->get_related_data([], 'attempt-3');
         $this->assertEmpty($data);
         // The student1 has only 1 aicc_session.
-        $data = $writer->get_data($subcontextaicc);
+        $this->export_context_data_for_user($this->student1->id, $this->context, 'mod_scorm');
+        $data = $writer->get_related_data([], 'aiccsession');
         $this->assertCount(1, (array) $data);
     }
 
@@ -220,58 +179,8 @@ class mod_scorm_testcase extends provider_testcase {
     }
 
     /**
-     * Test for provider::delete_data_for_users().
-     */
-    public function test_delete_data_for_users() {
-        global $DB;
-        $component = 'mod_scorm';
-
-        $this->resetAfterTest(true);
-        $this->setAdminUser();
-        $this->scorm_setup_test_scenario_data();
-
-        // Before deletion, we should have 8 entries in the scorm_scoes_track table.
-        $count = $DB->count_records('scorm_scoes_track');
-        $this->assertEquals(8, $count);
-        // Before deletion, we should have 4 entries in the scorm_aicc_session table.
-        $count = $DB->count_records('scorm_aicc_session');
-        $this->assertEquals(4, $count);
-
-        // Delete only student 1's data, retain student 2's data.
-        $approveduserids = [$this->student1->id];
-        $approvedlist = new approved_userlist($this->context, $component, $approveduserids);
-        provider::delete_data_for_users($approvedlist);
-
-        // After deletion, the scorm_scoes_track entries for the first student should have been deleted.
-        $count = $DB->count_records('scorm_scoes_track', ['userid' => $this->student1->id]);
-        $this->assertEquals(0, $count);
-        $count = $DB->count_records('scorm_scoes_track');
-        $this->assertEquals(4, $count);
-
-        // After deletion, the scorm_aicc_session entries for the first student should have been deleted.
-        $count = $DB->count_records('scorm_aicc_session', ['userid' => $this->student1->id]);
-        $this->assertEquals(0, $count);
-        $count = $DB->count_records('scorm_aicc_session');
-        $this->assertEquals(2, $count);
-
-        // Confirm that the SCORM hasn't been removed.
-        $scormcount = $DB->get_records('scorm');
-        $this->assertCount(1, (array) $scormcount);
-
-        // Delete scoes_track for student0 (nothing has to be removed).
-        $approveduserids = [$this->student0->id];
-        $approvedlist = new approved_userlist($this->context, $component, $approveduserids);
-        provider::delete_data_for_users($approvedlist);
-
-        $count = $DB->count_records('scorm_scoes_track');
-        $this->assertEquals(4, $count);
-        $count = $DB->count_records('scorm_aicc_session');
-        $this->assertEquals(2, $count);
-    }
-
-    /**
      * Helper function to setup 3 users and 2 SCORM attempts for student1 and student2.
-     * $this->student0 is always created without any attempt.
+     * $this->student0 is always created withot any attempt.
      */
     protected function scorm_setup_test_scenario_data() {
         global $DB;
@@ -280,8 +189,7 @@ class mod_scorm_testcase extends provider_testcase {
 
         // Setup test data.
         $course = $this->getDataGenerator()->create_course();
-        $params = array('course' => $course->id, 'name' => 'SCORM1');
-        $scorm = $this->getDataGenerator()->create_module('scorm', $params);
+        $scorm = $this->getDataGenerator()->create_module('scorm', array('course' => $course->id));
         $this->context = \context_module::instance($scorm->cmid);
 
         // Users enrolments.

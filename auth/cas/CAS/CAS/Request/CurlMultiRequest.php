@@ -80,8 +80,7 @@ implements CAS_Request_MultiRequestInterface
     /**
      * Retrieve the number of requests added to this batch.
      *
-     * @return int number of request elements
-     * @throws CAS_OutOfSequenceException if the request has already been sent
+     * @return number of request elements
      */
     public function getNumRequests()
     {

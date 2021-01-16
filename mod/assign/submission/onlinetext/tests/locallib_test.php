@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/assign/tests/generator.php');
+require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
 
 /**
  * Unit tests for mod/assign/submission/onlinetext/locallib.php
@@ -35,8 +35,35 @@ require_once($CFG->dirroot . '/mod/assign/tests/generator.php');
  */
 class assignsubmission_onlinetext_locallib_testcase extends advanced_testcase {
 
-    // Use the generator helper.
-    use mod_assign_test_generator;
+    /** @var stdClass $user A user to submit an assignment. */
+    protected $user;
+
+    /** @var stdClass $course New course created to hold the assignment activity. */
+    protected $course;
+
+    /** @var stdClass $cm A context module object. */
+    protected $cm;
+
+    /** @var stdClass $context Context of the assignment activity. */
+    protected $context;
+
+    /** @var stdClass $assign The assignment object. */
+    protected $assign;
+
+    /**
+     * Setup all the various parts of an assignment activity including creating an onlinetext submission.
+     */
+    protected function setUp() {
+        $this->user = $this->getDataGenerator()->create_user();
+        $this->course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $params = ['course' => $this->course->id, 'assignsubmission_onlinetext_enabled' => 1];
+        $instance = $generator->create_instance($params);
+        $this->cm = get_coursemodule_from_instance('assign', $instance->id);
+        $this->context = context_module::instance($this->cm->id);
+        $this->assign = new testable_assign($this->context, $this->cm, $this->course);
+        $this->setUser($this->user->id);
+    }
 
     /**
      * Test submission_is_empty
@@ -48,20 +75,11 @@ class assignsubmission_onlinetext_locallib_testcase extends advanced_testcase {
     public function test_submission_is_empty($submissiontext, $expected) {
         $this->resetAfterTest();
 
-        $course = $this->getDataGenerator()->create_course();
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
-        $assign = $this->create_instance($course, [
-                'assignsubmission_onlinetext_enabled' => true,
-            ]);
+        $plugin = $this->assign->get_submission_plugin_by_type('onlinetext');
+        $data = new stdClass();
+        $data->onlinetext_editor = ['text' => $submissiontext];
 
-        $this->setUser($student->id);
-
-        $plugin = $assign->get_submission_plugin_by_type('onlinetext');
-        $result = $plugin->submission_is_empty((object) [
-                'onlinetext_editor' => [
-                    'text' => $submissiontext,
-                ],
-            ]);
+        $result = $plugin->submission_is_empty($data);
         $this->assertTrue($result === $expected);
     }
 
@@ -74,21 +92,10 @@ class assignsubmission_onlinetext_locallib_testcase extends advanced_testcase {
      */
     public function test_new_submission_empty($submissiontext, $expected) {
         $this->resetAfterTest();
+        $data = new stdClass();
+        $data->onlinetext_editor = ['text' => $submissiontext];
 
-        $course = $this->getDataGenerator()->create_course();
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
-        $assign = $this->create_instance($course, [
-                'assignsubmission_onlinetext_enabled' => true,
-            ]);
-
-        $this->setUser($student->id);
-
-        $result = $assign->new_submission_empty((object) [
-                'onlinetext_editor' => [
-                    'text' => $submissiontext,
-                ],
-            ]);
-
+        $result = $this->assign->new_submission_empty($data);
         $this->assertTrue($result === $expected);
     }
 
@@ -103,10 +110,7 @@ class assignsubmission_onlinetext_locallib_testcase extends advanced_testcase {
             'Empty submission null' => [null, true],
             'Value 0' => [0, false],
             'String 0' => ['0', false],
-            'Text' => ['Ai! laurië lantar lassi súrinen, yéni únótimë ve rámar aldaron!', false],
-            'Image' => ['<img src="test.jpg" />', false],
-            'Video' => ['<video controls="true"><source src="test.mp4"></video>', false],
-            'Audio' => ['<audio controls="true"><source src="test.mp3"></audio>', false],
+            'Text' => ['Ai! laurië lantar lassi súrinen, yéni únótimë ve rámar aldaron!', false]
         ];
     }
 }

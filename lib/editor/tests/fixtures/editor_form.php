@@ -44,7 +44,7 @@ class editor_form extends moodleform {
      */
     protected function definition() {
         $mform = $this->_form;
-        $editoroptions = $this->_customdata['editoroptions'] ?? null;
+        $editoroptions = $this->_customdata['editoroptions'];
 
         // Add header.
         $mform->addElement('header', 'myheader', 'Editor in Moodle form');

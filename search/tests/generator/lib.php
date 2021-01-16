@@ -118,7 +118,7 @@ class core_search_generator extends component_generator_base {
         }
 
         if (!isset($options->contextid)) {
-            $info->contextid = \context_course::instance(SITEID)->id;
+            $info->contextid = \context_system::instance()->id;
         } else {
             $info->contextid = $options->contextid;
         }

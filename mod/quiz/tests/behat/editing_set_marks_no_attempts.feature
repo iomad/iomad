@@ -68,7 +68,7 @@ Feature: Edit quiz marks with no attempts
       | Decimal places in grades | 3 |
       | Decimal places in question grades | 5 |
     And I press "Save and display"
-    When I am on the "Quiz 1" "mod_quiz > Edit" page
+    And I navigate to "Edit quiz" in current page administration
     # Then the field "maxgrade" matches value "20.000" -- with exact match on decimal places.
     Then "//input[@name = 'maxgrade' and @value = '20.000']" "xpath_element" should exist
     And I should see "2.00000"

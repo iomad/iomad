@@ -1,10 +1,7 @@
 YUI.add('moodle-course-management', function (Y, NAME) {
 
-var Category;
-var Console;
-var Course;
-var DragDrop;
-var Item;
+/* global DragDrop, Category, Course */
+
 /**
  * Provides drop down menus for list of action links.
  *
@@ -21,9 +18,9 @@ var Item;
  * @constructor
  * @extends Base
  */
-Console = function() {
+function Console() {
     Console.superclass.constructor.apply(this, arguments);
-};
+}
 Console.NAME = 'moodle-course-management';
 Console.CSS_PREFIX = 'management';
 Console.ATTRS = {
@@ -593,6 +590,8 @@ M.course.management.console = null;
 M.course.management.init = function(config) {
     M.course.management.console = new Console(config);
 };
+/* global Console */
+
 /**
  * Drag and Drop handler
  *
@@ -601,9 +600,9 @@ M.course.management.init = function(config) {
  * @constructor
  * @extends Base
  */
-DragDrop = function(config) {
+function DragDrop(config) {
     Console.superclass.constructor.apply(this, [config]);
-};
+}
 DragDrop.NAME = 'moodle-course-management-dd';
 DragDrop.CSS_PREFIX = 'management-dd';
 DragDrop.ATTRS = {
@@ -874,9 +873,9 @@ Y.extend(DragDrop, Y.Base, DragDrop.prototype);
  * @constructor
  * @extends Base
  */
-Item = function() {
+function Item() {
     Item.superclass.constructor.apply(this, arguments);
-};
+}
 Item.NAME = 'moodle-course-management-item';
 Item.CSS_PREFIX = 'management-item';
 Item.ATTRS = {
@@ -1182,6 +1181,8 @@ Item.prototype = {
     }
 };
 Y.extend(Item, Y.Base, Item.prototype);
+/* global Item */
+
 /**
  * A managed category.
  *
@@ -1190,9 +1191,9 @@ Y.extend(Item, Y.Base, Item.prototype);
  * @constructor
  * @extends Item
  */
-Category = function() {
+function Category() {
     Category.superclass.constructor.apply(this, arguments);
-};
+}
 Category.NAME = 'moodle-course-management-category';
 Category.CSS_PREFIX = 'management-category';
 Category.ATTRS = {
@@ -1643,6 +1644,8 @@ Category.prototype = {
     }
 };
 Y.extend(Category, Item, Category.prototype);
+/* global Item */
+
 /**
  * A managed course.
  *
@@ -1651,9 +1654,9 @@ Y.extend(Category, Item, Category.prototype);
  * @constructor
  * @extends Item
  */
-Course = function() {
+function Course() {
     Course.superclass.constructor.apply(this, arguments);
-};
+}
 Course.NAME = 'moodle-course-management-course';
 Course.CSS_PREFIX = 'management-course';
 Course.ATTRS = {

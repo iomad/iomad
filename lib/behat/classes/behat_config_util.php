@@ -56,6 +56,11 @@ class behat_config_util {
     private $themecontexts;
 
     /**
+     * @var array list of all contexts in theme suite.
+     */
+    private $themesuitecontexts;
+
+    /**
      * @var array list of overridden theme contexts.
      */
     private $overriddenthemescontexts;
@@ -309,16 +314,13 @@ class behat_config_util {
 
         $this->contexts = array();
         foreach ($components as $componentname => $componentpath) {
-            if (false !== strpos($componentname, 'theme_')) {
-                continue;
-            }
             $componentpath = self::clean_path($componentpath);
 
             if (!file_exists($componentpath . self::get_behat_tests_path())) {
                 continue;
             }
             $diriterator = new DirectoryIterator($componentpath . self::get_behat_tests_path());
-            $regite = new RegexIterator($diriterator, '|^behat_.*\.php$|');
+            $regite = new RegexIterator($diriterator, '|behat_.*\.php$|');
 
             // All behat_*.php inside self::get_behat_tests_path() are added as steps definitions files.
             foreach ($regite as $file) {
@@ -491,23 +493,24 @@ class behat_config_util {
 
         $suites = $this->get_behat_suites($parallelruns, $currentrun);
 
+        $overriddenthemescontexts = $this->get_overridden_theme_contexts();
+        if (!empty($overriddenthemescontexts)) {
+            $allcontexts = array_merge($this->contexts, $overriddenthemescontexts);
+        } else {
+            $allcontexts = $this->contexts;
+        }
+
+        // Remove selectors from step definitions.
+        $themes = $this->get_list_of_themes();
         $selectortypes = ['named_partial', 'named_exact'];
-        $allpaths = [];
-        foreach (array_keys($suites) as $theme) {
-            // Remove selectors from step definitions.
+        foreach ($themes as $theme) {
             foreach ($selectortypes as $selectortype) {
                 // Don't include selector classes.
                 $selectorclass = self::get_behat_theme_selector_override_classname($theme, $selectortype);
-                if (isset($suites[$theme]['contexts'][$selectorclass])) {
-                    unset($suites[$theme]['contexts'][$selectorclass]);
+                if (isset($allcontexts[$selectorclass])) {
+                    unset($allcontexts[$selectorclass]);
                 }
             }
-
-            // Get a list of all step definition paths.
-            $allpaths = array_merge($allpaths, $suites[$theme]['contexts']);
-
-            // Convert the contexts array to a list of names only.
-            $suites[$theme]['contexts'] = array_keys($suites[$theme]['contexts']);
         }
 
         // Comments use black color, so failure path is not visible. Using color other then black/white is safer.
@@ -529,7 +532,7 @@ class behat_config_util {
                     ),
                     'Moodle\BehatExtension' => array(
                         'moodledirroot' => $CFG->dirroot,
-                        'steps_definitions' => $allpaths,
+                        'steps_definitions' => $allcontexts,
                     )
                 )
             )
@@ -617,48 +620,6 @@ class behat_config_util {
 
         // Check suite values.
         $behatprofilesuites = array();
-
-        // Automatically set tags information to skip app testing if necessary. We skip app testing
-        // if the browser is not Chrome. (Note: We also skip if it's not configured, but that is
-        // done on the theme/suite level.)
-        if (empty($values['browser']) || $values['browser'] !== 'chrome') {
-            if (!empty($values['tags'])) {
-                $values['tags'] .= ' && ~@app';
-            } else {
-                $values['tags'] = '~@app';
-            }
-        }
-
-        // Automatically add Chrome command line option to skip the prompt about allowing file
-        // storage - needed for mobile app testing (won't hurt for everything else either).
-        // We also need to disable web security, otherwise it can't make CSS requests to the server
-        // on localhost due to CORS restrictions.
-        if (!empty($values['browser']) && $values['browser'] === 'chrome') {
-            if (!isset($values['capabilities'])) {
-                $values['capabilities'] = [];
-            }
-            if (!isset($values['capabilities']['extra_capabilities'])) {
-                $values['capabilities']['extra_capabilities'] = [];
-            }
-            if (!isset($values['capabilities']['extra_capabilities']['chromeOptions'])) {
-                $values['capabilities']['extra_capabilities']['chromeOptions'] = [];
-            }
-            if (!isset($values['capabilities']['extra_capabilities']['chromeOptions']['args'])) {
-                $values['capabilities']['extra_capabilities']['chromeOptions']['args'] = [];
-            }
-            $values['capabilities']['extra_capabilities']['chromeOptions']['args'][] = '--unlimited-storage';
-            $values['capabilities']['extra_capabilities']['chromeOptions']['args'][] = '--disable-web-security';
-
-            // If the mobile app is enabled, check its version and add appropriate tags.
-            if ($mobiletags = $this->get_mobile_version_tags()) {
-                if (!empty($values['tags'])) {
-                    $values['tags'] .= ' && ' . $mobiletags;
-                } else {
-                    $values['tags'] = $mobiletags;
-                }
-            }
-        }
-
         // Fill tags information.
         if (isset($values['tags'])) {
             $behatprofilesuites = array(
@@ -698,102 +659,6 @@ class behat_config_util {
     }
 
     /**
-     * Gets version tags to use for the mobile app.
-     *
-     * This is based on the current mobile app version (from its package.json) and all known
-     * mobile app versions (based on the list appversions.json in the lib/behat directory).
-     *
-     * @param bool $verbose If true, outputs information about installed app version
-     * @return string List of tags or '' if not supporting mobile
-     */
-    protected function get_mobile_version_tags($verbose = true) : string {
-        global $CFG;
-
-        if (!empty($CFG->behat_ionic_dirroot)) {
-            // Get app version from package.json.
-            $jsonpath = $CFG->behat_ionic_dirroot . '/package.json';
-            $json = @file_get_contents($jsonpath);
-            if (!$json) {
-                throw new coding_exception('Unable to load app version from ' . $jsonpath);
-            }
-            $package = json_decode($json);
-            if ($package === null || empty($package->version)) {
-                throw new coding_exception('Invalid app package data in ' . $jsonpath);
-            }
-            $installedversion = $package->version;
-        } else if (!empty($CFG->behat_ionic_wwwroot)) {
-            // Get app version from config.json inside wwwroot.
-            $jsonurl = $CFG->behat_ionic_wwwroot . '/config.json';
-            $json = @download_file_content($jsonurl);
-            if (!$json) {
-                throw new coding_exception('Unable to load app version from ' . $jsonurl);
-            }
-            $config = json_decode($json);
-            if ($config === null || empty($config->versionname)) {
-                throw new coding_exception('Invalid app config data in ' . $jsonurl);
-            }
-            $installedversion = str_replace('-dev', '', $config->versionname);
-        } else {
-            return '';
-        }
-
-        // Read all feature files to check which mobile tags are used. (Note: This could be cached
-        // but ideally, it is the sort of thing that really ought to be refreshed by doing a new
-        // Behat init. Also, at time of coding it only takes 0.3 seconds and only if app enabled.)
-        $usedtags = [];
-        foreach ($this->features as $filepath) {
-            $feature = file_get_contents($filepath);
-            // This may incorrectly detect versions used e.g. in a comment or something, but it
-            // doesn't do much harm if we have extra ones.
-            if (preg_match_all('~@app_(?:from|upto)(?:[0-9]+(?:\.[0-9]+)*)~', $feature, $matches)) {
-                foreach ($matches[0] as $tag) {
-                    // Store as key in array so we don't get duplicates.
-                    $usedtags[$tag] = true;
-                }
-            }
-        }
-
-        // Set up relevant tags for each version.
-        $tags = [];
-        foreach ($usedtags as $usedtag => $ignored) {
-            if (!preg_match('~^@app_(from|upto)([0-9]+(?:\.[0-9]+)*)$~', $usedtag, $matches)) {
-                throw new coding_exception('Unexpected tag format');
-            }
-            $direction = $matches[1];
-            $version = $matches[2];
-
-            switch (version_compare($installedversion, $version)) {
-                case -1:
-                    // Installed version OLDER than the one being considered, so do not
-                    // include any scenarios that only run from the considered version up.
-                    if ($direction === 'from') {
-                        $tags[] = '~@app_from' . $version;
-                    }
-                    break;
-
-                case 0:
-                    // Installed version EQUAL to the one being considered - no tags need
-                    // excluding.
-                    break;
-
-                case 1:
-                    // Installed version NEWER than the one being considered, so do not
-                    // include any scenarios that only run up to that version.
-                    if ($direction === 'upto') {
-                        $tags[] = '~@app_upto' . $version;
-                    }
-                    break;
-            }
-        }
-
-        if ($verbose) {
-            mtrace('Configured app tests for version ' . $installedversion);
-        }
-
-        return join(' && ', $tags);
-    }
-
-    /**
      * Attempt to split feature list into fairish buckets using timing information, if available.
      * Simply add each one to lightest buckets until all files allocated.
      * PGA = Profile Guided Allocation. I made it up just now.
@@ -807,7 +672,7 @@ class behat_config_util {
     public function profile_guided_allocate($features, $nbuckets, $instance) {
 
         // No profile guided allocation is required in phpunit.
-        if (defined('PHPUNIT_TEST') && PHPUNIT_TEST) {
+        if (defined('PHPUNIT_TEST')) {
             return false;
         }
 
@@ -860,8 +725,7 @@ class behat_config_util {
             $totalweight += $weight;
         }
 
-        if ($totalweight && !defined('BEHAT_DISABLE_HISTOGRAM') && $instance == $nbuckets
-                && (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST)) {
+        if ($totalweight && !defined('BEHAT_DISABLE_HISTOGRAM') && $instance == $nbuckets && !defined('PHPUNIT_TEST')) {
             echo "Bucket weightings:\n";
             foreach ($weights as $k => $weight) {
                 echo $k + 1 . ": " . str_repeat('*', 70 * $nbuckets * $weight / $totalweight) . PHP_EOL;
@@ -1096,7 +960,7 @@ class behat_config_util {
                 unset($features[$key]);
             } else {
                 $featurestocheck = $this->get_components_features();
-                if (!isset($featurestocheck[$key]) && (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST)) {
+                if (!isset($featurestocheck[$key]) && !defined('PHPUNIT_TEST')) {
                     behat_error(BEHAT_EXITCODE_REQUIREMENT, 'Blacklisted feature "' . $blacklistpath . '" not found.');
                 }
             }
@@ -1131,8 +995,9 @@ class behat_config_util {
 
         // Create list of theme suite features and contexts.
         foreach ($themes as $theme) {
-            // Get theme features and contexts.
+            // Get theme features.
             $themefeatures[$theme] = $this->get_behat_features_for_theme($theme);
+
             $themecontexts[$theme] = $this->get_behat_contexts_for_theme($theme);
         }
 
@@ -1140,6 +1005,20 @@ class behat_config_util {
         foreach ($themefeatures as $themename => $removethemefeatures) {
             if (!empty($removethemefeatures['features'])) {
                 $features = $this->remove_blacklisted_features_from_list($features, $removethemefeatures['features']);
+            }
+        }
+
+        // Remove list of theme contexts form other suite contexts, as suite don't require other theme specific contexts.
+        foreach ($themecontexts as $themename => $themecontext) {
+            if (!empty($themecontext['contexts'])) {
+                foreach ($themecontext['contexts'] as $contextkey => $contextpath) {
+                    // Remove theme specific contexts from other themes.
+                    foreach ($themes as $currenttheme) {
+                        if (($currenttheme != $themename) && isset($themecontexts[$currenttheme]['suitecontexts'][$contextkey])) {
+                            unset($themecontexts[$currenttheme]['suitecontexts'][$contextkey]);
+                        }
+                    }
+                }
             }
         }
 
@@ -1174,12 +1053,12 @@ class behat_config_util {
                 $suitename = $theme;
             }
 
-            // Add suite no matter what. If there is no feature in suite then it will just exist successfully with no scenarios.
-            // But if we don't set this then the user has to know which run doesn't have suite and which run do.
+            // Add suite no matter what. If there is no feature in suite then it will just exist successfully with no
+            // scenarios. But if we don't set this then the user has to know which run doesn't have suite and which run do.
             $suites = array_merge($suites, array(
                 $suitename => array(
                     'paths'    => array_values($themesuitefeatures),
-                    'contexts' => $themecontexts[$theme],
+                    'contexts' => array_keys($themecontexts[$theme]['suitecontexts']),
                 )
             ));
         }
@@ -1211,7 +1090,7 @@ class behat_config_util {
         foreach ($themes as $themename => $themedir) {
             // Load the theme config.
             try {
-                $theme = $this->get_theme_config($themename);
+                $theme = theme_config::load($themename);
             } catch (Exception $e) {
                 // Bad theme, just skip it for now.
                 continue;
@@ -1232,20 +1111,9 @@ class behat_config_util {
     }
 
     /**
-     * Return the theme config for a given theme name.
-     * This is done so we can mock it in PHPUnit.
-     *
-     * @param string $themename name of theme
-     * @return theme_config
-     */
-    public function get_theme_config($themename) {
-        return theme_config::load($themename);
-    }
-
-    /**
      * Return theme directory.
      *
-     * @param string $themename name of theme
+     * @param string $themename
      * @return string theme directory
      */
     protected function get_theme_test_directory($themename) {
@@ -1338,7 +1206,7 @@ class behat_config_util {
 
         $tests = array();
         $testtypes = array(
-            'contexts' => '|^behat_.*\.php$|',
+            'contexts' => '|behat_.*\.php$|',
             'features' => '|.*\.feature$|',
         );
 
@@ -1368,19 +1236,11 @@ class behat_config_util {
      * @return array ($blacklistfeatures, $blacklisttags, $features)
      */
     protected function get_behat_features_for_theme($theme) {
-        global $CFG;
 
         // Get list of features defined by theme.
         $themefeatures = $this->get_tests_for_theme($theme, 'features');
         $themeblacklistfeatures = $this->get_blacklisted_tests_for_theme($theme, 'features');
         $themeblacklisttags = $this->get_blacklisted_tests_for_theme($theme, 'tags');
-
-        // Mobile app tests are not theme-specific, so run only for the default theme (and if
-        // configured).
-        if ((empty($CFG->behat_ionic_dirroot) && empty($CFG->behat_ionic_wwwroot)) ||
-                $theme !== $this->get_default_theme()) {
-            $themeblacklisttags[] = '@app';
-        }
 
         // Clean feature key and path.
         $features = array();
@@ -1427,70 +1287,90 @@ class behat_config_util {
     }
 
     /**
+     * Return list of contexts overridden by themes.
+     *
+     * @return array.
+     */
+    protected function get_overridden_theme_contexts() {
+        if (empty($this->overriddenthemescontexts)) {
+            $this->overriddenthemescontexts = array();
+        }
+
+        return $this->overriddenthemescontexts;
+    }
+
+    /**
      * Return list of behat contexts for theme and update $this->stepdefinitions list.
      *
      * @param string $theme theme name.
-     * @return  List of contexts
+     * @return array list($themecontexts, $themesuitecontexts)
      */
-    protected function get_behat_contexts_for_theme($theme) : array {
+    protected function get_behat_contexts_for_theme($theme) {
+
         // If we already have this list then just return. This will not change by run.
-        if (!empty($this->themecontexts[$theme])) {
-            return $this->themecontexts[$theme];
+        if (!empty($this->themecontexts[$theme]) && !empty($this->themesuitecontexts)) {
+            return array(
+                'contexts' => $this->themecontexts[$theme],
+                'suitecontexts' => $this->themesuitecontexts[$theme],
+            );
         }
 
-        try {
-            $themeconfig = $this->get_theme_config($theme);
-        } catch (Exception $e) {
-            // This theme has no theme config.
-            return [];
+        if (empty($this->overriddenthemescontexts)) {
+            $this->overriddenthemescontexts = array();
         }
 
-        // The theme will use all core contexts, except the one overridden by theme or its parent.
-        $parentcontexts = [];
-        if (isset($themeconfig->parents)) {
-            foreach ($themeconfig->parents as $parent) {
-                if ($parentcontexts = $this->get_behat_contexts_for_theme($parent)) {
-                    break;
+        $contexts = $this->get_components_contexts();
+
+        // Create list of contexts used by theme suite.
+        $themecontexts = $this->get_tests_for_theme($theme, 'contexts');
+        $blacklistedcontexts = $this->get_blacklisted_tests_for_theme($theme, 'contexts');
+
+        // Theme suite will use all core contexts, except the one overridden by theme.
+        $themesuitecontexts = $contexts;
+
+        foreach ($themecontexts as $context => $path) {
+
+            // If a context in theme starts with behat_theme_{themename}_behat_* then it's overriding core context.
+            if (preg_match('/^behat_theme_'.$theme.'_(\w+)$/', $context, $match)) {
+
+                if (!empty($themesuitecontexts[$match[1]])) {
+                    unset($themesuitecontexts[$match[1]]);
+                }
+
+                // Add this to the list of overridden paths, so it can be added to final contexts list for class resolver.
+                $this->overriddenthemescontexts[$context] = $path;
+            }
+
+            $selectortypes = ['named_partial', 'named_exact'];
+            foreach ($selectortypes as $selectortype) {
+                // Don't include selector classes.
+                if ($context === self::get_behat_theme_selector_override_classname($theme, $selectortype)) {
+                    unset($this->contexts[$context]);
+                    unset($themesuitecontexts[$context]);
+                    continue;
                 }
             }
+
+            // Add theme specific contexts with suffix to steps definitions.
+            $themesuitecontexts[$context] = $path;
         }
 
-        if (empty($parentcontexts)) {
-            $parentcontexts = $this->get_components_contexts();
-        }
-
-        // Remove contexts which have been actively blacklisted.
-        $blacklistedcontexts = $this->get_blacklisted_tests_for_theme($theme, 'contexts');
+        // Remove blacklisted contexts.
         foreach ($blacklistedcontexts as $blacklistpath) {
             $blacklistcontext = basename($blacklistpath, '.php');
 
-            unset($parentcontexts[$blacklistcontext]);
+            unset($themesuitecontexts[$blacklistcontext]);
         }
 
-        // Apply overrides.
-        $contexts = array_merge($parentcontexts, $this->get_tests_for_theme($theme, 'contexts'));
+        // We are only interested in the class name of context.
+        $this->themesuitecontexts[$theme] = $themesuitecontexts;
+        $this->themecontexts[$theme] = $themecontexts;
 
-        // Remove classes which are overridden.
-        foreach ($contexts as $contextclass => $path) {
-            require_once($path);
-            if (!class_exists($contextclass)) {
-                // This may be a Poorly named class.
-                continue;
-            }
+        $retval = array(
+            'contexts' => $themecontexts,
+            'suitecontexts' => $themesuitecontexts,
+        );
 
-            $rc = new \ReflectionClass($contextclass);
-            while ($rc = $rc->getParentClass()) {
-                if (isset($contexts[$rc->name])) {
-                    unset($contexts[$rc->name]);
-                }
-            }
-        }
-
-        // Sort the list of contexts.
-        ksort($contexts);
-
-        $this->themecontexts[$theme] = $contexts;
-
-        return $contexts;
+        return $retval;
     }
 }

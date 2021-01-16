@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Phpml\Preprocessing;
 
-use Phpml\Exception\InvalidOperationException;
 use Phpml\Preprocessing\Imputer\Strategy;
 
 class Imputer implements Preprocessor
 {
-    public const AXIS_COLUMN = 0;
-
-    public const AXIS_ROW = 1;
+    const AXIS_COLUMN = 0;
+    const AXIS_ROW = 1;
 
     /**
      * @var mixed
@@ -29,12 +27,15 @@ class Imputer implements Preprocessor
     private $axis;
 
     /**
-     * @var mixed[]
+     * @var
      */
-    private $samples = [];
+    private $samples;
 
     /**
-     * @param mixed $missingValue
+     * @param mixed      $missingValue
+     * @param Strategy   $strategy
+     * @param int        $axis
+     * @param array|null $samples
      */
     public function __construct($missingValue, Strategy $strategy, int $axis = self::AXIS_COLUMN, array $samples = [])
     {
@@ -44,23 +45,28 @@ class Imputer implements Preprocessor
         $this->samples = $samples;
     }
 
-    public function fit(array $samples, ?array $targets = null): void
+    /**
+     * @param array $samples
+     */
+    public function fit(array $samples)
     {
         $this->samples = $samples;
     }
 
-    public function transform(array &$samples): void
+    /**
+     * @param array $samples
+     */
+    public function transform(array &$samples)
     {
-        if ($this->samples === []) {
-            throw new InvalidOperationException('Missing training samples for Imputer.');
-        }
-
         foreach ($samples as &$sample) {
             $this->preprocessSample($sample);
         }
     }
 
-    private function preprocessSample(array &$sample): void
+    /**
+     * @param array $sample
+     */
+    private function preprocessSample(array &$sample)
     {
         foreach ($sample as $column => &$value) {
             if ($value === $this->missingValue) {
@@ -69,9 +75,15 @@ class Imputer implements Preprocessor
         }
     }
 
+    /**
+     * @param int   $column
+     * @param array $currentSample
+     *
+     * @return array
+     */
     private function getAxis(int $column, array $currentSample): array
     {
-        if ($this->axis === self::AXIS_ROW) {
+        if (self::AXIS_ROW === $this->axis) {
             return array_diff($currentSample, [$this->missingValue]);
         }
 

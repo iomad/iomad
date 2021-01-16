@@ -30,12 +30,13 @@ require_once($CFG->libdir . '/questionlib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/tablelib.php');
 
-admin_externalpage_setup('manageqtypes');
-
+// Check permissions.
+require_login();
 $systemcontext = context_system::instance();
 require_capability('moodle/question:config', $systemcontext);
 $canviewreports = has_capability('report/questioninstances:view', $systemcontext);
 
+admin_externalpage_setup('manageqtypes');
 $thispageurl = new moodle_url('/admin/qtypes.php');
 
 $qtypes = question_bank::get_all_qtypes();
@@ -172,7 +173,7 @@ foreach ($sortedqtypes as $qtypename => $localname) {
     if ($version) {
         $row[] = $version;
     } else {
-        $row[] = html_writer::tag('span', get_string('nodatabase', 'admin'), array('class' => 'text-muted'));
+        $row[] = html_writer::tag('span', get_string('nodatabase', 'admin'), array('class' => 'disabled'));
     }
 
     // Other question types required by this one.

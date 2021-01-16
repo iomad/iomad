@@ -20,6 +20,7 @@ require_once(dirname(__FILE__) . '/../../../local/framework_selector/lib.php');
  * base class for selecting frameworks of a company
  */
 abstract class company_framework_selector_base extends framework_selector_base {
+    const MAX_FRAMEWORKS_PER_PAGE = 200;
 
     protected $companyid;
 
@@ -66,7 +67,7 @@ class current_company_frameworks_selector extends company_framework_selector_bas
     }
 
     public function find_frameworks($search) {
-        global $CFG, $DB;
+        global $DB, $CFG;
         // By default wherecondition retrieves all frameworks except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'cf');
         $params['companyid'] = $this->companyid;
@@ -92,7 +93,7 @@ class current_company_frameworks_selector extends company_framework_selector_bas
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
                                      $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_frameworks) {
+            if ($potentialmemberscount > company_framework_selector_base::MAX_FRAMEWORKS_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -152,7 +153,7 @@ class potential_company_frameworks_selector extends company_framework_selector_b
     }
 
     public function find_frameworks($search) {
-        global $CFG, $DB, $SITE;
+        global $DB, $SITE;
         // By default wherecondition retrieves all frameworks except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'cf');
         $params['companyid'] = $this->companyid;
@@ -160,7 +161,7 @@ class potential_company_frameworks_selector extends company_framework_selector_b
         // Deal with shared frameworks.  Cannot be added to a company in this manner.
         $sharedsql = " AND cf.id NOT IN (
                          SELECT frameworkid FROM {iomad_frameworks}
-                         WHERE shared = 1 )
+                         WHERE shared = 1 ) 
                         AND cf.id NOT IN (
                          SELECT frameworkid FROM {company_comp_frameworks}
                          WHERE companyid = :companyid)";
@@ -183,7 +184,7 @@ class potential_company_frameworks_selector extends company_framework_selector_b
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_frameworks) {
+            if ($potentialmemberscount > company_framework_selector_base::MAX_FRAMEWORKS_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }

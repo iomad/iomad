@@ -60,9 +60,9 @@ class data_field_textarea extends data_field_base {
 
         $text   = '';
         $format = 0;
-        $str = '<div title="' . s($this->field->description) . '" class="d-inline-flex">';
-        $str .= '<label for="field_' . $this->field->id . '">';
-        $str .= html_writer::span($this->field->name, 'accesshide');
+        $str = '<div title="' . s($this->field->description) . '">';
+        $str .= '<label for="field_' . $this->field->id . '" class="accesshide">';
+        $str .= html_writer::span($this->field->name);
         if ($this->field->required) {
             $image = $OUTPUT->pix_icon('req', get_string('requiredelement', 'form'));
             $str .= html_writer::div($image, 'inline-req');
@@ -153,8 +153,7 @@ class data_field_textarea extends data_field_base {
         $editor->use_editor($field, $options, $fpoptions);
         $str .= '<input type="hidden" name="'.$field.'_itemid" value="'.s($draftitemid).'" />';
         $str .= '<div class="mod-data-input">';
-        $str .= '<div><textarea id="'.$field.'" name="'.$field.'" rows="'.$this->field->param3.'" class="form-control" ' .
-            'cols="'.$this->field->param2.'" spellcheck="true">'.s($text).'</textarea></div>';
+        $str .= '<div><textarea id="'.$field.'" name="'.$field.'" rows="'.$this->field->param3.'" cols="'.$this->field->param2.'" spellcheck="true">'.s($text).'</textarea></div>';
         $str .= '<div><label class="accesshide" for="' . $field . '_content1">' . get_string('format') . '</label>';
         $str .= '<select id="' . $field . '_content1" name="'.$field.'_content1">';
         foreach ($formats as $key=>$desc) {

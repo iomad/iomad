@@ -113,8 +113,10 @@ class SimplePie_Author
 		{
 			return $this->name;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -128,8 +130,10 @@ class SimplePie_Author
 		{
 			return $this->link;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -143,7 +147,10 @@ class SimplePie_Author
 		{
 			return $this->email;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 }
+

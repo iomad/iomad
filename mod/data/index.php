@@ -87,6 +87,9 @@ if ($rss) {
     array_push($table->align, 'center');
 }
 
+$options = new stdClass();
+$options->noclean = true;
+
 $currentsection = "";
 
 foreach ($datas as $data) {
@@ -127,12 +130,10 @@ foreach ($datas as $data) {
             }
             $currentsection = $data->section;
         }
-        $row = array($printsection, $link, format_module_intro('data', $data, $data->coursemodule),
-            $numrecords, $numunapprovedrecords);
+        $row = array ($printsection, $link, format_text($data->intro, $data->introformat, $options), $numrecords, $numunapprovedrecords);
 
     } else {
-        $row = array($link, format_module_intro('data', $data, $data->coursemodule),
-            $numrecords, $numunapprovedrecords);
+        $row = array ($link, format_text($data->intro, $data->introformat, $options), $numrecords, $numunapprovedrecords);
     }
 
     if ($rss) {

@@ -34,8 +34,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),

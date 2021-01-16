@@ -18,16 +18,16 @@
  * Label module version info
  *
  * @package    mod
- * @subpackage Training Event
- * @copyright  2014 E-Learn Design Ltd. {@link https://www.e-learndesign.co.uk}
- * @author     Derick Turner
+ * @subpackage label
+ * @copyright  2003 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->component  = 'mod_trainingevent';
-$plugin->version  = 2020111800;  // The current module version (Date: YYYYMMDDXX).
-$plugin->requires = 2019052000;  // Requires this Moodle version.
-$plugin->release  = '3.9.2 (Build: 20200914)'; // Human-friendly version name
+$plugin->version  = 2014012701;  // The current module version (Date: YYYYMMDDXX).
+$plugin->requires = 2010080300;  // Requires this Moodle version.
 $plugin->cron     = 0;           // Period for cron to check this module (secs).
+
+

@@ -77,9 +77,7 @@ define('COMPLETION_CRITERIA_TYPE_ROLE',         7);
 define('COMPLETION_CRITERIA_TYPE_COURSE',       8);
 
 /**
- * Criteria type constant to class name mapping.
- *
- * This global variable would be improved if it was implemented as a cache.
+ * Criteria type constant to class name mapping
  */
 global $COMPLETION_CRITERIA_TYPES;
 $COMPLETION_CRITERIA_TYPES = array(

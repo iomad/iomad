@@ -128,8 +128,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                 'timemodified' => 123456789,
                 'timesort' => 123456789,
                 'visible' => 1,
-                'subscriptionid' => 1,
-                'location' => 'Test location',
+                'subscriptionid' => 1
             ]
         );
     }
@@ -178,8 +177,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                 'timemodified' => 123456789,
                 'timesort' => 123456789,
                 'visible' => 1,
-                'subscriptionid' => 1,
-                'location' => 'Test location',
+                'subscriptionid' => 1
             ]
         );
     }
@@ -228,8 +226,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                 'timemodified' => 123456789,
                 'timesort' => 123456789,
                 'visible' => 1,
-                'subscriptionid' => 1,
-                'location' => 'Test location',
+                'subscriptionid' => 1
             ]
         );
     }
@@ -278,8 +275,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                 'timemodified' => 123456789,
                 'timesort' => 123456789,
                 'visible' => 1,
-                'subscriptionid' => 1,
-                'location' => 'Test location',
+                'subscriptionid' => 1
             ]
         );
 
@@ -334,8 +330,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                 'timemodified' => 123456789,
                 'timesort' => 123456789,
                 'visible' => 1,
-                'subscriptionid' => 1,
-                'location' => 'Test location',
+                'subscriptionid' => 1
             ]
         );
 
@@ -369,8 +364,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                     'timemodified' => 123456789,
                     'timesort' => 123456789,
                     'visible' => true,
-                    'subscriptionid' => 1,
-                    'location' => 'Test location',
+                    'subscriptionid' => 1
                 ],
                 'actioncallbackapplier' => function(event_interface $event) {
                     $event->testattribute = 'Hello';
@@ -404,8 +398,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                     'timemodified' => 123456789,
                     'timesort' => 123456789,
                     'visible' => true,
-                    'subscriptionid' => 1,
-                    'location' => 'Test location',
+                    'subscriptionid' => 1
                 ],
                 'actioncallbackapplier' => function(event_interface $event) {
                     $event->testattribute = 'Hello';
@@ -439,8 +432,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
                     'timemodified' => 123456789,
                     'timesort' => 123456789,
                     'visible' => true,
-                    'subscriptionid' => 1,
-                    'location' => 'Test location',
+                    'subscriptionid' => 1
                 ],
                 'actioncallbackapplier' => function(event_interface $event) {
                     $event->testattribute = 'Hello';
@@ -467,7 +459,7 @@ class core_calendar_event_factory_testcase extends advanced_testcase {
     protected function create_event($properties = []) {
         $record = new \stdClass();
         $record->name = 'event name';
-        $record->eventtype = 'site';
+        $record->eventtype = 'global';
         $record->timestart = time();
         $record->timeduration = 0;
         $record->timesort = 0;

@@ -22,11 +22,11 @@ Feature: Preview a Description question
       | Test questions   | description | description-001 | info     |
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   @javascript @_switch_window
   Scenario: Preview a Description question and submit a correct response.
-    When I choose "Preview" action for "description-001" in the question bank
+    When I click on "Preview" "link" in the "description-001" "table_row"
     And I switch to "questionpreview" window
     And I set the field "How questions behave" to "Immediate feedback"
     And I press "Start again with these options"

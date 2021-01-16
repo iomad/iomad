@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die();
 
 define('LOCAL_IOMAD_LEARNINGPATH_COURSEFULLNAME', 'fullname');
@@ -66,18 +67,3 @@ function local_iomad_learningpath_pluginfile($course,
 
 }
 
-/**
- * Hook called by delete_course to remove course from path before course is deleted
- *
- * @param object course record
- */
-function local_iomad_learningpath_pre_course_delete($course) {
-    global $DB, $OUTPUT;
-
-    // Clear references from the iomad_learningpathcourse table.
-    $DB->delete_records('iomad_learningpathcourse', array('course' => $course->id));
-
-    echo $OUTPUT->notification(get_string('removepath', 'local_iomad_learningpath'), 'notifysuccess');
-
-    return true;
-}

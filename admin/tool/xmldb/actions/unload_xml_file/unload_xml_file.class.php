@@ -35,6 +35,9 @@ class unload_xml_file extends XMLDBAction {
     function init() {
         parent::init();
 
+        // Set own custom attributes
+        $this->sesskey_protected = false; // This action doesn't need sesskey protection
+
         // Get needed strings
         $this->loadStrings(array(
             // 'key' => 'module',

@@ -103,13 +103,8 @@ if ($id) {
     $PAGE->set_context($catcontext);
 
 } else {
-    // Creating new course in default category.
-    $course = null;
     require_login();
-    $category = core_course_category::get_default();
-    $catcontext = context_coursecat::instance($category->id);
-    require_capability('moodle/course:create', $catcontext);
-    $PAGE->set_context($catcontext);
+    print_error('needcoursecategroyid');
 }
 
 // Prepare course and the editor.
@@ -166,8 +161,6 @@ if ($editform->is_cancelled()) {
 
         if (!empty($CFG->creatornewroleid) and !is_viewing($context, NULL, 'moodle/role:assign') and !is_enrolled($context, NULL, 'moodle/role:assign')) {
             // Deal with course creators - enrol them internally with default role.
-            // Note: This does not respect capabilities, the creator will be assigned the default role.
-            // This is an expected behaviour. See MDL-66683 for further details.
             enrol_try_internal_enrol($course->id, $USER->id, $CFG->creatornewroleid);
         }
 

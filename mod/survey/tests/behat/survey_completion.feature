@@ -1,4 +1,4 @@
-@mod @mod_survey @core_completion
+@mod @mod_survey
 Feature: A teacher can use activity completion to track a student progress
   In order to use activity completion
   As a teacher
@@ -8,14 +8,12 @@ Feature: A teacher can use activity completion to track a student progress
     Given the following "users" exist:
       | username | firstname | lastname | email |
       | teacher1 | Teacher | 1 | teacher1@example.com |
-      | student1 | Student | 1 | student1@example.com |
     And the following "courses" exist:
       | fullname | shortname | category | enablecompletion |
       | Course 1 | C1 | 0 | 1 |
     And the following "course enrolments" exist:
       | user | course | role |
       | teacher1 | C1 | editingteacher |
-      | student1 | C1 | student |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
 
@@ -27,11 +25,9 @@ Feature: A teacher can use activity completion to track a student progress
       | Completion tracking | Show activity as complete when conditions are met |
       | id_completionview   | 1 |
       | id_completionsubmit | 0 |
-    And I log out
-    When I log in as "student1"
-    And I am on "Course 1" course homepage
+    And I turn editing mode off
     And the "Test survey name" "survey" activity with "auto" completion should be marked as not complete
-    And I follow "Test survey name"
+    When I follow "Test survey name"
     And I am on "Course 1" course homepage
     Then the "Test survey name" "survey" activity with "auto" completion should be marked as complete
 
@@ -42,11 +38,9 @@ Feature: A teacher can use activity completion to track a student progress
       | Description | Test survey description |
       | Completion tracking | Show activity as complete when conditions are met |
       | id_completionsubmit | 1 |
-    And I log out
-    When I log in as "student1"
-    And I am on "Course 1" course homepage
+    And I turn editing mode off
     And the "Test survey name" "survey" activity with "auto" completion should be marked as not complete
-    And I follow "Test survey name"
+    When I follow "Test survey name"
     And I press "Click here to continue"
     And I am on "Course 1" course homepage
     Then the "Test survey name" "survey" activity with "auto" completion should be marked as complete

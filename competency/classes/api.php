@@ -48,9 +48,6 @@ require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
  */
 class api {
 
-    /** @var boolean Allow api functions even if competencies are not enabled for the site. */
-    private static $skipenabled = false;
-
     /**
      * Returns whether competencies are enabled.
      *
@@ -61,30 +58,7 @@ class api {
      * @return boolean True when enabled.
      */
     public static function is_enabled() {
-        return self::$skipenabled || get_config('core_competency', 'enabled');
-    }
-
-    /**
-     * When competencies used to be enabled, we can show the text but do not include links.
-     *
-     * @return boolean True means show links.
-     */
-    public static function show_links() {
-        return isloggedin() && !isguestuser() && get_config('core_competency', 'enabled');
-    }
-
-    /**
-     * Allow calls to competency api functions even if competencies are not currently enabled.
-     */
-    public static function skip_enabled() {
-        self::$skipenabled = true;
-    }
-
-    /**
-     * Restore the checking that competencies are enabled with any api function.
-     */
-    public static function check_enabled() {
-        self::$skipenabled = false;
+        return get_config('core_competency', 'enabled');
     }
 
     /**
@@ -1233,31 +1207,6 @@ class api {
     }
 
     /**
-     * Count the competencies associated to a course module.
-     *
-     * @param mixed $cmorid The course module, or its ID.
-     * @return int
-     */
-    public static function count_course_module_competencies($cmorid) {
-        static::require_enabled();
-        $cm = $cmorid;
-        if (!is_object($cmorid)) {
-            $cm = get_coursemodule_from_id('', $cmorid, 0, true, MUST_EXIST);
-        }
-
-        // Check the user have access to the course module.
-        self::validate_course_module($cm);
-        $context = context_module::instance($cm->id);
-
-        $capabilities = array('moodle/competency:coursecompetencyview', 'moodle/competency:coursecompetencymanage');
-        if (!has_any_capability($capabilities, $context)) {
-            throw new required_capability_exception($context, 'moodle/competency:coursecompetencyview', 'nopermissions', '');
-        }
-
-        return course_module_competency::count_competencies($cm->id);
-    }
-
-    /**
      * List the competencies associated to a course module.
      *
      * @param mixed $cmorid The course module, or its ID.
@@ -1285,7 +1234,7 @@ class api {
         $result = array();
 
         // TODO We could improve the performance of this into one single query.
-        $coursemodulecompetencies = course_module_competency::list_course_module_competencies($cm->id);
+        $coursemodulecompetencies = course_competency::list_course_module_competencies($cm->id);
         $competencies = course_module_competency::list_competencies($cm->id);
 
         // Build the return values.
@@ -3300,34 +3249,6 @@ class api {
     }
 
     /**
-     * List the plans with a competency.
-     *
-     * @param  int $userid The user id we want the plans for.
-     * @param  int $competencyorid The competency, or its ID.
-     * @return array[plan] Array of learning plans.
-     */
-    public static function list_plans_with_competency($userid, $competencyorid) {
-        global $USER;
-
-        static::require_enabled();
-        $competencyid = $competencyorid;
-        $competency = null;
-        if (is_object($competencyid)) {
-            $competency = $competencyid;
-            $competencyid = $competency->get('id');
-        }
-
-        $plans = plan::get_by_user_and_competency($userid, $competencyid);
-        foreach ($plans as $index => $plan) {
-            // Filter plans we cannot read.
-            if (!$plan->can_read()) {
-                unset($plans[$index]);
-            }
-        }
-        return $plans;
-    }
-
-    /**
      * List the competencies in a user plan.
      *
      * @param  int $planorid The plan, or its ID.
@@ -3896,7 +3817,7 @@ class api {
         if (!$userevidence->can_manage()) {
             throw new required_capability_exception($context, 'moodle/competency:userevidencemanage', 'nopermissions', '');
 
-        } else if (property_exists($data, 'userid') && $data->userid != $userevidence->get('userid')) {
+        } else if (array_key_exists('userid', $data) && $data->userid != $userevidence->get('userid')) {
             throw new coding_exception('Can not change the userid of a user evidence.');
         }
 
@@ -4717,9 +4638,6 @@ class api {
                 $recommend = false;
                 $strdesc = 'evidence_coursemodulecompleted';
 
-                if ($outcome == course_module_competency::OUTCOME_NONE) {
-                    continue;
-                }
                 if ($outcome == course_module_competency::OUTCOME_EVIDENCE) {
                     $action = evidence::ACTION_LOG;
 
@@ -4780,9 +4698,6 @@ class api {
             $recommend = false;
             $strdesc = 'evidence_coursecompleted';
 
-            if ($outcome == course_module_competency::OUTCOME_NONE) {
-                continue;
-            }
             if ($outcome == course_competency::OUTCOME_EVIDENCE) {
                 $action = evidence::ACTION_LOG;
 
@@ -4863,40 +4778,6 @@ class api {
     public static function hook_cohort_deleted(\stdClass $cohort) {
         global $DB;
         $DB->delete_records(template_cohort::TABLE, array('cohortid' => $cohort->id));
-    }
-
-    /**
-     * Action to perform when a user is deleted.
-     *
-     * @param int $userid The user id.
-     */
-    public static function hook_user_deleted($userid) {
-        global $DB;
-
-        $usercompetencies = $DB->get_records(user_competency::TABLE, ['userid' => $userid], '', 'id');
-        foreach ($usercompetencies as $usercomp) {
-            $DB->delete_records(evidence::TABLE, ['usercompetencyid' => $usercomp->id]);
-        }
-
-        $DB->delete_records(user_competency::TABLE, ['userid' => $userid]);
-        $DB->delete_records(user_competency_course::TABLE, ['userid' => $userid]);
-        $DB->delete_records(user_competency_plan::TABLE, ['userid' => $userid]);
-
-        // Delete any associated files.
-        $fs = get_file_storage();
-        $context = context_user::instance($userid);
-        $userevidences = $DB->get_records(user_evidence::TABLE, ['userid' => $userid], '', 'id');
-        foreach ($userevidences as $userevidence) {
-            $DB->delete_records(user_evidence_competency::TABLE, ['userevidenceid' => $userevidence->id]);
-            $DB->delete_records(user_evidence::TABLE, ['id' => $userevidence->id]);
-            $fs->delete_area_files($context->id, 'core_competency', 'userevidence', $userevidence->id);
-        }
-
-        $userplans = $DB->get_records(plan::TABLE, ['userid' => $userid], '', 'id');
-        foreach ($userplans as $userplan) {
-            $DB->delete_records(plan_competency::TABLE, ['planid' => $userplan->id]);
-            $DB->delete_records(plan::TABLE, ['id' => $userplan->id]);
-        }
     }
 
     /**
@@ -5163,9 +5044,8 @@ class api {
         static::require_enabled();
         $coursecontext = context_course::instance($courseid);
 
-        if (!has_any_capability(array('moodle/competency:coursecompetencyview', 'moodle/competency:coursecompetencymanage'),
-                $coursecontext)) {
-            throw new required_capability_exception($coursecontext, 'moodle/competency:coursecompetencyview', 'nopermissions', '');
+        if (!has_any_capability(array('moodle/competency:competencyview', 'moodle/competency:competencymanage'), $coursecontext)) {
+            throw new required_capability_exception($coursecontext, 'moodle/competency:competencyview', 'nopermissions', '');
         }
 
         return user_competency_course::get_least_proficient_competencies_for_course($courseid, $skip, $limit);

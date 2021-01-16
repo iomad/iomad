@@ -56,6 +56,24 @@ class notification implements \renderable, \templatable {
     const NOTIFY_ERROR = 'error';
 
     /**
+     * @deprecated
+     * A generic message.
+     */
+    const NOTIFY_MESSAGE = 'message';
+
+    /**
+     * @deprecated
+     * A message notifying the user that a problem occurred.
+     */
+    const NOTIFY_PROBLEM = 'problem';
+
+    /**
+     * @deprecated
+     * A notification of level 'redirect'.
+     */
+    const NOTIFY_REDIRECT = 'redirect';
+
+    /**
      * @var string Message payload.
      */
     protected $message = '';
@@ -84,7 +102,7 @@ class notification implements \renderable, \templatable {
      * Notification constructor.
      *
      * @param string $message the message to print out
-     * @param string $messagetype one of the NOTIFY_* constants..
+     * @param string $messagetype normally NOTIFY_PROBLEM or NOTIFY_SUCCESS.
      */
     public function __construct($message, $messagetype = null) {
         $this->message = $message;
@@ -94,6 +112,13 @@ class notification implements \renderable, \templatable {
         }
 
         $this->messagetype = $messagetype;
+
+        switch ($messagetype) {
+            case self::NOTIFY_PROBLEM:
+            case self::NOTIFY_REDIRECT:
+            case self::NOTIFY_MESSAGE:
+                debugging('Use of ' . $messagetype . ' has been deprecated. Please switch to an alternative type.');
+        }
     }
 
     /**
@@ -162,10 +187,6 @@ class notification implements \renderable, \templatable {
             'extraclasses'  => implode(' ', $this->extraclasses),
             'announce'      => $this->announce,
             'closebutton'   => $this->closebutton,
-            'issuccess'         => $this->messagetype === 'success',
-            'isinfo'            => $this->messagetype === 'info',
-            'iswarning'         => $this->messagetype === 'warning',
-            'iserror'           => $this->messagetype === 'error',
         );
     }
 

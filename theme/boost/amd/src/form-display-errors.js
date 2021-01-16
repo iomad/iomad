@@ -25,12 +25,6 @@ define(['jquery', 'core/event'], function($, Event) {
     return {
         enhance: function(elementid) {
             var element = document.getElementById(elementid);
-            if (!element) {
-                // Some elements (e.g. static) don't have a form field.
-                // Hence there is no validation. So, no setup required here.
-                return;
-            }
-
             $(element).on(Event.Events.FORM_FIELD_VALIDATION, function(event, msg) {
                 event.preventDefault();
                 var parent = $(element).closest('.form-group');
@@ -43,14 +37,13 @@ define(['jquery', 'core/event'], function($, Event) {
                 if (msg !== '') {
                     parent.addClass('has-danger');
                     parent.data('client-validation-error', true);
-                    $(element).addClass('is-invalid');
+                    $(element).addClass('form-control-danger');
                     $(element).attr('aria-describedby', feedback.attr('id'));
                     $(element).attr('aria-invalid', true);
                     feedback.attr('tabindex', 0);
                     feedback.html(msg);
 
                     // Only display and focus when the error was not already visible.
-                    // This is so that, when tabbing around the form, you don't get stuck.
                     if (!feedback.is(':visible')) {
                         feedback.show();
                         feedback.focus();
@@ -60,24 +53,13 @@ define(['jquery', 'core/event'], function($, Event) {
                     if (parent.data('client-validation-error') === true) {
                         parent.removeClass('has-danger');
                         parent.data('client-validation-error', false);
-                        $(element).removeClass('is-invalid');
+                        $(element).removeClass('form-control-danger');
                         $(element).removeAttr('aria-describedby');
                         $(element).attr('aria-invalid', false);
                         feedback.hide();
                     }
                 }
             });
-
-            var form = element.closest('form');
-            if (form && !('boostFormErrorsEnhanced' in form.dataset)) {
-                form.addEventListener('submit', function() {
-                    var visibleError = $('.form-control-feedback:visible');
-                    if (visibleError.length) {
-                        visibleError[0].focus();
-                    }
-                });
-                form.dataset.boostFormErrorsEnhanced = 1;
-            }
         }
     };
 });

@@ -34,7 +34,7 @@ require_once($CFG->libdir . '/form/text.php');
  * Duration element
  *
  * HTML class for a length of time. For example, 30 minutes of 4 days. The
- * values returned to PHP is the duration in seconds (an int rounded to the nearest second).
+ * values returned to PHP is the duration in seconds.
  *
  * @package   core_form
  * @category  form
@@ -42,15 +42,15 @@ require_once($CFG->libdir . '/form/text.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class MoodleQuickForm_duration extends MoodleQuickForm_group {
-    /**
-     * Control the fieldnames for form elements
-     * optional => if true, show a checkbox beside the element to turn it on (or off)
-     * @var array
-     */
-    protected $_options = array('optional' => false, 'defaultunit' => MINSECS);
+   /**
+    * Control the fieldnames for form elements
+    * optional => if true, show a checkbox beside the element to turn it on (or off)
+    * @var array
+    */
+   protected $_options = array('optional' => false, 'defaultunit' => 60);
 
-    /** @var array associative array of time units (days, hours, minutes, seconds) */
-    private $_units = null;
+   /** @var array associative array of time units (days, hours, minutes, seconds) */
+   private $_units = null;
 
    /**
     * constructor
@@ -58,15 +58,12 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
     * @param string $elementName Element's name
     * @param mixed $elementLabel Label(s) for an element
     * @param array $options Options to control the element's display. Recognised values are
-    *      'optional' => true/false - whether to display an 'enabled' checkbox next to the element.
-    *      'defaultunit' => 1|MINSECS|HOURSECS|DAYSECS|WEEKSECS - the default unit to display when
-    *              the time is blank. If not specified, minutes is used.
-    *      'units' => array containing some or all of 1, MINSECS, HOURSECS, DAYSECS and WEEKSECS
-    *              which unit choices to offer.
+    *              'optional' => true/false - whether to display an 'enabled' checkbox next to the element.
+    *              'defaultunit' => 1|60|3600|86400|604800 - the default unit to display when the time is blank.
+    *              If not specified, minutes is used.
     * @param mixed $attributes Either a typical HTML attribute string or an associative array
     */
-    public function __construct($elementName = null, $elementLabel = null,
-            $options = array(), $attributes = null) {
+    public function __construct($elementName = null, $elementLabel = null, $options = array(), $attributes = null) {
         // TODO MDL-52313 Replace with the call to parent::__construct().
         HTML_QuickForm_element::__construct($elementName, $elementLabel, $attributes);
         $this->_persistantFreeze = true;
@@ -85,24 +82,6 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
             }
             $this->_options['defaultunit'] = $options['defaultunit'];
         }
-        if (isset($options['units'])) {
-            if (!is_array($options['units'])) {
-                throw new coding_exception(
-                        'When creating a duration form field, units option must be an array.');
-            }
-            // Validate and register requested units.
-            $availableunits = $this->get_units();
-            $displayunits = [];
-            foreach ($options['units'] as $requestedunit) {
-                if (!isset($availableunits[$requestedunit])) {
-                    throw new coding_exception($requestedunit .
-                            ' is not a recognised unit in MoodleQuickForm_duration.');
-                }
-                $displayunits[$requestedunit] = $availableunits[$requestedunit];
-            }
-            krsort($displayunits, SORT_NUMERIC);
-            $this->_options['units'] = $displayunits;
-        }
     }
 
     /**
@@ -110,8 +89,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
      *
      * @deprecated since Moodle 3.1
      */
-    public function MoodleQuickForm_duration($elementName = null, $elementLabel = null,
-            $options = array(), $attributes = null) {
+    public function MoodleQuickForm_duration($elementName = null, $elementLabel = null, $options = array(), $attributes = null) {
         debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($elementName, $elementLabel, $options, $attributes);
     }
@@ -124,10 +102,10 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
     public function get_units() {
         if (is_null($this->_units)) {
             $this->_units = array(
-                WEEKSECS => get_string('weeks'),
-                DAYSECS => get_string('days'),
-                HOURSECS => get_string('hours'),
-                MINSECS => get_string('minutes'),
+                604800 => get_string('weeks'),
+                86400 => get_string('days'),
+                3600 => get_string('hours'),
+                60 => get_string('minutes'),
                 1 => get_string('seconds'),
             );
         }
@@ -135,23 +113,8 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
     }
 
     /**
-     * Get the units to be used for this field.
-     *
-     * The ones specified in the options passed to the constructor, or all by default.
-     *
-     * @return array number of seconds => lang string.
-     */
-    protected function get_units_used() {
-        if (!empty($this->_options['units'])) {
-            return $this->_options['units'];
-        } else {
-            return $this->get_units();
-        }
-    }
-
-    /**
      * Converts seconds to the best possible time unit. for example
-     * 1800 -> [30, MINSECS] = 30 minutes.
+     * 1800 -> array(30, 60) = 30 minutes.
      *
      * @param int $seconds an amout of time in seconds.
      * @return array associative array ($number => $unit)
@@ -160,7 +123,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
         if ($seconds == 0) {
             return array(0, $this->_options['defaultunit']);
         }
-        foreach ($this->get_units_used() as $unit => $notused) {
+        foreach ($this->get_units() as $unit => $notused) {
             if (fmod($seconds, $unit) == 0) {
                 return array($seconds / $unit, $unit);
             }
@@ -181,17 +144,14 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
         }
         $this->_elements = array();
         // E_STRICT creating elements without forms is nasty because it internally uses $this
-        $number = $this->createFormElement('text', 'number',
-                get_string('time', 'form'), $attributes, true);
+        $number = $this->createFormElement('text', 'number', get_string('time', 'form'), $attributes, true);
         $number->set_force_ltr(true);
         $this->_elements[] = $number;
         unset($attributes['size']);
-        $this->_elements[] = $this->createFormElement('select', 'timeunit',
-                get_string('timeunit', 'form'), $this->get_units_used(), $attributes, true);
+        $this->_elements[] = $this->createFormElement('select', 'timeunit', get_string('timeunit', 'form'), $this->get_units(), $attributes, true);
         // If optional we add a checkbox which the user can use to turn if on
         if($this->_options['optional']) {
-            $this->_elements[] = $this->createFormElement('checkbox', 'enabled', null,
-                    get_string('enable'), $this->getAttributes(), true);
+            $this->_elements[] = $this->createFormElement('checkbox', 'enabled', null, get_string('enable'), $this->getAttributes(), true);
         }
         foreach ($this->_elements as $element){
             if (method_exists($element, 'setHiddenLabel')){
@@ -205,7 +165,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
      *
      * @param string $event Name of event
      * @param mixed $arg event arguments
-     * @param MoodleQuickForm $caller calling object
+     * @param object $caller calling object
      * @return bool
      */
     function onQuickFormEvent($event, $arg, &$caller) {
@@ -218,7 +178,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
                 if (null === $value) {
                     // if no boxes were checked, then there is no value in the array
                     // yet we don't want to display default value in this case
-                    if ($caller->isSubmitted() && !$caller->is_new_repeat($this->getName())) {
+                    if ($caller->isSubmitted()) {
                         $value = $this->_findValue($caller->_submitValues);
                     } else {
                         $value = $this->_findValue($caller->_defaultValues);
@@ -240,7 +200,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
                 break;
 
             case 'createElement':
-                if (!empty($arg[2]['optional'])) {
+                if ($arg[2]['optional']) {
                     $caller->disabledIf($arg[0], $arg[0] . '[enabled]');
                 }
                 $caller->setType($arg[0] . '[number]', PARAM_FLOAT);
@@ -281,10 +241,10 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
      * Override of standard quickforms method.
      *
      * @param  array $submitValues
-     * @param  bool  $assoc  whether to return the value as associative array
+     * @param  bool  $notused Not used.
      * @return array field name => value. The value is the time interval in seconds.
      */
-    function exportValue(&$submitValues, $assoc = false) {
+    function exportValue(&$submitValues, $notused = false) {
         // Get the values from all the child elements.
         $valuearray = array();
         foreach ($this->_elements as $element) {
@@ -299,9 +259,8 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
             return null;
         }
         if ($this->_options['optional'] && empty($valuearray['enabled'])) {
-            return $this->_prepareValue(0, $assoc);
+            return array($this->getName() => 0);
         }
-        return $this->_prepareValue(
-                (int) round($valuearray['number'] * $valuearray['timeunit']), $assoc);
+        return array($this->getName() => $valuearray['number'] * $valuearray['timeunit']);
     }
 }

@@ -14,25 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Question bank column for the duplicate action icon.
- *
- * @package   core_question
- * @copyright 2013 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace core_question\bank;
-defined('MOODLE_INTERNAL') || die();
-
 
 /**
  * Question bank column for the duplicate action icon.
  *
- * @copyright 2013 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2013 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class copy_action_column extends menu_action_column_base {
+
+class copy_action_column extends action_column_base {
     /** @var string avoids repeated calls to get_string('duplicate'). */
     protected $strcopy;
 
@@ -45,21 +36,13 @@ class copy_action_column extends menu_action_column_base {
         return 'copyaction';
     }
 
-    protected function get_url_icon_and_label(\stdClass $question): array {
-        if (!\question_bank::is_qtype_installed($question->qtype)) {
-            // It sometimes happens that people end up with junk questions
-            // in their question bank of a type that is no longer installed.
-            // We cannot do most actions on them, because that leads to errors.
-            return [null, null, null];
-        }
-
+    protected function display_content($question, $rowclasses) {
         // To copy a question, you need permission to add a question in the same
         // category as the existing question, and ability to access the details of
         // the question being copied.
         if (question_has_capability_on($question, 'add') &&
                 (question_has_capability_on($question, 'edit') || question_has_capability_on($question, 'view'))) {
-            return [$this->qbank->copy_question_moodle_url($question->id), 't/copy', $this->strcopy];
+            $this->print_icon('t/copy', $this->strcopy, $this->qbank->copy_question_url($question->id));
         }
-        return [null, null, null];
     }
 }

@@ -45,21 +45,29 @@
 defined('MOODLE_INTERNAL') || die;
 
 function xmldb_label_upgrade($oldversion) {
-    global $CFG;
+    global $CFG, $DB;
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
+    // Moodle v3.1.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
+    // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.7.0 release upgrade line.
+    // Automatically generated Moodle v3.3.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.8.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2017062800) {
+        // Update all records in 'course_modules' for labels to have showdescription = 1.
+        if ($modid = $DB->get_field('modules', 'id', ['name' => 'label'])) {
+            $DB->execute("UPDATE {course_modules} SET showdescription = ? WHERE module = ?",
+                [1, $modid]);
+        }
 
-    // Automatically generated Moodle v3.9.0 release upgrade line.
+        // Label savepoint reached.
+        upgrade_mod_savepoint(true, 2017062800, 'label');
+    }
+
+    // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
     return true;

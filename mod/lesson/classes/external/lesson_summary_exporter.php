@@ -301,7 +301,6 @@ class lesson_summary_exporter extends exporter {
         return [
             'component' => 'mod_lesson',
             'filearea' => 'intro',
-            'options' => array('noclean' => true),
         ];
     }
 }

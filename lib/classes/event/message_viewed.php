@@ -46,7 +46,7 @@ class message_viewed extends base {
      * Init method.
      */
     protected function init() {
-        $this->data['objecttable'] = 'message_user_actions';
+        $this->data['objecttable'] = 'message_read';
         $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
     }
@@ -97,13 +97,15 @@ class message_viewed extends base {
     }
 
     public static function get_objectid_mapping() {
-        return array('db' => 'message_user_actions', 'restore' => base::NOT_MAPPED);
+        // Messages are not backed up, so no need to map them.
+        return array('db' => 'message_read', 'restore' => base::NOT_MAPPED);
     }
 
     public static function get_other_mapping() {
         // Messages are not backed up, so no need to map them on restore.
         $othermapped = array();
-        $othermapped['messageid'] = array('db' => 'messages', 'restore' => base::NOT_MAPPED);
+        // The messages table could vary for older events - so cannot be mapped.
+        $othermapped['messageid'] = array('db' => base::NOT_MAPPED, 'restore' => base::NOT_MAPPED);
         return $othermapped;
     }
 }

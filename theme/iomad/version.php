@@ -15,15 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Iomad.
- *
  * @package    theme_iomad
- * @copyright  2016 Frédéric Massart
+ * @copyright  2013 Howard Miller
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2019111800;
-$plugin->requires  = 2019111200;
+$plugin->version   = 2013112400;
+$plugin->requires  = 2013110500;
 $plugin->component = 'theme_iomad';
+$plugin->dependencies = array(
+    'theme_bootstrapbase'  => 2013110500,
+);

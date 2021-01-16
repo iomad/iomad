@@ -77,10 +77,8 @@ class user_groups_editable extends \core\output\inplace_editable {
         foreach ($coursegroups as $group) {
             $options[$group->id] = format_string($group->name, true, ['context' => $this->context]);
         }
-
-        $fullname = fullname($user, has_capability('moodle/site:viewfullnames', $this->context));
-        $this->edithint = get_string('editusersgroupsa', 'group', $fullname);
-        $this->editlabel = get_string('editusersgroupsa', 'group', $fullname);
+        $this->edithint = get_string('editusersgroupsa', 'group', fullname($user));
+        $this->editlabel = get_string('editusersgroupsa', 'group', fullname($user));
 
         $attributes = ['multiple' => true];
         $this->set_type_autocomplete($options, $attributes);
@@ -100,7 +98,7 @@ class user_groups_editable extends \core\output\inplace_editable {
         }
 
         if (!empty($listofgroups)) {
-            $this->displayvalue = implode(', ', $listofgroups);
+            $this->displayvalue = implode($listofgroups, ', ');
         } else {
             $this->displayvalue = get_string('groupsnone');
         }

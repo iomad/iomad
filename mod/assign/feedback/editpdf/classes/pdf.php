@@ -23,13 +23,12 @@
  */
 
 namespace assignfeedback_editpdf;
-use setasign\Fpdi\TcpdfFpdi;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->libdir.'/pdflib.php');
-require_once($CFG->dirroot.'/mod/assign/feedback/editpdf/fpdi/autoload.php');
+require_once($CFG->dirroot.'/mod/assign/feedback/editpdf/fpdi/fpdi.php');
 
 /**
  * Library code for manipulating PDFs
@@ -38,7 +37,7 @@ require_once($CFG->dirroot.'/mod/assign/feedback/editpdf/fpdi/autoload.php');
  * @copyright 2012 Davo Smith
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class pdf extends TcpdfFpdi {
+class pdf extends \FPDI {
 
     /** @var int the number of the current page in the PDF being processed */
     protected $currentpage = 0;
@@ -71,24 +70,6 @@ class pdf extends TcpdfFpdi {
     const MIN_ANNOTATION_HEIGHT = 5;
     /** Blank PDF file used during error. */
     const BLANK_PDF = '/mod/assign/feedback/editpdf/fixtures/blank.pdf';
-    /** Page image file name prefix*/
-    const IMAGE_PAGE = 'image_page';
-    /**
-     * Get the name of the font to use in generated PDF files.
-     * If $CFG->pdfexportfont is set - use it, otherwise use "freesans" as this
-     * open licensed font has wide support for different language charsets.
-     *
-     * @return string
-     */
-    private function get_export_font_name() {
-        global $CFG;
-
-        $fontname = 'freesans';
-        if (!empty($CFG->pdfexportfont)) {
-            $fontname = $CFG->pdfexportfont;
-        }
-        return $fontname;
-    }
 
     /**
      * Combine the given PDF files into a single PDF. Optionally add a coversheet and coversheet fields.
@@ -105,8 +86,7 @@ class pdf extends TcpdfFpdi {
         $this->setPrintHeader(false);
         $this->setPrintFooter(false);
         $this->scale = 72.0 / 100.0;
-        // Use font supporting the widest range of characters.
-        $this->SetFont($this->get_export_font_name(), '', 16.0 * $this->scale, '', true);
+        $this->SetFont('helvetica', '', 16.0 * $this->scale);
         $this->SetTextColor(0, 0, 0);
 
         $totalpagecount = 0;
@@ -153,7 +133,7 @@ class pdf extends TcpdfFpdi {
 
         $this->setPageUnit('pt');
         $this->scale = 72.0 / 100.0;
-        $this->SetFont($this->get_export_font_name(), '', 16.0 * $this->scale, '', true);
+        $this->SetFont('helvetica', '', 16.0 * $this->scale);
         $this->SetFillColor(255, 255, 176);
         $this->SetDrawColor(0, 0, 0);
         $this->SetLineWidth(1.0 * $this->scale);
@@ -210,11 +190,14 @@ class pdf extends TcpdfFpdi {
         // Get the size (and deduce the orientation) of the next page.
         $template = $this->importPage($pageno);
         $size = $this->getTemplateSize($template);
-
+        $orientation = 'P';
+        if ($size['w'] > $size['h']) {
+            $orientation = 'L';
+        }
         // Create a page of the required size / orientation.
-        $this->AddPage($size['orientation'], array($size['width'], $size['height']));
+        $this->AddPage($orientation, array($size['w'], $size['h']));
         // Prevent new page creation when comments are at the bottom of a page.
-        $this->setPageOrientation($size['orientation'], false, 0);
+        $this->setPageOrientation($orientation, false, 0);
         // Fill in the page with the original contents from the student.
         $this->useTemplate($template);
     }
@@ -243,7 +226,7 @@ class pdf extends TcpdfFpdi {
         $this->SetFontSize(12 * $this->scale);
         $this->SetMargins(100 * $this->scale, 120 * $this->scale, -1, true);
         $this->SetAutoPageBreak(true, 100 * $this->scale);
-        $this->setHeaderFont(array($this->get_export_font_name(), '', 24 * $this->scale, '', true));
+        $this->setHeaderFont(array('helvetica', '', 24 * $this->scale));
         $this->setHeaderMargin(24 * $this->scale);
         $this->setHeaderData('', 0, '', get_string('commentindex', 'assignfeedback_editpdf'));
 
@@ -550,7 +533,7 @@ class pdf extends TcpdfFpdi {
             throw new \coding_exception('The specified image output folder is not a valid folder');
         }
 
-        $imagefile = $this->imagefolder . '/' . self::IMAGE_PAGE . $pageno . '.png';
+        $imagefile = $this->imagefolder.'/image_page' . $pageno . '.png';
         $generate = true;
         if (file_exists($imagefile)) {
             if (filemtime($imagefile) > filemtime($this->filename)) {
@@ -582,7 +565,7 @@ class pdf extends TcpdfFpdi {
             }
         }
 
-        return self::IMAGE_PAGE . $pageno . '.png';
+        return 'image_page'.$pageno.'.png';
     }
 
     /**
@@ -688,7 +671,7 @@ class pdf extends TcpdfFpdi {
         $pdf->set_image_folder($tmperrorimagefolder);
         $image = $pdf->get_image(0);
         $pdf->Close(); // PDF loaded and never saved/outputted needs to be closed.
-        $newimg = self::IMAGE_PAGE . $pageno . '.png';
+        $newimg = 'image_page' . $pageno . '.png';
 
         copy($tmperrorimagefolder . '/' . $image, $errorimagefolder . '/' . $newimg);
         return $newimg;
@@ -735,11 +718,7 @@ class pdf extends TcpdfFpdi {
         }
 
         $testimagefolder = \make_temp_directory('assignfeedback_editpdf_test');
-        $filepath = $testimagefolder . '/' . self::IMAGE_PAGE . '0.png';
-        // Delete any previous test images, if they exist.
-        if (file_exists($filepath)) {
-            unlink($filepath);
-        }
+        @unlink($testimagefolder.'/image_page0.png'); // Delete any previous test images.
 
         $pdf = new pdf();
         $pdf->set_pdf($testfile);
@@ -764,46 +743,10 @@ class pdf extends TcpdfFpdi {
         require_once($CFG->libdir.'/filelib.php');
 
         $testimagefolder = \make_temp_directory('assignfeedback_editpdf_test');
-        $testimage = $testimagefolder . '/' . self::IMAGE_PAGE . '0.png';
+        $testimage = $testimagefolder.'/image_page0.png';
         send_file($testimage, basename($testimage), 0);
         die();
     }
 
-    /**
-     * This function add an image file to PDF page.
-     * @param \stored_file $imagestoredfile Image file to be added
-     */
-    public function add_image_page($imagestoredfile) {
-        $imageinfo = $imagestoredfile->get_imageinfo();
-        $imagecontent = $imagestoredfile->get_content();
-        $this->currentpage++;
-        $template = $this->importPage($this->currentpage);
-        $size = $this->getTemplateSize($template);
-
-        if ($imageinfo["width"] > $imageinfo["height"]) {
-            if ($size['width'] < $size['height']) {
-                $temp = $size['width'];
-                $size['width'] = $size['height'];
-                $size['height'] = $temp;
-            }
-        } else if ($imageinfo["width"] < $imageinfo["height"]) {
-            if ($size['width'] > $size['height']) {
-                $temp = $size['width'];
-                $size['width'] = $size['height'];
-                $size['height'] = $temp;
-            }
-        }
-        $orientation = $size['orientation'];
-        $this->SetHeaderMargin(0);
-        $this->SetFooterMargin(0);
-        $this->SetMargins(0, 0, 0, true);
-        $this->setPrintFooter(false);
-        $this->setPrintHeader(false);
-
-        $this->AddPage($orientation, $size);
-        $this->SetAutoPageBreak(false, 0);
-        $this->Image('@' . $imagecontent, 0, 0, $size['w'], $size['h'],
-            '', '', '', false, null, '', false, false, 0);
-    }
 }
 

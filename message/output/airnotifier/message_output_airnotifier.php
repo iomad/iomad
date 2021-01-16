@@ -102,9 +102,6 @@ class message_output_airnotifier extends message_output {
             $extra->fullmessagehtml = clean_param($extra->fullmessagehtml, PARAM_NOTAGS);
         }
 
-        // Send wwwroot to airnotifier.
-        $extra->wwwroot = $CFG->wwwroot;
-
         // We are sending to message to all devices.
         $airnotifiermanager = new message_airnotifier_manager();
         $devicetokens = $airnotifiermanager->get_user_devices($CFG->airnotifiermobileappname, $eventdata->userto->id);
@@ -120,8 +117,6 @@ class message_output_airnotifier extends message_output {
             $header = array('Accept: application/json', 'X-AN-APP-NAME: ' . $CFG->airnotifierappname,
                 'X-AN-APP-KEY: ' . $CFG->airnotifieraccesskey);
             $curl = new curl;
-            // Push notifications are supposed to be instant, do not wait to long blocking the execution.
-            $curl->setopt(array('CURLOPT_TIMEOUT' => 2, 'CURLOPT_CONNECTTIMEOUT' => 2));
             $curl->setHeader($header);
 
             $params = array(

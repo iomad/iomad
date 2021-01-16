@@ -72,23 +72,23 @@ define('HOURMINS', 60);
 // or clean_param() should have a specified type of parameter.
 
 /**
- * PARAM_ALPHA - contains only English ascii letters [a-zA-Z].
+ * PARAM_ALPHA - contains only english ascii letters a-zA-Z.
  */
 define('PARAM_ALPHA',    'alpha');
 
 /**
- * PARAM_ALPHAEXT the same contents as PARAM_ALPHA (English ascii letters [a-zA-Z]) plus the chars in quotes: "_-" allowed
+ * PARAM_ALPHAEXT the same contents as PARAM_ALPHA plus the chars in quotes: "_-" allowed
  * NOTE: originally this allowed "/" too, please use PARAM_SAFEPATH if "/" needed
  */
 define('PARAM_ALPHAEXT', 'alphaext');
 
 /**
- * PARAM_ALPHANUM - expected numbers 0-9 and English ascii letters [a-zA-Z] only.
+ * PARAM_ALPHANUM - expected numbers and letters only.
  */
 define('PARAM_ALPHANUM', 'alphanum');
 
 /**
- * PARAM_ALPHANUMEXT - expected numbers 0-9, letters (English ascii letters [a-zA-Z]) and _- only.
+ * PARAM_ALPHANUMEXT - expected numbers, letters only and _-.
  */
 define('PARAM_ALPHANUMEXT', 'alphanumext');
 
@@ -137,16 +137,13 @@ define('PARAM_FILE',   'file');
  *
  * Note that you should not use PARAM_FLOAT for numbers typed in by the user.
  * It does not work for languages that use , as a decimal separator.
- * Use PARAM_LOCALISEDFLOAT instead.
+ * Instead, do something like
+ *     $rawvalue = required_param('name', PARAM_RAW);
+ *     // ... other code including require_login, which sets current lang ...
+ *     $realvalue = unformat_float($rawvalue);
+ *     // ... then use $realvalue
  */
 define('PARAM_FLOAT',  'float');
-
-/**
- * PARAM_LOCALISEDFLOAT - a localised real/floating point number.
- * This is preferred over PARAM_FLOAT for numbers typed in by the user.
- * Cleans localised numbers to computer readable numbers; false for invalid numbers.
- */
-define('PARAM_LOCALISEDFLOAT',  'localisedfloat');
 
 /**
  * PARAM_HOST - expected fully qualified domain name (FQDN) or an IPv4 dotted quad (IP address)
@@ -365,10 +362,6 @@ define('PAGE_COURSE_VIEW', 'course-view');
 define('GETREMOTEADDR_SKIP_HTTP_CLIENT_IP', '1');
 /** Get remote addr constant */
 define('GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR', '2');
-/**
- * GETREMOTEADDR_SKIP_DEFAULT defines the default behavior remote IP address validation.
- */
-define('GETREMOTEADDR_SKIP_DEFAULT', GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR|GETREMOTEADDR_SKIP_HTTP_CLIENT_IP);
 
 // Blog access level constant declaration.
 define ('BLOG_USER_LEVEL', 1);
@@ -461,6 +454,13 @@ define('MOD_ARCHETYPE_ASSIGNMENT', 2);
 define('MOD_ARCHETYPE_SYSTEM', 3);
 
 /**
+ * Return this from modname_get_types callback to use default display in activity chooser.
+ * Deprecated, will be removed in 3.5, TODO MDL-53697.
+ * @deprecated since Moodle 3.1
+ */
+define('MOD_SUBTYPE_NO_CHILDREN', 'modsubtypenochildren');
+
+/**
  * Security token used for allowing access
  * from external application such as web services.
  * Scripts do not use any session, performance is relatively
@@ -491,9 +491,16 @@ define('HOMEPAGE_MY', 1);
 define('HOMEPAGE_USER', 2);
 
 /**
- * URL of the Moodle sites registration portal.
+ * Hub directory url (should be moodle.org)
  */
-defined('HUB_MOODLEORGHUBURL') || define('HUB_MOODLEORGHUBURL', 'https://stats.moodle.org');
+define('HUB_HUBDIRECTORYURL', "https://hubdirectory.moodle.org");
+
+
+/**
+ * Moodle.net url (should be moodle.net)
+ */
+define('HUB_MOODLEORGHUBURL', "https://moodle.net");
+define('HUB_OLDMOODLEORGHUBURL', "http://hub.moodle.org");
 
 /**
  * Moodle mobile app service name
@@ -843,10 +850,6 @@ function clean_param($param, $type) {
             // Convert to float.
             return (float)$param;
 
-        case PARAM_LOCALISEDFLOAT:
-            // Convert to float.
-            return unformat_float($param, true);
-
         case PARAM_ALPHA:
             // Remove everything not `a-z`.
             return preg_replace('/[^a-zA-Z]/i', '', $param);
@@ -951,7 +954,7 @@ function clean_param($param, $type) {
         case PARAM_COMPONENT:
             // We do not want any guessing here, either the name is correct or not
             // please note only normalised component names are accepted.
-            if (!preg_match('/^[a-z][a-z0-9]*(_[a-z][a-z0-9_]*)?[a-z0-9]+$/', $param)) {
+            if (!preg_match('/^[a-z]+(_[a-z][a-z0-9_]*)?[a-z0-9]+$/', $param)) {
                 return '';
             }
             if (strpos($param, '__') !== false) {
@@ -1409,14 +1412,6 @@ function set_config($name, $value, $plugin=null) {
                 $config->value = $value;
                 $DB->insert_record('config', $config, false);
             }
-            // When setting config during a Behat test (in the CLI script, not in the web browser
-            // requests), remember which ones are set so that we can clear them later.
-            if (defined('BEHAT_TEST')) {
-                if (!property_exists($CFG, 'behat_cli_added_config')) {
-                    $CFG->behat_cli_added_config = [];
-                }
-                $CFG->behat_cli_added_config[$name] = true;
-            }
         }
         if ($name === 'siteidentifier') {
             cache_helper::update_site_identifier($value);
@@ -1632,64 +1627,18 @@ function get_users_from_config($value, $capability, $includeadmins = true) {
 /**
  * Invalidates browser caches and cached data in temp.
  *
+ * IMPORTANT - If you are adding anything here to do with the cache directory you should also have a look at
+ * {@link phpunit_util::reset_dataroot()}
+ *
  * @return void
  */
 function purge_all_caches() {
-    purge_caches();
-}
+    global $CFG, $DB;
 
-/**
- * Selectively invalidate different types of cache.
- *
- * Purges the cache areas specified.  By default, this will purge all caches but can selectively purge specific
- * areas alone or in combination.
- *
- * @param bool[] $options Specific parts of the cache to purge. Valid options are:
- *        'muc'    Purge MUC caches?
- *        'theme'  Purge theme cache?
- *        'lang'   Purge language string cache?
- *        'js'     Purge javascript cache?
- *        'filter' Purge text filter cache?
- *        'other'  Purge all other caches?
- */
-function purge_caches($options = []) {
-    $defaults = array_fill_keys(['muc', 'theme', 'lang', 'js', 'template', 'filter', 'other'], false);
-    if (empty(array_filter($options))) {
-        $options = array_fill_keys(array_keys($defaults), true); // Set all options to true.
-    } else {
-        $options = array_merge($defaults, array_intersect_key($options, $defaults)); // Override defaults with specified options.
-    }
-    if ($options['muc']) {
-        cache_helper::purge_all();
-    }
-    if ($options['theme']) {
-        theme_reset_all_caches();
-    }
-    if ($options['lang']) {
-        get_string_manager()->reset_caches();
-    }
-    if ($options['js']) {
-        js_reset_all_caches();
-    }
-    if ($options['template']) {
-        template_reset_all_caches();
-    }
-    if ($options['filter']) {
-        reset_text_filters_cache();
-    }
-    if ($options['other']) {
-        purge_other_caches();
-    }
-}
-
-/**
- * Purge all non-MUC caches not otherwise purged in purge_caches.
- *
- * IMPORTANT - If you are adding anything here to do with the cache directory you should also have a look at
- * {@link phpunit_util::reset_dataroot()}
- */
-function purge_other_caches() {
-    global $DB, $CFG;
+    reset_text_filters_cache();
+    js_reset_all_caches();
+    theme_reset_all_caches();
+    get_string_manager()->reset_caches();
     core_text::reset_caches();
     if (class_exists('core_plugin_manager')) {
         core_plugin_manager::reset_caches();
@@ -1703,6 +1652,7 @@ function purge_other_caches() {
     }
 
     $DB->reset_caches();
+    cache_helper::purge_all();
 
     // Purge all other caches: rss, simplepie, etc.
     clearstatcache();
@@ -2103,11 +2053,7 @@ function get_user_preferences($name = null, $default = null, $user = null) {
     } else if (isset($user->id)) {
         // Is a valid object.
     } else if (is_numeric($user)) {
-        if ($USER->id == $user) {
-            $user = $USER;
-        } else {
-            $user = (object)array('id' => (int)$user);
-        }
+        $user = (object)array('id' => (int)$user);
     } else {
         throw new coding_exception('Invalid $user parameter in get_user_preferences() call');
     }
@@ -2278,35 +2224,6 @@ function userdate($date, $format = '', $timezone = 99, $fixday = true, $fixhour 
 }
 
 /**
- * Returns a html "time" tag with both the exact user date with timezone information
- * as a datetime attribute in the W3C format, and the user readable date and time as text.
- *
- * @package core
- * @category time
- * @param int $date the timestamp in UTC, as obtained from the database.
- * @param string $format strftime format. You should probably get this using
- *        get_string('strftime...', 'langconfig');
- * @param int|float|string $timezone by default, uses the user's time zone. if numeric and
- *        not 99 then daylight saving will not be added.
- *        {@link http://docs.moodle.org/dev/Time_API#Timezone}
- * @param bool $fixday If true (default) then the leading zero from %d is removed.
- *        If false then the leading zero is maintained.
- * @param bool $fixhour If true (default) then the leading zero from %I is removed.
- * @return string the formatted date/time.
- */
-function userdate_htmltime($date, $format = '', $timezone = 99, $fixday = true, $fixhour = true) {
-    $userdatestr = userdate($date, $format, $timezone, $fixday, $fixhour);
-    if (CLI_SCRIPT && !PHPUNIT_TEST) {
-        return $userdatestr;
-    }
-    $machinedate = new DateTime();
-    $machinedate->setTimestamp(intval($date));
-    $machinedate->setTimezone(core_date::get_user_timezone_object());
-
-    return html_writer::tag('time', $userdatestr, ['datetime' => $machinedate->format(DateTime::W3C)]);
-}
-
-/**
  * Returns a formatted date ensuring it is UTF-8.
  *
  * If we are running under Windows convert to Windows encoding and then back to UTF-8
@@ -2380,29 +2297,6 @@ function usertime($date, $timezone=99) {
     $dst = dst_offset_on($date, $timezone);
 
     return $date - $userdate->getOffset() + $dst;
-}
-
-/**
- * Get a formatted string representation of an interval between two unix timestamps.
- *
- * E.g.
- * $intervalstring = get_time_interval_string(12345600, 12345660);
- * Will produce the string:
- * '0d 0h 1m'
- *
- * @param int $time1 unix timestamp
- * @param int $time2 unix timestamp
- * @param string $format string (can be lang string) containing format chars: https://www.php.net/manual/en/dateinterval.format.php.
- * @return string the formatted string describing the time difference, e.g. '10d 11h 45m'.
- */
-function get_time_interval_string(int $time1, int $time2, string $format = ''): string {
-    $dtdate = new DateTime();
-    $dtdate->setTimeStamp($time1);
-    $dtdate2 = new DateTime();
-    $dtdate2->setTimeStamp($time2);
-    $interval = $dtdate2->diff($dtdate);
-    $format = empty($format) ? get_string('dateintervaldayshoursmins', 'langconfig') : $format;
-    return $interval->format($format);
 }
 
 /**
@@ -2590,9 +2484,6 @@ function dayofweek($day, $month, $year) {
 /**
  * Returns full login url.
  *
- * Any form submissions for authentication to this URL must include username,
- * password as well as a logintoken generated by \core\session\manager::get_login_token().
- *
  * @return string login url
  */
 function get_login_url() {
@@ -2730,11 +2621,6 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 $authplugin = get_auth_plugin($authname);
                 $authplugin->pre_loginpage_hook();
                 if (isloggedin()) {
-                    if ($cm) {
-                        $modinfo = get_fast_modinfo($course);
-                        $cm = $modinfo->get_cm($cm->id);
-                    }
-                    set_access_log_user();
                     break;
                 }
             }
@@ -2800,15 +2686,6 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     // Make sure the USER has a sesskey set up. Used for CSRF protection.
     sesskey();
 
-    if (\core\session\manager::is_loggedinas()) {
-        // During a "logged in as" session we should force all content to be cleaned because the
-        // logged in user will be viewing potentially malicious user generated content.
-        // See MDL-63786 for more details.
-        $CFG->forceclean = true;
-    }
-
-    $afterlogins = get_plugins_with_function('after_require_login', 'lib.php');
-
     // Do not bother admins with any formalities, except for activities pending deletion.
     if (is_siteadmin() && !($cm && $cm->deletioninprogress)) {
         // Set the global $COURSE.
@@ -2819,16 +2696,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             $PAGE->set_course($course);
         }
         // Set accesstime or the user will appear offline which messes up messaging.
-        // Do not update access time for webservice or ajax requests.
-        if (!WS_SERVER && !AJAX_SCRIPT) {
-            user_accesstime_log($course->id);
-        }
-
-        foreach ($afterlogins as $plugintype => $plugins) {
-            foreach ($plugins as $pluginfunction) {
-                $pluginfunction($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
-            }
-        }
+        user_accesstime_log($course->id);
         return;
     }
 
@@ -2957,7 +2825,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                     $USER->enrol['enrolled'][$course->id] = $until;
                     $access = true;
 
-                } else if (core_course_category::can_view_course_info($course)) {
+                } else {
                     $params = array('courseid' => $course->id, 'status' => ENROL_INSTANCE_ENABLED);
                     $instances = $DB->get_records('enrol', $params, 'sortorder, id ASC');
                     $enrols = enrol_get_plugins(true);
@@ -2992,16 +2860,6 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                             }
                         }
                     }
-                } else {
-                    // User is not enrolled and is not allowed to browse courses here.
-                    if ($preventredirect) {
-                        throw new require_login_exception('Course is not available');
-                    }
-                    $PAGE->set_context(null);
-                    // We need to override the navigation URL as the course won't have been added to the navigation and thus
-                    // the navigation will mess up when trying to find it.
-                    navigation_node::override_active_url(new moodle_url('/'));
-                    notice(get_string('coursehidden'), $CFG->wwwroot .'/');
                 }
             }
         }
@@ -3046,27 +2904,10 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         $PAGE->set_course($course);
     }
 
-    foreach ($afterlogins as $plugintype => $plugins) {
-        foreach ($plugins as $pluginfunction) {
-            $pluginfunction($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
-        }
-    }
-
     // Finally access granted, update lastaccess times.
-    // Do not update access time for webservice or ajax requests.
-    if (!WS_SERVER && !AJAX_SCRIPT) {
-        user_accesstime_log($course->id);
-    }
+    user_accesstime_log($course->id);
 }
 
-/**
- * A convenience function for where we must be logged in as admin
- * @return void
- */
-function require_admin() {
-    require_login(null, false);
-    require_capability('moodle/site:config', context_system::instance());
-}
 
 /**
  * This function just makes sure a user is logged out.
@@ -3190,10 +3031,7 @@ function require_course_login($courseorid, $autologinguest = true, $cm = null, $
             // If $PAGE->course, and hence $PAGE->context, have not already been set up properly, set them up now.
             $PAGE->set_course($PAGE->course);
         }
-        // Do not update access time for webservice or ajax requests.
-        if (!WS_SERVER && !AJAX_SCRIPT) {
-            user_accesstime_log(SITEID);
-        }
+        user_accesstime_log(SITEID);
         return;
 
     } else {
@@ -3239,10 +3077,9 @@ function validate_user_key($keyvalue, $script, $instance) {
  * @uses PARAM_ALPHANUM
  * @param string $script unique script identifier
  * @param int $instance optional instance id
- * @param string $keyvalue The key. If not supplied, this will be fetched from the current session.
  * @return int Instance ID
  */
-function require_user_key_login($script, $instance = null, $keyvalue = null) {
+function require_user_key_login($script, $instance=null) {
     global $DB;
 
     if (!NO_MOODLE_COOKIES) {
@@ -3252,17 +3089,13 @@ function require_user_key_login($script, $instance = null, $keyvalue = null) {
     // Extra safety.
     \core\session\manager::write_close();
 
-    if (null === $keyvalue) {
-        $keyvalue = required_param('key', PARAM_ALPHANUM);
-    }
+    $keyvalue = required_param('key', PARAM_ALPHANUM);
 
     $key = validate_user_key($keyvalue, $script, $instance);
 
     if (!$user = $DB->get_record('user', array('id' => $key->userid))) {
         print_error('invaliduserid');
     }
-
-    core_user::require_active_user($user, true, true);
 
     // Emulate normal session.
     enrol_check_plugins($user);
@@ -3524,12 +3357,11 @@ function ismoving($courseid) {
  * Returns a persons full name
  *
  * Given an object containing all of the users name values, this function returns a string with the full name of the person.
- * The result may depend on system settings or language. 'override' will force the alternativefullnameformat to be used. In
- * English, fullname as well as alternativefullnameformat is set to 'firstname lastname' by default. But you could have
- * fullname set to 'firstname lastname' and alternativefullnameformat set to 'firstname middlename alternatename lastname'.
+ * The result may depend on system settings or language.  'override' will force both names to be used even if system settings
+ * specify one.
  *
  * @param stdClass $user A {@link $USER} object to get full name of.
- * @param bool $override If true then the alternativefullnameformat format rather than fullnamedisplay format will be used.
+ * @param bool $override If true then the name will be firstname followed by lastname rather than adhering to fullnamedisplay.
  * @return string
  */
 function fullname($user, $override=false) {
@@ -3769,38 +3601,25 @@ function get_extra_user_fields($context, $already = array()) {
         return array();
     }
 
-    // Split showuseridentity on comma (filter needed in case the showuseridentity is empty).
-    $extra = array_filter(explode(',', $CFG->showuseridentity));
-
+    // Split showuseridentity on comma.
+    if (empty($CFG->showuseridentity)) {
+        // Explode gives wrong result with empty string.
+        $extra = array();
+    } else {
+        $extra =  explode(',', $CFG->showuseridentity);
+    }
+    $renumber = false;
     foreach ($extra as $key => $field) {
         if (in_array($field, $already)) {
             unset($extra[$key]);
+            $renumber = true;
         }
     }
-
-    // If the identity fields are also among hidden fields, make sure the user can see them.
-    $hiddenfields = array_filter(explode(',', $CFG->hiddenuserfields));
-    $hiddenidentifiers = array_intersect($extra, $hiddenfields);
-
-    if ($hiddenidentifiers) {
-        if ($context->get_course_context(false)) {
-            // We are somewhere inside a course.
-            $canviewhiddenuserfields = has_capability('moodle/course:viewhiddenuserfields', $context);
-
-        } else {
-            // We are not inside a course.
-            $canviewhiddenuserfields = has_capability('moodle/user:viewhiddendetails', $context);
-        }
-
-        if (!$canviewhiddenuserfields) {
-            // Remove hidden identifiers from the list.
-            $extra = array_diff($extra, $hiddenidentifiers);
-        }
+    if ($renumber) {
+        // For consistency, if entries are removed from array, renumber it
+        // so they are numbered as you would expect.
+        $extra = array_merge($extra);
     }
-
-    // Re-index the entries.
-    $extra = array_values($extra);
-
     return $extra;
 }
 
@@ -3856,9 +3675,6 @@ function get_user_field_name($field) {
         }
         case 'msn' : {
             return get_string('msnid');
-        }
-        case 'picture' : {
-            return get_string('pictureofuser');
         }
     }
     // Otherwise just use the same lang string.
@@ -4192,7 +4008,7 @@ function truncate_userinfo(array $info) {
  * @throws coding_exception if invalid $user parameter detected
  */
 function delete_user(stdClass $user) {
-    global $CFG, $DB, $SESSION;
+    global $CFG, $DB;
     require_once($CFG->libdir.'/grouplib.php');
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->dirroot.'/message/lib.php');
@@ -4241,6 +4057,9 @@ function delete_user(stdClass $user) {
     // Delete all grades - backup is kept in grade_grades_history table.
     grade_user_delete($user->id);
 
+    // Move unread messages from this user to read.
+    message_move_userfrom_unread2read($user->id);
+
     // TODO: remove from cohorts using standard API here.
 
     // Remove user tags.
@@ -4253,16 +4072,7 @@ function delete_user(stdClass $user) {
     // This might be slow but it is really needed - modules might do some extra cleanup!
     role_unassign_all(array('userid' => $user->id));
 
-    // Notify the competency subsystem.
-    \core_competency\api::hook_user_deleted($user->id);
-
     // Now do a brute force cleanup.
-
-    // Delete all user events and subscription events.
-    $DB->delete_records_select('event', 'userid = :userid AND subscriptionid IS NOT NULL', ['userid' => $user->id]);
-
-    // Now, delete all calendar subscription from the user.
-    $DB->delete_records('event_subscriptions', ['userid' => $user->id]);
 
     // Remove from all cohorts.
     $DB->delete_records('cohort_members', array('userid' => $user->id));
@@ -4296,23 +4106,12 @@ function delete_user(stdClass $user) {
     // Remove users customised pages.
     $DB->delete_records('my_pages', array('userid' => $user->id, 'private' => 1));
 
-    // Delete user from $SESSION->bulk_users.
-    if (isset($SESSION->bulk_users[$user->id])) {
-        unset($SESSION->bulk_users[$user->id]);
-    }
-
     // Force logout - may fail if file based sessions used, sorry.
     \core\session\manager::kill_user_sessions($user->id);
 
     // Generate username from email address, or a fake email.
     $delemail = !empty($user->email) ? $user->email : $user->username . '.' . $user->id . '@unknownemail.invalid';
-
-    $deltime = time();
-    $deltimelength = core_text::strlen((string) $deltime);
-
-    // Max username length is 100 chars. Select up to limit - (length of current time + 1 [period character]) from users email.
-    $delname = clean_param($delemail, PARAM_USERNAME);
-    $delname = core_text::substr($delname, 0, 100 - ($deltimelength + 1)) . ".{$deltime}";
+    $delname = clean_param($delemail . "." . time(), PARAM_USERNAME);
 
     // Workaround for bulk deletes of users with the same email address.
     while ($DB->record_exists('user', array('username' => $delname))) { // No need to use mnethostid here.
@@ -4327,16 +4126,13 @@ function delete_user(stdClass $user) {
     $updateuser->email        = md5($user->username);// Store hash of username, useful importing/restoring users.
     $updateuser->idnumber     = '';                  // Clear this field to free it up.
     $updateuser->picture      = 0;
-    $updateuser->timemodified = $deltime;
+    $updateuser->timemodified = time();
 
     // Don't trigger update event, as user is being deleted.
     user_update_user($updateuser, false, false);
 
-    // Delete all content associated with the user context, but not the context itself.
-    $usercontext->delete_content();
-
-    // Delete any search data.
-    \core_search\manager::context_deleted($usercontext);
+    // Now do a final accesslib cleanup - removes all role assignments in user context and context itself.
+    context_helper::delete_instance(CONTEXT_USER, $user->id);
 
     // Any plugin that needs to cleanup should register this event.
     // Trigger event.
@@ -4405,11 +4201,10 @@ function guest_user() {
  * @param string $password  User's password
  * @param bool $ignorelockout useful when guessing is prevented by other mechanism such as captcha or SSO
  * @param int $failurereason login failure reason, can be used in renderers (it may disclose if account exists)
- * @param mixed logintoken If this is set to a string it is validated against the login token for the session.
  * @return stdClass|false A {@link $USER} object or false if error
  */
-function authenticate_user_login($username, $password, $ignorelockout=false, &$failurereason=null, $logintoken=false) {
-    global $CFG, $DB, $PAGE;
+function authenticate_user_login($username, $password, $ignorelockout=false, &$failurereason=null) {
+    global $CFG, $DB;
     require_once("$CFG->libdir/authlib.php");
 
     if ($user = get_complete_user_data('username', $username, $CFG->mnet_localhost_id)) {
@@ -4428,23 +4223,6 @@ function authenticate_user_login($username, $password, $ignorelockout=false, &$f
             }
             unset($users);
         }
-    }
-
-    // Make sure this request came from the login form.
-    if (!\core\session\manager::validate_login_token($logintoken)) {
-        $failurereason = AUTH_LOGIN_FAILED;
-
-        // Trigger login failed event (specifying the ID of the found user, if available).
-        \core\event\user_login_failed::create([
-            'userid' => ($user->id ?? 0),
-            'other' => [
-                'username' => $username,
-                'reason' => $failurereason,
-            ],
-        ])->trigger();
-
-        error_log('[client '.getremoteaddr()."]  $CFG->wwwroot  Invalid Login Token:  $username  ".$_SERVER['HTTP_USER_AGENT']);
-        return false;
     }
 
     $authsenabled = get_enabled_auth_plugins();
@@ -4526,42 +4304,6 @@ function authenticate_user_login($username, $password, $ignorelockout=false, &$f
         // On auth fail fall through to the next plugin.
         if (!$authplugin->user_login($username, $password)) {
             continue;
-        }
-
-        // Before performing login actions, check if user still passes password policy, if admin setting is enabled.
-        if (!empty($CFG->passwordpolicycheckonlogin)) {
-            $errmsg = '';
-            $passed = check_password_policy($password, $errmsg, $user);
-            if (!$passed) {
-                // First trigger event for failure.
-                $failedevent = \core\event\user_password_policy_failed::create_from_user($user);
-                $failedevent->trigger();
-
-                // If able to change password, set flag and move on.
-                if ($authplugin->can_change_password()) {
-                    // Check if we are on internal change password page, or service is external, don't show notification.
-                    $internalchangeurl = new moodle_url('/login/change_password.php');
-                    if (!($PAGE->has_set_url() && $internalchangeurl->compare($PAGE->url)) && $authplugin->is_internal()) {
-                        \core\notification::error(get_string('passwordpolicynomatch', '', $errmsg));
-                    }
-                    set_user_preference('auth_forcepasswordchange', 1, $user);
-                } else if ($authplugin->can_reset_password()) {
-                    // Else force a reset if possible.
-                    \core\notification::error(get_string('forcepasswordresetnotice', '', $errmsg));
-                    redirect(new moodle_url('/login/forgot_password.php'));
-                } else {
-                    $notifymsg = get_string('forcepasswordresetfailurenotice', '', $errmsg);
-                    // If support page is set, add link for help.
-                    if (!empty($CFG->supportpage)) {
-                        $link = \html_writer::link($CFG->supportpage, $CFG->supportpage);
-                        $link = \html_writer::tag('p', $link);
-                        $notifymsg .= $link;
-                    }
-
-                    // If no change or reset is possible, add a notification for user.
-                    \core\notification::error($notifymsg);
-                }
-            }
         }
 
         // Successful authentication.
@@ -4667,7 +4409,7 @@ function authenticate_user_login($username, $password, $ignorelockout=false, &$f
  * @return stdClass A {@link $USER} object - BC only, do not use
  */
 function complete_user_login($user) {
-    global $CFG, $DB, $USER, $SESSION;
+    global $CFG, $USER, $SESSION;
 
     \core\session\manager::login_user($user);
 
@@ -4691,16 +4433,6 @@ function complete_user_login($user) {
     );
     $event->trigger();
 
-    // Queue migrating the messaging data, if we need to.
-    if (!get_user_preferences('core_message_migrate_data', false, $USER->id)) {
-        // Check if there are any legacy messages to migrate.
-        if (\core_message\helper::legacy_messages_exist($USER->id)) {
-            \core_message\task\migrate_message_data::queue_task($USER->id);
-        } else {
-            set_user_preference('core_message_migrate_data', true, $USER->id);
-        }
-    }
-
     if (isguestuser()) {
         // No need to continue when user is THE guest.
         return $USER;
@@ -4713,19 +4445,6 @@ function complete_user_login($user) {
 
     // Select password change url.
     $userauth = get_auth_plugin($USER->auth);
-
-    // IOMAD: if we have a SESSION for the company
-    // Check that it matches the user's actual company.
-    if (!empty($SESSION->currenteditingcompany)) {
-        if ($company = company::by_userid($USER->id, true)) {
-            if ($company->id != $SESSION->currenteditingcompany) {
-                $SESSION->currenteditingcompany = $company->id;
-                $SESSION->company = $company;
-            }
-        } else {
-            unset($SESSION->currenteditingcompany);
-        }
-    }
 
     // Check whether the user should be changing password.
     if (get_user_preferences('auth_forcepasswordchange', false)) {
@@ -4917,42 +4636,18 @@ function update_internal_user_password($user, $password, $fasthash = false) {
  * @param string $field The user field to be checked for a given value.
  * @param string $value The value to match for $field.
  * @param int $mnethostid
- * @param bool $throwexception If true, it will throw an exception when there's no record found or when there are multiple records
- *                              found. Otherwise, it will just return false.
  * @return mixed False, or A {@link $USER} object.
  */
-function get_complete_user_data($field, $value, $mnethostid = null, $throwexception = false) {
+function get_complete_user_data($field, $value, $mnethostid = null) {
     global $CFG, $DB;
 
     if (!$field || !$value) {
         return false;
     }
 
-    // Change the field to lowercase.
-    $field = core_text::strtolower($field);
-
-    // List of case insensitive fields.
-    $caseinsensitivefields = ['email'];
-
-    // Username input is forced to lowercase and should be case sensitive.
-    if ($field == 'username') {
-        $value = core_text::strtolower($value);
-    }
-
     // Build the WHERE clause for an SQL query.
     $params = array('fieldval' => $value);
-
-    // Do a case-insensitive query, if necessary. These are generally very expensive. The performance can be improved on some DBs
-    // such as MySQL by pre-filtering users with accent-insensitive subselect.
-    if (in_array($field, $caseinsensitivefields)) {
-        $fieldselect = $DB->sql_equal($field, ':fieldval', false);
-        $idsubselect = $DB->sql_equal($field, ':fieldval2', false, false);
-        $params['fieldval2'] = $value;
-    } else {
-        $fieldselect = "$field = :fieldval";
-        $idsubselect = '';
-    }
-    $constraints = "$fieldselect AND deleted <> 1";
+    $constraints = "$field = :fieldval AND deleted <> 1";
 
     // If we are loading user data based on anything other than id,
     // we must also restrict our search based on mnet host.
@@ -4967,23 +4662,9 @@ function get_complete_user_data($field, $value, $mnethostid = null, $throwexcept
         $constraints .= " AND mnethostid = :mnethostid";
     }
 
-    if ($idsubselect) {
-        $constraints .= " AND id IN (SELECT id FROM {user} WHERE {$idsubselect})";
-    }
-
     // Get all the basic user data.
-    try {
-        // Make sure that there's only a single record that matches our query.
-        // For example, when fetching by email, multiple records might match the query as there's no guarantee that email addresses
-        // are unique. Therefore we can't reliably tell whether the user profile data that we're fetching is the correct one.
-        $user = $DB->get_record_select('user', $constraints, $params, '*', MUST_EXIST);
-    } catch (dml_exception $exception) {
-        if ($throwexception) {
-            throw $exception;
-        } else {
-            // Return false when no records or multiple records were found.
-            return false;
-        }
+    if (! $user = $DB->get_record_select('user', $constraints, $params)) {
+        return false;
     }
 
     // Get various settings and preferences.
@@ -5017,14 +4698,6 @@ function get_complete_user_data($field, $value, $mnethostid = null, $throwexcept
         }
     }
 
-    // Add cohort theme.
-    if (!empty($CFG->allowcohortthemes)) {
-        require_once($CFG->dirroot . '/cohort/lib.php');
-        if ($cohorttheme = cohort_get_user_cohort_theme($user->id)) {
-            $user->cohorttheme = $cohorttheme;
-        }
-    }
-
     // Add the custom profile fields to the user record.
     $user->profile = array();
     if (!isguestuser($user)) {
@@ -5053,45 +4726,37 @@ function get_complete_user_data($field, $value, $mnethostid = null, $throwexcept
  *
  * @param string $password the password to be checked against the password policy
  * @param string $errmsg the error message to display when the password doesn't comply with the policy.
- * @param stdClass $user the user object to perform password validation against. Defaults to null if not provided.
- *
  * @return bool true if the password is valid according to the policy. false otherwise.
  */
-function check_password_policy($password, &$errmsg, $user = null) {
+function check_password_policy($password, &$errmsg) {
     global $CFG;
 
-    if (!empty($CFG->passwordpolicy)) {
-        $errmsg = '';
-        if (core_text::strlen($password) < $CFG->minpasswordlength) {
-            $errmsg .= '<div>'. get_string('errorminpasswordlength', 'auth', $CFG->minpasswordlength) .'</div>';
-        }
-        if (preg_match_all('/[[:digit:]]/u', $password, $matches) < $CFG->minpassworddigits) {
-            $errmsg .= '<div>'. get_string('errorminpassworddigits', 'auth', $CFG->minpassworddigits) .'</div>';
-        }
-        if (preg_match_all('/[[:lower:]]/u', $password, $matches) < $CFG->minpasswordlower) {
-            $errmsg .= '<div>'. get_string('errorminpasswordlower', 'auth', $CFG->minpasswordlower) .'</div>';
-        }
-        if (preg_match_all('/[[:upper:]]/u', $password, $matches) < $CFG->minpasswordupper) {
-            $errmsg .= '<div>'. get_string('errorminpasswordupper', 'auth', $CFG->minpasswordupper) .'</div>';
-        }
-        if (preg_match_all('/[^[:upper:][:lower:][:digit:]]/u', $password, $matches) < $CFG->minpasswordnonalphanum) {
-            $errmsg .= '<div>'. get_string('errorminpasswordnonalphanum', 'auth', $CFG->minpasswordnonalphanum) .'</div>';
-        }
-        if (!check_consecutive_identical_characters($password, $CFG->maxconsecutiveidentchars)) {
-            $errmsg .= '<div>'. get_string('errormaxconsecutiveidentchars', 'auth', $CFG->maxconsecutiveidentchars) .'</div>';
-        }
+    if (empty($CFG->passwordpolicy)) {
+        return true;
+    }
 
-        // Fire any additional password policy functions from plugins.
-        // Plugin functions should output an error message string or empty string for success.
-        $pluginsfunction = get_plugins_with_function('check_password_policy');
-        foreach ($pluginsfunction as $plugintype => $plugins) {
-            foreach ($plugins as $pluginfunction) {
-                $pluginerr = $pluginfunction($password, $user);
-                if ($pluginerr) {
-                    $errmsg .= '<div>'. $pluginerr .'</div>';
-                }
-            }
-        }
+    $errmsg = '';
+    if (core_text::strlen($password) < $CFG->minpasswordlength) {
+        $errmsg .= '<div>'. get_string('errorminpasswordlength', 'auth', $CFG->minpasswordlength) .'</div>';
+
+    }
+    if (preg_match_all('/[[:digit:]]/u', $password, $matches) < $CFG->minpassworddigits) {
+        $errmsg .= '<div>'. get_string('errorminpassworddigits', 'auth', $CFG->minpassworddigits) .'</div>';
+
+    }
+    if (preg_match_all('/[[:lower:]]/u', $password, $matches) < $CFG->minpasswordlower) {
+        $errmsg .= '<div>'. get_string('errorminpasswordlower', 'auth', $CFG->minpasswordlower) .'</div>';
+
+    }
+    if (preg_match_all('/[[:upper:]]/u', $password, $matches) < $CFG->minpasswordupper) {
+        $errmsg .= '<div>'. get_string('errorminpasswordupper', 'auth', $CFG->minpasswordupper) .'</div>';
+
+    }
+    if (preg_match_all('/[^[:upper:][:lower:][:digit:]]/u', $password, $matches) < $CFG->minpasswordnonalphanum) {
+        $errmsg .= '<div>'. get_string('errorminpasswordnonalphanum', 'auth', $CFG->minpasswordnonalphanum) .'</div>';
+    }
+    if (!check_consecutive_identical_characters($password, $CFG->maxconsecutiveidentchars)) {
+        $errmsg .= '<div>'. get_string('errormaxconsecutiveidentchars', 'auth', $CFG->maxconsecutiveidentchars) .'</div>';
     }
 
     if ($errmsg == '') {
@@ -5153,13 +4818,6 @@ function delete_course($courseorid, $showfeedback = true) {
         }
     }
 
-    // Tell the search manager we are about to delete a course. This prevents us sending updates
-    // for each individual context being deleted.
-    \core_search\manager::course_deleting_start($courseid);
-
-    $handler = core_course\customfield\course_handler::create();
-    $handler->delete_instance($courseid);
-
     // Make the course completely empty.
     remove_course_contents($courseid, $showfeedback);
 
@@ -5173,9 +4831,6 @@ function delete_course($courseorid, $showfeedback = true) {
     if (class_exists('format_base', false)) {
         format_base::reset_course_cache($courseid);
     }
-
-    // Tell search that we have deleted the course so it can delete course data from the index.
-    \core_search\manager::course_deleting_finish($courseid);
 
     // Trigger a course deleted event.
     $event = \core\event\course_deleted::create(array(
@@ -5262,9 +4917,6 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
         echo $OUTPUT->notification($strdeleted.get_string('type_block_plural', 'plugin'), 'notifysuccess');
     }
 
-    $DB->set_field('course_modules', 'deletioninprogress', '1', ['course' => $courseid]);
-    rebuild_course_cache($courseid, true);
-
     // Get the list of all modules that are properly installed.
     $allmodules = $DB->get_records_menu('modules', array(), '', 'name, id');
 
@@ -5285,12 +4937,13 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
 
             include_once("$moddir/lib.php");                 // Shows php warning only if plugin defective.
             $moddelete = $modname .'_delete_instance';       // Delete everything connected to an instance.
+            $moddeletecourse = $modname .'_delete_course';   // Delete other stray stuff (uncommon).
 
             if ($instances) {
                 foreach ($instances as $cm) {
                     if ($cm->id) {
                         // Delete activity context questions and question categories.
-                        question_delete_activity($cm);
+                        question_delete_activity($cm,  $showfeedback);
                         // Notify the competency subsystem.
                         \core_competency\api::hook_course_module_deleted($cm);
                     }
@@ -5306,11 +4959,15 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
                     if ($cm->id) {
                         // Delete cm and its context - orphaned contexts are purged in cron in case of any race condition.
                         context_helper::delete_instance(CONTEXT_MODULE, $cm->id);
-                        $DB->delete_records('course_modules_completion', ['coursemoduleid' => $cm->id]);
                         $DB->delete_records('course_modules', array('id' => $cm->id));
-                        rebuild_course_cache($cm->course, true);
                     }
                 }
+            }
+            if (function_exists($moddeletecourse)) {
+                // Execute optional course cleanup callback. Deprecated since Moodle 3.2. TODO MDL-53297 remove in 3.6.
+                debugging("Callback delete_course is deprecated. Function $moddeletecourse should be converted " .
+                    'to observer of event \core\event\course_content_deleted', DEBUG_DEVELOPER);
+                $moddeletecourse($course, $showfeedback);
             }
             if ($instances and $showfeedback) {
                 echo $OUTPUT->notification($strdeleted.get_string('pluginname', $modname), 'notifysuccess');
@@ -5328,8 +4985,9 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     // Remove all data from availability and completion tables that is associated
     // with course-modules belonging to this course. Note this is done even if the
     // features are not enabled now, in case they were enabled previously.
-    $DB->delete_records_subquery('course_modules_completion', 'coursemoduleid', 'id',
-            'SELECT id from {course_modules} WHERE course = ?', [$courseid]);
+    $DB->delete_records_select('course_modules_completion',
+           'coursemoduleid IN (SELECT id from {course_modules} WHERE course=?)',
+           array($courseid));
 
     // Remove course-module data that has not been removed in modules' _delete_instance callbacks.
     $cms = $DB->get_records('course_modules', array('course' => $course->id));
@@ -5344,24 +5002,32 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
         }
         context_helper::delete_instance(CONTEXT_MODULE, $cm->id);
         $DB->delete_records('course_modules', array('id' => $cm->id));
-        rebuild_course_cache($cm->course, true);
     }
 
     if ($showfeedback) {
         echo $OUTPUT->notification($strdeleted.get_string('type_mod_plural', 'plugin'), 'notifysuccess');
     }
 
-    // Delete questions and question categories.
-    question_delete_course($course);
-    if ($showfeedback) {
-        echo $OUTPUT->notification($strdeleted.get_string('questions', 'question'), 'notifysuccess');
+    // Cleanup the rest of plugins. Deprecated since Moodle 3.2. TODO MDL-53297 remove in 3.6.
+    $cleanuplugintypes = array('report', 'coursereport', 'format');
+    $callbacks = get_plugins_with_function('delete_course', 'lib.php');
+    foreach ($cleanuplugintypes as $type) {
+        if (!empty($callbacks[$type])) {
+            foreach ($callbacks[$type] as $pluginfunction) {
+                debugging("Callback delete_course is deprecated. Function $pluginfunction should be converted " .
+                    'to observer of event \core\event\course_content_deleted', DEBUG_DEVELOPER);
+                $pluginfunction($course->id, $showfeedback);
+            }
+            if ($showfeedback) {
+                echo $OUTPUT->notification($strdeleted.get_string('type_'.$type.'_plural', 'plugin'), 'notifysuccess');
+            }
+        }
     }
 
-    // Delete content bank contents.
-    $cb = new \core_contentbank\contentbank();
-    $cbdeleted = $cb->delete_contents($coursecontext);
-    if ($showfeedback && $cbdeleted) {
-        echo $OUTPUT->notification($strdeleted.get_string('contentbank', 'contentbank'), 'notifysuccess');
+    // Delete questions and question categories.
+    question_delete_course($course, $showfeedback);
+    if ($showfeedback) {
+        echo $OUTPUT->notification($strdeleted.get_string('questions', 'question'), 'notifysuccess');
     }
 
     // Make sure there are no subcontexts left - all valid blocks and modules should be already gone.
@@ -5371,14 +5037,11 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     }
     unset($childcontexts);
 
-    // Remove roles and enrolments by default.
+    // Remove all roles and enrolments by default.
     if (empty($options['keep_roles_and_enrolments'])) {
         // This hack is used in restore when deleting contents of existing course.
-        // During restore, we should remove only enrolment related data that the user performing the restore has a
-        // permission to remove.
-        $userid = $options['userid'] ?? null;
-        enrol_course_delete($course, $userid);
         role_unassign_all(array('contextid' => $coursecontext->id, 'component' => ''), true);
+        enrol_course_delete($course);
         if ($showfeedback) {
             echo $OUTPUT->notification($strdeleted.get_string('type_enrol_plural', 'plugin'), 'notifysuccess');
         }
@@ -5634,9 +5297,11 @@ function reset_course_userdata($data) {
     if (!empty($data->reset_roles_overrides)) {
         $children = $context->get_child_contexts();
         foreach ($children as $child) {
-            $child->delete_capabilities();
+            $DB->delete_records('role_capabilities', array('contextid' => $child->id));
         }
-        $context->delete_capabilities();
+        $DB->delete_records('role_capabilities', array('contextid' => $context->id));
+        // Force refresh for logged in users.
+        $context->mark_dirty();
         $status[] = array('component' => $componentstr, 'item' => get_string('deletecourseoverrides', 'role'), 'error' => false);
     }
 
@@ -5645,6 +5310,8 @@ function reset_course_userdata($data) {
         foreach ($children as $child) {
             role_unassign_all(array('contextid' => $child->id));
         }
+        // Force refresh for logged in users.
+        $context->mark_dirty();
         $status[] = array('component' => $componentstr, 'item' => get_string('deletelocalroles', 'role'), 'error' => false);
     }
 
@@ -5660,7 +5327,6 @@ function reset_course_userdata($data) {
             }
         }
 
-        $usersroles = enrol_get_course_users_roles($data->courseid);
         foreach ($data->unenrol_users as $withroleid) {
             if ($withroleid) {
                 $sql = "SELECT ue.*
@@ -5692,15 +5358,7 @@ function reset_course_userdata($data) {
                     continue;
                 }
 
-                if ($withroleid && count($usersroles[$ue->userid]) > 1) {
-                    // If we don't remove all roles and user has more than one role, just remove this role.
-                    role_unassign($withroleid, $ue->userid, $context->id);
-
-                    unset($usersroles[$ue->userid][$withroleid]);
-                } else {
-                    // If we remove all roles or user has only one role, unenrol user from course.
-                    $plugin->unenrol_user($instance, $ue->userid);
-                }
+                $plugin->unenrol_user($instance, $ue->userid);
                 $data->unenrolled[$ue->userid] = $ue->userid;
             }
             $rs->close();
@@ -5831,7 +5489,7 @@ function moodle_process_email($modargs, $body) {
     global $DB;
 
     // The first char should be an unencoded letter. We'll take this as an action.
-    switch ($modargs[0]) {
+    switch ($modargs{0}) {
         case 'B': { // Bounce.
             list(, $userid) = unpack('V', base64_decode(substr($modargs, 1, 8)));
             if ($user = $DB->get_record("user", array('id' => $userid), "id,email")) {
@@ -5913,7 +5571,7 @@ function get_mailer($action='get') {
         } else {
             // Use SMTP directly.
             $mailer->isSMTP();
-            if (!empty($CFG->debugsmtp) && (!empty($CFG->debugdeveloper))) {
+            if (!empty($CFG->debugsmtp)) {
                 $mailer->SMTPDebug = 3;
             }
             // Specify main and backup servers.
@@ -6039,8 +5697,7 @@ function generate_email_messageid($localpart = null) {
  * @param string $subject plain text subject line of the email
  * @param string $messagetext plain text version of the message
  * @param string $messagehtml complete html version of the message (optional)
- * @param string $attachment a file on the filesystem, either relative to $CFG->dataroot or a full path to a file in one of
- *          the following directories: $CFG->cachedir, $CFG->dataroot, $CFG->dirroot, $CFG->localcachedir, $CFG->tempdir
+ * @param string $attachment a file on the filesystem, either relative to $CFG->dataroot or a full path to a file in $CFG->tempdir
  * @param string $attachname the name of the file (extension indicates MIME)
  * @param bool $usetrueaddress determines whether $from email address should
  *          be sent out. Will be overruled by user profile setting for maildisplay
@@ -6247,7 +5904,6 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         'siteshortname' => $SITE->shortname,
         'sitewwwroot' => $CFG->wwwroot,
         'subject' => $subject,
-        'prefix' => $CFG->emailsubjectprefix,
         'to' => $user->email,
         'toname' => fullname($user),
         'from' => $mail->From,
@@ -6265,16 +5921,24 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     if (!empty($user->mailformat) && $user->mailformat == 1) {
         // Only process html templates if the user preferences allow html email.
 
-        if (!$messagehtml) {
+        if ($messagehtml) {
+            // If html has been given then pass it through the template.
+            $context['body'] = $messagehtml;
+            $messagehtml = $renderer->render_from_template('core/email_html', $context);
+
+        } else {
             // If no html has been given, BUT there is an html wrapping template then
             // auto convert the text to html and then wrap it.
-            $messagehtml = trim(text_to_html($messagetext));
+            $autohtml = trim(text_to_html($messagetext));
+            $context['body'] = $autohtml;
+            $temphtml = $renderer->render_from_template('core/email_html', $context);
+            if ($autohtml != $temphtml) {
+                $messagehtml = $temphtml;
+            }
         }
-        $context['body'] = $messagehtml;
-        $messagehtml = $renderer->render_from_template('core/email_html', $context);
     }
 
-    $context['body'] = html_to_text(nl2br($messagetext));
+    $context['body'] = $messagetext;
     $mail->Subject = $renderer->render_from_template('core/email_subject', $context);
     $mail->FromName = $renderer->render_from_template('core/email_fromname', $context);
     $messagetext = $renderer->render_from_template('core/email_text', $context);
@@ -6309,31 +5973,12 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
 
             // Before doing the comparison, make sure that the paths are correct (Windows uses slashes in the other direction).
             $attachpath = str_replace('\\', '/', $attachmentpath);
+            // Make sure both variables are normalised before comparing.
+            $temppath = str_replace('\\', '/', realpath($CFG->tempdir));
 
-            // Add allowed paths to an array (also check if it's not empty).
-            $allowedpaths = array_filter([
-                $CFG->cachedir,
-                $CFG->dataroot,
-                $CFG->dirroot,
-                $CFG->localcachedir,
-                $CFG->tempdir
-            ]);
-            // Set addpath to true.
-            $addpath = true;
-            // Check if attachment includes one of the allowed paths.
-            foreach ($allowedpaths as $tmpvar) {
-                // Make sure both variables are normalised before comparing.
-                $temppath = str_replace('\\', '/', realpath($tmpvar));
-                // Set addpath to false if the attachment includes one of the allowed paths.
-                if (strpos($attachpath, $temppath) === 0) {
-                    $addpath = false;
-                    break;
-                }
-            }
-
-            // If the attachment is a full path to a file in the multiple allowed paths, use it as is,
+            // If the attachment is a full path to a file in the tempdir, use it as is,
             // otherwise assume it is a relative path from the dataroot (for backwards compatibility reasons).
-            if ($addpath == true) {
+            if (strpos($attachpath, $temppath) !== 0) {
                 $attachmentpath = $CFG->dataroot . '/' . $attachmentpath;
             }
 
@@ -6482,7 +6127,7 @@ function setnew_password_and_mail($user, $fasthash = false) {
     $a->sitename    = format_string($site->fullname);
     $a->username    = $user->username;
     $a->newpassword = $newpassword;
-    $a->link        = $CFG->wwwroot .'/login/?lang='.$lang;
+    $a->link        = $CFG->wwwroot .'/login/';
     $a->signoff     = generate_email_signoff();
 
     $message = (string)new lang_string('newusernewpasswordtext', '', $a, $lang);
@@ -6580,6 +6225,8 @@ function send_confirmation_email($user, $confirmationurl = null) {
     $message     = get_string('emailconfirmation', '', $data);
     $messagehtml = text_to_html(get_string('emailconfirmation', '', $data), false, false, true);
 
+    $user->mailformat = 1;  // Always send HTML version as well.
+
     // Directly email rather than using the messaging system to ensure its not routed to a popup or jabber.
     return email_to_user($user, $supportuser, $subject, $message, $messagehtml);
 }
@@ -6616,14 +6263,17 @@ function send_password_change_confirmation_email($user, $resetrecord) {
 }
 
 /**
- * Sends an email containing information on how to change your password.
+ * Sends an email containinginformation on how to change your password.
  *
  * @param stdClass $user A {@link $USER} object
  * @return bool Returns true if mail was sent OK and false if there was an error.
  */
 function send_password_change_info($user) {
+    global $CFG;
+
     $site = get_site();
     $supportuser = core_user::get_support_user();
+    $systemcontext = context_system::instance();
 
     $data = new stdClass();
     $data->firstname = $user->firstname;
@@ -6632,18 +6282,35 @@ function send_password_change_info($user) {
     $data->sitename  = format_string($site->fullname);
     $data->admin     = generate_email_signoff();
 
-    if (!is_enabled_auth($user->auth)) {
+    $userauth = get_auth_plugin($user->auth);
+
+    if (!is_enabled_auth($user->auth) or $user->auth == 'nologin') {
         $message = get_string('emailpasswordchangeinfodisabled', '', $data);
         $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
         // Directly email rather than using the messaging system to ensure its not routed to a popup or jabber.
         return email_to_user($user, $supportuser, $subject, $message);
     }
 
-    $userauth = get_auth_plugin($user->auth);
-    ['subject' => $subject, 'message' => $message] = $userauth->get_password_change_info($user);
+    if ($userauth->can_change_password() and $userauth->change_password_url()) {
+        // We have some external url for password changing.
+        $data->link .= $userauth->change_password_url();
+
+    } else {
+        // No way to change password, sorry.
+        $data->link = '';
+    }
+
+    if (!empty($data->link) and has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
+        $message = get_string('emailpasswordchangeinfo', '', $data);
+        $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
+    } else {
+        $message = get_string('emailpasswordchangeinfofail', '', $data);
+        $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
+    }
 
     // Directly email rather than using the messaging system to ensure its not routed to a popup or jabber.
     return email_to_user($user, $supportuser, $subject, $message);
+
 }
 
 /**
@@ -6655,10 +6322,8 @@ function send_password_change_info($user) {
 function email_is_not_allowed($email) {
     global $CFG;
 
-    // Comparing lowercase domains.
-    $email = strtolower($email);
     if (!empty($CFG->allowemailaddresses)) {
-        $allowed = explode(' ', strtolower($CFG->allowemailaddresses));
+        $allowed = explode(' ', $CFG->allowemailaddresses);
         foreach ($allowed as $allowedpattern) {
             $allowedpattern = trim($allowedpattern);
             if (!$allowedpattern) {
@@ -6677,7 +6342,7 @@ function email_is_not_allowed($email) {
         return get_string('emailonlyallowed', '', $CFG->allowemailaddresses);
 
     } else if (!empty($CFG->denyemailaddresses)) {
-        $denied = explode(' ', strtolower($CFG->denyemailaddresses));
+        $denied = explode(' ', $CFG->denyemailaddresses);
         foreach ($denied as $deniedpattern) {
             $deniedpattern = trim($deniedpattern);
             if (!$deniedpattern) {
@@ -7188,10 +6853,19 @@ function current_language() {
  */
 function get_parent_language($lang=null) {
 
-    $parentlang = get_string_manager()->get_string('parentlanguage', 'langconfig', null, $lang);
+    // Let's hack around the current language.
+    if (!empty($lang)) {
+        $oldforcelang = force_current_language($lang);
+    }
 
+    $parentlang = get_string('parentlanguage', 'langconfig');
     if ($parentlang === 'en') {
         $parentlang = '';
+    }
+
+    // Let's hack around the current language.
+    if (!empty($lang)) {
+        force_current_language($oldforcelang);
     }
 
     return $parentlang;
@@ -7240,20 +6914,10 @@ function get_string_manager($forcereload=false) {
     if ($singleton === null) {
         if (empty($CFG->early_install_lang)) {
 
-            $transaliases = array();
             if (empty($CFG->langlist)) {
                  $translist = array();
             } else {
                 $translist = explode(',', $CFG->langlist);
-                $translist = array_map('trim', $translist);
-                // Each language in the $CFG->langlist can has an "alias" that would substitute the default language name.
-                foreach ($translist as $i => $value) {
-                    $parts = preg_split('/\s*\|\s*/', $value, 2);
-                    if (count($parts) == 2) {
-                        $transaliases[$parts[0]] = $parts[1];
-                        $translist[$i] = $parts[0];
-                    }
-                }
             }
 
             if (!empty($CFG->config_php_settings['customstringmanager'])) {
@@ -7263,7 +6927,7 @@ function get_string_manager($forcereload=false) {
                     $implements = class_implements($classname);
 
                     if (isset($implements['core_string_manager'])) {
-                        $singleton = new $classname($CFG->langotherroot, $CFG->langlocalroot, $translist, $transaliases);
+                        $singleton = new $classname($CFG->langotherroot, $CFG->langlocalroot, $translist);
                         return $singleton;
 
                     } else {
@@ -7276,7 +6940,7 @@ function get_string_manager($forcereload=false) {
                 }
             }
 
-            $singleton = new core_string_manager_standard($CFG->langotherroot, $CFG->langlocalroot, $translist, $transaliases);
+            $singleton = new core_string_manager_standard($CFG->langotherroot, $CFG->langlocalroot, $translist);
 
         } else {
             $singleton = new core_string_manager_install();
@@ -7538,12 +7202,10 @@ class emoticon_manager {
     /**
      * Returns the currently enabled emoticons
      *
-     * @param boolean $selectable - If true, only return emoticons that should be selectable from a list.
      * @return array of emoticon objects
      */
-    public function get_emoticons($selectable = false) {
+    public function get_emoticons() {
         global $CFG;
-        $notselectable = ['martin', 'egg'];
 
         if (empty($CFG->emoticons)) {
             return array();
@@ -7555,14 +7217,6 @@ class emoticon_manager {
             // Something is wrong with the format of stored setting.
             debugging('Invalid format of emoticons setting, please resave the emoticons settings form', DEBUG_NORMAL);
             return array();
-        }
-        if ($selectable) {
-            foreach ($emoticons as $index => $emote) {
-                if (in_array($emote->altidentifier, $notselectable)) {
-                    // Skip this one.
-                    unset($emoticons[$index]);
-                }
-            }
         }
 
         return $emoticons;
@@ -8240,28 +7894,6 @@ function moodle_major_version($fromdisk = false) {
 // MISCELLANEOUS.
 
 /**
- * Gets the system locale
- *
- * @return string Retuns the current locale.
- */
-function moodle_getlocale() {
-    global $CFG;
-
-    // Fetch the correct locale based on ostype.
-    if ($CFG->ostype == 'WINDOWS') {
-        $stringtofetch = 'localewin';
-    } else {
-        $stringtofetch = 'locale';
-    }
-
-    if (!empty($CFG->locale)) { // Override locale for all language packs.
-        return $CFG->locale;
-    }
-
-    return get_string($stringtofetch, 'langconfig');
-}
-
-/**
  * Sets the system locale
  *
  * @category string
@@ -8274,11 +7906,20 @@ function moodle_setlocale($locale='') {
 
     $oldlocale = $currentlocale;
 
+    // Fetch the correct locale based on ostype.
+    if ($CFG->ostype == 'WINDOWS') {
+        $stringtofetch = 'localewin';
+    } else {
+        $stringtofetch = 'locale';
+    }
+
     // The priority is the same as in get_string() - parameter, config, course, session, user, global language.
     if (!empty($locale)) {
         $currentlocale = $locale;
+    } else if (!empty($CFG->locale)) { // Override locale for all language packs.
+        $currentlocale = $CFG->locale;
     } else {
-        $currentlocale = moodle_getlocale();
+        $currentlocale = get_string($stringtofetch, 'langconfig');
     }
 
     // Do nothing if locale already set up.
@@ -8745,10 +8386,9 @@ function generate_password($maxlen=10) {
  * then it will display '5.4' instead of '5.400' or '5' instead of '5.000'.
  *
  * @param float $float The float to print
- * @param int $decimalpoints The number of decimal places to print. -1 is a special value for auto detect (full precision).
+ * @param int $decimalpoints The number of decimal places to print.
  * @param bool $localized use localized decimal separator
- * @param bool $stripzeros If true, removes final zeros after decimal point. It will be ignored and the trailing zeros after
- *                         the decimal point are always striped if $decimalpoints is -1.
+ * @param bool $stripzeros If true, removes final zeros after decimal point
  * @return string locale float
  */
 function format_float($float, $decimalpoints=1, $localized=true, $stripzeros=false) {
@@ -8760,17 +8400,10 @@ function format_float($float, $decimalpoints=1, $localized=true, $stripzeros=fal
     } else {
         $separator = '.';
     }
-    if ($decimalpoints == -1) {
-        // The following counts the number of decimals.
-        // It is safe as both floatval() and round() functions have same behaviour when non-numeric values are provided.
-        $floatval = floatval($float);
-        for ($decimalpoints = 0; $floatval != round($float, $decimalpoints); $decimalpoints++);
-    }
-
     $result = number_format($float, $decimalpoints, $separator, '');
     if ($stripzeros) {
         // Remove zeros and final dot if not needed.
-        $result = preg_replace('~(' . preg_quote($separator, '~') . ')?0+$~', '', $result);
+        $result = preg_replace('~(' . preg_quote($separator) . ')?0+$~', '', $result);
     }
     return $result;
 }
@@ -9207,16 +8840,11 @@ function mtrace($string, $eol="\n", $sleep=0) {
         $fn($string, $eol);
         return;
     } else if (defined('STDOUT') && !PHPUNIT_TEST && !defined('BEHAT_TEST')) {
-        // We must explicitly call the add_line function here.
-        // Uses of fwrite to STDOUT are not picked up by ob_start.
-        if ($output = \core\task\logmanager::add_line("{$string}{$eol}")) {
-            fwrite(STDOUT, $output);
-        }
+        fwrite(STDOUT, $string.$eol);
     } else {
         echo $string . $eol;
     }
 
-    // Flush again.
     flush();
 
     // Delay to keep message on user's screen in case of subsequent redirect.
@@ -9236,19 +8864,29 @@ function cleardoubleslashes ($path) {
 }
 
 /**
- * Is the current ip in a given list?
+ * Is current ip in give list?
  *
  * @param string $list
  * @return bool
  */
 function remoteip_in_list($list) {
+    $inlist = false;
     $clientip = getremoteaddr(null);
 
     if (!$clientip) {
         // Ensure access on cli.
         return true;
     }
-    return \core\ip_utils::is_ip_in_subnet_list($clientip, $list);
+
+    $list = explode("\n", $list);
+    foreach ($list as $subnet) {
+        $subnet = trim($subnet);
+        if (address_in_subnet($clientip, $subnet)) {
+            $inlist = true;
+            break;
+        }
+    }
+    return $inlist;
 }
 
 /**
@@ -9263,7 +8901,7 @@ function getremoteaddr($default='0.0.0.0') {
     if (empty($CFG->getremoteaddrconf)) {
         // This will happen, for example, before just after the upgrade, as the
         // user is redirected to the admin screen.
-        $variablestoskip = GETREMOTEADDR_SKIP_DEFAULT;
+        $variablestoskip = 0;
     } else {
         $variablestoskip = $CFG->getremoteaddrconf;
     }
@@ -9276,15 +8914,7 @@ function getremoteaddr($default='0.0.0.0') {
     if (!($variablestoskip & GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR)) {
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $forwardedaddresses = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
-
-            $forwardedaddresses = array_filter($forwardedaddresses, function($ip) {
-                global $CFG;
-                return !\core\ip_utils::is_ip_in_subnet_list($ip, $CFG->reverseproxyignore ?? '', ',');
-            });
-
-            // Multiple proxies can append values to this header including an
-            // untrusted original request header so we must only trust the last ip.
-            $address = end($forwardedaddresses);
+            $address = $forwardedaddresses[0];
 
             if (substr_count($address, ":") > 1) {
                 // Remove port and brackets from IPv6.
@@ -9490,15 +9120,12 @@ function get_performance_info() {
         // Attempt to avoid devs debugging peformance issues, when its caused by css building and so on.
         $info['html'] .= '<p><strong>Warning: Theme designer mode is enabled.</strong></p>';
     }
-    $info['html'] .= '<ul class="list-unstyled row mx-md-0">';         // Holds userfriendly HTML representation.
+    $info['html'] .= '<ul class="list-unstyled m-l-1 row">';         // Holds userfriendly HTML representation.
 
     $info['realtime'] = microtime_diff($PERF->starttime, microtime());
 
     $info['html'] .= '<li class="timeused col-sm-4">'.$info['realtime'].' secs</li> ';
     $info['txt'] .= 'time: '.$info['realtime'].'s ';
-
-    // GET/POST (or NULL if $_SERVER['REQUEST_METHOD'] is undefined) is useful for txt logged information.
-    $info['txt'] .= 'method: ' . ($_SERVER['REQUEST_METHOD'] ?? "NULL") . ' ';
 
     if (function_exists('memory_get_usage')) {
         $info['memory_total'] = memory_get_usage();
@@ -9514,7 +9141,7 @@ function get_performance_info() {
         $info['txt']  .= 'memory_peak: '.$info['memory_peak'].'B (' . display_size($info['memory_peak']).') ';
     }
 
-    $info['html'] .= '</ul><ul class="list-unstyled row mx-md-0">';
+    $info['html'] .= '</ul><ul class="list-unstyled m-l-1 row">';
     $inc = get_included_files();
     $info['includecount'] = count($inc);
     $info['html'] .= '<li class="included col-sm-4">Included '.$info['includecount'].' files</li> ';
@@ -9554,12 +9181,6 @@ function get_performance_info() {
     $info['dbqueries'] = $DB->perf_get_reads().'/'.($DB->perf_get_writes() - $PERF->logwrites);
     $info['html'] .= '<li class="dbqueries col-sm-4">DB reads/writes: '.$info['dbqueries'].'</li> ';
     $info['txt'] .= 'db reads/writes: '.$info['dbqueries'].' ';
-
-    if ($DB->want_read_slave()) {
-        $info['dbreads_slave'] = $DB->perf_get_reads_slave();
-        $info['html'] .= '<li class="dbqueries col-sm-4">DB reads from slave: '.$info['dbreads_slave'].'</li> ';
-        $info['txt'] .= 'db reads from slave: '.$info['dbreads_slave'].' ';
-    }
 
     $info['dbtime'] = round($DB->perf_get_queries_time(), 5);
     $info['html'] .= '<li class="dbtime col-sm-4">DB queries time: '.$info['dbtime'].' secs</li> ';
@@ -9604,185 +9225,57 @@ function get_performance_info() {
     }
 
     $info['html'] .= '</ul>';
-    $html = '';
     if ($stats = cache_helper::get_stats()) {
-
-        $table = new html_table();
-        $table->attributes['class'] = 'cachesused table table-dark table-sm w-auto table-bordered';
-        $table->head = ['Mode', 'Cache item', 'Static', 'H', 'M', get_string('mappingprimary', 'cache'), 'H', 'M', 'S'];
-        $table->data = [];
-        $table->align = ['left', 'left', 'left', 'right', 'right', 'left', 'right', 'right', 'right'];
-
+        $html = '<ul class="cachesused list-unstyled m-l-1 row">';
+        $html .= '<li class="cache-stats-heading font-weight-bold">Caches used (hits/misses/sets)</li>';
+        $html .= '</ul><ul class="cachesused list-unstyled m-l-1">';
         $text = 'Caches used (hits/misses/sets): ';
         $hits = 0;
         $misses = 0;
         $sets = 0;
-        $maxstores = 0;
-
-        // We want to align static caches into their own column.
-        $hasstatic = false;
-        foreach ($stats as $definition => $details) {
-            $numstores = count($details['stores']);
-            $first = key($details['stores']);
-            if ($first !== cache_store::STATIC_ACCEL) {
-                $numstores++; // Add a blank space for the missing static store.
-            }
-            $maxstores = max($maxstores, $numstores);
-        }
-
-        $storec = 0;
-
-        while ($storec++ < ($maxstores - 2)) {
-            if ($storec == ($maxstores - 2)) {
-                $table->head[] = get_string('mappingfinal', 'cache');
-            } else {
-                $table->head[] = "Store $storec";
-            }
-            $table->align[] = 'left';
-            $table->align[] = 'right';
-            $table->align[] = 'right';
-            $table->align[] = 'right';
-            $table->head[] = 'H';
-            $table->head[] = 'M';
-            $table->head[] = 'S';
-        }
-
-        ksort($stats);
-
         foreach ($stats as $definition => $details) {
             switch ($details['mode']) {
                 case cache_store::MODE_APPLICATION:
                     $modeclass = 'application';
-                    $mode = ' <span title="application cache">App</span>';
+                    $mode = ' <span title="application cache">[a]</span>';
                     break;
                 case cache_store::MODE_SESSION:
                     $modeclass = 'session';
-                    $mode = ' <span title="session cache">Ses</span>';
+                    $mode = ' <span title="session cache">[s]</span>';
                     break;
                 case cache_store::MODE_REQUEST:
                     $modeclass = 'request';
-                    $mode = ' <span title="request cache">Req</span>';
+                    $mode = ' <span title="request cache">[r]</span>';
                     break;
             }
-            $row = [$mode, $definition];
-
+            $html .= '<ul class="cache-definition-stats list-unstyled m-l-1 cache-mode-'.$modeclass.' card d-inline-block">';
+            $html .= '<li class="cache-definition-stats-heading p-t-1 card-header bg-inverse font-weight-bold">' .
+                $definition . $mode.'</li>';
             $text .= "$definition {";
-
-            $storec = 0;
             foreach ($details['stores'] as $store => $data) {
-
-                if ($storec == 0 && $store !== cache_store::STATIC_ACCEL) {
-                    $row[] = '';
-                    $row[] = '';
-                    $row[] = '';
-                    $storec++;
-                }
-
-                $hits   += $data['hits'];
+                $hits += $data['hits'];
                 $misses += $data['misses'];
-                $sets   += $data['sets'];
+                $sets += $data['sets'];
                 if ($data['hits'] == 0 and $data['misses'] > 0) {
-                    $cachestoreclass = 'nohits bg-danger';
+                    $cachestoreclass = 'nohits text-danger';
                 } else if ($data['hits'] < $data['misses']) {
-                    $cachestoreclass = 'lowhits bg-warning text-dark';
+                    $cachestoreclass = 'lowhits text-warning';
                 } else {
-                    $cachestoreclass = 'hihits';
+                    $cachestoreclass = 'hihits text-success';
                 }
                 $text .= "$store($data[hits]/$data[misses]/$data[sets]) ";
-                $cell = new html_table_cell($store);
-                $cell->attributes = ['class' => $cachestoreclass];
-                $row[] = $cell;
-                $cell = new html_table_cell($data['hits']);
-                $cell->attributes = ['class' => $cachestoreclass];
-                $row[] = $cell;
-                $cell = new html_table_cell($data['misses']);
-                $cell->attributes = ['class' => $cachestoreclass];
-                $row[] = $cell;
-
-                if ($store !== cache_store::STATIC_ACCEL) {
-                    // The static cache is never set.
-                    $cell = new html_table_cell($data['sets']);
-                    $cell->attributes = ['class' => $cachestoreclass];
-                    $row[] = $cell;
+                $html .= "<li class=\"cache-store-stats $cachestoreclass p-x-1\">" .
+                    "$store: $data[hits] / $data[misses] / $data[sets]</li>";
+                // This makes boxes of same sizes.
+                if (count($details['stores']) == 1) {
+                    $html .= "<li class=\"cache-store-stats $cachestoreclass p-x-1\">&nbsp;</li>";
                 }
-                $storec++;
             }
-            while ($storec++ < $maxstores) {
-                $row[] = '';
-                $row[] = '';
-                $row[] = '';
-                $row[] = '';
-            }
+            $html .= '</ul>';
             $text .= '} ';
-
-            $table->data[] = $row;
         }
-
-        $html .= html_writer::table($table);
-
-        // Now lets also show sub totals for each cache store.
-        $storetotals = [];
-        $storetotal = ['hits' => 0, 'misses' => 0, 'sets' => 0];
-        foreach ($stats as $definition => $details) {
-            foreach ($details['stores'] as $store => $data) {
-                if (!array_key_exists($store, $storetotals)) {
-                    $storetotals[$store] = ['hits' => 0, 'misses' => 0, 'sets' => 0];
-                }
-                $storetotals[$store]['class']   = $data['class'];
-                $storetotals[$store]['hits']   += $data['hits'];
-                $storetotals[$store]['misses'] += $data['misses'];
-                $storetotals[$store]['sets']   += $data['sets'];
-                $storetotal['hits']   += $data['hits'];
-                $storetotal['misses'] += $data['misses'];
-                $storetotal['sets']   += $data['sets'];
-            }
-        }
-
-        $table = new html_table();
-        $table->attributes['class'] = 'cachesused table table-dark table-sm w-auto table-bordered';
-        $table->head = [get_string('storename', 'cache'), get_string('type_cachestore', 'plugin'), 'H', 'M', 'S'];
-        $table->data = [];
-        $table->align = ['left', 'left', 'right', 'right', 'right'];
-
-        ksort($storetotals);
-
-        foreach ($storetotals as $store => $data) {
-            $row = [];
-            if ($data['hits'] == 0 and $data['misses'] > 0) {
-                $cachestoreclass = 'nohits bg-danger';
-            } else if ($data['hits'] < $data['misses']) {
-                $cachestoreclass = 'lowhits bg-warning text-dark';
-            } else {
-                $cachestoreclass = 'hihits';
-            }
-            $cell = new html_table_cell($store);
-            $cell->attributes = ['class' => $cachestoreclass];
-            $row[] = $cell;
-            $cell = new html_table_cell($data['class']);
-            $cell->attributes = ['class' => $cachestoreclass];
-            $row[] = $cell;
-            $cell = new html_table_cell($data['hits']);
-            $cell->attributes = ['class' => $cachestoreclass];
-            $row[] = $cell;
-            $cell = new html_table_cell($data['misses']);
-            $cell->attributes = ['class' => $cachestoreclass];
-            $row[] = $cell;
-            $cell = new html_table_cell($data['sets']);
-            $cell->attributes = ['class' => $cachestoreclass];
-            $row[] = $cell;
-            $table->data[] = $row;
-        }
-        $row = [
-            get_string('total'),
-            '',
-            $storetotal['hits'],
-            $storetotal['misses'],
-            $storetotal['sets'],
-        ];
-        $table->data[] = $row;
-
-        $html .= html_writer::table($table);
-
+        $html .= '</ul> ';
+        $html .= "<div class='cache-total-stats row'>Total: $hits / $misses / $sets</div>";
         $info['cachesused'] = "$hits / $misses / $sets";
         $info['html'] .= $html;
         $info['txt'] .= $text.'. ';
@@ -9792,7 +9285,7 @@ function get_performance_info() {
         $info['txt'] .= 'Caches used (hits/misses/sets): 0/0/0 ';
     }
 
-    $info['html'] = '<div class="performanceinfo siteinfo container-fluid px-md-0 overflow-auto mt-3">'.$info['html'].'</div>';
+    $info['html'] = '<div class="performanceinfo siteinfo container-fluid">'.$info['html'].'</div>';
     return $info;
 }
 
@@ -10291,7 +9784,7 @@ function get_home_page() {
  * Gets the name of a course to be displayed when showing a list of courses.
  * By default this is just $course->fullname but user can configure it. The
  * result of this function should be passed through print_string.
- * @param stdClass|core_course_list_element $course Moodle course object
+ * @param stdClass|course_in_list $course Moodle course object
  * @return string Display name of course (either fullname or short + fullname)
  */
 function get_course_display_name_for_list($course) {
@@ -10602,56 +10095,4 @@ class lang_string {
     public function get_component() {
         return $this->component;
     }
-}
-
-/**
- * Get human readable name describing the given callable.
- *
- * This performs syntax check only to see if the given param looks like a valid function, method or closure.
- * It does not check if the callable actually exists.
- *
- * @param callable|string|array $callable
- * @return string|bool Human readable name of callable, or false if not a valid callable.
- */
-function get_callable_name($callable) {
-
-    if (!is_callable($callable, true, $name)) {
-        return false;
-
-    } else {
-        return $name;
-    }
-}
-
-/**
- * Tries to guess if $CFG->wwwroot is publicly accessible or not.
- * Never put your faith on this function and rely on its accuracy as there might be false positives.
- * It just performs some simple checks, and mainly is used for places where we want to hide some options
- * such as site registration when $CFG->wwwroot is not publicly accessible.
- * Good thing is there is no false negative.
- * Note that it's possible to force the result of this check by specifying $CFG->site_is_public in config.php
- *
- * @return bool
- */
-function site_is_public() {
-    global $CFG;
-
-    // Return early if site admin has forced this setting.
-    if (isset($CFG->site_is_public)) {
-        return (bool)$CFG->site_is_public;
-    }
-
-    $host = parse_url($CFG->wwwroot, PHP_URL_HOST);
-
-    if ($host === 'localhost' || preg_match('|^127\.\d+\.\d+\.\d+$|', $host)) {
-        $ispublic = false;
-    } else if (\core\ip_utils::is_ip_address($host) && !ip_is_public($host)) {
-        $ispublic = false;
-    } else if (($address = \core\ip_utils::get_ip_address($host)) && !ip_is_public($address)) {
-        $ispublic = false;
-    } else {
-        $ispublic = true;
-    }
-
-    return $ispublic;
 }

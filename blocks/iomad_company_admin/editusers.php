@@ -26,10 +26,10 @@ $unsuspend      = optional_param('unsuspend', 0, PARAM_INT);
 $showsuspended  = optional_param('showsuspended', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
 $confirmuser  = optional_param('confirmuser', 0, PARAM_INT);
-$sort         = optional_param('sort', 'lastname', PARAM_ALPHA);
+$sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
@@ -41,6 +41,15 @@ $usertype = optional_param('usertype', 'a', PARAM_ALPHANUM);
 
 $params = array();
 
+if ($delete) {
+    $params['delete'] = $delete;
+}
+if ($suspend) {
+    $params['suspend'] = $suspend;
+}
+if ($unsuspend) {
+    $params['suspend'] = $unsuspend;
+}
 if ($showsuspended) {
     $params['showsuspended'] = $showsuspended;
 }
@@ -101,7 +110,7 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
-// Get output renderer.
+// Get output renderer.                                                                                                                                                                                         
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
@@ -109,11 +118,10 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
@@ -128,7 +136,7 @@ echo $output->header();
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
-}
+}   
 
 // Get the associated department id.
 $company = new company($companyid);
@@ -188,19 +196,6 @@ if (!$showall && $category = $DB->get_record_sql('select uic.id, uic.name from {
             ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname, null, PARAM_RAW);
         }
     }
-    if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
-                                                    WHERE id NOT IN (
-                                                     SELECT profileid FROM {company})")) {
-        foreach ($categories as $category) {
-            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
-                foreach ($fields as $field) {
-                    $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
-                    ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.
-                                                              $field->shortname, null, PARAM_RAW);
-                }
-            }
-        }
-    }
 }
 
 // Deal with the user optional profile search.
@@ -208,7 +203,7 @@ $idlist = array();
 if (!empty($fieldnames)) {
     $fieldids = array();
     foreach ($fieldnames as $id => $fieldname) {
-        if (!empty($fields[$id]->datatype) && $fields[$id]->datatype == "menu") {
+        if ($fields[$id]->datatype == "menu") {
             $paramarray = explode("\n", $fields[$id]->param1);
             if (!empty($paramarray[${$fieldname}])) {
                 ${$fieldname} = $paramarray[${$fieldname}];
@@ -250,13 +245,14 @@ $strshowallusers = get_string('showallusers');
 $strenrolment = get_string('userenrolments', 'block_iomad_company_admin');
 $struserlicense = get_string('userlicenses', 'block_iomad_company_admin');
 $strshowall = get_string('showallcompanies', 'block_iomad_company_admin');
-$struserreport = get_string('report_users_title', 'local_report_users');
 
 if (empty($CFG->loginhttps)) {
     $securewwwroot = $CFG->wwwroot;
 } else {
     $securewwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
 }
+
+$returnurl = "$CFG->wwwroot/blocks/iomad_company_admin/editusers.php";
 
 if ($confirmuser and confirm_sesskey()) {
     if (!$user = $DB->get_record('user', array('id' => $confirmuser))) {
@@ -327,8 +323,6 @@ if ($confirmuser and confirm_sesskey()) {
                                                                                      'userid' => $USER->id,
                                                                                      'other' => $eventother));
         $event->trigger();
-        $returnmessage = get_string('userdeletedok', 'block_iomad_company_admin');
-        redirect($returnurl, $returnmessage, null, \core\output\notification::NOTIFY_SUCCESS);
 
     }
 
@@ -369,18 +363,12 @@ if ($confirmuser and confirm_sesskey()) {
                                                                                        'other' => $eventother));
         $event->trigger();
 
-        $returnmessage = get_string('usersuspendedok', 'block_iomad_company_admin');
-        redirect($returnurl, $returnmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+        $params['suspend'] = 0;
     }
 
 } else if ($unsuspend and confirm_sesskey()) {
-    // Check if the company has gone over the user quota.
-    if (!$company->check_usercount(1)) {
-        $maxusers = $company->get('maxusers');
-        print_error('maxuserswarning', 'block_iomad_company_admin', $returnurl, $maxusers);
-    }
-
     // Unsuspends a selected user, after confirmation.
+
     if (!iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)) {
         print_error('nopermissions', 'error', '', 'suspend a user');
     }
@@ -417,8 +405,7 @@ if ($confirmuser and confirm_sesskey()) {
                                                                                          'other' => $eventother));
         $event->trigger();
 
-        $returnmessage = get_string('userunsuspendedok', 'block_iomad_company_admin');
-        redirect($returnurl, $returnmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+        $params['suspend'] = 0;
     }
 
 } else if ($acl and confirm_sesskey()) {
@@ -641,8 +628,6 @@ flush();
 if (!$users) {
     $match = array();
     echo $output->heading(get_string('nousersfound'));
-    echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_user_create_form.php'),
-                                get_string('createuser', 'block_iomad_company_admin'));
 
     $table = null;
 
@@ -690,7 +675,7 @@ if (!$users) {
                // This manager can't edit manager users.
             } else {
                 $url = new moodle_url('/blocks/iomad_company_admin/editadvanced.php', array(
-                    'id' => $user->id,
+                    'id' => $user->id,   
                 ));
                 $actions['edit'] = new action_menu_link_secondary(
                     $url,
@@ -700,7 +685,7 @@ if (!$users) {
                 if (iomad::has_capability('block/iomad_company_admin:edituserpassword', $systemcontext)) {
                     $url = new moodle_url('/blocks/iomad_company_admin/editusers.php', array(
                         'password' => $user->id,
-                        'sesskey' => sesskey(),
+                        'sesskey' => sesskey(),   
                     ));
                     $actions['password'] = new action_menu_link_secondary(
                         $url,
@@ -784,17 +769,6 @@ if (!$users) {
             );
         }
 
-        if (iomad::has_capability('local/report_users:view', $systemcontext)) {
-            $url = new moodle_url('/local/report_users/userdisplay.php', array(
-                'userid' => $user->id,
-            ));
-            $actions['userreport'] = new action_menu_link_secondary(
-                $url,
-                null,
-                $struserreport
-            );
-        }
-
         if ($user->lastaccess) {
             $strlastaccess = format_time(time() - $user->lastaccess);
         } else {
@@ -817,7 +791,7 @@ if (!$users) {
         foreach ($actions as $action) {
             $menu->add($action);
         }
-
+        
 
         if (!$showall) {
             $table->data[] = array("$fullname",
@@ -913,7 +887,7 @@ function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recor
         }
            $params['companyid'] = $extraparams['companyid'];
     }
-    return $DB->get_records_sql("SELECT " . $DB->sql_concat('c.id', "'-'", 'u.id')." , u.*, d.name as departmentname, c.name as companyname
+    return $DB->get_records_sql("SELECT concat(c.id, '-', u.id), u.*, d.name as departmentname, c.name as companyname
                                  FROM {user} u, {department} d, {company_users} cu, {company} c
                                  WHERE $select and cu.userid = u.id and d.id = cu.departmentid AND c.id = cu.companyid
                                  $companysql

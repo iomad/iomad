@@ -49,7 +49,6 @@
                 array($module->id));
         core_plugin_manager::reset_caches();
         admin_get_root(true, false);  // settings not required - only pages
-        redirect(new moodle_url('/admin/modules.php'));
     }
 
     if (!empty($show) and confirm_sesskey()) {
@@ -67,7 +66,6 @@
                 array($module->id));
         core_plugin_manager::reset_caches();
         admin_get_root(true, false);  // settings not required - only pages
-        redirect(new moodle_url('/admin/modules.php'));
     }
 
     echo $OUTPUT->header();
@@ -89,13 +87,9 @@
     $table->set_attribute('class', 'admintable generaltable');
     $table->setup();
 
-    $pluginmanager = core_plugin_manager::instance();
-
     foreach ($modules as $module) {
-        $plugininfo = $pluginmanager->get_plugin_info('mod_'.$module->name);
-        $status = $plugininfo->get_status();
 
-        if ($status === core_plugin_manager::PLUGIN_STATUS_MISSING) {
+        if (!file_exists("$CFG->dirroot/mod/$module->name/lib.php")) {
             $strmodulename = '<span class="notifyproblem">'.$module->name.' ('.get_string('missingfromdisk').')</span>';
             $missing = true;
         } else {
@@ -123,8 +117,8 @@
             $count = -1;
         }
         if ($count>0) {
-            $countlink = $OUTPUT->action_link(new moodle_url('/course/search.php', ['modulelist' => $module->name]),
-                $count, null, ['title' => $strshowmodulecourse]);
+            $countlink = "<a href=\"{$CFG->wwwroot}/course/search.php?modulelist=$module->name" .
+                "&amp;sesskey=".sesskey()."\" title=\"$strshowmodulecourse\">$count</a>";
         } else if ($count < 0) {
             $countlink = get_string('error');
         } else {

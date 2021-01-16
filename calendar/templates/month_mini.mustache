@@ -38,7 +38,6 @@
     }} data-categoryid="{{categoryid}}"{{!
     }} data-month="{{date.mon}}"{{!
     }} data-year="{{date.year}}"{{!
-    }} data-day="{{date.mday}}"{{!
     }} data-view="month"{{!
     }}>
     {{> core/overlay_loading}}
@@ -78,9 +77,8 @@
         <thead>
           <tr>
                 {{# daynames }}
-                <th class="header text-xs-center">
-                    <span class="sr-only">{{fullname}}</span>
-                    <span aria-hidden="true">{{shortname}}</span>
+                <th class="header text-xs-center" scope="col">
+                    <abbr title="{{fullname}}">{{shortname}}</abbr>
                 </th>
                 {{/ daynames }}
             </tr>
@@ -129,8 +127,7 @@
                         This is the timestamp for this month.
                         }} data-day-timestamp="{{timestamp}}"{{!
                     }}>{{!
-                        }}<span class="sr-only">{{daytitle}}</span>
-                        {{#popovertitle}}
+                        }}{{#popovertitle}}
                             {{< core_calendar/minicalendar_day_link }}
                                 {{$day}}{{mday}}{{/day}}
                                 {{$url}}{{viewdaylink}}{{/url}}
@@ -138,8 +135,13 @@
                                 {{$nocontent}}{{#str}}eventnone, calendar{{/str}}{{/nocontent}}
                                 {{$content}}
                                     {{#events}}
-                                        <div data-popover-eventtype-{{normalisedeventtype}}="1">
-                                            {{> core_calendar/event_icon}}
+                                        <div data-popover-eventtype-{{calendareventtype}}="1">
+                                            {{#modulename}}
+                                                {{#pix}} icon, {{modulename}} {{/pix}}
+                                            {{/modulename}}
+                                            {{^modulename}}
+                                                {{#pix}} i/{{eventtype}}event, core {{/pix}}
+                                            {{/modulename}}
                                             {{{popupname}}}
                                         </div>
                                     {{/events}}
@@ -147,7 +149,7 @@
                             {{/ core_calendar/minicalendar_day_link }}
                         {{/popovertitle}}{{!
                         }}{{^popovertitle}}
-                            <span aria-hidden="true">{{mday}}</span>
+                            {{mday}}
                         {{/popovertitle}}{{!
                     }}</td>
                 {{/days}}

@@ -8,7 +8,7 @@ Feature: Add URL to main menu block
   Scenario: Add a URL in menu block and ensure it appears
     Given I log in as "admin"
     And I am on site homepage
-    And I navigate to "Turn editing on" in current page administration
+    And I navigate to "Turn editing on" node in "Front page settings"
     And I add the "Main menu" block
     When I add a "URL" to section "0" and I fill the form with:
       | Name | google |
@@ -16,4 +16,4 @@ Feature: Add URL to main menu block
       | External URL | http://www.google.com |
       | id_display | In pop-up |
     Then "google" "link" should exist in the "Main menu" "block"
-    And "Add an activity or resource" "button" should exist in the "Main menu" "block"
+    And "Add an activity or resource" "link" should exist in the "Main menu" "block"

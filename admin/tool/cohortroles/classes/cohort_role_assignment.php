@@ -103,4 +103,5 @@ class cohort_role_assignment extends persistent {
 
         return true;
     }
+
 }

@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 namespace local_iomad_learningpath\output;
 
 defined('MOODLE_INTERNAL') || die();
@@ -41,14 +42,11 @@ class courselist_page implements renderable, templatable {
 
     protected $categories;
 
-    protected $programlicenses;
-
-    public function __construct($context, $path, $groups, $categories, $programlicenses) {
+    public function __construct($context, $path, $groups, $categories) {
         $this->context = $context;
         $this->path = $path;
         $this->groups = $groups;
         $this->categories = $categories;
-        $this->programlicenses = $programlicenses;
     }
 
     /**
@@ -57,7 +55,7 @@ class courselist_page implements renderable, templatable {
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-
+        
         // fix courses list inside groups
         $groups = $this->groups;
         foreach ($groups as $group) {
@@ -69,7 +67,6 @@ class courselist_page implements renderable, templatable {
         $data->path = $this->path;
         $data->groups = array_values($groups);
         $data->categories = array_values($this->categories);
-        $data->programlicenses = array_values($this->programlicenses);
         $data->iscourses = !empty($this->courses);
         $data->done = $output->single_button(
             new \moodle_url('/local/iomad_learningpath/manage.php'),

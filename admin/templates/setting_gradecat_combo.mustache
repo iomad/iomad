@@ -37,11 +37,8 @@
         "advanced": true
     }
 }}
-{{!
-    Setting configselect.
-}}
 <div class="form-group">
-    <select id="{{id}}" name="{{name}}[value]" class="form-select custom-select">
+    <select id="{{id}}" name="{{name}}[value]" class="form-select">
         {{#options}}
             <option value="{{value}}" {{#selected}}selected{{/selected}}>{{name}}</option>
         {{/options}}

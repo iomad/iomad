@@ -89,8 +89,7 @@ LICENSE
 /**
  * This class was heavily modified in order to get usefull spreadsheet emulation ;-)
  * skodak
- * This class was modified to allow comparison operators (<, <=, ==, >=, >)
- * and synonyms functions (for the 'if' function). See MDL-14274 for more details.
+ *
  */
 
 class EvalMath {
@@ -114,8 +113,7 @@ class EvalMath {
         'average'=>array(-1), 'max'=>array(-1),  'min'=>array(-1),
         'mod'=>array(2),      'pi'=>array(0),    'power'=>array(2),
         'round'=>array(1, 2), 'sum'=>array(-1), 'rand_int'=>array(2),
-        'rand_float'=>array(0), 'ifthenelse'=>array(3), 'cond_and'=>array(-1), 'cond_or'=>array(-1));
-    var $fcsynonyms = array('if' => 'ifthenelse', 'and' => 'cond_and', 'or' => 'cond_or');
+        'rand_float'=>array(0));
 
     var $allowimplicitmultiplication;
 
@@ -209,25 +207,20 @@ class EvalMath {
         $stack = new EvalMathStack;
         $output = array(); // postfix form of expression, to be passed to pfx()
         $expr = trim(strtolower($expr));
-        // MDL-14274: new operators for comparison added.
-        $ops   = array('+', '-', '*', '/', '^', '_', '>', '<', '<=', '>=', '==');
+
+        $ops   = array('+', '-', '*', '/', '^', '_');
         $ops_r = array('+'=>0,'-'=>0,'*'=>0,'/'=>0,'^'=>1); // right-associative operator?
-        $ops_p = array('+'=>0,'-'=>0,'*'=>1,'/'=>1,'_'=>1,'^'=>2, '>'=>3, '<'=>3, '<='=>3, '>='=>3, '=='=>3); // operator precedence
+        $ops_p = array('+'=>0,'-'=>0,'*'=>1,'/'=>1,'_'=>1,'^'=>2); // operator precedence
 
         $expecting_op = false; // we use this in syntax-checking the expression
                                // and determining when a - is a negation
 
-        if (preg_match("/[^\w\s+*^\/()\.,-<>=]/", $expr, $matches)) { // make sure the characters are all good
+        if (preg_match("/[^\w\s+*^\/()\.,-]/", $expr, $matches)) { // make sure the characters are all good
             return $this->trigger(get_string('illegalcharactergeneral', 'mathslib', $matches[0]));
         }
 
         while(1) { // 1 Infinite Loop ;)
-            // MDL-14274 Test two character operators.
-            $op = substr($expr, $index, 2);
-            if (!in_array($op, $ops)) {
-                // MDL-14274 Get one character operator.
-                $op = substr($expr, $index, 1); // get the first character at the current index
-            }
+            $op = substr($expr, $index, 1); // get the first character at the current index
             // find out if we're currently at the beginning of a number/variable/function/parenthesis/operand
             $ex = preg_match('/^('.self::$namepat.'\(?|\d+(?:\.\d*)?(?:(e[+-]?)\d*)?|\.\d+|\()/', substr($expr, $index), $match);
             //===============
@@ -252,7 +245,7 @@ class EvalMath {
                 }
                 // many thanks: http://en.wikipedia.org/wiki/Reverse_Polish_notation#The_algorithm_in_detail
                 $stack->push($op); // finally put OUR operator onto the stack
-                $index += strlen($op);
+                $index++;
                 $expecting_op = false;
             //===============
             } elseif ($op == ')' and $expecting_op) { // ready to close a parenthesis?
@@ -272,9 +265,7 @@ class EvalMath {
                             $a->given = $arg_count;
                             return $this->trigger(get_string('wrongnumberofarguments', 'mathslib', $a));
                         }
-                    } elseif ($this->get_native_function_name($fnn)) {
-                        $fnn = $this->get_native_function_name($fnn); // Resolve synonyms.
-
+                    } elseif (array_key_exists($fnn, $this->fc)) {
                         $counts = $this->fc[$fnn];
                         if (in_array(-1, $counts) and $arg_count > 0) {}
                         elseif (!in_array($arg_count, $counts)) {
@@ -318,9 +309,7 @@ class EvalMath {
                 $expecting_op = true;
                 $val = $match[1];
                 if (preg_match('/^('.self::$namepat.')\($/', $val, $matches)) { // may be func, or variable w/ implicit multiplication against parentheses...
-                    if (in_array($matches[1], $this->fb) or
-                                array_key_exists($matches[1], $this->f) or
-                                $this->get_native_function_name($matches[1])){ // it's a func
+                    if (in_array($matches[1], $this->fb) or array_key_exists($matches[1], $this->f) or array_key_exists($matches[1], $this->fc)) { // it's a func
                         $stack->push($val);
                         $stack->push(1);
                         $stack->push('(');
@@ -342,7 +331,6 @@ class EvalMath {
                     $stack->pop();// 1
                     $fn = $stack->pop();
                     $fnn = $matches[1]; // get the function name
-                    $fnn = $this->get_native_function_name($fnn); // Resolve synonyms.
                     $counts = $this->fc[$fnn];
                     if (!in_array(0, $counts)){
                         $a= new stdClass();
@@ -380,20 +368,7 @@ class EvalMath {
         }
         return $output;
     }
-    /**
-     *
-     * @param string $fnn
-     * @return string|boolean false if function name unknown.
-     */
-    function get_native_function_name($fnn) {
-        if (array_key_exists($fnn, $this->fcsynonyms)) {
-            return $this->fcsynonyms[$fnn];
-        } else if (array_key_exists($fnn, $this->fc)) {
-            return $fnn;
-        } else {
-            return false;
-        }
-    }
+
     // evaluate postfix notation
     function pfx($tokens, $vars = array()) {
 
@@ -412,8 +387,7 @@ class EvalMath {
                     $fnn = preg_replace("/^arc/", "a", $fnn); // for the 'arc' trig synonyms
                     if ($fnn == 'ln') $fnn = 'log';
                     eval('$stack->push(' . $fnn . '($op1));'); // perfectly safe eval()
-                } elseif ($this->get_native_function_name($fnn)) { // calc emulation function
-                    $fnn = $this->get_native_function_name($fnn); // Resolve synonyms.
+                } elseif (array_key_exists($fnn, $this->fc)) { // calc emulation function
                     // get args
                     $args = array();
                     for ($i = $count-1; $i >= 0; $i--) {
@@ -433,7 +407,7 @@ class EvalMath {
                     $stack->push($this->pfx($this->f[$fnn]['func'], $args)); // yay... recursion!!!!
                 }
             // if the token is a binary operator, pop two values off the stack, do the operation, and push the result back on
-            } elseif (in_array($token, array('+', '-', '*', '/', '^', '>', '<', '==', '<=', '>='), true)) {
+            } elseif (in_array($token, array('+', '-', '*', '/', '^'), true)) {
                 if (is_null($op2 = $stack->pop())) return $this->trigger(get_string('internalerror', 'mathslib'));
                 if (is_null($op1 = $stack->pop())) return $this->trigger(get_string('internalerror', 'mathslib'));
                 switch ($token) {
@@ -448,16 +422,6 @@ class EvalMath {
                         $stack->push($op1/$op2); break;
                     case '^':
                         $stack->push(pow($op1, $op2)); break;
-                    case '>':
-                        $stack->push((int)($op1 > $op2)); break;
-                    case '<':
-                        $stack->push((int)($op1 < $op2)); break;
-                    case '==':
-                        $stack->push((int)($op1 == $op2)); break;
-                    case '<=':
-                        $stack->push((int)($op1 <= $op2)); break;
-                    case '>=':
-                        $stack->push((int)($op1 >= $op2)); break;
                 }
             // if the token is a unary operator, pop one value off the stack, do the operation, and push it back on
             } elseif ($token == "_") {
@@ -519,41 +483,6 @@ class EvalMathStack {
 
 // spreadsheet functions emulation
 class EvalMathFuncs {
-    /**
-     * MDL-14274 new conditional function.
-     * @param boolean $condition boolean for conditional.
-     * @param variant $then value if condition is true.
-     * @param unknown $else value if condition is false.
-     * @author Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
-     * @return unknown
-     */
-    static function ifthenelse($condition, $then, $else) {
-        if ($condition == true) {
-            return $then;
-        } else {
-            return $else;
-        }
-    }
-
-    static function cond_and() {
-        $args = func_get_args();
-        foreach($args as $a) {
-            if ($a == false) {
-                return 0;
-            }
-        }
-        return 1;
-    }
-
-    static function cond_or() {
-        $args = func_get_args();
-        foreach($args as $a) {
-            if($a == true) {
-                return 1;
-            }
-        }
-        return 0;
-    }
 
     static function average() {
         $args = func_get_args();

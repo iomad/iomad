@@ -1722,6 +1722,7 @@ class core_dml_testcase extends database_driver_testcase {
         $this->assertEquals(2, $record->id);
     }
 
+
     public function test_get_record_select() {
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
@@ -5665,6 +5666,7 @@ class moodle_database_for_testing extends moodle_database {
     public function commit_transaction() {}
     public function rollback_transaction() {}
 }
+
 
 /**
  * Dumb test class with toString() returning 1.

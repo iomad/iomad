@@ -209,11 +209,9 @@ class qtype_calculatedsimple_test_helper extends question_test_helper {
     }
 
     public function get_calculatedsimple_question_data_sumwithvariants() {
-        global $USER;
         $q = new stdClass();
 
         $q->name = 'Calculated simple';
-        $q->createdby = $USER->id;
         $q->questiontext = '<p>This is a simple sum of two variables.</p>';
         $q->questiontextformat = '1';
         $q->generalfeedback = '<p>The answer is  {a} + {b}</p>';
@@ -240,7 +238,7 @@ class qtype_calculatedsimple_test_helper extends question_test_helper {
         $q->options->answers[0]->question = '3379';
         $q->options->answers[0]->answer = '{a} + {b}';
         $q->options->answers[0]->answerformat = '0';
-        $q->options->answers[0]->fraction = 1.0;
+        $q->options->answers[0]->fraction = '1.0000000';
         $q->options->answers[0]->feedback = '';
         $q->options->answers[0]->feedbackformat = '1';
         $q->options->answers[0]->tolerance = '0.01';
@@ -251,7 +249,7 @@ class qtype_calculatedsimple_test_helper extends question_test_helper {
         $q->options->units = array();
 
         $q->options->unitgradingtype = '0';
-        $q->options->unitpenalty = 0.1;
+        $q->options->unitpenalty = '0.1000000';
         $q->options->showunits = '3';
         $q->options->unitsleft = '0';
 

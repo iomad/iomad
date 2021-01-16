@@ -48,6 +48,9 @@ class cohort_upload_form extends moodleform {
         $mform = $this->_form;
         $data  = (object)$this->_customdata;
 
+        $mform->addElement('hidden', 'returnurl');
+        $mform->setType('returnurl', PARAM_URL);
+
         $mform->addElement('header', 'cohortfileuploadform', get_string('uploadafile'));
 
         $filepickeroptions = array();
@@ -135,9 +138,11 @@ class cohort_upload_form extends moodleform {
      * @return array
      */
     protected function get_context_options() {
+        global $CFG;
+        require_once($CFG->libdir. '/coursecatlib.php');
         if ($this->contextoptions === null) {
             $this->contextoptions = array();
-            $displaylist = core_course_category::make_categories_list('moodle/cohort:manage');
+            $displaylist = coursecat::make_categories_list('moodle/cohort:manage');
             // We need to index the options array by context id instead of category id and add option for system context.
             $syscontext = context_system::instance();
             if (has_capability('moodle/cohort:manage', $syscontext)) {
@@ -354,7 +359,7 @@ class cohort_upload_form extends moodleform {
         $columns = $cir->get_columns();
 
         // Check that columns include 'name' and warn about extra columns.
-        $allowedcolumns = array('contextid', 'name', 'idnumber', 'description', 'descriptionformat', 'visible', 'theme');
+        $allowedcolumns = array('contextid', 'name', 'idnumber', 'description', 'descriptionformat', 'visible');
         $additionalcolumns = array('context', 'category', 'category_id', 'category_idnumber', 'category_path');
         $displaycolumns = array();
         $extracolumns = array();
@@ -419,13 +424,6 @@ class cohort_upload_form extends moodleform {
                 $cohorts[$rownum]['errors'][] = new lang_string('namefieldempty', 'cohort');
             }
 
-            if (!empty($hash['theme']) && !empty($CFG->allowcohortthemes)) {
-                $availablethemes = cohort_get_list_of_themes();
-                if (empty($availablethemes[$hash['theme']])) {
-                    $cohorts[$rownum]['errors'][] = new lang_string('invalidtheme', 'cohort');
-                }
-            }
-
             $cohorts[$rownum]['data'] = array_intersect_key($hash, $cohorts[0]['data']);
             $haserrors = $haserrors || !empty($cohorts[$rownum]['errors']);
             $haswarnings = $haswarnings || !empty($cohorts[$rownum]['warnings']);
@@ -467,9 +465,6 @@ class cohort_upload_form extends moodleform {
                         }
                         $hash[$key] = clean_param($value, PARAM_BOOL) ? 1 : 0;
                     }
-                    break;
-                case 'theme':
-                    $hash[$key] = core_text::substr(clean_param($value, PARAM_TEXT), 0, 50);
                     break;
             }
         }

@@ -45,114 +45,38 @@ class edit_model extends \moodleform {
 
         $mform = $this->_form;
 
-        if ($this->_customdata['trainedmodel'] && $this->_customdata['staticmodel'] === false) {
+        if ($this->_customdata['model']->is_trained()) {
             $message = get_string('edittrainedwarning', 'tool_analytics');
             $mform->addElement('html', $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING));
         }
 
         $mform->addElement('advcheckbox', 'enabled', get_string('enabled', 'tool_analytics'));
 
-        // Target.
-        if (!empty($this->_customdata['targets'])) {
-            $targets = array('' => '');
-            foreach ($this->_customdata['targets'] as $classname => $target) {
-                $optionname = \tool_analytics\output\helper::class_to_option($classname);
-                $targets[$optionname] = $target->get_name();
-            }
-
-            $mform->addElement('select', 'target', get_string('target', 'tool_analytics'), $targets);
-            $mform->addHelpButton('target', 'target', 'tool_analytics');
-            $mform->addRule('target', get_string('required'), 'required', null, 'client');
+        $indicators = array();
+        foreach ($this->_customdata['indicators'] as $classname => $indicator) {
+            $optionname = \tool_analytics\output\helper::class_to_option($classname);
+            $indicators[$optionname] = $indicator->get_name();
         }
-
-        if (!empty($this->_customdata['targetname']) && !empty($this->_customdata['targetclass'])) {
-            $mform->addElement('static', 'targetname', get_string('target', 'tool_analytics'), $this->_customdata['targetname']);
-            $mform->addElement('hidden', 'target',
-                \tool_analytics\output\helper::class_to_option($this->_customdata['targetclass']));
-            // We won't update the model's target so no worries about its format (we can't use PARAM_ALPHANUMEXT
-            // because of class_to_option).
-            $mform->setType('target', PARAM_TEXT);
-        }
-
-        // Indicators.
-        if (!$this->_customdata['staticmodel']) {
-            $indicators = array();
-            foreach ($this->_customdata['indicators'] as $classname => $indicator) {
-                $optionname = \tool_analytics\output\helper::class_to_option($classname);
-                $indicators[$optionname] = $indicator->get_name();
-            }
-            $options = array(
-                'multiple' => true
-            );
-            $mform->addElement('autocomplete', 'indicators', get_string('indicators', 'tool_analytics'), $indicators, $options);
-            $mform->setType('indicators', PARAM_ALPHANUMEXT);
-            $mform->addHelpButton('indicators', 'indicators', 'tool_analytics');
-        }
-
-        // Time-splitting methods.
-        if (!empty($this->_customdata['invalidcurrenttimesplitting'])) {
-            $mform->addElement('html', $OUTPUT->notification(
-                get_string('invalidcurrenttimesplitting', 'tool_analytics'),
-                \core\output\notification::NOTIFY_WARNING)
-            );
-        }
+        $options = array(
+            'multiple' => true
+        );
+        $mform->addElement('autocomplete', 'indicators', get_string('indicators', 'tool_analytics'), $indicators, $options);
+        $mform->setType('indicators', PARAM_ALPHANUMEXT);
 
         $timesplittings = array('' => '');
         foreach ($this->_customdata['timesplittings'] as $classname => $timesplitting) {
             $optionname = \tool_analytics\output\helper::class_to_option($classname);
             $timesplittings[$optionname] = $timesplitting->get_name();
         }
+
         $mform->addElement('select', 'timesplitting', get_string('timesplittingmethod', 'analytics'), $timesplittings);
         $mform->addHelpButton('timesplitting', 'timesplittingmethod', 'analytics');
 
-        // Contexts restriction.
-        if (!empty($this->_customdata['supportscontexts'])) {
+        $mform->addElement('hidden', 'id', $this->_customdata['id']);
+        $mform->setType('id', PARAM_INT);
 
-            $options = [
-                'ajax' => 'tool_analytics/potential-contexts',
-                'multiple' => true,
-                'noselectionstring' => get_string('all')
-            ];
-
-            if (!empty($this->_customdata['id'])) {
-                $options['modelid'] = $this->_customdata['id'];
-                $contexts = $this->load_current_contexts();
-            } else {
-                // No need to preload any selected contexts.
-                $contexts = [];
-            }
-
-            $mform->addElement('autocomplete', 'contexts', get_string('contexts', 'tool_analytics'), $contexts, $options);
-            $mform->setType('contexts', PARAM_INT);
-            $mform->addHelpButton('contexts', 'contexts', 'tool_analytics');
-        }
-
-        // Predictions processor.
-        if (!$this->_customdata['staticmodel']) {
-            $defaultprocessor = \core_analytics\manager::get_predictions_processor_name(
-                \core_analytics\manager::get_predictions_processor()
-            );
-            $predictionprocessors = ['' => get_string('defaultpredictoroption', 'analytics', $defaultprocessor)];
-            foreach ($this->_customdata['predictionprocessors'] as $classname => $predictionsprocessor) {
-                if ($predictionsprocessor->is_ready() !== true) {
-                    continue;
-                }
-                $optionname = \tool_analytics\output\helper::class_to_option($classname);
-                $predictionprocessors[$optionname] = \core_analytics\manager::get_predictions_processor_name($predictionsprocessor);
-            }
-
-            $mform->addElement('select', 'predictionsprocessor', get_string('predictionsprocessor', 'analytics'),
-                $predictionprocessors);
-            $mform->addHelpButton('predictionsprocessor', 'predictionsprocessor', 'analytics');
-        }
-
-        if (!empty($this->_customdata['id'])) {
-            $mform->addElement('hidden', 'id', $this->_customdata['id']);
-            $mform->setType('id', PARAM_INT);
-
-            $mform->addElement('hidden', 'action', 'edit');
-            $mform->setType('action', PARAM_ALPHANUMEXT);
-        }
+        $mform->addElement('hidden', 'action', 'edit');
+        $mform->setType('action', PARAM_ALPHANUMEXT);
 
         $this->add_action_buttons();
     }
@@ -168,46 +92,20 @@ class edit_model extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        $targetclass = \tool_analytics\output\helper::option_to_class($data['target']);
-        $target = \core_analytics\manager::get_target($targetclass);
-
         if (!empty($data['timesplitting'])) {
-            $timesplittingclass = \tool_analytics\output\helper::option_to_class($data['timesplitting']);
-            if (\core_analytics\manager::is_valid($timesplittingclass, '\core_analytics\local\time_splitting\base') === false) {
+            $realtimesplitting = \tool_analytics\output\helper::option_to_class($data['timesplitting']);
+            if (\core_analytics\manager::is_valid($realtimesplitting, '\core_analytics\local\time_splitting\base') === false) {
                 $errors['timesplitting'] = get_string('errorinvalidtimesplitting', 'analytics');
             }
-
-            $timesplitting = \core_analytics\manager::get_time_splitting($timesplittingclass);
-            if (!$target->can_use_timesplitting($timesplitting)) {
-                $errors['timesplitting'] = get_string('invalidtimesplitting', 'tool_analytics');
-            }
         }
 
-        if (!empty($data['contexts'])) {
-
-            $analyserclass = $target->get_analyser_class();
-            if (!$potentialcontexts = $analyserclass::potential_context_restrictions()) {
-                $errors['contexts'] = get_string('errornocontextrestrictions', 'analytics');
-            } else {
-
-                // Flip the contexts array so we can just diff by key.
-                $selectedcontexts = array_flip($data['contexts']);
-                $invalidcontexts = array_diff_key($selectedcontexts, $potentialcontexts);
-                if (!empty($invalidcontexts)) {
-                    $errors['contexts'] = get_string('errorinvalidcontexts', 'analytics');
-                }
-            }
-        }
-
-        if (!$this->_customdata['staticmodel']) {
-            if (empty($data['indicators'])) {
-                $errors['indicators'] = get_string('errornoindicators', 'analytics');
-            } else {
-                foreach ($data['indicators'] as $indicator) {
-                    $realindicatorname = \tool_analytics\output\helper::option_to_class($indicator);
-                    if (\core_analytics\manager::is_valid($realindicatorname, '\core_analytics\local\indicator\base') === false) {
-                        $errors['indicators'] = get_string('errorinvalidindicator', 'analytics', $realindicatorname);
-                    }
+        if (empty($data['indicators'])) {
+            $errors['indicators'] = get_string('errornoindicators', 'analytics');
+        } else {
+            foreach ($data['indicators'] as $indicator) {
+                $realindicatorname = \tool_analytics\output\helper::option_to_class($indicator);
+                if (\core_analytics\manager::is_valid($realindicatorname, '\core_analytics\local\indicator\base') === false) {
+                    $errors['indicators'] = get_string('errorinvalidindicator', 'analytics', $realindicatorname);
                 }
             }
         }
@@ -217,19 +115,5 @@ class edit_model extends \moodleform {
         }
 
         return $errors;
-    }
-
-    /**
-     * Load the currently selected context options.
-     *
-     * @return array
-     */
-    protected function load_current_contexts() {
-        $contexts = [];
-        foreach ($this->_customdata['contexts'] as $context) {
-            $contexts[$context->id] = $context->get_context_name(true, true);
-        }
-
-        return $contexts;
     }
 }

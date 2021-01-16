@@ -55,10 +55,6 @@ class big_search_form implements renderable, templatable {
     public $tags;
     /** @var string The URL of the search form. */
     public $actionurl;
-    /** @var bool Is the user a guest user? */
-    public $guestuser;
-    /** @var bool Whether the include starredonly checkbox is checked. */
-    public $starredonly;
 
     /**
      * Constructor.
@@ -67,10 +63,9 @@ class big_search_form implements renderable, templatable {
      * @param object $user The user.
      */
     public function __construct($course) {
-        global $DB, $USER;
+        global $DB;
         $this->course = $course;
         $this->tags = [];
-        $this->guestuser = !isloggedin() || isguestuser($USER);
         $this->showfullwords = $DB->get_dbfamily() == 'mysql' || $DB->get_dbfamily() == 'postgres';
         $this->actionurl = new moodle_url('/mod/forum/search.php');
 
@@ -165,15 +160,6 @@ class big_search_form implements renderable, templatable {
     }
 
     /**
-     * Set starred only value.
-     *
-     * @param mixed $value Bool.
-     */
-    public function set_starredonly($value) {
-        $this->starredonly = $value;
-    }
-
-    /**
      * Forum ID setter search criteria.
      *
      * @param int $forumid The forum ID.
@@ -196,8 +182,6 @@ class big_search_form implements renderable, templatable {
         $data->subject = $this->subject;
         $data->user = $this->user;
         $data->showfullwords = $this->showfullwords;
-        $data->guestuser = $this->guestuser;
-        $data->starredonly = $this->starredonly;
         $data->actionurl = $this->actionurl->out(false);
 
         $tagtypestoshow = \core_tag_area::get_showstandard('mod_forum', 'forum_posts');
@@ -230,19 +214,17 @@ class big_search_form implements renderable, templatable {
             $dateto = time() + HOURSECS;
         }
 
-        $data->datefromfields = html_writer::div(html_writer::select_time('days', 'fromday', $datefrom), 'form-group fitem ml-2')
-                              . html_writer::div(html_writer::select_time('months', 'frommonth', $datefrom),
-                           'form-group fitem ml-2')
-                              . html_writer::div(html_writer::select_time('years', 'fromyear', $datefrom), 'form-group fitem ml-2')
-                              . html_writer::div(html_writer::select_time('hours', 'fromhour', $datefrom), 'form-group fitem ml-2')
-                              . html_writer::div(html_writer::select_time('minutes', 'fromminute', $datefrom),
-                           'form-group fitem ml-2');
+        $data->datefromfields = html_writer::select_time('days', 'fromday', $datefrom)
+                              . html_writer::select_time('months', 'frommonth', $datefrom)
+                              . html_writer::select_time('years', 'fromyear', $datefrom)
+                              . html_writer::select_time('hours', 'fromhour', $datefrom)
+                              . html_writer::select_time('minutes', 'fromminute', $datefrom);
 
-        $data->datetofields = html_writer::div(html_writer::select_time('days', 'today', $dateto), 'form-group fitem ml-2')
-                            . html_writer::div(html_writer::select_time('months', 'tomonth', $dateto), 'form-group fitem ml-2')
-                            . html_writer::div(html_writer::select_time('years', 'toyear', $dateto), 'form-group fitem ml-2')
-                            . html_writer::div(html_writer::select_time('hours', 'tohour', $dateto), 'form-group fitem ml-2')
-                            . html_writer::div(html_writer::select_time('minutes', 'tominute', $dateto), 'form-group fitem ml-2');
+        $data->datetofields = html_writer::select_time('days', 'today', $dateto)
+                            . html_writer::select_time('months', 'tomonth', $dateto)
+                            . html_writer::select_time('years', 'toyear', $dateto)
+                            . html_writer::select_time('hours', 'tohour', $dateto)
+                            . html_writer::select_time('minutes', 'tominute', $dateto);
 
         if ($this->forumid && !empty($this->forumoptions)) {
             foreach ($this->forumoptions as $index => $option) {

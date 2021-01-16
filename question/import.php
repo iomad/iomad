@@ -86,7 +86,9 @@ if ($form = $import_form->get_data()) {
     // work out if this is an uploaded file
     // or one from the filesarea.
     $realfilename = $import_form->get_new_filename('newfile');
-    $importfile = make_request_directory() . "/{$realfilename}";
+
+    $importfile = "{$CFG->tempdir}/questionimport/{$realfilename}";
+    make_temp_directory('questionimport');
     if (!$result = $import_form->save_file('newfile', $importfile, true)) {
         throw new moodle_exception('uploadproblem');
     }
@@ -118,7 +120,7 @@ if ($form = $import_form->get_data()) {
     }
 
     // Process the uploaded file
-    if (!$qformat->importprocess()) {
+    if (!$qformat->importprocess($category)) {
         print_error('cannotimport', '', $thispageurl->out());
     }
 
@@ -126,14 +128,6 @@ if ($form = $import_form->get_data()) {
     if (!$qformat->importpostprocess()) {
         print_error('cannotimport', '', $thispageurl->out());
     }
-
-    // Log the import into this category.
-    $eventparams = [
-            'contextid' => $qformat->category->contextid,
-            'other' => ['format' => $form->format, 'categoryid' => $qformat->category->id],
-    ];
-    $event = \core\event\questions_imported::create($eventparams);
-    $event->trigger();
 
     $params = $thispageurl->params() + array(
         'category' => $qformat->category->id . ',' . $qformat->category->contextid);

@@ -15,6 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $plugin->version  = 2016083100;   // The (date) version of this plugin.
-$plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->release  = '3.9.2 (Build: 20200914)'; // Human-friendly version name
+$plugin->requires = 2010021900;   // Requires this Moodle version.
+
 $plugin->component  = 'local_framework_selector';

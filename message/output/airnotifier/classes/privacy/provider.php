@@ -30,8 +30,6 @@ use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\transform;
-use core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_userlist;
 
 /**
  * Privacy class for requesting user data.
@@ -40,10 +38,7 @@ use \core_privacy\local\request\approved_userlist;
  * @copyright  2018 Adrian Greeve <adrian@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
-        \core_privacy\local\request\plugin\provider {
+class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\plugin\provider {
 
     /**
      * Returns meta data about this system.
@@ -94,26 +89,6 @@ class provider implements
     }
 
     /**
-     * Get the list of users within a specific context.
-     *
-     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if (!$context instanceof \context_user) {
-            return;
-        }
-
-        $sql = "SELECT ud.userid
-                  FROM {message_airnotifier_devices} mad
-                  JOIN {user_devices} ud ON ud.id = mad.userdeviceid
-                 WHERE ud.userid = ?";
-        $params = [$context->instanceid];
-        $userlist->add_from_sql('userid', $sql, $params);
-    }
-
-    /**
      * Export all user data for the specified user, in the specified contexts.
      *
      * @param approved_contextlist $contextlist The approved contexts to export information for.
@@ -155,19 +130,6 @@ class provider implements
     }
 
     /**
-     * Delete multiple users within a single context.
-     *
-     * @param approved_userlist $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if ($context instanceof \context_user) {
-            static::delete_data($context->instanceid);
-        }
-    }
-
-    /**
      * Delete all user data for the specified user, in the specified contexts.
      *
      * @param approved_contextlist $contextlist The approved contexts and user information to delete information for.
@@ -181,7 +143,7 @@ class provider implements
      *
      * @param int $userid The user ID
      */
-    protected static function delete_data(int $userid) {
+    protected static function delete_data($userid) {
         global $DB;
 
         foreach (static::get_records($userid) as $record) {
@@ -195,10 +157,10 @@ class provider implements
      * @param  int $userid The user ID
      * @return array An array of records.
      */
-    protected static function get_records(int $userid) : array {
+    protected static function get_records($userid) {
         global $DB;
-        $sql = "SELECT mad.id, mad.enable, ud.appid, ud.name, ud.model, ud.platform, ud.version, ud.timecreated, ud.timemodified,
-                        ud.pushid
+        $sql = "SELECT mad.id, mad.enable, ud.appid, ud.name, ud.model, ud.platform, ud.version, ud.timecreated,
+                       ud.timemodified, ud.pushid
                 FROM {message_airnotifier_devices} mad
                 JOIN {user_devices} ud ON mad.userdeviceid = ud.id
                 WHERE ud.userid = :userid";

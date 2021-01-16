@@ -93,8 +93,7 @@ class dropdown_attribute extends element {
                     'value' => $option,
                     'selected' => $selected == $option
                 ];
-            }, array_keys($options)),
-            'label' => get_string('gradefor', 'gradereport_singleview', $this->label),
+            }, array_keys($options))
         );
 
         return $OUTPUT->render_from_template('gradereport_singleview/dropdown_attribute', $context);

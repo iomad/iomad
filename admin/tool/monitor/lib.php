@@ -119,24 +119,14 @@ function tool_monitor_can_subscribe() {
  * @return array|bool Returns an array of courses or false if the user has no permission to subscribe to rules.
  */
 function tool_monitor_get_user_courses() {
-    // Get the course sorting according to the admin settings.
-    $sort = enrol_get_courses_sortingsql();
-
+    $orderby = 'visible DESC, sortorder ASC';
     $options = array();
     if (has_capability('tool/monitor:subscribe', context_system::instance())) {
         $options[0] = get_string('site');
     }
 
-    $fieldlist = array_merge(
-            [
-                'fullname',
-                'visible',
-            ],
-            array_values(context_helper::get_preload_record_columns('c'))
-        );
-
-    $fields = implode(', ', $fieldlist);
-    if ($courses = get_user_capability_course('tool/monitor:subscribe', null, true, $fields, $sort)) {
+    $fields = 'fullname, visible, ctxid, ctxpath, ctxdepth, ctxlevel, ctxinstance';
+    if ($courses = get_user_capability_course('tool/monitor:subscribe', null, true, $fields, $orderby)) {
         foreach ($courses as $course) {
             context_helper::preload_from_record($course);
             $coursectx = context_course::instance($course->id);

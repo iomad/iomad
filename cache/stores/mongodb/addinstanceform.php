@@ -51,7 +51,7 @@ class cachestore_mongodb_addinstance_form extends cachestore_addinstance_form {
         global $OUTPUT;
         $form = $this->_form;
 
-        if (!version_compare(phpversion('mongodb'), '1.5', 'ge')) {
+        if (!class_exists('MongoClient')) {
             $form->addElement('html', $OUTPUT->notification(get_string('pleaseupgrademongo', 'cachestore_mongodb')));
         }
 
@@ -71,7 +71,7 @@ class cachestore_mongodb_addinstance_form extends cachestore_addinstance_form {
         $form->addHelpButton('username', 'username', 'cachestore_mongodb');
         $form->setType('username', PARAM_ALPHANUMEXT);
 
-        $form->addElement('passwordunmask', 'password', get_string('password', 'cachestore_mongodb'));
+        $form->addElement('text', 'password', get_string('password', 'cachestore_mongodb'));
         $form->addHelpButton('password', 'password', 'cachestore_mongodb');
         $form->setType('password', PARAM_TEXT);
 

@@ -25,10 +25,12 @@
 define('NO_OUTPUT_BUFFERING', true);
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/dataformatlib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
 
 $dataformat = optional_param('dataformat', '', PARAM_ALPHA);
 
+require_login();
 admin_externalpage_setup('userbulk');
 require_capability('moodle/user:update', context_system::instance());
 
@@ -68,9 +70,9 @@ if ($dataformat) {
     $downloadusers = new ArrayObject($SESSION->bulk_users);
     $iterator = $downloadusers->getIterator();
 
-    \core\dataformat::download_data($filename, $dataformat, $fields, $iterator, function($userid) use ($extrafields, $fields) {
+    download_as_dataformat($filename, $dataformat, $fields, $iterator, function($userid) use ($extrafields, $fields) {
         global $DB;
-
+        $row = array();
         if (!$user = $DB->get_record('user', array('id' => $userid))) {
             return null;
         }

@@ -12,12 +12,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+/* global ANNOTATIONCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
  *
  * @module moodle-assignfeedback_editpdf-editor
-*/
+ */
 
 /**
  * Class representing a highlight.
@@ -109,13 +110,13 @@ Y.extend(ANNOTATIONHIGHLIGHT, M.assignfeedback_editpdf.annotation, {
         shape = this.editor.graphic.addShape({
             type: Y.Rect,
             width: bounds.width,
-            height: 20,
+            height: 16,
             stroke: false,
             fill: {
                color: highlightcolour
             },
             x: bounds.x,
-            y: edit.start.y - 10
+            y: edit.start.y
         });
 
         drawable.shapes.push(shape);
@@ -138,9 +139,9 @@ Y.extend(ANNOTATIONHIGHLIGHT, M.assignfeedback_editpdf.annotation, {
         this.gradeid = this.editor.get('gradeid');
         this.pageno = this.editor.currentpage;
         this.x = bounds.x;
-        this.y = edit.start.y - 10;
+        this.y = edit.start.y;
         this.endx = bounds.x + bounds.width;
-        this.endy = edit.start.y + 10;
+        this.endy = edit.start.y + 16;
         this.colour = edit.annotationcolour;
         this.page = '';
 

@@ -110,21 +110,19 @@ class MoodleQuickForm_listing extends HTML_QuickForm_input {
     function toHtml() {
         global $CFG, $PAGE;
 
-        $this->_generateId();
-        $elementid = $this->getAttribute('id');
         $mainhtml = html_writer::tag('div', $this->items[$this->getValue()]->mainhtml,
-                array('id' => $elementid . '_items_main', 'class' => 'formlistingmain'));
+                array('id' => $this->getName().'_items_main', 'class' => 'formlistingmain'));
 
         // Add the main div containing the selected item (+ the caption: "More items").
         $html = html_writer::tag('div', $mainhtml .
                     html_writer::tag('div', $this->showall,
-                        array('id' => $elementid . '_items_caption', 'class' => 'formlistingmore')),
-                    array('id' => $elementid . '_items', 'class' => 'formlisting hide'));
+                        array('id' => $this->getName().'_items_caption', 'class' => 'formlistingmore')),
+                    array('id'=>$this->getName().'_items', 'class' => 'formlisting hide'));
 
         // Add collapsible region: all the items.
         $itemrows = '';
         $html .= html_writer::tag('div', $itemrows,
-                array('id' => $elementid . '_items_all', 'class' => 'formlistingall'));
+                array('id' => $this->getName().'_items_all', 'class' => 'formlistingall'));
 
         // Add radio buttons for non javascript support.
         $radiobuttons = '';
@@ -141,19 +139,19 @@ class MoodleQuickForm_listing extends HTML_QuickForm_input {
 
         // Container for the hidden hidden input which will contain the selected item.
         $html .= html_writer::tag('div', $radiobuttons,
-                array('id' => 'formlistinginputcontainer_' . $elementid, 'class' => 'formlistinginputcontainer'));
+                array('id' => 'formlistinginputcontainer_' . $this->getName(), 'class' => 'formlistinginputcontainer'));
 
         $module = array('name'=>'form_listing', 'fullpath'=>'/lib/form/yui/listing/listing.js',
             'requires'=>array('node', 'event', 'transition', 'escape'));
 
         $PAGE->requires->js_init_call('M.form_listing.init',
                  array(array(
-                'elementid' => $elementid.'_items',
+                'elementid' => $this->getName().'_items',
                 'hideall' => $this->hideall,
                 'showall' => $this->showall,
                 'hiddeninputid' => $this->getAttribute('id'),
                 'items' => $this->items,
-                'inputname' => $elementid,
+                'inputname' => $this->getName(),
                 'currentvalue' => $this->getValue())), true, $module);
 
         return $html;

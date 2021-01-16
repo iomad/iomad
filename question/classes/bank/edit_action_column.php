@@ -14,31 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Base class for question bank columns that just contain an action icon.
- *
- * @package   core_question
- * @copyright 2009 Tim Hunt
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace core_question\bank;
-defined('MOODLE_INTERNAL') || die();
-
 
 /**
  * Base class for question bank columns that just contain an action icon.
  *
- * @copyright 2009 Tim Hunt
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2009 Tim Hunt
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class edit_action_column extends menu_action_column_base {
+class edit_action_column extends action_column_base {
     protected $stredit;
     protected $strview;
 
     public function init() {
         parent::init();
-        $this->stredit = get_string('editquestion', 'question');
+        $this->stredit = get_string('edit');
         $this->strview = get_string('view');
     }
 
@@ -46,20 +36,11 @@ class edit_action_column extends menu_action_column_base {
         return 'editaction';
     }
 
-    protected function get_url_icon_and_label(\stdClass $question): array {
-        if (!\question_bank::is_qtype_installed($question->qtype)) {
-            // It sometimes happens that people end up with junk questions
-            // in their question bank of a type that is no longer installed.
-            // We cannot do most actions on them, because that leads to errors.
-            return [null, null, null];
-        }
-
+    protected function display_content($question, $rowclasses) {
         if (question_has_capability_on($question, 'edit')) {
-            return [$this->qbank->edit_question_moodle_url($question->id), 't/edit', $this->stredit];
+            $this->print_icon('t/edit', $this->stredit, $this->qbank->edit_question_url($question->id));
         } else if (question_has_capability_on($question, 'view')) {
-            return [$this->qbank->edit_question_moodle_url($question->id), 'i/info', $this->strview];
-        } else {
-            return [null, null, null];
+            $this->print_icon('i/info', $this->strview, $this->qbank->edit_question_url($question->id));
         }
     }
 }

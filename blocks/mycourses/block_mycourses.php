@@ -23,6 +23,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+require_once('locallib.php');
 
 class block_mycourses extends block_base {
 

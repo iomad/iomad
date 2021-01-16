@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template core_calendar/event_list
+    @template calendar/event_list
 
     Calendar event list.
 
@@ -31,13 +31,13 @@
     {
     }
 }}
-<div class="eventlist my-1">
+<div class="eventlist m-y-1">
     {{#events}}
         {{> core_calendar/event_item }}
     {{/events}}
     {{^events}}
         <span class="calendar-information calendar-no-results">
-            {{$noeventsmessage}}{{/noeventsmessage}}
+            {{#str}}daywithnoevents, calendar{{/str}}
         </span>
     {{/events}}
 </div>

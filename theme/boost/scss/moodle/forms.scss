@@ -10,7 +10,7 @@
 }
 
 .mform .containsadvancedelements .advanced.show {
-    display: flex;
+    display: block;
 }
 
 #adminsettings span.error {
@@ -27,38 +27,34 @@
     .custom-select {
         max-width: 100%;
     }
-    .form-group {
-        margin: 0.1rem 0.25rem 0.1rem 0;
-    }
-    br + label {
-        justify-content: flex-start;
-        width: 100%;
-        margin-right: 0;
-    }
-}
-
-.unresponsive.mform .form-inline,
-.unresponsive.mform .form-inline label {
-    display: inline-flex;
-}
-
-#jump-to-activity.custom-select {
-    width: 100%;
 }
 
 .mform fieldset {
+    margin-left: $spacer * 1.5;
     margin-bottom: $spacer / 2;
     border-bottom: $border-width solid $table-border-color;
 }
 
-@include media-breakpoint-up(sm) {
-    .mform > .form-group {
-        margin-left: $spacer * 1.5;
-    }
+.editor_atto_content.form-control {
+    width: 100%;
 }
 
 #adminsettings .form-control[size] {
     width: auto;
+}
+
+.mform fieldset.collapsible legend a.fheader {
+    padding: 0 5px 0 ($spacer * 1.5);
+    margin-left: -($spacer * 1.5);
+    background: url([[pix:t/expanded]]) 0 center no-repeat;
+}
+
+.mform fieldset.collapsed legend a.fheader {
+    /*rtl:raw:
+    background-image: url([[pix:t/collapsed_rtl]]);
+    */
+    /*rtl:remove*/
+    background-image: url([[pix:t/collapsed]]);
 }
 
 .jsenabled .mform .collapsed .fcontainer {
@@ -90,7 +86,7 @@ input#id_externalurl {
 
 .form-defaultinfo,
 .form-label .form-shortname {
-    color: $text-muted;
+    @extend .text-muted;
 }
 
 .form-label .form-shortname {
@@ -102,12 +98,8 @@ input#id_externalurl {
     display: inline;
 }
 
-.form-inline label:not(.sr-only):not(.accesshide) + select {
-    margin-left: 0.5rem;
-}
-
 .formsettingheading .form-horizontal {
-    color: $text-muted;
+    @extend .text-muted;
 }
 
 // Moodle doesn't differentiate between what Bootstrap calls
@@ -115,12 +107,23 @@ input#id_externalurl {
 // uneditable looks ugly, styling both as form help is fairly
 // subtle in it's impact. Going for the latter as the best option.
 .no-felement.fstatic {
-    color: $text-muted;
+    @extend .text-muted;
     padding-top: 5px;
 }
 
 .no-fitem .fstaticlabel {
     font-weight: bold;
+}
+
+// Pale grey container for submit buttons.
+.form-buttons,
+.path-admin .buttons,
+#fitem_id_submitbutton,
+.fp-content-center form + div,
+div.backup-section + form,
+#fgroup_id_buttonar {
+    @extend .form-group;
+    padding-left: 0;
 }
 
 .form-item .form-setting .defaultsnext > input {
@@ -150,19 +153,14 @@ input#id_externalurl {
 // I think this could be avoided (or at least tidied up) ifr
 // we used HTML5 input types like url, phone, email, number etc.
 /* rtl:ignore */
-.mform .fitem .felement input[name="email"],
-.mform .fitem .felement input[name="email2"],
-.mform .fitem .felement input[name="url"],
-.mform .fitem .felement input[name="idnumber"],
-.mform .fitem .felement input[name="phone1"],
-.mform .fitem .felement input[name="phone2"] {
+.mform .fitem .felement input[name=email],
+.mform .fitem .felement input[name=email2],
+.mform .fitem .felement input[name=url],
+.mform .fitem .felement input[name=idnumber],
+.mform .fitem .felement input[name=phone1],
+.mform .fitem .felement input[name=phone2] {
     text-align: left;
     direction: ltr;
-}
-
-// Reduce the mediaplugin width when using inside forms.
-.que.match .mediaplugin {
-    width: 50vw;
 }
 
 /* rtl:ignore */
@@ -226,15 +224,6 @@ fieldset.coursesearchbox label {
     display: none;
 }
 
-.availability-field {
-    label {
-        display: inline-flex;
-    }
-    .availability-group label {
-        vertical-align: top;
-    }
-}
-
 .availability-eye {
     clear: left;
     float: left;
@@ -244,12 +233,8 @@ fieldset.coursesearchbox label {
     float: left;
     @include border-radius($card-border-radius);
     border: $card-border-width solid $card-border-color;
-    padding: 1rem;
-    margin-top: 0.5rem;
-}
-.availability-plugincontrols,
-.availability-childlist .availability-inner {
-    margin-left: .625rem;
+    padding: $card-spacer-x / 2;
+    margin-left: $card-spacer-x / 2;
 }
 .availability-field .availability-plugincontrols .availability-group select {
     max-width: 12rem;
@@ -272,60 +257,57 @@ fieldset.coursesearchbox label {
 }
 .form-autocomplete-selection {
     margin: $input-padding-y-sm;
-    // Padding top and bottom, plus mb-1 and the 100% lineheight.
+    // Padding top and bottom, plus m-b-1 and the 100% lineheight.
     min-height: 2 * $input-padding-y-sm + 2 * $font-size-base;
 }
 
-.form-autocomplete-selection [role=option] {
+.form-autocomplete-multiple [role=listitem] {
     cursor: pointer;
-    white-space: inherit;
-    word-break: break-word;
-    line-height: 1.4;
-    text-align: left;
 }
 
 .form-autocomplete-suggestions {
     position: absolute;
     background-color: white;
-    border: $border-width solid $input-border-color;
+    border: 2px solid $gray-lighter;
+    border-radius: 3px;
     min-width: 206px;
     max-height: 20em;
     overflow: auto;
-    margin: $dropdown-spacer 0 0;
-    padding: $dropdown-padding-y 0;
+    margin: 0;
+    padding: 0;
+    margin-top: 0.4em;
     z-index: 1;
 }
 
 .form-autocomplete-suggestions li {
     list-style-type: none;
-    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    padding: 0.2em;
     margin: 0;
     cursor: pointer;
     color: $body-color;
-    &:hover,
-    &:focus,
-    &[aria-selected="true"] {
-        background-color: $dropdown-link-active-bg;
-        color: $dropdown-link-active-color;
-    }
-    &::before {
-        content: "\200B";
-    }
+}
+
+.form-autocomplete-suggestions li:hover {
+    background-color: lighten($dropdown-link-active-bg, 15%);
+    color: $dropdown-link-active-color;
+}
+
+.form-autocomplete-suggestions li[aria-selected=true] {
+    background-color: darken($dropdown-bg, 5%);
+    color: $gray;
 }
 
 .form-autocomplete-downarrow {
     color: $body-color;
-    top: 0.2rem;
-    right: 0.5rem;
+    position: relative;
+    top: 0.2em;
+    left: -1.5em;
     cursor: pointer;
-    .loading-icon {
-        position: absolute;
-        top: 0;
-        left: 0;
-        background-color: $white;
-    }
 }
 
+.form-autocomplete-selection:focus {
+    outline: none;
+}
 /** Undo some bootstrap things */
 .form-autocomplete-selection + input.form-control {
     width: auto;
@@ -344,14 +326,12 @@ select[size],
 select[multiple] {
     overflow: auto;
 }
-
-select[size="1"] {
+select[size=1] {
     overflow: visible;
 }
 
 textarea[data-auto-rows] {
     overflow-x: hidden;
-    resize: none;
 }
 
 /** Display elements under labels in vertical forms regardless of the screen size. */
@@ -400,78 +380,23 @@ textarea[data-auto-rows] {
     max-width: 30rem;
 }
 
+/** Atto fields do not have form-control because that would break the layout of the editor.
+    So they need these extra styles to highlight the editor when there is a validation error. */
+.has-danger .editor_atto_content.form-control,
+.has-danger .editor_atto_content.form-control-danger {
+    @include form-control-validation($brand-danger);
+    background-image: $form-icon-danger;
+    padding-right: ($input-padding-x * 3);
+    background-repeat: no-repeat;
+    background-position: center right ($input-height / 4);
+    background-size: ($input-height / 2) ($input-height / 2);
+}
+
 // Styles for the JS file types browser provided by the "filetypes" element.
 [data-filetypesbrowserbody] {
     [aria-expanded="false"] > [role="group"],
     [aria-expanded="false"] [data-filetypesbrowserfeature="hideifcollapsed"],
     [aria-expanded="true"] [data-filetypesbrowserfeature="hideifexpanded"] {
         display: none;
-    }
-}
-
-// The autocomplete popup needs a display:block container to correctly position to popup.
-.form-inline[data-fieldtype="autocomplete"],
-.form-inline[data-fieldtype="tags"] {
-    display: block;
-}
-
-// Show editor at 100% width by default.
-[data-fieldtype="editor"] > div {
-    flex-grow: 1;
-}
-
-@include media-breakpoint-up(sm) {
-    .mform fieldset {
-        margin-left: $spacer * 1.5;
-    }
-    .mform fieldset.collapsible legend a.fheader {
-        padding: 0 5px 0 ($spacer * 1.5);
-        margin-left: -($spacer * 1.5);
-        background: url([[pix:t/expanded]]) 0 center no-repeat;
-    }
-
-    .mform fieldset.collapsed legend a.fheader {
-        /*rtl:raw:
-        background-image: url([[pix:t/collapsed_rtl]]);
-        */
-        /*rtl:remove*/
-        background-image: url([[pix:t/collapsed]]);
-    }
-
-    .mform {
-        .form-inline {
-            .fdefaultcustom {
-                label {
-                    justify-content: initial;
-                }
-            }
-        }
-    }
-}
-
-// Form inset on the left/right.
-// Used to display an icon/button within the form control.
-.input-group {
-    &.form-inset {
-        .form-inset-item {
-            position: absolute;
-            padding-top: calc(#{$input-padding-y} + #{$input-border-width});
-            z-index: 3;
-        }
-
-        &.form-inset-left {
-            .form-control {
-                padding-left: $spacer * 1.5;
-            }
-        }
-
-        &.form-inset-right {
-            .form-control {
-                padding-right: $spacer * 1.5;
-            }
-            .form-inset-item {
-                right: 0;
-            }
-        }
     }
 }

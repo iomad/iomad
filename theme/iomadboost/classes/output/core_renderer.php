@@ -80,13 +80,13 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * @return string logo url or false;
      */
     protected function get_iomad_logo($maxwidth = 100, $maxheight = 100) {
-        global $CFG, $DB;
+        global $CFG; $DB;
 
         $fs = get_file_storage();
 
         $clientlogo = '';
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
-        if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+        $companyid = \iomad::is_company_user();
+        if ($companyid) {
             $context = \context_system::instance();
             $files = $fs->get_area_files($context->id, 'theme_iomad', 'companylogo', $companyid );
             if ($files) {
@@ -166,8 +166,8 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $css = '';
 
         // Get company colours
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
-        if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
+        $companyid = \iomad::is_company_user();
+        if ($companyid) {
             $company = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
             $linkcolor = $company->linkcolor;
             if ($linkcolor) {
@@ -207,7 +207,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
 
         // Deal with company custom menu items.
-        if ($companyid = \iomad::get_my_companyid(\context_system::instance(), false)) {
+        if ($companyid = \iomad::is_company_user()) {
             if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = $companyrec->custommenuitems;
@@ -232,7 +232,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
 
         // Deal with company custom menu items.
-        if ($companyid = \iomad::get_my_companyid(\context_system::instance(), false)) {
+        if ($companyid = \iomad::is_company_user()) {
             if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = $companyrec->custommenuitems;
@@ -270,11 +270,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * @return string HTML fragment
      */
     public function navbar_button() {
-        global $CFG, $DB;
+        global $CFG;
 
         $custommenuitems = false;
         // Deal with company custom menu items.
-        if ($companyid = \iomad::get_my_companyid(\context_system::instance(), false)) {
+        if ($companyid = \iomad::is_company_user()) {
             if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = true;

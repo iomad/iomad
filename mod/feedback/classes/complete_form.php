@@ -293,22 +293,15 @@ class mod_feedback_complete_form extends moodleform {
      */
     public function add_form_element($item, $element, $addrequiredrule = true, $setdefaultvalue = true) {
         global $OUTPUT;
-
-        if (is_array($element) && $element[0] == 'group') {
-            // For groups, use the mforms addGroup API.
-            // $element looks like: ['group', $groupinputname, $name, $objects, $separator, $appendname],
-            $element = $this->_form->addGroup($element[3], $element[1], $element[2], $element[4], $element[5]);
-        } else {
-            // Add non-group element to the form.
-            if (is_array($element)) {
-                if ($this->is_frozen() && $element[0] === 'text') {
-                    // Convert 'text' element to 'static' when freezing for better display.
-                    $element = ['static', $element[1], $element[2]];
-                }
-                $element = call_user_func_array(array($this->_form, 'createElement'), $element);
+        // Add element to the form.
+        if (is_array($element)) {
+            if ($this->is_frozen() && $element[0] === 'text') {
+                // Convert 'text' element to 'static' when freezing for better display.
+                $element = ['static', $element[1], $element[2]];
             }
-            $element = $this->_form->addElement($element);
+            $element = call_user_func_array(array($this->_form, 'createElement'), $element);
         }
+        $element = $this->_form->addElement($element);
 
         // Prepend standard CSS classes to the element classes.
         $attributes = $element->getAttributes();
@@ -323,7 +316,7 @@ class mod_feedback_complete_form extends moodleform {
 
         // Set default value.
         if ($setdefaultvalue && ($tmpvalue = $this->get_item_value($item))) {
-            $this->_form->setDefault($element->getName(), htmlspecialchars_decode($tmpvalue, ENT_QUOTES));
+            $this->_form->setDefault($element->getName(), $tmpvalue);
         }
 
         // Freeze if needed.
@@ -399,8 +392,8 @@ class mod_feedback_complete_form extends moodleform {
      */
     protected function add_item_label($item, $element) {
         if (strlen($item->label) && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
-            $name = get_string('nameandlabelformat', 'mod_feedback',
-                (object)['label' => format_string($item->label), 'name' => $element->getLabel()]);
+            $name = $element->getLabel();
+            $name = '('.format_string($item->label).') '.$name;
             $element->setLabel($name);
         }
     }

@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 namespace local_iomad_learningpath\output;
 
 defined('MOODLE_INTERNAL') || die();
@@ -52,7 +53,7 @@ class manage_page implements renderable, templatable {
             $thumb = $fs->get_file($this->context->id, 'local_iomad_learningpath', 'thumbnail', $path->id, '/', 'thumbnail.png');
             $path->linkedit = new \moodle_url('/local/iomad_learningpath/editpath.php', ['id' => $path->id]);
             if ($thumb) {
-                $path->linkthumbnail = \moodle_url::make_pluginfile_url($thumb->get_contextid(), $thumb->get_component(), $thumb->get_filearea(),
+                $path->linkthumbnail = \moodle_url::make_pluginfile_url($thumb->get_contextid(), $thumb->get_component(), $thumb->get_filearea(), 
                     $thumb->get_itemid(), $thumb->get_filepath(), $thumb->get_filename());
             } else {
                 $path->linkthumbnail = $output->image_url('learningpath', 'local_iomad_learningpath');

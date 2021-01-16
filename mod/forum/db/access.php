@@ -33,7 +33,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
@@ -49,8 +48,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -62,8 +59,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -78,8 +73,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -94,8 +87,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -109,8 +100,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -124,8 +113,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -138,8 +125,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -152,8 +137,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -166,8 +149,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' =>  'mod/forum:viewanyrating'
@@ -176,28 +157,6 @@ $capabilities = array(
     'mod/forum:rate' => array(
 
         'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/forum:postprivatereply' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/forum:readprivatereplies' => array(
-        'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
@@ -216,61 +175,51 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
 
     'mod/forum:deleteownpost' => array(
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
 
     'mod/forum:deleteanypost' => array(
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
 
     'mod/forum:splitdiscussions' => array(
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
 
     'mod/forum:movediscussions' => array(
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -282,8 +231,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -297,8 +244,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -310,8 +255,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -323,8 +266,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -333,13 +274,11 @@ $capabilities = array(
 
         'riskbitmask' => RISK_SPAM,
 
-        'captype' => 'write',
+        'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -353,8 +292,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -368,20 +305,7 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
-        )
-    ),
-    'mod/forum:exportforum' => array(
-        'riskbitmask' => RISK_PERSONAL,
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
         )
     ),
     'mod/forum:exportpost' => array(
@@ -393,8 +317,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -407,8 +329,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
             'student' => CAP_ALLOW,
         )
@@ -422,8 +342,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -435,8 +353,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'frontpage' => CAP_ALLOW
         )
     ),
@@ -447,8 +363,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -458,37 +372,8 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
-    'mod/forum:canoverridecutoff' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'mod/forum:canoverridediscussionlock'
-    ),
-    'mod/forum:cantogglefavourite' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'user' => CAP_ALLOW
-        )
-    ),
-
-    'mod/forum:grade' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
 );
 

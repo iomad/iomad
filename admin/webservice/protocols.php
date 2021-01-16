@@ -30,7 +30,8 @@ require_once($CFG->libdir.'/tablelib.php');
 $PAGE->set_url('/' . $CFG->admin . '/webservice/protocols.php');
 //TODO: disable the blocks here or better make the page layout default to no blocks!
 
-require_admin();
+require_login();
+require_capability('moodle/site:config', context_system::instance());
 
 $returnurl = $CFG->wwwroot . "/" . $CFG->admin . "/settings.php?section=webserviceprotocols";
 

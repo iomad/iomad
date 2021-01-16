@@ -34,7 +34,6 @@ use \core_privacy\local\request\contextlist_base;
  *
  * @copyright   2018 Andrew Nicols <andrew@nicols.co.uk>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \core_privacy\local\request\contextlist_base
  */
 class contextlist_base_test extends advanced_testcase {
     /**
@@ -44,7 +43,6 @@ class contextlist_base_test extends advanced_testcase {
      * @param   array   $input List of context IDs
      * @param   array   $expected list of contextids
      * @param   int     $count Expected count
-     * @covers ::get_contextids
      */
     public function test_get_contextids($input, $expected, $count) {
         $uit = new test_contextlist_base();
@@ -86,8 +84,6 @@ class contextlist_base_test extends advanced_testcase {
 
     /**
      * Ensure that get_contexts returns the correct list of contexts.
-     *
-     * @covers ::get_contexts
      */
     public function test_get_contexts() {
         global $DB;
@@ -118,7 +114,6 @@ class contextlist_base_test extends advanced_testcase {
      * @param   array   $input List of context IDs
      * @param   array   $expected list of contextids
      * @param   int     $count Expected count
-     * @covers ::count
      */
     public function test_countable($input, $expected, $count) {
         $uit = new test_contextlist_base();
@@ -129,12 +124,6 @@ class contextlist_base_test extends advanced_testcase {
 
     /**
      * Ensure that the contextlist_base iterates over the set of contexts.
-     *
-     * @covers ::current
-     * @covers ::key
-     * @covers ::next
-     * @covers ::rewind
-     * @covers ::valid
      */
     public function test_context_iteration() {
         global $DB;
@@ -151,138 +140,6 @@ class contextlist_base_test extends advanced_testcase {
         foreach ($uit as $key => $context) {
             $this->assertNotFalse(array_search($context, $contexts));
         }
-    }
-
-    /**
-     * Test that deleting a context results in current returning nothing.
-     *
-     * @covers ::current
-     */
-    public function test_current_context_one_context() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $data = (object) [
-            'contextlevel' => CONTEXT_BLOCK,
-            'instanceid' => 45,
-            'path' => '1/5/67/107',
-            'depth' => 4
-        ];
-
-        $contextid = $DB->insert_record('context', $data);
-
-        $contextbase = new test_contextlist_base();
-        $contextbase->set_contextids([$contextid]);
-        $this->assertCount(1, $contextbase);
-        $currentcontext = $contextbase->current();
-        $this->assertEquals($contextid, $currentcontext->id);
-        $DB->delete_records('context', ['id' => $contextid]);
-        context_helper::reset_caches();
-        $this->assertEmpty($contextbase->current());
-    }
-
-    /**
-     * Test that deleting a context results in the next record being returned.
-     *
-     * @covers ::current
-     */
-    public function test_current_context_two_contexts() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $data = (object) [
-            'contextlevel' => CONTEXT_BLOCK,
-            'instanceid' => 45,
-            'path' => '1/5/67/107',
-            'depth' => 4
-        ];
-
-        $contextid1 = $DB->insert_record('context', $data);
-
-        $data = (object) [
-            'contextlevel' => CONTEXT_BLOCK,
-            'instanceid' => 47,
-            'path' => '1/5/54/213',
-            'depth' => 4
-        ];
-
-        $contextid2 = $DB->insert_record('context', $data);
-
-        $contextbase = new test_contextlist_base();
-        $contextbase->set_contextids([$contextid1, $contextid2]);
-        $this->assertCount(2, $contextbase);
-        $DB->delete_records('context', ['id' => $contextid1]);
-        context_helper::reset_caches();
-        // Current should return context 2.
-        $this->assertEquals($contextid2, $contextbase->current()->id);
-    }
-
-    /**
-     * Test that if there are no non-deleted contexts that nothing is returned.
-     *
-     * @covers ::get_contexts
-     */
-    public function test_get_contexts_all_deleted() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $data = (object) [
-            'contextlevel' => CONTEXT_BLOCK,
-            'instanceid' => 45,
-            'path' => '1/5/67/107',
-            'depth' => 4
-        ];
-
-        $contextid = $DB->insert_record('context', $data);
-
-        $contextbase = new test_contextlist_base();
-        $contextbase->set_contextids([$contextid]);
-        $this->assertCount(1, $contextbase);
-        $DB->delete_records('context', ['id' => $contextid]);
-        context_helper::reset_caches();
-        $this->assertEmpty($contextbase->get_contexts());
-    }
-
-    /**
-     * Test that get_contexts() returns only active contexts.
-     *
-     * @covers ::get_contexts
-     */
-    public function test_get_contexts_one_deleted() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $data = (object) [
-            'contextlevel' => CONTEXT_BLOCK,
-            'instanceid' => 45,
-            'path' => '1/5/67/107',
-            'depth' => 4
-        ];
-
-        $contextid1 = $DB->insert_record('context', $data);
-
-        $data = (object) [
-            'contextlevel' => CONTEXT_BLOCK,
-            'instanceid' => 47,
-            'path' => '1/5/54/213',
-            'depth' => 4
-        ];
-
-        $contextid2 = $DB->insert_record('context', $data);
-
-        $contextbase = new test_contextlist_base();
-        $contextbase->set_contextids([$contextid1, $contextid2]);
-        $this->assertCount(2, $contextbase);
-        $DB->delete_records('context', ['id' => $contextid1]);
-        context_helper::reset_caches();
-        $contexts = $contextbase->get_contexts();
-        $this->assertCount(1, $contexts);
-        $context = array_shift($contexts);
-        $this->assertEquals($contextid2, $context->id);
     }
 }
 

@@ -660,13 +660,9 @@ class core_dml_testcase extends database_driver_testcase {
         $table->add_field('course', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, 'lala');
         $table->add_field('description', XMLDB_TYPE_TEXT, 'small', null, null, null, null);
-        $table->add_field('oneint', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('oneintnodefault', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null);
         $table->add_field('enumfield', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'test2');
         $table->add_field('onenum', XMLDB_TYPE_NUMBER, '10,2', null, null, null, 200);
-        $table->add_field('onenumnodefault', XMLDB_TYPE_NUMBER, '10,2', null, null, null);
-        $table->add_field('onefloat', XMLDB_TYPE_FLOAT, '10,2', null, XMLDB_NOTNULL, null, 300);
-        $table->add_field('onefloatnodefault', XMLDB_TYPE_FLOAT, '10,2', null, XMLDB_NOTNULL, null);
+        $table->add_field('onefloat', XMLDB_TYPE_FLOAT, '10,2', null, null, null, 300);
         $table->add_field('anotherfloat', XMLDB_TYPE_FLOAT, null, null, null, null, 400);
         $table->add_field('negativedfltint', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '-1');
         $table->add_field('negativedfltnumber', XMLDB_TYPE_NUMBER, '10', null, XMLDB_NOTNULL, null, '-2');
@@ -727,20 +723,6 @@ class core_dml_testcase extends database_driver_testcase {
         $this->assertNull($field->default_value);
         $this->assertFalse($field->not_null);
 
-        $field = $columns['oneint'];
-        $this->assertSame('I', $field->meta_type);
-        $this->assertFalse($field->auto_increment);
-        $this->assertTrue($field->has_default);
-        $this->assertEquals(0, $field->default_value);
-        $this->assertTrue($field->not_null);
-
-        $field = $columns['oneintnodefault'];
-        $this->assertSame('I', $field->meta_type);
-        $this->assertFalse($field->auto_increment);
-        $this->assertFalse($field->has_default);
-        $this->assertNull($field->default_value);
-        $this->assertTrue($field->not_null);
-
         $field = $columns['enumfield'];
         $this->assertSame('C', $field->meta_type);
         $this->assertFalse($field->auto_increment);
@@ -756,28 +738,12 @@ class core_dml_testcase extends database_driver_testcase {
         $this->assertEquals(200.0, $field->default_value);
         $this->assertFalse($field->not_null);
 
-        $field = $columns['onenumnodefault'];
-        $this->assertSame('N', $field->meta_type);
-        $this->assertFalse($field->auto_increment);
-        $this->assertEquals(10, $field->max_length);
-        $this->assertEquals(2, $field->scale);
-        $this->assertFalse($field->has_default);
-        $this->assertNull($field->default_value);
-        $this->assertFalse($field->not_null);
-
         $field = $columns['onefloat'];
         $this->assertSame('N', $field->meta_type);
         $this->assertFalse($field->auto_increment);
         $this->assertTrue($field->has_default);
         $this->assertEquals(300.0, $field->default_value);
-        $this->assertTrue($field->not_null);
-
-        $field = $columns['onefloatnodefault'];
-        $this->assertSame('N', $field->meta_type);
-        $this->assertFalse($field->auto_increment);
-        $this->assertFalse($field->has_default);
-        $this->assertNull($field->default_value);
-        $this->assertTrue($field->not_null);
+        $this->assertFalse($field->not_null);
 
         $field = $columns['anotherfloat'];
         $this->assertSame('N', $field->meta_type);
@@ -2355,7 +2321,7 @@ class core_dml_testcase extends database_driver_testcase {
         $record->id = '1';
         $record->course = '1';
         $record->oneint = null;
-        $record->onenum = 1.0;
+        $record->onenum = '1.00';
         $record->onechar = 'a';
         $record->onetext = 'aaa';
 
@@ -2439,68 +2405,6 @@ class core_dml_testcase extends database_driver_testcase {
         } catch (moodle_exception $e) {
             $this->assertInstanceOf('coding_exception', $e);
         }
-    }
-
-    public function test_insert_record_with_nullable_unique_index() {
-        $DB = $this->tdb;
-        $dbman = $DB->get_manager();
-
-        $table = $this->get_test_table();
-        $tablename = $table->getName();
-
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('notnull1', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('nullable1', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_field('nullable2', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_index('notnull1-nullable1-nullable2', XMLDB_INDEX_UNIQUE,
-                array('notnull1', 'nullable1', 'nullable2'));
-        $dbman->create_table($table);
-
-        // Insert one record. Should be OK (no exception).
-        $DB->insert_record($tablename, (object) ['notnull1' => 1, 'nullable1' => 1, 'nullable2' => 1]);
-
-        $this->assertEquals(1, $DB->count_records($table->getName()));
-        $this->assertEquals(1, $DB->count_records($table->getName(), ['nullable1' => 1]));
-
-        // Inserting a duplicate should fail.
-        try {
-            $DB->insert_record($tablename, (object) ['notnull1' => 1, 'nullable1' => 1, 'nullable2' => 1]);
-            $this->fail('dml_write_exception expected when a record violates a unique index');
-        } catch (moodle_exception $e) {
-            $this->assertInstanceOf('dml_write_exception', $e);
-        }
-
-        $this->assertEquals(1, $DB->count_records($table->getName()));
-        $this->assertEquals(1, $DB->count_records($table->getName(), ['nullable1' => 1]));
-
-        // Inserting a record with nulls in the nullable columns should work.
-        $DB->insert_record($tablename, (object) ['notnull1' => 1, 'nullable1' => null, 'nullable2' => null]);
-
-        $this->assertEquals(2, $DB->count_records($table->getName()));
-        $this->assertEquals(1, $DB->count_records($table->getName(), ['nullable1' => 1]));
-        $this->assertEquals(1, $DB->count_records($table->getName(), ['nullable1' => null]));
-
-        // And it should be possible to insert a duplicate.
-        $DB->insert_record($tablename, (object) ['notnull1' => 1, 'nullable1' => null, 'nullable2' => null]);
-
-        $this->assertEquals(3, $DB->count_records($table->getName()));
-        $this->assertEquals(1, $DB->count_records($table->getName(), ['nullable1' => 1]));
-        $this->assertEquals(2, $DB->count_records($table->getName(), ['nullable1' => null]));
-
-        // Same, but with only one of the nullable columns being null.
-        $DB->insert_record($tablename, (object) ['notnull1' => 1, 'nullable1' => 1, 'nullable2' => null]);
-
-        $this->assertEquals(4, $DB->count_records($table->getName()));
-        $this->assertEquals(2, $DB->count_records($table->getName(), ['nullable1' => 1]));
-        $this->assertEquals(2, $DB->count_records($table->getName(), ['nullable1' => null]));
-
-        $DB->insert_record($tablename, (object) ['notnull1' => 1, 'nullable1' => 1, 'nullable2' => null]);
-
-        $this->assertEquals(5, $DB->count_records($table->getName()));
-        $this->assertEquals(3, $DB->count_records($table->getName(), ['nullable1' => 1]));
-        $this->assertEquals(2, $DB->count_records($table->getName(), ['nullable1' => null]));
-
     }
 
     public function test_import_record() {
@@ -3460,29 +3364,6 @@ class core_dml_testcase extends database_driver_testcase {
         $DB->insert_record($tablename, array('course' => 2));
 
         $this->assertTrue($DB->delete_records_select($tablename, 'course = ?', array(2)));
-        $this->assertEquals(1, $DB->count_records($tablename));
-    }
-
-    public function test_delete_records_subquery() {
-        $DB = $this->tdb;
-        $dbman = $DB->get_manager();
-
-        $table = $this->get_test_table();
-        $tablename = $table->getName();
-
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('course', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $dbman->create_table($table);
-
-        $DB->insert_record($tablename, array('course' => 3));
-        $DB->insert_record($tablename, array('course' => 2));
-        $DB->insert_record($tablename, array('course' => 2));
-
-        // This is not a useful scenario for using a subquery, but it will be sufficient for testing.
-        // Use the 'frog' alias just to make it clearer when we are testing the alias parameter.
-        $DB->delete_records_subquery($tablename, 'id', 'frog',
-                'SELECT id AS frog FROM {' . $tablename . '} WHERE course = ?', [2]);
         $this->assertEquals(1, $DB->count_records($tablename));
     }
 
@@ -5197,16 +5078,6 @@ class core_dml_testcase extends database_driver_testcase {
         if (!isset($cfg->dboptions)) {
             $cfg->dboptions = array();
         }
-        // If we have a readonly slave situation, we need to either observe
-        // the latency, or if the latency is not specified we need to take
-        // the slave out because the table may not have propagated yet.
-        if (isset($cfg->dboptions['readonly'])) {
-            if (isset($cfg->dboptions['readonly']['latency'])) {
-                usleep(intval(1000000 * $cfg->dboptions['readonly']['latency']));
-            } else {
-                unset($cfg->dboptions['readonly']);
-            }
-        }
         $DB2 = moodle_database::get_driver_instance($cfg->dbtype, $cfg->dblibrary);
         $DB2->connect($cfg->dbhost, $cfg->dbuser, $cfg->dbpass, $cfg->dbname, $cfg->prefix, $cfg->dboptions);
 
@@ -5779,9 +5650,7 @@ class moodle_database_for_testing extends moodle_database {
     public function get_last_error() {}
     public function get_tables($usecache=true) {}
     public function get_indexes($table) {}
-    protected function fetch_columns(string $table): array {
-        return [];
-    }
+    public function get_columns($table, $usecache=true) {}
     protected function normalise_value($column, $value) {}
     public function set_debug($state) {}
     public function get_debug() {}

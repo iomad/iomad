@@ -31,37 +31,25 @@ $capabilities = array(
     'block/iomad_commerce:admin_view' => array(
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_BLOCK
     ),
 
     'block/iomad_commerce:add_course' => array(
 
         'captype' => 'write',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_BLOCK
     ),
 
     'block/iomad_commerce:edit_course' => array(
 
         'captype' => 'write',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_BLOCK
     ),
 
     'block/iomad_commerce:hide_course' => array(
 
         'captype' => 'write',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_BLOCK
     ),
 
     'block/iomad_commerce:buyitnow' => array(
@@ -73,10 +61,7 @@ $capabilities = array(
     'block/iomad_commerce:delete_course' => array(
 
         'captype' => 'write',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
+        'contextlevel' => CONTEXT_BLOCK
     )
 
 );

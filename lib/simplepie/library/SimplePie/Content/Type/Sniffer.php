@@ -120,18 +120,24 @@ class SimplePie_Content_Type_Sniffer
 				{
 					return $return;
 				}
-
-				return $official;
+				else
+				{
+					return $official;
+				}
 			}
 			elseif ($official === 'text/html')
 			{
 				return $this->feed_or_html();
 			}
-
-			return $official;
+			else
+			{
+				return $official;
+			}
 		}
-
-		return $this->unknown();
+		else
+		{
+			return $this->unknown();
+		}
 	}
 
 	/**
@@ -152,8 +158,10 @@ class SimplePie_Content_Type_Sniffer
 		{
 			return 'application/octect-stream';
 		}
-
-		return 'text/plain';
+		else
+		{
+			return 'text/plain';
+		}
 	}
 
 	/**
@@ -199,8 +207,10 @@ class SimplePie_Content_Type_Sniffer
 		{
 			return 'image/vnd.microsoft.icon';
 		}
-
-		return $this->text_or_binary();
+		else
+		{
+			return $this->text_or_binary();
+		}
 	}
 
 	/**
@@ -231,8 +241,10 @@ class SimplePie_Content_Type_Sniffer
 		{
 			return 'image/vnd.microsoft.icon';
 		}
-
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -316,3 +328,4 @@ class SimplePie_Content_Type_Sniffer
 		return 'text/html';
 	}
 }
+

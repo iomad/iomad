@@ -17,9 +17,6 @@
 /**
  * Contains class used to prepare a contact for display.
  *
- * TODO: This file should be removed once the related web services go through final deprecation.
- * Followup: MDL-63261
- *
  * @package   core_message
  * @copyright 2016 Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -87,11 +84,6 @@ class contact implements templatable, renderable {
     public $lastmessage;
 
     /**
-     * @var int The last message sent timestamp.
-     */
-    public $lastmessagedate;
-
-    /**
      * @var bool Is the user online?
      */
     public $isonline;
@@ -112,11 +104,6 @@ class contact implements templatable, renderable {
     public $unreadcount;
 
     /**
-     * @var int The id of the conversation to which to message belongs.
-     */
-    public $conversationid;
-
-    /**
      * Constructor.
      *
      * @param \stdClass $contact
@@ -130,12 +117,10 @@ class contact implements templatable, renderable {
         $this->messageid = $contact->messageid;
         $this->ismessaging = $contact->ismessaging;
         $this->lastmessage = $contact->lastmessage;
-        $this->lastmessagedate = $contact->lastmessagedate;
         $this->isonline = $contact->isonline;
         $this->isblocked = $contact->isblocked;
         $this->isread = $contact->isread;
         $this->unreadcount = $contact->unreadcount;
-        $this->conversationid = $contact->conversationid ?? null;
     }
 
     public function export_for_template(\renderer_base $output) {
@@ -155,13 +140,11 @@ class contact implements templatable, renderable {
         } else {
             $contact->lastmessage = null;
         }
-        $contact->lastmessagedate = $this->lastmessagedate;
         $contact->showonlinestatus = is_null($this->isonline) ? false : true;
         $contact->isonline = $this->isonline;
         $contact->isblocked = $this->isblocked;
         $contact->isread = $this->isread;
         $contact->unreadcount = $this->unreadcount;
-        $contact->conversationid = $this->conversationid;
 
         return $contact;
     }

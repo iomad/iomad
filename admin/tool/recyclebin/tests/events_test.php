@@ -216,18 +216,12 @@ class tool_recyclebin_events_testcase extends advanced_testcase {
         $sink = $this->redirectEvents();
         $rb->restore_item($item);
         $events = $sink->get_events();
-        $eventscount = 0;
+        $event = reset($events);
 
-        foreach ($events as $event) {
-            if ($event instanceof \tooL_recyclebin\event\course_bin_item_restored) {
-                // Check that the event contains the expected values.
-                $this->assertEquals(context_course::instance($course->id), $event->get_context());
-                $this->assertEquals($item->id, $event->objectid);
-                $this->assertEventContextNotUsed($event);
-                $eventscount++;
-            }
-        }
-        // Only one course_bin_item_restored event should be triggered.
-        $this->assertEquals(1, $eventscount);
+        // Check that the event contains the expected values.
+        $this->assertInstanceOf('\tooL_recyclebin\event\course_bin_item_restored', $event);
+        $this->assertEquals(context_course::instance($course->id), $event->get_context());
+        $this->assertEquals($item->id, $event->objectid);
+        $this->assertEventContextNotUsed($event);
     }
 }

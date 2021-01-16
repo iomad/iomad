@@ -63,19 +63,22 @@ Feature: New discussions and discussions with recently added replies are display
     And I am on "Course 1" course homepage
     And I follow "Course general forum"
     And I follow "Forum post 1"
-    And I reply "Forum post 1" post from "Course general forum" forum with:
+    And I click on "Reply" "link" in the "//div[@aria-label='Forum post 1 by Student 1']" "xpath_element"
+    And I set the following fields to these values:
       | Message | Reply to the first post |
+    And I press "Post to forum"
+    And I wait to be redirected
     And I am on "Course 1" course homepage
     And I follow "Course general forum"
     #
-    # Make sure the order of the forum posts is as expected, with most recent new participation first (ie excluding edits).
+    # Make sure the order of the forum posts is as expected (most recently participated first).
     #
-    Then I should see "Forum post 1" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=1]" "xpath_element"
-    And I should see "Forum post 3" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=2]" "xpath_element"
-    And I should see "Edited forum post 2" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=3]" "xpath_element"
+    Then I should see "Forum post 3" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=3]" "xpath_element"
+    And I should see "Edited forum post 2" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=2]" "xpath_element"
+    And I should see "Forum post 1" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=1]" "xpath_element"
     #
     # Make sure the next/prev navigation uses the same order of the posts.
     #
-    And I follow "Forum post 3"
+    And I follow "Edited forum post 2"
     And "//a[@aria-label='Next discussion: Forum post 1']" "xpath_element" should exist
-    And "//a[@aria-label='Previous discussion: Edited forum post 2']" "xpath_element" should exist
+    And "//a[@aria-label='Previous discussion: Forum post 3']" "xpath_element" should exist

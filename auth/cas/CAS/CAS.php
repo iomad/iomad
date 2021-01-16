@@ -61,15 +61,11 @@ if (!defined('E_USER_DEPRECATED')) {
 /**
  * phpCAS version. accessible for the user by phpCAS::getVersion().
  */
-define('PHPCAS_VERSION', '1.3.8');
+define('PHPCAS_VERSION', '1.3.5+');
 
 /**
  * @addtogroup public
  * @{
- */
-
-/**
- * phpCAS supported protocols. accessible for the user by phpCAS::getSupportedProtocols().
  */
 
 /**
@@ -248,7 +244,6 @@ define("PHPCAS_LANG_DEFAULT", PHPCAS_LANG_ENGLISH);
 
 /**
  * The default directory for the debug file under Unix.
- * @return  string directory for the debug file
  */
 function gettmpdir() {
 if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
@@ -292,7 +287,6 @@ class phpCAS
     private static $_PHPCAS_CLIENT;
 
     /**
-     * @var array
      * This variable is used to store where the initializer is called from
      * (to print a comprehensive error in case of multiple calls).
      *
@@ -301,7 +295,6 @@ class phpCAS
     private static $_PHPCAS_INIT_CALL;
 
     /**
-     * @var array
      * This variable is used to store phpCAS debug mode.
      *
      * @hideinitializer
@@ -332,12 +325,12 @@ class phpCAS
      *
      * @param string $server_version  the version of the CAS server
      * @param string $server_hostname the hostname of the CAS server
-     * @param int    $server_port     the port the CAS server is running on
+     * @param string $server_port     the port the CAS server is running on
      * @param string $server_uri      the URI the CAS server is responding on
      * @param bool   $changeSessionID Allow phpCAS to change the session_id (Single
      * Sign Out/handleLogoutRequests is based on that change)
      *
-     * @return void a newly created CAS_Client object
+     * @return a newly created CAS_Client object
      * @note Only one of the phpCAS::client() and phpCAS::proxy functions should be
      * called, only once, and before all other methods (except phpCAS::getVersion()
      * and phpCAS::setDebug()).
@@ -376,12 +369,12 @@ class phpCAS
      *
      * @param string $server_version  the version of the CAS server
      * @param string $server_hostname the hostname of the CAS server
-     * @param int    $server_port     the port the CAS server is running on
+     * @param string $server_port     the port the CAS server is running on
      * @param string $server_uri      the URI the CAS server is responding on
      * @param bool   $changeSessionID Allow phpCAS to change the session_id (Single
      * Sign Out/handleLogoutRequests is based on that change)
      *
-     * @return void a newly created CAS_Client object
+     * @return a newly created CAS_Client object
      * @note Only one of the phpCAS::client() and phpCAS::proxy functions should be
      * called, only once, and before all other methods (except phpCAS::getVersion()
      * and phpCAS::setDebug()).
@@ -498,7 +491,7 @@ class phpCAS
     /**
      * Show is verbose mode is on
      *
-     * @return bool verbose
+     * @return boot verbose
      */
     public static function getVerbose()
     {
@@ -638,7 +631,7 @@ class phpCAS
      * This method is used to indicate the end of the execution of a function in
      * debug mode.
      *
-     * @param mixed $res the result of the function
+     * @param string $res the result of the function
      *
      * @return void
      */
@@ -649,6 +642,7 @@ class phpCAS
         } else {
             self::$_PHPCAS_DEBUG['indent']--;
         }
+        $dbg = debug_backtrace();
         $str = '';
         if (is_object($res)) {
             $str .= '<= ' . get_class($res);
@@ -715,27 +709,11 @@ class phpCAS
     /**
      * This method returns the phpCAS version.
      *
-     * @return string the phpCAS version.
+     * @return the phpCAS version.
      */
     public static function getVersion()
     {
         return PHPCAS_VERSION;
-    }
-
-    /**
-     * This method returns supported protocols.
-     *
-     * @return array an array of all supported protocols. Use internal protocol name as array key.
-     */
-    public static function getSupportedProtocols()
-    {
-        $supportedProtocols = array();
-        $supportedProtocols[CAS_VERSION_1_0] = 'CAS 1.0';
-        $supportedProtocols[CAS_VERSION_2_0] = 'CAS 2.0';
-        $supportedProtocols[CAS_VERSION_3_0] = 'CAS 3.0';
-        $supportedProtocols[SAML_VERSION_1_1] = 'SAML 1.1';
-
-        return $supportedProtocols;
     }
 
     /** @} */
@@ -795,8 +773,8 @@ class phpCAS
     /**
      * This method can be used to set a custom PGT storage object.
      *
-     * @param CAS_PGTStorage_AbstractStorage $storage a PGT storage object that inherits from the
-     * CAS_PGTStorage_AbstractStorage class
+     * @param CAS_PGTStorage $storage a PGT storage object that inherits from the
+     * CAS_PGTStorage class
      *
      * @return void
      */
@@ -925,7 +903,7 @@ class phpCAS
      * This method is used to access an HTTP[S] service.
      *
      * @param string $url       the service to access.
-     * @param int &$err_code an error code Possible values are
+     * @param string &$err_code an error code Possible values are
      * PHPCAS_SERVICE_OK (on success), PHPCAS_SERVICE_PT_NO_SERVER_RESPONSE,
      * PHPCAS_SERVICE_PT_BAD_SERVER_RESPONSE, PHPCAS_SERVICE_PT_FAILURE,
      * PHPCAS_SERVICE_NOT_AVAILABLE.
@@ -958,7 +936,7 @@ class phpCAS
      * including the mailing box for IMAP URLs, as accepted by imap_open().
      * @param string $service   a string giving for CAS retrieve Proxy ticket
      * @param string $flags     options given to imap_open().
-     * @param int &$err_code an error code Possible values are
+     * @param string &$err_code an error code Possible values are
      * PHPCAS_SERVICE_OK (on success), PHPCAS_SERVICE_PT_NO_SERVER_RESPONSE,
      * PHPCAS_SERVICE_PT_BAD_SERVER_RESPONSE, PHPCAS_SERVICE_PT_FAILURE,
      * PHPCAS_SERVICE_NOT_AVAILABLE.
@@ -966,7 +944,7 @@ class phpCAS
      * @param string &$pt       the Proxy Ticket (PT) retrieved from the CAS
      * server to access the URL on success, false on error).
      *
-     * @return object|false IMAP stream on success, false otherwise (in this later
+     * @return object IMAP stream on success, false otherwise (in this later
      * case, $err_code gives the reason why it failed and $err_msg contains an
      * error message).
      */
@@ -1049,7 +1027,7 @@ class phpCAS
      * logs in (such as registering an account, performing logging, etc), register
      * a callback function here.
      *
-     * @param callable $function       Callback function
+     * @param string $function       Callback function
      * @param array  $additionalArgs optional array of arguments
      *
      * @return void
@@ -1070,7 +1048,7 @@ class phpCAS
      * applications that manage their own sessions (rather than letting phpCAS
      * start and destroy the session).
      *
-     * @param callable $function       Callback function
+     * @param string $function       Callback function
      * @param array  $additionalArgs optional array of arguments
      *
      * @return void
@@ -1088,7 +1066,7 @@ class phpCAS
      * determined by a cas gateway call.(cas login call without any interactive
      * prompt)
      *
-     * @return bool true when the user is authenticated, false when a previous
+     * @return true when the user is authenticated, false when a previous
      * gateway login failed or the function will not return if the user is
      * redirected to the cas server for a gateway login attempt
      */
@@ -1156,7 +1134,7 @@ class phpCAS
      * This method is called to check if the user is authenticated (previously or by
      * tickets given in the URL).
      *
-     * @return bool true when the user is authenticated.
+     * @return true when the user is authenticated.
      */
     public static function isAuthenticated()
     {
@@ -1291,7 +1269,7 @@ class phpCAS
      *
      * @return void
      */
-    public static function handleLogoutRequests($check_client = true, $allowed_clients = array())
+    public static function handleLogoutRequests($check_client = true, $allowed_clients = false)
     {
         phpCAS::_validateClientExists();
 
@@ -1300,8 +1278,9 @@ class phpCAS
 
     /**
      * This method returns the URL to be used to login.
+     * or phpCAS::isAuthenticated().
      *
-     * @return string the login URL
+     * @return the login name of the authenticated user
      */
     public static function getServerLoginURL()
     {
@@ -1406,9 +1385,10 @@ class phpCAS
     }
 
     /**
-     * This method returns the URL to be used to logout.
+     * This method returns the URL to be used to login.
+     * or phpCAS::isAuthenticated().
      *
-     * @return string the URL to use to log out
+     * @return the login name of the authenticated user
      */
     public static function getServerLogoutURL()
     {
@@ -1612,7 +1592,7 @@ class phpCAS
      * Retrieve a Proxy Ticket from the CAS server.
      *
      * @param string $target_service Url string of service to proxy
-     * @param int &$err_code      error code
+     * @param string &$err_code      error code
      * @param string &$err_msg       error message
      *
      * @return string Proxy Ticket
@@ -1706,27 +1686,6 @@ class phpCAS
     }
 
     /**
-     * Set a salt/seed for the session-id hash to make it harder to guess.
-     *
-     * When $changeSessionID = true phpCAS will create a session-id that is derived
-     * from the service ticket. Doing so allows phpCAS to look-up and destroy the
-     * proper session on single-log-out requests. While the service tickets
-     * provided by the CAS server may include enough data to generate a strong
-     * hash, clients may provide an additional salt to ensure that session ids
-     * are not guessable if the session tickets do not have enough entropy.
-     *
-     * @param string $salt The salt to combine with the session ticket.
-     *
-     * @return void
-     */
-     public static function setSessionIdSalt($salt) {
-       phpCAS :: traceBegin();
-       phpCAS::_validateClientExists();
-       self::$_PHPCAS_CLIENT->setSessionIdSalt($salt);
-       phpCAS :: traceEnd();
-     }
-
-    /**
      * If you want your service to be proxied you have to enable it (default
      * disabled) and define an accepable list of proxies that are allowed to
      * proxy your service.
@@ -1752,7 +1711,7 @@ class phpCAS
      * For quick testing or in certain production screnarios you might want to
      * allow allow any other valid service to proxy your service. To do so, add
      * the "Any" chain:
-     *		phpCAS::allowProxyChain(new CAS_ProxyChain_Any);
+     *		phpcas::allowProxyChain(new CAS_ProxyChain_Any);
      * THIS SETTING IS HOWEVER NOT RECOMMENDED FOR PRODUCTION AND HAS SECURITY
      * IMPLICATIONS: YOU ARE ALLOWING ANY SERVICE TO ACT ON BEHALF OF A USER
      * ON THIS SERVICE.
@@ -2032,3 +1991,4 @@ class phpCAS
 /**
  * @example example_advanced_saml11.php
  */
+?>

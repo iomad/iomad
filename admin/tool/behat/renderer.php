@@ -44,9 +44,13 @@ class tool_behat_renderer extends plugin_renderer_base {
         global $CFG;
         require_once($CFG->libdir . '/behat/classes/behat_selectors.php');
 
-        $html = $this->output->header();
-        $html .= $this->output->heading(get_string('pluginname', 'tool_behat'));
-        $html .= $form->render();
+        $html = $this->generic_info();
+
+        // Form.
+        ob_start();
+        $form->display();
+        $html .= ob_get_contents();
+        ob_end_clean();
 
         if (empty($stepsdefinitions)) {
             $stepsdefinitions = get_string('nostepsdefinitions', 'tool_behat');
@@ -124,9 +128,7 @@ class tool_behat_renderer extends plugin_renderer_base {
      */
     public function render_error($msg) {
 
-        $html = $this->output->header();
-        $html .= $this->output->heading(get_string('pluginname', 'tool_behat'));
-        $html .= $this->generic_info();
+        $html = $this->generic_info();
 
         $a = new stdClass();
         $a->errormsg = $msg;
@@ -137,7 +139,7 @@ class tool_behat_renderer extends plugin_renderer_base {
         $msg = get_string('wrongbehatsetup', 'tool_behat', $a);
 
         // Error box including generic error string + specific error msg.
-        $html .= $this->output->box_start('box errorbox alert alert-danger');
+        $html .= $this->output->box_start('box errorbox');
         $html .= html_writer::tag('div', $msg);
         $html .= $this->output->box_end();
 
@@ -151,14 +153,20 @@ class tool_behat_renderer extends plugin_renderer_base {
      *
      * @return string
      */
-    public function generic_info() {
+    protected function generic_info() {
+
+        $title = get_string('pluginname', 'tool_behat');
+
+        // Header.
+        $html = $this->output->header();
+        $html .= $this->output->heading($title);
 
         // Info.
-        $installurl = behat_command::DOCS_URL;
+        $installurl = behat_command::DOCS_URL . '#Installation';
         $installlink = html_writer::tag('a', $installurl, array('href' => $installurl, 'target' => '_blank'));
-        $writetestsurl = 'https://docs.moodle.org/dev/Writing acceptance tests';
+        $writetestsurl = behat_command::DOCS_URL . '#Writing_features';
         $writetestslink = html_writer::tag('a', $writetestsurl, array('href' => $writetestsurl, 'target' => '_blank'));
-        $writestepsurl = 'https://docs.moodle.org/dev/Writing_new_acceptance_test_step_definitions';
+        $writestepsurl = behat_command::DOCS_URL . '#Adding_steps_definitions';
         $writestepslink = html_writer::tag('a', $writestepsurl, array('href' => $writestepsurl, 'target' => '_blank'));
         $infos = array(
             get_string('installinfo', 'tool_behat', $installlink),
@@ -167,7 +175,8 @@ class tool_behat_renderer extends plugin_renderer_base {
         );
 
         // List of steps.
-        $html = $this->output->box_start();
+        $html .= $this->output->box_start();
+        $html .= html_writer::tag('h3', get_string('infoheading', 'tool_behat'));
         $html .= html_writer::tag('div', get_string('aim', 'tool_behat'));
         $html .= html_writer::start_tag('div');
         $html .= html_writer::start_tag('ul');

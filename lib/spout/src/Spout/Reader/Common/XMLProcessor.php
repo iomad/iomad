@@ -7,6 +7,8 @@ use Box\Spout\Reader\Wrapper\XMLReader;
 /**
  * Class XMLProcessor
  * Helps process XML files
+ *
+ * @package Box\Spout\Reader\Common
  */
 class XMLProcessor
 {
@@ -22,11 +24,13 @@ class XMLProcessor
     const PROCESSING_CONTINUE = 1;
     const PROCESSING_STOP = 2;
 
+
     /** @var \Box\Spout\Reader\Wrapper\XMLReader The XMLReader object that will help read sheet's XML data */
     protected $xmlReader;
 
     /** @var array Registered callbacks */
     private $callbacks = [];
+
 
     /**
      * @param \Box\Spout\Reader\Wrapper\XMLReader $xmlReader XMLReader object
@@ -86,8 +90,8 @@ class XMLProcessor
      * Resumes the reading of the XML file where it was left off.
      * Stops whenever a callback indicates that reading should stop or at the end of the file.
      *
-     * @throws \Box\Spout\Reader\Exception\XMLProcessingException
      * @return void
+     * @throws \Box\Spout\Reader\Exception\XMLProcessingException
      */
     public function readUntilStopped()
     {

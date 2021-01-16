@@ -33,7 +33,6 @@ defined('MOODLE_INTERNAL') || die();
  *      Extra information about event.
  *
  *      - string name: category name.
- *      - string contentmovedcategoryid: (optional) category id where content was moved on deletion
  * }
  *
  * @package    core
@@ -72,11 +71,7 @@ class course_category_deleted extends base {
      * @return string
      */
     public function get_description() {
-        $descr = "The user with id '$this->userid' deleted the course category with id '$this->objectid'.";
-        if (!empty($this->other['contentmovedcategoryid'])) {
-            $descr .= " Its content has been moved to category with id '{$this->other['contentmovedcategoryid']}'.";
-        }
-        return $descr;
+        return "The user with id '$this->userid' deleted the course category with id '$this->objectid'.";
     }
 
     /**
@@ -91,7 +86,7 @@ class course_category_deleted extends base {
     /**
      * Returns the legacy event data.
      *
-     * @return \core_course_category the category that was deleted
+     * @return \coursecat the category that was deleted
      */
     protected function get_legacy_eventdata() {
         return $this->coursecat;
@@ -100,9 +95,9 @@ class course_category_deleted extends base {
     /**
      * Set custom data of the event - deleted coursecat.
      *
-     * @param \core_course_category $coursecat
+     * @param \coursecat $coursecat
      */
-    public function set_coursecat(\core_course_category $coursecat) {
+    public function set_coursecat(\coursecat $coursecat) {
         $this->coursecat = $coursecat;
     }
 
@@ -110,7 +105,7 @@ class course_category_deleted extends base {
      * Returns deleted coursecat for event observers.
      *
      * @throws \coding_exception
-     * @return \core_course_category
+     * @return \coursecat
      */
     public function get_coursecat() {
         if ($this->is_restored()) {

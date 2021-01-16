@@ -36,12 +36,15 @@ if (!is_siteadmin()) {
 }
 
 $admisselector = new core_role_admins_existing_selector();
+$admisselector->set_extra_fields(array('username', 'email'));
+
 $potentialadmisselector = new core_role_admins_potential_selector();
+$potentialadmisselector->set_extra_fields(array('username', 'email'));
 
 if (optional_param('add', false, PARAM_BOOL) and confirm_sesskey()) {
     if ($userstoadd = $potentialadmisselector->get_selected_users()) {
         $user = reset($userstoadd);
-        $username = $potentialadmisselector->output_user($user);
+        $username = fullname($user) . " ($user->username, $user->email)";
         echo $OUTPUT->header();
         $yesurl = new moodle_url('/admin/roles/admins.php', array('confirmadd'=>$user->id, 'sesskey'=>sesskey()));
         echo $OUTPUT->confirm(get_string('confirmaddadmin', 'core_role', $username), $yesurl, $PAGE->url);
@@ -55,7 +58,7 @@ if (optional_param('add', false, PARAM_BOOL) and confirm_sesskey()) {
         if ($USER->id == $user->id) {
             // Can not remove self.
         } else {
-            $username = $admisselector->output_user($user);
+            $username = fullname($user) . " ($user->username, $user->email)";
             echo $OUTPUT->header();
             $yesurl = new moodle_url('/admin/roles/admins.php', array('confirmdel'=>$user->id, 'sesskey'=>sesskey()));
             echo $OUTPUT->confirm(get_string('confirmdeladmin', 'core_role', $username), $yesurl, $PAGE->url);
@@ -77,16 +80,9 @@ if (optional_param('add', false, PARAM_BOOL) and confirm_sesskey()) {
         }
 
         if (isset($admins[$newmain])) {
-            $logstringold = implode(', ', $admins);
-
             unset($admins[$newmain]);
             array_unshift($admins, $newmain);
-
-            $logstringnew = implode(', ', $admins);
-
             set_config('siteadmins', implode(',', $admins));
-            add_to_config_log('siteadmins', $logstringold, $logstringnew, null);
-
             redirect($PAGE->url);
         }
     }
@@ -99,16 +95,8 @@ if (optional_param('add', false, PARAM_BOOL) and confirm_sesskey()) {
             $admins[$admin] = $admin;
         }
     }
-
-    $logstringold = implode(', ', $admins);
-
     $admins[$confirmadd] = $confirmadd;
-
-    $logstringnew = implode(', ', $admins);
-
     set_config('siteadmins', implode(',', $admins));
-    add_to_config_log('siteadmins', $logstringold, $logstringnew, 'core');
-
     redirect($PAGE->url);
 
 } else if ($confirmdel and confirm_sesskey() and $confirmdel != $USER->id) {
@@ -119,16 +107,8 @@ if (optional_param('add', false, PARAM_BOOL) and confirm_sesskey()) {
             $admins[$admin] = $admin;
         }
     }
-
-    $logstringold = implode(', ', $admins);
-
     unset($admins[$confirmdel]);
-
-    $logstringnew = implode(', ', $admins);
-
     set_config('siteadmins', implode(',', $admins));
-    add_to_config_log('siteadmins', $logstringold, $logstringnew, 'core');
-
     redirect($PAGE->url);
 }
 

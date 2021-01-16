@@ -9,6 +9,10 @@
   @include img-fluid();
 }
 
+// Rounded corners
+.img-rounded {
+  @include border-radius($border-radius-lg);
+}
 
 // Image thumbnails
 .img-thumbnail {
@@ -16,10 +20,16 @@
   background-color: $thumbnail-bg;
   border: $thumbnail-border-width solid $thumbnail-border-color;
   @include border-radius($thumbnail-border-radius);
+  transition: all .2s ease-in-out;
   @include box-shadow($thumbnail-box-shadow);
 
   // Keep them at most 100% wide
-  @include img-fluid();
+  @include img-fluid(inline-block);
+}
+
+// Perfect circle
+.img-circle {
+  border-radius: 50%;
 }
 
 //
@@ -32,11 +42,11 @@
 }
 
 .figure-img {
-  margin-bottom: $spacer / 2;
+  margin-bottom: ($spacer-y / 2);
   line-height: 1;
 }
 
 .figure-caption {
-  @include font-size($figure-caption-font-size);
-  color: $figure-caption-color;
+  font-size: $figure-caption-font-size;
+  color: $gray-light;
 }

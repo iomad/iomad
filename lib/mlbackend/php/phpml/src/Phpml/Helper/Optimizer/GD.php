@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Phpml\Helper\Optimizer;
 
-use Closure;
-use Phpml\Exception\InvalidOperationException;
-
 /**
  * Batch version of Gradient Descent to optimize the weights
  * of a classifier given samples, targets and the objective function to minimize
@@ -16,11 +13,18 @@ class GD extends StochasticGD
     /**
      * Number of samples given
      *
-     * @var int|null
+     * @var int
      */
-    protected $sampleCount;
+    protected $sampleCount = null;
 
-    public function runOptimization(array $samples, array $targets, Closure $gradientCb): array
+    /**
+     * @param array    $samples
+     * @param array    $targets
+     * @param \Closure $gradientCb
+     *
+     * @return array
+     */
+    public function runOptimization(array $samples, array $targets, \Closure $gradientCb)
     {
         $this->samples = $samples;
         $this->targets = $targets;
@@ -34,11 +38,11 @@ class GD extends StochasticGD
             $theta = $this->theta;
 
             // Calculate update terms for each sample
-            [$errors, $updates, $totalPenalty] = $this->gradient($theta);
+            list($errors, $updates, $totalPenalty) = $this->gradient($theta);
 
             $this->updateWeightsWithUpdates($updates, $totalPenalty);
 
-            $this->costValues[] = array_sum($errors) / $this->sampleCount;
+            $this->costValues[] = array_sum($errors)/$this->sampleCount;
 
             if ($this->earlyStop($theta)) {
                 break;
@@ -53,22 +57,22 @@ class GD extends StochasticGD
     /**
      * Calculates gradient, cost function and penalty term for each sample
      * then returns them as an array of values
+     *
+     * @param array $theta
+     *
+     * @return array
      */
-    protected function gradient(array $theta): array
+    protected function gradient(array $theta)
     {
         $costs = [];
-        $gradient = [];
+        $gradient= [];
         $totalPenalty = 0;
-
-        if ($this->gradientCb === null) {
-            throw new InvalidOperationException('Gradient callback is not defined');
-        }
 
         foreach ($this->samples as $index => $sample) {
             $target = $this->targets[$index];
 
             $result = ($this->gradientCb)($theta, $sample, $target);
-            [$cost, $grad, $penalty] = array_pad($result, 3, 0);
+            list($cost, $grad, $penalty) = array_pad($result, 3, 0);
 
             $costs[] = $cost;
             $gradient[] = $grad;
@@ -80,7 +84,11 @@ class GD extends StochasticGD
         return [$costs, $gradient, $totalPenalty];
     }
 
-    protected function updateWeightsWithUpdates(array $updates, float $penalty): void
+    /**
+     * @param array $updates
+     * @param float $penalty
+     */
+    protected function updateWeightsWithUpdates(array $updates, float $penalty)
     {
         // Updates all weights at once
         for ($i = 0; $i <= $this->dimensions; ++$i) {
@@ -102,8 +110,10 @@ class GD extends StochasticGD
 
     /**
      * Clears the optimizer internal vars after the optimization process.
+     *
+     * @return void
      */
-    protected function clear(): void
+    protected function clear()
     {
         $this->sampleCount = null;
         parent::clear();

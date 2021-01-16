@@ -51,7 +51,7 @@
 
 {{^haspermissionagreedocs}}
     <h3>{{{messagetitle}}}</h3>
-    <p class="mt-1 mb-1">{{{messagedesc}}}</p>
+    <p class="m-t-1 m-b-1">{{{messagedesc}}}</p>
 
     <div class="policies">
         <ul>
@@ -61,11 +61,11 @@
         </ul>
     </div>
 
-    <p class="mt-3">{{#str}}nopermissiontoagreedocscontact, tool_policy{{/str}}</p>
-    <div class="agreedoc-officer card">
+    <p class="m-t-3">{{#str}}nopermissiontoagreedocscontact, tool_policy{{/str}}</p>
+    <div class="agreedoc-officer well">
         <div>
-            <p class="mb-0">{{{supportname}}}</p>
-            <p class="mb-0"><a href="mailto:{{supportemail}}">{{supportemail}}</a></p>
+            <p class="m-b-0">{{{supportname}}}</p>
+            <p class="m-b-0"><a href="mailto:{{supportemail}}">{{supportemail}}</a></p>
         </div>
     </div>
 {{/haspermissionagreedocs}}
@@ -73,6 +73,6 @@
 {{#js}}
 // Initialise the JS for the modal window which displays the policy versions.
 require(['tool_policy/policyactions'], function(ActionsMod) {
-    ActionsMod.init('[data-action="view"]');
+    ActionsMod.init();
 });
 {{/js}}

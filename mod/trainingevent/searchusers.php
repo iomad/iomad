@@ -98,7 +98,7 @@ echo $output->header();
 $location = $DB->get_record('classroom', array('id' => $event->classroomid));
 
 // How many are already attending?
-$attending = $DB->count_records('trainingevent_users', array('trainingeventid' => $event->id, 'waitlisted' => 0));
+$attending = $DB->count_records('trainingevent_users', array('trainingeventid' => $event->id));
 
 // Get the associated department id.
 $company = new company($location->companyid);
@@ -108,7 +108,7 @@ $companydepartment = $parentlevel->id;
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($company->id, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
-}
+}   
 
 if (has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
     $userhierarchylevel = $parentlevel->id;
@@ -226,7 +226,7 @@ if (!empty($params['email'])) {
     $sqlsearch .= " AND email like '%".$params['email']."%' ";
 }
 // Deal with users already assigned..
-if ($assignedusers = $DB->get_records('trainingevent_users', array('trainingeventid' => $event->id, 'waitlisted' => 0), null, 'userid')) {
+if ($assignedusers = $DB->get_records('trainingevent_users', array('trainingeventid' => $event->id), null, 'userid')) {
     $sqlsearch .= " AND id not in (".implode(',', array_keys($assignedusers)).") ";
 }
 

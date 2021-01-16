@@ -24,53 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig && \core_analytics\manager::is_analytics_enabled()) {
-
-    $settings = new admin_settingpage('analyticssite', new lang_string('analyticssiteinfo', 'analytics'));
-    $ADMIN->add('analytics', $settings);
-
-    if ($ADMIN->fulltree) {
-        $modeinstructions = [
-            'facetoface' => get_string('modeinstructionfacetoface', 'analytics'),
-            'blendedhybrid' => get_string('modeinstructionblendedhybrid', 'analytics'),
-            'fullyonline' => get_string('modeinstructionfullyonline', 'analytics'),
-        ];
-        $settings->add(new admin_setting_configmultiselect('analytics/modeinstruction', get_string('modeinstruction', 'analytics'),
-            '', [], $modeinstructions));
-
-        $settings->add(new admin_setting_configtext_with_maxlength('analytics/percentonline',
-            get_string('percentonline', 'analytics'),
-            get_string('percentonline_help', 'analytics'), '', PARAM_INT, 3, 3));
-
-        $typeinstitutions = [
-            'typeinstitutionacademic' => get_string('typeinstitutionacademic', 'analytics'),
-            'typeinstitutiontraining' => get_string('typeinstitutiontraining', 'analytics'),
-            'typeinstitutionngo' => get_string('typeinstitutionngo', 'analytics'),
-        ];
-        $settings->add(new admin_setting_configmultiselect('analytics/typeinstitution', get_string('typeinstitution', 'analytics'),
-            '', [], $typeinstitutions));
-
-        $levelinstitutions = [
-            'levelinstitutionisced0' => get_string('levelinstitutionisced0', 'analytics'),
-            'levelinstitutionisced1' => get_string('levelinstitutionisced1', 'analytics'),
-            'levelinstitutionisced2' => get_string('levelinstitutionisced2', 'analytics'),
-            'levelinstitutionisced3' => get_string('levelinstitutionisced3', 'analytics'),
-            'levelinstitutionisced4' => get_string('levelinstitutionisced4', 'analytics'),
-            'levelinstitutionisced5' => get_string('levelinstitutionisced5', 'analytics'),
-            'levelinstitutionisced6' => get_string('levelinstitutionisced6', 'analytics'),
-            'levelinstitutionisced7' => get_string('levelinstitutionisced7', 'analytics'),
-            'levelinstitutionisced8' => get_string('levelinstitutionisced8', 'analytics'),
-        ];
-        $settings->add(new admin_setting_configmultiselect('analytics/levelinstitution',
-            get_string('levelinstitution', 'analytics'), '', [], $levelinstitutions));
-    }
-
+if ($hassiteconfig) {
     $settings = new admin_settingpage('analyticssettings', new lang_string('analyticssettings', 'analytics'));
     $ADMIN->add('analytics', $settings);
 
     if ($ADMIN->fulltree) {
-
-
         // Select the site prediction's processor.
         $predictionprocessors = \core_analytics\manager::get_all_prediction_processors();
         $predictors = array();
@@ -79,8 +37,8 @@ if ($hassiteconfig && \core_analytics\manager::is_analytics_enabled()) {
             $predictors[$fullclassname] = new lang_string('pluginname', $pluginname);
         }
         $settings->add(new \core_analytics\admin_setting_predictor('analytics/predictionsprocessor',
-            new lang_string('defaultpredictionsprocessor', 'analytics'), new lang_string('predictionsprocessor_help', 'analytics'),
-            \core_analytics\manager::default_mlbackend(), $predictors)
+            new lang_string('predictionsprocessor', 'analytics'), new lang_string('predictionsprocessor_help', 'analytics'),
+            '\mlbackend_php\processor', $predictors)
         );
 
         // Log store.
@@ -117,7 +75,7 @@ if ($hassiteconfig && \core_analytics\manager::is_analytics_enabled()) {
             $defaultreader, $options));
 
         // Enable/disable time splitting methods.
-        $alltimesplittings = \core_analytics\manager::get_time_splitting_methods_for_evaluation(true);
+        $alltimesplittings = \core_analytics\manager::get_all_time_splittings();
 
         $timesplittingoptions = array();
         $timesplittingdefaults = array('\core\analytics\time_splitting\quarters_accum',
@@ -125,16 +83,20 @@ if ($hassiteconfig && \core_analytics\manager::is_analytics_enabled()) {
         foreach ($alltimesplittings as $key => $timesplitting) {
             $timesplittingoptions[$key] = $timesplitting->get_name();
         }
-        $settings->add(new admin_setting_configmultiselect('analytics/defaulttimesplittingsevaluation',
-            new lang_string('defaulttimesplittingmethods', 'analytics'),
-            new lang_string('defaulttimesplittingmethods_help', 'analytics'),
+        $settings->add(new admin_setting_configmultiselect('analytics/timesplittings',
+            new lang_string('enabledtimesplittings', 'analytics'), new lang_string('timesplittingmethod_help', 'analytics'),
             $timesplittingdefaults, $timesplittingoptions)
         );
 
-        // Predictions processor output dir - specify default in setting description (used if left blank).
-        $defaultmodeloutputdir = \core_analytics\model::default_output_dir();
+        // Predictions processor output dir.
+        $defaultmodeloutputdir = rtrim($CFG->dataroot, '/') . DIRECTORY_SEPARATOR . 'models';
+        if (empty(get_config('analytics', 'modeloutputdir')) && !file_exists($defaultmodeloutputdir) &&
+                is_writable($defaultmodeloutputdir)) {
+            // Automatically create the dir for them so users don't see the invalid value red cross.
+            mkdir($defaultmodeloutputdir, $CFG->directorypermissions, true);
+        }
         $settings->add(new admin_setting_configdirectory('analytics/modeloutputdir', new lang_string('modeloutputdir', 'analytics'),
-            new lang_string('modeloutputdirwithdefaultinfo', 'analytics', $defaultmodeloutputdir), ''));
+            new lang_string('modeloutputdirinfo', 'analytics'), $defaultmodeloutputdir));
 
         // Disable web interface evaluation and get predictions.
         $settings->add(new admin_setting_configcheckbox('analytics/onlycli', new lang_string('onlycli', 'analytics'),

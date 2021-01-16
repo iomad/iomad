@@ -120,8 +120,7 @@ class main_view extends XMLDBAction {
         $result = $this->launch('get_db_directories');
         // Display list of DB directories if everything is ok
         if ($result && !empty($XMLDB->dbdirs)) {
-            $o .= '<table id="listdirectories" border="0" cellpadding="5" cellspacing="1"' .
-                ' class="table-striped table-sm admintable generaltable">';
+            $o .= '<table id="listdirectories" border="0" cellpadding="5" cellspacing="1" class="admintable generaltable">';
             $row = 0;
             foreach ($XMLDB->dbdirs as $key => $dbdir) {
                 // Detect if this is the lastused dir
@@ -170,7 +169,7 @@ class main_view extends XMLDBAction {
                     file_exists($key . '/install.xml') &&
                     is_readable($key . '/install.xml') &&
                     empty($dbdir->xml_loaded)) {
-                    $b .= '<a href="index.php?action=load_xml_file&amp;sesskey=' . sesskey() . '&amp;dir=' . urlencode(str_replace($CFG->dirroot, '', $key)) . '&amp;time=' . time() . '&amp;postaction=main_view#lastused">[' . $this->str['load'] . ']</a>';
+                    $b .= '<a href="index.php?action=load_xml_file&amp;dir=' . urlencode(str_replace($CFG->dirroot, '', $key)) . '&amp;time=' . time() . '&amp;postaction=main_view#lastused">[' . $this->str['load'] . ']</a>';
                 } else {
                     $b .= '[' . $this->str['load'] . ']';
                 }
@@ -240,7 +239,7 @@ class main_view extends XMLDBAction {
                     is_readable($key . '/install.xml') &&
                     !empty($dbdir->xml_loaded) &&
                     empty($dbdir->xml_changed)) {
-                    $b .= '<a href="index.php?action=unload_xml_file&amp;sesskey=' . sesskey() . '&amp;dir=' . urlencode(str_replace($CFG->dirroot, '', $key)) . '&amp;time=' . time() . '&amp;postaction=main_view#lastused">[' . $this->str['unload'] . ']</a>';
+                    $b .= '<a href="index.php?action=unload_xml_file&amp;dir=' . urlencode(str_replace($CFG->dirroot, '', $key)) . '&amp;time=' . time() . '&amp;postaction=main_view#lastused">[' . $this->str['unload'] . ']</a>';
                 } else {
                     $b .= '[' . $this->str['unload'] . ']';
                 }

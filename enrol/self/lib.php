@@ -157,8 +157,6 @@ class enrol_self_plugin extends enrol_plugin {
 
         $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
 
-        \core\notification::success(get_string('youenrolledincourse', 'enrol'));
-
         if ($instance->password and $instance->customint1 and $data->enrolpassword !== $instance->password) {
             // It must be a group enrolment, let's assign group too.
             $groups = $DB->get_records('groups', array('courseid'=>$instance->courseid), 'id', 'id, enrolmentkey');
@@ -408,6 +406,16 @@ class enrol_self_plugin extends enrol_plugin {
     }
 
     /**
+     * Enrol self cron support.
+     * @return void
+     */
+    public function cron() {
+        $trace = new text_progress_trace();
+        $this->sync($trace, null);
+        $this->send_expiry_notifications($trace);
+    }
+
+    /**
      * Sync all meta course links.
      *
      * @param progress_trace $trace
@@ -450,9 +458,8 @@ class enrol_self_plugin extends enrol_plugin {
             $userid = $instance->userid;
             unset($instance->userid);
             $this->unenrol_user($instance, $userid);
-            $days = $instance->customint2 / DAYSECS;
-            $trace->output("unenrolling user $userid from course $instance->courseid " .
-                "as they did not log in for at least $days days", 1);
+            $days = $instance->customint2 / 60*60*24;
+            $trace->output("unenrolling user $userid from course $instance->courseid as they have did not log in for at least $days days", 1);
         }
         $rs->close();
 
@@ -468,9 +475,8 @@ class enrol_self_plugin extends enrol_plugin {
             $userid = $instance->userid;
             unset($instance->userid);
             $this->unenrol_user($instance, $userid);
-            $days = $instance->customint2 / DAYSECS;
-            $trace->output("unenrolling user $userid from course $instance->courseid " .
-                "as they did not access the course for at least $days days", 1);
+                $days = $instance->customint2 / 60*60*24;
+            $trace->output("unenrolling user $userid from course $instance->courseid as they have did not access course for at least $days days", 1);
         }
         $rs->close();
 
@@ -661,8 +667,8 @@ class enrol_self_plugin extends enrol_plugin {
      */
     protected function get_expirynotify_options() {
         $options = array(0 => get_string('no'),
-                         1 => get_string('expirynotifyenroller', 'enrol_self'),
-                         2 => get_string('expirynotifyall', 'enrol_self'));
+                         1 => get_string('expirynotifyenroller', 'core_enrol'),
+                         2 => get_string('expirynotifyall', 'core_enrol'));
         return $options;
     }
 
@@ -689,25 +695,6 @@ class enrol_self_plugin extends enrol_plugin {
     }
 
     /**
-     * The self enrollment plugin has several bulk operations that can be performed.
-     * @param course_enrolment_manager $manager
-     * @return array
-     */
-    public function get_bulk_operations(course_enrolment_manager $manager) {
-        global $CFG;
-        require_once($CFG->dirroot.'/enrol/self/locallib.php');
-        $context = $manager->get_context();
-        $bulkoperations = array();
-        if (has_capability("enrol/self:manage", $context)) {
-            $bulkoperations['editselectedusers'] = new enrol_self_editselectedusers_operation($manager, $this);
-        }
-        if (has_capability("enrol/self:unenrol", $context)) {
-            $bulkoperations['deleteselectedusers'] = new enrol_self_deleteselectedusers_operation($manager, $this);
-        }
-        return $bulkoperations;
-    }
-
-    /**
      * Add elements to the edit instance form.
      *
      * @param stdClass $instance
@@ -716,7 +703,7 @@ class enrol_self_plugin extends enrol_plugin {
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
-        global $CFG, $DB;
+        global $CFG;
 
         // Merge these two settings to one value for the single selection element.
         if ($instance->notifyall and $instance->expirynotify) {

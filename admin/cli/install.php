@@ -219,6 +219,7 @@ $databases = array('mysqli' => moodle_database::get_driver_instance('mysqli', 'n
                    'pgsql'  => moodle_database::get_driver_instance('pgsql',  'native'),
                    'oci'    => moodle_database::get_driver_instance('oci',    'native'),
                    'sqlsrv' => moodle_database::get_driver_instance('sqlsrv', 'native'), // MS SQL*Server PHP driver
+                   'mssql'  => moodle_database::get_driver_instance('mssql',  'native'), // FreeTDS driver
                   );
 foreach ($databases as $type=>$database) {
     if ($database->driver_installed() !== true) {
@@ -266,7 +267,6 @@ list($options, $unrecognized) = cli_get_params(
 );
 
 $interactive = empty($options['non-interactive']);
-$skipdatabase = $options['skip-database'];
 
 // set up language
 $lang = clean_param($options['lang'], PARAM_SAFEDIR);
@@ -392,6 +392,7 @@ if ($interactive) {
 $CFG->wwwroot       = $wwwroot;
 $CFG->httpswwwroot  = $CFG->wwwroot;
 
+
 //We need dataroot before lang download
 $CFG->dataroot = $options['dataroot'];
 if ($interactive) {
@@ -442,7 +443,6 @@ if ($interactive) {
     }
 }
 $CFG->tempdir       = $CFG->dataroot.'/temp';
-$CFG->backuptempdir = $CFG->tempdir.'/backup';
 $CFG->cachedir      = $CFG->dataroot.'/cache';
 $CFG->localcachedir = $CFG->dataroot.'/localcache';
 
@@ -514,105 +514,100 @@ if ($interactive) {
 $database = $databases[$CFG->dbtype];
 
 
-// We cannot do any validation until all DB connection data is provided.
-$hintdatabase = '';
-do {
-    echo $hintdatabase;
-
-    // Ask for db host.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('databasehost', 'install'));
-        if ($options['dbhost'] !== '') {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['dbhost']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-        $CFG->dbhost = cli_input($prompt, $options['dbhost']);
-
+// ask for db host
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('databasehost', 'install'));
+    if ($options['dbhost'] !== '') {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['dbhost']);
     } else {
-        $CFG->dbhost = $options['dbhost'];
+        $prompt = get_string('clitypevalue', 'admin');
     }
+    $CFG->dbhost = cli_input($prompt, $options['dbhost']);
 
-    // Ask for db name.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('databasename', 'install'));
-        if ($options['dbname'] !== '') {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['dbname']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-        $CFG->dbname = cli_input($prompt, $options['dbname']);
+} else {
+    $CFG->dbhost = $options['dbhost'];
+}
 
+// ask for db name
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('databasename', 'install'));
+    if ($options['dbname'] !== '') {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['dbname']);
     } else {
-        $CFG->dbname = $options['dbname'];
+        $prompt = get_string('clitypevalue', 'admin');
     }
+    $CFG->dbname = cli_input($prompt, $options['dbname']);
 
-    // Ask for db prefix.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('dbprefix', 'install'));
-        //TODO: solve somehow the prefix trouble for oci.
-        if ($options['prefix'] !== '') {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['prefix']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-        $CFG->prefix = cli_input($prompt, $options['prefix']);
+} else {
+    $CFG->dbname = $options['dbname'];
+}
 
+// ask for db prefix
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('dbprefix', 'install'));
+    //TODO: solve somehow the prefix trouble for oci
+    if ($options['prefix'] !== '') {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['prefix']);
     } else {
-        $CFG->prefix = $options['prefix'];
+        $prompt = get_string('clitypevalue', 'admin');
     }
+    $CFG->prefix = cli_input($prompt, $options['prefix']);
 
-    // Ask for db port.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('databaseport', 'install'));
-        $prompt = get_string('clitypevaluedefault', 'admin', $options['dbport']);
-        $CFG->dboptions['dbport'] = (int) cli_input($prompt, $options['dbport']);
+} else {
+    $CFG->prefix = $options['prefix'];
+}
 
+// ask for db port
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('databaseport', 'install'));
+    $prompt = get_string('clitypevaluedefault', 'admin', $options['dbport']);
+    $CFG->dboptions['dbport'] = (int)cli_input($prompt, $options['dbport']);
+
+} else {
+    $CFG->dboptions['dbport'] = (int)$options['dbport'];
+}
+if ($CFG->dboptions['dbport'] <= 0) {
+    $CFG->dboptions['dbport'] = '';
+}
+
+// ask for db socket
+if ($CFG->ostype === 'WINDOWS') {
+    $CFG->dboptions['dbsocket'] = '';
+
+} else if ($interactive and empty($CFG->dboptions['dbport'])) {
+    cli_separator();
+    cli_heading(get_string('databasesocket', 'install'));
+    $prompt = get_string('clitypevaluedefault', 'admin', $options['dbsocket']);
+    $CFG->dboptions['dbsocket'] = cli_input($prompt, $options['dbsocket']);
+
+} else {
+    $CFG->dboptions['dbsocket'] = $options['dbsocket'];
+}
+
+// ask for db user
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('databaseuser', 'install'));
+    if ($options['dbuser'] !== '') {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['dbuser']);
     } else {
-        $CFG->dboptions['dbport'] = (int) $options['dbport'];
+        $prompt = get_string('clitypevalue', 'admin');
     }
-    if ($CFG->dboptions['dbport'] <= 0) {
-        $CFG->dboptions['dbport'] = '';
-    }
+    $CFG->dbuser = cli_input($prompt, $options['dbuser']);
 
-    // Ask for db socket.
-    if ($CFG->ostype === 'WINDOWS') {
-        $CFG->dboptions['dbsocket'] = '';
+} else {
+    $CFG->dbuser = $options['dbuser'];
+}
 
-    } else if ($interactive and empty($CFG->dboptions['dbport'])) {
-        cli_separator();
-        cli_heading(get_string('databasesocket', 'install'));
-        $prompt = get_string('clitypevaluedefault', 'admin', $options['dbsocket']);
-        $CFG->dboptions['dbsocket'] = cli_input($prompt, $options['dbsocket']);
-
-    } else {
-        $CFG->dboptions['dbsocket'] = $options['dbsocket'];
-    }
-
-    // Ask for db user.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('databaseuser', 'install'));
-        if ($options['dbuser'] !== '') {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['dbuser']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-        $CFG->dbuser = cli_input($prompt, $options['dbuser']);
-
-    } else {
-        $CFG->dbuser = $options['dbuser'];
-    }
-
-    // Ask for db password.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('databasepass', 'install'));
-
+// ask for db password
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('databasepass', 'install'));
+    do {
         if ($options['dbpass'] !== '') {
             $prompt = get_string('clitypevaluedefault', 'admin', $options['dbpass']);
         } else {
@@ -620,116 +615,108 @@ do {
         }
 
         $CFG->dbpass = cli_input($prompt, $options['dbpass']);
-        if (function_exists('distro_pre_create_db')) { // Hook for distros needing to do something before DB creation.
-            $distro = distro_pre_create_db($database, $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->dbname, $CFG->prefix,
-                    array('dbpersist' => 0, 'dbport' => $CFG->dboptions['dbport'], 'dbsocket' => $CFG->dboptions['dbsocket']),
-                    $distro);
+        if (function_exists('distro_pre_create_db')) { // Hook for distros needing to do something before DB creation
+            $distro = distro_pre_create_db($database, $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->dbname, $CFG->prefix, array('dbpersist'=>0, 'dbport'=>$CFG->dboptions['dbport'], 'dbsocket'=>$CFG->dboptions['dbsocket']), $distro);
         }
-        $hintdatabase = install_db_validate($database, $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->dbname, $CFG->prefix,
-                array('dbpersist' => 0, 'dbport' => $CFG->dboptions['dbport'], 'dbsocket' => $CFG->dboptions['dbsocket']));
+        $hint_database = install_db_validate($database, $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->dbname, $CFG->prefix, array('dbpersist'=>0, 'dbport'=>$CFG->dboptions['dbport'], 'dbsocket'=>$CFG->dboptions['dbsocket']));
+    } while ($hint_database !== '');
 
-    } else {
-        $CFG->dbpass = $options['dbpass'];
-        $hintdatabase = install_db_validate($database, $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->dbname, $CFG->prefix,
-                array('dbpersist' => 0, 'dbport' => $CFG->dboptions['dbport'], 'dbsocket' => $CFG->dboptions['dbsocket']));
-        if ($hintdatabase !== '') {
-            cli_error(get_string('dbconnectionerror', 'install'));
-        }
+} else {
+    $CFG->dbpass = $options['dbpass'];
+    $hint_database = install_db_validate($database, $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->dbname, $CFG->prefix, array('dbpersist'=>0, 'dbport'=>$CFG->dboptions['dbport'], 'dbsocket'=>$CFG->dboptions['dbsocket']));
+    if ($hint_database !== '') {
+        cli_error(get_string('dbconnectionerror', 'install'));
     }
-} while ($hintdatabase !== '');
+}
 
-// If --skip-database option is provided, we do not need to ask for site fullname, shortname, adminuser, adminpass, adminemail.
-// These fields will be requested during the database install part.
-if (!$skipdatabase) {
-    // Ask for fullname.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('fullsitename', 'moodle'));
+// ask for fullname
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('fullsitename', 'moodle'));
 
-        if ($options['fullname'] !== '') {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['fullname']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-
-        do {
-            $options['fullname'] = cli_input($prompt, $options['fullname']);
-        } while (empty($options['fullname']));
+    if ($options['fullname'] !== '') {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['fullname']);
     } else {
-        if (empty($options['fullname'])) {
-            $a = (object)['option' => 'fullname', 'value' => $options['fullname']];
-            cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
-        }
-    }
-
-    // Ask for shortname.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('shortsitename', 'moodle'));
-
-        if ($options['shortname'] !== '') {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['shortname']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-
-        do {
-            $options['shortname'] = cli_input($prompt, $options['shortname']);
-        } while (empty($options['shortname']));
-    } else {
-        if (empty($options['shortname'])) {
-            $a = (object)['option' => 'shortname', 'value' => $options['shortname']];
-            cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
-        }
-    }
-
-    // Ask for admin user name.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('cliadminusername', 'install'));
-        if (!empty($options['adminuser'])) {
-            $prompt = get_string('clitypevaluedefault', 'admin', $options['adminuser']);
-        } else {
-            $prompt = get_string('clitypevalue', 'admin');
-        }
-        do {
-            $options['adminuser'] = cli_input($prompt, $options['adminuser']);
-        } while (empty($options['adminuser']) or $options['adminuser'] === 'guest');
-    } else {
-        if ((empty($options['adminuser']) || $options['adminuser'] === 'guest')) {
-            $a = (object)['option' => 'adminuser', 'value' => $options['adminuser']];
-            cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
-        }
-    }
-
-    // Ask for admin user password.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('cliadminpassword', 'install'));
         $prompt = get_string('clitypevalue', 'admin');
-        do {
-            $options['adminpass'] = cli_input($prompt);
-        } while (empty($options['adminpass']) or $options['adminpass'] === 'admin');
-    } else {
-        if ((empty($options['adminpass']) or $options['adminpass'] === 'admin')) {
-            $a = (object)['option' => 'adminpass', 'value' => $options['adminpass']];
-            cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
-        }
     }
 
-    // Ask for the admin email address.
-    if ($interactive) {
-        cli_separator();
-        cli_heading(get_string('cliadminemail', 'install'));
-        $prompt = get_string('clitypevaluedefault', 'admin', $options['adminemail']);
-        $options['adminemail'] = cli_input($prompt, $options['adminemail']);
-    }
-
-    // Validate that the address provided was an e-mail address.
-    if (!empty($options['adminemail']) && !validate_email($options['adminemail'])) {
-        $a = (object)['option' => 'adminemail', 'value' => $options['adminemail']];
+    do {
+        $options['fullname'] = cli_input($prompt, $options['fullname']);
+    } while (empty($options['fullname']));
+} else {
+    if (empty($options['fullname'])) {
+        $a = (object)array('option'=>'fullname', 'value'=>$options['fullname']);
         cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
     }
+}
+
+// ask for shortname
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('shortsitename', 'moodle'));
+
+    if ($options['shortname'] !== '') {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['shortname']);
+    } else {
+        $prompt = get_string('clitypevalue', 'admin');
+    }
+
+    do {
+        $options['shortname'] = cli_input($prompt, $options['shortname']);
+    } while (empty($options['shortname']));
+} else {
+    if (empty($options['shortname'])) {
+        $a = (object)array('option'=>'shortname', 'value'=>$options['shortname']);
+        cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
+    }
+}
+
+// ask for admin user name
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('cliadminusername', 'install'));
+    if (!empty($options['adminuser'])) {
+        $prompt = get_string('clitypevaluedefault', 'admin', $options['adminuser']);
+    } else {
+        $prompt = get_string('clitypevalue', 'admin');
+    }
+    do {
+        $options['adminuser'] = cli_input($prompt, $options['adminuser']);
+    } while (empty($options['adminuser']) or $options['adminuser'] === 'guest');
+} else {
+    if (empty($options['adminuser']) or $options['adminuser'] === 'guest') {
+        $a = (object)array('option'=>'adminuser', 'value'=>$options['adminuser']);
+        cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
+    }
+}
+
+// ask for admin user password
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('cliadminpassword', 'install'));
+    $prompt = get_string('clitypevalue', 'admin');
+    do {
+        $options['adminpass'] = cli_input($prompt);
+    } while (empty($options['adminpass']) or $options['adminpass'] === 'admin');
+} else {
+    if (empty($options['adminpass']) or $options['adminpass'] === 'admin') {
+        $a = (object)array('option'=>'adminpass', 'value'=>$options['adminpass']);
+        cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
+    }
+}
+
+// Ask for the admin email address.
+if ($interactive) {
+    cli_separator();
+    cli_heading(get_string('cliadminemail', 'install'));
+    $prompt = get_string('clitypevaluedefault', 'admin', $options['adminemail']);
+    $options['adminemail'] = cli_input($prompt);
+}
+
+// Validate that the address provided was an e-mail address.
+if (!empty($options['adminemail']) && !validate_email($options['adminemail'])) {
+    $a = (object) array('option' => 'adminemail', 'value' => $options['adminemail']);
+    cli_error(get_string('cliincorrectvalueerror', 'admin', $a));
 }
 
 // Ask for the upgrade key.
@@ -750,26 +737,22 @@ if ($options['upgradekey'] !== '') {
     $CFG->upgradekey = $options['upgradekey'];
 }
 
-// The user does not also need to pass agree-license when --skip-database is provided as the user will need to accept
-// the license again in the database install part.
-if (!$skipdatabase) {
-    if ($interactive) {
-        if (!$options['agree-license']) {
-            cli_separator();
-            cli_heading(get_string('copyrightnotice'));
-            echo "Moodle  - Modular Object-Oriented Dynamic Learning Environment\n";
-            echo get_string('gpl3')."\n\n";
-            echo get_string('doyouagree')."\n";
-            $prompt = get_string('cliyesnoprompt', 'admin');
-            $input = cli_input($prompt, '', array(get_string('clianswerno', 'admin'), get_string('cliansweryes', 'admin')));
-            if ($input == get_string('clianswerno', 'admin')) {
-                exit(1);
-            }
+if ($interactive) {
+    if (!$options['agree-license']) {
+        cli_separator();
+        cli_heading(get_string('copyrightnotice'));
+        echo "Moodle  - Modular Object-Oriented Dynamic Learning Environment\n";
+        echo get_string('gpl3')."\n\n";
+        echo get_string('doyouagree')."\n";
+        $prompt = get_string('cliyesnoprompt', 'admin');
+        $input = cli_input($prompt, '', array(get_string('clianswerno', 'admin'), get_string('cliansweryes', 'admin')));
+        if ($input == get_string('clianswerno', 'admin')) {
+            exit(1);
         }
-    } else {
-        if (!$options['agree-license'] && !$skipdatabase) {
-            cli_error(get_string('climustagreelicense', 'install'));
-        }
+    }
+} else {
+    if (!$options['agree-license']) {
+        cli_error(get_string('climustagreelicense', 'install'));
     }
 }
 
@@ -818,7 +801,7 @@ if (!core_plugin_manager::instance()->all_plugins_ok($version, $failed)) {
     cli_error(get_string('pluginschecktodo', 'admin'));
 }
 
-if (!$skipdatabase) {
+if (!$options['skip-database']) {
     install_cli_database($options, $interactive);
     // This needs to happen at the end to ensure it occurs after all caches
     // have been purged for the last time.

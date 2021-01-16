@@ -29,9 +29,6 @@ require_once($CFG->dirroot.'/calendar/lib.php');
 // Event types.
 define('CHAT_EVENT_TYPE_CHATTIME', 'chattime');
 
-// Gap between sessions. 5 minutes or more of idleness between messages in a chat means the messages belong in different sessions.
-define('CHAT_SESSION_GAP', 300);
-
 // The HTML head for the message window to start with (<!-- nix --> is used to get some browsers starting with output.
 global $CHAT_HTMLHEAD;
 $CHAT_HTMLHEAD = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\" \"http://www.w3.org/TR/REC-html40/loose.dtd\"><html><head></head>\n<body>\n\n".padding(200);
@@ -123,8 +120,7 @@ function chat_add_instance($chat) {
         $event = new stdClass();
         $event->type        = CALENDAR_EVENT_TYPE_ACTION;
         $event->name        = $chat->name;
-        $event->description = format_module_intro('chat', $chat, $chat->coursemodule, false);
-        $event->format      = FORMAT_HTML;
+        $event->description = format_module_intro('chat', $chat, $chat->coursemodule);
         $event->courseid    = $chat->course;
         $event->groupid     = 0;
         $event->userid      = 0;
@@ -135,7 +131,7 @@ function chat_add_instance($chat) {
         $event->timesort    = $chat->chattime;
         $event->timeduration = 0;
 
-        calendar_event::create($event, false);
+        calendar_event::create($event);
     }
 
     if (!empty($chat->completionexpected)) {
@@ -170,13 +166,12 @@ function chat_update_instance($chat) {
         if ($chat->schedule > 0) {
             $event->type        = CALENDAR_EVENT_TYPE_ACTION;
             $event->name        = $chat->name;
-            $event->description = format_module_intro('chat', $chat, $chat->coursemodule, false);
-            $event->format      = FORMAT_HTML;
+            $event->description = format_module_intro('chat', $chat, $chat->coursemodule);
             $event->timestart   = $chat->chattime;
             $event->timesort    = $chat->chattime;
 
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event, false);
+            $calendarevent->update($event);
         } else {
             // Do not publish this event, so delete it.
             $calendarevent = calendar_event::load($event->id);
@@ -188,8 +183,7 @@ function chat_update_instance($chat) {
             $event = new stdClass();
             $event->type        = CALENDAR_EVENT_TYPE_ACTION;
             $event->name        = $chat->name;
-            $event->description = format_module_intro('chat', $chat, $chat->coursemodule, false);
-            $event->format      = FORMAT_HTML;
+            $event->description = format_module_intro('chat', $chat, $chat->coursemodule);
             $event->courseid    = $chat->course;
             $event->groupid     = 0;
             $event->userid      = 0;
@@ -200,7 +194,7 @@ function chat_update_instance($chat) {
             $event->timesort    = $chat->chattime;
             $event->timeduration = 0;
 
-            calendar_event::create($event, false);
+            calendar_event::create($event);
         }
     }
 
@@ -337,7 +331,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
     $strftimerecent = get_string('strftimerecent');
 
     if ($past) {
-        echo $OUTPUT->heading(get_string("pastchats", 'chat') . ':', 6);
+        echo $OUTPUT->heading(get_string("pastchats", 'chat').':', 3);
 
         foreach ($past as $cm) {
             $link = $CFG->wwwroot.'/mod/chat/view.php?id='.$cm->id;
@@ -348,7 +342,7 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
     }
 
     if ($current) {
-        echo $OUTPUT->heading(get_string("currentchats", 'chat') . ':', 6);
+        echo $OUTPUT->heading(get_string("currentchats", 'chat').':', 3);
 
         $oldest = floor((time() - $CFG->chat_old_ping) / 10) * 10;  // Better db caching.
 
@@ -398,6 +392,41 @@ function chat_print_recent_activity($course, $viewfullnames, $timestart) {
             echo '</div>';
         }
     }
+
+    return true;
+}
+
+/**
+ * Function to be run periodically according to the moodle cron
+ * This function searches for things that need to be done, such
+ * as sending out mail, toggling flags etc ...
+ *
+ * @global object
+ * @return bool
+ */
+function chat_cron () {
+    global $DB;
+
+    chat_update_chat_times();
+
+    chat_delete_old_users();
+
+    // Delete old messages with a single SQL query.
+    $subselect = "SELECT c.keepdays
+                    FROM {chat} c
+                   WHERE c.id = {chat_messages}.chatid";
+
+    $sql = "DELETE
+              FROM {chat_messages}
+             WHERE ($subselect) > 0 AND timestamp < ( ".time()." -($subselect) * 24 * 3600)";
+
+    $DB->execute($sql);
+
+    $sql = "DELETE
+              FROM {chat_messages_current}
+             WHERE timestamp < ( ".time()." - 8 * 3600)";
+
+    $DB->execute($sql);
 
     return true;
 }
@@ -463,14 +492,13 @@ function chat_prepare_update_events($chat, $cm = null) {
     $event = new stdClass();
     $event->name        = $chat->name;
     $event->type        = CALENDAR_EVENT_TYPE_ACTION;
-    $event->description = format_module_intro('chat', $chat, $cm->id, false);
-    $event->format      = FORMAT_HTML;
+    $event->description = format_module_intro('chat', $chat, $cm->id);
     $event->timestart   = $chat->chattime;
     $event->timesort    = $chat->chattime;
     if ($event->id = $DB->get_field('event', 'id', array('modulename' => 'chat', 'instance' => $chat->id,
             'eventtype' => CHAT_EVENT_TYPE_CHATTIME))) {
         $calendarevent = calendar_event::load($event->id);
-        $calendarevent->update($event, false);
+        $calendarevent->update($event);
     } else if ($chat->schedule > 0) {
         // The chat is scheduled and the event should be published.
         $event->courseid    = $chat->course;
@@ -481,7 +509,7 @@ function chat_prepare_update_events($chat, $cm = null) {
         $event->eventtype   = CHAT_EVENT_TYPE_CHATTIME;
         $event->timeduration = 0;
         $event->visible = $cm->visible;
-        calendar_event::create($event, false);
+        calendar_event::create($event);
     }
 }
 
@@ -1140,10 +1168,44 @@ function chat_get_post_actions() {
 }
 
 /**
- * @deprecated since Moodle 3.3, when the block_course_overview block was removed.
+ * @deprecated since 3.3
+ * @todo The final deprecation of this function will take place in Moodle 3.7 - see MDL-57487.
+ * @global object
+ * @global object
+ * @param array $courses
+ * @param array $htmlarray Passed by reference
  */
-function chat_print_overview() {
-    throw new coding_exception('chat_print_overview() can not be used any more and is obsolete.');
+function chat_print_overview($courses, &$htmlarray) {
+    global $USER, $CFG;
+
+    debugging('The function chat_print_overview() is now deprecated.', DEBUG_DEVELOPER);
+
+    if (empty($courses) || !is_array($courses) || count($courses) == 0) {
+        return array();
+    }
+
+    if (!$chats = get_all_instances_in_courses('chat', $courses)) {
+        return;
+    }
+
+    $strchat = get_string('modulename', 'chat');
+    $strnextsession  = get_string('nextsession', 'chat');
+
+    foreach ($chats as $chat) {
+        if ($chat->chattime and $chat->schedule) {  // A chat is scheduled.
+            $str = '<div class="chat overview"><div class="name">'.
+                   $strchat.': <a '.($chat->visible ? '' : ' class="dimmed"').
+                   ' href="'.$CFG->wwwroot.'/mod/chat/view.php?id='.$chat->coursemodule.'">'.
+                   $chat->name.'</a></div>';
+            $str .= '<div class="info">'.$strnextsession.': '.userdate($chat->chattime).'</div></div>';
+
+            if (empty($htmlarray[$chat->course]['chat'])) {
+                $htmlarray[$chat->course]['chat'] = $str;
+            } else {
+                $htmlarray[$chat->course]['chat'] .= $str;
+            }
+        }
+    }
 }
 
 
@@ -1205,6 +1267,16 @@ function chat_reset_userdata($data) {
 
     return $status;
 }
+
+/**
+ * Returns all other caps used in module
+ *
+ * @return array
+ */
+function chat_get_extra_capabilities() {
+    return array('moodle/site:accessallgroups', 'moodle/site:viewfullnames');
+}
+
 
 /**
  * @param string $feature FEATURE_xx constant for requested feature
@@ -1384,39 +1456,16 @@ function chat_view($chat, $course, $cm, $context) {
  *
  * @param calendar_event $event
  * @param \core_calendar\action_factory $factory
- * @param int $userid User id to use for all capability checks, etc. Set to 0 for current user (default).
  * @return \core_calendar\local\event\entities\action_interface|null
  */
 function mod_chat_core_calendar_provide_event_action(calendar_event $event,
-                                                     \core_calendar\action_factory $factory,
-                                                     int $userid = 0) {
-    global $USER, $DB;
+                                                     \core_calendar\action_factory $factory) {
+    global $DB;
 
-    if ($userid) {
-        $user = core_user::get_user($userid, 'id, timezone');
-    } else {
-        $user = $USER;
-    }
-
-    $cm = get_fast_modinfo($event->courseid, $user->id)->instances['chat'][$event->instance];
-
-    if (!$cm->uservisible) {
-        // The module is not visible to the user for any reason.
-        return null;
-    }
-
-    $completion = new \completion_info($cm->get_course());
-
-    $completiondata = $completion->get_data($cm, false, $userid);
-
-    if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
-        return null;
-    }
-
+    $cm = get_fast_modinfo($event->courseid)->instances['chat'][$event->instance];
     $chattime = $DB->get_field('chat', 'chattime', array('id' => $event->instance));
-    $usertimezone = core_date::get_user_timezone($user);
-    $chattimemidnight = usergetmidnight($chattime, $usertimezone);
-    $todaymidnight = usergetmidnight(time(), $usertimezone);
+    $chattimemidnight = usergetmidnight($chattime);
+    $todaymidnight = usergetmidnight(time());
 
     if ($chattime < $todaymidnight) {
         // The chat is before today. Do not show at all.
@@ -1432,104 +1481,4 @@ function mod_chat_core_calendar_provide_event_action(calendar_event $event,
             $actionable
         );
     }
-}
-
-/**
- * Given a set of messages for a chat, return the completed chat sessions (including optionally not completed ones).
- *
- * @param  array $messages list of messages from a chat. It is assumed that these are sorted by timestamp in DESCENDING order.
- * @param  bool $showall   whether to include incomplete sessions or not
- * @return array           the list of sessions
- * @since  Moodle 3.5
- */
-function chat_get_sessions($messages, $showall = false) {
-    $sessions     = [];
-    $start        = 0;
-    $end          = 0;
-    $sessiontimes = [];
-
-    // Group messages by session times.
-    foreach ($messages as $message) {
-        // Initialise values start-end times if necessary.
-        if (empty($start)) {
-            $start = $message->timestamp;
-        }
-        if (empty($end)) {
-            $end = $message->timestamp;
-        }
-
-        // If this message's timestamp has been more than the gap, it means it's been idle.
-        if ($start - $message->timestamp > CHAT_SESSION_GAP) {
-            // Mark this as the session end of the next session.
-            $end = $message->timestamp;
-        }
-        // Use this time as the session's start (until it gets overwritten on the next iteration, if needed).
-        $start = $message->timestamp;
-
-        // Set this start-end pair in our list of session times.
-        $sessiontimes[$end]['sessionstart'] = $start;
-        if (!isset($sessiontimes[$end]['sessionend'])) {
-            $sessiontimes[$end]['sessionend'] = $end;
-        }
-        if ($message->userid && !$message->issystem) {
-            if (!isset($sessiontimes[$end]['sessionusers'][$message->userid])) {
-                $sessiontimes[$end]['sessionusers'][$message->userid] = 1;
-            } else {
-                $sessiontimes[$end]['sessionusers'][$message->userid]++;
-            }
-        }
-    }
-
-    // Go through each session time and prepare the session data to be returned.
-    foreach ($sessiontimes as $sessionend => $sessiondata) {
-        if (!isset($sessiondata['sessionusers'])) {
-            $sessiondata['sessionusers'] = [];
-        }
-        $sessionusers = $sessiondata['sessionusers'];
-        $sessionstart = $sessiondata['sessionstart'];
-
-        $iscomplete = $sessionend - $sessionstart > 60 && count($sessionusers) > 1;
-        if ($showall || $iscomplete) {
-            $sessions[] = (object) ($sessiondata + ['iscomplete' => $iscomplete]);
-        }
-    }
-
-    return $sessions;
-}
-
-/**
- * Return the messages of the given chat session.
- *
- * @param  int $chatid      the chat id
- * @param  mixed $group     false if groups not used, int if groups used, 0 means all groups
- * @param  int $start       the session start timestamp (0 to not filter by time)
- * @param  int $end         the session end timestamp (0 to not filter by time)
- * @param  string $sort     an order to sort the results in (optional, a valid SQL ORDER BY parameter)
- * @return array session messages
- * @since  Moodle 3.5
- */
-function chat_get_session_messages($chatid, $group = false, $start = 0, $end = 0, $sort = '') {
-    global $DB;
-
-    $params = array('chatid' => $chatid);
-
-    // If the user is allocated to a group, only show messages from people in the same group, or no group.
-    if ($group) {
-        $groupselect = " AND (groupid = :currentgroup OR groupid = 0)";
-        $params['currentgroup'] = $group;
-    } else {
-        $groupselect = "";
-    }
-
-    $select = "chatid = :chatid $groupselect";
-    if (!empty($start)) {
-        $select .= ' AND timestamp >= :start';
-        $params['start'] = $start;
-    }
-    if (!empty($end)) {
-        $select .= ' AND timestamp <= :end';
-        $params['end'] = $end;
-    }
-
-    return $DB->get_records_select('chat_messages', $select, $params, $sort);
 }

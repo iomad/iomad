@@ -288,9 +288,9 @@ class restore_ui_stage_confirm extends restore_ui_independent_stage implements f
      * @throws restore_ui_exception
      */
     public function process() {
-        $backuptempdir = make_backup_temp_directory('');
+        global $CFG;
         if ($this->filename) {
-            $archivepath = $backuptempdir . '/' . $this->filename;
+            $archivepath = $CFG->tempdir . '/backup/' . $this->filename;
             if (!file_exists($archivepath)) {
                 throw new restore_ui_exception('invalidrestorefile');
             }
@@ -316,14 +316,13 @@ class restore_ui_stage_confirm extends restore_ui_independent_stage implements f
      * @return bool
      */
     protected function extract_file_to_dir($source) {
-        global $USER;
+        global $CFG, $USER;
 
         $this->filepath = restore_controller::get_tempdir_name($this->contextid, $USER->id);
-        $backuptempdir = make_backup_temp_directory('', false);
 
         $fb = get_file_packer('application/vnd.moodle.backup');
         $result = $fb->extract_to_pathname($source,
-                $backuptempdir . '/' . $this->filepath . '/', null, $this);
+                $CFG->tempdir . '/backup/' . $this->filepath . '/', null, $this);
 
         // If any progress happened, end it.
         if ($this->startedprogress) {
@@ -474,9 +473,8 @@ class restore_ui_stage_destination extends restore_ui_independent_stage {
      * @throws restore_ui_exception
      */
     public function process() {
-        global $DB;
-        $filepathdir = make_backup_temp_directory($this->filepath, false);
-        if (!file_exists($filepathdir) || !is_dir($filepathdir)) {
+        global $CFG, $DB;
+        if (!file_exists("$CFG->tempdir/backup/".$this->filepath) || !is_dir("$CFG->tempdir/backup/".$this->filepath)) {
             throw new restore_ui_exception('invalidrestorepath');
         }
         if (optional_param('searchcourses', false, PARAM_BOOL)) {
@@ -901,7 +899,7 @@ class restore_ui_stage_review extends restore_ui_stage {
             foreach ($tasks as $task) {
                 if ($task instanceof restore_root_task) {
                     // If its a backup root add a root settings heading to group nicely.
-                    $form->add_heading('rootsettings', get_string('restorerootsettings', 'backup'));
+                    $form->add_heading('rootsettings', get_string('rootsettings', 'backup'));
                 } else if (!$courseheading) {
                     // We haven't already add a course heading.
                     $form->add_heading('coursesettings', get_string('coursesettings', 'backup'));
@@ -1061,26 +1059,7 @@ class restore_ui_stage_process extends restore_ui_stage {
                 if (!empty($info->role_mappings->mappings)) {
                     $context = context_course::instance($this->ui->get_controller()->get_courseid());
                     $assignableroles = get_assignable_roles($context, ROLENAME_ALIAS, false);
-
-                    // Get current role mappings.
-                    $currentroles = role_fix_names(get_all_roles(), $context);
-                    // Get backup role mappings.
-                    $rolemappings = $info->role_mappings->mappings;
-
-                    array_map(function($rolemapping) use ($currentroles) {
-                        foreach ($currentroles as $role) {
-                            // Find matching archetype to determine the backup's shortname for label display.
-                            if ($rolemapping->archetype == $role->archetype) {
-                                $rolemapping->name = $rolemapping->shortname;
-                                break;
-                            }
-                        }
-                        if ($rolemapping->name == null) {
-                            $rolemapping->name = get_string('undefinedrolemapping', 'backup', $rolemapping->archetype);
-                        }
-                    }, $rolemappings);
-
-                    $html .= $renderer->role_mappings($rolemappings, $assignableroles);
+                    $html .= $renderer->role_mappings($info->role_mappings->mappings, $assignableroles);
                 }
                 break;
             default:

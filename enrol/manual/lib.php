@@ -197,14 +197,14 @@ class enrol_manual_plugin extends enrol_plugin {
         global $CFG, $PAGE;
         require_once($CFG->dirroot.'/cohort/lib.php');
 
-        static $called = false;
-
         $instance = null;
+        $instances = array();
         foreach ($manager->get_enrolment_instances() as $tempinstance) {
             if ($tempinstance->enrol == 'manual') {
                 if ($instance === null) {
                     $instance = $tempinstance;
                 }
+                $instances[] = array('id' => $tempinstance->id, 'name' => $this->get_instance_name($tempinstance));
             }
         }
         if (empty($instance)) {
@@ -222,13 +222,19 @@ class enrol_manual_plugin extends enrol_plugin {
         $context = context_course::instance($instance->courseid);
         $arguments = array('contextid' => $context->id);
 
-        if (!$called) {
-            $called = true;
-            // Calling the following more than once will cause unexpected results.
-            $PAGE->requires->js_call_amd('enrol_manual/quickenrolment', 'init', array($arguments));
-        }
+        $PAGE->requires->js_call_amd('enrol_manual/quickenrolment', 'init', array($arguments));
 
         return $button;
+    }
+
+    /**
+     * Enrol cron support.
+     * @return void
+     */
+    public function cron() {
+        $trace = new text_progress_trace();
+        $this->sync($trace, null);
+        $this->send_expiry_notifications($trace);
     }
 
     /**
@@ -506,7 +512,6 @@ class enrol_manual_plugin extends enrol_plugin {
      * @param int $timeend 0 means forever
      * @param int $status default to ENROL_USER_ACTIVE for new enrolments, no change by default in updates
      * @param bool $recovergrades restore grade history
-     * @return int The number of enrolled cohort users
      */
     public function enrol_cohort(stdClass $instance, $cohortid, $roleid = null, $timestart = 0, $timeend = 0, $status = null, $recovergrades = null) {
         global $DB;
@@ -519,7 +524,6 @@ class enrol_manual_plugin extends enrol_plugin {
         foreach ($members as $userid) {
             $this->enrol_user($instance, $userid, $roleid, $timestart, $timeend, $status, $recovergrades);
         }
-        return count($members);
     }
 
     /**

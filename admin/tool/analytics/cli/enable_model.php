@@ -31,21 +31,19 @@ $help = "Enables the provided model.
 
 Options:
 --modelid           Model id
---list              List models
---analysisinterval  Time splitting method full class name
+--timesplitting     Time splitting method full class name
 -h, --help          Print out this help
 
 Example:
-\$ php admin/tool/analytics/cli/enable_model.php --modelid=1 --analysisinterval=\"\\core\\analytics\\time_splitting\\quarters\"
+\$ php admin/tool/analytics/cli/enable_model.php --modelid=1 --timesplitting=\"\\core\\analytics\\time_splitting\\quarters\"
 ";
 
 // Now get cli options.
 list($options, $unrecognized) = cli_get_params(
     array(
-        'help'             => false,
-        'list'             => false,
-        'modelid'          => false,
-        'analysisinterval' => false
+        'help'            => false,
+        'modelid'         => false,
+        'timesplitting'   => false
     ),
     array(
         'h' => 'help',
@@ -57,17 +55,7 @@ if ($options['help']) {
     exit(0);
 }
 
-if (!\core_analytics\manager::is_analytics_enabled()) {
-    echo get_string('analyticsdisabled', 'analytics') . PHP_EOL;
-    exit(0);
-}
-
-if ($options['list'] || $options['modelid'] === false) {
-    \tool_analytics\clihelper::list_models();
-    exit(0);
-}
-
-if ($options['analysisinterval'] === false) {
+if ($options['modelid'] === false || $options['timesplitting'] === false) {
     echo $help;
     exit(0);
 }
@@ -78,7 +66,7 @@ if ($options['analysisinterval'] === false) {
 $model = new \core_analytics\model($options['modelid']);
 
 // Evaluate its suitability to predict accurately.
-$model->enable($options['analysisinterval']);
+$model->enable($options['timesplitting']);
 
 cli_heading(get_string('success'));
 exit(0);

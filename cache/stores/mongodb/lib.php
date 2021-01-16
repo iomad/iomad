@@ -26,15 +26,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once('MongoDB/functions.php');
-
 /**
  * The MongoDB Cache store.
  *
- * This cache store uses the MongoDB Native Driver and the MongoDB PHP Library.
+ * This cache store uses the MongoDB Native Driver.
  * For installation instructions have a look at the following two links:
- *  - {@link http://php.net/manual/en/set.mongodb.php}
- *  - {@link https://docs.mongodb.com/ecosystem/drivers/php/}
+ *  - {@link http://www.php.net/manual/en/mongo.installation.php}
+ *  - {@link http://www.mongodb.org/display/DOCS/PHP+Language+Center}
  *
  * @copyright  2012 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -67,19 +65,19 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
 
     /**
      * The Connection object
-     * @var MongoDB/Client
+     * @var Mongo
      */
     protected $connection = false;
 
     /**
      * The Database Object
-     * @var MongoDB/Database
+     * @var MongoDB
      */
     protected $database;
 
     /**
      * The Collection object
-     * @var MongoDB/Collection
+     * @var MongoCollection
      */
     protected $collection;
 
@@ -106,6 +104,14 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
      * @var bool
      */
     protected $isready = false;
+
+    /**
+     * Set to true if the Mongo extension is < version 1.3.
+     * If this is the case we must use the legacy Mongo class instead of MongoClient.
+     * Mongo is backwards compatible, although obviously deprecated.
+     * @var bool
+     */
+    protected $legacymongo = false;
 
     /**
      * Constructs a new instance of the Mongo store.
@@ -142,14 +148,16 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
             $this->extendedmode = $configuration['extendedmode'];
         }
 
+        // Test if the MongoClient class exists, if not we need to switch to legacy classes.
+        $this->legacymongo = (!class_exists('MongoClient'));
+
+        // MongoClient from Mongo 1.3 onwards. Mongo for earlier versions.
+        $class = ($this->legacymongo) ? 'Mongo' : 'MongoClient';
         try {
-            $this->connection = new MongoDB\Client($this->server, $this->options);
-            // Required because MongoDB\Client does not try to connect to the server
-            $rp = new MongoDB\Driver\ReadPreference(MongoDB\Driver\ReadPreference::RP_PRIMARY);
-            $this->connection->getManager()->selectServer($rp);
+            $this->connection = new $class($this->server, $this->options);
             $this->isready = true;
-        } catch (MongoDB\Driver\Exception\RuntimeException $e) {
-            // We only want to catch RuntimeException here.
+        } catch (MongoConnectionException $e) {
+            // We only want to catch MongoConnectionExceptions here.
         }
     }
 
@@ -158,7 +166,7 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
      * @return bool
      */
     public static function are_requirements_met() {
-        return version_compare(phpversion('mongodb'), '1.5', 'ge');
+        return class_exists('MongoClient') || class_exists('Mongo');
     }
 
     /**
@@ -195,18 +203,17 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
         if ($this->is_initialised()) {
             throw new coding_exception('This mongodb instance has already been initialised.');
         }
-        $this->database = $this->connection->selectDatabase($this->databasename);
+        $this->database = $this->connection->selectDB($this->databasename);
         $this->definitionhash = 'm'.$definition->generate_definition_hash();
         $this->collection = $this->database->selectCollection($this->definitionhash);
 
         $options = array('name' => 'idx_key');
-
-        $w = $this->usesafe ? 1 : 0;
-        $wc = new MongoDB\Driver\WriteConcern($w);
-
-        $options['writeConcern'] = $wc;
-
-        $this->collection->createIndex(array('key' => 1), $options);
+        if ($this->legacymongo) {
+            $options['safe'] = $this->usesafe;
+        } else {
+            $options['w'] = $this->usesafe ? 1 : 0;
+        }
+        $this->collection->ensureIndex(array('key' => 1), $options);
     }
 
     /**
@@ -214,7 +221,7 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
      * @return bool
      */
     public function is_initialised() {
-        return ($this->database instanceof MongoDB\Database);
+        return ($this->database instanceof MongoDB);
     }
 
     /**
@@ -254,13 +261,7 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
         }
 
         $result = $this->collection->findOne($key);
-        // Note $result is really an object, BSONDocument extending ArrayObject,
-        // which implements ArrayAccess. That enables access to its information
-        // using square brackets and some array operations. But, it seems that
-        // it's not enough for array_key_exists() to operate on it. Hence, we
-        // are explicitly casting to array, after having checked that the operation
-        // doesn't incur into any performance penalty.
-        if ($result === null || !array_key_exists('data', (array)$result)) {
+        if ($result === null || !array_key_exists('data', $result)) {
             return false;
         }
         $data = @unserialize($result['data']);
@@ -318,20 +319,24 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
         }
         $record['data'] = serialize($data);
         $options = array('upsert' => true);
-
-        $w = $this->usesafe ? 1 : 0;
-        $wc = new MongoDB\Driver\WriteConcern($w);
-
-        $options['writeConcern'] = $wc;
-
-        $this->delete($key);
-        try {
-            $this->collection->insertOne($record, $options);
-        } catch (MongoDB\Exception\Exception $e) {
-            return false;
+        if ($this->legacymongo) {
+            $options['safe'] = $this->usesafe;
+        } else {
+            $options['w'] = $this->usesafe ? 1 : 0;
         }
-
-        return true;
+        $this->delete($key);
+        $result = $this->collection->insert($record, $options);
+        if ($result === true) {
+            // Safe mode is off.
+            return true;
+        } else if (is_array($result)) {
+            if (empty($result['ok']) || isset($result['err'])) {
+                return false;
+            }
+            return true;
+        }
+        // Who knows?
+        return false;
     }
 
     /**
@@ -368,23 +373,27 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
             $criteria = $key;
         }
         $options = array('justOne' => false);
-
-        $w = $this->usesafe ? 1 : 0;
-        $wc = new MongoDB\Driver\WriteConcern($w);
-
-        $options['writeConcern'] = $wc;
-
-        try {
-            $result = $this->collection->deleteOne($criteria, $options);
-        } catch (\MongoDB\Exception $e) {
-            return false;
+        if ($this->legacymongo) {
+            $options['safe'] = $this->usesafe;
+        } else {
+            $options['w'] = $this->usesafe ? 1 : 0;
         }
+        $result = $this->collection->remove($criteria, $options);
 
-        if (empty($result->getDeletedCount())) {
-            return false;
+        if ($result === true) {
+            // Safe mode.
+            return true;
+        } else if (is_array($result)) {
+            if (empty($result['ok']) || isset($result['err'])) {
+                return false;
+            } else if (empty($result['n'])) {
+                // Nothing was removed.
+                return false;
+            }
+            return true;
         }
-
-        return true;
+        // Who knows?
+        return false;
     }
 
     /**
@@ -489,10 +498,20 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
     public function instance_deleted() {
         // We can't use purge here that acts upon a collection.
         // Instead we must drop the named database.
-        if (!$this->is_ready()) {
-            return;
+        if ($this->connection) {
+            $connection = $this->connection;
+        } else {
+            try {
+                // MongoClient from Mongo 1.3 onwards. Mongo for earlier versions.
+                $class = ($this->legacymongo) ? 'Mongo' : 'MongoClient';
+                $connection = new $class($this->server, $this->options);
+            } catch (MongoConnectionException $e) {
+                // We only want to catch MongoConnectionExceptions here.
+                // If the server cannot be connected to we cannot clean it.
+                return;
+            }
         }
-        $database = $this->connection->selectDatabase($this->databasename);
+        $database = $connection->selectDB($this->databasename);
         $database->drop();
         $connection = null;
         $database = null;
@@ -545,6 +564,7 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
         return $store;
     }
 
+
     /**
      * Generates an instance of the cache store that can be used for testing.
      *
@@ -557,7 +577,7 @@ class cachestore_mongodb extends cache_store implements cache_is_configurable {
 
         // If the configuration is not defined correctly, return only the configuration know about.
         if (defined('TEST_CACHESTORE_MONGODB_TESTSERVER')) {
-            $configuration['server'] = TEST_CACHESTORE_MONGODB_TESTSERVER;
+            $configuration['servers'] = explode("\n", TEST_CACHESTORE_MONGODB_TESTSERVER);
         }
 
         return $configuration;

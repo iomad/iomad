@@ -51,9 +51,7 @@ list($options, $unrecognized) = cli_get_params(
         'non-interactive'   => false,
         'allow-unstable'    => false,
         'help'              => false,
-        'lang'              => $lang,
-        'verbose-settings'  => false,
-        'is-pending'        => false,
+        'lang'              => $lang
     ),
     array(
         'h' => 'help'
@@ -86,11 +84,6 @@ Options:
                       site language if not set. Defaults to 'en' if the lang
                       parameter is invalid or if the language pack is not
                       installed.
---verbose-settings    Show new settings values. By default only the name of
-                      new core or plugin settings are displayed. This option
-                      outputs the new values as well as the setting name.
---is-pending          If an upgrade is needed it exits with an error code of
-                      2 so it distinct from other types of errors.
 -h, --help            Print out this help
 
 Example:
@@ -119,10 +112,6 @@ if (!moodle_needs_upgrading()) {
     cli_error(get_string('cliupgradenoneed', 'core_admin', $newversion), 0);
 }
 
-if ($options['is-pending']) {
-    cli_error(get_string('cliupgradepending', 'core_admin'), 2);
-}
-
 // Test environment first.
 list($envstatus, $environment_results) = check_moodle_environment(normalize_version($release), ENV_SELECT_RELEASE);
 if (!$envstatus) {
@@ -137,16 +126,15 @@ if (!$envstatus) {
 
 // Test plugin dependencies.
 $failed = array();
-if (!core_plugin_manager::instance()->all_plugins_ok($version, $failed, $CFG->branch)) {
+if (!core_plugin_manager::instance()->all_plugins_ok($version, $failed)) {
     cli_problem(get_string('pluginscheckfailed', 'admin', array('pluginslist' => implode(', ', array_unique($failed)))));
     cli_error(get_string('pluginschecktodo', 'admin'));
 }
 
-$a = new stdClass();
-$a->oldversion = $oldversion;
-$a->newversion = $newversion;
-
 if ($interactive) {
+    $a = new stdClass();
+    $a->oldversion = $oldversion;
+    $a->newversion = $newversion;
     echo cli_heading(get_string('databasechecking', '', $a)) . PHP_EOL;
 }
 
@@ -195,24 +183,9 @@ upgrade_noncore(true);
 // log in as admin - we need doanything permission when applying defaults
 \core\session\manager::set_user(get_admin());
 
-// Apply default settings and output those that have changed.
-cli_heading(get_string('cliupgradedefaultheading', 'admin'));
-$settingsoutput = admin_apply_default_settings(null, false);
-
-foreach ($settingsoutput as $setting => $value) {
-
-    if ($options['verbose-settings']) {
-        $stringvlaues = array(
-                'name' => $setting,
-                'defaultsetting' => var_export($value, true) // Expand objects.
-        );
-        echo get_string('cliupgradedefaultverbose', 'admin', $stringvlaues) . PHP_EOL;
-
-    } else {
-        echo get_string('cliupgradedefault', 'admin', $setting) . PHP_EOL;
-
-    }
-}
+// apply all default settings, just in case do it twice to fill all defaults
+admin_apply_default_settings(NULL, false);
+admin_apply_default_settings(NULL, false);
 
 // This needs to happen at the end to ensure it occurs after all caches
 // have been purged for the last time.
@@ -220,5 +193,5 @@ foreach ($settingsoutput as $setting => $value) {
 // to immediately start browsing the site.
 upgrade_themes();
 
-echo get_string('cliupgradefinished', 'admin', $a)."\n";
+echo get_string('cliupgradefinished', 'admin')."\n";
 exit(0); // 0 means success

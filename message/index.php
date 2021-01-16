@@ -36,44 +36,61 @@ if (empty($CFG->messaging)) {
 
 // The id of the user we want to view messages from.
 $id = optional_param('id', 0, PARAM_INT);
-$view = optional_param('view', null, PARAM_ALPHANUM);
-// It's possible a user may come from a link where these parameters are specified.
-// We no longer support viewing another user's messaging area (that can be achieved
-// via the 'Log-in as' feature). The 'user2' value takes preference over 'id'.
-$userid = optional_param('user2', $id, PARAM_INT);
-$conversationid = optional_param('convid', null, PARAM_INT);
 
-if (!core_user::is_real_user($userid)) {
-    $userid = null;
-}
-// You can specify either a user, or a conversation, not both.
-if ($userid) {
-    $conversationid = \core_message\api::get_conversation_between_users([$USER->id, $userid]);
-} else if ($conversationid) {
-    // Check that the user belongs to the conversation.
-    if (!\core_message\api::is_user_in_conversation($USER->id, $conversationid)) {
-        $conversationid = null;
-    }
-}
-
-if ($userid) {
-    if (!\core_message\api::can_send_message($userid, $USER->id)) {
-        throw new moodle_exception('Can not contact user');
-    }
-}
+// It's possible for someone with the right capabilities to view a conversation between two other users. For BC
+// we are going to accept other URL parameters to figure this out.
+$user1id = optional_param('user1', $USER->id, PARAM_INT);
+$user2id = optional_param('user2', $id, PARAM_INT);
+$contactsfirst = optional_param('contactsfirst', 0, PARAM_INT);
 
 $url = new moodle_url('/message/index.php');
-if ($userid) {
-    $url->param('id', $userid);
+if ($id) {
+    $url->param('id', $id);
+} else {
+    if ($user1id) {
+        $url->param('user1', $user1id);
+    }
+    if ($user2id) {
+        $url->param('user2', $user2id);
+    }
+    if ($contactsfirst) {
+        $url->param('contactsfirst', $contactsfirst);
+    }
 }
 $PAGE->set_url($url);
-$PAGE->set_context(context_user::instance($USER->id));
-$PAGE->set_pagelayout('mydashboard');
 
+$user1 = null;
+$currentuser = true;
+if ($user1id != $USER->id) {
+    $user1 = core_user::get_user($user1id, '*', MUST_EXIST);
+    $currentuser = false;
+} else {
+    $user1 = $USER;
+}
+
+$user2 = null;
+if (!empty($user2id)) {
+    $user2 = core_user::get_user($user2id, '*', MUST_EXIST);
+}
+
+$user2realuser = !empty($user2) && core_user::is_real_user($user2->id);
+$systemcontext = context_system::instance();
+if ($currentuser === false && !has_capability('moodle/site:readallmessages', $systemcontext)) {
+    print_error('accessdenied', 'admin');
+}
+
+$PAGE->set_context(context_user::instance($user1->id));
+$PAGE->set_pagelayout('standard');
 $strmessages = get_string('messages', 'message');
+if ($user2realuser) {
+    $user2fullname = fullname($user2);
 
-$PAGE->set_title("$strmessages");
-$PAGE->set_heading("$strmessages");
+    $PAGE->set_title("$strmessages: $user2fullname");
+    $PAGE->set_heading("$strmessages: $user2fullname");
+} else {
+    $PAGE->set_title("{$SITE->shortname}: $strmessages");
+    $PAGE->set_heading("{$SITE->shortname}: $strmessages");
+}
 
 // Remove the user node from the main navigation for this page.
 $usernode = $PAGE->navigation->find('users', null);
@@ -82,12 +99,56 @@ $usernode->remove();
 $settings = $PAGE->settingsnav->find('messages', null);
 $settings->make_active();
 
+// Get the renderer and the information we are going to be use.
+$renderer = $PAGE->get_renderer('core_message');
+$requestedconversation = false;
+if ($contactsfirst) {
+    $conversations = \core_message\api::get_contacts($user1->id, 0, 20);
+} else {
+    $conversations = \core_message\api::get_conversations($user1->id, 0, 20);
+}
+$messages = [];
+if (!$user2realuser) {
+    // If there are conversations, but the user has not chosen a particular one, then render the most recent one.
+    $user2 = new stdClass();
+    $user2->id = null;
+    if (!empty($conversations)) {
+        $contact = reset($conversations);
+        $user2->id = $contact->userid;
+    }
+} else {
+    // The user has specifically requested to see a conversation. Add the flag to
+    // the context so that we can render the messaging app appropriately - this is
+    // used for smaller screens as it allows the UI to be responsive.
+    $requestedconversation = true;
+}
+
+// Mark the conversation as read.
+if (!empty($user2->id)) {
+    if ($currentuser && isset($conversations[$user2->id])) {
+        // Mark the conversation we are loading as read.
+        \core_message\api::mark_all_read_for_user($user1->id, $user2->id);
+        // Ensure the UI knows it's read as well.
+        $conversations[$user2->id]->isread = 1;
+    }
+
+    $messages = \core_message\api::get_messages($user1->id, $user2->id, 0, 20, 'timecreated DESC');
+}
+
+$pollmin = !empty($CFG->messagingminpoll) ? $CFG->messagingminpoll : MESSAGE_DEFAULT_MIN_POLL_IN_SECONDS;
+$pollmax = !empty($CFG->messagingmaxpoll) ? $CFG->messagingmaxpoll : MESSAGE_DEFAULT_MAX_POLL_IN_SECONDS;
+$polltimeout = !empty($CFG->messagingtimeoutpoll) ? $CFG->messagingtimeoutpoll : MESSAGE_DEFAULT_TIMEOUT_POLL_IN_SECONDS;
+$messagearea = new \core_message\output\messagearea\message_area($user1->id, $user2->id, $conversations, $messages,
+        $requestedconversation, $contactsfirst, $pollmin, $pollmax, $polltimeout);
+
+// Now the page contents.
 echo $OUTPUT->header();
-// Display a message if the messages have not been migrated yet.
-if (!get_user_preferences('core_message_migrate_data', false)) {
-    $notify = new \core\output\notification(get_string('messagingdatahasnotbeenmigrated', 'message'),
+echo $OUTPUT->heading(get_string('messages', 'message'));
+// Display a message that the user is viewing someone else's messages.
+if (!$currentuser) {
+    $notify = new \core\output\notification(get_string('viewinganotherusersmessagearea', 'message'),
         \core\output\notification::NOTIFY_WARNING);
     echo $OUTPUT->render($notify);
 }
-echo \core_message\helper::render_messaging_widget(false, $userid, $conversationid, $view);
+echo $renderer->render($messagearea);
 echo $OUTPUT->footer();

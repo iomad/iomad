@@ -195,23 +195,4 @@ class section extends \core_search\base {
     public function get_component_name() {
         return 'course';
     }
-
-    /**
-     * Returns an icon instance for the document.
-     *
-     * @param \core_search\document $doc
-     * @return \core_search\document_icon
-     */
-    public function get_doc_icon(\core_search\document $doc) : \core_search\document_icon {
-        return new \core_search\document_icon('i/section');
-    }
-
-    /**
-     * Returns a list of category names associated with the area.
-     *
-     * @return array
-     */
-    public function get_category_names() {
-        return [\core_search\manager::SEARCH_AREA_CATEGORY_COURSE_CONTENT];
-    }
 }

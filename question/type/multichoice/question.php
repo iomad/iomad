@@ -44,10 +44,6 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
 
     public $shuffleanswers;
     public $answernumbering;
-    /**
-     * @var int standard instruction to be displayed if enabled.
-     */
-    public $showstandardinstruction = 0;
     public $layout = self::LAYOUT_VERTICAL;
 
     public $correctfeedback;
@@ -180,7 +176,8 @@ class qtype_multichoice_single_question extends qtype_multichoice_base {
     }
 
     public function summarise_response(array $response) {
-        if (!$this->is_complete_response($response)) {
+        if (!array_key_exists('answer', $response) ||
+                !array_key_exists($response['answer'], $this->order)) {
             return null;
         }
         $ansid = $this->order[$response['answer']];
@@ -189,7 +186,8 @@ class qtype_multichoice_single_question extends qtype_multichoice_base {
     }
 
     public function classify_response(array $response) {
-        if (!$this->is_complete_response($response)) {
+        if (!array_key_exists('answer', $response) ||
+                !array_key_exists($response['answer'], $this->order)) {
             return array($this->id => question_classified_response::no_response());
         }
         $choiceid = $this->order[$response['answer']];
@@ -232,18 +230,11 @@ class qtype_multichoice_single_question extends qtype_multichoice_base {
     }
 
     public function is_same_response(array $prevresponse, array $newresponse) {
-        if (!$this->is_complete_response($prevresponse)) {
-            $prevresponse = [];
-        }
-        if (!$this->is_complete_response($newresponse)) {
-            $newresponse = [];
-        }
         return question_utils::arrays_same_at_key($prevresponse, $newresponse, 'answer');
     }
 
     public function is_complete_response(array $response) {
-        return array_key_exists('answer', $response) && $response['answer'] !== ''
-                && (string) $response['answer'] !== '-1';
+        return array_key_exists('answer', $response) && $response['answer'] !== '';
     }
 
     public function is_gradable_response(array $response) {

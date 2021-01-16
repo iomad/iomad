@@ -39,89 +39,98 @@ require_once($CFG->dirroot . '/question/type/ddimageortext/rendererbase.php');
 class qtype_ddmarker_renderer extends qtype_ddtoimage_renderer_base {
     public function formulation_and_controls(question_attempt $qa,
             question_display_options $options) {
+        global $PAGE, $OUTPUT;
 
         $question = $qa->get_question();
         $response = $qa->get_last_qt_data();
-        $componentname = $question->qtype->plugin_name();
 
         $questiontext = $question->format_questiontext($qa);
 
-        $dropareaclass = 'droparea';
-        $draghomesclass = 'draghomes';
-        if ($options->readonly) {
-            $dropareaclass .= ' readonly';
-            $draghomesclass .= ' readonly';
-        }
+        $output = html_writer::tag('div', $questiontext, array('class' => 'qtext'));
 
-        $output = html_writer::div($questiontext, 'qtext');
+        $bgimage = self::get_url_for_image($qa, 'bgimage');
 
-        $output .= html_writer::start_div('ddarea');
-        $output .= html_writer::start_div($dropareaclass);
-        $output .= html_writer::img(self::get_url_for_image($qa, 'bgimage'), get_string('dropbackground', 'qtype_ddmarker'),
-                ['class' => 'dropbackground img-responsive img-fluid']);
+        $img = html_writer::empty_tag('img', array(
+                'src' => $bgimage, 'class' => 'dropbackground',
+                'alt' => get_string('dropbackground', 'qtype_ddmarker')));
 
-        $output .= html_writer::div('', 'dropzones');
-        $output .= html_writer::div('', 'markertexts');
+        $droparea = html_writer::tag('div', $img, array('class' => 'droparea'));
 
-        $output .= html_writer::end_div();
-        $output .= html_writer::start_div($draghomesclass);
-
+        $draghomes = '';
         $orderedgroup = $question->get_ordered_choices(1);
+        $componentname = $question->qtype->plugin_name();
         $hiddenfields = '';
         foreach ($orderedgroup as $choiceno => $drag) {
-            $classes = ['marker', 'choice' . $choiceno];
-            $attr = [];
+            $classes = array('draghome',
+                             "choice{$choiceno}");
             if ($drag->infinite) {
                 $classes[] = 'infinite';
             } else {
-                $classes[] = 'dragno' . $drag->noofdrags;
+                $classes[] = 'dragno'.$drag->noofdrags;
             }
-            if (!$options->readonly) {
-                $attr['tabindex'] = 0;
-            }
-            $dragoutput = html_writer::start_span(join(' ', $classes), $attr);
-            $targeticonhtml = $this->output->image_icon('crosshairs', '', $componentname, ['class' => 'target']);
-            $markertext = html_writer::span($drag->text, 'markertext');
-            $dragoutput .= $targeticonhtml . $markertext;
-            $dragoutput .= html_writer::end_span();
-            $output .= $dragoutput;
+            $targeticonhtml =
+                $OUTPUT->image_icon('crosshairs', '', $componentname, array('class' => 'target'));
+
+            $markertextattrs = array('class' => 'markertext');
+            $markertext = html_writer::tag('span', $drag->text, $markertextattrs);
+            $draghomesattrs = array('class' => join(' ', $classes));
+            $draghomes .= html_writer::tag('span', $targeticonhtml . $markertext, $draghomesattrs);
             $hiddenfields .= $this->hidden_field_choice($qa, $choiceno, $drag->infinite, $drag->noofdrags);
         }
 
-        $output .= html_writer::end_div();
-        $output .= html_writer::end_div();
+        $dragitemsclass = 'dragitems';
+        if ($options->readonly) {
+            $dragitemsclass .= ' readonly';
+        }
+
+        $dragitems = html_writer::tag('div', $draghomes, array('class' => $dragitemsclass));
+        $dropzones = html_writer::tag('div', '', array('class' => 'dropzones'));
+        $texts = html_writer::tag('div', '', array('class' => 'markertexts'));
+        $output .= html_writer::tag('div',
+                                    $droparea.$dragitems.$dropzones . $texts,
+                                    array('class' => 'ddarea'));
 
         if ($question->showmisplaced && $qa->get_state()->is_finished()) {
             $visibledropzones = $question->get_drop_zones_without_hit($response);
         } else {
-            $visibledropzones = [];
+            $visibledropzones = array();
         }
 
+        $topnode = 'div#q'.$qa->get_slot();
+        $params = array('dropzones' => $visibledropzones,
+                        'topnode' => $topnode,
+                        'readonly' => $options->readonly);
+
+        $PAGE->requires->yui_module('moodle-qtype_ddmarker-dd',
+                                        'M.qtype_ddmarker.init_question',
+                                        array($params));
+
         if ($qa->get_state() == question_state::$invalid) {
-            $output .= html_writer::div($question->get_validation_error($qa->get_last_qt_data()), 'validationerror');
+            $output .= html_writer::nonempty_tag('div',
+                                        $question->get_validation_error($qa->get_last_qt_data()),
+                                        array('class' => 'validationerror'));
         }
 
         if ($question->showmisplaced && $qa->get_state()->is_finished()) {
             $wrongparts = $question->get_drop_zones_without_hit($response);
             if (count($wrongparts) !== 0) {
-                $wrongpartsstringspans = [];
+                $wrongpartsstringspans = array();
                 foreach ($wrongparts as $wrongpart) {
-                    $wrongpartsstringspans[] = html_writer::span($wrongpart->markertext, 'wrongpart');
+                    $wrongpartsstringspans[] = html_writer::nonempty_tag('span',
+                                    $wrongpart->markertext, array('class' => 'wrongpart'));
                 }
                 $wrongpartsstring = join(', ', $wrongpartsstringspans);
-                $output .= html_writer::span(get_string('followingarewrongandhighlighted', 'qtype_ddmarker', $wrongpartsstring),
-                        'wrongparts');
+                $output .= html_writer::nonempty_tag('span',
+                                                    get_string('followingarewrongandhighlighted',
+                                                                'qtype_ddmarker',
+                                                                $wrongpartsstring),
+                                                    array('class' => 'wrongparts'));
             }
         }
 
-        $output .= html_writer::div($hiddenfields, 'ddform');
-
-        $this->page->requires->js_call_amd('qtype_ddmarker/question', 'init',
-                [$qa->get_outer_question_div_unique_id(), $options->readonly, $visibledropzones]);
-
+        $output .= html_writer::tag('div', $hiddenfields, array('class' => 'ddform'));
         return $output;
     }
-
     protected function hidden_field_choice(question_attempt $qa, $choiceno, $infinite, $noofdrags, $value = null) {
         $varname = 'c'.$choiceno;
         $classes = array('choices', 'choice'.$choiceno, 'noofdrags'.$noofdrags);

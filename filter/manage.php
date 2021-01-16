@@ -202,8 +202,7 @@ if (empty($availablefilters)) {
 
     echo html_writer::table($table);
     echo html_writer::start_tag('div', array('class'=>'buttons'));
-    $submitattr = ['type' => 'submit', 'name' => 'savechanges', 'value' => get_string('savechanges'), 'class' => 'btn btn-primary'];
-    echo html_writer::empty_tag('input', $submitattr);
+    echo html_writer::empty_tag('input', array('type'=>'submit', 'name'=>'savechanges', 'value'=>get_string('savechanges')));
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('form');

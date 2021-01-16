@@ -394,7 +394,7 @@ abstract class base implements \IteratorAggregate {
         $event->logextra = $logextra;
 
         foreach (self::$fields as $key) {
-            if (!array_key_exists($key, $data) && $key != 'companyid') {
+            if (!array_key_exists($key, $data)) {
                 debugging("Event restore data must contain key $key");
                 $data[$key] = null;
             }
@@ -835,6 +835,10 @@ abstract class base implements \IteratorAggregate {
         \core\event\manager::dispatch($this);
 
         $this->dispatched = true;
+
+        if ($legacyeventname = static::get_legacy_eventname()) {
+            events_trigger_legacy($legacyeventname, $this->get_legacy_eventdata());
+        }
     }
 
     /**

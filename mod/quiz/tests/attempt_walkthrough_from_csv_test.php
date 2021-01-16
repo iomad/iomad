@@ -94,11 +94,6 @@ class mod_quiz_attempt_walkthrough_from_csv_testcase extends advanced_testcase {
             if ($q['type'] !== 'random') {
                 // Don't actually create random questions here.
                 $overrides = array('category' => $cat->id, 'defaultmark' => $q['mark']) + $q['overrides'];
-                if ($q['type'] === 'truefalse') {
-                    // True/false question can never have hints, but sometimes we need to put them
-                    // in the CSV file, to keep it rectangular.
-                    unset($overrides['hint']);
-                }
                 $question = $questiongenerator->create_question($q['type'], $q['which'], $overrides);
                 $q['id'] = $question->id;
 
@@ -343,8 +338,7 @@ class mod_quiz_attempt_walkthrough_from_csv_testcase extends advanced_testcase {
                     $this->assertEquals((bool)$value, $attemptobj->is_finished());
                     break;
                 case 'summarks' :
-                    $this->assertEquals((float)$value, $attemptobj->get_sum_marks(),
-                        "Sum of marks of attempt {$result['quizattempt']}.");
+                    $this->assertEquals($value, $attemptobj->get_sum_marks(), "Sum of marks of attempt {$result['quizattempt']}.");
                     break;
                 case 'quizgrade' :
                     // Check quiz grades.

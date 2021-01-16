@@ -7,7 +7,7 @@ class HTMLPurifier_AttrDef_HTML_Bool extends HTMLPurifier_AttrDef
 {
 
     /**
-     * @type string
+     * @type bool
      */
     protected $name;
 
@@ -17,7 +17,7 @@ class HTMLPurifier_AttrDef_HTML_Bool extends HTMLPurifier_AttrDef
     public $minimized = true;
 
     /**
-     * @param bool|string $name
+     * @param bool $name
      */
     public function __construct($name = false)
     {

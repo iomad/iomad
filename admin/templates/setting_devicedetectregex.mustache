@@ -29,10 +29,7 @@
         ]
     }
 }}
-{{!
-    Setting devicedetectregex.
-}}
-<table class="table table-striped">
+<table class="generaltable">
     <thead>
         <tr>
             <th>{{#str}}devicedetectregexexpression, admin{{/str}}</th>
@@ -43,10 +40,10 @@
         {{#expressions}}
             <tr>
                 <td class="c{{index}}">
-                    <input type="text" name="{{name}}[expression{{index}}]" class="form-control" value="{{expression}}">
+                    <input type="text" name="{{name}}[expression{{index}}]" class="form-text text-ltr" value="{{expression}}">
                 </td>
                 <td class="c{{index}}">
-                    <input type="text" name="{{name}}[value{{index}}]" class="form-control" value="{{value}}">
+                    <input type="text" name="{{name}}[value{{index}}]" class="form-text text-ltr" value="{{value}}">
                 </td>
             </tr>
         {{/expressions}}

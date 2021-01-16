@@ -83,7 +83,7 @@ Examples:
         Stores the given configuration variable in the shell variable, escaped
         so that it can be safely used as a shell argument.
 
-    # php cfg.php --name=theme --set=classic
+    # php cfg.php --name=theme --set=clean
         Sets the given configuration variable to the given value.
 
     # php cfg.php --name=noemailever --unset
@@ -124,12 +124,7 @@ if ($options['unset'] || $options['set'] !== null) {
         cli_error('The configuration variable is hard-set in the config.php, unable to change.', 4);
     }
 
-    $new = $options['set'];
-    $old = get_config($options['component'], $options['name']);
-    if ($new !== $old) {
-        set_config($options['name'], $options['set'], $options['component']);
-        add_to_config_log($options['name'], $old, $new, $options['component']);
-    }
+    set_config($options['name'], $options['set'], $options['component']);
     exit(0);
 }
 

@@ -15,32 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__).'/../../config.php');
-require_once(dirname(__FILE__).'/report_user_logins_table.php');
+require_once($CFG->libdir.'/completionlib.php');
+require_once($CFG->libdir.'/excellib.class.php');
+require_once(dirname(__FILE__).'/select_form.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
-require_once($CFG->dirroot."/lib/tablelib.php");
+require_once($CFG->dirroot."/local/email/lib.php");
 
 // Params.
 $participant = optional_param('participant', 0, PARAM_INT);
-$download = optional_param('download', 0, PARAM_CLEAN);
+$dodownload = optional_param('dodownload', 0, PARAM_CLEAN);
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
 $email  = optional_param('email', 0, PARAM_CLEAN);
-$sort         = optional_param('sort', 'lastname', PARAM_ALPHA);
+$sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
-$loginfromraw = optional_param_array('loginfromraw', null, PARAM_INT);
-$logintoraw = optional_param_array('logintoraw', null, PARAM_INT);
+$loginfromraw = optional_param_array('loginfrom', null, PARAM_INT);
+$logintoraw = optional_param_array('loginto', null, PARAM_INT);
 
 require_login($SITE);
 $systemcontext = context_system::instance();
 iomad::require_capability('local/report_user_logins:view', $systemcontext);
 
-if (!empty($download)) {
+if (!empty($dodownload)) {
     $page = 0;
     $perpage = 0;
 }
@@ -83,10 +85,6 @@ if ($loginfromraw) {
         $loginfrom = $loginfromraw;
     }
     $params['loginfrom'] = $loginfrom;
-    $params['loginfromraw[day]'] = $loginfromraw['day'];
-    $params['loginfromraw[month]'] = $loginfromraw['month'];
-    $params['loginfromraw[year]'] = $loginfromraw['year'];
-    $params['loginfromraw[enabled]'] = $loginfromraw['enabled'];
 } else {
     $loginfrom = null;
 }
@@ -98,10 +96,6 @@ if ($logintoraw) {
         $loginto = $logintoraw;
     }
     $params['loginto'] = $loginto;
-    $params['logintoraw[day]'] = $logintoraw['day'];
-    $params['logintoraw[month]'] = $logintoraw['month'];
-    $params['logintoraw[year]'] = $logintoraw['year'];
-    $params['logintoraw[enabled]'] = $logintoraw['enabled'];
 } else {
     if (!empty($comptfrom)) {
         $loginto = time();
@@ -162,12 +156,12 @@ if (!empty($fieldnames)) {
 
 // Url stuff.
 $url = new moodle_url('/local/report_user_logins/index.php');
-$dashboardurl = new moodle_url('/my');
+$dashboardurl = new moodle_url('/local/iomad_dashboard/index.php');
 
 // Page stuff:.
 $strcompletion = get_string('pluginname', 'local_report_user_logins');
 $PAGE->set_url($url);
-$PAGE->set_pagelayout('report');
+$PAGE->set_pagelayout('admin');
 $PAGE->set_title($strcompletion);
 $PAGE->requires->css("/local/report_user_logins/styles.css");
 $PAGE->requires->jquery();
@@ -187,18 +181,13 @@ $company = new company($companyid);
 $parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
-// all companies?
-if ($parentslist = $company->get_parent_companies_recursive()) {
-    $companysql = " AND u.id NOT IN (
-                    SELECT userid FROM {company_users}
-                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance()) ||
+    !empty($SESSION->currenteditingcompany)) {
+    $userhierarchylevel = $parentlevel->id;
 } else {
-    $companysql = "";
+    $userlevel = $company->get_userlevel($USER);
+    $userhierarchylevel = $userlevel->id;
 }
-
-// Work out where the user sits in the company department tree.
-$userlevel = $company->get_userlevel($USER);
-$userhierarchylevel = $userlevel->id;
 if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
@@ -208,30 +197,21 @@ $foundobj = iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($strcompletion, $url);
+// Set the url.
+company_admin_fix_breadcrumb($PAGE, $strcompletion, $url);
 
 $url = new moodle_url('/local/report_user_logins/index.php', $params);
 
 // Do we have any additional reporting fields?
 $extrafields = array();
 if (!empty($CFG->iomad_report_fields)) {
-    $companyrec = $DB->get_record('company', array('id' => $companyid));
     foreach (explode(',', $CFG->iomad_report_fields) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
             $profilefield = $DB->get_record('user_info_field', array('shortname' => str_replace('profile_field_', '', $extrafield)));
-            if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', array('profileid' => $profilefield->categoryid))) {
-                $extrafields[$extrafield]->title = $profilefield->name;
-                $extrafields[$extrafield]->fieldid = $profilefield->id;
-            } else {
-                unset($extrafields[$extrafield]);
-            }
+            $extrafields[$extrafield]->title = $profilefield->name;
         } else {
             $extrafields[$extrafield]->title = get_string($extrafield);
         }
@@ -261,106 +241,497 @@ $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departme
 // Create data for form.
 $customdata = null;
 $options = $params;
+$options['dodownload'] = 1;
 
-// Set up the table.
-$table = new local_report_user_logins_table('user_report_logins');
-$table->is_downloading($download, 'user_report_logins', 'user_report_logins123');
-
-if (!$table->is_downloading()) {
+// Only print the header if we are not downloading.
+if (empty($dodownload)) {
     echo $output->header();
+    // Check the department is valid.
+    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+        print_error('invaliddepartment', 'block_iomad_company_admin');
+    }   
 
-    // Display the search form and department picker.
-    if (!empty($companyid)) {
-        if (empty($table->is_downloading())) {
-            echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-            echo html_writer::start_tag('div', array('class' => 'fitem'));
-            echo $treehtml;
-            echo html_writer::start_tag('div', array('style' => 'display:none'));
-            echo $fwselectoutput;
-            echo html_writer::end_tag('div');
-            echo html_writer::end_tag('div');
-            echo html_writer::end_tag('div');
+} else {
+    // Check the department is valid.
+    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+        print_error('invaliddepartment', 'block_iomad_company_admin');
+        die;
+    }   
+}
 
-            // Set up the filter form.
-            $options['companyid'] = $companyid;
-            $options['addfrom'] = 'loginfromraw';
-            $options['addto'] = 'logintoraw';
-            $options['adddodownload'] = false;
-            $options['loginfromraw'] = $loginfrom;
-            $options['logintoraw'] = $loginto;
-            $mform = new iomad_user_filter_form(null, $options);
-            $mform->set_data(array('departmentid' => $departmentid));
-            $mform->set_data($options);
-            $mform->get_data();
+// Get the data.
+if (!empty($companyid)) {
+    if (empty($dodownload)) {
+        echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+        echo html_writer::start_tag('div', array('class' => 'fitem'));
+        echo $treehtml;
+        echo html_writer::start_tag('div', array('style' => 'display:none'));
+        echo $fwselectoutput;
+        echo html_writer::end_tag('div');
+        echo html_writer::end_tag('div');
+        echo html_writer::end_tag('div');
 
-            // Display the user filter form.
-            $mform->display();
-        }
+        // Set up the filter form.
+        $params['companyid'] = $companyid;
+        $params['addfrom'] = 'loginfrom';
+        $params['addto'] = 'loginto';
+        $params['adddodownload'] = true;
+        $mform = new iomad_user_filter_form(null, $params);
+        $mform->set_data(array('departmentid' => $departmentid));
+        $mform->set_data($params);
+        $mform->get_data();
+
+        // Display the user filter form.
+        $mform->display();
     }
 }
 
-// Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
-$showdepartments[$departmentid] = $departmentid;
-$departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
+if (!empty($dodownload)) {
+    // Set up the Excel workbook.
 
-// Set up the initial SQL for the form.
-$selectsql = "u.id,u.firstname,u.lastname,d.name as department,u.email,url.created,url.firstlogin,url.lastlogin,url.logincount";
-$fromsql = "{user} u JOIN {local_report_user_logins} url ON (u.id = url.userid) JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id)";
-$wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql";
-$sqlparams = array('companyid' => $companyid) + $searchinfo->searchparams;
+    header("Content-Type: application/download\n");
+    header("Content-Disposition: attachment; filename=\"user_login_report.csv\"");
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
+    header("Pragma: public");
 
-// Set up the headers for the form.
-$headers = array(get_string('firstname'),
-                 get_string('lastname'),
-                 get_string('department', 'block_iomad_company_admin'),
-                 get_string('email'));
+}
 
-$columns = array('firstname',
-                    'lastname',
-                    'department',
-                    'email');
+$columns = array("firstname", "lastname", "email", "department", "created", "firstaccess", "lastaccess", "numlogins");
 
-// Deal with optional report fields.
-if (!empty($extrafields)) {
-    foreach ($extrafields as $extrafield) {
-        $headers[] = $extrafield->title;
-        $columns[] = $extrafield->name;
-        if (!empty($extrafield->fieldid)) {
-            // Its a profile field.
-            // Skip it this time as these may not have data.
+foreach ($columns as $column) {
+    if ($column == 'company') {
+        $string[$column] = get_string('company', 'block_iomad_company_admin');
+    } else if ($column == 'numlogins') {
+        $string[$column] = get_string('numlogins', 'block_iomad_company_admin');
+    } else if ($column == 'created') {
+        $string[$column] = get_string('created', 'block_iomad_company_admin');
+    } else {
+        $string[$column] = get_string("$column");
+    }
+    if ($sort != $column) {
+        $columnicon = "";
+        if ($column == "lastaccess") {
+            $columndir = "DESC";
         } else {
-            $selectsql .= ", u." . $extrafield->name;
+            $columndir = "ASC";
         }
+    } else {
+        $columndir = $dir == "ASC" ? "DESC":"ASC";
+        if ($column == "lastaccess") {
+            $columnicon = $dir == "ASC" ? "up":"down";
+        } else {
+            $columnicon = $dir == "ASC" ? "down":"up";
+        }
+        $columnicon = " <img src=\"" . $output->image_url('t/' . $columnicon) . "\" alt=\"\" />";
+
     }
-    foreach ($extrafields as $extrafield) {
-        if (!empty($extrafield->fieldid)) {
-            // Its a profile field.
-            $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
-            $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid . " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
-            $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
+    $params['sort'] = $column;
+    $params['dir'] = $columndir;
+    if ($column == 'numlogins' || !empty($dodownload)) {
+        $$column = $string[$column];
+    } else {
+        $$column = "<a href= ". new moodle_url('index.php', $params).">".$string[$column]."</a>$columnicon";
+    }
+}
+
+if ($sort == "name") {
+    $sort = "firstname";
+}
+
+// Get all or company users depending on capability.
+//  Check if has capability edit all users.
+if (iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
+    // Make sure we dont display site admins.
+    // Set default search to something which cant happen.
+    $sqlsearch = "id!='-1' AND id NOT IN (" . $CFG->siteadmins . ")";
+
+    // Get department users.
+    $departmentusers = company::get_recursive_department_users($departmentid);
+    if (count($departmentusers) > 0) {
+        $departmentids = "";
+        foreach ($departmentusers as $departmentuser) {
+            if (!empty($departmentids)) {
+                $departmentids .= ",".$departmentuser->userid;
+            } else {
+                $departmentids .= $departmentuser->userid;
+            }
+        }
+        if (!empty($showsuspended)) {
+            $sqlsearch .= " AND deleted <> 1 ";
+        } else {
+            $sqlsearch .= " AND deleted <> 1 AND suspended = 0 ";
+        }
+        $sqlsearch .= " AND id in ($departmentids) ";
+    } else {
+        $sqlsearch = "1 = 0";
+    }
+
+    // all companies?
+    if ($parentslist = $company->get_parent_companies_recursive()) {
+        $sqlsearch .= " AND id NOT IN (
+                        SELECT userid FROM {company_users}
+                        WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+    } else {
+        $companysql = "";
+    }
+
+    // Deal with search strings.
+    $searchparams = array();
+    if (!empty($idlist)) {
+        $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
+    }
+    if (!empty($params['firstname'])) {
+        $sqlsearch .= " AND firstname like :firstname ";
+        $searchparams['firstname'] = '%'.$params['firstname'].'%';
+    }
+
+    if (!empty($params['lastname'])) {
+        $sqlsearch .= " AND lastname like :lastname ";
+        $searchparams['lastname'] = '%'.$params['lastname'].'%';
+    }
+
+    if (!empty($params['email'])) {
+        $sqlsearch .= " AND email like :email ";
+        $searchparams['email'] = '%'.$params['email'].'%';
+    }
+
+    $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
+
+} else if (iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)) {   // Check if has role edit company users.
+
+    // Get users company association.
+    $departmentusers = company::get_recursive_department_users($departmentid);
+    if (count($departmentusers) > 0) {
+        $departmentids = "";
+        foreach ($departmentusers as $departmentuser) {
+            if (!empty($departmentids)) {
+                $departmentids .= ",".$departmentuser->userid;
+            } else {
+                $departmentids .= $departmentuser->userid;
+            }
+        }
+        if (!empty($showsuspended)) {
+            $sqlsearch = " deleted <> 1 AND id in ($departmentids) ";
+        } else {
+            $sqlsearch = " deleted <> 1 AND suspended = 0 AND id in ($departmentids) ";
+        }
+    } else {
+        $sqlsearch = "1 = 0";
+    }
+
+    // all companies?
+    if ($parentslist = $company->get_parent_companies_recursive()) {
+        $sqlsearch .= " AND id NOT IN (
+                        SELECT userid FROM {company_users}
+                        WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+    } else {
+        $companysql = "";
+    }
+
+    // Deal with search strings.
+    $searchparams = array();
+    if (!empty($idlist)) {
+        $sqlsearch .= " AND id in (".implode(',', array_keys($idlist)).") ";
+    }
+    if (!empty($params['firstname'])) {
+        $sqlsearch .= " AND firstname like :firstname ";
+        $searchparams['firstname'] = '%'.$params['firstname'].'%';
+    }
+
+    if (!empty($params['lastname'])) {
+        $sqlsearch .= " AND lastname like :lastname ";
+        $searchparams['lastname'] = '%'.$params['lastname'].'%';
+    }
+
+    if (!empty($params['email'])) {
+        $sqlsearch .= " AND email like :email ";
+        $searchparams['email'] = '%'.$params['email'].'%';
+    }
+
+    $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
+}
+$userlist = "";
+
+if (!empty($userrecords)) {
+    $userlist = "u.id in (". implode(',', array_values($userrecords)).")";
+} else {
+    $userlist = "1=2";
+}
+if (!empty($userlist)) {
+    $userlistarray = array('companyid' => $companyid,
+                           'loginfrom' => $loginfrom,
+                           'loginto' => $loginto);
+    $users = iomad_get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist, $userlistarray);
+    $totalusers = iomad_get_users_listing($sort, $dir, 0, 0, '', '', '', $userlist, $userlistarray);
+
+} else {
+    $users = array();
+}
+$usercount = count($totalusers);
+
+// Get total login and user creation events.
+$timesql = "";
+if (!empty($loginfrom)) {
+    $timesql = " AND timecreated > :loginfrom ";
+}
+if (!empty($loginto)) {
+    $timesql .= " AND timecreated < :loginto ";
+}
+if (!empty($userrecords)) {
+    $totalcreations = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
+                                              WHERE eventname = :eventname
+                                              AND relateduserid IN (". implode(',', array_values($userrecords)).")
+                                              $timesql",
+                                              array('eventname' => '\core\event\user_created',
+                                                    'loginfrom' => $loginfrom,
+                                                    'loginto' => $loginto));
+    $totallogins = $DB->count_records_sql("SELECT COUNT(id) FROM {logstore_standard_log}
+                                           WHERE eventname = :eventname
+                                           AND userid IN (". implode(',', array_values($userrecords)).")
+                                           $timesql",
+                                           array('eventname' => '\core\event\user_loggedin',
+                                                 'loginfrom' => $loginfrom,
+                                                 'loginto' => $loginto));
+} else {
+    $totalcreations = 0;
+    $totallogins = 0;
+}
+
+if (empty($dodownload)) {
+    echo $output->heading(get_string('userssummary', 'local_report_user_logins', array('usercount' => $usercount, 'totalcreations' => $totalcreations, 'totallogins' => $totallogins)));
+}
+
+$alphabet = explode(',', get_string('alphabet', 'block_iomad_company_admin'));
+$strall = get_string('all');
+
+// Fix sort for paging.
+$params['sort'] = $sort;
+$params['dir'] = $dir;
+
+// We don't want to be deleting when we are using the paging bar.
+$params['delete'] = '';
+$params['confirm'] = '';
+
+$baseurl = new moodle_url('index.php', $params);
+
+flush();
+
+
+if (!$users && empty($dodownload)) {
+    $match = array();
+    echo $output->heading(get_string('nousersfound'));
+
+    $table = null;
+
+} else {
+
+    if (empty($dodownload)) {
+        echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+    }
+    $mainadmin = get_admin();
+
+    $override = new stdclass();
+    $override->firstname = 'firstname';
+    $override->lastname = 'lastname';
+    $fullnamelanguage = get_string('fullnamedisplay', '', $override);
+    if (($CFG->fullnamedisplay == 'firstname lastname') or
+        ($CFG->fullnamedisplay == 'firstname') or
+        ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'firstname lastname')) {
+        $fullnamedisplay = "$firstname / $lastname";
+    } else {
+        $fullnamedisplay = "$lastname / $firstname";
+    }
+
+    if (empty($dodownload)) {
+        // set up the table.
+        $table = new html_table();
+        $table->id = 'ReportTable';
+        $headstart = array('fullnamedisplay' => $fullnamedisplay,
+                           'email' => $email,
+                           'department' => $department);
+
+        $headmid = array();
+        if (!empty($extrafields)) {
+            foreach ($extrafields as $extrafield) {
+                $headmid[$extrafield->name] = $extrafield->title;
+            }
+        }
+
+        $headend = array ($created => $created,
+                          $firstaccess => $firstaccess,
+                          $lastaccess => $lastaccess,
+                          $numlogins => $numlogins);
+        $table->head = $headstart + $headmid + $headend;
+
+        $table->align = array ("left", "center", "center", "center", "center", "center", "center");
+    } else {
+        $headstart = "\"$firstname\",\"$lastname\",\"$email\",\"$department\"";
+        $headmid = "";
+        if (!empty($extrafields)) {
+            foreach ($extrafields as $extrafield) {
+                $headmid .= ",\"$extrafield->title\"";
+            }
+        }
+
+        $headend =  ",\"$created\",\"$firstaccess\",\"$lastaccess\",\"$numlogins\"\n";
+        echo $headstart . $headmid . $headend;
+    }
+
+    foreach ($users as $user) {
+
+        // User actions
+        $actions = array();
+
+        profile_load_data($user);
+
+        if ($user->username == 'guest') {
+            continue; // Do not dispaly dummy new user and guest here.
+        }
+
+        if ($user->timecreated) {
+            $strtimecreated =  date($CFG->iomad_date_format, $user->timecreated);
+        } else {
+            $strtimecreated = get_string('never');
+        }
+        if ($user->firstaccess) {
+            $strfirstaccess =  date($CFG->iomad_date_format, $user->firstaccess);
+        } else {
+            $strfirstaccess = get_string('never');
+        }
+        if ($user->lastaccess) {
+            $strlastaccess = date($CFG->iomad_date_format, $user->lastaccess);
+        } else {
+            $strlastaccess = get_string('never');
+        }
+
+        $fullname = fullname($user, true);
+
+        // Is this a suspended user?
+        if (!empty($user->suspended)) {
+            $fullname .= " (S)";
+        }
+
+        $numlogins = $DB->count_records('logstore_standard_log', array('userid' => $user->id, 'eventname' => '\core\event\user_loggedin'));
+
+        $user->department = $user->departmentname;
+        if (empty($dodownload)) {
+            $rowstart = array('fullname' => $fullname,
+                              'email' => $user->email,
+                              'department' => $user->departmentname);
+            $rowmid = array();
+            if (!empty($extrafields)) {
+                foreach($extrafields as $extrafield) {
+                    $fieldname = $extrafield->name;
+                    $rowmid[$extrafield->name] = $user->$fieldname;
+                }
+            }
+
+            $rowend = array('timecreated' => $strtimecreated,
+                            'firstaccess' => $strfirstaccess,
+                            'lastaccess' => $strlastaccess,
+                            'numlogins' => $numlogins);
+            $table->data[] = $rowstart + $rowmid + $rowend;
+        } else {
+            $rowstart = "\"$user->firstname\",\"$user->lastname\",\"$user->email\",\"$user->department\"";
+            $rowmid = "";
+            if (!empty($extrafields)) {
+                foreach($extrafields as $extrafield) {
+                    $fieldname = $extrafield->name;
+                    $rowmid .= ",\"$user->$fieldname\"";
+                }
+            }
+            $rowend = ",\"$strtimecreated\",\"$strfirstaccess\",\"$strlastaccess\",\"$numlogins\"\n";
+            echo $rowstart . $rowmid . $rowend;
         }
     }
 }
 
-// And final the rest of the form headers.
-$headers[] = get_string('created', 'block_iomad_company_admin');
-$headers[] = get_string('firstaccess');
-$headers[] = get_string('lastaccess');
-$headers[] = get_string('numlogins', 'block_iomad_company_admin');
+if (!empty($dodownload)) {
+    die;
+}
+if (!empty($table)) {
+    echo html_writer::table($table);
+    echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
+}
 
-$columns[] = 'created';
-$columns[] = 'firstlogin';
-$columns[] = 'lastlogin';
-$columns[] = 'logincount';
+echo $output->footer();
 
-$table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
-$table->define_baseurl($url);
-$table->define_columns($columns);
-$table->define_headers($headers);
-$table->out($CFG->iomad_max_list_users, true);
+function iomad_get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recordsperpage=0,
+                       $search='', $firstinitial='', $lastinitial='', $extraselect='', array $extraparams = null) {
+    global $DB, $USER;
 
-if (!$table->is_downloading()) {
-    echo $output->footer();
+    $fullname  = $DB->sql_fullname();
+
+    $select = "u.deleted <> 1";
+    $params = array();
+
+    if (!empty($search)) {
+        $search = trim($search);
+        $select .= " AND (". $DB->sql_like("u.$fullname", ':search1', false, false).
+                   " OR ". $DB->sql_like('u.email', ':search2', false, false).
+                   " OR u.username = :search3)";
+        $params['search1'] = "%$search%";
+        $params['search2'] = "%$search%";
+        $params['search3'] = "$search";
+    }
+
+    if ($firstinitial) {
+        $select .= " AND ". $DB->sql_like('u.firstname', ':fni', false, false);
+        $params['fni'] = "$firstinitial%";
+    }
+    if ($lastinitial) {
+        $select .= " AND ". $DB->sql_like('u.lastname', ':lni', false, false);
+        $params['lni'] = "$lastinitial%";
+    }
+
+    if ($extraselect) {
+        $select .= " AND $extraselect";
+        $params = $params + (array)$extraparams;
+    }
+
+    if ($sort) {
+        if ($sort == "department") {
+            $sort = " ORDER by d.name $dir";
+        } else if ($sort == "company") {
+            $sort = " ORDER by c.name $dir";
+        } else if ($sort == "created") {
+            $sort = " ORDER by u.timecreated $dir";
+        } else {
+            $sort = " ORDER BY u.$sort $dir";
+        }
+    }
+
+    $loginsql = "";
+    if ($extraparams['loginfrom'] != null) {
+        $loginsql .= " AND u.id IN (SELECT userid FROM {logstore_standard_log}
+                        WHERE timecreated >= :loginfrom
+                        AND eventname = :loginevent1) ";
+        $params['loginevent1'] = '\core\event\user_loggedin'; 
+    }
+    if ($extraparams['loginto'] != null) {
+        $loginsql .= " AND u.id IN (SELECT userid FROM {logstore_standard_log}
+                        WHERE timecreated <= :loginto
+                        AND eventname = :loginevent2) "; 
+        $params['loginevent2'] = '\core\event\user_loggedin'; 
+    }
+
+    // all companies?
+    $company = new company($extraparams['companyid']);
+
+    if ($parentslist = $company->get_parent_companies_recursive()) {
+        $companysql = " AND c.id = :companyid AND u.id NOT IN (
+                        SELECT userid FROM {company_users}
+                        WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+    } else {
+        $companysql = " AND c.id = :companyid";
+    }
+    $params['companyid'] = $extraparams['companyid'];
+    return $DB->get_records_sql("SELECT concat(c.id, '-', u.id), u.*, d.name as departmentname, c.name as companyname
+                                 FROM {user} u, {department} d, {company_users} cu, {company} c
+                                 WHERE $select and cu.userid = u.id and d.id = cu.departmentid AND c.id = cu.companyid
+                                 $companysql
+                                 $loginsql
+                                 $sort", $params, $page, $recordsperpage);
+
 }

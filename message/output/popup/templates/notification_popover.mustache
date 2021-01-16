@@ -45,8 +45,7 @@
     {{$togglelabel}}{{#str}} shownotificationwindownonew, message {{/str}}{{/togglelabel}}
     {{$togglecontent}}
         {{#pix}} i/notifications, core, {{#str}} togglenotificationmenu, message {{/str}} {{/pix}}
-        <div class="count-container {{^unreadcount}}hidden{{/unreadcount}}" data-region="count-container"
-        aria-label="{{#str}} unreadnotifications, core_message, {{unreadcount}} {{/str}}">{{unreadcount}}</div>
+        <div class="count-container hidden" data-region="count-container"></div>
     {{/togglecontent}}
 
     {{$containerlabel}}{{#str}} notificationwindow, message {{/str}}{{/containerlabel}}
@@ -57,15 +56,13 @@
            href="#"
            title="{{#str}} markallread {{/str}}"
            data-action="mark-all-read"
-           role="button"
-           aria-label="{{#str}} markallread {{/str}}">
-            <span class="normal-icon">{{#pix}} t/markasread, core {{/pix}}</span>
+           role="button">
+            <span class="normal-icon">{{#pix}} t/markasread, core, {{#str}} markallread {{/str}} {{/pix}}</span>
             {{> core/loading }}
         </a>
         <a href="{{{urls.preferences}}}"
-           title="{{#str}} notificationpreferences, message {{/str}}"
-           aria-label="{{#str}} notificationpreferences, message {{/str}}">
-            {{#pix}} i/settings, core {{/pix}}
+           title="{{#str}} notificationpreferences, message {{/str}}">
+            {{#pix}} i/settings, core, {{#str}} notificationpreferences, message {{/str}} {{/pix}}
         </a>
     {{/headeractions}}
 

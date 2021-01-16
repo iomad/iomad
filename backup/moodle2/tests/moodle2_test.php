@@ -127,7 +127,8 @@ class core_backup_moodle2_testcase extends advanced_testcase {
 
         // Extract backup file.
         $backupid = 'abc';
-        $backuppath = make_backup_temp_directory($backupid);
+        $backuppath = $CFG->tempdir . '/backup/' . $backupid;
+        check_dir_exists($backuppath);
         get_file_packer('application/vnd.moodle.backup')->extract_to_pathname(
                 __DIR__ . '/fixtures/availability_26_format.mbz', $backuppath);
 
@@ -595,7 +596,7 @@ class core_backup_moodle2_testcase extends advanced_testcase {
             assign_capability($cap, CAP_ALLOW, $roleidcat, $categorycontext);
         }
 
-        core_role_set_assign_allowed($roleidcat, $studentrole->id);
+        allow_assign($roleidcat, $studentrole->id);
         role_assign($roleidcat, $user->id, $categorycontext);
         accesslib_clear_all_caches_for_unit_testing();
 
@@ -953,142 +954,5 @@ class core_backup_moodle2_testcase extends advanced_testcase {
         $this->assertEquals('', $requests[1]->searcharea);
         $this->assertEquals($restoredforumcontext->id, $requests[2]->contextid);
         $this->assertEquals('', $requests[2]->searcharea);
-    }
-
-    /**
-     * Test restoring courses based on the backup plan. Primarily used with
-     * the import functionality
-     */
-    public function test_restore_course_using_plan_defaults() {
-        global $DB, $CFG, $USER;
-
-        $this->resetAfterTest(true);
-        $this->setAdminUser();
-        $CFG->enableglobalsearch = true;
-
-        // Set admin config setting so that activities are not restored by default.
-        set_config('restore_general_activities', 0, 'restore');
-
-        // Create a course.
-        $generator = $this->getDataGenerator();
-        $course = $generator->create_course();
-        $course2 = $generator->create_course();
-        $course3 = $generator->create_course();
-
-        // Add a forum.
-        $forum = $generator->create_module('forum', ['course' => $course->id]);
-
-        // Backup course...
-        $CFG->backup_file_logger_level = backup::LOG_NONE;
-        $bc = new backup_controller(backup::TYPE_1COURSE, $course->id,
-            backup::FORMAT_MOODLE, backup::INTERACTIVE_NO, backup::MODE_IMPORT,
-            $USER->id);
-        $backupid = $bc->get_backupid();
-        $bc->execute_plan();
-        $bc->destroy();
-
-        // Restore it on top of course2 (should duplicate the forum).
-        $rc = new restore_controller($backupid, $course2->id,
-            backup::INTERACTIVE_NO, backup::MODE_IMPORT, $USER->id,
-            backup::TARGET_EXISTING_ADDING, null, backup::RELEASESESSION_NO);
-        $this->assertTrue($rc->execute_precheck());
-        $rc->execute_plan();
-        $rc->destroy();
-
-        // Get the forums now on the old course.
-        $modinfo = get_fast_modinfo($course2->id);
-        $forums = $modinfo->get_instances_of('forum');
-        $this->assertCount(0, $forums);
-    }
-
-    /**
-     * The Question category hierarchical structure was changed in Moodle 3.5.
-     * From 3.5, all question categories in each context are a child of a single top level question category for that context.
-     * This test ensures that both Moodle 3.4 and 3.5 backups can still be correctly restored.
-     */
-    public function test_restore_question_category_34_35() {
-        global $DB, $USER, $CFG;
-
-        $this->resetAfterTest(true);
-        $this->setAdminUser();
-
-        $backupfiles = array('question_category_34_format', 'question_category_35_format');
-
-        foreach ($backupfiles as $backupfile) {
-            // Extract backup file.
-            $backupid = $backupfile;
-            $backuppath = make_backup_temp_directory($backupid);
-            get_file_packer('application/vnd.moodle.backup')->extract_to_pathname(
-                    __DIR__ . "/fixtures/$backupfile.mbz", $backuppath);
-
-            // Do restore to new course with default settings.
-            $categoryid = $DB->get_field_sql("SELECT MIN(id) FROM {course_categories}");
-            $newcourseid = restore_dbops::create_new_course(
-                    'Test fullname', 'Test shortname', $categoryid);
-            $rc = new restore_controller($backupid, $newcourseid,
-                    backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id,
-                    backup::TARGET_NEW_COURSE);
-
-            $this->assertTrue($rc->execute_precheck());
-            $rc->execute_plan();
-            $rc->destroy();
-
-            // Get information about the resulting course and check that it is set up correctly.
-            $modinfo = get_fast_modinfo($newcourseid);
-            $quizzes = array_values($modinfo->get_instances_of('quiz'));
-            $contexts = $quizzes[0]->context->get_parent_contexts(true);
-
-            $topcategorycount = [];
-            foreach ($contexts as $context) {
-                $cats = $DB->get_records('question_categories', array('contextid' => $context->id), 'parent', 'id, name, parent');
-
-                // Make sure all question categories that were inside the backup file were restored correctly.
-                if ($context->contextlevel == CONTEXT_COURSE) {
-                    $this->assertEquals(['top', 'Default for C101'], array_column($cats, 'name'));
-                } else if ($context->contextlevel == CONTEXT_MODULE) {
-                    $this->assertEquals(['top', 'Default for Q1'], array_column($cats, 'name'));
-                }
-
-                $topcategorycount[$context->id] = 0;
-                foreach ($cats as $cat) {
-                    if (!$cat->parent) {
-                        $topcategorycount[$context->id]++;
-                    }
-                }
-
-                // Make sure there is a single top level category in this context.
-                if ($cats) {
-                    $this->assertEquals(1, $topcategorycount[$context->id]);
-                }
-            }
-        }
-    }
-
-    /**
-     * Test the content bank content through a backup and restore.
-     */
-    public function test_contentbank_content_backup() {
-        global $DB, $USER, $CFG;
-        $this->resetAfterTest();
-
-        $this->setAdminUser();
-        $generator = $this->getDataGenerator();
-        $cbgenerator = $this->getDataGenerator()->get_plugin_generator('core_contentbank');
-
-        // Create course and add content bank content.
-        $course = $generator->create_course();
-        $context = context_course::instance($course->id);
-        $filepath = $CFG->dirroot . '/h5p/tests/fixtures/filltheblanks.h5p';
-        $contents = $cbgenerator->generate_contentbank_data('contenttype_h5p', 2, $USER->id, $context, true, $filepath);
-        $this->assertEquals(2, $DB->count_records('contentbank_content'));
-
-        // Do backup and restore.
-        $newcourseid = $this->backup_and_restore($course);
-
-        // Confirm that values were transferred correctly into content bank on new course.
-        $newcontext = context_course::instance($newcourseid);
-
-        $this->assertEquals(4, $DB->count_records('contentbank_content'));
-        $this->assertEquals(2, $DB->count_records('contentbank_content', ['contextid' => $newcontext->id]));
     }
 }

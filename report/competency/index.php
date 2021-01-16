@@ -31,11 +31,6 @@ $course = $DB->get_record('course', $params, '*', MUST_EXIST);
 require_login($course);
 $context = context_course::instance($course->id);
 $currentuser = optional_param('user', null, PARAM_INT);
-$currentmodule = optional_param('mod', null, PARAM_INT);
-if ($currentmodule > 0) {
-    $cm = get_coursemodule_from_id('', $currentmodule, 0, false, MUST_EXIST);
-    $context = context_module::instance($cm->id);
-}
 
 // Fetch current active group.
 $groupmode = groups_get_course_groupmode($course);
@@ -59,7 +54,6 @@ if (empty($currentuser)) {
 $urlparams = array('id' => $id);
 $navurl = new moodle_url('/report/competency/index.php', $urlparams);
 $urlparams['user'] = $currentuser;
-$urlparams['mod'] = $currentmodule;
 $url = new moodle_url('/report/competency/index.php', $urlparams);
 
 $title = get_string('pluginname', 'report_competency');
@@ -75,8 +69,8 @@ $output = $PAGE->get_renderer('report_competency');
 
 echo $output->header();
 $baseurl = new moodle_url('/report/competency/index.php');
-$nav = new \report_competency\output\user_course_navigation($currentuser, $course->id, $baseurl, $currentmodule);
-$top = $output->render($nav);
+$nav = new \report_competency\output\user_course_navigation($currentuser, $course->id, $baseurl);
+echo $output->render($nav);
 if ($currentuser > 0) {
     $user = core_user::get_user($currentuser);
     $usercontext = context_user::instance($currentuser);
@@ -85,16 +79,12 @@ if ($currentuser > 0) {
         'user' => $user,
         'usercontext' => $usercontext
     );
-    if ($currentmodule > 0) {
-        $title = get_string('filtermodule', 'report_competency', format_string($cm->name));
-    }
-    $top .= $output->context_header($userheading, 3);
+    echo $output->context_header($userheading, 3);
 }
-echo $output->container($top, 'clearfix');
 echo $output->heading($title, 3);
 
 if ($currentuser > 0) {
-    $page = new \report_competency\output\report($course->id, $currentuser, $currentmodule);
+    $page = new \report_competency\output\report($course->id, $currentuser);
     echo $output->render($page);
 } else {
     echo $output->container('', 'clearfix');

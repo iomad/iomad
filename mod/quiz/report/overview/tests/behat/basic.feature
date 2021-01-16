@@ -35,14 +35,29 @@ Feature: Basic use of the Grades report
       | question | page | maxmark |
       | TF1      | 1    |         |
       | TF2      | 1    | 3.0     |
-    And user "student1" has attempted "Quiz 1" with responses:
-      | slot | response |
-      |   1  | True     |
-      |   2  | False    |
-    And user "student2" has attempted "Quiz 1" with responses:
-      | slot | response |
-      |   1  | True     |
-      |   2  | True     |
+
+    # Add some attempts
+    And I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
+    And I press "Attempt quiz now"
+    And I click on "True" "radio" in the "First question" "question"
+    And I click on "False" "radio" in the "Second question" "question"
+    And I press "Finish attempt ..."
+    And I press "Submit all and finish"
+    And I click on "Submit all and finish" "button" in the "Confirmation" "dialogue"
+    And I log out
+
+    And I log in as "student2"
+    And I am on "Course 1" course homepage
+    And I follow "Quiz 1"
+    And I press "Attempt quiz now"
+    And I click on "True" "radio" in the "First question" "question"
+    And I click on "True" "radio" in the "Second question" "question"
+    And I press "Finish attempt ..."
+    And I press "Submit all and finish"
+    And I click on "Submit all and finish" "button" in the "Confirmation" "dialogue"
+    And I log out
 
     # Basic check of the Grades report
     When I log in as "teacher1"
@@ -58,7 +73,8 @@ Feature: Basic use of the Grades report
     # Check changing the form parameters
     And I set the field "Attempts from" to "enrolled users who have not attempted the quiz"
     And I press "Show report"
-    # Note: teachers should not appear in the report.
+    # Check teacher1's grade
+    And I should see "-" in the "T1 Teacher1" "table_row"
     # Check student3's grade
     And I should see "-" in the "S3 Student3" "table_row"
 
@@ -68,8 +84,8 @@ Feature: Basic use of the Grades report
     And I should see "25.00" in the "S1 Student1" "table_row"
     # Check student2's grade
     And I should see "100.00" in the "S2 Student2" "table_row"
-    # Check student3's grade
-    And I should see "-" in the "S3 Student3" "table_row"
+    # Check teacher1's grade
+    And I should see "-" in the "T1 Teacher1" "table_row"
 
     And I set the field "Attempts from" to "all users who have attempted the quiz"
     And I press "Show report"
@@ -77,3 +93,13 @@ Feature: Basic use of the Grades report
     And I should see "25.00" in the "S1 Student1" "table_row"
     # Check student2's grade
     And I should see "100.00" in the "S2 Student2" "table_row"
+
+    # Check regrade and delete attempts.
+    And I set the field with xpath "//tr[contains(normalize-space(.), 'student1@example.com')]//input[@type='checkbox']" to "1"
+    And I press "Regrade selected attempts"
+    And I press "Continue"
+    And I should see "student1@example.com"
+    And I set the field with xpath "//tr[contains(normalize-space(.), 'student1@example.com')]//input[@type='checkbox']" to "1"
+    And I press "Delete selected attempts"
+    And I press "Yes"
+    And I should not see "student1@example.com"

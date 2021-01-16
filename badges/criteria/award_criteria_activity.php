@@ -188,7 +188,7 @@ class award_criteria_activity extends award_criteria {
      * @return bool Whether criteria is complete
      */
     public function review($userid, $filtered = false) {
-        $completionstates = array(COMPLETION_COMPLETE, COMPLETION_COMPLETE_PASS, COMPLETION_COMPLETE_FAIL);
+        $completionstates = array(COMPLETION_COMPLETE, COMPLETION_COMPLETE_PASS);
 
         if ($this->course->startdate > time()) {
             return false;

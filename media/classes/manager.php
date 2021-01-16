@@ -138,10 +138,19 @@ final class core_media_manager {
     }
 
     /**
-     * @deprecated since Moodle 3.3. The setup is now done in ::instance() so there is no need to call this.
+     * Setup page requirements.
+     *
+     * This should must only be called once per page request.
+     *
+     * @deprecated Moodle 3.3, The setup is now done in ::instance() so there is no need to call this
+     * @param moodle_page $page The page we are going to add requirements to.
+     * @see core_media_manager::instance()
+     * @todo MDL-57632 final deprecation
      */
-    public function setup() {
-        throw new coding_exception('core_media_manager::setup() can not be used any more because it is done in ::instance()');
+    public function setup($page) {
+        debugging('core_media_manager::setup() is deprecated.' .
+                  'You only need to call core_media_manager::instance() now', DEBUG_DEVELOPER);
+        // No need to call ::instance from here, because the instance has already be set up.
     }
 
     /**

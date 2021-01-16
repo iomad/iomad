@@ -2,17 +2,17 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp\Formatter;
+namespace Leafo\ScssPhp\Formatter;
 
-use ScssPhp\ScssPhp\Formatter;
-use ScssPhp\ScssPhp\Formatter\OutputBlock;
+use Leafo\ScssPhp\Formatter;
+use Leafo\ScssPhp\Formatter\OutputBlock;
 
 /**
  * Expanded formatter
@@ -55,14 +55,14 @@ class Expanded extends Formatter
 
         foreach ($block->lines as $index => $line) {
             if (substr($line, 0, 2) === '/*') {
-                $block->lines[$index] = preg_replace('/[\r\n]+/', $glue, $line);
+                $block->lines[$index] = preg_replace('/(\r|\n)+/', $glue, $line);
             }
         }
 
-        $this->write($inner . implode($glue, $block->lines));
+        echo $inner . implode($glue, $block->lines);
 
         if (empty($block->selectors) || ! empty($block->children)) {
-            $this->write($this->break);
+            echo $this->break;
         }
     }
 }

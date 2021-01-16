@@ -39,21 +39,6 @@ use moodle_url;
 class week_day_exporter extends day_exporter {
 
     /**
-     * Constructor.
-     *
-     * @param \calendar_information $calendar The calendar information for the period being displayed
-     * @param mixed $data Either an stdClass or an array of values.
-     * @param array $related Related objects.
-     */
-    public function __construct(\calendar_information $calendar, $data, $related) {
-        parent::__construct($calendar, $data, $related);
-        // Fix the url for today to be based on the today timestamp
-        // rather than the calendar_information time set in the parent
-        // constructor.
-        $this->url->param('time', $this->data[0]);
-    }
-
-    /**
      * Return the list of properties.
      *
      * @return array
@@ -86,9 +71,6 @@ class week_day_exporter extends day_exporter {
                 'type' => PARAM_RAW,
                 'default' => '',
             ],
-            'daytitle' => [
-                'type' => PARAM_RAW,
-            ]
         ]);
 
         return $return;
@@ -101,13 +83,71 @@ class week_day_exporter extends day_exporter {
      * @return array Keys are the property names, values are their values.
      */
     protected function get_other_values(renderer_base $output) {
+        $timestamp = $this->data[0];
+        // Need to account for user's timezone.
+        $usernow = usergetdate(time());
+        $today = new \DateTimeImmutable();
+        // The start time should use the day's date but the current
+        // time of the day (adjusted for user's timezone).
+        $neweventstarttime = $today->setTimestamp($timestamp)->setTime(
+            $usernow['hours'],
+            $usernow['minutes'],
+            $usernow['seconds']
+        );
+
         $return = parent::get_other_values($output);
+
+        $url = new moodle_url('/calendar/view.php', [
+                'view' => 'day',
+                'time' => $timestamp,
+            ]);
+
+        if ($this->calendar->course && SITEID !== $this->calendar->course->id) {
+            $url->param('course', $this->calendar->course->id);
+        } else if ($this->calendar->categoryid) {
+            $url->param('category', $this->calendar->categoryid);
+        }
+
+        $return['viewdaylink'] = $url->out(false);
+
+        if ($popovertitle = $this->get_popover_title()) {
+            $return['popovertitle'] = $popovertitle;
+        }
+        $cache = $this->related['cache'];
+        $eventexporters = array_map(function($event) use ($cache, $output, $url) {
+            $context = $cache->get_context($event);
+            $course = $cache->get_course($event);
+            $exporter = new calendar_event_exporter($event, [
+                'context' => $context,
+                'course' => $course,
+                'daylink' => $url,
+                'type' => $this->related['type'],
+                'today' => $this->data[0],
+            ]);
+
+            return $exporter;
+        }, $this->related['events']);
+
+        $return['events'] = array_map(function($exporter) use ($output) {
+            return $exporter->export($output);
+        }, $eventexporters);
 
         if ($popovertitle = $this->get_popover_title()) {
             $return['popovertitle'] = $popovertitle;
         }
 
-        $return['daytitle'] = $this->get_day_title();
+        $return['calendareventtypes'] = array_map(function($exporter) {
+            return $exporter->get_calendar_event_type();
+        }, $eventexporters);
+        $return['calendareventtypes'] = array_values(array_unique($return['calendareventtypes']));
+
+        $return['haslastdayofevent'] = false;
+        foreach ($return['events'] as $event) {
+            if ($event->islastday) {
+                $return['haslastdayofevent'] = true;
+                break;
+            }
+        }
 
         return $return;
     }
@@ -142,26 +182,6 @@ class week_day_exporter extends day_exporter {
 
         if ($this->data['istoday']) {
             $title = get_string('todayplustitle', 'calendar', $userdate);
-        }
-
-        return $title;
-    }
-
-    /**
-     * Get the title for this day.
-     *
-     * @return string
-     */
-    protected function get_day_title(): string {
-        $userdate = userdate($this->data[0], get_string('strftimedayshort'));
-
-        $numevents = count($this->related['events']);
-        if ($numevents == 1) {
-            $title = get_string('dayeventsone', 'calendar', $userdate);
-        } else if ($numevents) {
-            $title = get_string('dayeventsmany', 'calendar', ['num' => $numevents, 'day' => $userdate]);
-        } else {
-            $title = get_string('dayeventsnone', 'calendar', $userdate);
         }
 
         return $title;

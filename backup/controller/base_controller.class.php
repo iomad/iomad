@@ -33,16 +33,6 @@ abstract class base_controller extends backup implements loggable {
      */
     protected $logger;
 
-    /** @var bool Whether this backup should release the session. */
-    protected $releasesession = backup::RELEASESESSION_NO;
-
-    /**
-     * Holds the relevant destination information for course copy operations.
-     *
-     * @var \stdClass.
-     */
-    protected $copy;
-
     /**
      * Gets the progress reporter, which can be used to report progress within
      * the backup or restore process.
@@ -91,41 +81,5 @@ abstract class base_controller extends backup implements loggable {
      */
     public function log($message, $level, $a = null, $depth = null, $display = false) {
         backup_helper::log($message, $level, $a, $depth, $display, $this->logger);
-    }
-
-    /**
-     * Returns the set value of releasesession.
-     * This is used to indicate if the session should be closed during the backup/restore.
-     *
-     * @return bool Indicates whether the session should be released.
-     */
-    public function get_releasesession() {
-        return $this->releasesession;
-    }
-
-    /**
-     * Store extra data for course copy operations.
-     *
-     * For a course copying these is data required to be passed to the restore step.
-     * We store this data in its own section of the backup controller
-     *
-     * @param \stdClass $data The course copy data.
-     * @throws backup_controller_exception
-     */
-    public function set_copy(\stdClass $data): void {
-        // Only allow setting of copy data when controller is in copy mode.
-        if ($this->mode != backup::MODE_COPY) {
-            throw new backup_controller_exception('cannot_set_copy_vars_wrong_mode');
-        }
-        $this->copy = $data;
-    }
-
-    /**
-     * Get the course copy data.
-     *
-     * @return \stdClass
-     */
-    public function get_copy(): \stdClass {
-        return $this->copy;
     }
 }

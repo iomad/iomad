@@ -76,8 +76,7 @@ class core_completionlib_testcase extends advanced_testcase {
      * @param  boolean $canonicalize
      * @param  boolean $ignoreCase
      */
-    public static function assertEquals($expected, $actual, string $message = '', float $delta = 0, int $maxDepth = 10,
-                                        bool $canonicalize = false, bool $ignoreCase = false): void {
+    public static function assertEquals($expected, $actual, $message = '', $delta = 0, $maxDepth = 10, $canonicalize = FALSE, $ignoreCase = FALSE) {
         // Nasty cheating hack: prevent random failures on timemodified field.
         if (is_object($expected) and is_object($actual)) {
             if (property_exists($expected, 'timemodified') and property_exists($actual, 'timemodified')) {
@@ -873,44 +872,6 @@ class core_completionlib_testcase extends advanced_testcase {
 
         $this->assertTrue($c1->has_activities());
         $this->assertFalse($c2->has_activities());
-    }
-
-    /**
-     * Test that data is cleaned up when we delete courses that are set as completion criteria for other courses
-     *
-     * @return void
-     */
-    public function test_course_delete_prerequisite() {
-        global $DB;
-
-        $this->setup_data();
-
-        $courseprerequisite = $this->getDataGenerator()->create_course(['enablecompletion' => true]);
-
-        $criteriadata = (object) [
-            'id' => $this->course->id,
-            'criteria_course' => [$courseprerequisite->id],
-        ];
-
-        /** @var completion_criteria_course $criteria */
-        $criteria = completion_criteria::factory(['criteriatype' => COMPLETION_CRITERIA_TYPE_COURSE]);
-        $criteria->update_config($criteriadata);
-
-        // Sanity test.
-        $this->assertTrue($DB->record_exists('course_completion_criteria', [
-            'course' => $this->course->id,
-            'criteriatype' => COMPLETION_CRITERIA_TYPE_COURSE,
-            'courseinstance' => $courseprerequisite->id,
-        ]));
-
-        // Deleting the prerequisite course should remove the completion criteria.
-        delete_course($courseprerequisite, false);
-
-        $this->assertFalse($DB->record_exists('course_completion_criteria', [
-            'course' => $this->course->id,
-            'criteriatype' => COMPLETION_CRITERIA_TYPE_COURSE,
-            'courseinstance' => $courseprerequisite->id,
-        ]));
     }
 
     /**

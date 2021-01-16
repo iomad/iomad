@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version  = 2020120400;   // The (date) version of this plugin.
-$plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->release  = '3.9.2 (Build: 20200914)'; // Human-friendly version name
+$plugin->version  = 2017090309;   // The (date) version of this plugin.
+$plugin->requires = 2016052301;   // Requires this Moodle version.
+$plugin->cron = 300;              // Minimum number of seconds between executions of the cron function.
 $plugin->component  = 'block_iomad_company_admin';

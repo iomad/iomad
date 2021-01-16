@@ -27,7 +27,6 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 require_once($CFG->dirroot.'/lib/formslib.php');
-require_once($CFG->dirroot.'/user/lib.php');
 
 /**
  * Class user_edit_form.
@@ -58,9 +57,7 @@ class user_edit_language_form extends moodleform {
         $mform->addElement('hidden', 'course', $COURSE->id);
         $mform->setType('course', PARAM_INT);
 
-        $purpose = user_edit_map_field_purpose($userid, 'lang');
-        $translations = get_string_manager()->get_list_of_translations();
-        $mform->addElement('select', 'lang', get_string('preferredlanguage'), $translations, $purpose);
+        $mform->addElement('select', 'lang', get_string('preferredlanguage'), get_string_manager()->get_list_of_translations());
         $mform->setDefault('lang', core_user::get_property_default('lang'));
 
         $this->add_action_buttons(true, get_string('savechanges'));

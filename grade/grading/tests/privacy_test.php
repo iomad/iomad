@@ -25,8 +25,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
 use \core_privacy\tests\provider_testcase;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\transform;
@@ -84,19 +82,6 @@ class core_grading_privacy_testcase extends provider_testcase {
         // User0 hasn't created or modified any grading definition.
         $contextlist = provider::get_contexts_for_userid($this->user0->id);
         $this->assertCount(0, $contextlist);
-    }
-
-    /**
-     * Test retrieval of user ids in a given context.
-     */
-    public function test_get_users_in_context() {
-        $this->resetAfterTest();
-        $this->grading_setup_test_scenario_data();
-        // Instance two has one user who created the definitions and another who modified it.
-        $userlist = new \core_privacy\local\request\userlist($this->instancecontext2, 'core_grading');
-        provider::get_users_in_context($userlist);
-        // Check that we get both.
-        $this->assertCount(2, $userlist->get_userids());
     }
 
     /**
@@ -256,161 +241,6 @@ class core_grading_privacy_testcase extends provider_testcase {
 
         // Before deletion, we should have same grading_definitions (nothing was deleted).
         $this->assertCount(2, $DB->get_records('grading_definitions'));
-    }
-
-    /**
-     * Test exporting user data relating to an item ID.
-     */
-    public function test_export_item_data() {
-        global $DB;
-        $this->resetAfterTest();
-        $course = $this->getDataGenerator()->create_course();
-        $module = $this->getDataGenerator()->create_module('assign', ['course' => $course]);
-        $user = $this->getDataGenerator()->create_user();
-        $guidegenerator = \testing_util::get_data_generator()->get_plugin_generator('gradingform_guide');
-
-        $this->setUser($user);
-
-        $modulecontext = context_module::instance($module->cmid);
-        $controller = $guidegenerator->get_test_guide($modulecontext);
-
-        // In the situation of mod_assign this would be the id from assign_grades.
-        $itemid = 1;
-        $instance = $controller->create_instance($user->id, $itemid);
-        $data = $guidegenerator->get_test_form_data(
-            $controller,
-            $itemid,
-            5, 'This user made several mistakes.',
-            10, 'This user has two pictures.'
-        );
-
-        $instance->update($data);
-        $instanceid = $instance->get_data('id');
-
-        provider::export_item_data($modulecontext, $itemid, ['Test']);
-        $data = (array) writer::with_context($modulecontext)->get_data(['Test', 'Marking guide', $instance->get_data('id')]);
-        $this->assertCount(2, $data);
-        $this->assertEquals('This user made several mistakes.', $data['Spelling mistakes']->remark);
-        $this->assertEquals(5, $data['Spelling mistakes']->score);
-        $this->assertEquals('This user has two pictures.', $data['Pictures']->remark);
-        $this->assertEquals(10, $data['Pictures']->score);
-    }
-
-    /**
-     * Test deleting user data related to a context and item ID.
-     */
-    public function test_delete_instance_data() {
-        global $DB;
-        $this->resetAfterTest();
-        $course = $this->getDataGenerator()->create_course();
-        $module = $this->getDataGenerator()->create_module('assign', ['course' => $course]);
-        $user = $this->getDataGenerator()->create_user();
-        $guidegenerator = \testing_util::get_data_generator()->get_plugin_generator('gradingform_guide');
-
-        $this->setUser($user);
-
-        $modulecontext = context_module::instance($module->cmid);
-        $controller = $guidegenerator->get_test_guide($modulecontext);
-
-        // In the situation of mod_assign this would be the id from assign_grades.
-        $itemid = 1;
-        $instance = $controller->create_instance($user->id, $itemid);
-        $data = $guidegenerator->get_test_form_data(
-            $controller,
-            $itemid,
-            5, 'This user made several mistakes.',
-            10, 'This user has two pictures.'
-        );
-        $instance->update($data);
-
-        $itemid = 2;
-        $instance = $controller->create_instance($user->id, $itemid);
-        $data = $guidegenerator->get_test_form_data(
-            $controller,
-            $itemid,
-            25, 'This user made no mistakes.',
-            5, 'This user has one picture.'
-        );
-        $instance->update($data);
-
-        // Check how many records we have in the fillings table.
-        $records = $DB->get_records('gradingform_guide_fillings');
-        $this->assertCount(4, $records);
-        // Let's delete one of the instances (the last one would be the easiest).
-        provider::delete_instance_data($modulecontext, $itemid);
-        $records = $DB->get_records('gradingform_guide_fillings');
-        $this->assertCount(2, $records);
-        foreach ($records as $record) {
-            $this->assertNotEquals($instance->get_id(), $record->instanceid);
-        }
-        // This will delete all the rest of the instances for this context.
-        provider::delete_instance_data($modulecontext);
-        $records = $DB->get_records('gradingform_guide_fillings');
-        $this->assertEmpty($records);
-    }
-
-    /**
-     * Test the deletion of multiple instances at once.
-     */
-    public function test_delete_data_for_instances() {
-        global $DB;
-        $this->resetAfterTest();
-        $course = $this->getDataGenerator()->create_course();
-        $module = $this->getDataGenerator()->create_module('assign', ['course' => $course]);
-        $user1 = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $user3 = $this->getDataGenerator()->create_user();
-        $guidegenerator = \testing_util::get_data_generator()->get_plugin_generator('gradingform_guide');
-
-        $this->setUser($user1);
-
-        $modulecontext = context_module::instance($module->cmid);
-        $controller = $guidegenerator->get_test_guide($modulecontext);
-
-        // In the situation of mod_assign this would be the id from assign_grades.
-        $itemid1 = 1;
-        $instance1 = $controller->create_instance($user1->id, $itemid1);
-        $data = $guidegenerator->get_test_form_data(
-            $controller,
-            $itemid1,
-            5, 'This user made several mistakes.',
-            10, 'This user has two pictures.'
-        );
-        $instance1->update($data);
-
-        $itemid2 = 2;
-        $instance2 = $controller->create_instance($user2->id, $itemid2);
-        $data = $guidegenerator->get_test_form_data(
-            $controller,
-            $itemid2,
-            15, 'This user made a couple of mistakes.',
-            10, 'This user has one picture.'
-        );
-        $instance2->update($data);
-
-        $itemid3 = 3;
-        $instance3 = $controller->create_instance($user3->id, $itemid3);
-        $data = $guidegenerator->get_test_form_data(
-            $controller,
-            $itemid3,
-            20, 'This user made one mistakes.',
-            10, 'This user has one picture.'
-        );
-        $instance3->update($data);
-
-        $records = $DB->get_records('gradingform_guide_fillings');
-        $this->assertCount(6, $records);
-
-        // Delete all user data for items 1 and 3.
-        provider::delete_data_for_instances($modulecontext, [$itemid1, $itemid3]);
-
-        $records = $DB->get_records('gradingform_guide_fillings');
-        $this->assertCount(2, $records);
-        $instanceid = $instance2->get_data('id');
-        // The instance id should match for all remaining records.
-        foreach ($records as $record) {
-            $this->assertEquals($instanceid, $record->instanceid);
-        }
     }
 
     /**

@@ -221,38 +221,20 @@ class gradeimport_csv_load_data {
     protected function check_user_exists($value, $userfields) {
         global $DB;
 
+        $usercheckproblem = false;
         $user = null;
-        $errorkey = false;
         // The user may use the incorrect field to match the user. This could result in an exception.
         try {
-            $field = $userfields['field'];
-            // Fields that can be queried in a case-insensitive manner.
-            $caseinsensitivefields = [
-                'email',
-                'username',
-            ];
-            // Build query predicate.
-            if (in_array($field, $caseinsensitivefields)) {
-                // Case-insensitive.
-                $select = $DB->sql_equal($field, ':' . $field, false);
-            } else {
-                // Exact-value.
-                $select = "{$field} = :{$field}";
-            }
-
-            // Make sure the record exists and that there's only one matching record found.
-            $user = $DB->get_record_select('user', $select, array($userfields['field'] => $value), '*', MUST_EXIST);
-        } catch (dml_missing_record_exception $missingex) {
-            $errorkey = 'usermappingerror';
-        } catch (dml_multiple_records_exception $multiex) {
-            $errorkey = 'usermappingerrormultipleusersfound';
+            $user = $DB->get_record('user', array($userfields['field'] => $value));
+        } catch (Exception $e) {
+            $usercheckproblem = true;
         }
         // Field may be fine, but no records were returned.
-        if ($errorkey) {
+        if (!$user || $usercheckproblem) {
             $usermappingerrorobj = new stdClass();
             $usermappingerrorobj->field = $userfields['label'];
             $usermappingerrorobj->value = $value;
-            $this->cleanup_import(get_string($errorkey, 'grades', $usermappingerrorobj));
+            $this->cleanup_import(get_string('usermappingerror', 'grades', $usermappingerrorobj));
             unset($usermappingerrorobj);
             return null;
         }
@@ -399,7 +381,10 @@ class gradeimport_csv_load_data {
             case 'useridnumber':
             case 'useremail':
             case 'username':
-                $this->studentid = $this->check_user_exists($value, $userfields[$mappingidentifier]);
+                // Skip invalid row with blank user field.
+                if (!empty($value)) {
+                    $this->studentid = $this->check_user_exists($value, $userfields[$mappingidentifier]);
+                }
             break;
             case 'new':
                 $this->import_new_grade_item($header, $key, $value);

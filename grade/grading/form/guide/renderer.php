@@ -60,6 +60,7 @@ class gradingform_guide_renderer extends plugin_renderer_base {
      */
     public function criterion_template($mode, $options, $elementname = '{NAME}', $criterion = null, $value = null,
                                        $validationerrors = null, $comments = null) {
+        global $PAGE;
 
         if ($criterion === null || !is_array($criterion) || !array_key_exists('id', $criterion)) {
             $criterion = array('id' => '{CRITERION-id}',
@@ -253,9 +254,9 @@ class gradingform_guide_renderer extends plugin_renderer_base {
                 }
 
                 // Include string for JS for the comment chooser title.
-                $this->page->requires->string_for_js('insertcomment', 'gradingform_guide');
+                $PAGE->requires->string_for_js('insertcomment', 'gradingform_guide');
                 // Include comment_chooser module.
-                $this->page->requires->js_call_amd('gradingform_guide/comment_chooser', 'initialise',
+                $PAGE->requires->js_call_amd('gradingform_guide/comment_chooser', 'initialise',
                     array($criterion['id'], $chooserbuttonid, $remarkid, $commentoptions));
             }
 

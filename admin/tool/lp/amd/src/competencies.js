@@ -27,9 +27,8 @@ define(['jquery',
         'core/templates',
         'core/str',
         'tool_lp/competencypicker',
-        'tool_lp/dragdrop-reorder',
-        'core/pending'],
-       function($, notification, ajax, templates, str, Picker, dragdrop, Pending) {
+        'tool_lp/dragdrop-reorder'],
+       function($, notification, ajax, templates, str, Picker, dragdrop) {
 
     /**
      * Constructor
@@ -118,7 +117,6 @@ define(['jquery',
      * Pick a competency
      *
      * @method pickCompetency
-     * @return {Promise}
      */
     competencies.prototype.pickCompetency = function() {
         var self = this;
@@ -134,7 +132,6 @@ define(['jquery',
             self.pickerInstance = new Picker(self.pageContextId, false, pageContextIncludes);
             self.pickerInstance.on('save', function(e, data) {
                 var compIds = data.competencyIds;
-                var pendingPromise = new Pending();
 
                 if (self.itemtype === "course") {
                     requests = [];
@@ -147,7 +144,7 @@ define(['jquery',
                     });
                     requests.push({
                         methodname: 'tool_lp_data_for_course_competencies_page',
-                        args: {courseid: self.itemid, moduleid: 0}
+                        args: {courseid: self.itemid}
                     });
 
                     pagerender = 'tool_lp/course_competencies_page';
@@ -184,20 +181,17 @@ define(['jquery',
                     pagerender = 'tool_lp/plan_page';
                     pageregion = 'plan-page';
                 }
-                ajax.call(requests)[requests.length - 1]
-                .then(function(context) {
+                ajax.call(requests)[requests.length - 1].then(function(context) {
                     return templates.render(pagerender, context);
-                })
-                .then(function(html, js) {
-                    templates.replaceNode($('[data-region="' + pageregion + '"]'), html, js);
+                }).then(function(html, js) {
+                    $('[data-region="' + pageregion + '"]').replaceWith(html);
+                    templates.runTemplateJS(js);
                     return;
-                })
-                .then(pendingPromise.resolve)
-                .catch(notification.exception);
+                }).catch(notification.exception);
             });
         }
 
-        return self.pickerInstance.display();
+        self.pickerInstance.display();
     };
 
     /**
@@ -218,7 +212,7 @@ define(['jquery',
                 {methodname: 'core_competency_remove_competency_from_course',
                     args: {courseid: localthis.itemid, competencyid: deleteid}},
                 {methodname: 'tool_lp_data_for_course_competencies_page',
-                    args: {courseid: localthis.itemid, moduleid: 0}}
+                    args: {courseid: localthis.itemid}}
             ]);
             pagerender = 'tool_lp/course_competencies_page';
             pageregion = 'coursecompetenciespage';
@@ -308,7 +302,6 @@ define(['jquery',
         if (localthis.itemtype == 'course') {
             // Course completion rule handling.
             $('[data-region="coursecompetenciespage"]').on('change', 'select[data-field="ruleoutcome"]', function(e) {
-                var pendingPromise = new Pending();
                 var requests = [];
                 var pagerender = 'tool_lp/course_competencies_page';
                 var pageregion = 'coursecompetenciespage';
@@ -318,27 +311,21 @@ define(['jquery',
                     {methodname: 'core_competency_set_course_competency_ruleoutcome',
                       args: {coursecompetencyid: coursecompetencyid, ruleoutcome: ruleoutcome}},
                     {methodname: 'tool_lp_data_for_course_competencies_page',
-                      args: {courseid: localthis.itemid, moduleid: 0}}
+                      args: {courseid: localthis.itemid}}
                 ]);
 
-                requests[1].then(function(context) {
-                    return templates.render(pagerender, context);
-                })
-                .then(function(html, js) {
-                    return templates.replaceNode($('[data-region="' + pageregion + '"]'), html, js);
-                })
-                .then(pendingPromise.resolve)
-                .catch(notification.exception);
+                requests[1].done(function(context) {
+                    templates.render(pagerender, context).done(function(html, js) {
+                        $('[data-region="' + pageregion + '"]').replaceWith(html);
+                        templates.runTemplateJS(js);
+                    }).fail(notification.exception);
+                }).fail(notification.exception);
             });
         }
 
         $('[data-region="actions"] button').click(function(e) {
-            var pendingPromise = new Pending();
             e.preventDefault();
-
-            localthis.pickCompetency()
-                .then(pendingPromise.resolve)
-                .catch();
+            localthis.pickCompetency();
         });
         $('[data-action="delete-competency-link"]').click(function(e) {
             e.preventDefault();

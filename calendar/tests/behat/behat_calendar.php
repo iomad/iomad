@@ -121,19 +121,7 @@ class behat_calendar extends behat_base {
      */
     public function i_view_the_calendar_for($month, $year) {
         $time = make_timestamp($year, $month, 1);
-        $this->execute('behat_general::i_visit', ['/calendar/view.php?view=month&course=1&time='.$time]);
+        $this->getSession()->visit($this->locate_path('/calendar/view.php?view=month&course=1&time='.$time));
 
-    }
-
-    /**
-     * Navigate to site calendar.
-     *
-     * @Given /^I am viewing site calendar$/
-     * @throws coding_exception
-     * @return void
-     */
-    public function i_am_viewing_site_calendar() {
-        $url = new moodle_url('/calendar/view.php', ['view' => 'month']);
-        $this->execute('behat_general::i_visit', [$url]);
     }
 }

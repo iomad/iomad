@@ -27,7 +27,8 @@ namespace tool_analytics\output;
 defined('MOODLE_INTERNAL') || die();
 
 use plugin_renderer_base;
-
+use templatable;
+use renderable;
 
 /**
  * Renderer class.
@@ -73,12 +74,14 @@ class renderer extends plugin_renderer_base {
      * @return string HTML
      */
     public function render_evaluate_results($results, $logs = array()) {
+        global $OUTPUT;
+
         $output = '';
 
         foreach ($results as $timesplittingid => $result) {
 
             if (!CLI_SCRIPT) {
-                $output .= $this->output->box_start('generalbox mb-3');
+                $output .= $OUTPUT->box_start('generalbox m-b-3');
             }
 
             // Check that the array key is a string, not all results depend on time splitting methods (e.g. general errors).
@@ -87,48 +90,47 @@ class renderer extends plugin_renderer_base {
                 $langstrdata = (object)array('name' => $timesplitting->get_name(), 'id' => $timesplittingid);
 
                 if (CLI_SCRIPT) {
-                    $output .= $this->output->heading(get_string('scheduledanalysisresultscli', 'tool_analytics', $langstrdata), 3);
+                    $output .= $OUTPUT->heading(get_string('getpredictionsresultscli', 'tool_analytics', $langstrdata), 3);
                 } else {
-                    $output .= $this->output->heading(get_string('scheduledanalysisresults', 'tool_analytics', $langstrdata), 3);
+                    $output .= $OUTPUT->heading(get_string('getpredictionsresults', 'tool_analytics', $langstrdata), 3);
                 }
             }
 
             if ($result->status == 0) {
-                $output .= $this->output->notification(get_string('goodmodel', 'tool_analytics'),
+                $output .= $OUTPUT->notification(get_string('goodmodel', 'tool_analytics'),
                     \core\output\notification::NOTIFY_SUCCESS);
             } else if ($result->status === \core_analytics\model::NO_DATASET) {
-                $output .= $this->output->notification(get_string('nodatatoevaluate', 'tool_analytics'),
+                $output .= $OUTPUT->notification(get_string('nodatatoevaluate', 'tool_analytics'),
                     \core\output\notification::NOTIFY_WARNING);
             }
 
             if (isset($result->score)) {
                 // Score.
-                $output .= $this->output->heading(get_string('accuracy', 'tool_analytics') . ': ' .
+                $output .= $OUTPUT->heading(get_string('accuracy', 'tool_analytics') . ': ' .
                     round(floatval($result->score), 4) * 100  . '%', 4);
             }
 
             if (!empty($result->info)) {
                 foreach ($result->info as $message) {
-                    $output .= $this->output->notification($message, \core\output\notification::NOTIFY_WARNING);
+                    $output .= $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING);
                 }
             }
 
             if (!CLI_SCRIPT) {
-                $output .= $this->output->box_end();
+                $output .= $OUTPUT->box_end();
             }
         }
 
         // Info logged during evaluation.
         if (!empty($logs) && debugging()) {
-            $output .= $this->output->heading(get_string('extrainfo', 'tool_analytics'), 3);
+            $output .= $OUTPUT->heading(get_string('extrainfo', 'tool_analytics'), 3);
             foreach ($logs as $log) {
-                $output .= $this->output->notification($log, \core\output\notification::NOTIFY_WARNING);
+                $output .= $OUTPUT->notification($log, \core\output\notification::NOTIFY_WARNING);
             }
         }
 
         if (!CLI_SCRIPT) {
-            $output .= $this->output->single_button(new \moodle_url('/admin/tool/analytics/index.php'),
-                    get_string('continue'), 'get');
+            $output .= $OUTPUT->single_button(new \moodle_url('/admin/tool/analytics/index.php'), get_string('continue'), 'get');
         }
 
         return $output;
@@ -145,82 +147,65 @@ class renderer extends plugin_renderer_base {
      * @return string HTML
      */
     public function render_get_predictions_results($trainresults = false, $trainlogs = array(), $predictresults = false, $predictlogs = array()) {
+        global $OUTPUT;
+
         $output = '';
 
         if ($trainresults || (!empty($trainlogs) && debugging())) {
-            $output .= $this->output->heading(get_string('trainingresults', 'tool_analytics'), 3);
+            $output .= $OUTPUT->heading(get_string('trainingresults', 'tool_analytics'), 3);
         }
 
         if ($trainresults) {
             if ($trainresults->status == 0) {
-                $output .= $this->output->notification(
-                        get_string('trainingprocessfinished', 'tool_analytics'),
+                $output .= $OUTPUT->notification(get_string('trainingprocessfinished', 'tool_analytics'),
                     \core\output\notification::NOTIFY_SUCCESS);
             } else if ($trainresults->status === \core_analytics\model::NO_DATASET ||
                     $trainresults->status === \core_analytics\model::NOT_ENOUGH_DATA) {
-                $output .= $this->output->notification(
-                        get_string('nodatatotrain', 'tool_analytics'),
+                $output .= $OUTPUT->notification(get_string('nodatatotrain', 'tool_analytics'),
                     \core\output\notification::NOTIFY_WARNING);
             } else {
-                $output .= $this->output->notification(
-                        get_string('generalerror', 'tool_analytics', $trainresults->status),
+                $output .= $OUTPUT->notification(get_string('generalerror', 'tool_analytics', $trainresults->status),
                     \core\output\notification::NOTIFY_ERROR);
             }
         }
 
         if (!empty($trainlogs) && debugging()) {
-            $output .= $this->output->heading(get_string('extrainfo', 'tool_analytics'), 4);
+            $output .= $OUTPUT->heading(get_string('extrainfo', 'tool_analytics'), 4);
             foreach ($trainlogs as $log) {
-                $output .= $this->output->notification($log, \core\output\notification::NOTIFY_WARNING);
+                $output .= $OUTPUT->notification($log, \core\output\notification::NOTIFY_WARNING);
             }
         }
 
         if ($predictresults || (!empty($predictlogs) && debugging())) {
-            $output .= $this->output->heading(
-                    get_string('predictionresults', 'tool_analytics'), 3, 'main mt-3');
+            $output .= $OUTPUT->heading(get_string('predictionresults', 'tool_analytics'), 3, 'main m-t-3');
         }
 
         if ($predictresults) {
             if ($predictresults->status == 0) {
-                $output .= $this->output->notification(
-                        get_string('predictionprocessfinished', 'tool_analytics'),
+                $output .= $OUTPUT->notification(get_string('predictionprocessfinished', 'tool_analytics'),
                     \core\output\notification::NOTIFY_SUCCESS);
             } else if ($predictresults->status === \core_analytics\model::NO_DATASET ||
                     $predictresults->status === \core_analytics\model::NOT_ENOUGH_DATA) {
-                $output .= $this->output->notification(
-                        get_string('nodatatopredict', 'tool_analytics'),
+                $output .= $OUTPUT->notification(get_string('nodatatopredict', 'tool_analytics'),
                     \core\output\notification::NOTIFY_WARNING);
             } else {
-                $output .= $this->output->notification(
-                        get_string('generalerror', 'tool_analytics', $predictresults->status),
+                $output .= $OUTPUT->notification(get_string('generalerror', 'tool_analytics', $predictresults->status),
                     \core\output\notification::NOTIFY_ERROR);
             }
         }
 
         if (!empty($predictlogs) && debugging()) {
-            $output .= $this->output->heading(get_string('extrainfo', 'tool_analytics'), 4);
+            $output .= $OUTPUT->heading(get_string('extrainfo', 'tool_analytics'), 4);
             foreach ($predictlogs as $log) {
-                $output .= $this->output->notification($log, \core\output\notification::NOTIFY_WARNING);
+                $output .= $OUTPUT->notification($log, \core\output\notification::NOTIFY_WARNING);
             }
         }
 
         if (!CLI_SCRIPT) {
-            $output .= $this->output->single_button(new \moodle_url('/admin/tool/analytics/index.php'),
-                    get_string('continue'), 'get');
+            $output .= $OUTPUT->single_button(new \moodle_url('/admin/tool/analytics/index.php'), get_string('continue'), 'get');
         }
 
         return $output;
-    }
-
-    /**
-     * Defer to template.
-     *
-     * @param \tool_analytics\output\insights_report $insightsreport
-     * @return string HTML
-     */
-    protected function render_insights_report(\tool_analytics\output\insights_report $insightsreport): string {
-        $data = $insightsreport->export_for_template($this);
-        return parent::render_from_template('tool_analytics/insights_report', $data);
     }
 
     /**
@@ -233,27 +218,4 @@ class renderer extends plugin_renderer_base {
         $data = $invalidanalysables->export_for_template($this);
         return parent::render_from_template('tool_analytics/invalid_analysables', $data);
     }
-
-    /**
-     * Renders an analytics disabled notification.
-     *
-     * @return string HTML
-     */
-    public function render_analytics_disabled() {
-        global $FULLME;
-
-        $this->page->set_url($FULLME);
-        $this->page->set_title(get_string('pluginname', 'tool_analytics'));
-        $this->page->set_heading(get_string('pluginname', 'tool_analytics'));
-
-        $output = $this->output->header();
-        $output .= $this->output->notification(get_string('analyticsdisabled', 'analytics'),
-                \core\output\notification::NOTIFY_INFO);
-        $output .= \html_writer::tag('a', get_string('continue'), ['class' => 'btn btn-primary',
-            'href' => (new \moodle_url('/'))->out()]);
-        $output .= $this->output->footer();
-
-        return $output;
-    }
-
 }

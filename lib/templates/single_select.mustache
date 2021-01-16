@@ -95,8 +95,7 @@
         {{#helpicon}}
             {{>core/help_icon}}
         {{/helpicon}}
-        <select {{#attributes}}{{name}}="{{value}}" {{/attributes}} id="{{id}}" class="custom-select {{classes}}" name="{{name}}"
-                {{#title}}title="{{.}}"{{/title}} {{#disabled}}disabled{{/disabled}}>
+        <select {{#attributes}}{{name}}="{{value}}" {{/attributes}} id="{{id}}" class="custom-select {{classes}}" name="{{name}}">
             {{#options}}
                 {{#optgroup}}
                     <optgroup label="{{name}}">
@@ -111,14 +110,13 @@
             {{/options}}
         </select>
         <noscript>
-            <input type="submit" class="btn btn-secondary ml-1" value="{{#str}}go, core{{/str}}">
+            <input type="submit" role="button" class="btn btn-secondary" value="{{#str}}go, core{{/str}}">
         </noscript>
     </form>
 </div>
 {{#js}}
-require(['jquery', 'core/custom_interaction_events'], function($, CustomEvents) {
-    CustomEvents.define('#{{id}}', [CustomEvents.events.accessibleChange]);
-    $('#{{id}}').on(CustomEvents.events.accessibleChange, function() {
+require(['jquery'], function($) {
+    $('#{{id}}').change(function() {
         var ignore = $(this).find(':selected').attr('data-ignore');
         if (typeof ignore === typeof undefined) {
             $('#{{formid}}').submit();

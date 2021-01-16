@@ -30,52 +30,7 @@ require_once('lib.php');
 redirect_if_major_upgrade_required();
 
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
-$anchor      = optional_param('anchor', '', PARAM_RAW);     // Used to restore hash anchor to wantsurl.
-
-$resendconfirmemail = optional_param('resendconfirmemail', false, PARAM_BOOL);
-
-// IOMAD - deal with any passed company parameters so we can set the theme and other good stuff.
-$wantedcompanyid = optional_param('id', 0, PARAM_INT);
-if (!empty($wantedcompanyid)) {
-    $wantedcompanyshort = required_param('code', PARAM_CLEAN);
-} else {
-    $wantedcompanyshort = '';
-}
-
-// It might be safe to do this for non-Behat sites, or there might
-// be a security risk. For now we only allow it on Behat sites.
-// If you wants to do the analysis, you may be able to remove the
-// if (BEHAT_SITE_RUNNING).
-if (defined('BEHAT_SITE_RUNNING') && BEHAT_SITE_RUNNING) {
-    $wantsurl    = optional_param('wantsurl', '', PARAM_LOCALURL);   // Overrides $SESSION->wantsurl if given.
-    if ($wantsurl !== '') {
-        $SESSION->wantsurl = (new moodle_url($wantsurl))->out(false);
-    }
-} else {
-    $wantsurl = optional_param('wantsurl', '', PARAM_RAW);    // Used to set a URL to go to.
-    if (!empty($wantsurl)) {
-        $SESSION->wantsurl = urldecode($wantsurl);
-    }
-}
-
-// Redirect if they are currently logged in and there is a wantsurl.
-if (isloggedin() && !isguestuser() && !empty($SESSION->wantsurl)) {
-    redirect($SESSION->wantsurl);
-}
-
-// Check if the company being passed is valid.
-if (!empty($wantedcompanyid) && !$company = $DB->get_record('company', array('id'=> $wantedcompanyid, 'shortname'=>$wantedcompanyshort))) {
-    print_error(get_string('unknown_company', 'local_iomad_signup'));
-} else if (!empty($wantedcompanyid)) {
-    // Set the page theme.
-    $SESSION->currenteditingcompany = $company->id;
-    $SESSION->theme = $company->theme;
-    $SESSION->company = $company;
-    if (empty($SESSION->companysetlang)) {
-        $SESSION->lang = $company->lang;
-        $SESSION->companysetlang = true;
-    }
-}
+$anchor      = optional_param('anchor', '', PARAM_RAW);      // Used to restore hash anchor to wantsurl.
 
 $context = context_system::instance();
 $PAGE->set_url("$CFG->wwwroot/login/index.php");
@@ -85,20 +40,6 @@ $PAGE->set_pagelayout('login');
 /// Initialize variables
 $errormsg = '';
 $errorcode = 0;
-
-// IOMAD - Set the theme if the server hostname matches one of ours.
-if ($company = $DB->get_record('company', array('hostname' => $_SERVER["SERVER_NAME"]))) {
-    $hascompanybyurl = true;
-    // set the current editing company to be this.
-    $SESSION->currenteditingcompany = $company->id;
-    // Set the page theme.
-    $SESSION->theme = $company->theme;
-    $SESSION->company = $company;
-    $wantedcompanyid = $company->id;
-    $wantedcompanyshort = $company->shortname;
-} else {
-    $hascompanybyurl = false;
-}
 
 // login page requested session test
 if ($testsession) {
@@ -121,21 +62,17 @@ if ($testsession) {
 if (!empty($SESSION->has_timed_out)) {
     $session_has_timed_out = true;
     unset($SESSION->has_timed_out);
-    if (!$hascompanybyurl) {
-        unset($SESSION->currenteditingcompany);
-        unset($SESSION->theme);
-    }
 } else {
     $session_has_timed_out = false;
 }
 
+/// auth plugins may override these - SSO anyone?
 $frm  = false;
 $user = false;
 
 $authsequence = get_enabled_auth_plugins(true); // auths, in sequence
 foreach($authsequence as $authname) {
     $authplugin = get_auth_plugin($authname);
-    // The auth plugin's loginpage_hook() can eventually set $frm and/or $user.
     $authplugin->loginpage_hook();
 }
 
@@ -194,14 +131,13 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
     }
 
     if ($user) {
-        // The auth plugin has already provided the user via the loginpage_hook() called above.
+        //user already supplied by aut plugin prelogin hook
     } else if (($frm->username == 'guest') and empty($CFG->guestloginbutton)) {
         $user = false;    /// Can't log in as guest if guest button is disabled
         $frm = false;
     } else {
         if (empty($errormsg)) {
-            $logintoken = isset($frm->logintoken) ? $frm->logintoken : '';
-            $user = authenticate_user_login($frm->username, $frm->password, false, $errorcode, $logintoken);
+            $user = authenticate_user_login($frm->username, $frm->password, false, $errorcode);
         }
     }
 
@@ -236,49 +172,9 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
             $PAGE->set_heading($site->fullname);
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string("mustconfirm"));
-            if ($resendconfirmemail) {
-                if (!send_confirmation_email($user)) {
-                    echo $OUTPUT->notification(get_string('emailconfirmsentfailure'), \core\output\notification::NOTIFY_ERROR);
-                } else {
-                    echo $OUTPUT->notification(get_string('emailconfirmsentsuccess'), \core\output\notification::NOTIFY_SUCCESS);
-                }
-            }
-            echo $OUTPUT->box(get_string("emailconfirmsent", "", s($user->email)), "generalbox boxaligncenter");
-            $resendconfirmurl = new moodle_url('/login/index.php',
-                [
-                    'username' => $frm->username,
-                    'password' => $frm->password,
-                    'resendconfirmemail' => true,
-                    'logintoken' => \core\session\manager::get_login_token()
-                ]
-            );
-            echo $OUTPUT->single_button($resendconfirmurl, get_string('emailconfirmationresend'));
+            echo $OUTPUT->box(get_string("emailconfirmsent", "", $user->email), "generalbox boxaligncenter");
             echo $OUTPUT->footer();
             die;
-        }
-
-        // Check if the company in the session is still correct.
-        if (!has_capability('block/iomad_company_admin:company_view_all', context_system::instance()) &&
-            !empty($SESSION->currenteditingcompany)) {
-            $currenteditingcompany = $SESSION->currenteditingcompany;
-            $currentcompany = $SESSION->company;
-            if ($mycompany = company::by_userid($user->id, true)) {
-                if ($currenteditingcompany != $mycompany->id) {
-                    $mycompanyrec = $DB->get_record('company', array('id' => $mycompany->id));
-                    if ($mycompanyrec->hostname != $currentcompany->hostname) {
-                        if (empty($mycompanyrec->hostname)) {
-                            $companyurl = $CFG->wwwrootdefault;
-                        } else {
-                            $companyurl = $_SERVER['REQUEST_SCHEME'] . "://" . $mycompanyrec->hostname;
-                        }
-                    }
-                    $SESSION->currenteditingcompany = $mycompany->id;
-                    $SESSION->company = $mycompanyrec;
-                    $SESSION->theme = $mycompanyrec->theme;
-
-                    redirect ($companyurl . '/login/index.php');
-                }
-            }
         }
 
     /// Let's get them all set up.
@@ -418,7 +314,7 @@ if (empty($frm->username) && $authsequence[0] != 'shibboleth') {  // See bug 518
     $frm->password = "";
 }
 
-// IOMAD - changes to display the instructions.
+// IOMAD changes to display the instructions.
 if (!empty($CFG->registerauth) or is_enabled_auth('none') or !empty($CFG->auth_instructions)) {
     if (!empty($CFG->local_iomad_signup_showinstructions)) {
         $show_instructions = true;

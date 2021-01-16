@@ -81,15 +81,15 @@ class core_calendar_renderer extends plugin_renderer_base {
 
         // Previous.
         $calendar->set_time($prev);
-        list($previousmonth, ) = calendar_get_view($calendar, 'minithree', false, true);
+        list($previousmonth, ) = calendar_get_view($calendar, 'minithree', false);
 
         // Current month.
         $calendar->set_time($current);
-        list($currentmonth, ) = calendar_get_view($calendar, 'minithree', false, true);
+        list($currentmonth, ) = calendar_get_view($calendar, 'minithree', false);
 
         // Next month.
         $calendar->set_time($next);
-        list($nextmonth, ) = calendar_get_view($calendar, 'minithree', false, true);
+        list($nextmonth, ) = calendar_get_view($calendar, 'minithree', false);
 
         // Reset the time back.
         $calendar->set_time($current);
@@ -135,15 +135,12 @@ class core_calendar_renderer extends plugin_renderer_base {
     /**
      * Displays an event
      *
-     * @deprecated since 3.9
-     *
      * @param calendar_event $event
      * @param bool $showactions
      * @return string
      */
     public function event(calendar_event $event, $showactions=true) {
         global $CFG;
-        debugging('This function is no longer used', DEBUG_DEVELOPER);
 
         $event = calendar_add_event_metadata($event);
         $context = $event->context;
@@ -164,7 +161,7 @@ class core_calendar_renderer extends plugin_renderer_base {
                 $deletelink = null;
             }
 
-            $commands  = html_writer::start_tag('div', array('class' => 'commands float-sm-right'));
+            $commands  = html_writer::start_tag('div', array('class' => 'commands pull-xs-right'));
             $commands .= html_writer::start_tag('a', array('href' => $editlink));
             $str = get_string('tt_editevent', 'calendar');
             $commands .= $this->output->pix_icon('t/edit', $str);
@@ -208,9 +205,9 @@ class core_calendar_renderer extends plugin_renderer_base {
             $output .= html_writer::tag('div', $event->courselink);
         }
         if (!empty($event->time)) {
-            $output .= html_writer::tag('span', $event->time, array('class' => 'date float-sm-right mr-1'));
+            $output .= html_writer::tag('span', $event->time, array('class' => 'date pull-xs-right m-r-1'));
         } else {
-            $attrs = array('class' => 'date float-sm-right mr-1');
+            $attrs = array('class' => 'date pull-xs-right m-r-1');
             $output .= html_writer::tag('span', calendar_time_representation($event->timestart), $attrs);
         }
 
@@ -246,41 +243,19 @@ class core_calendar_renderer extends plugin_renderer_base {
      * @return string
      */
     public function course_filter_selector(moodle_url $returnurl, $label = null, $courseid = null) {
-        global $CFG, $DB;
+        global $CFG;
 
         if (!isloggedin() or isguestuser()) {
             return '';
         }
 
-        $contextrecords = [];
         $courses = calendar_get_default_courses($courseid, 'id, shortname');
-
-        if (!empty($courses) && count($courses) > CONTEXT_CACHE_MAX_SIZE) {
-            // We need to pull the context records from the DB to preload them
-            // below. The calendar_get_default_courses code will actually preload
-            // the contexts itself however the context cache is capped to a certain
-            // amount before it starts recycling. Unfortunately that starts to happen
-            // quite a bit if a user has access to a large number of courses (e.g. admin).
-            // So in order to avoid hitting the DB for each context as we loop below we
-            // can load all of the context records and add them to the cache just in time.
-            $courseids = array_map(function($c) {
-                return $c->id;
-            }, $courses);
-            list($insql, $params) = $DB->get_in_or_equal($courseids);
-            $contextsql = "SELECT ctx.instanceid, " . context_helper::get_preload_record_columns_sql('ctx') .
-                          " FROM {context} ctx WHERE ctx.contextlevel = ? AND ctx.instanceid $insql";
-            array_unshift($params, CONTEXT_COURSE);
-            $contextrecords = $DB->get_records_sql($contextsql, $params);
-        }
 
         unset($courses[SITEID]);
 
         $courseoptions = array();
         $courseoptions[SITEID] = get_string('fulllistofcourses');
         foreach ($courses as $course) {
-            if (isset($contextrecords[$course->id])) {
-                context_helper::preload_from_record($contextrecords[$course->id]);
-            }
             $coursecontext = context_course::instance($course->id);
             $courseoptions[$course->id] = format_string($course->shortname, true, array('context' => $coursecontext));
         }
@@ -295,15 +270,12 @@ class core_calendar_renderer extends plugin_renderer_base {
         $courseurl = new moodle_url($returnurl);
         $courseurl->remove_params('course');
 
-        $labelattributes = [];
-        if (empty($label)) {
+        if ($label === null) {
             $label = get_string('listofcourses');
-            $labelattributes['class'] = 'sr-only';
         }
 
-        $select = html_writer::label($label, 'course', false, $labelattributes);
-        $select .= html_writer::select($courseoptions, 'course', $selected, false,
-                ['class' => 'cal_courses_flt ml-1 mr-auto', 'id' => 'course']);
+        $select = html_writer::label($label, 'course', false, ['class' => 'm-r-1']);
+        $select .= html_writer::select($courseoptions, 'course', $selected, false, ['class' => 'cal_courses_flt']);
 
         return $select;
     }
@@ -395,7 +367,7 @@ class core_calendar_renderer extends plugin_renderer_base {
         }
         $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
         $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'id', 'value' => $subscription->id));
-        $html .= html_writer::start_tag('div', array('class' => 'btn-group float-right'));
+        $html .= html_writer::start_tag('div', array('class' => 'btn-group pull-right'));
         if (!empty($subscription->url)) {
             $html .= html_writer::tag('button', get_string('update'), array('type'  => 'submit', 'name' => 'action',
                                                                             'class' => 'btn btn-secondary',

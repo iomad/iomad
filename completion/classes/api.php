@@ -87,15 +87,14 @@ class api {
             if ($completionexpectedtime !== null) {
                 // Calendar event exists so update it.
                 $event->name = get_string('completionexpectedfor', 'completion', $lang);
-                $event->description = format_module_intro($modulename, $instance, $cmid, false);
-                $event->format = FORMAT_HTML;
+                $event->description = format_module_intro($modulename, $instance, $cmid);
                 $event->timestart = $completionexpectedtime;
                 $event->timesort = $completionexpectedtime;
                 $event->visible = instance_is_visible($modulename, $instance);
                 $event->timeduration = 0;
 
                 $calendarevent = \calendar_event::load($event->id);
-                $calendarevent->update($event, false);
+                $calendarevent->update($event);
             } else {
                 // Calendar event is no longer needed.
                 $calendarevent = \calendar_event::load($event->id);
@@ -105,8 +104,7 @@ class api {
             // Event doesn't exist so create one.
             if ($completionexpectedtime !== null) {
                 $event->name = get_string('completionexpectedfor', 'completion', $lang);
-                $event->description = format_module_intro($modulename, $instance, $cmid, false);
-                $event->format = FORMAT_HTML;
+                $event->description = format_module_intro($modulename, $instance, $cmid);
                 $event->courseid = $instance->course;
                 $event->groupid = 0;
                 $event->userid = 0;
@@ -117,7 +115,7 @@ class api {
                 $event->visible = instance_is_visible($modulename, $instance);
                 $event->timeduration = 0;
 
-                \calendar_event::create($event, false);
+                \calendar_event::create($event);
             }
         }
 

@@ -36,6 +36,8 @@ define ('PIX_FILE_SKIPPED', 2);
 
 admin_externalpage_setup('tooluploaduserpictures');
 
+require_login();
+
 require_capability('tool/uploaduser:uploaduserpictures', context_system::instance());
 
 $site = get_site();

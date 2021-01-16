@@ -40,15 +40,14 @@ $linkurl = new moodle_url('/local/report_user_license_allocations/index.php');
 // Print the page header.
 $PAGE->set_context($context);
 $PAGE->set_url($linkurl);
-$PAGE->set_pagelayout('report');
+$PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $baseurl = new moodle_url(basename(__FILE__));
 $returnurl = $baseurl;
@@ -65,6 +64,7 @@ if (empty($dodownload)) {
         print_error('invaliduser', 'block_iomad_company_management');
     }
 }
+
 
 // Get this list of license the user has been allocated.
 $userlicenses = $DB->get_records_sql("SELECT DISTINCT objectid FROM {logstore_standard_log}
@@ -104,7 +104,7 @@ if (empty($dodownload)) {
 // Table for results.
 $compusertable = new html_table();
 $compusertable->head = array(get_string('course', 'local_report_completion'),
-                             get_string('status'),
+                             get_string('status', 'local_report_completion'),
                              get_string('dateenrolled', 'local_report_completion'),
                              get_string('datestarted', 'local_report_completion'),
                              get_string('datecompleted', 'local_report_completion'),
@@ -112,7 +112,7 @@ $compusertable->head = array(get_string('course', 'local_report_completion'),
 $compusertable->align = array('left', 'center', 'center', 'center', 'center', 'center');
 $compusertable->width = '95%';
 
-$compusertable->head[] = get_string('actions');
+$compusertable->head[] = get_string('actions', 'local_report_user_license_allocations');
 $compusertable->align[] = 'center';
 
 // Set that there is nothing found here first.
@@ -191,7 +191,7 @@ foreach ($userresults as $licenseid => $detail) {
             $allocationinfo .= get_string('allocated', 'local_report_user_license_allocations', date($CFG->iomad_date_format, $allocation->timecreated)) . "</br>";
         } else if ($allocation->eventname == '\block_iomad_company_admin\event\user_license_unassigned') {
             $allocationinfo .= get_string('unallocated', 'local_report_user_license_allocations', date($CFG->iomad_date_format, $allocation->timecreated)) . "</br>";
-        }
+        } 
     }
     $licenseurl = "<a href='" . new moodle_url('/local/report_user_license_allocations/index.php', array('licenseid' => $licenseid)) ."'>" .
                    $license->name . "</a>";

@@ -26,11 +26,9 @@ namespace repository_onedrive\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\context;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\transform;
-use core_privacy\local\request\userlist;
 use \core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -41,10 +39,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2018 Zig Tan <zig@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
-        \core_privacy\local\request\plugin\provider {
+class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\plugin\provider {
 
     /**
      * Returns meta data about this system.
@@ -101,26 +96,6 @@ class provider implements
         $contextlist->add_from_sql($sql, $params);
 
         return $contextlist;
-    }
-
-    /**
-     * Get the list of users who have data within a context.
-     *
-     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if (!$context instanceof \context_user) {
-            return;
-        }
-
-        // The data is associated at the user context level, so retrieve the user's context id.
-        $sql = "SELECT usermodified AS userid
-                  FROM {repository_onedrive_access}
-                 WHERE usermodified = ?";
-        $params = [$context->instanceid];
-        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -221,39 +196,4 @@ class provider implements
         $DB->delete_records('repository_onedrive_access', ['usermodified' => $userid]);
     }
 
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param   approved_userlist       $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        global $DB;
-        $context = $userlist->get_context();
-
-        // Sanity check that context is at the User context level, then get the userid.
-        if ($context->contextlevel !== CONTEXT_USER) {
-            return;
-        }
-
-        $userids = $userlist->get_userids();
-        list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
-        $params = [
-            'contextid' => $context->id,
-            'contextuser' => CONTEXT_USER,
-        ];
-        $params = array_merge($params, $inparams);
-
-        // Fetch the repository_onedrive_access IDs in the context for approved users.
-        $sql = "SELECT roa.id
-                  FROM {repository_onedrive_access} roa
-                  JOIN {context} c ON c.instanceid = roa.usermodified
-                   AND c.contextlevel = :contextuser
-                   AND c.id = :contextid
-                 WHERE roa.usermodified {$insql}";
-        $accessids = $DB->get_fieldset_sql($sql, $params);
-
-        // Delete the relevant repository_onedrive_access data.
-        list($insql, $params) = $DB->get_in_or_equal($accessids, SQL_PARAMS_NAMED);
-        $DB->delete_records_select('repository_onedrive_access', "id {$insql}", $params);
-    }
 }

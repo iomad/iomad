@@ -24,8 +24,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 use \core_privacy\tests\provider_testcase;
-use \block_rss_client\privacy\provider;
-use \core_privacy\local\request\approved_userlist;
 
 /**
  * Unit tests for blocks\rss_client\classes\privacy\provider.php
@@ -52,7 +50,7 @@ class block_rss_client_testcase extends provider_testcase {
 
         $this->add_rss_feed($user);
 
-        $contextlist = provider::get_contexts_for_userid($user->id);
+        $contextlist = \block_rss_client\privacy\provider::get_contexts_for_userid($user->id);
 
         $this->assertEquals($context, $contextlist->current());
     }
@@ -83,93 +81,6 @@ class block_rss_client_testcase extends provider_testcase {
     }
 
     /**
-     * Test that only users within a course context are fetched.
-     */
-    public function test_get_users_in_context() {
-        $component = 'block_rss_client';
-
-        // Create a user.
-        $user = $this->getDataGenerator()->create_user();
-        $usercontext = context_user::instance($user->id);
-
-        $userlist = new \core_privacy\local\request\userlist($usercontext, $component);
-        provider::get_users_in_context($userlist);
-        $this->assertCount(0, $userlist);
-
-        $this->add_rss_feed($user);
-
-        // The list of users within the user context should contain user.
-        provider::get_users_in_context($userlist);
-        $this->assertCount(1, $userlist);
-        $expected = [$user->id];
-        $actual = $userlist->get_userids();
-        $this->assertEquals($expected, $actual);
-
-        // The list of users within the system context should be empty.
-        $systemcontext = context_system::instance();
-        $userlist2 = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(0, $userlist2);
-    }
-
-    /**
-     * Test that data for users in approved userlist is deleted.
-     */
-    public function test_delete_data_for_users() {
-        $component = 'block_rss_client';
-
-        $user1 = $this->getDataGenerator()->create_user();
-        $usercontext1 = context_user::instance($user1->id);
-        $user2 = $this->getDataGenerator()->create_user();
-        $usercontext2 = context_user::instance($user2->id);
-
-        $this->add_rss_feed($user1);
-        $this->add_rss_feed($user2);
-
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(1, $userlist1);
-        $expected = [$user1->id];
-        $actual = $userlist1->get_userids();
-        $this->assertEquals($expected, $actual);
-
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(1, $userlist2);
-        $expected = [$user2->id];
-        $actual = $userlist2->get_userids();
-        $this->assertEquals($expected, $actual);
-
-        // Convert $userlist1 into an approved_contextlist.
-        $approvedlist1 = new approved_userlist($usercontext1, $component, $userlist1->get_userids());
-        // Delete using delete_data_for_user.
-        provider::delete_data_for_users($approvedlist1);
-
-        // Re-fetch users in usercontext1.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
-        provider::get_users_in_context($userlist1);
-        // The user data in usercontext1 should be deleted.
-        $this->assertCount(0, $userlist1);
-
-        // Re-fetch users in usercontext2.
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
-        provider::get_users_in_context($userlist2);
-        // The user data in usercontext2 should be still present.
-        $this->assertCount(1, $userlist2);
-
-        // Convert $userlist2 into an approved_contextlist in the system context.
-        $systemcontext = context_system::instance();
-        $approvedlist2 = new approved_userlist($systemcontext, $component, $userlist2->get_userids());
-        // Delete using delete_data_for_user.
-        provider::delete_data_for_users($approvedlist2);
-        // Re-fetch users in usercontext2.
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
-        provider::get_users_in_context($userlist2);
-        // The user data in systemcontext should not be deleted.
-        $this->assertCount(1, $userlist2);
-    }
-
-    /**
      * Test that user data is deleted using the context.
      */
     public function test_delete_data_for_all_users_in_context() {
@@ -184,7 +95,7 @@ class block_rss_client_testcase extends provider_testcase {
         $rssfeeds = $DB->get_records('block_rss_client', ['userid' => $user->id]);
         $this->assertCount(1, $rssfeeds);
 
-        provider::delete_data_for_all_users_in_context($context);
+        \block_rss_client\privacy\provider::delete_data_for_all_users_in_context($context);
 
         // Check that it has now been deleted.
         $rssfeeds = $DB->get_records('block_rss_client', ['userid' => $user->id]);
@@ -208,7 +119,7 @@ class block_rss_client_testcase extends provider_testcase {
 
         $approvedlist = new \core_privacy\local\request\approved_contextlist($user, 'block_rss_feed',
                 [$context->id]);
-        provider::delete_data_for_user($approvedlist);
+        \block_rss_client\privacy\provider::delete_data_for_user($approvedlist);
 
         // Check that it has now been deleted.
         $rssfeeds = $DB->get_records('block_rss_client', ['userid' => $user->id]);

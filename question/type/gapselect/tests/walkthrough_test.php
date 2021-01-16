@@ -40,7 +40,7 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
     public function test_interactive_behaviour() {
 
         // Create a gapselect question.
-        $q = test_question_maker::make_question('gapselect');
+        $q = qtype_gapselect_test_helper::make_a_gapselect_question();
         $q->hints = array(
             new question_hint_with_parts(1, 'This is the first hint.', FORMAT_HTML, false, false),
             new question_hint_with_parts(2, 'This is the second hint.', FORMAT_HTML, true, true),
@@ -52,19 +52,16 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
         $this->check_current_output(
+                $this->get_contains_select_expectation('p1',
+                                array('' => get_string('choosedots'), '1' => 'quick', '2' => 'slow'), null, true),
+                $this->get_contains_select_expectation('p2',
+                                array('' => get_string('choosedots'), '1' => 'fox', '2' => 'dog'), null, true),
+                $this->get_contains_select_expectation('p3',
+                                array('' => get_string('choosedots'), '1' => 'lazy', '2' => 'assiduous'), null, true),
                 $this->get_contains_submit_button_expectation(true),
                 $this->get_does_not_contain_feedback_expectation(),
                 $this->get_tries_remaining_expectation(3),
                 $this->get_no_hint_visible_expectation());
-        // Note it is possible to check the first select option as below, but it is not required.
-        // Also note the ' ' in the p2 example below is a nbsp (used when names are short).
-        $this->check_output_contains_selectoptions(
-                $this->get_contains_select_expectation('p1',
-                        ['0' => '&nbsp;', '1' => 'quick', '2' => 'slow'], null, true),
-                $this->get_contains_select_expectation('p2',
-                        ['0' => '&nbsp;', '1' => 'fox', '2' => 'dog'], null, true),
-                $this->get_contains_select_expectation('p3',
-                        ['1' => 'lazy', '2' => 'assiduous'], null, true));
 
         // Save the wrong answer.
         $this->process_submission(array('p1' => '2', 'p2' => '2', 'p3' => '2'));
@@ -73,18 +70,17 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
         $this->check_current_output(
+                $this->get_contains_select_expectation('p1',
+                                array('' => get_string('choosedots'), '1' => 'quick', '2' => 'slow'), 2, true),
+                $this->get_contains_select_expectation('p2',
+                                array('' => get_string('choosedots'), '1' => 'fox', '2' => 'dog'), 2, true),
+                $this->get_contains_select_expectation('p3',
+                                array('' => get_string('choosedots'), '1' => 'lazy', '2' => 'assiduous'), 2, true),
                 $this->get_contains_submit_button_expectation(true),
                 $this->get_does_not_contain_correctness_expectation(),
                 $this->get_does_not_contain_feedback_expectation(),
                 $this->get_tries_remaining_expectation(3),
                 $this->get_no_hint_visible_expectation());
-        $this->check_output_contains_selectoptions(
-                $this->get_contains_select_expectation('p1',
-                        ['1' => 'quick', '2' => 'slow'], 2, true),
-                $this->get_contains_select_expectation('p2',
-                        ['1' => 'fox', '2' => 'dog'], 2, true),
-                $this->get_contains_select_expectation('p3',
-                        ['1' => 'lazy', '2' => 'assiduous'], 2, true));
 
         // Submit the wrong answer.
         $this->process_submission(array('p1' => '2', 'p2' => '2', 'p3' => '2', '-submit' => 1));
@@ -93,17 +89,16 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
         $this->check_current_output(
-                $this->get_does_not_contain_submit_button_expectation(),
+                $this->get_contains_select_expectation('p1',
+                                array('' => get_string('choosedots'), '1' => 'quick', '2' => 'slow'), 2, false),
+                $this->get_contains_select_expectation('p2',
+                                array('' => get_string('choosedots'), '1' => 'fox', '2' => 'dog'), 2, false),
+                $this->get_contains_select_expectation('p3',
+                                array('' => get_string('choosedots'), '1' => 'lazy', '2' => 'assiduous'), 2, false),
+                        $this->get_does_not_contain_submit_button_expectation(),
                 $this->get_contains_try_again_button_expectation(true),
                 $this->get_does_not_contain_correctness_expectation(),
                 $this->get_contains_hint_expectation('This is the first hint'));
-        $this->check_output_contains_selectoptions(
-                $this->get_contains_select_expectation('p1',
-                        ['1' => 'quick', '2' => 'slow'], 2, false),
-                $this->get_contains_select_expectation('p2',
-                        ['1' => 'fox', '2' => 'dog'], 2, false),
-                $this->get_contains_select_expectation('p3',
-                        ['1' => 'lazy', '2' => 'assiduous'], 2, false));
 
         // Do try again.
         $this->process_submission(array('-tryagain' => 1));
@@ -112,18 +107,17 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
         $this->check_current_output(
+                $this->get_contains_select_expectation('p1',
+                                array('' => get_string('choosedots'), '1' => 'quick', '2' => 'slow'), 2, true),
+                $this->get_contains_select_expectation('p2',
+                                array('' => get_string('choosedots'), '1' => 'fox', '2' => 'dog'), 2, true),
+                $this->get_contains_select_expectation('p3',
+                                array('' => get_string('choosedots'), '1' => 'lazy', '2' => 'assiduous'), 2, true),
                 $this->get_contains_submit_button_expectation(true),
                 $this->get_does_not_contain_correctness_expectation(),
                 $this->get_does_not_contain_feedback_expectation(),
                 $this->get_tries_remaining_expectation(2),
                 $this->get_no_hint_visible_expectation());
-        $this->check_output_contains_selectoptions(
-                $this->get_contains_select_expectation('p1',
-                        ['1' => 'quick', '2' => 'slow'], 2, true),
-                $this->get_contains_select_expectation('p2',
-                        ['1' => 'fox', '2' => 'dog'], 2, true),
-                $this->get_contains_select_expectation('p3',
-                        ['1' => 'lazy', '2' => 'assiduous'], 2, true));
 
         // Submit the right answer.
         $this->process_submission(array('p1' => '1', 'p2' => '1', 'p3' => '1', '-submit' => 1));
@@ -132,16 +126,15 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
         $this->check_current_state(question_state::$gradedright);
         $this->check_current_mark(2);
         $this->check_current_output(
+                $this->get_contains_select_expectation('p1',
+                                array('' => get_string('choosedots'), '1' => 'quick', '2' => 'slow'), 1, false),
+                $this->get_contains_select_expectation('p2',
+                                array('' => get_string('choosedots'), '1' => 'fox', '2' => 'dog'), 1, false),
+                $this->get_contains_select_expectation('p3',
+                                array('' => get_string('choosedots'), '1' => 'lazy', '2' => 'assiduous'), 1, false),
                 $this->get_does_not_contain_submit_button_expectation(),
                 $this->get_contains_correct_expectation(),
                 $this->get_no_hint_visible_expectation());
-        $this->check_output_contains_selectoptions(
-                $this->get_contains_select_expectation('p1',
-                        ['1' => 'quick', '2' => 'slow'], 1, false),
-                $this->get_contains_select_expectation('p2',
-                        ['1' => 'fox', '2' => 'dog'], 1, false),
-                $this->get_contains_select_expectation('p3',
-                        ['1' => 'lazy', '2' => 'assiduous'], 1, false));
 
         // Check regrading does not mess anything up.
         $this->quba->regrade_all_questions();
@@ -160,35 +153,17 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
         $filtermanager->reset_caches();
 
         // Create a multilang gapselect question.
-        $q = test_question_maker::make_question('gapselect', 'multilang');
+        $q = qtype_gapselect_test_helper::make_a_multilang_gapselect_question();
         $q->shufflechoices = false;
         $this->start_attempt_at_question($q, 'interactive', 3);
 
         // Check the initial state.
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
-        $this->check_output_contains_selectoptions(
+        $this->check_current_output(
                 $this->get_contains_select_expectation('p1',
-                        ['1' => 'cat', '2' => 'dog'], null, true),
+                        array('' => get_string('choosedots'), '1' => 'cat', '2' => 'dog'), null, true),
                 $this->get_contains_select_expectation('p2',
-                        ['1' => 'mat', '2' => 'bat'], null, true));
-    }
-
-    public function test_choices_containing_dollars() {
-
-        // Choices with a currency like entry (e.g. $3) should display.
-        $q = test_question_maker::make_question('gapselect', 'currency');
-        $q->shufflechoices = false;
-        $this->start_attempt_at_question($q, 'interactive', 1);
-
-        // Check the initial state.
-        $this->check_current_state(question_state::$todo);
-        $this->check_current_mark(null);
-        $html = $this->quba->render_question($this->slot, $this->displayoptions);
-        preg_match_all('/<option value="([^>]*)">([^<]*)<\/option>/', $html, $matches);
-        $this->assertEquals('$2', $matches[2][1]);
-        $this->assertEquals('$3', $matches[2][2]);
-        $this->assertEquals('$4.99', $matches[2][3]);
-        $this->assertEquals('-1', $matches[2][4]);
+                        array('' => get_string('choosedots'), '1' => 'mat', '2' => 'bat'), null, true));
     }
 }

@@ -34,21 +34,16 @@ class backup_plan extends base_plan implements loggable {
     protected $excludingdactivities;
 
     /**
-     * The role ids to keep in a copy operation.
-     * @var array
-     */
-    protected $keptroles = array();
-
-    /**
      * Constructor - instantiates one object of this class
      */
     public function __construct($controller) {
+        global $CFG;
+
         if (! $controller instanceof backup_controller) {
             throw new backup_plan_exception('wrong_backup_controller_specified');
         }
-        $backuptempdir    = make_backup_temp_directory('');
         $this->controller = $controller;
-        $this->basepath   = $backuptempdir . '/' . $controller->get_backupid();
+        $this->basepath   = $CFG->tempdir . '/backup/' . $controller->get_backupid();
         $this->excludingdactivities = false;
         parent::__construct('backup_plan');
     }
@@ -108,26 +103,6 @@ class backup_plan extends base_plan implements loggable {
 
     public function set_excluding_activities() {
         $this->excludingdactivities = true;
-    }
-
-    /**
-     * Sets the user roles that should be kept in the destination course
-     * for a course copy operation.
-     *
-     * @param array $roleids
-     */
-    public function set_kept_roles(array $roleids): void {
-        $this->keptroles = $roleids;
-    }
-
-    /**
-     * Get the user roles that should be kept in the destination course
-     * for a course copy operation.
-     *
-     * @return array
-     */
-    public function get_kept_roles(): array {
-        return $this->keptroles;
     }
 
     public function log($message, $level, $a = null, $depth = null, $display = false) {

@@ -4,18 +4,32 @@ declare(strict_types=1);
 
 namespace Phpml\Math\Distance;
 
-/**
- * Class Manhattan
- *
- * L^1 Metric.
- */
-class Manhattan extends Distance
+use Phpml\Exception\InvalidArgumentException;
+use Phpml\Math\Distance;
+
+class Manhattan implements Distance
 {
     /**
-     * Manhattan constructor.
+     * @param array $a
+     * @param array $b
+     *
+     * @return float
+     *
+     * @throws InvalidArgumentException
      */
-    public function __construct()
+    public function distance(array $a, array $b): float
     {
-        parent::__construct(1.0);
+        if (count($a) !== count($b)) {
+            throw InvalidArgumentException::arraySizeNotMatch();
+        }
+
+        $distance = 0;
+        $count = count($a);
+
+        for ($i = 0; $i < $count; ++$i) {
+            $distance += abs($a[$i] - $b[$i]);
+        }
+
+        return $distance;
     }
 }

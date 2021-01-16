@@ -112,8 +112,10 @@ class SimplePie_Restriction
 		{
 			return $this->relationship;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -127,8 +129,10 @@ class SimplePie_Restriction
 		{
 			return $this->type;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -142,7 +146,9 @@ class SimplePie_Restriction
 		{
 			return $this->value;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 }

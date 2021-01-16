@@ -69,11 +69,8 @@ class core_role_check_users_selector extends user_selector_base {
 
         if ($coursecontext and $coursecontext != SITEID) {
             $sql1 = " FROM {user} u
-                      JOIN (SELECT DISTINCT subu.id
-                              FROM {user} subu
-                              JOIN {user_enrolments} ue ON (ue.userid = subu.id)
-                              JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = :courseid1)
-                           ) subq ON subq.id = u.id
+                      JOIN {user_enrolments} ue ON (ue.userid = u.id)
+                      JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = :courseid1)
                      WHERE $wherecondition";
             $params['courseid1'] = $coursecontext->instanceid;
 

@@ -56,8 +56,7 @@ class backup_qtype_multichoice_plugin extends backup_qtype_plugin {
             'layout', 'single', 'shuffleanswers',
             'correctfeedback', 'correctfeedbackformat',
             'partiallycorrectfeedback', 'partiallycorrectfeedbackformat',
-            'incorrectfeedback', 'incorrectfeedbackformat', 'answernumbering',
-            'shownumcorrect', 'showstandardinstruction'));
+            'incorrectfeedback', 'incorrectfeedbackformat', 'answernumbering', 'shownumcorrect'));
 
         // Now the own qtype tree.
         $pluginwrapper->add_child($multichoice);

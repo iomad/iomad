@@ -61,7 +61,7 @@ Feature: A teacher checks the grade history report in a course
     # Test filtering by student.
     And I press "Select users"
     And I set the field with xpath "//form/input[@class='usp-search-field']" to "Student 1"
-    And I click on "Search" "button" in the "//div[@class='usp-search']" "xpath_element"
+    And I press "Search"
     And I set the field with xpath "//div[@class='usp-checkbox']/input" to "1"
     And I press "Finish selecting users"
     And I press "Submit"
@@ -77,7 +77,7 @@ Feature: A teacher checks the grade history report in a course
       | Student 2          | The greatest assignment ever  | 50.00          | 70.00         | Teacher 2 |
       | Student 2          | Rewarding assignment          | 60.00          | 80.00         | Teacher 2 |
     # Test filtering by assignment.
-    And I set the field "Grade item" to "The greatest assignment ever"
+    And I click on "The greatest assignment ever" "option" in the "#id_itemid" "css_element"
     And I press "Submit"
     And the following should exist in the "gradereport_history" table:
       | First name/Surname | Grade item                    | Original grade | Revised grade | Grader    |
@@ -87,7 +87,7 @@ Feature: A teacher checks the grade history report in a course
       | Student 1          | Rewarding assignment          |                | 60.00         | Teacher 1 |
       | Student 1          | Rewarding assignment          | 60.00          | 80.00         | Teacher 2 |
     # Test filtering by grader.
-    And I set the field "Grader" to "Teacher 1"
+    And I click on "Teacher 1" "option" in the "#id_grader" "css_element"
     And I press "Submit"
     And the following should exist in the "gradereport_history" table:
       | First name/Surname | Grade item                    | Original grade | Revised grade | Grader    |

@@ -58,7 +58,6 @@ class renderer extends plugin_renderer_base {
      */
     protected function render_insight(renderable $renderable) {
         $data = $renderable->export_for_template($this);
-        $renderable->get_model()->get_target()->add_bulk_actions_js();
         return parent::render_from_template('report_insights/insight_details', $data);
     }
 
@@ -69,15 +68,15 @@ class renderer extends plugin_renderer_base {
      * @return string HTML
      */
     public function render_model_disabled($insightinfo) {
+        global $OUTPUT, $PAGE;
 
         // We don't want to disclose the name of the model if it has not been enabled.
-        $this->page->set_title($insightinfo->contextname);
-        $this->page->set_heading($insightinfo->contextname);
+        $PAGE->set_title($insightinfo->contextname);
+        $PAGE->set_heading($insightinfo->contextname);
 
-        $output = $this->output->header();
-        $output .= $this->output->notification(get_string('disabledmodel', 'report_insights'),
-                \core\output\notification::NOTIFY_INFO);
-        $output .= $this->output->footer();
+        $output = $OUTPUT->header();
+        $output .= $OUTPUT->notification(get_string('disabledmodel', 'report_insights'), \core\output\notification::NOTIFY_INFO);
+        $output .= $OUTPUT->footer();
 
         return $output;
     }
@@ -89,15 +88,15 @@ class renderer extends plugin_renderer_base {
      * @return string HTML
      */
     public function render_no_insights(\context $context) {
+        global $OUTPUT, $PAGE;
 
         // We don't want to disclose the name of the model if it has not been enabled.
-        $this->page->set_title($context->get_context_name());
-        $this->page->set_heading($context->get_context_name());
+        $PAGE->set_title($context->get_context_name());
+        $PAGE->set_heading($context->get_context_name());
 
-        $output = $this->output->header();
-        $output .= $this->output->notification(get_string('noinsights', 'analytics'),
-                \core\output\notification::NOTIFY_INFO);
-        $output .= $this->output->footer();
+        $output = $OUTPUT->header();
+        $output .= $OUTPUT->notification(get_string('noinsights', 'analytics'), \core\output\notification::NOTIFY_INFO);
+        $output .= $OUTPUT->footer();
 
         return $output;
     }
@@ -109,37 +108,15 @@ class renderer extends plugin_renderer_base {
      * @return string HTML
      */
     public function render_no_insights_model(\context $context) {
+        global $OUTPUT, $PAGE;
 
         // We don't want to disclose the name of the model if it has not been enabled.
-        $this->page->set_title($context->get_context_name());
-        $this->page->set_heading($context->get_context_name());
+        $PAGE->set_title($context->get_context_name());
+        $PAGE->set_heading($context->get_context_name());
 
-        $output = $this->output->header();
-        $output .= $this->output->notification(get_string('noinsightsmodel', 'analytics'),
-                \core\output\notification::NOTIFY_INFO);
-        $output .= $this->output->footer();
-
-        return $output;
-    }
-
-    /**
-     * Renders an analytics disabled notification.
-     *
-     * @return string HTML
-     */
-    public function render_analytics_disabled() {
-        global $FULLME;
-
-        $this->page->set_url($FULLME);
-        $this->page->set_title(get_string('pluginname', 'report_insights'));
-        $this->page->set_heading(get_string('pluginname', 'report_insights'));
-
-        $output = $this->output->header();
-        $output .= $this->output->notification(get_string('analyticsdisabled', 'analytics'),
-                \core\output\notification::NOTIFY_INFO);
-        $output .= \html_writer::tag('a', get_string('continue'), ['class' => 'btn btn-primary',
-            'href' => (new \moodle_url('/'))->out()]);
-        $output .= $this->output->footer();
+        $output = $OUTPUT->header();
+        $output .= $OUTPUT->notification(get_string('noinsightsmodel', 'analytics'), \core\output\notification::NOTIFY_INFO);
+        $output .= $OUTPUT->footer();
 
         return $output;
     }

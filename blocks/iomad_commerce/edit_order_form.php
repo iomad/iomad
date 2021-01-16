@@ -59,7 +59,7 @@ class order_edit_form extends moodleform {
         foreach (array(INVOICESTATUS_UNPAID, INVOICESTATUS_PAID) as $status) {
             $choices[$status] = get_string('status_' . $status, 'block_iomad_commerce');
         }
-        $mform->addElement('select', 'status', get_string('status'), $choices);
+        $mform->addElement('select', 'status', get_string('status', 'block_iomad_commerce'), $choices);
         $mform->addRule('status', $strrequired, 'required', null, 'client');
 
         $mform->addElement('header', 'header', get_string('purchaser_details', 'block_iomad_commerce'));
@@ -124,7 +124,10 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('edit_invoice', 'block_iomad_commerce'));
-$PAGE->navbar->add($linktext, $linkurl);
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+
 $PAGE->navbar->add(get_string('edit_invoice', 'block_iomad_commerce'));
 
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.

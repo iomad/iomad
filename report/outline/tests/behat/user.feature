@@ -27,7 +27,7 @@ Feature: View the user page for the outline report
       | External URL | http://www.google.com |
 
   Scenario: View the user page when only the legacy log reader is enabled
-    Given I navigate to "Plugins > Logging > Manage log stores" in site administration
+    Given I navigate to "Manage log stores" node in "Site administration > Plugins > Logging"
     And I click on "Enable" "link" in the "Legacy log" "table_row"
     And I click on "Disable" "link" in the "Standard log" "table_row"
     And the following config values are set as admin:
@@ -57,7 +57,7 @@ Feature: View the user page for the outline report
     And I should see "3 views"
 
   Scenario: View the user page when only the standard log reader is enabled
-    Given I navigate to "Plugins > Logging > Manage log stores" in site administration
+    Given I navigate to "Manage log stores" node in "Site administration > Plugins > Logging"
     And "Enable" "link" should exist in the "Legacy log" "table_row"
     And "Disable" "link" should exist in the "Standard log" "table_row"
     And I log out
@@ -85,7 +85,7 @@ Feature: View the user page for the outline report
     And I should see "3 views"
 
   Scenario: View the user page when both the standard and legacy log readers are enabled
-    Given I navigate to "Plugins > Logging > Manage log stores" in site administration
+    Given I navigate to "Manage log stores" node in "Site administration > Plugins > Logging"
     And I click on "Enable" "link" in the "Legacy log" "table_row"
     And "Disable" "link" should exist in the "Standard log" "table_row"
     And the following config values are set as admin:
@@ -113,17 +113,3 @@ Feature: View the user page for the outline report
     When I follow "Complete report"
     And I should see "4 views"
     And I should see "3 views"
-
-  Scenario: View the user complete report page when there is a no-grade forum
-    Given the following "activities" exist:
-      | activity | name   | description     | course | idnumber |
-      | forum    | forum1 | C1 first forum  | C1     | forum1   |
-    And I am on "Course 1" course homepage
-    When I follow "Participants"
-    And I follow "Student 1"
-    And I follow "Outline report"
-    Then I should see "Outline report"
-    When I follow "Participants"
-    And I follow "Student 1"
-    And I follow "Complete report"
-    Then I should see "Complete report"

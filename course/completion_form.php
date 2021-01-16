@@ -128,31 +128,58 @@ class course_completion_form extends moodleform {
         }
 
         // Get applicable courses (prerequisites).
-        $hasselectablecourses = core_course_category::search_courses(['onlywithcompletion' => true], ['limit' => 2]);
-        unset($hasselectablecourses[$course->id]);
-        if ($hasselectablecourses) {
-            // Show multiselect box.
-            $mform->addElement('course', 'criteria_course', get_string('coursesavailable', 'completion'),
-                array('multiple' => 'multiple', 'onlywithcompletion' => true, 'exclude' => $course->id));
-            $mform->setType('criteria_course', PARAM_INT);
+        $courses = $DB->get_records_sql("
+                SELECT DISTINCT c.id, c.category, c.fullname, cc.id AS selected
+                  FROM {course} c
+             LEFT JOIN {course_completion_criteria} cc ON cc.courseinstance = c.id AND cc.course = {$course->id}
+            INNER JOIN {course_completion_criteria} ccc ON ccc.course = c.id
+                 WHERE c.enablecompletion = ".COMPLETION_ENABLED."
+                       AND c.id <> {$course->id}");
 
-            $selectedcourses = $DB->get_fieldset_select('course_completion_criteria', 'courseinstance',
-                'course = :course AND criteriatype = :type', ['course' => $course->id, 'type' => COMPLETION_CRITERIA_TYPE_COURSE]);
-            $mform->setDefault('criteria_course', $selectedcourses);
+        if (!empty($courses)) {
+            // Get category list.
+            require_once($CFG->libdir. '/coursecatlib.php');
+            $list = coursecat::make_categories_list();
 
-            // Map aggregation methods to context-sensitive human readable dropdown menu.
-            $courseaggregationmenu = array();
-            foreach ($aggregation_methods as $methodcode => $methodname) {
-                if ($methodcode === COMPLETION_AGGREGATION_ALL) {
-                    $courseaggregationmenu[COMPLETION_AGGREGATION_ALL] = get_string('courseaggregation_all', 'core_completion');
-                } else if ($methodcode === COMPLETION_AGGREGATION_ANY) {
-                    $courseaggregationmenu[COMPLETION_AGGREGATION_ANY] = get_string('courseaggregation_any', 'core_completion');
-                } else {
-                    $courseaggregationmenu[$methodcode] = $methodname;
+            // Get course list for select box.
+            $selectbox = array();
+            $selected = array();
+            foreach ($courses as $c) {
+                $selectbox[$c->id] = $list[$c->category] . ' / ' . format_string($c->fullname, true,
+                    array('context' => context_course::instance($c->id)));
+
+                // If already selected ...
+                if ($c->selected) {
+                    $selected[] = $c->id;
                 }
             }
-            $mform->addElement('select', 'course_aggregation', get_string('courseaggregation', 'core_completion'), $courseaggregationmenu);
-            $mform->setDefault('course_aggregation', $completion->get_aggregation_method(COMPLETION_CRITERIA_TYPE_COURSE));
+
+            // Show multiselect box.
+            $mform->addElement('select', 'criteria_course', get_string('coursesavailable', 'completion'), $selectbox,
+                array('multiple' => 'multiple', 'size' => 6));
+
+            // Select current criteria.
+            $mform->setDefault('criteria_course', $selected);
+
+            // Explain list.
+            $mform->addElement('static', 'criteria_courses_explaination', '', get_string('coursesavailableexplaination', 'completion'));
+
+            if (count($courses) > 1) {
+                // Map aggregation methods to context-sensitive human readable dropdown menu.
+                $courseaggregationmenu = array();
+                foreach ($aggregation_methods as $methodcode => $methodname) {
+                    if ($methodcode === COMPLETION_AGGREGATION_ALL) {
+                        $courseaggregationmenu[COMPLETION_AGGREGATION_ALL] = get_string('courseaggregation_all', 'core_completion');
+                    } else if ($methodcode === COMPLETION_AGGREGATION_ANY) {
+                        $courseaggregationmenu[COMPLETION_AGGREGATION_ANY] = get_string('courseaggregation_any', 'core_completion');
+                    } else {
+                        $courseaggregationmenu[$methodcode] = $methodname;
+                    }
+                }
+                $mform->addElement('select', 'course_aggregation', get_string('courseaggregation', 'core_completion'), $courseaggregationmenu);
+                $mform->setDefault('course_aggregation', $completion->get_aggregation_method(COMPLETION_CRITERIA_TYPE_COURSE));
+            }
+
         } else {
             $mform->addElement('static', 'nocourses', '', get_string('err_nocourses', 'completion'));
         }

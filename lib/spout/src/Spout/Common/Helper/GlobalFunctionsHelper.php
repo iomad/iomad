@@ -7,6 +7,8 @@ namespace Box\Spout\Common\Helper;
  * This class wraps global functions to facilitate testing
  *
  * @codeCoverageIgnore
+ *
+ * @package Box\Spout\Common\Helper
  */
 class GlobalFunctionsHelper
 {
@@ -28,7 +30,7 @@ class GlobalFunctionsHelper
      * @see fgets()
      *
      * @param resource $handle
-     * @param int|null $length
+     * @param int|void $length
      * @return string
      */
     public function fgets($handle, $length = null)
@@ -79,20 +81,14 @@ class GlobalFunctionsHelper
      * @see fgetcsv()
      *
      * @param resource $handle
-     * @param int|null $length
-     * @param string|null $delimiter
-     * @param string|null $enclosure
+     * @param int|void $length
+     * @param string|void $delimiter
+     * @param string|void $enclosure
      * @return array
      */
     public function fgetcsv($handle, $length = null, $delimiter = null, $enclosure = null)
     {
-        // PHP uses '\' as the default escape character. This is not RFC-4180 compliant...
-        // To fix that, simply disable the escape character.
-        // @see https://bugs.php.net/bug.php?id=43225
-        // @see http://tools.ietf.org/html/rfc4180
-        $escapeCharacter = "\0";
-
-        return fgetcsv($handle, $length, $delimiter, $enclosure, $escapeCharacter);
+        return fgetcsv($handle, $length, $delimiter, $enclosure);
     }
 
     /**
@@ -101,19 +97,13 @@ class GlobalFunctionsHelper
      *
      * @param resource $handle
      * @param array $fields
-     * @param string|null $delimiter
-     * @param string|null $enclosure
+     * @param string|void $delimiter
+     * @param string|void $enclosure
      * @return int
      */
     public function fputcsv($handle, array $fields, $delimiter = null, $enclosure = null)
     {
-        // PHP uses '\' as the default escape character. This is not RFC-4180 compliant...
-        // To fix that, simply disable the escape character.
-        // @see https://bugs.php.net/bug.php?id=43225
-        // @see http://tools.ietf.org/html/rfc4180
-        $escapeCharacter = "\0";
-
-        return fputcsv($handle, $fields, $delimiter, $enclosure, $escapeCharacter);
+        return fputcsv($handle, $fields, $delimiter, $enclosure);
     }
 
     /**
@@ -175,7 +165,6 @@ class GlobalFunctionsHelper
     public function file_get_contents($filePath)
     {
         $realFilePath = $this->convertToUseRealPath($filePath);
-
         return file_get_contents($realFilePath);
     }
 
@@ -218,7 +207,7 @@ class GlobalFunctionsHelper
      * Wrapper around global function feof()
      * @see feof()
      *
-     * @param resource $handle
+     * @param resource
      * @return bool
      */
     public function feof($handle)
@@ -243,7 +232,7 @@ class GlobalFunctionsHelper
      * @see basename()
      *
      * @param string $path
-     * @param string|null $suffix
+     * @param string|void $suffix
      * @return string
      */
     public function basename($path, $suffix = null)

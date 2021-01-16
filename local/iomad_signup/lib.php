@@ -31,6 +31,16 @@ function local_iomad_signup_user_created($user) {
         $user = $DB->get_record('user', array('id' => $user), '*', MUST_EXIST);
     }
 
+    // the plugin needs to be enabled
+    if (!$CFG->local_iomad_signup_enable) {
+        return true;
+    }
+
+    // If not 'email' auth then we are not interested
+    if (empty($CFG->local_iomad_signup_auth) || !in_array($user->auth, explode(',', $CFG->local_iomad_signup_auth))) {
+        return true;
+    }
+
     // If the user is already in a company then we do nothing more
     // as this came from the self sign up pages.
     if ($userrecord = $DB->get_record('company_users', array('userid' => $user->id))) {
@@ -43,21 +53,11 @@ function local_iomad_signup_user_created($user) {
         return true;
     }
 
-    // For the rest of this the plugin needs to be enabled.
-    if (!$CFG->local_iomad_signup_enable) {
-        return true;
-    }
-
-    // If not 'email' auth then we are not interested
-    if (empty($CFG->local_iomad_signup_auth) || !in_array($user->auth, explode(',', $CFG->local_iomad_signup_auth))) {
-        return true;
-    }
-
     // Get context
     $context = context_system::instance();
 
     // Check if we have a domain already for this users email address.
-    list($dump, $emaildomain) = explode('@', $user->email);
+    list($dump, $emaildomain) = explode('@', $user->email); 
     if ($domaininfo = $DB->get_record_sql("SELECT * FROM {company_domains} WHERE " . $DB->sql_compare_text('domain') . " = '" . $DB->sql_compare_text($emaildomain)."'")) {
         // Get company.
         $company = new company($domaininfo->companyid);
@@ -87,11 +87,9 @@ function local_iomad_signup_user_created($user) {
         }
 	$DB->update_record('user', $user);
         profile_save_data($user);
+    } else if (!empty($CFG->local_iomad_signup_company)) {
     }
-
-    // Force the company theme in case it's not already been done.
-    $DB->set_field('user', 'theme', $company->get_theme(), array('id' => $user->id));
-
+    
     // Do we have a role to assign?
     if (!empty($CFG->local_iomad_signup_role)) {
         // Get role

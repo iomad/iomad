@@ -60,7 +60,7 @@ abstract class binary extends discrete {
      *
      * @return array
      */
-    public function ignored_predicted_classes() {
+    protected function ignored_predicted_classes() {
         // Zero-value class is usually ignored in binary classifiers.
         return array(0);
     }

@@ -157,9 +157,8 @@ class mod_folder_external extends external_api {
                 // Entry to return.
                 $folder->name = external_format_string($folder->name, $context->id);
 
-                $options = array('noclean' => true);
-                list($folder->intro, $folder->introformat) =
-                    external_format_text($folder->intro, $folder->introformat, $context->id, 'mod_folder', 'intro', null, $options);
+                list($folder->intro, $folder->introformat) = external_format_text($folder->intro,
+                                                                $folder->introformat, $context->id, 'mod_folder', 'intro', null);
                 $folder->introfiles = external_util::get_area_files($context->id, 'mod_folder', 'intro', false, false);
 
                 $returnedfolders[] = $folder;

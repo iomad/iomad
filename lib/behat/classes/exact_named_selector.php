@@ -32,9 +32,6 @@
  */
 class behat_exact_named_selector extends \Behat\Mink\Selector\ExactNamedSelector {
 
-    // Use the named selector trait.
-    use behat_named_selector;
-
     /**
      * Creates selector instance.
      */
@@ -65,9 +62,6 @@ class behat_exact_named_selector extends \Behat\Mink\Selector\ExactNamedSelector
         'table_exact' => 'table',
         'text_exact' => 'text',
     );
-
-    /** @var List of deprecated selectors */
-    protected static $deprecatedselectors = [];
 
     /**
      * Allowed selectors getter.

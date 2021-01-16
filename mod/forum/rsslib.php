@@ -189,7 +189,7 @@ function forum_rss_feed_discussions_sql($forum, $cm, $newsince=0) {
               FROM {forum_discussions} d
                    JOIN {forum_posts} p ON p.discussion = d.id
                    JOIN {user} u ON p.userid = u.id
-             WHERE d.forum = {$forum->id} AND p.parent = 0 AND p.deleted <> 1
+             WHERE d.forum = {$forum->id} AND p.parent = 0 AND p.deleted <> 0
                    $timelimit $groupselect $newsince
           ORDER BY $forumsort";
     return array($sql, $params);
@@ -204,8 +204,6 @@ function forum_rss_feed_discussions_sql($forum, $cm, $newsince=0) {
  * @return string the SQL query to be used to get the Post details from the forum table of the database
  */
 function forum_rss_feed_posts_sql($forum, $cm, $newsince=0) {
-    global $USER;
-
     $modcontext = context_module::instance($cm->id);
 
     // Get group enforcement SQL.
@@ -224,15 +222,6 @@ function forum_rss_feed_posts_sql($forum, $cm, $newsince=0) {
         $newsince = " AND p.modified > :newsince";
     } else {
         $newsince = '';
-    }
-
-    $canseeprivatereplies = has_capability('mod/forum:readprivatereplies', $modcontext);
-    if (!$canseeprivatereplies) {
-        $privatewhere = ' AND (p.privatereplyto = :currentuser1 OR p.userid = :currentuser2 OR p.privatereplyto = 0)';
-        $params['currentuser1'] = $USER->id;
-        $params['currentuser2'] = $USER->id;
-    } else {
-        $privatewhere = '';
     }
 
     $usernamefields = get_all_user_name_fields(true, 'u');
@@ -254,9 +243,8 @@ function forum_rss_feed_posts_sql($forum, $cm, $newsince=0) {
                {forum_posts} p,
                {user} u
             WHERE d.forum = {$forum->id} AND
-                p.discussion = d.id AND p.deleted <> 1 AND
+                p.discussion = d.id AND p.deleted <> 0 AND
                 u.id = p.userid $newsince
-                $privatewhere
                 $groupselect
             ORDER BY p.created desc";
 

@@ -39,11 +39,11 @@ require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
 class mod_quiz_events_testcase extends advanced_testcase {
 
     /**
-     * Setup a quiz.
+     * Setup some convenience test data with a single attempt.
      *
-     * @return quiz the generated quiz.
+     * @param bool $ispreview Make the attempt a preview attempt when true.
      */
-    protected function prepare_quiz() {
+    protected function prepare_quiz_data($ispreview = false) {
 
         $this->resetAfterTest(true);
 
@@ -53,8 +53,8 @@ class mod_quiz_events_testcase extends advanced_testcase {
         // Make a quiz.
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
 
-        $quiz = $quizgenerator->create_instance(array('course' => $course->id, 'questionsperpage' => 0,
-                'grade' => 100.0, 'sumgrades' => 2));
+        $quiz = $quizgenerator->create_instance(array('course'=>$course->id, 'questionsperpage' => 0,
+            'grade' => 100.0, 'sumgrades' => 2));
 
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id);
 
@@ -73,17 +73,8 @@ class mod_quiz_events_testcase extends advanced_testcase {
         $user1 = $this->getDataGenerator()->create_user();
         $this->setUser($user1);
 
-        return quiz::create($quiz->id, $user1->id);
-    }
+        $quizobj = quiz::create($quiz->id, $user1->id);
 
-    /**
-     * Setup a quiz attempt at the quiz created by {@link prepare_quiz()}.
-     *
-     * @param quiz $quizobj the generated quiz.
-     * @param bool $ispreview Make the attempt a preview attempt when true.
-     * @return array with three elements, array($quizobj, $quba, $attempt)
-     */
-    protected function prepare_quiz_attempt($quizobj, $ispreview = false) {
         // Start the attempt.
         $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
@@ -94,17 +85,6 @@ class mod_quiz_events_testcase extends advanced_testcase {
         quiz_attempt_save_started($quizobj, $quba, $attempt);
 
         return array($quizobj, $quba, $attempt);
-    }
-
-    /**
-     * Setup some convenience test data with a single attempt.
-     *
-     * @param bool $ispreview Make the attempt a preview attempt when true.
-     * @return array with three elements, array($quizobj, $quba, $attempt)
-     */
-    protected function prepare_quiz_data($ispreview = false) {
-        $quizobj = $this->prepare_quiz();
-        return $this->prepare_quiz_attempt($quizobj, $ispreview);
     }
 
     public function test_attempt_submitted() {
@@ -214,14 +194,10 @@ class mod_quiz_events_testcase extends advanced_testcase {
     }
 
     public function test_attempt_started() {
-        $quizobj = $this->prepare_quiz();
+        list($quizobj, $quba, $attempt) = $this->prepare_quiz_data();
 
-        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
+        // Create another attempt.
+        $attempt = quiz_create_attempt($quizobj, 1, false, time(), false, 2);
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();
@@ -690,14 +666,11 @@ class mod_quiz_events_testcase extends advanced_testcase {
      * Test the attempt previewed event.
      */
     public function test_attempt_preview_started() {
-        $quizobj = $this->prepare_quiz();
+        list($quizobj, $quba, $attempt) = $this->prepare_quiz_data();
 
-        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-
-        $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, true);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
+        // We want to preview this attempt.
+        $attempt = quiz_create_attempt($quizobj, 1, false, time(), false, 2);
+        $attempt->preview = 1;
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();
@@ -748,41 +721,5 @@ class mod_quiz_events_testcase extends advanced_testcase {
             $quizobj->get_quizid(), $quizobj->get_cmid());
         $this->assertEventLegacyLogData($expected, $event);
         $this->assertEventContextNotUsed($event);
-    }
-
-    /**
-     * Test the attempt regraded event.
-     *
-     * There is no external API for regrading attempts, so the unit test will simply
-     * create and trigger the event and ensure the event data is returned as expected.
-     */
-    public function test_attempt_regraded() {
-      $this->resetAfterTest();
-
-      $this->setAdminUser();
-      $course = $this->getDataGenerator()->create_course();
-      $quiz = $this->getDataGenerator()->create_module('quiz', array('course' => $course->id));
-
-      $params = array(
-        'objectid' => 1,
-        'relateduserid' => 2,
-        'courseid' => $course->id,
-        'context' => context_module::instance($quiz->cmid),
-        'other' => array(
-          'quizid' => $quiz->id
-        )
-      );
-      $event = \mod_quiz\event\attempt_regraded::create($params);
-
-      // Trigger and capture the event.
-      $sink = $this->redirectEvents();
-      $event->trigger();
-      $events = $sink->get_events();
-      $event = reset($events);
-
-      // Check that the event data is valid.
-      $this->assertInstanceOf('\mod_quiz\event\attempt_regraded', $event);
-      $this->assertEquals(context_module::instance($quiz->cmid), $event->get_context());
-      $this->assertEventContextNotUsed($event);
     }
 }

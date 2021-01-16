@@ -30,7 +30,7 @@ use MaxMind\WebService\Client as WsClient;
  * ## Usage ##
  *
  * The basic API for this class is the same for all of the web service end
- * points. First you create a web service object with your MaxMind `$accountId`
+ * points. First you create a web service object with your MaxMind `$userId`
  * and `$licenseKey`, then you call the method corresponding to a specific end
  * point, passing it the IP address you want to look up.
  *
@@ -47,12 +47,12 @@ class Client implements ProviderInterface
     private $client;
     private static $basePath = '/geoip/v2.1';
 
-    const VERSION = 'v2.10.0';
+    const VERSION = 'v2.6.0';
 
     /**
      * Constructor.
      *
-     * @param int    $accountId  your MaxMind account ID
+     * @param int    $userId     your MaxMind user ID
      * @param string $licenseKey your MaxMind license key
      * @param array  $locales    list of locale codes to use in name property
      *                           from most preferred to least preferred
@@ -65,7 +65,7 @@ class Client implements ProviderInterface
      *                           `http://username:password@127.0.0.1:10`.
      */
     public function __construct(
-        $accountId,
+        $userId,
         $licenseKey,
         $locales = ['en'],
         $options = []
@@ -74,7 +74,7 @@ class Client implements ProviderInterface
 
         // This is for backwards compatibility. Do not remove except for a
         // major version bump.
-        if (\is_string($options)) {
+        if (is_string($options)) {
             $options = ['host' => $options];
         }
 
@@ -84,7 +84,7 @@ class Client implements ProviderInterface
 
         $options['userAgent'] = $this->userAgent();
 
-        $this->client = new WsClient($accountId, $licenseKey, $options);
+        $this->client = new WsClient($userId, $licenseKey, $options);
     }
 
     private function userAgent()
@@ -102,7 +102,7 @@ class Client implements ProviderInterface
      * @throws \GeoIp2\Exception\AddressNotFoundException if the address you
      *                                                    provided is not in our database (e.g., a private address).
      * @throws \GeoIp2\Exception\AuthenticationException  if there is a problem
-     *                                                    with the account ID or license key that you provided
+     *                                                    with the user ID or license key that you provided
      * @throws \GeoIp2\Exception\OutOfQueriesException    if your account is out
      *                                                    of queries
      * @throws \GeoIp2\Exception\InvalidRequestException} if your request was received by the web service but is
@@ -111,7 +111,7 @@ class Client implements ProviderInterface
      * @throws \GeoIp2\Exception\HttpException            if an unexpected HTTP error code or message was returned.
      *                                                    This could indicate a problem with the connection between
      *                                                    your server and the web service or that the web service
-     *                                                    returned an invalid document or 500 error code
+     *                                                    returned an invalid document or 500 error code.
      * @throws \GeoIp2\Exception\GeoIp2Exception          This serves as the parent
      *                                                    class to the above exceptions. It will be thrown directly
      *                                                    if a 200 status code is returned but the body is invalid.
@@ -133,7 +133,7 @@ class Client implements ProviderInterface
      * @throws \GeoIp2\Exception\AddressNotFoundException if the address you provided is not in our database (e.g.,
      *                                                    a private address).
      * @throws \GeoIp2\Exception\AuthenticationException  if there is a problem
-     *                                                    with the account ID or license key that you provided
+     *                                                    with the user ID or license key that you provided
      * @throws \GeoIp2\Exception\OutOfQueriesException    if your account is out of queries
      * @throws \GeoIp2\Exception\InvalidRequestException} if your request was received by the web service but is
      *                                                    invalid for some other reason.  This may indicate an
@@ -164,7 +164,7 @@ class Client implements ProviderInterface
      * @throws \GeoIp2\Exception\AddressNotFoundException if the address you
      *                                                    provided is not in our database (e.g., a private address).
      * @throws \GeoIp2\Exception\AuthenticationException  if there is a problem
-     *                                                    with the account ID or license key that you provided
+     *                                                    with the user ID or license key that you provided
      * @throws \GeoIp2\Exception\OutOfQueriesException    if your account is out
      *                                                    of queries
      * @throws \GeoIp2\Exception\InvalidRequestException} if your request was received by the web service but is
@@ -173,7 +173,7 @@ class Client implements ProviderInterface
      * @throws \GeoIp2\Exception\HttpException            if an unexpected HTTP error code or message was returned.
      *                                                    This could indicate a problem with the connection between
      *                                                    your server and the web service or that the web service
-     *                                                    returned an invalid document or 500 error code
+     *                                                    returned an invalid document or 500 error code.
      * @throws \GeoIp2\Exception\GeoIp2Exception          This serves as the parent
      *                                                    class to the above exceptions. It will be thrown directly
      *                                                    if a 200 status code is returned but the body is invalid.

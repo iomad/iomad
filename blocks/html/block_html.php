@@ -86,41 +86,6 @@ class block_html extends block_base {
         return $this->content;
     }
 
-    public function get_content_for_external($output) {
-        global $CFG;
-        require_once($CFG->libdir . '/externallib.php');
-
-        $bc = new stdClass;
-        $bc->title = null;
-        $bc->content = '';
-        $bc->contenformat = FORMAT_MOODLE;
-        $bc->footer = '';
-        $bc->files = [];
-
-        if (!$this->hide_header()) {
-            $bc->title = $this->title;
-        }
-
-        if (isset($this->config->text)) {
-            $filteropt = new stdClass;
-            if ($this->content_is_trusted()) {
-                // Fancy html allowed only on course, category and system blocks.
-                $filteropt->noclean = true;
-            }
-
-            $format = FORMAT_HTML;
-            // Check to see if the format has been properly set on the config.
-            if (isset($this->config->format)) {
-                $format = $this->config->format;
-            }
-            list($bc->content, $bc->contentformat) =
-                external_format_text($this->config->text, $format, $this->context, 'block_html', 'content', null, $filteropt);
-            $bc->files = external_util::get_area_files($this->context->id, 'block_html', 'content', false, false);
-
-        }
-        return $bc;
-    }
-
 
     /**
      * Serialize and store config data
@@ -208,24 +173,5 @@ class block_html extends block_base {
         }
 
         return $attributes;
-    }
-
-    /**
-     * Return the plugin config settings for external functions.
-     *
-     * @return stdClass the configs for both the block instance and plugin
-     * @since Moodle 3.8
-     */
-    public function get_config_for_external() {
-        global $CFG;
-
-        // Return all settings for all users since it is safe (no private keys, etc..).
-        $instanceconfigs = !empty($this->config) ? $this->config : new stdClass();
-        $pluginconfigs = (object) ['allowcssclasses' => $CFG->block_html_allowcssclasses];
-
-        return (object) [
-            'instance' => $instanceconfigs,
-            'plugin' => $pluginconfigs,
-        ];
     }
 }

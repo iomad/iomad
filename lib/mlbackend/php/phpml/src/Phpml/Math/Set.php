@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Phpml\Math;
 
-use ArrayIterator;
-use IteratorAggregate;
-
-class Set implements IteratorAggregate
+class Set implements \IteratorAggregate
 {
     /**
-     * @var string[]|int[]|float[]|bool[]
+     * @var string[]|int[]|float[]
      */
-    private $elements = [];
+    private $elements;
 
     /**
-     * @param string[]|int[]|float[]|bool[] $elements
+     * @param string[]|int[]|float[] $elements
      */
     public function __construct(array $elements = [])
     {
@@ -24,24 +21,39 @@ class Set implements IteratorAggregate
 
     /**
      * Creates the union of A and B.
+     *
+     * @param Set $a
+     * @param Set $b
+     *
+     * @return Set
      */
-    public static function union(self $a, self $b): self
+    public static function union(Set $a, Set $b) : Set
     {
         return new self(array_merge($a->toArray(), $b->toArray()));
     }
 
     /**
      * Creates the intersection of A and B.
+     *
+     * @param Set $a
+     * @param Set $b
+     *
+     * @return Set
      */
-    public static function intersection(self $a, self $b): self
+    public static function intersection(Set $a, Set $b) : Set
     {
         return new self(array_intersect($a->toArray(), $b->toArray()));
     }
 
     /**
      * Creates the difference of A and B.
+     *
+     * @param Set $a
+     * @param Set $b
+     *
+     * @return Set
      */
-    public static function difference(self $a, self $b): self
+    public static function difference(Set $a, Set $b) : Set
     {
         return new self(array_diff($a->toArray(), $b->toArray()));
     }
@@ -49,9 +61,12 @@ class Set implements IteratorAggregate
     /**
      * Creates the Cartesian product of A and B.
      *
+     * @param Set $a
+     * @param Set $b
+     *
      * @return Set[]
      */
-    public static function cartesian(self $a, self $b): array
+    public static function cartesian(Set $a, Set $b) : array
     {
         $cartesian = [];
 
@@ -67,9 +82,11 @@ class Set implements IteratorAggregate
     /**
      * Creates the power set of A.
      *
+     * @param Set $a
+     *
      * @return Set[]
      */
-    public static function power(self $a): array
+    public static function power(Set $a) : array
     {
         $power = [new self()];
 
@@ -83,17 +100,35 @@ class Set implements IteratorAggregate
     }
 
     /**
-     * @param string|int|float|bool $element
+     * Removes duplicates and rewrites index.
+     *
+     * @param string[]|int[]|float[] $elements
+     *
+     * @return string[]|int[]|float[]
      */
-    public function add($element): self
+    private static function sanitize(array $elements) : array
+    {
+        sort($elements, SORT_ASC);
+
+        return array_values(array_unique($elements, SORT_ASC));
+    }
+
+    /**
+     * @param string|int|float $element
+     *
+     * @return Set
+     */
+    public function add($element) : Set
     {
         return $this->addAll([$element]);
     }
 
     /**
-     * @param string[]|int[]|float[]|bool[] $elements
+     * @param string[]|int[]|float[] $elements
+     *
+     * @return Set
      */
-    public function addAll(array $elements): self
+    public function addAll(array $elements) : Set
     {
         $this->elements = self::sanitize(array_merge($this->elements, $elements));
 
@@ -102,16 +137,20 @@ class Set implements IteratorAggregate
 
     /**
      * @param string|int|float $element
+     *
+     * @return Set
      */
-    public function remove($element): self
+    public function remove($element) : Set
     {
         return $this->removeAll([$element]);
     }
 
     /**
      * @param string[]|int[]|float[] $elements
+     *
+     * @return Set
      */
-    public function removeAll(array $elements): self
+    public function removeAll(array $elements) : Set
     {
         $this->elements = self::sanitize(array_diff($this->elements, $elements));
 
@@ -120,54 +159,53 @@ class Set implements IteratorAggregate
 
     /**
      * @param string|int|float $element
+     *
+     * @return bool
      */
-    public function contains($element): bool
+    public function contains($element) : bool
     {
         return $this->containsAll([$element]);
     }
 
     /**
      * @param string[]|int[]|float[] $elements
+     *
+     * @return bool
      */
-    public function containsAll(array $elements): bool
+    public function containsAll(array $elements) : bool
     {
-        return count(array_diff($elements, $this->elements)) === 0;
+        return !array_diff($elements, $this->elements);
     }
 
     /**
-     * @return string[]|int[]|float[]|bool[]
+     * @return string[]|int[]|float[]
      */
-    public function toArray(): array
+    public function toArray() : array
     {
         return $this->elements;
     }
 
-    public function getIterator(): ArrayIterator
+    /**
+     * @return \ArrayIterator
+     */
+    public function getIterator() : \ArrayIterator
     {
-        return new ArrayIterator($this->elements);
-    }
-
-    public function isEmpty(): bool
-    {
-        return $this->cardinality() === 0;
-    }
-
-    public function cardinality(): int
-    {
-        return count($this->elements);
+        return new \ArrayIterator($this->elements);
     }
 
     /**
-     * Removes duplicates and rewrites index.
-     *
-     * @param string[]|int[]|float[]|bool[] $elements
-     *
-     * @return string[]|int[]|float[]|bool[]
+     * @return bool
      */
-    private static function sanitize(array $elements): array
+    public function isEmpty() : bool
     {
-        sort($elements, SORT_ASC);
+        return $this->cardinality() == 0;
+    }
 
-        return array_values(array_unique($elements, SORT_ASC));
+    /**
+     * @return int
+     */
+    public function cardinality() : int
+    {
+        return count($this->elements);
     }
 }

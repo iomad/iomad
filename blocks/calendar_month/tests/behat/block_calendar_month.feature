@@ -26,7 +26,7 @@ Feature: Enable the calendar block in a course and test it's functionality
     Then "Calendar" "block" should exist
 
   @javascript
-  Scenario: View a site event in the calendar block
+  Scenario: View a global event in the calendar block
     Given I log in as "admin"
     And I create a calendar event with form data:
       | id_eventtype | Site |
@@ -52,7 +52,7 @@ Feature: Enable the calendar block in a course and test it's functionality
       | id_eventtype | Course |
       | id_name | Course Event |
     And I am on "Course 1" course homepage
-    And I follow "Hide site events"
+    And I follow "Hide global events"
     And I hover over today in the calendar
     Then I should not see "Site Event"
     And I should see "Course Event"
@@ -129,7 +129,7 @@ Feature: Enable the calendar block in a course and test it's functionality
       | student2 | G2 |
     When I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Edit settings" in current page administration
+    And I navigate to "Edit settings" node in "Course administration"
     And I set the following fields to these values:
       | id_groupmode | Separate groups |
       | id_groupmodeforce | Yes |
@@ -167,7 +167,7 @@ Feature: Enable the calendar block in a course and test it's functionality
       | student2 | G2 |
     When I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Edit settings" in current page administration
+    And I navigate to "Edit settings" node in "Course administration"
     And I set the following fields to these values:
       | id_groupmode | Separate groups |
       | id_groupmodeforce | Yes |

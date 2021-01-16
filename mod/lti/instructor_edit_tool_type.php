@@ -64,18 +64,12 @@ if (defined('BEHAT_SITE_RUNNING') && BEHAT_SITE_RUNNING) {
 
 echo $OUTPUT->header();
 
-if ($action == 'edit') {
-    $type = lti_get_type_type_config($typeid);
-} else {
-    $type = new stdClass();
-    $type->lti_clientid = null;
-}
-
-$form = new mod_lti_edit_types_form($url, (object)array('id' => $typeid, 'clientid' => $type->lti_clientid));
+$form = new mod_lti_edit_types_form();
 
 // If the user just opened an add or edit form.
 if ($action == 'add' || $action == 'edit') {
     if ($action == 'edit') {
+        $type = lti_get_type_type_config($typeid);
         $form->set_data($type);
     }
     echo $OUTPUT->heading(get_string('toolsetup', 'lti'));
@@ -121,13 +115,8 @@ EOF;
                 window.opener.M.mod_lti.editor.addToolType({$json});
 EOF;
         }
-        echo html_writer::script($script . $closewindow);
-    } else if ($form->is_cancelled()) {
-        echo html_writer::script($closewindow);
-    } else {
-        echo $OUTPUT->heading(get_string('toolsetup', 'lti'));
-        $form->display();
     }
+    echo html_writer::script($script . $closewindow);
 }
 
 echo $OUTPUT->footer();

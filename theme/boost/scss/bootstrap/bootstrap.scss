@@ -1,14 +1,20 @@
 /*!
- * Bootstrap v4.5.0 (https://getbootstrap.com/)
- * Copyright 2011-2020 The Bootstrap Authors
- * Copyright 2011-2020 Twitter, Inc.
+ * Bootstrap v4.0.0-alpha.4 (http://getbootstrap.com)
+ * Copyright 2011-2016 The Bootstrap Authors
+ * Copyright 2011-2016 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
-@import "functions";
+// Core variables and mixins
+@import "custom";
 @import "variables";
 @import "mixins";
-@import "root";
+
+// Reset and dependencies
+@import "normalize";
+@import "print";
+
+// Core CSS
 @import "reboot";
 @import "type";
 @import "images";
@@ -17,7 +23,9 @@
 @import "tables";
 @import "forms";
 @import "buttons";
-@import "transitions";
+
+// Components
+@import "animation";
 @import "dropdown";
 @import "button-group";
 @import "input-group";
@@ -27,18 +35,20 @@
 @import "card";
 @import "breadcrumb";
 @import "pagination";
-@import "badge";
+@import "tags";
 @import "jumbotron";
 @import "alert";
 @import "progress";
 @import "media";
 @import "list-group";
+@import "responsive-embed";
 @import "close";
-@import "toasts";
+
+// Components w/ JavaScript
 @import "modal";
 @import "tooltip";
 @import "popover";
 @import "carousel";
-@import "spinners";
+
+// Utility classes
 @import "utilities";
-@import "print";

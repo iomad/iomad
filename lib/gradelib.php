@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
 /** Include essential files */
 require_once($CFG->libdir . '/grade/constants.php');
 
@@ -254,7 +252,6 @@ function grade_update($source, $courseid, $itemtype, $itemmodule, $iteminstance,
         $rawgrade       = false;
         $feedback       = false;
         $feedbackformat = FORMAT_MOODLE;
-        $feedbackfiles = [];
         $usermodified   = $USER->id;
         $datesubmitted  = null;
         $dategraded     = null;
@@ -271,10 +268,6 @@ function grade_update($source, $courseid, $itemtype, $itemmodule, $iteminstance,
             $feedbackformat = $grade['feedbackformat'];
         }
 
-        if (array_key_exists('feedbackfiles', $grade)) {
-            $feedbackfiles = $grade['feedbackfiles'];
-        }
-
         if (array_key_exists('usermodified', $grade)) {
             $usermodified = $grade['usermodified'];
         }
@@ -288,8 +281,7 @@ function grade_update($source, $courseid, $itemtype, $itemmodule, $iteminstance,
         }
 
         // update or insert the grade
-        if (!$grade_item->update_raw_grade($userid, $rawgrade, $source, $feedback, $feedbackformat, $usermodified,
-                $dategraded, $datesubmitted, $grade_grade, $feedbackfiles)) {
+        if (!$grade_item->update_raw_grade($userid, $rawgrade, $source, $feedback, $feedbackformat, $usermodified, $dategraded, $datesubmitted, $grade_grade)) {
             $failed = true;
         }
     }
@@ -474,7 +466,7 @@ function grade_get_grades($courseid, $itemtype, $itemmodule, $iteminstance, $use
 
                 switch ($grade_item->gradetype) {
                     case GRADE_TYPE_NONE:
-                        break;
+                        continue;
 
                     case GRADE_TYPE_VALUE:
                         $item->scaleid = 0;
@@ -545,17 +537,7 @@ function grade_get_grades($courseid, $itemtype, $itemmodule, $iteminstance, $use
                         if (is_null($grade->feedback)) {
                             $grade->str_feedback = '';
                         } else {
-                            $feedback = file_rewrite_pluginfile_urls(
-                                $grade->feedback,
-                                'pluginfile.php',
-                                $grade_grades[$userid]->get_context()->id,
-                                GRADE_FILE_COMPONENT,
-                                GRADE_FEEDBACK_FILEAREA,
-                                $grade_grades[$userid]->id
-                            );
-
-                            $grade->str_feedback = format_text($feedback, $grade->feedbackformat,
-                                ['context' => $grade_grades[$userid]->get_context()]);
+                            $grade->str_feedback = format_text($grade->feedback, $grade->feedbackformat);
                         }
 
                         $item->grades[$userid] = $grade;
@@ -955,11 +937,14 @@ function grade_get_letters($context=null) {
         return array('93'=>'A', '90'=>'A-', '87'=>'B+', '83'=>'B', '80'=>'B-', '77'=>'C+', '73'=>'C', '70'=>'C-', '67'=>'D+', '60'=>'D', '0'=>'F');
     }
 
-    $cache = cache::make('core', 'grade_letters');
-    $data = $cache->get($context->id);
+    static $cache = array();
 
-    if (!empty($data)) {
-        return $data;
+    if (array_key_exists($context->id, $cache)) {
+        return $cache[$context->id];
+    }
+
+    if (count($cache) > 100) {
+        $cache = array(); // cache size limit
     }
 
     $letters = array();
@@ -975,15 +960,13 @@ function grade_get_letters($context=null) {
         }
 
         if (!empty($letters)) {
-            // Cache the grade letters for this context.
-            $cache->set($context->id, $letters);
+            $cache[$context->id] = $letters;
             return $letters;
         }
     }
 
     $letters = grade_get_letters(null);
-    // Cache the grade letters for this context.
-    $cache->set($context->id, $letters);
+    $cache[$context->id] = $letters;
     return $letters;
 }
 
@@ -1129,7 +1112,7 @@ function grade_recover_history_grades($userid, $courseid) {
  *
  * @param int $courseid The course ID
  * @param int $userid If specified try to do a quick regrading of the grades of this user only
- * @param object $updated_item Optional grade item to be marked for regrading. It is required if $userid is set.
+ * @param object $updated_item Optional grade item to be marked for regrading
  * @param \core\progress\base $progress If provided, will be used to update progress on this long operation.
  * @return bool true if ok, array of errors if problems found. Grade item id => error message
  */
@@ -1263,7 +1246,7 @@ function grade_regrade_final_grades($courseid, $userid=null, $updated_item=null,
                 if ($updateddependencies === false) {
                     // If no direct descendants are marked as updated, then we don't need to update this grade item. We then mark it
                     // as final.
-                    $count++;
+
                     $finalids[] = $gid;
                     continue;
                 }
@@ -1416,22 +1399,10 @@ function remove_grade_letters($context, $showfeedback) {
 
     $strdeleted = get_string('deleted');
 
-    $records = $DB->get_records('grade_letters', array('contextid' => $context->id));
-    foreach ($records as $record) {
-        $DB->delete_records('grade_letters', array('id' => $record->id));
-        // Trigger the letter grade deleted event.
-        $event = \core\event\grade_letter_deleted::create(array(
-            'objectid' => $record->id,
-            'context' => $context,
-        ));
-        $event->trigger();
-    }
+    $DB->delete_records('grade_letters', array('contextid'=>$context->id));
     if ($showfeedback) {
         echo $OUTPUT->notification($strdeleted.' - '.get_string('letters', 'grades'), 'notifysuccess');
     }
-
-    $cache = cache::make('core', 'grade_letters');
-    $cache->delete($context->id);
 }
 
 /**
@@ -1491,16 +1462,7 @@ function grade_course_category_delete($categoryid, $newparentid, $showfeedback) 
     global $DB;
 
     $context = context_coursecat::instance($categoryid);
-    $records = $DB->get_records('grade_letters', array('contextid' => $context->id));
-    foreach ($records as $record) {
-        $DB->delete_records('grade_letters', array('id' => $record->id));
-        // Trigger the letter grade deleted event.
-        $event = \core\event\grade_letter_deleted::create(array(
-            'objectid' => $record->id,
-            'context' => $context,
-        ));
-        $event->trigger();
-    }
+    $DB->delete_records('grade_letters', array('contextid'=>$context->id));
 }
 
 /**
@@ -1551,6 +1513,58 @@ function grade_user_unenrol($courseid, $userid) {
                 foreach ($grades as $grade) {
                     $grade->delete('userdelete');
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Grading cron job. Performs background clean up on the gradebook
+ */
+function grade_cron() {
+    global $CFG, $DB;
+
+    $now = time();
+
+    $sql = "SELECT i.*
+              FROM {grade_items} i
+             WHERE i.locked = 0 AND i.locktime > 0 AND i.locktime < ? AND EXISTS (
+                SELECT 'x' FROM {grade_items} c WHERE c.itemtype='course' AND c.needsupdate=0 AND c.courseid=i.courseid)";
+
+    // go through all courses that have proper final grades and lock them if needed
+    $rs = $DB->get_recordset_sql($sql, array($now));
+    foreach ($rs as $item) {
+        $grade_item = new grade_item($item, false);
+        $grade_item->locked = $now;
+        $grade_item->update('locktime');
+    }
+    $rs->close();
+
+    $grade_inst = new grade_grade();
+    $fields = 'g.'.implode(',g.', $grade_inst->required_fields);
+
+    $sql = "SELECT $fields
+              FROM {grade_grades} g, {grade_items} i
+             WHERE g.locked = 0 AND g.locktime > 0 AND g.locktime < ? AND g.itemid=i.id AND EXISTS (
+                SELECT 'x' FROM {grade_items} c WHERE c.itemtype='course' AND c.needsupdate=0 AND c.courseid=i.courseid)";
+
+    // go through all courses that have proper final grades and lock them if needed
+    $rs = $DB->get_recordset_sql($sql, array($now));
+    foreach ($rs as $grade) {
+        $grade_grade = new grade_grade($grade, false);
+        $grade_grade->locked = $now;
+        $grade_grade->update('locktime');
+    }
+    $rs->close();
+
+    //TODO: do not run this cleanup every cron invocation
+    // cleanup history tables
+    if (!empty($CFG->gradehistorylifetime)) {  // value in days
+        $histlifetime = $now - ($CFG->gradehistorylifetime * 3600 * 24);
+        $tables = array('grade_outcomes_history', 'grade_categories_history', 'grade_items_history', 'grade_grades_history', 'scale_history');
+        foreach ($tables as $table) {
+            if ($DB->delete_records_select($table, "timemodified < ?", array($histlifetime))) {
+                mtrace("    Deleted old grade history records from '$table'");
             }
         }
     }
@@ -1622,23 +1636,4 @@ function grade_floats_different($f1, $f2) {
  */
 function grade_floats_equal($f1, $f2) {
     return (grade_floatval($f1) === grade_floatval($f2));
-}
-
-/**
- * Get the most appropriate grade date for a grade item given the user that the grade relates to.
- *
- * @param \stdClass $grade
- * @param \stdClass $user
- * @return int|null
- */
-function grade_get_date_for_user_grade(\stdClass $grade, \stdClass $user): ?int {
-    // The `datesubmitted` is the time that the grade was created.
-    // The `dategraded` is the time that it was modified or overwritten.
-    // If the grade was last modified by the user themselves use the date graded.
-    // Otherwise use date submitted.
-    if ($grade->usermodified == $user->id || empty($grade->datesubmitted)) {
-        return $grade->dategraded;
-    } else {
-        return $grade->datesubmitted;
-    }
 }

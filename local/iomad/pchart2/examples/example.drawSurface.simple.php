@@ -1,4 +1,4 @@
-<?php
+<?php   
  /* CAT:Surface chart*/
 
  /* pChart library inclusions */
@@ -21,8 +21,8 @@
 
  /* Add a border to the picture */
  $myPicture->drawRectangle(0,0,209,99,array("R"=>0,"G"=>0,"B"=>0));
-
- /* Write the picture title */
+ 
+ /* Write the picture title */ 
  $myPicture->setFontProperties(array("FontName"=>"../fonts/Silkscreen.ttf","FontSize"=>6));
  $myPicture->drawText(10,13,"pSurface() :: Surface charts",array("R"=>255,"G"=>255,"B"=>255));
 
@@ -42,6 +42,7 @@
  $myPicture->setFontProperties(array("FontName"=>"../fonts/pf_arma_five.ttf","FontSize"=>6));
 
  $myPicture->setFontProperties(array("FontName"=>"../fonts/Bedizen.ttf","FontSize"=>7));
+
 
  $mySurface->writeXLabels(array("Angle"=>45,"Labels"=>array("Run 1","Run 2","Run 3","Run 4","Run 5","Run 6","Run 7","Run 8","Run 9","Run 10")));
  $mySurface->writeYLabels(array("Labels"=>array("Probe 1","Probe 2")));

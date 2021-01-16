@@ -36,24 +36,9 @@ defined('MOODLE_INTERNAL') || die();
 class manager {
 
     /**
-     * Default mlbackend
-     */
-    const DEFAULT_MLBACKEND = '\mlbackend_php\processor';
-
-    /**
-     * Name of the file where components declare their models.
-     */
-    const ANALYTICS_FILENAME = 'db/analytics.php';
-
-    /**
      * @var \core_analytics\predictor[]
      */
-    protected static $predictionprocessors = [];
-
-    /**
-     * @var \core_analytics\local\target\base[]
-     */
-    protected static $alltargets = null;
+    protected static $predictionprocessors = null;
 
     /**
      * @var \core_analytics\local\indicator\base[]
@@ -80,39 +65,10 @@ class manager {
      *
      * @throws \required_capability_exception
      * @param \context $context
-     * @param  bool $return The method returns a bool if true.
      * @return void
      */
-    public static function check_can_list_insights(\context $context, bool $return = false) {
-        global $USER;
-
-        if ($context->contextlevel === CONTEXT_USER && $context->instanceid == $USER->id) {
-            $capability = 'moodle/analytics:listowninsights';
-        } else {
-            $capability = 'moodle/analytics:listinsights';
-        }
-
-        if ($return) {
-            return has_capability($capability, $context);
-        } else {
-            require_capability($capability, $context);
-        }
-    }
-
-    /**
-     * Is analytics enabled globally?
-     *
-     * return bool
-     */
-    public static function is_analytics_enabled(): bool {
-        global $CFG;
-
-        if (isset($CFG->enableanalytics)) {
-            return $CFG->enableanalytics;
-        }
-
-        // Enabled by default.
-        return true;
+    public static function check_can_list_insights(\context $context) {
+        require_capability('moodle/analytics:listinsights', $context);
     }
 
     /**
@@ -141,9 +97,7 @@ class manager {
                 $params['trained'] = 1;
             }
             if ($predictioncontext) {
-                $conditions[] = "EXISTS (SELECT 'x'
-                                           FROM {analytics_predictions} ap
-                                          WHERE ap.modelid = am.id AND ap.contextid = :contextid)";
+                $conditions[] = "EXISTS (SELECT 'x' FROM {analytics_predictions} ap WHERE ap.modelid = am.id AND ap.contextid = :contextid)";
                 $params['contextid'] = $predictioncontext->id;
             }
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
@@ -159,17 +113,13 @@ class manager {
                 $models[$modelobj->id] = $model;
             }
         }
-
-        // Sort the models by the model name using the current session language.
-        \core_collator::asort_objects_by_method($models, 'get_name');
-
         return $models;
     }
 
     /**
-     * Returns the provided predictions processor class.
+     * Returns the site selected predictions processor.
      *
-     * @param false|string $predictionclass Returns the system default processor if false
+     * @param string $predictionclass
      * @param bool $checkisready
      * @return \core_analytics\predictor
      */
@@ -178,13 +128,13 @@ class manager {
         // We want 0 or 1 so we can use it as an array key for caching.
         $checkisready = intval($checkisready);
 
-        if (!$predictionclass) {
+        if ($predictionclass === false) {
             $predictionclass = get_config('analytics', 'predictionsprocessor');
         }
 
         if (empty($predictionclass)) {
             // Use the default one if nothing set.
-            $predictionclass = self::default_mlbackend();
+            $predictionclass = '\mlbackend_php\processor';
         }
 
         if (!class_exists($predictionclass)) {
@@ -230,52 +180,6 @@ class manager {
     }
 
     /**
-     * Resets the cached prediction processors.
-     * @return null
-     */
-    public static function reset_prediction_processors() {
-        self::$predictionprocessors = [];
-    }
-
-    /**
-     * Returns the name of the provided predictions processor.
-     *
-     * @param \core_analytics\predictor $predictionsprocessor
-     * @return string
-     */
-    public static function get_predictions_processor_name(\core_analytics\predictor $predictionsprocessor) {
-            $component = substr(get_class($predictionsprocessor), 0, strpos(get_class($predictionsprocessor), '\\', 1));
-        return get_string('pluginname', $component);
-    }
-
-    /**
-     * Whether the provided plugin is used by any model.
-     *
-     * @param string $plugin
-     * @return bool
-     */
-    public static function is_mlbackend_used($plugin) {
-        $models = self::get_all_models();
-        foreach ($models as $model) {
-            $processor = $model->get_predictions_processor();
-            $noprefixnamespace = ltrim(get_class($processor), '\\');
-            $processorplugin = substr($noprefixnamespace, 0, strpos($noprefixnamespace, '\\'));
-            if ($processorplugin == $plugin) {
-                return true;
-            }
-        }
-
-        // Default predictions processor.
-        $defaultprocessorclass = get_config('analytics', 'predictionsprocessor');
-        $pluginclass = '\\' . $plugin . '\\processor';
-        if ($pluginclass === $defaultprocessorclass) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Get all available time splitting methods.
      *
      * @return \core_analytics\local\time_splitting\base[]
@@ -302,44 +206,20 @@ class manager {
     /**
      * Returns the enabled time splitting methods.
      *
-     * @deprecated since Moodle 3.7
-     * @todo MDL-65086 This will be deleted in Moodle 4.1
-     * @see \core_analytics\manager::get_time_splitting_methods_for_evaluation
      * @return \core_analytics\local\time_splitting\base[]
      */
     public static function get_enabled_time_splitting_methods() {
-        debugging('This function has been deprecated. You can use self::get_time_splitting_methods_for_evaluation if ' .
-            'you want to get the default time splitting methods for evaluation, or you can use self::get_all_time_splittings if ' .
-            'you want to get all the time splitting methods available on this site.');
-        return self::get_time_splitting_methods_for_evaluation();
-    }
 
-    /**
-     * Returns the time-splitting methods for model evaluation.
-     *
-     * @param  bool $all Return all the time-splitting methods that can potentially be used for evaluation or the default ones.
-     * @return \core_analytics\local\time_splitting\base[]
-     */
-    public static function get_time_splitting_methods_for_evaluation(bool $all = false) {
-
-        if ($all === false) {
-            if ($enabledtimesplittings = get_config('analytics', 'defaulttimesplittingsevaluation')) {
-                $enabledtimesplittings = array_flip(explode(',', $enabledtimesplittings));
-            }
+        if ($enabledtimesplittings = get_config('analytics', 'timesplittings')) {
+            $enabledtimesplittings = array_flip(explode(',', $enabledtimesplittings));
         }
 
         $timesplittings = self::get_all_time_splittings();
         foreach ($timesplittings as $key => $timesplitting) {
 
-            if (!$timesplitting->valid_for_evaluation()) {
+            // We remove the ones that are not enabled. This also respects the default value (all methods enabled).
+            if (!empty($enabledtimesplittings) && !isset($enabledtimesplittings[$key])) {
                 unset($timesplittings[$key]);
-            }
-
-            if ($all === false) {
-                // We remove the ones that are not enabled. This also respects the default value (all methods enabled).
-                if (!empty($enabledtimesplittings) && !isset($enabledtimesplittings[$key])) {
-                    unset($timesplittings[$key]);
-                }
             }
         }
         return $timesplittings;
@@ -359,28 +239,6 @@ class manager {
     }
 
     /**
-     * Return all targets in the system.
-     *
-     * @return \core_analytics\local\target\base[]
-     */
-    public static function get_all_targets() : array {
-        if (self::$alltargets !== null) {
-            return self::$alltargets;
-        }
-
-        $classes = self::get_analytics_classes('target');
-
-        self::$alltargets = [];
-        foreach ($classes as $fullclassname => $classpath) {
-            $instance = self::get_target($fullclassname);
-            if ($instance) {
-                self::$alltargets[$instance->get_id()] = $instance;
-            }
-        }
-
-        return self::$alltargets;
-    }
-    /**
      * Return all system indicators.
      *
      * @return \core_analytics\local\indicator\base[]
@@ -396,6 +254,7 @@ class manager {
         foreach ($classes as $fullclassname => $classpath) {
             $instance = self::get_indicator($fullclassname);
             if ($instance) {
+                // Using get_class as get_component_classes_in_namespace returns double escaped fully qualified class names.
                 self::$allindicators[$instance->get_id()] = $instance;
             }
         }
@@ -501,15 +360,11 @@ class manager {
             }
             $existingcalculations[$calculation->indicator][$calculation->sampleid] = $calculation->value;
         }
-        $calculations->close();
         return $existingcalculations;
     }
 
     /**
      * Returns the models with insights at the provided context.
-     *
-     * Note that this method is used for display purposes. It filters out models whose insights
-     * are not linked from the reports page.
      *
      * @param \context $context
      * @return \core_analytics\model[]
@@ -521,50 +376,11 @@ class manager {
         $models = self::get_all_models(true, true, $context);
         foreach ($models as $key => $model) {
             // Check that it not only have predictions but also generates insights from them.
-            if (!$model->uses_insights() || !$model->get_target()->link_insights_report()) {
+            if (!$model->uses_insights()) {
                 unset($models[$key]);
             }
         }
         return $models;
-    }
-
-    /**
-     * Returns the models that generated insights in the provided context. It can also be used to add new models to the context.
-     *
-     * Note that if you use this function with $newmodelid is the caller responsibility to ensure that the
-     * provided model id generated insights for the provided context.
-     *
-     * @throws \coding_exception
-     * @param  \context $context
-     * @param  int|null $newmodelid A new model to add to the list of models with insights in the provided context.
-     * @return int[]
-     */
-    public static function cached_models_with_insights(\context $context, int $newmodelid = null) {
-
-        $cache = \cache::make('core', 'contextwithinsights');
-        $modelids = $cache->get($context->id);
-        if ($modelids === false) {
-            // The cache is empty, but we don't know if it is empty because there are no insights
-            // in this context or because cache/s have been purged, we need to be conservative and
-            // "pay" 1 db read to fill up the cache.
-
-            $models = \core_analytics\manager::get_models_with_insights($context);
-
-            if ($newmodelid && empty($models[$newmodelid])) {
-                throw new \coding_exception('The provided modelid ' . $newmodelid . ' did not generate any insights');
-            }
-
-            $modelids = array_keys($models);
-            $cache->set($context->id, $modelids);
-
-        } else if ($newmodelid && !in_array($newmodelid, $modelids)) {
-            // We add the context we got as an argument to the cache.
-
-            array_push($modelids, $newmodelid);
-            $cache->set($context->id, $modelids);
-        }
-
-        return $modelids;
     }
 
     /**
@@ -601,16 +417,84 @@ class manager {
     }
 
     /**
-     * Used to be used to add models included with the Moodle core.
+     * Adds the models included with moodle core to the system.
      *
-     * @deprecated Deprecated since Moodle 3.7 (MDL-61667) - Use lib/db/analytics.php instead.
-     * @todo Remove this method in Moodle 4.1 (MDL-65186).
      * @return void
      */
     public static function add_builtin_models() {
 
-        debugging('core_analytics\manager::add_builtin_models() has been deprecated. Core models are now automatically '.
-            'updated according to their declaration in the lib/db/analytics.php file.', DEBUG_DEVELOPER);
+        $target = self::get_target('\core\analytics\target\course_dropout');
+
+        // Community of inquiry indicators.
+        $coiindicators = array(
+            '\mod_assign\analytics\indicator\cognitive_depth',
+            '\mod_assign\analytics\indicator\social_breadth',
+            '\mod_book\analytics\indicator\cognitive_depth',
+            '\mod_book\analytics\indicator\social_breadth',
+            '\mod_chat\analytics\indicator\cognitive_depth',
+            '\mod_chat\analytics\indicator\social_breadth',
+            '\mod_choice\analytics\indicator\cognitive_depth',
+            '\mod_choice\analytics\indicator\social_breadth',
+            '\mod_data\analytics\indicator\cognitive_depth',
+            '\mod_data\analytics\indicator\social_breadth',
+            '\mod_feedback\analytics\indicator\cognitive_depth',
+            '\mod_feedback\analytics\indicator\social_breadth',
+            '\mod_folder\analytics\indicator\cognitive_depth',
+            '\mod_folder\analytics\indicator\social_breadth',
+            '\mod_forum\analytics\indicator\cognitive_depth',
+            '\mod_forum\analytics\indicator\social_breadth',
+            '\mod_glossary\analytics\indicator\cognitive_depth',
+            '\mod_glossary\analytics\indicator\social_breadth',
+            '\mod_imscp\analytics\indicator\cognitive_depth',
+            '\mod_imscp\analytics\indicator\social_breadth',
+            '\mod_label\analytics\indicator\cognitive_depth',
+            '\mod_label\analytics\indicator\social_breadth',
+            '\mod_lesson\analytics\indicator\cognitive_depth',
+            '\mod_lesson\analytics\indicator\social_breadth',
+            '\mod_lti\analytics\indicator\cognitive_depth',
+            '\mod_lti\analytics\indicator\social_breadth',
+            '\mod_page\analytics\indicator\cognitive_depth',
+            '\mod_page\analytics\indicator\social_breadth',
+            '\mod_quiz\analytics\indicator\cognitive_depth',
+            '\mod_quiz\analytics\indicator\social_breadth',
+            '\mod_resource\analytics\indicator\cognitive_depth',
+            '\mod_resource\analytics\indicator\social_breadth',
+            '\mod_scorm\analytics\indicator\cognitive_depth',
+            '\mod_scorm\analytics\indicator\social_breadth',
+            '\mod_survey\analytics\indicator\cognitive_depth',
+            '\mod_survey\analytics\indicator\social_breadth',
+            '\mod_url\analytics\indicator\cognitive_depth',
+            '\mod_url\analytics\indicator\social_breadth',
+            '\mod_wiki\analytics\indicator\cognitive_depth',
+            '\mod_wiki\analytics\indicator\social_breadth',
+            '\mod_workshop\analytics\indicator\cognitive_depth',
+            '\mod_workshop\analytics\indicator\social_breadth',
+            '\core_course\analytics\indicator\completion_enabled',
+            '\core_course\analytics\indicator\potential_cognitive_depth',
+            '\core_course\analytics\indicator\potential_social_breadth',
+            '\core\analytics\indicator\any_access_after_end',
+            '\core\analytics\indicator\any_access_before_start',
+            '\core\analytics\indicator\any_write_action_in_course',
+            '\core\analytics\indicator\read_actions',
+        );
+        $indicators = array();
+        foreach ($coiindicators as $coiindicator) {
+            $indicator = self::get_indicator($coiindicator);
+            $indicators[$indicator->get_id()] = $indicator;
+        }
+        if (!\core_analytics\model::exists($target, $indicators)) {
+            $model = \core_analytics\model::create($target, $indicators);
+        }
+
+        // No teaching model.
+        $target = self::get_target('\core\analytics\target\no_teaching');
+        $timesplittingmethod = '\core\analytics\time_splitting\single_range';
+        $noteacher = self::get_indicator('\core_course\analytics\indicator\no_teacher');
+        $nostudent = self::get_indicator('\core_course\analytics\indicator\no_student');
+        $indicators = array($noteacher->get_id() => $noteacher, $nostudent->get_id() => $nostudent);
+        if (!\core_analytics\model::exists($target, $indicators)) {
+            \core_analytics\model::create($target, $indicators, $timesplittingmethod);
+        }
     }
 
     /**
@@ -619,90 +503,46 @@ class manager {
     public static function cleanup() {
         global $DB;
 
-        $DB->execute("DELETE FROM {analytics_prediction_actions} WHERE predictionid IN
-                          (SELECT ap.id FROM {analytics_predictions} ap
-                        LEFT JOIN {context} ctx ON ap.contextid = ctx.id
-                            WHERE ctx.id IS NULL)");
+        // Clean up stuff that depends on contexts that do not exist anymore.
+        $sql = "SELECT DISTINCT ap.contextid FROM {analytics_predictions} ap
+                  LEFT JOIN {context} ctx ON ap.contextid = ctx.id
+                 WHERE ctx.id IS NULL";
+        $apcontexts = $DB->get_records_sql($sql);
 
-        // Cleanup analaytics predictions/calcs with MySQL friendly sub-select.
-        $DB->execute("DELETE FROM {analytics_predictions} WHERE id IN (
-                        SELECT oldpredictions.id
-                        FROM (
-                            SELECT p.id
-                            FROM {analytics_predictions} p
-                            LEFT JOIN {context} ctx ON p.contextid = ctx.id
-                            WHERE ctx.id IS NULL
-                        ) oldpredictions
-                    )");
+        $sql = "SELECT DISTINCT aic.contextid FROM {analytics_indicator_calc} aic
+                  LEFT JOIN {context} ctx ON aic.contextid = ctx.id
+                 WHERE ctx.id IS NULL";
+        $indcalccontexts = $DB->get_records_sql($sql);
 
-        $DB->execute("DELETE FROM {analytics_indicator_calc} WHERE id IN (
-                        SELECT oldcalcs.id FROM (
-                            SELECT c.id
-                            FROM {analytics_indicator_calc} c
-                            LEFT JOIN {context} ctx ON c.contextid = ctx.id
-                            WHERE ctx.id IS NULL
-                        ) oldcalcs
-                    )");
+        $contexts = $apcontexts + $indcalccontexts;
+        if ($contexts) {
+            list($sql, $params) = $DB->get_in_or_equal(array_keys($contexts));
+            $DB->execute("DELETE FROM {analytics_prediction_actions} WHERE predictionid IN
+                (SELECT ap.id FROM {analytics_predictions} ap WHERE ap.contextid $sql)", $params);
+
+            $DB->delete_records_select('analytics_predictions', "contextid $sql", $params);
+            $DB->delete_records_select('analytics_indicator_calc', "contextid $sql", $params);
+        }
 
         // Clean up stuff that depends on analysable ids that do not exist anymore.
-
         $models = self::get_all_models();
         foreach ($models as $model) {
-
-            // We first dump into memory the list of analysables we have in the database (we could probably do this with 1 single
-            // query for the 3 tables, but it may be safer to do it separately).
-            $predictsamplesanalysableids = $DB->get_fieldset_select('analytics_predict_samples', 'DISTINCT analysableid',
-                'modelid = :modelid', ['modelid' => $model->get_id()]);
-            $predictsamplesanalysableids = array_flip($predictsamplesanalysableids);
-            $trainsamplesanalysableids = $DB->get_fieldset_select('analytics_train_samples', 'DISTINCT analysableid',
-                'modelid = :modelid', ['modelid' => $model->get_id()]);
-            $trainsamplesanalysableids = array_flip($trainsamplesanalysableids);
-            $usedanalysablesanalysableids = $DB->get_fieldset_select('analytics_used_analysables', 'DISTINCT analysableid',
-                'modelid = :modelid', ['modelid' => $model->get_id()]);
-            $usedanalysablesanalysableids = array_flip($usedanalysablesanalysableids);
-
             $analyser = $model->get_analyser(array('notimesplitting' => true));
-
-            // We do not honour the list of contexts in this model as it can contain stale records.
-            $analysables = $analyser->get_analysables_iterator();
-
-            $analysableids = [];
-            foreach ($analysables as $analysable) {
-                if (!$analysable) {
-                    continue;
-                }
-                unset($predictsamplesanalysableids[$analysable->get_id()]);
-                unset($trainsamplesanalysableids[$analysable->get_id()]);
-                unset($usedanalysablesanalysableids[$analysable->get_id()]);
+            $analysables = $analyser->get_analysables();
+            if (!$analysables) {
+                continue;
             }
 
-            $param = ['modelid' => $model->get_id()];
+            $analysableids = array_map(function($analysable) {
+                return $analysable->get_id();
+            }, $analysables);
 
-            if ($predictsamplesanalysableids) {
-                list($idssql, $idsparams) = $DB->get_in_or_equal(array_flip($predictsamplesanalysableids), SQL_PARAMS_NAMED);
-                $DB->delete_records_select('analytics_predict_samples', "modelid = :modelid AND analysableid $idssql",
-                    $param + $idsparams);
-            }
-            if ($trainsamplesanalysableids) {
-                list($idssql, $idsparams) = $DB->get_in_or_equal(array_flip($trainsamplesanalysableids), SQL_PARAMS_NAMED);
-                $DB->delete_records_select('analytics_train_samples', "modelid = :modelid AND analysableid $idssql",
-                    $param + $idsparams);
-            }
-            if ($usedanalysablesanalysableids) {
-                list($idssql, $idsparams) = $DB->get_in_or_equal(array_flip($usedanalysablesanalysableids), SQL_PARAMS_NAMED);
-                $DB->delete_records_select('analytics_used_analysables', "modelid = :modelid AND analysableid $idssql",
-                    $param + $idsparams);
-            }
+            list($notinsql, $params) = $DB->get_in_or_equal($analysableids, SQL_PARAMS_NAMED, 'param', false);
+            $params['modelid'] = $model->get_id();
+
+            $DB->delete_records_select('analytics_predict_samples', "modelid = :modelid AND analysableid $notinsql", $params);
+            $DB->delete_records_select('analytics_train_samples', "modelid = :modelid AND analysableid $notinsql", $params);
         }
-    }
-
-    /**
-     * Default system backend.
-     *
-     * @return string
-     */
-    public static function default_mlbackend() {
-        return self::DEFAULT_MLBACKEND;
     }
 
     /**
@@ -716,294 +556,23 @@ class manager {
         // Just in case...
         $element = clean_param($element, PARAM_ALPHANUMEXT);
 
-        $classes = \core_component::get_component_classes_in_namespace(null, 'analytics\\' . $element);
+        // Core analytics classes (analytics subsystem should not contain uses of the analytics API).
+        $classes = \core_component::get_component_classes_in_namespace('core', 'analytics\\' . $element);
+
+        // Plugins.
+        foreach (\core_component::get_plugin_types() as $type => $unusedplugintypepath) {
+            foreach (\core_component::get_plugin_list($type) as $pluginname => $unusedpluginpath) {
+                $frankenstyle = $type . '_' . $pluginname;
+                $classes += \core_component::get_component_classes_in_namespace($frankenstyle, 'analytics\\' . $element);
+            }
+        }
+
+        // Core subsystems.
+        foreach (\core_component::get_core_subsystems() as $subsystemname => $unusedsubsystempath) {
+            $componentname = 'core_' . $subsystemname;
+            $classes += \core_component::get_component_classes_in_namespace($componentname, 'analytics\\' . $element);
+        }
 
         return $classes;
     }
-
-    /**
-     * Check that all the models declared by the component are up to date.
-     *
-     * This is intended to be called during the installation / upgrade to automatically create missing models.
-     *
-     * @param string $componentname The name of the component to load models for.
-     * @return array \core_analytics\model[] List of actually created models.
-     */
-    public static function update_default_models_for_component(string $componentname): array {
-
-        $result = [];
-
-        foreach (static::load_default_models_for_component($componentname) as $definition) {
-            if (!\core_analytics\model::exists(static::get_target($definition['target']))) {
-                $result[] = static::create_declared_model($definition);
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Return the list of models declared by the given component.
-     *
-     * @param string $componentname The name of the component to load models for.
-     * @throws \coding_exception Exception thrown in case of invalid syntax.
-     * @return array The $models description array.
-     */
-    public static function load_default_models_for_component(string $componentname): array {
-
-        $dir = \core_component::get_component_directory($componentname);
-
-        if (!$dir) {
-            // This is either an invalid component, or a core subsystem without its own root directory.
-            return [];
-        }
-
-        $file = $dir . '/' . self::ANALYTICS_FILENAME;
-
-        if (!is_readable($file)) {
-            return [];
-        }
-
-        $models = null;
-        include($file);
-
-        if (!isset($models) || !is_array($models) || empty($models)) {
-            return [];
-        }
-
-        foreach ($models as &$model) {
-            if (!isset($model['enabled'])) {
-                $model['enabled'] = false;
-            } else {
-                $model['enabled'] = clean_param($model['enabled'], PARAM_BOOL);
-            }
-        }
-
-        static::validate_models_declaration($models);
-
-        return $models;
-    }
-
-    /**
-     * Return the list of all the models declared anywhere in this Moodle installation.
-     *
-     * Models defined by the core and core subsystems come first, followed by those provided by plugins.
-     *
-     * @return array indexed by the frankenstyle component
-     */
-    public static function load_default_models_for_all_components(): array {
-
-        $tmp = [];
-
-        foreach (\core_component::get_component_list() as $type => $components) {
-            foreach (array_keys($components) as $component) {
-                if ($loaded = static::load_default_models_for_component($component)) {
-                    $tmp[$type][$component] = $loaded;
-                }
-            }
-        }
-
-        $result = [];
-
-        if ($loaded = static::load_default_models_for_component('core')) {
-            $result['core'] = $loaded;
-        }
-
-        if (!empty($tmp['core'])) {
-            $result += $tmp['core'];
-            unset($tmp['core']);
-        }
-
-        foreach ($tmp as $components) {
-            $result += $components;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Validate the declaration of prediction models according the syntax expected in the component's db folder.
-     *
-     * The expected structure looks like this:
-     *
-     *  [
-     *      [
-     *          'target' => '\fully\qualified\name\of\the\target\class',
-     *          'indicators' => [
-     *              '\fully\qualified\name\of\the\first\indicator',
-     *              '\fully\qualified\name\of\the\second\indicator',
-     *          ],
-     *          'timesplitting' => '\optional\name\of\the\time_splitting\class',
-     *          'enabled' => true,
-     *      ],
-     *  ];
-     *
-     * @param array $models List of declared models.
-     * @throws \coding_exception Exception thrown in case of invalid syntax.
-     */
-    public static function validate_models_declaration(array $models) {
-
-        foreach ($models as $model) {
-            if (!isset($model['target'])) {
-                throw new \coding_exception('Missing target declaration');
-            }
-
-            if (!static::is_valid($model['target'], '\core_analytics\local\target\base')) {
-                throw new \coding_exception('Invalid target classname', $model['target']);
-            }
-
-            if (empty($model['indicators']) || !is_array($model['indicators'])) {
-                throw new \coding_exception('Missing indicators declaration');
-            }
-
-            foreach ($model['indicators'] as $indicator) {
-                if (!static::is_valid($indicator, '\core_analytics\local\indicator\base')) {
-                    throw new \coding_exception('Invalid indicator classname', $indicator);
-                }
-            }
-
-            if (isset($model['timesplitting'])) {
-                if (substr($model['timesplitting'], 0, 1) !== '\\') {
-                    throw new \coding_exception('Expecting fully qualified time splitting classname', $model['timesplitting']);
-                }
-                if (!static::is_valid($model['timesplitting'], '\core_analytics\local\time_splitting\base')) {
-                    throw new \coding_exception('Invalid time splitting classname', $model['timesplitting']);
-                }
-            }
-
-            if (!empty($model['enabled']) && !isset($model['timesplitting'])) {
-                throw new \coding_exception('Cannot enable a model without time splitting method specified');
-            }
-        }
-    }
-
-    /**
-     * Create the defined model.
-     *
-     * @param array $definition See {@link self::validate_models_declaration()} for the syntax.
-     * @return \core_analytics\model
-     */
-    public static function create_declared_model(array $definition): \core_analytics\model {
-
-        list($target, $indicators) = static::get_declared_target_and_indicators_instances($definition);
-
-        if (isset($definition['timesplitting'])) {
-            $timesplitting = $definition['timesplitting'];
-        } else {
-            $timesplitting = false;
-        }
-
-        $created = \core_analytics\model::create($target, $indicators, $timesplitting);
-
-        if (!empty($definition['enabled'])) {
-            $created->enable();
-        }
-
-        return $created;
-    }
-
-    /**
-     * Returns a string uniquely representing the given model declaration.
-     *
-     * @param array $model Model declaration
-     * @return string complying with PARAM_ALPHANUM rules and starting with an 'id' prefix
-     */
-    public static function model_declaration_identifier(array $model) : string {
-        return 'id'.sha1(serialize($model));
-    }
-
-    /**
-     * Given a model definition, return actual target and indicators instances.
-     *
-     * @param array $definition See {@link self::validate_models_declaration()} for the syntax.
-     * @return array [0] => target instance, [1] => array of indicators instances
-     */
-    public static function get_declared_target_and_indicators_instances(array $definition): array {
-
-        $target = static::get_target($definition['target']);
-
-        $indicators = [];
-
-        foreach ($definition['indicators'] as $indicatorname) {
-            $indicator = static::get_indicator($indicatorname);
-            $indicators[$indicator->get_id()] = $indicator;
-        }
-
-        return [$target, $indicators];
-    }
-
-    /**
-     * Return the context restrictions that can be applied to the provided context levels.
-     *
-     * @throws \coding_exception
-     * @param  array|null $contextlevels The list of context levels provided by the analyser. Null if all of them.
-     * @param  string|null $query
-     * @return array Associative array with contextid as key and the short version of the context name as value.
-     */
-    public static function get_potential_context_restrictions(?array $contextlevels = null, string $query = null) {
-        global $DB;
-
-        if (empty($contextlevels) && !is_null($contextlevels)) {
-            return false;
-        }
-
-        if (!is_null($contextlevels)) {
-            foreach ($contextlevels as $contextlevel) {
-                if ($contextlevel !== CONTEXT_COURSE && $contextlevel !== CONTEXT_COURSECAT) {
-                    throw new \coding_exception('Only CONTEXT_COURSE and CONTEXT_COURSECAT are supported at the moment.');
-                }
-            }
-        }
-
-        $contexts = [];
-
-        // We have a separate process for each context level for performance reasons (to iterate through mdl_context calling
-        // get_context_name() would be too slow).
-        $contextsystem = \context_system::instance();
-        if (is_null($contextlevels) || in_array(CONTEXT_COURSECAT, $contextlevels)) {
-
-            $sql = "SELECT cc.id, cc.name, ctx.id AS contextid
-                      FROM {course_categories} cc
-                      JOIN {context} ctx ON ctx.contextlevel = :ctxlevel AND ctx.instanceid = cc.id";
-            $params = ['ctxlevel' => CONTEXT_COURSECAT];
-
-            if ($query) {
-                $sql .= " WHERE " . $DB->sql_like('cc.name', ':query', false, false);
-                $params['query'] = '%' . $query . '%';
-            }
-
-            $coursecats = $DB->get_recordset_sql($sql, $params);
-            foreach ($coursecats as $record) {
-                $contexts[$record->contextid] = get_string('category') . ': ' .
-                    format_string($record->name, true, array('context' => $contextsystem));
-            }
-            $coursecats->close();
-        }
-
-        if (is_null($contextlevels) || in_array(CONTEXT_COURSE, $contextlevels)) {
-
-            $sql = "SELECT c.id, c.shortname, ctx.id AS contextid
-                      FROM {course} c
-                      JOIN {context} ctx ON ctx.contextlevel = :ctxlevel AND ctx.instanceid = c.id
-                      WHERE c.id != :siteid";
-            $params = ['ctxlevel' => CONTEXT_COURSE, 'siteid' => SITEID];
-
-            if ($query) {
-                $sql .= ' AND (' . $DB->sql_like('c.fullname', ':query1', false, false) . ' OR ' .
-                    $DB->sql_like('c.shortname', ':query2', false, false) . ')';
-                $params['query1'] = '%' . $query . '%';
-                $params['query2'] = '%' . $query . '%';
-            }
-
-            $courses = $DB->get_recordset_sql($sql, $params);
-            foreach ($courses as $record) {
-                $contexts[$record->contextid] = get_string('course') . ': ' .
-                    format_string($record->shortname, true, array('context' => $contextsystem));
-            }
-            $courses->close();
-        }
-
-        return $contexts;
-    }
-
 }

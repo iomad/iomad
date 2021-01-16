@@ -61,21 +61,21 @@ class behat_assignfeedback_editpdf extends behat_base {
     var event = { clientX: 100, clientY: 250, preventDefault: function() {} };
     instance.edit_start(event);
 }()); ';
-        $this->execute_script($js);
+        $this->getSession()->executeScript($js);
         sleep(1);
         $js = ' (function() {
     var instance = M.assignfeedback_editpdf.instance;
     var event = { clientX: 150, clientY: 275, preventDefault: function() {} };
     instance.edit_move(event);
 }()); ';
-        $this->execute_script($js);
+        $this->getSession()->executeScript($js);
         sleep(1);
         $js = ' (function() {
     var instance = M.assignfeedback_editpdf.instance;
     var event = { clientX: 200, clientY: 300, preventDefault: function() {} };
     instance.edit_end(event);
 }()); ';
-        $this->execute_script($js);
+        $this->getSession()->executeScript($js);
         sleep(1);
     }
 
@@ -100,6 +100,6 @@ class behat_assignfeedback_editpdf extends behat_base {
         ];
         $js = implode(' && ', $conditions);
 
-        $this->getSession()->wait(self::get_timeout() * 1000, "({$js})");
+        $this->getSession()->wait(self::TIMEOUT * 1000, "({$js})");
     }
 }

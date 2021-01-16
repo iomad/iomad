@@ -90,7 +90,6 @@ class company_users_course_form extends moodleform {
     }
 
     public function definition_after_data() {
-        global $OUTPUT;
 
         $mform =& $this->_form;
 
@@ -122,12 +121,18 @@ class company_users_course_form extends moodleform {
         $mform->addElement('html', '
               </td>
               <td id="buttonscell">
-                  <p class="arrow_button">
-                    <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('enrol', 'block_iomad_company_admin') . '"
-                           title="' . get_string('enrol', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
-                    <input name="remove" id="remove" type="submit" value="'. get_string('unenrol', 'block_iomad_company_admin').'&nbsp;'.$OUTPUT->rarrow(). '"
-                           title="'. get_string('unenrol', 'block_iomad_company_admin') .'" class="btn btn-secondary"/><br />
-                 </p>
+                  <div id="addcontrols">
+                      <input name="add" id="add" type="submit" value="&nbsp;' .
+                      get_string('enrol', 'block_iomad_company_admin') .
+                      '" title="Enrol" /><br />
+
+                  </div>
+
+                  <div id="removecontrols">
+                      <input name="remove" id="remove" type="submit" value="' .
+                      get_string('unenrol', 'block_iomad_company_admin') .
+                      '&nbsp;" title="Unenrol" />
+                  </div>
               </td>
               <td id="potentialcell">');
 
@@ -159,7 +164,7 @@ class company_users_course_form extends moodleform {
                         } else {
                             $duedate = 0;
                         }
-                        company_user::enrol($this->user, array($addcourse->id), $this->selectedcompany);
+                        company_user::enrol($this->user, array($addcourse->id));
                         EmailTemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user, 'due' => $duedate));
                     }
                 }
@@ -220,10 +225,9 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('company_users_course_title', 'block_iomad_company_admin'));
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $coursesform = new company_users_course_form($formurl, $context, $companyid, $departmentid, $userid);
 
@@ -232,7 +236,7 @@ echo $OUTPUT->header();
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
-}
+}   
 
 // Check the userid is valid.
 if (!company::check_valid_user($companyid, $userid, $departmentid)) {
@@ -243,7 +247,7 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
     if ($returnurl) {
         redirect($returnurl);
     } else {
-        redirect(new moodle_url('/my'));
+        redirect(new moodle_url('/local/iomad_dashboard/index.php'));
     }
 } else {
     if ($companyid > 0) {

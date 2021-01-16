@@ -35,65 +35,58 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool result
  */
 function xmldb_workshop_upgrade($oldversion) {
-    global $DB;
+    global $CFG, $DB;
 
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    if ($oldversion < 2018062600) {
-
-        // Define field submissiontypetext to be added to workshop.
+    if ($oldversion < 2016022200) {
+        // Add field submissionfiletypes to the table workshop.
         $table = new xmldb_table('workshop');
-        $field = new xmldb_field('submissiontypetext', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'gradedecimals');
+        $field = new xmldb_field('submissionfiletypes', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'nattachments');
 
-        // Conditionally launch add field submissiontypetext.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        $field = new xmldb_field('submissiontypefile', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1',
-                'submissiontypetext');
+        // Add field overallfeedbackfiletypes to the table workshop.
+        $field = new xmldb_field('overallfeedbackfiletypes',
+                XMLDB_TYPE_CHAR, '255', null, null, null, null, 'overallfeedbackfiles');
 
-        // Conditionally launch add field submissiontypefile.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // Convert existing workshops with attachments disabled to use the new settings.
-        $workshops = $DB->get_records('workshop', ['nattachments' => 0]);
-        foreach ($workshops as $workshop) {
-            $update = (object) [
-                'id' => $workshop->id,
-                'submissiontypefile' => 0,
-                'submissiontypetext' => 2,
-                'nattachments' => 1
-            ];
-            $DB->update_record('workshop', $update);
-        }
-
-        // Changing the default of field nattachments on table workshop to 1.
-        $field = new xmldb_field('nattachments', XMLDB_TYPE_INTEGER, '3', null, null, null, '1', 'submissiontypefile');
-
-        // Launch change of default for field nattachments.
-        $dbman->change_field_default($table, $field);
-
-        // Workshop savepoint reached.
-        upgrade_mod_savepoint(true, 2018062600, 'workshop');
+        upgrade_mod_savepoint(true, 2016022200, 'workshop');
     }
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
+    // Moodle v3.1.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.7.0 release upgrade line.
+    // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.8.0 release upgrade line.
+    // Automatically generated Moodle v3.3.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.9.0 release upgrade line.
+    // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
+
+    if ($oldversion < 2017111301) {
+        // Drop the old Moodle 1.x tables, thanks privacy by design for forcing me to do so finally.
+
+        $oldtables = ['workshop_old', 'workshop_elements_old', 'workshop_rubrics_old', 'workshop_submissions_old',
+            'workshop_assessments_old', 'workshop_grades_old', 'workshop_stockcomments_old', 'workshop_comments_old'];
+
+        foreach ($oldtables as $oldtable) {
+            $table = new xmldb_table($oldtable);
+
+            if ($dbman->table_exists($table)) {
+                $dbman->drop_table($table);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2017111301, 'workshop');
+    }
 
     return true;
 }

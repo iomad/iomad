@@ -32,10 +32,8 @@ use context_module;
 use stdClass;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\helper;
 use core_privacy\local\request\transform;
-use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 require_once($CFG->dirroot . '/mod/lesson/locallib.php');
@@ -53,7 +51,6 @@ require_once($CFG->dirroot . '/mod/lesson/pagetypes/multichoice.php');
  */
 class provider implements
     \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\core_userlist_provider,
     \core_privacy\local\request\plugin\provider,
     \core_privacy\local\request\user_preference_provider {
 
@@ -167,54 +164,6 @@ class provider implements
         $contextlist->add_from_sql($sql, $params);
 
         return $contextlist;
-    }
-
-    /**
-     * Get the list of users who have data within a context.
-     *
-     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
-     *
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if (!is_a($context, \context_module::class)) {
-            return;
-        }
-
-        $params = [
-            'lesson' => 'lesson',
-            'modulelevel' => CONTEXT_MODULE,
-            'contextid' => $context->id,
-        ];
-
-        // Mapping of lesson tables which may contain user data.
-        $joins = [
-            'lesson_attempts',
-            'lesson_branch',
-            'lesson_grades',
-            'lesson_overrides',
-            'lesson_timer',
-        ];
-
-        foreach ($joins as $join) {
-            $sql = "
-                SELECT lx.userid
-                  FROM {lesson} l
-                  JOIN {modules} m
-                    ON m.name = :lesson
-                  JOIN {course_modules} cm
-                    ON cm.instance = l.id
-                   AND cm.module = m.id
-                  JOIN {context} ctx
-                    ON ctx.instanceid = cm.id
-                   AND ctx.contextlevel = :modulelevel
-                  JOIN {{$join}} lx
-                    ON lx.lessonid = l.id
-                 WHERE ctx.id = :contextid";
-
-            $userlist->add_from_sql('userid', $sql, $params);
-        }
     }
 
     /**
@@ -445,7 +394,6 @@ class provider implements
 
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_lesson', 'essay_responses');
-        $fs->delete_area_files($context->id, 'mod_lesson', 'essay_answers');
     }
 
     /**
@@ -486,45 +434,6 @@ class provider implements
             $cmid = $lessonidstocmids[$record->lessonid];
             $context = context_module::instance($cmid);
             $fs->delete_area_files($context->id, 'mod_lesson', 'essay_responses', $record->id);
-            $fs->delete_area_files($context->id, 'mod_lesson', 'essay_answers', $record->id);
-        }
-        $recordset->close();
-
-        // Delete all the things.
-        $DB->delete_records_select('lesson_attempts', $sql, $params);
-        $DB->delete_records_select('lesson_branch', $sql, $params);
-        $DB->delete_records_select('lesson_grades', $sql, $params);
-        $DB->delete_records_select('lesson_timer', $sql, $params);
-        $DB->delete_records_select('lesson_overrides', $sql, $params);
-    }
-
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param   approved_userlist    $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        global $DB;
-
-        $context = $userlist->get_context();
-        $lessonid = static::get_lesson_id_from_context($context);
-        $userids = $userlist->get_userids();
-
-        if (empty($lessonid)) {
-            return;
-        }
-
-        // Prepare the SQL we'll need below.
-        list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
-        $sql = "lessonid = :lessonid AND userid {$insql}";
-        $params = array_merge($inparams, ['lessonid' => $lessonid]);
-
-        // Delete the attempt files.
-        $fs = get_file_storage();
-        $recordset = $DB->get_recordset_select('lesson_attempts', $sql, $params, '', 'id, lessonid');
-        foreach ($recordset as $record) {
-            $fs->delete_area_files($context->id, 'mod_lesson', 'essay_responses', $record->id);
-            $fs->delete_area_files($context->id, 'mod_lesson', 'essay_answers', $record->id);
         }
         $recordset->close();
 
@@ -619,21 +528,7 @@ class provider implements
             if ($data->page_qtype == LESSON_PAGE_ESSAY) {
                 // Essay questions serialise data in the answer field.
                 $info = \lesson_page_type_essay::extract_useranswer($answer);
-                $answerfilespath = [get_string('privacy:path:essayanswers', 'mod_lesson'), $data->attempt_id];
-                $answer = format_text(
-                    writer::with_context($context)->rewrite_pluginfile_urls(
-                        $answerfilespath,
-                        'mod_lesson',
-                        'essay_answers',
-                        $data->attempt_id,
-                        $info->answer
-                    ),
-                    $info->answerformat,
-                    $options
-                );
-                writer::with_context($context)->export_area_files($answerfilespath, 'mod_lesson',
-                    'essay_answers', $data->page_id);
-
+                $answer = format_text($info->answer, $info->answerformat, $options);
                 if ($info->response !== null) {
                     // We export the files in a subfolder to avoid conflicting files, and tell the user
                     // where those files were exported. That is because we are not using a subfolder for
@@ -653,7 +548,6 @@ class provider implements
                     );
                     writer::with_context($context)->export_area_files($responsefilespath, 'mod_lesson',
                         'essay_responses', $data->page_id);
-
                 }
 
             } else if ($data->page_qtype == LESSON_PAGE_MULTICHOICE && $data->page_qoption) {

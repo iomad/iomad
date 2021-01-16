@@ -75,10 +75,9 @@ class core_requirejs {
      *  <componentdir>/amd/src/modulename.js
      *
      * @param boolean $debug If true, returns the paths to the original (unminified) source files.
-     * @param boolean $includelazy If true, includes modules with the -lazy suffix.
      * @return array $files An array of mappings from module names to file paths.
      */
-    public static function find_all_amd_modules($debug = false, $includelazy = false) {
+    public static function find_all_amd_modules($debug = false) {
         global $CFG;
 
         $jsdirs = array();
@@ -114,16 +113,13 @@ class core_requirejs {
                 // Skip it - RecursiveDirectoryIterator fatals if the directory is not readable as an iterator.
                 continue;
             }
-            $srcdir = realpath($srcdir);
-            $directory = new RecursiveDirectoryIterator($srcdir);
-            $items = new RecursiveIteratorIterator($directory);
+            $items = new RecursiveDirectoryIterator($srcdir);
             foreach ($items as $item) {
                 $extension = $item->getExtension();
                 if ($extension === 'js') {
-                    $filename = substr($item->getRealpath(), strlen($srcdir) + 1);
-                    $filename = preg_replace('/(\.min)?\.js$/', '', $filename);
-                    // We skip lazy loaded modules unless specifically requested.
-                    if ($includelazy || strpos($filename, '-lazy') === false) {
+                    $filename = str_replace('.min', '', $item->getBaseName('.js'));
+                    // We skip lazy loaded modules.
+                    if (strpos($filename, '-lazy') === false) {
                         $modulename = $component . '/' . $filename;
                         $jsfiles[$modulename] = $item->getRealPath();
                     }

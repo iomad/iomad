@@ -53,11 +53,6 @@ class event implements event_interface {
     protected $description;
 
     /**
-     * @var string $location Location of this event.
-     */
-    protected $location;
-
-    /**
      * @var proxy_interface $category Category for this event.
      */
     protected $category;
@@ -103,11 +98,6 @@ class event implements event_interface {
     protected $visible;
 
     /**
-     * @var string $component
-     */
-    protected $component;
-
-    /**
      * @var proxy_interface $subscription Subscription for this event.
      */
     protected $subscription;
@@ -128,8 +118,6 @@ class event implements event_interface {
      * @param times_interface            $times          The times associated with the event.
      * @param bool                       $visible        The event's visibility. True for visible, false for invisible.
      * @param proxy_interface            $subscription   The event's subscription.
-     * @param string                     $location       The event's location.
-     * @param string                     $component      The event's component.
      */
     public function __construct(
         $id,
@@ -144,14 +132,11 @@ class event implements event_interface {
         $type,
         times_interface $times,
         $visible,
-        proxy_interface $subscription = null,
-        $location = null,
-        $component = null
+        proxy_interface $subscription = null
     ) {
         $this->id = $id;
         $this->name = $name;
         $this->description = $description;
-        $this->location = $location;
         $this->category = $category;
         $this->course = $course;
         $this->group = $group;
@@ -162,7 +147,6 @@ class event implements event_interface {
         $this->times = $times;
         $this->visible = $visible;
         $this->subscription = $subscription;
-        $this->component = $component;
     }
 
     public function get_id() {
@@ -175,10 +159,6 @@ class event implements event_interface {
 
     public function get_description() {
         return $this->description;
-    }
-
-    public function get_location() {
-        return $this->location;
     }
 
     public function get_category() {
@@ -219,13 +199,5 @@ class event implements event_interface {
 
     public function is_visible() {
         return $this->visible;
-    }
-
-    /**
-     * Resolved event component (frankenstyle name of activity module or the component)
-     * @return string|null
-     */
-    public function get_component() {
-        return $this->get_course_module() ? 'mod_' . $this->get_course_module()->get('modname') : $this->component;
     }
 }

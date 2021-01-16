@@ -164,8 +164,6 @@ if ($options['install']) {
         mtrace("Acceptance tests site installed");
     }
 
-    // Note: Do not build the themes here. This is done during the 'enable' stage.
-
 } else if ($options['drop']) {
     // Ensure no tests are running.
     test_lock::acquire('behat');
@@ -183,10 +181,6 @@ if ($options['install']) {
 
     // Enable test mode.
     behat_util::start_test_mode($options['add-core-features-to-theme'], $options['optimize-runs'], $parallel, $run);
-
-    // Themes are only built in the 'enable' command.
-    behat_util::build_themes();
-    mtrace("Testing environment themes built");
 
     // This is only displayed once for parallel install.
     if (empty($run)) {
@@ -224,7 +218,7 @@ if ($options['install']) {
     // Run behat command to get steps in feature files.
     $featurestepscmd = behat_command::get_behat_command(true);
     $featurestepscmd .= ' --config ' . behat_config_manager::get_behat_cli_config_filepath();
-    $featurestepscmd .= ' --dry-run --format=moodle_stepcount';
+    $featurestepscmd .= ' --dry-run --format=moodle_step_count';
     $processes = cli_execute_parallel(array($featurestepscmd), __DIR__ . "/../../../../");
     $status = print_update_step_output(array_pop($processes), $behatstepfile);
 

@@ -533,8 +533,7 @@ class core_calendar_events_testcase extends advanced_testcase {
         $subscription = new stdClass();
         $subscription->eventtype = 'group';
         $subscription->name = 'test';
-        $subscription->courseid = $courseid;
-        $subscription->groupid = $groupid;
+        $subscription->groupid = "{$courseid}-{$groupid}";
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();
@@ -669,9 +668,7 @@ class core_calendar_events_testcase extends advanced_testcase {
         $subscription = new stdClass();
         $subscription->eventtype = 'group';
         $subscription->name = 'test';
-        $subscription->courseid = $courseid;
-        $subscription->groupid = $groupid;
-
+        $subscription->groupid = "{$courseid}-{$groupid}";
         $subscription->id = calendar_add_subscription($subscription);
         // Now edit it.
         $subscription->name = 'awesome';
@@ -800,8 +797,7 @@ class core_calendar_events_testcase extends advanced_testcase {
         $subscription = new stdClass();
         $subscription->eventtype = 'group';
         $subscription->name = 'test';
-        $subscription->groupid = $groupid;
-        $subscription->courseid = $courseid;
+        $subscription->groupid = "{$courseid}-{$groupid}";
         $subscription->id = calendar_add_subscription($subscription);
 
         // Trigger and capture the event.

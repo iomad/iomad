@@ -156,10 +156,9 @@ class mod_resource_external extends external_api {
                 $context = context_module::instance($resource->coursemodule);
                 // Entry to return.
                 $resource->name = external_format_string($resource->name, $context->id);
-                $options = array('noclean' => true);
-                list($resource->intro, $resource->introformat) =
-                    external_format_text($resource->intro, $resource->introformat, $context->id, 'mod_resource', 'intro', null,
-                        $options);
+
+                list($resource->intro, $resource->introformat) = external_format_text($resource->intro,
+                                                                $resource->introformat, $context->id, 'mod_resource', 'intro', null);
                 $resource->introfiles = external_util::get_area_files($context->id, 'mod_resource', 'intro', false, false);
                 $resource->contentfiles = external_util::get_area_files($context->id, 'mod_resource', 'content');
 

@@ -42,6 +42,7 @@ if ($node && $newnode) {
     $newnode->make_active();
 }
 
+require_capability('moodle/site:config', context_system::instance());
 
 $tokenlisturl = new moodle_url("/" . $CFG->admin . "/settings.php", array('section' => 'webservicetokens'));
 

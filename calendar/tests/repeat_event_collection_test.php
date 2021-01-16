@@ -155,7 +155,7 @@ class core_calendar_repeat_event_collection_testcase extends advanced_testcase {
     protected function create_event($properties = []) {
         $record = new \stdClass();
         $record->name = 'event name';
-        $record->eventtype = 'site';
+        $record->eventtype = 'global';
         $record->repeat = 0;
         $record->repeats = 0;
         $record->timestart = time();
@@ -204,9 +204,7 @@ class core_calendar_repeat_event_collection_event_test_factory implements event_
                 (new \DateTimeImmutable())->setTimestamp($dbrow->timemodified)
             ),
             !empty($dbrow->visible),
-            new std_proxy($dbrow->subscriptionid, $identity),
-            $dbrow->location,
-            $dbrow->component
+            new std_proxy($dbrow->subscriptionid, $identity)
         );
     }
 }

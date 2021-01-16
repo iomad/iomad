@@ -22,25 +22,17 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace core_question\bank;
-defined('MOODLE_INTERNAL') || die();
 
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Action to add and remove tags to questions.
  *
- * @copyright 2018 Simey Lameze <simey@moodle.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    core_question
+ * @copyright  2018 Simey Lameze <simey@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class tags_action_column extends action_column_base implements menuable_action {
-    /**
-     * @var string store this lang string for performance.
-     */
-    protected $managetags;
-
-    public function init() {
-        parent::init();
-        $this->managetags = get_string('managetags', 'tag');
-    }
+class tags_action_column extends action_column_base {
 
     /**
      * Return the name for this column.
@@ -58,45 +50,36 @@ class tags_action_column extends action_column_base implements menuable_action {
      * @param string $rowclasses
      */
     protected function display_content($question, $rowclasses) {
-        global $OUTPUT;
-
         if (\core_tag_tag::is_enabled('core_question', 'question') &&
                 question_has_capability_on($question, 'view')) {
 
-            [$url, $attributes] = $this->get_link_url_and_attributes($question);
-            echo \html_writer::link($url, $OUTPUT->pix_icon('t/tags',
-                    $this->managetags), $attributes);
+            $cantag = question_has_capability_on($question, 'tag');
+            $qbank = $this->qbank;
+            $url = new \moodle_url($qbank->edit_question_url($question->id));
+            $editingcontext = $qbank->get_most_specific_context();
+
+            $this->print_tag_icon($question->id, $url, $cantag, $editingcontext->id);
         }
     }
 
     /**
-     * Helper used by display_content and get_action_menu_link.
+     * Build and print the tags icon.
      *
-     * @param object $question the row from the $question table, augmented with extra information.
-     * @return array with two elements, \moodle_url and
-     *     an array or data $attributes needed to make the JavaScript work.
+     * @param int $id The question ID.
+     * @param \moodle_url $url Editing question url.
+     * @param bool $cantag Whether the user can tag questions or not.
+     * @param int $contextid Question category context ID.
      */
-    protected function get_link_url_and_attributes($question) {
-        $url = new \moodle_url($this->qbank->edit_question_url($question->id));
+    protected function print_tag_icon($id, \moodle_url $url, $cantag, $contextid) {
+        global $OUTPUT;
 
-        $attributes = [
-                'data-action' => 'edittags',
-                'data-cantag' => question_has_capability_on($question, 'tag'),
-                'data-contextid' => $this->qbank->get_most_specific_context()->id,
-                'data-questionid' => $question->id
+        $params = [
+            'data-action' => 'edittags',
+            'data-cantag' => $cantag,
+            'data-contextid' => $contextid,
+            'data-questionid' => $id
         ];
 
-        return [$url, $attributes];
-    }
-
-    public function get_action_menu_link(\stdClass $question): ?\action_menu_link {
-        if (!\core_tag_tag::is_enabled('core_question', 'question') ||
-                !question_has_capability_on($question, 'view')) {
-            return null;
-        }
-
-        [$url, $attributes] = $this->get_link_url_and_attributes($question);
-        return new \action_menu_link_secondary($url, new \pix_icon('t/tags', ''),
-                $this->managetags, $attributes);
+        echo \html_writer::link($url, $OUTPUT->pix_icon('t/tags', get_string('managetags', 'tag')), $params);
     }
 }

@@ -491,7 +491,6 @@ class gradereport_user_external extends external_api {
                                         'categoryid' => new external_value(PARAM_INT, 'Grade item category id'),
                                         'outcomeid' => new external_value(PARAM_INT, 'Outcome id'),
                                         'scaleid' => new external_value(PARAM_INT, 'Scale id'),
-                                        'locked' => new external_value(PARAM_BOOL, 'Grade item for user locked?', VALUE_OPTIONAL),
                                         'cmid' => new external_value(PARAM_INT, 'Course module id (if type mod)', VALUE_OPTIONAL),
                                         'weightraw' => new external_value(PARAM_FLOAT, 'Weight raw', VALUE_OPTIONAL),
                                         'weightformatted' => new external_value(PARAM_NOTAGS, 'Weight', VALUE_OPTIONAL),
@@ -502,8 +501,6 @@ class gradereport_user_external extends external_api {
                                         'gradehiddenbydate' => new external_value(PARAM_BOOL, 'Grade hidden by date?', VALUE_OPTIONAL),
                                         'gradeneedsupdate' => new external_value(PARAM_BOOL, 'Grade needs update?', VALUE_OPTIONAL),
                                         'gradeishidden' => new external_value(PARAM_BOOL, 'Grade is hidden?', VALUE_OPTIONAL),
-                                        'gradeislocked' => new external_value(PARAM_BOOL, 'Grade is locked?', VALUE_OPTIONAL),
-                                        'gradeisoverridden' => new external_value(PARAM_BOOL, 'Grade overridden?', VALUE_OPTIONAL),
                                         'gradeformatted' => new external_value(PARAM_NOTAGS, 'The grade formatted', VALUE_OPTIONAL),
                                         'grademin' => new external_value(PARAM_FLOAT, 'Grade min', VALUE_OPTIONAL),
                                         'grademax' => new external_value(PARAM_FLOAT, 'Grade max', VALUE_OPTIONAL),
@@ -514,7 +511,7 @@ class gradereport_user_external extends external_api {
                                         'numusers' => new external_value(PARAM_INT, 'Num users in course', VALUE_OPTIONAL),
                                         'averageformatted' => new external_value(PARAM_NOTAGS, 'Grade average', VALUE_OPTIONAL),
                                         'feedback' => new external_value(PARAM_RAW, 'Grade feedback', VALUE_OPTIONAL),
-                                        'feedbackformat' => new external_format_value('feedback', VALUE_OPTIONAL),
+                                        'feedbackformat' => new external_format_value('feedback'),
                                     ), 'Grade items'
                                 )
                             )

@@ -773,44 +773,17 @@ class moodle_url {
      * @param string $pathname
      * @param string $filename
      * @param bool $forcedownload
-     * @param mixed $includetoken Whether to use a user token when displaying this group image.
-     *                True indicates to generate a token for current user, and integer value indicates to generate a token for the
-     *                user whose id is the value indicated.
-     *                If the group picture is included in an e-mail or some other location where the audience is a specific
-     *                user who will not be logged in when viewing, then we use a token to authenticate the user.
      * @return moodle_url
      */
     public static function make_pluginfile_url($contextid, $component, $area, $itemid, $pathname, $filename,
-                                               $forcedownload = false, $includetoken = false) {
-        global $CFG, $USER;
-
-        $path = [];
-
-        if ($includetoken) {
-            $urlbase = "$CFG->wwwroot/tokenpluginfile.php";
-            $userid = $includetoken === true ? $USER->id : $includetoken;
-            $token = get_user_key('core_files', $userid);
-            if ($CFG->slasharguments) {
-                $path[] = $token;
-            }
+                                               $forcedownload = false) {
+        global $CFG;
+        $urlbase = "$CFG->wwwroot/pluginfile.php";
+        if ($itemid === null) {
+            return self::make_file_url($urlbase, "/$contextid/$component/$area".$pathname.$filename, $forcedownload);
         } else {
-            $urlbase = "$CFG->wwwroot/pluginfile.php";
+            return self::make_file_url($urlbase, "/$contextid/$component/$area/$itemid".$pathname.$filename, $forcedownload);
         }
-        $path[] = $contextid;
-        $path[] = $component;
-        $path[] = $area;
-
-        if ($itemid !== null) {
-            $path[] = $itemid;
-        }
-
-        $path = "/" . implode('/', $path) . "{$pathname}{$filename}";
-
-        $url = self::make_file_url($urlbase, $path, $forcedownload, $includetoken);
-        if ($includetoken && empty($CFG->slasharguments)) {
-            $url->param('token', $token);
-        }
-        return $url;
     }
 
     /**
@@ -1107,10 +1080,13 @@ function page_get_doc_link_path(moodle_page $page) {
  * @return boolean
  */
 function validate_email($address) {
-    global $CFG;
-    require_once($CFG->libdir.'/phpmailer/moodle_phpmailer.php');
 
-    return moodle_phpmailer::validateAddress($address) && !preg_match('/[<>]/', $address);
+    return (bool)preg_match('#^[-!\#$%&\'*+\\/0-9=?A-Z^_`a-z{|}~]+'.
+                 '(\.[-!\#$%&\'*+\\/0-9=?A-Z^_`a-z{|}~]+)*'.
+                  '@'.
+                  '[-!\#$%&\'*+\\/0-9=?A-Z^_`a-z{|}~]+\.'.
+                  '[-!\#$%&\'*+\\./0-9=?A-Z^_`a-z{|}~]+$#',
+                  $address);
 }
 
 /**
@@ -1194,7 +1170,7 @@ function format_text_menu() {
  * <pre>
  * Options:
  *      trusted     :   If true the string won't be cleaned. Default false required noclean=true.
- *      noclean     :   If true the string won't be cleaned, unless $CFG->forceclean is set. Default false required trusted=true.
+ *      noclean     :   If true the string won't be cleaned. Default false required trusted=true.
  *      nocache     :   If true the strign will not be cached and will be formatted every call. Default false.
  *      filter      :   If true the string will be run through applicable filters as well. Default true.
  *      para        :   If true then the returned string will be wrapped in div tags. Default true.
@@ -1236,10 +1212,6 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
         } else {
             $options['noclean'] = false;
         }
-    }
-    if (!empty($CFG->forceclean)) {
-        // Whatever the caller claims, the admin wants all content cleaned anyway.
-        $options['noclean'] = false;
     }
     if (!isset($options['nocache'])) {
         $options['nocache'] = false;
@@ -1856,7 +1828,7 @@ function purify_html($text, $options = array()) {
         }
 
         if ($def = $config->maybeGetRawHTMLDefinition()) {
-            $def->addElement('nolink', 'Inline', 'Flow', array());                      // Skip our filters inside.
+            $def->addElement('nolink', 'Block', 'Flow', array());                       // Skip our filters inside.
             $def->addElement('tex', 'Inline', 'Inline', array());                       // Tex syntax, equivalent to $$xx$$.
             $def->addElement('algebra', 'Inline', 'Inline', array());                   // Algebra syntax, equivalent to @@xx@@.
             $def->addElement('lang', 'Block', 'Flow', array(), array('lang'=>'CDATA')); // Original multilang style - only our hacked lang attribute.
@@ -2054,63 +2026,6 @@ function content_to_text($content, $contentformat) {
 }
 
 /**
- * Factory method for extracting draft file links from arbitrary text using regular expressions. Only text
- * is required; other file fields may be passed to filter.
- *
- * @param string $text Some html content.
- * @param bool $forcehttps force https urls.
- * @param int $contextid This parameter and the next three identify the file area to save to.
- * @param string $component The component name.
- * @param string $filearea The filearea.
- * @param int $itemid The item id for the filearea.
- * @param string $filename The specific filename of the file.
- * @return array
- */
-function extract_draft_file_urls_from_text($text, $forcehttps = false, $contextid = null, $component = null,
-                                           $filearea = null, $itemid = null, $filename = null) {
-    global $CFG;
-
-    $wwwroot = $CFG->wwwroot;
-    if ($forcehttps) {
-        $wwwroot = str_replace('http://', 'https://', $wwwroot);
-    }
-    $urlstring = '/' . preg_quote($wwwroot, '/');
-
-    $urlbase = preg_quote('draftfile.php');
-    $urlstring .= "\/(?<urlbase>{$urlbase})";
-
-    if (is_null($contextid)) {
-        $contextid = '[0-9]+';
-    }
-    $urlstring .= "\/(?<contextid>{$contextid})";
-
-    if (is_null($component)) {
-        $component = '[a-z_]+';
-    }
-    $urlstring .= "\/(?<component>{$component})";
-
-    if (is_null($filearea)) {
-        $filearea = '[a-z_]+';
-    }
-    $urlstring .= "\/(?<filearea>{$filearea})";
-
-    if (is_null($itemid)) {
-        $itemid = '[0-9]+';
-    }
-    $urlstring .= "\/(?<itemid>{$itemid})";
-
-    // Filename matching magic based on file_rewrite_urls_to_pluginfile().
-    if (is_null($filename)) {
-        $filename = '[^\'\",&<>|`\s:\\\\]+';
-    }
-    $urlstring .= "\/(?<filename>{$filename})/";
-
-    // Regular expression which matches URLs and returns their components.
-    preg_match_all($urlstring, $text, $urls, PREG_SET_ORDER);
-    return $urls;
-}
-
-/**
  * This function will highlight search words in a given string
  *
  * It cares about HTML and will not ruin links.  It's best to use
@@ -2281,8 +2196,7 @@ function send_headers($contenttype, $cacheable = true) {
     }
     @header('Accept-Ranges: none');
 
-    // The Moodle app must be allowed to embed content always.
-    if (empty($CFG->allowframembedding) && !core_useragent::is_moodle_app()) {
+    if (empty($CFG->allowframembedding)) {
         @header('X-Frame-Options: sameorigin');
     }
 }
@@ -2493,20 +2407,15 @@ function print_collapsible_region_end($return = false) {
  * @param boolean $large Default small picture, or large.
  * @param boolean $return If false print picture, otherwise return the output as string
  * @param boolean $link Enclose image in a link to view specified course?
- * @param boolean $includetoken Whether to use a user token when displaying this group image.
- *                True indicates to generate a token for current user, and integer value indicates to generate a token for the
- *                user whose id is the value indicated.
- *                If the group picture is included in an e-mail or some other location where the audience is a specific
- *                user who will not be logged in when viewing, then we use a token to authenticate the user.
  * @return string|void Depending on the setting of $return
  */
-function print_group_picture($group, $courseid, $large = false, $return = false, $link = true, $includetoken = false) {
+function print_group_picture($group, $courseid, $large=false, $return=false, $link=true) {
     global $CFG;
 
     if (is_array($group)) {
         $output = '';
         foreach ($group as $g) {
-            $output .= print_group_picture($g, $courseid, $large, true, $link, $includetoken);
+            $output .= print_group_picture($g, $courseid, $large, true, $link);
         }
         if ($return) {
             return $output;
@@ -2516,7 +2425,7 @@ function print_group_picture($group, $courseid, $large = false, $return = false,
         }
     }
 
-    $pictureurl = get_group_picture_url($group, $courseid, $large, $includetoken);
+    $pictureurl = get_group_picture_url($group, $courseid, $large);
 
     // If there is no picture, do nothing.
     if (!isset($pictureurl)) {
@@ -2549,14 +2458,9 @@ function print_group_picture($group, $courseid, $large = false, $return = false,
  * @param  stdClass $group A group object.
  * @param  int $courseid The course ID for the group.
  * @param  bool $large A large or small group picture? Default is small.
- * @param  boolean $includetoken Whether to use a user token when displaying this group image.
- *                 True indicates to generate a token for current user, and integer value indicates to generate a token for the
- *                 user whose id is the value indicated.
- *                 If the group picture is included in an e-mail or some other location where the audience is a specific
- *                 user who will not be logged in when viewing, then we use a token to authenticate the user.
  * @return moodle_url Returns the url for the group picture.
  */
-function get_group_picture_url($group, $courseid, $large = false, $includetoken = false) {
+function get_group_picture_url($group, $courseid, $large = false) {
     global $CFG;
 
     $context = context_course::instance($courseid);
@@ -2577,8 +2481,7 @@ function get_group_picture_url($group, $courseid, $large = false, $includetoken 
         $file = 'f2';
     }
 
-    $grouppictureurl = moodle_url::make_pluginfile_url(
-            $context->id, 'group', 'icon', $group->id, '/', $file, false, $includetoken);
+    $grouppictureurl = moodle_url::make_pluginfile_url($context->id, 'group', 'icon', $group->id, '/', $file);
     $grouppictureurl->param('rev', $group->picture);
     return $grouppictureurl;
 }
@@ -2949,9 +2852,6 @@ function redirect($url, $message='', $delay=null, $messagetype = \core\output\no
     \core\session\manager::write_close();
 
     if ($delay == 0 && !$debugdisableredirect && !headers_sent()) {
-        // This helps when debugging redirect issues like loops and it is not clear
-        // which layer in the stack sent the redirect header.
-        @header('X-Redirect-By: Moodle');
         // 302 might not work for POST requests, 303 is ignored by obsolete clients.
         @header($_SERVER['SERVER_PROTOCOL'] . ' 303 See Other');
         @header('Location: '.$url);
@@ -2981,10 +2881,10 @@ function obfuscate_email($email) {
     $length = strlen($email);
     $obfuscated = '';
     while ($i < $length) {
-        if (rand(0, 2) && $email[$i]!='@') { // MDL-20619 some browsers have problems unobfuscating @.
-            $obfuscated.='%'.dechex(ord($email[$i]));
+        if (rand(0, 2) && $email{$i}!='@') { // MDL-20619 some browsers have problems unobfuscating @.
+            $obfuscated.='%'.dechex(ord($email{$i}));
         } else {
-            $obfuscated.=$email[$i];
+            $obfuscated.=$email{$i};
         }
         $i++;
     }
@@ -3618,9 +3518,7 @@ function print_password_policy() {
     $message = '';
     if (!empty($CFG->passwordpolicy)) {
         $messages = array();
-        if (!empty($CFG->minpasswordlength)) {
-            $messages[] = get_string('informminpasswordlength', 'auth', $CFG->minpasswordlength);
-        }
+        $messages[] = get_string('informminpasswordlength', 'auth', $CFG->minpasswordlength);
         if (!empty($CFG->minpassworddigits)) {
             $messages[] = get_string('informminpassworddigits', 'auth', $CFG->minpassworddigits);
         }
@@ -3634,20 +3532,8 @@ function print_password_policy() {
             $messages[] = get_string('informminpasswordnonalphanum', 'auth', $CFG->minpasswordnonalphanum);
         }
 
-        // Fire any additional password policy functions from plugins.
-        // Callbacks must return an array of message strings.
-        $pluginsfunction = get_plugins_with_function('print_password_policy');
-        foreach ($pluginsfunction as $plugintype => $plugins) {
-            foreach ($plugins as $pluginfunction) {
-                $messages = array_merge($messages, $pluginfunction());
-            }
-        }
-
         $messages = join(', ', $messages); // This is ugly but we do not have anything better yet...
-        // Check if messages is empty before outputting any text.
-        if ($messages != '') {
-            $message = get_string('informpasswordpolicy', 'auth', $messages);
-        }
+        $message = get_string('informpasswordpolicy', 'auth', $messages);
     }
     return $message;
 }

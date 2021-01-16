@@ -155,13 +155,15 @@ class SimplePie_HTTP_Parser
 		{
 			return true;
 		}
-
-		$this->http_version = '';
-		$this->status_code = '';
-		$this->reason = '';
-		$this->headers = array();
-		$this->body = '';
-		return false;
+		else
+		{
+			$this->http_version = '';
+			$this->status_code = '';
+			$this->reason = '';
+			$this->headers = array();
+			$this->body = '';
+			return false;
+		}
 	}
 
 	/**
@@ -493,26 +495,5 @@ class SimplePie_HTTP_Parser
 				return;
 			}
 		}
-	}
-
-	/**
-	 * Prepare headers (take care of proxies headers)
-	 *
-	 * @param string  $headers Raw headers
-	 * @param integer $count   Redirection count. Default to 1.
-	 *
-	 * @return string
-	 */
-	static public function prepareHeaders($headers, $count = 1)
-	{
-		$data = explode("\r\n\r\n", $headers, $count);
-		$data = array_pop($data);
-		if (false !== stripos($data, "HTTP/1.0 200 Connection established\r\n\r\n")) {
-			$data = str_ireplace("HTTP/1.0 200 Connection established\r\n\r\n", '', $data);
-		}
-		if (false !== stripos($data, "HTTP/1.1 200 Connection established\r\n\r\n")) {
-			$data = str_ireplace("HTTP/1.1 200 Connection established\r\n\r\n", '', $data);
-		}
-		return $data;
 	}
 }

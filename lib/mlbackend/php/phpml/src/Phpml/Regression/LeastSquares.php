@@ -10,7 +10,6 @@ use Phpml\Math\Matrix;
 class LeastSquares implements Regression
 {
     use Predictable;
-
     /**
      * @var array
      */
@@ -29,9 +28,13 @@ class LeastSquares implements Regression
     /**
      * @var array
      */
-    private $coefficients = [];
+    private $coefficients;
 
-    public function train(array $samples, array $targets): void
+    /**
+     * @param array $samples
+     * @param array $targets
+     */
+    public function train(array $samples, array $targets)
     {
         $this->samples = array_merge($this->samples, $samples);
         $this->targets = array_merge($this->targets, $targets);
@@ -40,6 +43,8 @@ class LeastSquares implements Regression
     }
 
     /**
+     * @param array $sample
+     *
      * @return mixed
      */
     public function predictSample(array $sample)
@@ -52,12 +57,18 @@ class LeastSquares implements Regression
         return $result;
     }
 
-    public function getCoefficients(): array
+    /**
+     * @return array
+     */
+    public function getCoefficients()
     {
         return $this->coefficients;
     }
 
-    public function getIntercept(): float
+    /**
+     * @return float
+     */
+    public function getIntercept()
     {
         return $this->intercept;
     }
@@ -65,7 +76,7 @@ class LeastSquares implements Regression
     /**
      * coefficient(b) = (X'X)-1X'Y.
      */
-    private function computeCoefficients(): void
+    private function computeCoefficients()
     {
         $samplesMatrix = $this->getSamplesMatrix();
         $targetsMatrix = $this->getTargetsMatrix();
@@ -79,8 +90,10 @@ class LeastSquares implements Regression
 
     /**
      * Add one dimension for intercept calculation.
+     *
+     * @return Matrix
      */
-    private function getSamplesMatrix(): Matrix
+    private function getSamplesMatrix()
     {
         $samples = [];
         foreach ($this->samples as $sample) {
@@ -91,7 +104,10 @@ class LeastSquares implements Regression
         return new Matrix($samples);
     }
 
-    private function getTargetsMatrix(): Matrix
+    /**
+     * @return Matrix
+     */
+    private function getTargetsMatrix()
     {
         if (is_array($this->targets[0])) {
             return new Matrix($this->targets);

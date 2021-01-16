@@ -2,16 +2,16 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp\Formatter;
+namespace Leafo\ScssPhp\Formatter;
 
-use ScssPhp\ScssPhp\Formatter;
+use Leafo\ScssPhp\Formatter;
 
 /**
  * Compact formatter

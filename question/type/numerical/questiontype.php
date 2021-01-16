@@ -52,17 +52,6 @@ class qtype_numerical extends question_type {
     const UNITGRADEDOUTOFMARK = 1;
     const UNITGRADEDOUTOFMAX = 2;
 
-    /**
-     * Validate that a string is a number formatted correctly for the current locale.
-     * @param string $x a string
-     * @return bool whether $x is a number that the numerical question type can interpret.
-     */
-    public static function is_valid_number(string $x) : bool {
-        $ap = new qtype_numerical_answer_processor(array());
-        list($value, $unit) = $ap->apply_units($x);
-        return !is_null($value) && !$unit;
-    }
-
     public function get_question_options($question) {
         global $CFG, $DB, $OUTPUT;
         parent::get_question_options($question);
@@ -225,7 +214,6 @@ class qtype_numerical extends question_type {
                 if ($options->tolerance === false) {
                     $result->notice = get_string('invalidnumerictolerance', 'qtype_numerical');
                 }
-                $options->tolerance = (string)$options->tolerance;
             }
             if (isset($options->id)) {
                 $DB->update_record('question_numerical', $options);
@@ -554,7 +542,7 @@ class qtype_numerical_answer_processor {
     }
 
     /**
-     * @return bool If the student's response contains a '.' or a ',' that
+     * @return book If the student's response contains a '.' or a ',' that
      * matches the thousands separator in the current locale. In this case, the
      * parsing in apply_unit can give a result that the student did not expect.
      */
@@ -652,7 +640,7 @@ class qtype_numerical_answer_processor {
         if (strpos($response, '.') !== false || substr_count($response, ',') > 1) {
             $response = str_replace(',', '', $response);
         } else {
-            $response = str_replace([$this->thousandssep, $this->decsep, ','], ['', '.', '.'], $response);
+            $response = str_replace(',', '.', $response);
         }
 
         $regex = '[+-]?(?:\d+(?:\\.\d*)?|\\.\d+)(?:e[-+]?\d+)?';

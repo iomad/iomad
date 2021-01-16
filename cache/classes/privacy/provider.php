@@ -39,9 +39,7 @@ class provider implements
         \core_privacy\local\metadata\provider,
 
         // The cache subsystem stores data on behalf of other components.
-        \core_privacy\local\request\subsystem\plugin_provider,
-        \core_privacy\local\request\shared_userlist_provider
-    {
+        \core_privacy\local\request\subsystem\plugin_provider {
 
     /**
      * Returns meta data about this system.

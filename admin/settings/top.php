@@ -15,14 +15,6 @@ $ADMIN->add('root', new admin_externalpage('registrationmoodleorg', new lang_str
  // hidden upgrade script
 $ADMIN->add('root', new admin_externalpage('upgradesettings', new lang_string('upgradesettings', 'admin'), "$CFG->wwwroot/$CFG->admin/upgradesettings.php", 'moodle/site:config', true));
 
-// Adding Moodle Services information page.
-$moodleservices = new admin_settingpage('moodleservices', new lang_string('moodleservices',
-    'admin'));
-$ADMIN->add('root', $moodleservices);
-
-$userfeedback = new admin_settingpage('userfeedback', new lang_string('feedbacksettings', 'admin'));
-$ADMIN->add('root', $userfeedback);
-
 if ($hassiteconfig) {
     $optionalsubsystems = new admin_settingpage('optionalsubsystems', new lang_string('advancedfeatures', 'admin'));
     $ADMIN->add('root', $optionalsubsystems);
@@ -34,11 +26,8 @@ $ADMIN->add('root', new admin_category('grades', new lang_string('grades')));
 $ADMIN->add('root', new admin_category('analytics', new lang_string('analytics', 'analytics')));
 $ADMIN->add('root', new admin_category('competencies', new lang_string('competencies', 'core_competency')));
 $ADMIN->add('root', new admin_category('badges', new lang_string('badges'), empty($CFG->enablebadges)));
-$ADMIN->add('root', new admin_category('h5p', new lang_string('h5p', 'core_h5p')));
-$ADMIN->add('root', new admin_category('license', new lang_string('license')));
 $ADMIN->add('root', new admin_category('location', new lang_string('location','admin')));
 $ADMIN->add('root', new admin_category('language', new lang_string('language')));
-$ADMIN->add('root', new admin_category('messaging', new lang_string('messagingcategory', 'admin')));
 $ADMIN->add('root', new admin_category('modules', new lang_string('plugins', 'admin')));
 $ADMIN->add('root', new admin_category('security', new lang_string('security','admin')));
 $ADMIN->add('root', new admin_category('appearance', new lang_string('appearance','admin')));

@@ -285,9 +285,6 @@ class grade_category extends grade_object {
      * @return bool success
      */
     public function delete($source=null) {
-        global $DB;
-
-        $transaction = $DB->start_delegated_transaction();
         $grade_item = $this->load_grade_item();
 
         if ($this->is_course_category()) {
@@ -337,10 +334,7 @@ class grade_category extends grade_object {
         $grade_item->delete($source);
 
         // delete category itself
-        $success = parent::delete($source);
-
-        $transaction->allow_commit();
-        return $success;
+        return parent::delete($source);
     }
 
     /**
@@ -2198,7 +2192,7 @@ class grade_category extends grade_object {
         $children_array = array();
         foreach ($category->children as $sortorder=>$child) {
 
-            if (property_exists($child, 'itemtype')) {
+            if (array_key_exists('itemtype', $child)) {
                 $grade_item = new grade_item($child, false);
 
                 if (in_array($grade_item->itemtype, array('course', 'category'))) {
@@ -2315,12 +2309,10 @@ class grade_category extends grade_object {
         // For a course category, we return the course name if the fullname is set to '?' in the DB (empty in the category edit form)
         if (empty($this->parent) && $this->fullname == '?') {
             $course = $DB->get_record('course', array('id'=> $this->courseid));
-            return format_string($course->fullname, false, array("context" => context_course::instance($this->courseid)));
+            return format_string($course->fullname);
 
         } else {
-            // Grade categories can't be set up at system context (unlike scales and outcomes)
-            // We therefore must have a courseid, and don't need to handle system contexts when filtering.
-            return format_string($this->fullname, false, array("context" => context_course::instance($this->courseid)));
+            return $this->fullname;
         }
     }
 
@@ -2595,13 +2587,12 @@ class grade_category extends grade_object {
      */
     public function set_hidden($hidden, $cascade=false) {
         $this->load_grade_item();
+        //this hides the associated grade item (the course total)
+        $this->grade_item->set_hidden($hidden, $cascade);
         //this hides the category itself and everything it contains
         parent::set_hidden($hidden, $cascade);
 
         if ($cascade) {
-
-            // This hides the associated grade item (the course/category total).
-            $this->grade_item->set_hidden($hidden, $cascade);
 
             if ($children = grade_item::fetch_all(array('categoryid'=>$this->id))) {
 
@@ -2626,7 +2617,9 @@ class grade_category extends grade_object {
             if ($category_array && array_key_exists($this->parent, $category_array)) {
                 $category = $category_array[$this->parent];
                 //call set_hidden on the category regardless of whether it is hidden as its parent might be hidden
-                $category->set_hidden($hidden, false);
+                //if($category->is_hidden()) {
+                    $category->set_hidden($hidden, false);
+                //}
             }
         }
     }

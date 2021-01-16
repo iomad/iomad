@@ -66,12 +66,10 @@ class toolproxy extends \mod_lti\local\ltiservice\resource_base {
      */
     public function execute($response) {
 
-        $ok = $this->check_tool(null, $response->get_request_data());
-        $ok = $ok && ($this->get_service()->get_tool_proxy());
+        $ok = $this->check_tool_proxy(null, $response->get_request_data());
         if ($ok) {
             $toolproxy = $this->get_service()->get_tool_proxy();
-        }
-        if (!$ok) {
+        } else {
             $toolproxy = null;
             $response->set_code(401);
         }
@@ -120,7 +118,6 @@ class toolproxy extends \mod_lti\local\ltiservice\resource_base {
         }
 
         // Check all services requested were offered (only tool services currently supported).
-        $requestsbasicoutcomes = false;
         if ($ok && isset($toolproxyjson->security_contract->tool_service)) {
             $contexts = lti_get_contexts($toolproxyjson);
             $profileservice = lti_get_service_by_name('profile');
@@ -132,7 +129,6 @@ class toolproxy extends \mod_lti\local\ltiservice\resource_base {
             $errors = array();
             foreach ($tpservices as $service) {
                 $fqid = lti_get_fqid($contexts, $service->service);
-                $requestsbasicoutcomes = $requestsbasicoutcomes || (substr($fqid, -13) === 'Outcomes.LTI1');
                 if (substr($fqid, 0, strlen($context)) !== $context) {
                     $errors[] = $service->service;
                 } else {
@@ -223,15 +219,7 @@ class toolproxy extends \mod_lti\local\ltiservice\resource_base {
 
                 $type = new \stdClass();
                 $type->state = LTI_TOOL_STATE_PENDING;
-                $type->ltiversion = LTI_VERSION_2;
                 $type->toolproxyid = $toolproxy->id;
-                // Ensure gradebook column is created.
-                if ($requestsbasicoutcomes && !in_array('BasicOutcome.url', $launchrequest->enabled_capability)) {
-                    $launchrequest->enabled_capability[] = 'BasicOutcome.url';
-                }
-                if ($requestsbasicoutcomes && !in_array('BasicOutcome.sourcedId', $launchrequest->enabled_capability)) {
-                    $launchrequest->enabled_capability[] = 'BasicOutcome.sourcedId';
-                }
                 $type->enabledcapability = implode("\n", $launchrequest->enabled_capability);
                 $type->parameter = self::lti_extract_parameters($launchrequest->parameter);
 

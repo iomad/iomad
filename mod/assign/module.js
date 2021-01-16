@@ -3,17 +3,11 @@ M.mod_assign = {};
 M.mod_assign.init_tree = function(Y, expand_all, htmlid) {
     var treeElement = Y.one('#'+htmlid);
     if (treeElement) {
-        Y.use('yui2-treeview', 'node-event-simulate', function(Y) {
+        Y.use('yui2-treeview', function(Y) {
             var tree = new Y.YUI2.widget.TreeView(htmlid);
 
             tree.subscribe("clickEvent", function(node, event) {
                 // We want normal clicking which redirects to url.
-                return false;
-            });
-
-            tree.subscribe("enterKeyPressed", function(node) {
-                // We want keyboard activation to trigger a click on the first link.
-                Y.one(node.getContentEl()).one('a').simulate('click');
                 return false;
             });
 
@@ -163,65 +157,59 @@ M.mod_assign.init_grading_options = function(Y) {
 };
 
 M.mod_assign.init_plugin_summary = function(Y, subtype, type, submissionid) {
-    var suffix = subtype + '_' + type + '_' + submissionid;
-    var classname = 'contract_' + suffix;
-    var contract = Y.one('.' + classname);
+    suffix = subtype + '_' + type + '_' + submissionid;
+    classname = 'contract_' + suffix;
+    contract = Y.one('.' + classname);
     if (contract) {
         contract.on('click', function(e) {
-            e.preventDefault();
-            var link = e.currentTarget || e.target;
-            var linkclasses = link.getAttribute('class').split(' ');
-            var thissuffix = '';
-            for (var i = 0; i < linkclasses.length; i++) {
-                classname = linkclasses[i];
+            img = e.target;
+            imgclasses = img.getAttribute('class').split(' ');
+            for (i = 0; i < imgclasses.length; i++) {
+                classname = imgclasses[i];
                 if (classname.indexOf('contract_') == 0) {
                     thissuffix = classname.substr(9);
                 }
             }
-            var fullclassname = 'full_' + thissuffix;
-            var full = Y.one('.' + fullclassname);
+            fullclassname = 'full_' + thissuffix;
+            full = Y.one('.' + fullclassname);
             if (full) {
                 full.hide(false);
             }
-            var summaryclassname = 'summary_' + thissuffix;
-            var summary = Y.one('.' + summaryclassname);
+            summaryclassname = 'summary_' + thissuffix;
+            summary = Y.one('.' + summaryclassname);
             if (summary) {
                 summary.show(false);
-                summary.one('a.expand_' + thissuffix).focus();
             }
         });
     }
     classname = 'expand_' + suffix;
-    var expand = Y.one('.' + classname);
+    expand = Y.one('.' + classname);
 
-    var full = Y.one('.full_' + suffix);
+    full = Y.one('.full_' + suffix);
     if (full) {
         full.hide(false);
         full.toggleClass('hidefull');
     }
     if (expand) {
         expand.on('click', function(e) {
-            e.preventDefault();
-            var link = e.currentTarget || e.target;
-            var linkclasses = link.getAttribute('class').split(' ');
-            var thissuffix = '';
-            for (var i = 0; i < linkclasses.length; i++) {
-                classname = linkclasses[i];
+            img = e.target;
+            imgclasses = img.getAttribute('class').split(' ');
+            for (i = 0; i < imgclasses.length; i++) {
+                classname = imgclasses[i];
                 if (classname.indexOf('expand_') == 0) {
                     thissuffix = classname.substr(7);
                 }
             }
-            var summaryclassname = 'summary_' + thissuffix;
-            var summary = Y.one('.' + summaryclassname);
+            summaryclassname = 'summary_' + thissuffix;
+            summary = Y.one('.' + summaryclassname);
             if (summary) {
                 summary.hide(false);
             }
-            var fullclassname = 'full_' + thissuffix;
+            fullclassname = 'full_' + thissuffix;
             full = Y.one('.' + fullclassname);
             if (full) {
                 full.show(false);
-                full.one('a.contract_' + thissuffix).focus();
             }
         });
     }
-};
+}

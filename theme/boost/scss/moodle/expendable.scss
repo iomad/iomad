@@ -1,8 +1,15 @@
+table#explaincaps,
+table#defineroletable,
+table.grading-report,
+table#listdirectories,
+table.rolecaps,
+table.userenrolment,
+form#movecourses table,
+#page-admin-course-index .editcourse,
+.forumheaderlist,
 table.flexible,
 .generaltable {
-    tbody tr:nth-of-type(#{$table-striped-order}) {
-        background-color: $table-accent-bg;
-    }
+    @extend .table-striped;
 }
 
 table {
@@ -21,23 +28,17 @@ table {
 #page-admin-user table,
 .environmenttable,
 .category_subcategories,
-.rcs-results {
-    th,
-    td {
-        padding: $table-cell-padding-sm;
-    }
+.rcs-results,
+table#listdirectories {
+    @extend .table-sm;
 }
 
+table.grading-report,
 .forumheaderlist,
 .generaltable,
 table.flexible,
 .category_subcategories,
 table#modules,
 table#permissions {
-    tbody tr {
-        @include hover {
-            color: $table-hover-color;
-            background-color: $table-hover-bg;
-        }
-    }
+    @extend .table-hover;
 }

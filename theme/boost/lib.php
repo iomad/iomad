@@ -48,7 +48,7 @@ function theme_boost_get_extra_scss($theme) {
     // Sets the background image, and its settings.
     if (!empty($imageurl)) {
         $content .= 'body { ';
-        $content .= "background-image: url('$imageurl'); background-size: cover;";
+        $content .= "background-image: url('$imageurl');";
         $content .= ' }';
     }
 
@@ -110,16 +110,6 @@ function theme_boost_get_main_scss_content($theme) {
 }
 
 /**
- * Get compiled css.
- *
- * @return string compiled css
- */
-function theme_boost_get_precompiled_css() {
-    global $CFG;
-    return file_get_contents($CFG->dirroot . '/theme/boost/style/moodle.css');
-}
-
-/**
  * Get SCSS to prepend.
  *
  * @param theme_config $theme The theme config object.
@@ -131,7 +121,7 @@ function theme_boost_get_pre_scss($theme) {
     $scss = '';
     $configurable = [
         // Config key => [variableName, ...].
-        'brandcolor' => ['primary'],
+        'brandcolor' => ['brand-primary'],
     ];
 
     // Prepend variables first.

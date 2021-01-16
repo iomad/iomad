@@ -32,6 +32,8 @@ use  core_course_renderer;
 
 require_once($CFG->dirroot . '/blocks/mycourses/locallib.php');
 require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->libdir . '/coursecatlib.php');
+
 
 /**
  * Class containing data for my overview block.
@@ -75,6 +77,7 @@ class main implements renderable, templatable {
         $completedview = new completed_view($mycompletion, $cutoffdate);
 
         // Now, set the tab we are going to be viewing.
+/* GH set always available to support first time users
         $viewingavailable = false;
         $viewinginprogress = false;
         $viewingcompleted = false;
@@ -85,7 +88,10 @@ class main implements renderable, templatable {
         } else {
             $viewinginprogress = true;
         }
-        $nocoursesurl = $output->image_url('courses', 'block_mycourses')->out();
+GH   */        
+$viewingavailable = true; // is what beginners want
+
+        $nocoursesurl = $output->image_url('courses', 'block_myoverview')->out();
 
         return [
             'midnight' => usergetmidnight(time()),

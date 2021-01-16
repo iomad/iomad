@@ -76,7 +76,7 @@ class tool_lp_external_testcase extends externallib_advanced_testcase {
      * Setup function- we will create a course and add an assign instance to it.
      */
     protected function setUp() {
-        global $DB, $CFG;
+        global $DB;
 
         $this->resetAfterTest(true);
 
@@ -91,7 +91,9 @@ class tool_lp_external_testcase extends externallib_advanced_testcase {
         $catcontext = context_coursecat::instance($category->id);
 
         // Fetching default authenticated user role.
-        $authrole = $DB->get_record('role', array('id' => $CFG->defaultuserroleid));
+        $userroles = get_archetype_roles('user');
+        $this->assertCount(1, $userroles);
+        $authrole = array_pop($userroles);
 
         // Reset all default authenticated users permissions.
         unassign_capability('moodle/competency:competencygrade', $authrole->id);
@@ -114,7 +116,7 @@ class tool_lp_external_testcase extends externallib_advanced_testcase {
         $this->userrole = create_role('User role', 'lpuserrole', 'learning plan user role description');
 
         assign_capability('moodle/competency:competencymanage', CAP_ALLOW, $this->creatorrole, $syscontext->id);
-        assign_capability('moodle/competency:coursecompetencyconfigure', CAP_ALLOW, $this->creatorrole, $syscontext->id);
+        assign_capability('moodle/competency:competencycompetencyconfigure', CAP_ALLOW, $this->creatorrole, $syscontext->id);
         assign_capability('moodle/competency:planmanage', CAP_ALLOW, $this->creatorrole, $syscontext->id);
         assign_capability('moodle/competency:planmanagedraft', CAP_ALLOW, $this->creatorrole, $syscontext->id);
         assign_capability('moodle/competency:planmanageown', CAP_ALLOW, $this->creatorrole, $syscontext->id);
@@ -459,33 +461,4 @@ class tool_lp_external_testcase extends externallib_advanced_testcase {
         $this->assertEquals('A', $summary->evidence[1]->gradename);
     }
 
-    public function test_data_for_course_competency_page() {
-        $this->setAdminUser();
-
-        $dg = $this->getDataGenerator();
-        $lpg = $dg->get_plugin_generator('core_competency');
-        $f1 = $lpg->create_framework();
-        $c1 = $lpg->create_competency(array('competencyframeworkid' => $f1->get('id')));
-        $course1 = $dg->create_course(array('category' => $this->category->id));
-        $cc = api::add_competency_to_course($course1->id, $c1->get('id'));
-
-        $evidence = \core_competency\external::grade_competency($this->user->id, $c1->get('id'), 1, true);
-        $evidence = \core_competency\external::grade_competency($this->user->id, $c1->get('id'), 2, true);
-
-        $pagegenerator = $this->getDataGenerator()->get_plugin_generator('mod_page');
-        $page = $pagegenerator->create_instance(array('course' => $course1->id));
-        $page2 = $pagegenerator->create_instance(array('course' => $course1->id));
-
-        $cm = get_coursemodule_from_instance('page', $page->id);
-        $cm2 = get_coursemodule_from_instance('page', $page2->id);
-        // Add the competency to the course module.
-        $ccm = api::add_competency_to_course_module($cm, $c1->get('id'));
-        $summary = external::data_for_course_competencies_page($course1->id, 0);
-        $summary2 = external::data_for_course_competencies_page($course1->id, $cm->id);
-        $summary3 = external::data_for_course_competencies_page($course1->id, $cm2->id);
-
-        $this->assertEquals(count($summary->competencies), 1);
-        $this->assertEquals(count($summary->competencies), count($summary2->competencies));
-        $this->assertEquals(count($summary3->competencies), 0);
-    }
 }

@@ -7,11 +7,11 @@ Feature: List the system steps definitions
   Background:
     Given I am on homepage
     And I log in as "admin"
-    And I navigate to "Development > Acceptance testing" in site administration
+    And I navigate to "Acceptance testing" node in "Site administration > Development"
 
   @javascript
   Scenario: Accessing the list
-    Then I should see "Step definitions"
+    Then I should see "Steps definitions"
     And I should not see "There aren't steps definitions matching this filter"
 
   @javascript
@@ -26,11 +26,3 @@ Feature: List the system steps definitions
     Given I set the field "Contains" to "homepage"
     When I press "Filter"
     Then I should see "Opens Moodle homepage."
-
-  @javascript
-  Scenario: Filtering by the multiple words pattern
-    Given I set the field "Contains" to "should exist"
-    When I press "Filter"
-    Then I should not see "There aren't steps definitions matching this filter"
-    And I should see "Checks the provided element and selector type exists in the current page."
-    And I should see "Checks that an element and selector type exists in another element and selector type on the current page."

@@ -42,9 +42,8 @@ class scanner_exception extends \moodle_exception {
      * @param string $link
      * @param mixed $a
      * @param mixed $debuginfo
-     * @param string $module optional plugin name
      */
-    public function __construct($errorcode, $link = '', $a = null, $debuginfo = null, $module = 'antivirus') {
-        parent::__construct($errorcode, $module, $link, $a, $debuginfo);
+    public function __construct($errorcode, $link = '', $a = null, $debuginfo = null) {
+        parent::__construct($errorcode, 'antivirus', $link, $a, $debuginfo);
     }
 }

@@ -34,7 +34,6 @@ use \core_privacy\local\metadata\types\plugintype_link;
  *
  * @copyright   2018 Andrew Nicols <andrew@nicols.co.uk>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \core_privacy\local\metadata\types\plugintype_link
  */
 class core_privacy_metadata_types_plugintype_link extends advanced_testcase {
 
@@ -44,7 +43,6 @@ class core_privacy_metadata_types_plugintype_link extends advanced_testcase {
      * @dataProvider invalid_string_provider
      * @param   string  $name Name
      * @param   string  $summary Summary
-     * @covers ::__construct
      */
     public function test_invalid_configs($name, $privacyfields, $summary) {
         $record = new plugintype_link($name, $privacyfields, $summary);
@@ -57,7 +55,6 @@ class core_privacy_metadata_types_plugintype_link extends advanced_testcase {
      * @dataProvider invalid_string_provider
      * @param   string  $name Name
      * @param   string  $summary Summary
-     * @covers ::__construct
      */
     public function test_invalid_configs_debug_normal($name, $privacyfields, $summary) {
         global $CFG;
@@ -74,7 +71,6 @@ class core_privacy_metadata_types_plugintype_link extends advanced_testcase {
      * @dataProvider valid_string_provider
      * @param   string  $name Name
      * @param   string  $summary Summary
-     * @covers ::__construct
      */
     public function test_valid_configs($name, $privacyfields, $summary) {
         $record = new plugintype_link($name, $privacyfields, $summary);

@@ -47,15 +47,13 @@ class test_lock {
      *
      * @internal
      * @static
-     * @param   string $framework phpunit|behat
-     * @param   string $lockfilesuffix A sub-type used by the framework
-     * @return  void
+     * @param    string  $framework Test framework
+     * @return   void
      */
-    public static function acquire(string $framework, string $lockfilesuffix = '') {
+    public static function acquire($framework) {
         global $CFG;
-
         $datarootpath = $CFG->{$framework . '_dataroot'} . '/' . $framework;
-        $lockfile = "{$datarootpath}/lock{$lockfilesuffix}";
+        $lockfile = $datarootpath . '/lock';
         if (!file_exists($datarootpath)) {
             // Dataroot not initialised yet.
             return;
@@ -64,58 +62,36 @@ class test_lock {
             file_put_contents($lockfile, 'This file prevents concurrent execution of Moodle ' . $framework . ' tests');
             testing_fix_file_permissions($lockfile);
         }
-
-        $lockhandlename = self::get_lock_handle_name($framework, $lockfilesuffix);
-        if (self::$lockhandles[$lockhandlename] = fopen($lockfile, 'r')) {
+        if (self::$lockhandles[$framework] = fopen($lockfile, 'r')) {
             $wouldblock = null;
-            $locked = flock(self::$lockhandles[$lockhandlename], (LOCK_EX | LOCK_NB), $wouldblock);
+            $locked = flock(self::$lockhandles[$framework], (LOCK_EX | LOCK_NB), $wouldblock);
             if (!$locked) {
                 if ($wouldblock) {
                     echo "Waiting for other test execution to complete...\n";
                 }
-                $locked = flock(self::$lockhandles[$lockhandlename], LOCK_EX);
+                $locked = flock(self::$lockhandles[$framework], LOCK_EX);
             }
             if (!$locked) {
-                fclose(self::$lockhandles[$lockhandlename]);
-                self::$lockhandles[$lockhandlename] = null;
+                fclose(self::$lockhandles[$framework]);
+                self::$lockhandles[$framework] = null;
             }
         }
-        register_shutdown_function(['test_lock', 'release'], $framework, $lockfilesuffix);
+        register_shutdown_function(array('test_lock', 'release'), $framework);
     }
 
     /**
      * Note: do not call manually!
      * @internal
      * @static
-     * @param   string $framework phpunit|behat
-     * @param   string $lockfilesuffix A sub-type used by the framework
-     * @return  void
+     * @param    string  $framework phpunit|behat
+     * @return   void
      */
-    public static function release(string $framework, string $lockfilesuffix = '') {
-        $lockhandlename = self::get_lock_handle_name($framework, $lockfilesuffix);
-
-        if (self::$lockhandles[$lockhandlename]) {
-            flock(self::$lockhandles[$lockhandlename], LOCK_UN);
-            fclose(self::$lockhandles[$lockhandlename]);
-            self::$lockhandles[$lockhandlename] = null;
+    public static function release($framework) {
+        if (self::$lockhandles[$framework]) {
+            flock(self::$lockhandles[$framework], LOCK_UN);
+            fclose(self::$lockhandles[$framework]);
+            self::$lockhandles[$framework] = null;
         }
-    }
-
-    /**
-     * Get the name of the lock handle stored in the class.
-     *
-     * @param   string $framework
-     * @param   string $lockfilesuffix
-     * @return  string
-     */
-    protected static function get_lock_handle_name(string $framework, string $lockfilesuffix): string {
-        $lockhandlepieces = [$framework];
-
-        if (!empty($lockfilesuffix)) {
-            $lockhandlepieces[] = $lockfilesuffix;
-        }
-
-        return implode('%', $lockhandlepieces);
     }
 
 }

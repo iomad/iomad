@@ -25,8 +25,6 @@
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
 
-require_once(__DIR__ . '/../../../../behat/behat_base.php');
-
 /**
  * Steps definitions to deal with the atto text editor
  *

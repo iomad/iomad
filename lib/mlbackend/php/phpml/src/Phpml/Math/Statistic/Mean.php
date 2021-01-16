@@ -9,9 +9,13 @@ use Phpml\Exception\InvalidArgumentException;
 class Mean
 {
     /**
+     * @param array $numbers
+     *
+     * @return float
+     *
      * @throws InvalidArgumentException
      */
-    public static function arithmetic(array $numbers): float
+    public static function arithmetic(array $numbers)
     {
         self::checkArrayLength($numbers);
 
@@ -19,6 +23,8 @@ class Mean
     }
 
     /**
+     * @param array $numbers
+     *
      * @return float|mixed
      *
      * @throws InvalidArgumentException
@@ -28,11 +34,11 @@ class Mean
         self::checkArrayLength($numbers);
 
         $count = count($numbers);
-        $middleIndex = (int) floor($count / 2);
+        $middleIndex = (int)floor($count / 2);
         sort($numbers, SORT_NUMERIC);
         $median = $numbers[$middleIndex];
 
-        if ($count % 2 === 0) {
+        if (0 === $count % 2) {
             $median = ($median + $numbers[$middleIndex - 1]) / 2;
         }
 
@@ -40,6 +46,8 @@ class Mean
     }
 
     /**
+     * @param array $numbers
+     *
      * @return mixed
      *
      * @throws InvalidArgumentException
@@ -50,16 +58,18 @@ class Mean
 
         $values = array_count_values($numbers);
 
-        return array_search(max($values), $values, true);
+        return array_search(max($values), $values);
     }
 
     /**
+     * @param array $array
+     *
      * @throws InvalidArgumentException
      */
-    private static function checkArrayLength(array $array): void
+    private static function checkArrayLength(array $array)
     {
-        if (count($array) === 0) {
-            throw new InvalidArgumentException('The array has zero elements');
+        if (empty($array)) {
+            throw InvalidArgumentException::arrayCantBeEmpty();
         }
     }
 }

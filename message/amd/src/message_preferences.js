@@ -29,7 +29,8 @@ define(['jquery', 'core/ajax', 'core/notification',
     var SELECTORS = {
         PREFERENCE: '[data-state]',
         PREFERENCES_CONTAINER: '[data-region="preferences-container"]',
-        CONTACTABLE_PRIVACY_CONTAINER: '[data-region="privacy-setting-container"]',
+        BLOCK_NON_CONTACTS: '[data-region="block-non-contacts-container"] [data-block-non-contacts]',
+        BLOCK_NON_CONTACTS_CONTAINER: '[data-region="block-non-contacts-container"]',
     };
 
     /**
@@ -55,15 +56,16 @@ define(['jquery', 'core/ajax', 'core/notification',
     };
 
     /**
-     * Update the contactable privacy user preference in the DOM and
+     * Update the block messages from non-contacts user preference in the DOM and
      * send a request to update on the server.
      *
      * @return {Promise}
-     * @method saveContactablePrivacySetting
+     * @method saveBlockNonContactsStatus
      */
-    MessagePreferences.prototype.saveContactablePrivacySetting = function() {
-        var container = this.root.find(SELECTORS.CONTACTABLE_PRIVACY_CONTAINER);
-        var value = $("input[type='radio']:checked").val();
+    MessagePreferences.prototype.saveBlockNonContactsStatus = function() {
+        var checkbox = this.root.find(SELECTORS.BLOCK_NON_CONTACTS);
+        var container = this.root.find(SELECTORS.BLOCK_NON_CONTACTS_CONTAINER);
+        var ischecked = checkbox.prop('checked');
 
         if (container.hasClass('loading')) {
             return $.Deferred().resolve();
@@ -77,8 +79,8 @@ define(['jquery', 'core/ajax', 'core/notification',
                 userid: this.userId,
                 preferences: [
                     {
-                        type: container.attr('data-preference-key'),
-                        value: value,
+                        type: checkbox.attr('data-preference-key'),
+                        value: ischecked ? 1 : 0,
                     }
                 ]
             }
@@ -101,22 +103,20 @@ define(['jquery', 'core/ajax', 'core/notification',
             CustomEvents.events.activate
         ]);
 
-        this.root.on('change', function(e) {
-            // Add listener for privacy setting radio buttons change.
-            if (e.target.name == 'message_blocknoncontacts') {
-                this.saveContactablePrivacySetting();
-            } else {
-                // Add listener for processor preferences.
-                if (!this.preferencesDisabled()) {
-                    var preferencesContainer = $(e.target).closest(SELECTORS.PREFERENCES_CONTAINER);
-                    var preferenceElement = $(e.target).closest(SELECTORS.PREFERENCE);
-                    var messagePreference = new MessageNotificationPreference(preferencesContainer, this.userId);
+        this.root.on(CustomEvents.events.activate, SELECTORS.BLOCK_NON_CONTACTS, function() {
+            this.saveBlockNonContactsStatus();
+        }.bind(this));
 
-                    preferenceElement.addClass('loading');
-                    messagePreference.save().always(function() {
-                        preferenceElement.removeClass('loading');
-                    });
-                }
+        this.root.on('change', function(e) {
+            if (!this.preferencesDisabled()) {
+                var preferencesContainer = $(e.target).closest(SELECTORS.PREFERENCES_CONTAINER);
+                var preferenceElement = $(e.target).closest(SELECTORS.PREFERENCE);
+                var messagePreference = new MessageNotificationPreference(preferencesContainer, this.userId);
+
+                preferenceElement.addClass('loading');
+                messagePreference.save().always(function() {
+                    preferenceElement.removeClass('loading');
+                });
             }
         }.bind(this));
     };

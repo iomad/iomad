@@ -54,15 +54,6 @@ if ($chapterid) {
 }
 $chapter->cmid = $cm->id;
 
-// Get the previous page number.
-$prevpage = $chapter->pagenum - 1;
-if ($prevpage) {
-    $currentchapter = $DB->get_record('book_chapters', ['pagenum' => $prevpage, 'bookid' => $book->id]);
-    if ($currentchapter) {
-        $chapter->currentchaptertitle = $currentchapter->title;
-    }
-}
-
 $options = array('noclean'=>true, 'subdirs'=>true, 'maxfiles'=>-1, 'maxbytes'=>0, 'context'=>$context);
 $chapter = file_prepare_standard_editor($chapter, 'content', $options, $context, 'mod_book', 'chapter', $chapter->id);
 
@@ -137,7 +128,7 @@ if ($chapters = book_preload_chapters($book)) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($book->name));
+echo $OUTPUT->heading($book->name);
 
 $mform->display();
 

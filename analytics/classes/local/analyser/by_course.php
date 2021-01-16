@@ -38,40 +38,34 @@ abstract class by_course extends base {
     /**
      * Return the list of courses to analyse.
      *
-     * @param string|null $action 'prediction', 'training' or null if no specific action needed.
-     * @param \context[] $contexts Only analysables that depend on the provided contexts. All analysables in the system if empty.
-     * @return \Iterator
+     * @return \core_analytics\course[]
      */
-    public function get_analysables_iterator(?string $action = null, array $contexts = []) {
-        global $DB;
+    public function get_analysables() {
 
-        list($sql, $params) = $this->get_iterator_sql('course', CONTEXT_COURSE, $action, 'c', $contexts);
+        // Default to all system courses.
+        if (!empty($this->options['filter'])) {
+            $courses = array();
+            foreach ($this->options['filter'] as $courseid) {
+                $courses[$courseid] = new \stdClass();
+                $courses[$courseid]->id = $courseid;
+            }
+        } else {
+            // Iterate through all potentially valid courses.
+            $courses = get_courses('all', 'c.sortorder ASC', 'c.id');
+        }
+        unset($courses[SITEID]);
 
-        $ordersql = $this->order_sql('sortorder', 'ASC', 'c');
-
-        $recordset = $DB->get_recordset_sql($sql . $ordersql, $params);
-
-        if (!$recordset->valid()) {
-            $this->add_log(get_string('nocourses', 'analytics'));
-            return new \ArrayIterator([]);
+        $analysables = array();
+        foreach ($courses as $course) {
+            // Skip the frontpage course.
+            $analysable = \core_analytics\course::instance($course->id);
+            $analysables[$analysable->get_id()] = $analysable;
         }
 
-        return new \core\dml\recordset_walk($recordset, function($record) {
+        if (empty($analysables)) {
+            $this->log[] = get_string('nocourses', 'analytics');
+        }
 
-            if ($record->id == SITEID) {
-                return false;
-            }
-            $context = \context_helper::preload_from_record($record);
-            return \core_analytics\course::instance($record, $context);
-        });
-    }
-
-    /**
-     * Can be limited to course categories or specific courses.
-     *
-     * @return array
-     */
-    public static function context_restriction_support(): array {
-        return [CONTEXT_COURSE, CONTEXT_COURSECAT];
+        return $analysables;
     }
 }

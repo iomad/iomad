@@ -1,6 +1,6 @@
 <?php
 /*
-@version   v5.20.16  12-Jan-2020
+@version   v5.20.9  21-Dec-2016
 @copyright (c) 2000-2013 John Lim (jlim#natsoft.com). All rights reserved.
 @copyright (c) 2014      Damien Regad, Mark Newnham and the ADOdb community
   Released under both BSD license and Lesser GPL library license.
@@ -113,7 +113,7 @@ class ADODB_mysqli extends ADOConnection {
 		if ($persist && PHP_VERSION > 5.2 && strncmp($argHostname,'p:',2) != 0) $argHostname = 'p:'.$argHostname;
 
 		#if (!empty($this->port)) $argHostname .= ":".$this->port;
-		$ok = @mysqli_real_connect($this->_connectionID,
+		$ok = mysqli_real_connect($this->_connectionID,
 					$argHostname,
 					$argUsername,
 					$argPassword,
@@ -128,7 +128,7 @@ class ADODB_mysqli extends ADOConnection {
 			return true;
 		} else {
 			if ($this->debug) {
-				ADOConnection::outp("Could not connect : "  . $this->ErrorMsg());
+				ADOConnection::outp("Could't connect : "  . $this->ErrorMsg());
 			}
 			$this->_connectionID = null;
 			return false;
@@ -601,7 +601,7 @@ class ADODB_mysqli extends ADOConnection {
 				$ref_table = strtoupper($ref_table);
 			}
 
-			// see https://sourceforge.net/p/adodb/bugs/100/
+			// see https://sourceforge.net/tracker/index.php?func=detail&aid=2287278&group_id=42718&atid=433976
 			if (!isset($foreign_keys[$ref_table])) {
 				$foreign_keys[$ref_table] = array();
 			}
@@ -713,8 +713,6 @@ class ADODB_mysqli extends ADOConnection {
 				$inputarr = false,
 				$secs = 0)
 	{
-		$nrows = (int) $nrows;
-		$offset = (int) $offset;
 		$offsetStr = ($offset >= 0) ? "$offset," : '';
 		if ($nrows < 0) $nrows = '18446744073709551615';
 

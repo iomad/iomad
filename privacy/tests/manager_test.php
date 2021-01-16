@@ -39,7 +39,6 @@ use \core_privacy\local\request\approved_contextlist;
  *
  * @copyright   2018 Jake Dallimore <jrhdallimore@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \core_privacy\manager
  */
 class privacy_manager_testcase extends advanced_testcase {
     /**
@@ -67,8 +66,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test collection of metadata for components implementing a metadata provider.
-     *
-     * @covers ::get_metadata_for_components
      */
     public function test_get_metadata_for_components() {
         // Get a mock manager, in which the core components list is mocked to include all mock plugins.
@@ -90,8 +87,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that get_contexts_for_userid() only returns contextlist collections for core providers.
-     *
-     * @covers ::get_contexts_for_userid
      */
     public function test_get_contexts_for_userid() {
         // Get a mock manager, in which the core components list is mocked to include all mock plugins.
@@ -117,8 +112,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test verifying the output of component_is_compliant.
-     *
-     * @covers ::component_is_compliant
      */
     public function test_component_is_compliant() {
         // Get a mock manager, in which the core components list is mocked to include all mock plugins.
@@ -164,7 +157,6 @@ class privacy_manager_testcase extends advanced_testcase {
      * @dataProvider    component_is_compliant_provider
      * @param   string  $component
      * @param   boolean $expected
-     * @covers ::component_is_compliant
      */
     public function test_component_is_compliant_examples($component, $expected) {
         $manager = new \core_privacy\manager();
@@ -174,8 +166,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      *  Test verifying only approved contextlists can be used with the export_user_data method.
-     *
-     * @covers ::export_user_data
      */
     public function test_export_user_data() {
         // Get a mock manager, in which the core components list is mocked to include all mock plugins.
@@ -209,8 +199,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      *  Test verifying only approved contextlists can be used with the delete_data_for_user method.
-     *
-     * @covers ::delete_data_for_user
      */
     public function test_delete_data_for_user() {
         $this->resetAfterTest();
@@ -242,8 +230,6 @@ class privacy_manager_testcase extends advanced_testcase {
      * Ensure that all installed plugins can provide metadata.
      *
      * This really just checks that all providers can be safely autoloaded.
-     *
-     * @covers ::get_metadata_for_components
      */
     public function test_installed_plugins() {
         $manager = new \core_privacy\manager();
@@ -253,8 +239,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that the reason for the null provider is returned.
-     *
-     * @covers ::get_null_provider_reason
      */
     public function test_get_null_provider_reason() {
         $manager = new \core_privacy\manager();
@@ -267,8 +251,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that manager::plugintype_class_callback() can be executed.
-     *
-     * @covers ::plugintype_class_callback
      */
     public function test_plugintype_class_callback() {
         \core_privacy\manager::plugintype_class_callback('doesnotexist', 'unusable', 'foo', ['bar']);
@@ -276,8 +258,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that manager::component_class_callback() can be executed.
-     *
-     * @covers ::component_class_callback
      */
     public function test_component_class_callback() {
         \core_privacy\manager::component_class_callback('foo_bar', 'unusable', 'foo', ['bar']);
@@ -289,7 +269,6 @@ class privacy_manager_testcase extends advanced_testcase {
      * @dataProvider is_empty_subsystem_provider
      * @param   string  $component
      * @param   bool    $expected
-     * @covers ::is_empty_subsystem
      */
     public function test_is_empty_subsystem($component, $expected) {
         $this->assertEquals($expected, \core_privacy\manager::is_empty_subsystem($component));
@@ -327,8 +306,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that get_contexts_for_userid() with a failing item.
-     *
-     * @covers ::get_contexts_for_userid
      */
     public function test_get_contexts_for_userid_with_failing() {
         // Get a mock manager, in which the core components list is mocked to include all mock plugins.
@@ -364,8 +341,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that export_user_data() with a failing item.
-     *
-     * @covers ::export_user_data
      */
     public function test_export_user_data_with_failing() {
         $user = \core_user::get_user_by_username('admin');
@@ -399,8 +374,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that delete_data_for_user() with a failing item.
-     *
-     * @covers ::delete_data_for_user
      */
     public function test_delete_data_for_user_with_failing() {
         $user = \core_user::get_user_by_username('admin');
@@ -434,8 +407,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that delete_data_for_all_users_in_context() with a failing item.
-     *
-     * @covers ::delete_data_for_all_users_in_context
      */
     public function test_delete_data_for_all_users_in_context_with_failing() {
         $user = \core_user::get_user_by_username('admin');
@@ -464,8 +435,6 @@ class privacy_manager_testcase extends advanced_testcase {
 
     /**
      * Test that get_metadata_for_components() with a failing item.
-     *
-     * @covers ::get_metadata_for_components
      */
     public function test_get_metadata_for_components_with_failing() {
         $user = \core_user::get_user_by_username('admin');

@@ -120,28 +120,31 @@ function SCORMapi1_3(def, cmiobj, cmiint, cmicommentsuser, cmicommentslms, scorm
     }
 
     var correct_responses = {
-        'true-false':{'max':1, 'delimiter':'', 'unique':false, 'duplicate':false,
+        'true-false':{'pre':'', 'max':1, 'delimiter':'', 'unique':false, 'duplicate':false,
                       'format':'^true$|^false$',
                       'limit':1},
-        'choice':{'max':36, 'delimiter':'[,]', 'unique':true, 'duplicate':false,
+        'choice':{'pre':'', 'max':36, 'delimiter':'[,]', 'unique':true, 'duplicate':false,
                   'format':CMIShortIdentifier},
-        'fill-in':{'max':10, 'delimiter':'[,]', 'unique':false, 'duplicate':false,
+//        'fill-in':{'pre':'^(((\{case_matters=(true|false)\})(\{order_matters=(true|false)\})?)|((\{order_matters=(true|false)\})(\{case_matters=(true|false)\})?))(.*?)$',
+        'fill-in':{'pre':'',
+                   'max':10, 'delimiter':'[,]', 'unique':false, 'duplicate':false,
                    'format':CMILangString250cr},
-        'long-fill-in':{'max':1, 'delimiter':'', 'unique':false, 'duplicate':true,
+        'long-fill-in':{'pre':'^(\{case_matters=(true|false)\})?', 'max':1, 'delimiter':'', 'unique':false, 'duplicate':true,
                         'format':CMILangString4000},
-        'matching':{'max':36, 'delimiter':'[,]', 'delimiter2':'[.]', 'unique':false, 'duplicate':false,
+        'matching':{'pre':'', 'max':36, 'delimiter':'[,]', 'delimiter2':'[.]', 'unique':false, 'duplicate':false,
                     'format':CMIShortIdentifier, 'format2':CMIShortIdentifier},
-        'performance':{'max':250, 'delimiter':'[,]', 'delimiter2':'[.]', 'unique':false, 'duplicate':false,
+        'performance':{'pre':'^(\{order_matters=(true|false)\})?',
+                       'max':250, 'delimiter':'[,]', 'delimiter2':'[.]', 'unique':false, 'duplicate':false,
                        'format':'^$|' + CMIShortIdentifier, 'format2':CMIDecimal + '|^$|' + CMIShortIdentifier},
-        'sequencing':{'max':36, 'delimiter':'[,]', 'unique':false, 'duplicate':false,
+        'sequencing':{'pre':'', 'max':36, 'delimiter':'[,]', 'unique':false, 'duplicate':false,
                       'format':CMIShortIdentifier},
-        'likert':{'max':1, 'delimiter':'', 'unique':false, 'duplicate':false,
+        'likert':{'pre':'', 'max':1, 'delimiter':'', 'unique':false, 'duplicate':false,
                   'format':CMIShortIdentifier,
                   'limit':1},
-        'numeric':{'max':2, 'delimiter':'[:]', 'unique':false, 'duplicate':false,
+        'numeric':{'pre':'', 'max':2, 'delimiter':'[:]', 'unique':false, 'duplicate':false,
                    'format':CMIDecimal,
                    'limit':1},
-        'other':{'max':1, 'delimiter':'', 'unique':false, 'duplicate':false,
+        'other':{'pre':'', 'max':1, 'delimiter':'', 'unique':false, 'duplicate':false,
                  'format':CMIString4000,
                  'limit':1}
     }
@@ -859,6 +862,14 @@ function SCORMapi1_3(def, cmiobj, cmiint, cmicommentsuser, cmicommentslms, scorm
                 nodes[i] = result.node;
             }
 
+            // check for prefix on each node
+            if (correct_responses[interactiontype].pre != '') {
+                matches = nodes[i].match(correct_responses[interactiontype].pre);
+                if (matches != null) {
+                    nodes[i] = nodes[i].substr(matches[1].length);
+                }
+            }
+
             if (correct_responses[interactiontype].delimiter2 != undefined) {
                 values = nodes[i].split(correct_responses[interactiontype].delimiter2);
                 if (values.length == 2) {
@@ -1216,11 +1227,7 @@ function SCORMapi1_3(def, cmiobj, cmiint, cmicommentsuser, cmicommentslms, scorm
         datastring += navrequest;
 
         var myRequest = NewHttpReq();
-        var result = DoRequest(myRequest, datamodelurl, datamodelurlparams + datastring);
-
-        if (result === false) {
-            return false;
-        }
+        result = DoRequest(myRequest, datamodelurl, datamodelurlparams + datastring);
 
         var results = String(result).split('\n');
         if ((results.length > 2) && (navrequest != '')) {

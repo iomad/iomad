@@ -120,7 +120,7 @@ class core_external extends external_api {
     /**
      * Returns description of get_string() result value
      *
-     * @return external_description
+     * @return string
      * @since Moodle 2.4
      */
     public static function get_string_returns() {
@@ -189,7 +189,7 @@ class core_external extends external_api {
     /**
      * Returns description of get_string() result value
      *
-     * @return external_description
+     * @return array
      * @since Moodle 2.4
      */
     public static function get_strings_returns() {
@@ -233,9 +233,6 @@ class core_external extends external_api {
                         [
                             'timestamp' => new external_value(PARAM_INT, 'unix timestamp'),
                             'format' => new external_value(PARAM_TEXT, 'format string'),
-                            'type' => new external_value(PARAM_PLUGIN, 'The calendar type', VALUE_DEFAULT),
-                            'fixday' => new external_value(PARAM_INT, 'Remove leading zero for day', VALUE_DEFAULT, 1),
-                            'fixhour' => new external_value(PARAM_INT, 'Remove leading zero for hour', VALUE_DEFAULT, 1),
                         ]
                     )
                 )
@@ -267,12 +264,7 @@ class core_external extends external_api {
         self::validate_context($context);
 
         $formatteddates = array_map(function($timestamp) {
-
-            $calendartype = $timestamp['type'];
-            $fixday = !empty($timestamp['fixday']);
-            $fixhour = !empty($timestamp['fixhour']);
-            $calendar  = \core_calendar\type_factory::get_calendar_instance($calendartype);
-            return $calendar->timestamp_to_date_string($timestamp['timestamp'], $timestamp['format'], 99, $fixday, $fixhour);
+            return userdate($timestamp['timestamp'], $timestamp['format']);
         }, $params['timestamps']);
 
         return ['dates' => $formatteddates];
@@ -281,7 +273,7 @@ class core_external extends external_api {
     /**
      * Returns description of get_user_dates() result value
      *
-     * @return external_description
+     * @return array
      */
     public static function get_user_dates_returns() {
         return new external_single_structure(
@@ -341,7 +333,7 @@ class core_external extends external_api {
     /**
      * Returns description of get_component_strings() result value
      *
-     * @return external_description
+     * @return array
      * @since Moodle 2.4
      */
     public static function get_component_strings_returns() {
@@ -429,7 +421,7 @@ class core_external extends external_api {
     /**
      * Returns description of get_fragment() result value
      *
-     * @return external_description
+     * @return array
      * @since Moodle 3.1
      */
     public static function get_fragment_returns() {
@@ -497,7 +489,7 @@ class core_external extends external_api {
                 'value' => new external_value(PARAM_RAW, 'value of the item as it is stored', VALUE_OPTIONAL),
                 'itemid' => new external_value(PARAM_RAW, 'identifier of the updated item', VALUE_OPTIONAL),
                 'edithint' => new external_value(PARAM_NOTAGS, 'hint for editing element', VALUE_OPTIONAL),
-                'editlabel' => new external_value(PARAM_RAW, 'label for editing element', VALUE_OPTIONAL),
+                'editlabel' => new external_value(PARAM_NOTAGS, 'label for editing element', VALUE_OPTIONAL),
                 'type' => new external_value(PARAM_ALPHA, 'type of the element (text, toggle, select)', VALUE_OPTIONAL),
                 'options' => new external_value(PARAM_RAW, 'options of the element, format depends on type', VALUE_OPTIONAL),
                 'linkeverything' => new external_value(PARAM_INT, 'Should everything be wrapped in the edit link or link displayed separately', VALUE_OPTIONAL),

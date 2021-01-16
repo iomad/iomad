@@ -32,9 +32,7 @@
             [
                 {"name": "Item 3", "isgroup": false, "value": "3"},
                 {"name": "Item 4", "isgroup": false, "value": "4"}
-            ]}],
-        "disabled": false,
-        "title": "Some cool title"
+            ]}]
     }
 }}
 <div class="{{classes}}">
@@ -48,39 +46,34 @@
         {{#helpicon}}
             {{>core/help_icon}}
         {{/helpicon}}
-        <select {{#attributes}}{{name}}="{{value}}" {{/attributes}} id="{{id}}" class="custom-select {{classes}}" name="jump"
-                {{#title}}title="{{.}}"{{/title}} {{#disabled}}disabled{{/disabled}}>
+        <select {{#attributes}}{{name}}="{{value}}" {{/attributes}} id="{{id}}" class="custom-select {{classes}}" name="jump">
             {{#options}}
                 {{#isgroup}}
                     <optgroup label="{{name}}">
                         {{#options}}
-                            <option value="{{value}}" {{#selected}}selected{{/selected}}>{{{name}}}</option>
+                            <option value="{{value}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                         {{/options}}
                     </optgroup>
                 {{/isgroup}}
                 {{^isgroup}}
-                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{{name}}}</option>
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                 {{/isgroup}}
             {{/options}}
         </select>
         {{#showbutton}}
-            <input type="submit" class="btn btn-secondary ml-1" value="{{showbutton}}">
+            <input type="submit" class="btn btn-secondary" value="{{showbutton}}">
         {{/showbutton}}
         {{^showbutton}}
             <noscript>
-                <input type="submit" class="btn btn-secondary ml-1" value="{{#str}}go, core{{/str}}">
+                <input type="submit" class="btn btn-secondary" value="{{#str}}go, core{{/str}}">
             </noscript>
         {{/showbutton}}
     </form>
 </div>
 {{^showbutton}}
     {{#js}}
-        require(['jquery', 'core/custom_interaction_events'], function($, CustomEvents) {
-            CustomEvents.define('#{{id}}', [CustomEvents.events.accessibleChange]);
-            $('#{{id}}').on(CustomEvents.events.accessibleChange, function() {
-                if (!$(this).val()) {
-                    return false;
-                }
+        require(['jquery'], function($) {
+            $('#{{id}}').change(function() {
                 $('#{{formid}}').submit();
             });
         });

@@ -28,7 +28,7 @@ require_once('lib.php');
 require_commerce_enabled();
 
 class course_edit_form extends moodleform {
-
+    
     protected $isadding;
     protected $shopsettingsid = 0;
     protected $context = null;
@@ -75,7 +75,7 @@ class course_edit_form extends moodleform {
         $mform->setType('currency', PARAM_TEXT);
         $mform->addElement('hidden', 'deletedBlockPrices', 0);
         $mform->setType('deletedBlockPrices', PARAM_INT);
-
+        
         // Adding the elements in the definition_after_data function rather than in the definition function
         // so that when the currentcourses or potentialcourses get changed in the process function, the
         // changes get displayed, rather than the lists as they are before processing.
@@ -397,10 +397,10 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string($title, 'block_iomad_commerce'));
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
+
 $PAGE->navbar->add(get_string($title, 'block_iomad_commerce'));
 
 /* next line copied from /course/edit.php */

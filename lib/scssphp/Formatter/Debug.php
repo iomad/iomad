@@ -2,17 +2,17 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp\Formatter;
+namespace Leafo\ScssPhp\Formatter;
 
-use ScssPhp\ScssPhp\Formatter;
-use ScssPhp\ScssPhp\Formatter\OutputBlock;
+use Leafo\ScssPhp\Formatter;
+use Leafo\ScssPhp\Formatter\OutputBlock;
 
 /**
  * Debug formatter
@@ -52,13 +52,13 @@ class Debug extends Formatter
         $indent = $this->indentStr();
 
         if (empty($block->lines)) {
-            $this->write("{$indent}block->lines: []\n");
+            echo "{$indent}block->lines: []\n";
 
             return;
         }
 
         foreach ($block->lines as $index => $line) {
-            $this->write("{$indent}block->lines[{$index}]: $line\n");
+            echo "{$indent}block->lines[{$index}]: $line\n";
         }
     }
 
@@ -70,13 +70,13 @@ class Debug extends Formatter
         $indent = $this->indentStr();
 
         if (empty($block->selectors)) {
-            $this->write("{$indent}block->selectors: []\n");
+            echo "{$indent}block->selectors: []\n";
 
             return;
         }
 
         foreach ($block->selectors as $index => $selector) {
-            $this->write("{$indent}block->selectors[{$index}]: $selector\n");
+            echo "{$indent}block->selectors[{$index}]: $selector\n";
         }
     }
 
@@ -88,7 +88,7 @@ class Debug extends Formatter
         $indent = $this->indentStr();
 
         if (empty($block->children)) {
-            $this->write("{$indent}block->children: []\n");
+            echo "{$indent}block->children: []\n";
 
             return;
         }
@@ -109,10 +109,8 @@ class Debug extends Formatter
     {
         $indent = $this->indentStr();
 
-        $this->write("{$indent}block->type: {$block->type}\n" .
-             "{$indent}block->depth: {$block->depth}\n");
-
-        $this->currentBlock = $block;
+        echo "{$indent}block->type: {$block->type}\n" .
+             "{$indent}block->depth: {$block->depth}\n";
 
         $this->blockSelectors($block);
         $this->blockLines($block);

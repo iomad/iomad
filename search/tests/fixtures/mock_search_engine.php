@@ -37,9 +37,6 @@ class engine extends \core_search\engine {
     /** @var \core_search\document[] Documents added */
     protected $added = [];
 
-    /** @var array Schema updates applied */
-    protected $schemaupdates = [];
-
     public function is_installed() {
         return true;
     }
@@ -99,55 +96,5 @@ class engine extends \core_search\engine {
         $added = $this->added;
         $this->added = [];
         return $added;
-    }
-
-    public function update_schema($oldversion, $newversion) {
-        $this->schemaupdates[] = [$oldversion, $newversion];
-    }
-
-    /**
-     * Gets all schema updates applied, as an array. Each entry has an array with two values,
-     * old and new version.
-     *
-     * @return array List of schema updates for comparison
-     */
-    public function get_and_clear_schema_updates() {
-        $result = $this->schemaupdates;
-        $this->schemaupdates = [];
-        return $result;
-    }
-
-    /**
-     * Records delete of course index so it can be checked later.
-     *
-     * @param int $oldcourseid Course id
-     * @return bool True to indicate action taken
-     */
-    public function delete_index_for_course(int $oldcourseid) {
-        $this->deletes[] = ['course', $oldcourseid];
-        return true;
-    }
-
-    /**
-     * Records delete of context index so it can be checked later.
-     *
-     * @param int $oldcontextid Context id
-     * @return bool True to indicate action taken
-     */
-    public function delete_index_for_context(int $oldcontextid) {
-        $this->deletes[] = ['context', $oldcontextid];
-        return true;
-    }
-
-    /**
-     * Gets all course/context deletes applied, as an array. Each entry is an array with two
-     * values, the first is either 'course' or 'context' and the second is the id deleted.
-     *
-     * @return array List of deletes for comparison
-     */
-    public function get_and_clear_deletes() {
-        $deletes = $this->deletes;
-        $this->deletes = [];
-        return $deletes;
     }
 }

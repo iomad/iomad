@@ -14,27 +14,57 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A secure layout for the iomad theme.
- *
- * @package   theme_iomad
- * @copyright 2016 Damyon Wiese
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+echo $OUTPUT->doctype() ?>
+<html <?php echo $OUTPUT->htmlattributes(); ?>>
+<head>
+    <title><?php echo $OUTPUT->page_title(); ?></title>
+    <link rel="shortcut icon" href="<?php echo $OUTPUT->favicon(); ?>" />
+    <?php echo $OUTPUT->standard_head_html() ?>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-defined('MOODLE_INTERNAL') || die();
+<body <?php echo $OUTPUT->body_attributes(); ?>>
 
-$blockshtml = $OUTPUT->blocks('side-pre');
-$hasblocks = strpos($blockshtml, 'data-block=') !== false;
-$bodyattributes = $OUTPUT->body_attributes();
+<?php echo $OUTPUT->standard_top_of_body_html() ?>
 
-$templatecontext = [
-    'sitename' => format_string($SITE->shortname, true, ['context' => context_course::instance(SITEID), "escape" => false]),
-    'output' => $OUTPUT,
-    'bodyattributes' => $bodyattributes,
-    'sidepreblocks' => $blockshtml,
-    'hasblocks' => $hasblocks
-];
+<header role="banner" class="navbar navbar-fixed-top moodle-has-zindex">
+    <nav role="navigation" class="navbar-inner">
+        <div class="container-fluid">
+            <a class="brand" href="<?php echo $CFG->wwwroot;?>"><?php echo $SITE->shortname; ?></a>
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <div class="nav-collapse collapse">
+                <ul class="nav pull-right">
+                    <li><?php echo $OUTPUT->page_heading_menu(); ?></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
 
-echo $OUTPUT->render_from_template('theme_iomad/secure', $templatecontext);
+<div id="page" class="container-fluid">
 
+    <header id="page-header" class="clearfix">
+        <?php echo $html->heading; ?>
+    </header>
+
+    <div id="page-content" class="row-fluid">
+        <div id="region-bs-main-and-pre" class="span9">
+            <div class="row-fluid">
+                <section id="region-main" class="span8 pull-right">
+                    <?php echo $OUTPUT->main_content(); ?>
+                </section>
+                <?php echo $OUTPUT->blocks('side-pre', 'span4 desktop-first-column'); ?>
+            </div>
+        </div>
+        <?php echo $OUTPUT->blocks('side-post', 'span3'); ?>
+    </div>
+
+    <?php echo $OUTPUT->standard_end_of_body_html() ?>
+
+</div>
+</body>
+</html>

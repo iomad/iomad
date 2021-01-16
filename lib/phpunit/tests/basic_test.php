@@ -52,8 +52,7 @@ class core_phpunit_basic_testcase extends basic_testcase {
      */
     public function test_bootstrap() {
         global $CFG;
-
-        // The httpswwwroot has been deprecated, we keep it as an alias for backwards compatibility with plugins only.
+        // The use of httpswwwroot is deprecated, but we are still setting it for backwards compatibility.
         $this->assertTrue(isset($CFG->httpswwwroot));
         $this->assertEquals($CFG->httpswwwroot, $CFG->wwwroot);
         $this->assertEquals($CFG->prefix, $CFG->phpunit_prefix);

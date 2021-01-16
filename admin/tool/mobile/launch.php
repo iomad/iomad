@@ -34,12 +34,6 @@ $urlscheme         = optional_param('urlscheme', 'moodlemobile', PARAM_NOTAGS); 
 $confirmed         = optional_param('confirmed', false, PARAM_BOOL);  // If we are being redirected after user confirmation.
 $oauthsso          = optional_param('oauthsso', 0, PARAM_INT); // Id of the OpenID issuer (for OAuth direct SSO).
 
-// Validate that the urlscheme is valid.
-if (!preg_match('/^[a-zA-Z][a-zA-Z0-9-\+\.]*$/', $urlscheme)) {
-    throw new moodle_exception('Invalid parameter: the value of urlscheme isn\'t valid. ' .
-            'It should start with a letter and can only contain letters, numbers and the characters "." "+" "-".');
-}
-
 // Check web services enabled.
 if (!$CFG->enablewebservices) {
     throw new moodle_exception('enablewsdescription', 'webservice');

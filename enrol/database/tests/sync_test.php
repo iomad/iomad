@@ -96,15 +96,12 @@ class enrol_database_testcase extends advanced_testcase {
                 break;
 
             case 'mssql':
-                set_config('dbtype', 'mssqlnative', 'enrol_database');
-                set_config('dbsybasequoting', '1', 'enrol_database');
-
-                // The native sqlsrv driver uses a comma as separator between host and port.
-                $dbhost = $CFG->dbhost;
-                if (!empty($dboptions['dbport'])) {
-                    $dbhost .= ',' . $dboptions['dbport'];
+                if (get_class($DB) == 'mssql_native_moodle_database') {
+                    set_config('dbtype', 'mssql_n', 'enrol_database');
+                } else {
+                    set_config('dbtype', 'mssqlnative', 'enrol_database');
                 }
-                set_config('dbhost', $dbhost, 'enrol_database');
+                set_config('dbsybasequoting', '1', 'enrol_database');
                 break;
 
             default:

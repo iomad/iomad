@@ -76,18 +76,13 @@ class invalid_analysables implements \renderable, \templatable {
 
         $offset = $this->page * $this->perpage;
 
-        $contexts = $this->model->get_contexts();
-        $analysables = $this->model->get_analyser(['notimesplitting' => true])->get_analysables_iterator(null, $contexts);
+        $analysables = $this->model->get_analyser(['notimesplitting' => true])->get_analysables();
 
         $skipped = 0;
         $enoughresults = false;
         $morepages = false;
         $results = array();
-        foreach ($analysables as $analysable) {
-
-            if (!$analysable) {
-                continue;
-            }
+        foreach ($analysables as $key => $analysable) {
 
             $validtraining = $this->model->get_target()->is_valid_analysable($analysable, true);
             if ($validtraining === true) {
@@ -122,11 +117,13 @@ class invalid_analysables implements \renderable, \templatable {
                 $morepages = true;
                 break;
             }
+
+            unset($analysables[$key]);
         }
 
         // Prepare the context object.
         $data = new \stdClass();
-        $data->modelname = $this->model->get_name();
+        $data->modelname = $this->model->get_target()->get_name();
 
         if ($this->page > 0) {
             $prev = clone $PAGE->url;
@@ -156,12 +153,6 @@ class invalid_analysables implements \renderable, \templatable {
             $data->analysables[] = $obj;
         }
 
-        if (empty($data->analysables)) {
-            $data->noanalysables = [
-                'message' => get_string('noinvalidanalysables', 'tool_analytics'),
-                'announce' => true,
-            ];
-        }
         return $data;
     }
 }

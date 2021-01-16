@@ -15,142 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library functions for overview.
+ * Contains functions called by core.
  *
- * @package   block_myoverview
- * @copyright 2018 Peter Dias
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_myoverview
+ * @copyright  2017 Mark Nelson <markn@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Constants for the user preferences grouping options
+ * The timeline view.
  */
-define('BLOCK_MYOVERVIEW_GROUPING_ALLINCLUDINGHIDDEN', 'allincludinghidden');
-define('BLOCK_MYOVERVIEW_GROUPING_ALL', 'all');
-define('BLOCK_MYOVERVIEW_GROUPING_INPROGRESS', 'inprogress');
-define('BLOCK_MYOVERVIEW_GROUPING_FUTURE', 'future');
-define('BLOCK_MYOVERVIEW_GROUPING_PAST', 'past');
-define('BLOCK_MYOVERVIEW_GROUPING_FAVOURITES', 'favourites');
-define('BLOCK_MYOVERVIEW_GROUPING_HIDDEN', 'hidden');
-define('BLOCK_MYOVERVIEW_GROUPING_CUSTOMFIELD', 'customfield');
+define('BLOCK_MYOVERVIEW_TIMELINE_VIEW', 'timeline');
 
 /**
- * Allows selection of all courses without a value for the custom field.
+ * The courses view.
  */
-define('BLOCK_MYOVERVIEW_CUSTOMFIELD_EMPTY', -1);
+define('BLOCK_MYOVERVIEW_COURSES_VIEW', 'courses');
 
 /**
- * Constants for the user preferences sorting options
- * timeline
- */
-define('BLOCK_MYOVERVIEW_SORTING_TITLE', 'title');
-define('BLOCK_MYOVERVIEW_SORTING_LASTACCESSED', 'lastaccessed');
-define('BLOCK_MYOVERVIEW_SORTING_SHORTNAME', 'shortname');
-
-/**
- * Constants for the user preferences view options
- */
-define('BLOCK_MYOVERVIEW_VIEW_CARD', 'card');
-define('BLOCK_MYOVERVIEW_VIEW_LIST', 'list');
-define('BLOCK_MYOVERVIEW_VIEW_SUMMARY', 'summary');
-
-/**
- * Constants for the user paging preferences
- */
-define('BLOCK_MYOVERVIEW_PAGING_12', 12);
-define('BLOCK_MYOVERVIEW_PAGING_24', 24);
-define('BLOCK_MYOVERVIEW_PAGING_48', 48);
-define('BLOCK_MYOVERVIEW_PAGING_96', 96);
-define('BLOCK_MYOVERVIEW_PAGING_ALL', 0);
-
-/**
- * Constants for the admin category display setting
- */
-define('BLOCK_MYOVERVIEW_DISPLAY_CATEGORIES_ON', 'on');
-define('BLOCK_MYOVERVIEW_DISPLAY_CATEGORIES_OFF', 'off');
-
-/**
- * Get the current user preferences that are available
+ * Returns the name of the user preferences as well as the details this plugin uses.
  *
- * @return mixed Array representing current options along with defaults
+ * @return array
  */
 function block_myoverview_user_preferences() {
-    $preferences['block_myoverview_user_grouping_preference'] = array(
-        'null' => NULL_NOT_ALLOWED,
-        'default' => BLOCK_MYOVERVIEW_GROUPING_ALL,
+    $preferences = array();
+    $preferences['block_myoverview_last_tab'] = array(
         'type' => PARAM_ALPHA,
-        'choices' => array(
-            BLOCK_MYOVERVIEW_GROUPING_ALLINCLUDINGHIDDEN,
-            BLOCK_MYOVERVIEW_GROUPING_ALL,
-            BLOCK_MYOVERVIEW_GROUPING_INPROGRESS,
-            BLOCK_MYOVERVIEW_GROUPING_FUTURE,
-            BLOCK_MYOVERVIEW_GROUPING_PAST,
-            BLOCK_MYOVERVIEW_GROUPING_FAVOURITES,
-            BLOCK_MYOVERVIEW_GROUPING_HIDDEN,
-            BLOCK_MYOVERVIEW_GROUPING_CUSTOMFIELD,
-        )
-    );
-
-    $preferences['block_myoverview_user_grouping_customfieldvalue_preference'] = [
-        'null' => NULL_ALLOWED,
-        'default' => null,
-        'type' => PARAM_RAW,
-    ];
-
-    $preferences['block_myoverview_user_sort_preference'] = array(
         'null' => NULL_NOT_ALLOWED,
-        'default' => BLOCK_MYOVERVIEW_SORTING_TITLE,
-        'type' => PARAM_ALPHA,
-        'choices' => array(
-            BLOCK_MYOVERVIEW_SORTING_TITLE,
-            BLOCK_MYOVERVIEW_SORTING_LASTACCESSED,
-            BLOCK_MYOVERVIEW_SORTING_SHORTNAME
-        )
-    );
-    $preferences['block_myoverview_user_view_preference'] = array(
-        'null' => NULL_NOT_ALLOWED,
-        'default' => BLOCK_MYOVERVIEW_VIEW_CARD,
-        'type' => PARAM_ALPHA,
-        'choices' => array(
-            BLOCK_MYOVERVIEW_VIEW_CARD,
-            BLOCK_MYOVERVIEW_VIEW_LIST,
-            BLOCK_MYOVERVIEW_VIEW_SUMMARY
-        )
-    );
-
-    $preferences['/^block_myoverview_hidden_course_(\d)+$/'] = array(
-        'isregex' => true,
-        'choices' => array(0, 1),
-        'type' => PARAM_INT,
-        'null' => NULL_NOT_ALLOWED,
-        'default' => 'none'
-    );
-
-    $preferences['block_myoverview_user_paging_preference'] = array(
-        'null' => NULL_NOT_ALLOWED,
-        'default' => BLOCK_MYOVERVIEW_PAGING_12,
-        'type' => PARAM_INT,
-        'choices' => array(
-            BLOCK_MYOVERVIEW_PAGING_12,
-            BLOCK_MYOVERVIEW_PAGING_24,
-            BLOCK_MYOVERVIEW_PAGING_48,
-            BLOCK_MYOVERVIEW_PAGING_96,
-            BLOCK_MYOVERVIEW_PAGING_ALL
-        )
+        'default' => BLOCK_MYOVERVIEW_TIMELINE_VIEW,
+        'choices' => array(BLOCK_MYOVERVIEW_TIMELINE_VIEW, BLOCK_MYOVERVIEW_COURSES_VIEW)
     );
 
     return $preferences;
-}
-
-/**
- * Pre-delete course hook to cleanup any records with references to the deleted course.
- *
- * @param stdClass $course The deleted course
- */
-function block_myoverview_pre_course_delete(\stdClass $course) {
-    // Removing any favourited courses which have been created for users, for this course.
-    $service = \core_favourites\service_factory::get_service_for_component('core_course');
-    $service->delete_favourites_by_type_and_item('courses', $course->id);
 }

@@ -8,12 +8,20 @@ interface Network
 {
     /**
      * @param mixed $input
+     *
+     * @return self
      */
-    public function setInput($input): self;
+    public function setInput($input);
 
+    /**
+     * @return array
+     */
     public function getOutput(): array;
 
-    public function addLayer(Layer $layer): void;
+    /**
+     * @param Layer $layer
+     */
+    public function addLayer(Layer $layer);
 
     /**
      * @return Layer[]

@@ -62,7 +62,6 @@ class qtype_multichoice_test_helper extends question_test_helper {
         $qdata->options = new stdClass();
         $qdata->options->shuffleanswers = 1;
         $qdata->options->answernumbering = '123';
-        $qdata->options->showstandardinstruction = 0;
         $qdata->options->layout = 0;
         $qdata->options->single = 0;
         $qdata->options->correctfeedback =
@@ -81,7 +80,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 13,
                 'answer' => 'One',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0.5,
+                'fraction' => '0.5',
                 'feedback' => 'One is odd.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -89,7 +88,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 14,
                 'answer' => 'Two',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0.0,
+                'fraction' => '0.0',
                 'feedback' => 'Two is even.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -97,7 +96,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 15,
                 'answer' => 'Three',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0.5,
+                'fraction' => '0.5',
                 'feedback' => 'Three is odd.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -105,7 +104,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 16,
                 'answer' => 'Four',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0.0,
+                'fraction' => '0.0',
                 'feedback' => 'Four is even.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -147,7 +146,6 @@ class qtype_multichoice_test_helper extends question_test_helper {
 
         $qdata->shuffleanswers = 1;
         $qdata->answernumbering = '123';
-        $qdata->showstandardinstruction = 0;
         $qdata->single = '0';
         $qdata->correctfeedback = array('text' => test_question_maker::STANDARD_OVERALL_CORRECT_FEEDBACK,
                                                  'format' => FORMAT_HTML);
@@ -245,7 +243,6 @@ class qtype_multichoice_test_helper extends question_test_helper {
         $qdata->options = new stdClass();
         $qdata->options->shuffleanswers = 1;
         $qdata->options->answernumbering = '123';
-        $qdata->options->showstandardinstruction = 0;
         $qdata->options->layout = 0;
         $qdata->options->single = 1;
         $qdata->options->correctfeedback =
@@ -264,7 +261,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 13,
                 'answer' => 'One',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 1,
+                'fraction' => '1',
                 'feedback' => 'One is the oddest.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -272,7 +269,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 14,
                 'answer' => 'Two',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0.0,
+                'fraction' => '0.0',
                 'feedback' => 'Two is even.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -280,7 +277,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 15,
                 'answer' => 'Three',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0,
+                'fraction' => '0',
                 'feedback' => 'Three is odd.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -288,7 +285,7 @@ class qtype_multichoice_test_helper extends question_test_helper {
                 'id' => 16,
                 'answer' => 'Four',
                 'answerformat' => FORMAT_PLAIN,
-                'fraction' => 0.0,
+                'fraction' => '0.0',
                 'feedback' => 'Four is even.',
                 'feedbackformat' => FORMAT_HTML,
             ),
@@ -330,7 +327,6 @@ class qtype_multichoice_test_helper extends question_test_helper {
 
         $qdata->shuffleanswers = 1;
         $qdata->answernumbering = '123';
-        $qdata->showstandardinstruction = 0;
         $qdata->single = '1';
         $qdata->correctfeedback = array('text' => test_question_maker::STANDARD_OVERALL_CORRECT_FEEDBACK,
                                         'format' => FORMAT_HTML);

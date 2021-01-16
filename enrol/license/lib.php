@@ -14,18 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * License enrolment plugin.
+ * Self enrolment plugin.
  *
  * @package    enrol
  * @subpackage license
- * @copyright  2011 E-Learn Design Ltd. http://www.e-learndesign.co.uk
- * @author     Derick Turner
+ * @copyright  2010 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Self enrolment plugin implementation.
+ * @author Petr Skoda
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class enrol_license_plugin extends enrol_plugin {
 
     /**
@@ -162,86 +164,32 @@ class enrol_license_plugin extends enrol_plugin {
     }
 
     /**
-     * license enrol user to course
+     * Creates course enrol form, checks if form submitted
+     * and enrols user if necessary. It can also redirect.
      *
-     * @param stdClass $instance enrolment instance
-     * @param stdClass $data data needed for enrolment.
-     * @return bool|array true if enroled else eddor code and messege
+     * @param stdClass $instance
+     * @return string html text, usually a form in a text box
      */
-    public function enrol_license(stdClass $instance, $data = null) {
-        global $DB, $USER, $CFG;
+    public function enrol_page_hook(stdClass $instance) {
+        global $CFG, $OUTPUT, $SESSION, $USER, $DB;
 
-        // Don't enrol user if password is not passed when required.
-        if ($instance->password && !isset($data->enrolpassword)) {
-            return;
+        if (isguestuser()) {
+            // Can not enrol guest!!
+            return null;
         }
-
-        $timestart = time();
-        if ($instance->enrolperiod) {
-            $timeend = $timestart + $instance->enrolperiod;
-        } else {
-            $timeend = 0;
-        }
-
-        $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
-
-        if ($instance->password and $instance->customint1 and $data->enrolpassword !== $instance->password) {
-            // It must be a group enrolment, let's assign group too.
-            $groups = $DB->get_records('groups', array('courseid'=>$instance->courseid), 'id', 'id, enrolmentkey');
-            foreach ($groups as $group) {
-                if (empty($group->enrolmentkey)) {
-                    continue;
-                }
-                if ($group->enrolmentkey === $data->enrolpassword) {
-                    // Add user to group.
-                    require_once($CFG->dirroot.'/group/lib.php');
-                    groups_add_member($group->id, $USER->id);
-                    break;
-                }
-            }
-        }
-        // Send welcome message.
-        if ($instance->customint4 != ENROL_DO_NOT_SEND_EMAIL) {
-            $this->email_welcome_message($instance, $USER);
-        }
-    }
-
-    /**
-     * Checks if user can license enrol.
-     *
-     * @param stdClass $instance enrolment instance
-     * @param bool $checkuserenrolment if true will check if user enrolment is inactive.
-     *             used by navigation to improve performance.
-     * @return bool|string true if successful, else error message or false.
-     */
-    public function can_license_enrol(stdClass $instance, $checkuserenrolment = true) {
-        global $CFG, $DB, $OUTPUT, $USER;
-
-        if ($checkuserenrolment) {
-            if (isguestuser()) {
-                // Can not enrol guest.
-                return get_string('noguestaccess', 'enrol') . $OUTPUT->continue_button(get_login_url());
-            }
-            // Check if user is already enroled.
-            if ($DB->get_record('user_enrolments', array('userid' => $USER->id, 'enrolid' => $instance->id))) {
-                return get_string('canntenrol', 'enrol_license');
-            }
-        }
-
-        if ($instance->status != ENROL_INSTANCE_ENABLED) {
-            return get_string('canntenrol', 'enrol_license');
+        if ($DB->record_exists('user_enrolments', array('userid' => $USER->id, 'enrolid' => $instance->id))) {
+            // TODO: maybe we should tell them they are already enrolled, but can not access the course.
+            return null;
         }
 
         if ($instance->enrolstartdate != 0 and $instance->enrolstartdate > time()) {
-            return get_string('canntenrolearly', 'enrol_license', userdate($instance->enrolstartdate));
+            // TODO: inform that we can not enrol yet.
+            return null;
         }
 
         if ($instance->enrolenddate != 0 and $instance->enrolenddate < time()) {
-            return get_string('canntenrollate', 'enrol_license', userdate($instance->enrolenddate));
-        }
-
-        if ($DB->record_exists('user_enrolments', array('userid' => $USER->id, 'enrolid' => $instance->id))) {
-            return get_string('canntenrol', 'enrol_license');
+            // TODO: inform that enrolment is not possible any more.
+            return null;
         }
 
         if ($instance->customint3 > 0) {
@@ -249,19 +197,7 @@ class enrol_license_plugin extends enrol_plugin {
             $count = $DB->count_records('user_enrolments', array('enrolid' => $instance->id));
             if ($count >= $instance->customint3) {
                 // Bad luck, no more license enrolments here.
-                return get_string('maxenrolledreached', 'enrol_license');
-            }
-        }
-
-        if ($instance->customint5) {
-            require_once("$CFG->dirroot/cohort/lib.php");
-            if (!cohort_is_member($instance->customint5, $USER->id)) {
-                $cohort = $DB->get_record('cohort', array('id' => $instance->customint5));
-                if (!$cohort) {
-                    return null;
-                }
-                $a = format_string($cohort->name, true, array('context' => context::instance_by_id($cohort->contextid)));
-                return markdown_to_html(get_string('cohortnonmemberinfo', 'enrol_license', $a));
+                return $OUTPUT->notification(get_string('maxenrolledreached', 'enrol_license'));
             }
         }
 
@@ -272,126 +208,74 @@ class enrol_license_plugin extends enrol_plugin {
                 AND clu.isusing = 0
                 AND clu.licensecourseid = :courseid";
         if (!$license = $DB->get_record_sql($sql, array('userid' => $USER->id, 'courseid' => $instance->courseid))) {
-            return get_string('nolicenseinformationfound', 'enrol_license');
+            return $OUTPUT->notification(get_string('nolicenseinformationfound', 'enrol_license'));
         }
 
         if (time() > $license->expirydate) {
-            return get_string('licensenolongervalid', 'enrol_license');
+            return $OUTPUT->notification(get_string('licensenolongervalid', 'enrol_license'));
         }
 
         if (time() < $license->startdate) {
-            return get_string('licensenotyetvalid', 'enrol_license', date($CFG->iomad_date_format, $license->startdate));
+            return $OUTPUT->notification(get_string('licensenotyetvalid', 'enrol_license', date($CFG->iomad_date_format, $license->startdate)));
         }
-
-        // Check if the user is using a learning path for the license.
-        if (!company::license_ok_to_use($license->id, $instance->courseid, $USER->id)) {
-            return get_string('coursenotavailableyet', 'enrol_license', date($CFG->iomad_date_format, $license->startdate));
-        }
-
-        return true;
-    }
-
-
-    /**
-     * Creates course enrol form, checks if form submitted
-     * and enrols user if necessary. It can also redirect.
-     *
-     * @param stdClass $instance
-     * @return string html text, usually a form in a text box
-     */
-    public function enrol_page_hook(stdClass $instance) {
-        global $CFG, $OUTPUT, $SESSION, $USER, $DB;
-
 
         require_once("$CFG->dirroot/enrol/license/locallib.php");
         require_once("$CFG->dirroot/group/lib.php");
 
-        $enrolstatus = $this->can_license_enrol($instance);
+        $form = new enrol_license_enrol_form(null, $instance);
+        $instanceid = optional_param('instance', 0, PARAM_INT);
 
-        if (true === $enrolstatus) {
-            // Get the license information.
-            $sql = "SELECT * from {companylicense} cl, {companylicense_users} clu
-                    WHERE clu.userid = :userid
-                    AND clu.licenseid = cl.id
-                    AND clu.isusing = 0
-                    AND clu.licensecourseid = :courseid";
-            $license = $DB->get_record_sql($sql, array('userid' => $USER->id, 'courseid' => $instance->courseid));
-            
-    
-            $form = new enrol_license_enrol_form(null, $instance);
-            $instanceid = optional_param('instance', 0, PARAM_INT);
-    
-            if ($instance->id == $instanceid || $license->type == 1 || $license->type == 3) {
-                if ($data = $form->get_data() || $license->type == 1 || $license->type == 3) {
-                    $enrol = enrol_get_plugin('license');
-    
-                    // Enrol the user in the course.
-                    $timestart = time();
-    
-                    if ($license->type == 0 || $license->type == 2) {
-                        if (empty($license->cutoffdate)) {
-                            // Set the timeend to be time start + the valid length for the license in days.
-                            $timeend = $timestart + ($license->validlength * 24 * 60 * 60 );
-                        } else {
-                            // Set the timeend to be the cutt off date.
-                            $timeend = $license->cutoffdate;
-                        }
+        if ($instance->id == $instanceid || $license->type == 1 || $license->type == 3) {
+            if ($data = $form->get_data() || $license->type == 1 || $license->type == 3) {
+                $enrol = enrol_get_plugin('license');
+
+                // Enrol the user in the course.
+                $timestart = time();
+
+                if ($license->type == 1 || $license->type == 3) {
+                    // Set the timeend to be time start + the valid length for the license in days.
+                    $timeend = $timestart + ($license->validlength * 24 * 60 * 60 );
+                } else {
+                    // Set the timeend to be when the license runs out.
+                    $timeend = $license->expirydate;
+                }
+
+                if ($license->type < 2) {
+                    $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
+                } else {
+                    // Educator role.
+                    if ($DB->get_record('iomad_courses', array('courseid' => $instance->courseid, 'shared' => 0))) {
+                        // Not shared.
+                        $role = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
                     } else {
-                        // Set the timeend to be when the license runs out.
-                        $timeend = $license->expirydate;
+                        // Shared.
+                        $role = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
                     }
-    
-                    if ($license->type < 2) {
-                        $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
-                    } else {
-                        // Educator role.
-                        if ($DB->get_record('iomad_courses', array('courseid' => $instance->courseid, 'shared' => 0))) {
-                            // Not shared.
-                            $role = $DB->get_record('role', array('shortname' => 'companycourseeditor'));
-                        } else {
-                            // Shared.
-                            $role = $DB->get_record('role', array('shortname' => 'companycoursenoneditor'));
-                        }
-                        $this->enrol_user($instance, $USER->id, $role->id, $timestart, $timeend);
-                    }
+                    $this->enrol_user($instance, $USER->id, $role->id, $timestart, $timeend);
                 }
 
                 // Get the userlicense record.
                 $userlicense = $DB->get_record('companylicense_users', array('id' => $license->id));
 
+                // Add the user to the appropriate course group.
+                if (!$DB->get_record('course', array('id' => $instance->courseid, 'groupmode' => 0))) {
+                    company::add_user_to_shared_course($instance->courseid, $USER->id, $license->companyid, $userlicense->groupid);
+                }
+
                 // Update the userlicense record to mark it as in use.
                 $DB->set_field('companylicense_users', 'isusing', 1, array('id' => $userlicense->id));
-
-                // Fire an event to record this 
-                $eventother = array('licenseid' => $userlicense->licenseid);
-                $event = \block_iomad_company_admin\event\user_license_used::create(array('context' => \context_course::instance($instance->courseid),
-                                                                                          'objectid' => $userlicense->id,
-                                                                                          'courseid' => $instance->courseid,
-                                                                                          'userid' => $USER->id,
-                                                                                          'other' => $eventother));
-                $event->trigger();
 
                 // Send welcome.
                 if ($instance->customint4) {
                     $this->email_welcome_message($instance, $USER);
                 }
             }
-        } else {
-            // This user can not license enrol using this instance. Using an empty form to keep
-            // the UI consistent with other enrolment plugins that returns a form.
-            $data = new stdClass();
-            $data->header = $this->get_instance_name($instance);
-            $data->info = $enrolstatus;
-
-            // The can_license_enrol call returns a button to the login page if the user is a
-            // guest, setting the login url to the form if that is the case.
-            $url = isguestuser() ? get_login_url() : null;
-            $form = new enrol_license_empty_form($url, $data);
         }
 
         ob_start();
         $form->display();
         $output = ob_get_clean();
+
         return $OUTPUT->box($output);
     }
 
@@ -452,7 +336,7 @@ class enrol_license_plugin extends enrol_plugin {
             $messagehtml = text_to_html($messagetext, null, false, true);
         }
 
-        $subject = get_string('welcometocourse', 'enrol_license', format_string($course->fullname, true, array('context'=>$context)));
+        $subject = get_string('welcometocourse', 'enrol_self', format_string($course->fullname, true, array('context'=>$context)));
 
         $sendoption = $instance->customint4;
         $contact = $this->get_welcome_email_contact($sendoption, $context);
@@ -550,33 +434,27 @@ class enrol_license_plugin extends enrol_plugin {
                             $license['score'] = $gradeitem->finalgrade;
                             $license['result'] = $gradeitem->feedback;
                         }
-
                         $DB->delete_records('grade_grades', array('id' => $gradeitem->id));
                     }
-		}
 
-		if (!empty($license['id'])) {
-                    // Update the user license information.
-                    mtrace("updating license ".$license['id']." for user ".$user->userid);
-                    $DB->update_record('companylicense_users', $license);
-		}
-
-                // Delete any completion data.
-                if ($completion = $DB->get_record('course_completions', array('userid' => $user->userid,
-                                                                              'course' => $user->courseid))){
+                    // Delete any completion data.
+                    $completion = $DB->get_record('course_completions', array('userid' => $user->userid,
+                                                                              'course' => $user->courseid));
                     if (!empty($completion->timecompleted)) {
                         $license['timecompleted'] = $completion->timecompleted;
                     } else {
                         $license['timecompleted'] = $runtime;
                     }
+                    // Update the user license information.
+                    mtrace("updating license ".$license['id']." for user ".$user->userid);
+                    $DB->update_record('companylicense_users', $license);
                     // Delete the completion information.
                     mtrace("removing course completion for user $user->userid on $user->courseid");
                     $DB->delete_records('course_completions', array('id' => $completion->id));
+                    // Delete the enrolment.
+                    mtrace("removing enrolment for user ".$user->userid." from ".$user->courseid);
+                    $DB->delete_records('user_enrolments', array('id' => $user->id));
                 }
-
-                // Delete the enrolment.
-                mtrace("removing enrolment for user ".$user->userid." from ".$user->courseid);
-                $DB->delete_records('user_enrolments', array('id' => $user->id));
             }
         }
     }
@@ -590,7 +468,7 @@ class enrol_license_plugin extends enrol_plugin {
     public function can_hide_show_instance($instance) {
         $context = context_course::instance($instance->courseid);
 
-        if (!has_capability('enrol/license:config', $context)) {
+        if (!has_capability('enrol/self:config', $context)) {
             return false;
         }
 
@@ -626,9 +504,9 @@ class enrol_license_plugin extends enrol_plugin {
                 $contact = array_values($rusers)[0];
             }
         } else if ($sendoption == ENROL_SEND_EMAIL_FROM_KEY_HOLDER) {
-            // Send as the first user with enrol/license:holdkey capability assigned in the course.
+            // Send as the first user with enrol/self:holdkey capability assigned in the course.
             list($sort) = users_order_by_sql('u');
-            $keyholders = get_users_by_capability($context, 'enrol/license:holdkey', 'u.*', $sort);
+            $keyholders = get_users_by_capability($context, 'enrol/self:holdkey', 'u.*', $sort);
             if (!empty($keyholders)) {
                 $contact = array_values($keyholders)[0];
             }

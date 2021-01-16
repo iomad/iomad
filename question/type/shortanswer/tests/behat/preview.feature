@@ -22,11 +22,11 @@ Feature: Preview a Short answer question
       | Test questions   | shortanswer | shortanswer-001 | frogtoad |
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   @javascript @_switch_window
   Scenario: Preview a Short answer question with correct answer
-    When I choose "Preview" action for "shortanswer-001" in the question bank
+    When I click on "Preview" "link" in the "shortanswer-001" "table_row"
     And I switch to "questionpreview" window
     Then I should see "Name an amphibian:"
     # Set behaviour options
@@ -41,7 +41,7 @@ Feature: Preview a Short answer question
 
   @javascript @_switch_window
   Scenario: Preview a Short answer question with almost correct answer
-    When I choose "Preview" action for "shortanswer-001" in the question bank
+    When I click on "Preview" "link" in the "shortanswer-001" "table_row"
     And I switch to "questionpreview" window
     Then I should see "Name an amphibian:"
     # Set behaviour options
@@ -56,7 +56,7 @@ Feature: Preview a Short answer question
 
   @javascript @_switch_window
   Scenario: Preview a Short answer question with incorrect answer
-    When I choose "Preview" action for "shortanswer-001" in the question bank
+    When I click on "Preview" "link" in the "shortanswer-001" "table_row"
     And I switch to "questionpreview" window
     Then I should see "Name an amphibian:"
     # Set behaviour options

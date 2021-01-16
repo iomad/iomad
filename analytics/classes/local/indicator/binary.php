@@ -41,7 +41,9 @@ abstract class binary extends discrete {
      * @return array
      */
     public static final function get_classes() {
-        return [-1, 1];
+        // It does not really matter, all \core_analytics\local\indicator\discrete get_classes calls have been overwriten as we
+        // only need 1 column here.
+        return array(0);
     }
 
     /**

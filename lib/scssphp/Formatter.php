@@ -2,17 +2,16 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp;
+namespace Leafo\ScssPhp;
 
-use ScssPhp\ScssPhp\Formatter\OutputBlock;
-use ScssPhp\ScssPhp\SourceMap\SourceMapGenerator;
+use Leafo\ScssPhp\Formatter\OutputBlock;
 
 /**
  * Base formatter
@@ -57,34 +56,9 @@ abstract class Formatter
     public $assignSeparator;
 
     /**
-     * @var boolean
+     * @var boolea
      */
     public $keepSemicolons;
-
-    /**
-     * @var \ScssPhp\ScssPhp\Formatter\OutputBlock
-     */
-    protected $currentBlock;
-
-    /**
-     * @var integer
-     */
-    protected $currentLine;
-
-    /**
-     * @var integer
-     */
-    protected $currentColumn;
-
-    /**
-     * @var \ScssPhp\ScssPhp\SourceMap\SourceMapGenerator
-     */
-    protected $sourceMapGenerator;
-
-    /**
-     * @var string
-     */
-    protected $strippedSemicolon;
 
     /**
      * Initialize formatter
@@ -119,9 +93,29 @@ abstract class Formatter
     }
 
     /**
+     * Strip semi-colon appended by property(); it's a separator, not a terminator
+     *
+     * @api
+     *
+     * @param array $lines
+     */
+    public function stripSemicolon(&$lines)
+    {
+        if ($this->keepSemicolons) {
+            return;
+        }
+
+        if (($count = count($lines))
+            && substr($lines[$count - 1], -1) === ';'
+        ) {
+            $lines[$count - 1] = substr($lines[$count - 1], 0, -1);
+        }
+    }
+
+    /**
      * Output lines inside a block
      *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $block
+     * @param \Leafo\ScssPhp\Formatter\OutputBlock $block
      */
     protected function blockLines(OutputBlock $block)
     {
@@ -129,31 +123,31 @@ abstract class Formatter
 
         $glue = $this->break . $inner;
 
-        $this->write($inner . implode($glue, $block->lines));
+        echo $inner . implode($glue, $block->lines);
 
         if (! empty($block->children)) {
-            $this->write($this->break);
+            echo $this->break;
         }
     }
 
     /**
      * Output block selectors
      *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $block
+     * @param \Leafo\ScssPhp\Formatter\OutputBlock $block
      */
     protected function blockSelectors(OutputBlock $block)
     {
         $inner = $this->indentStr();
 
-        $this->write($inner
+        echo $inner
             . implode($this->tagSeparator, $block->selectors)
-            . $this->open . $this->break);
+            . $this->open . $this->break;
     }
 
     /**
      * Output block children
      *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $block
+     * @param \Leafo\ScssPhp\Formatter\OutputBlock $block
      */
     protected function blockChildren(OutputBlock $block)
     {
@@ -165,15 +159,13 @@ abstract class Formatter
     /**
      * Output non-empty block
      *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $block
+     * @param \Leafo\ScssPhp\Formatter\OutputBlock $block
      */
     protected function block(OutputBlock $block)
     {
         if (empty($block->lines) && empty($block->children)) {
             return;
         }
-
-        $this->currentBlock = $block;
 
         $pre = $this->indentStr();
 
@@ -194,44 +186,12 @@ abstract class Formatter
         if (! empty($block->selectors)) {
             $this->indentLevel--;
 
-            if (! $this->keepSemicolons) {
-                $this->strippedSemicolon = '';
-            }
-
             if (empty($block->children)) {
-                $this->write($this->break);
+                echo $this->break;
             }
 
-            $this->write($pre . $this->close . $this->break);
+            echo $pre . $this->close . $this->break;
         }
-    }
-
-    /**
-     * Test and clean safely empty children
-     *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $block
-     *
-     * @return boolean
-     */
-    protected function testEmptyChildren($block)
-    {
-        $isEmpty = empty($block->lines);
-
-        if ($block->children) {
-            foreach ($block->children as $k => &$child) {
-                if (! $this->testEmptyChildren($child)) {
-                    $isEmpty = false;
-                    continue;
-                }
-
-                if ($child->type === Type::T_MEDIA || $child->type === Type::T_DIRECTIVE) {
-                    $child->children = [];
-                    $child->selectors = null;
-                }
-            }
-        }
-
-        return $isEmpty;
     }
 
     /**
@@ -239,23 +199,12 @@ abstract class Formatter
      *
      * @api
      *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock             $block              An abstract syntax tree
-     * @param \ScssPhp\ScssPhp\SourceMap\SourceMapGenerator|null $sourceMapGenerator Optional source map generator
+     * @param \Leafo\ScssPhp\Formatter\OutputBlock $block An abstract syntax tree
      *
      * @return string
      */
-    public function format(OutputBlock $block, SourceMapGenerator $sourceMapGenerator = null)
+    public function format(OutputBlock $block)
     {
-        $this->sourceMapGenerator = null;
-
-        if ($sourceMapGenerator) {
-            $this->currentLine        = 1;
-            $this->currentColumn      = 0;
-            $this->sourceMapGenerator = $sourceMapGenerator;
-        }
-
-        $this->testEmptyChildren($block);
-
         ob_start();
 
         $this->block($block);
@@ -263,54 +212,5 @@ abstract class Formatter
         $out = ob_get_clean();
 
         return $out;
-    }
-
-    /**
-     * Output content
-     *
-     * @param string $str
-     */
-    protected function write($str)
-    {
-        if (! empty($this->strippedSemicolon)) {
-            echo $this->strippedSemicolon;
-
-            $this->strippedSemicolon = '';
-        }
-
-        /*
-         * Maybe Strip semi-colon appended by property(); it's a separator, not a terminator
-         * will be striped for real before a closing, otherwise displayed unchanged starting the next write
-         */
-        if (! $this->keepSemicolons &&
-            $str &&
-            (strpos($str, ';') !== false) &&
-            (substr($str, -1) === ';')
-        ) {
-            $str = substr($str, 0, -1);
-
-            $this->strippedSemicolon = ';';
-        }
-
-        if ($this->sourceMapGenerator) {
-            $this->sourceMapGenerator->addMapping(
-                $this->currentLine,
-                $this->currentColumn,
-                $this->currentBlock->sourceLine,
-                //columns from parser are off by one
-                $this->currentBlock->sourceColumn > 0 ? $this->currentBlock->sourceColumn - 1 : 0,
-                $this->currentBlock->sourceName
-            );
-
-            $lines = explode("\n", $str);
-            $lineCount = count($lines);
-            $this->currentLine += $lineCount-1;
-
-            $lastLine = array_pop($lines);
-
-            $this->currentColumn = ($lineCount === 1 ? $this->currentColumn : 0) + strlen($lastLine);
-        }
-
-        echo $str;
     }
 }

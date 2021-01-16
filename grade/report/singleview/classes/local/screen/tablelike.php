@@ -172,8 +172,7 @@ abstract class tablelike extends screen {
 
         $summary = $this->summary();
         if (!empty($summary)) {
-            $table->caption = $summary;
-            $table->captionhide = true;
+            $table->summary = $summary;
         }
 
         // To be used for extra formatting.

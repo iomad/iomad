@@ -57,7 +57,7 @@ class inprogress_view implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output) {
-        global $CFG, $DB, $USER;
+        global $CFG, $DB;
         require_once($CFG->dirroot.'/course/lib.php');
 
         // Build courses view data structure.
@@ -66,7 +66,7 @@ class inprogress_view implements renderable, templatable {
         foreach ($this->mycompletion->myinprogress as $mid => $inprogress) {
             $context = \context_course::instance($inprogress->courseid);
             $course = $DB->get_record("course", array("id"=>$inprogress->courseid));
-            $courseobj = new \core_course_list_element($course);
+            $courseobj = new \course_in_list($course);
 
             $exporter = new course_summary_exporter($course, ['context' => $context]);
             $exportedcourse = $exporter->export($output);
@@ -81,7 +81,7 @@ class inprogress_view implements renderable, templatable {
             foreach ($courseobj->get_course_overviewfiles() as $file) {
                 $isimage = $file->is_valid_image();
                 if (!$isimage) {
-                    $imageurl = null;
+                    $imageurl = $this->output->pix_icon(file_file_icon($file, 24), $file->get_filename(), 'moodle');
                 } else {
                     $imageurl = file_encode_url("$CFG->wwwroot/pluginfile.php",
                                 '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
@@ -91,18 +91,11 @@ class inprogress_view implements renderable, templatable {
             if (empty($imageurl)) {
                 $imageurl = $output->image_url('i/course');
             }
-
             $exportedcourse = $exporter->export($output);
             $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $inprogress->courseid));
+            $exportedcourse->fullname = $inprogress->coursefullname;
             $exportedcourse->image = $imageurl;
             $exportedcourse->summary = $coursesummary;
-
-            // Get the course percentage.
-            if ($totalrec = $DB->get_records('course_completion_criteria', array('course' => $inprogress->courseid))) {
-                $usercount = $DB->count_records('course_completion_crit_compl', array('course' => $inprogress->courseid, 'userid' => $USER->id));
-                $exportedcourse->progress = round($usercount * 100 / count($totalrec), 0);
-                $exportedcourse->hasprogress = true;
-            }
             $inprogressview['courses'][] = $exportedcourse;
         }
         return $inprogressview;

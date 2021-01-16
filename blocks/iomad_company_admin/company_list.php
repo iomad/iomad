@@ -22,7 +22,7 @@ $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirma
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_companies, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 
 $context = context_system::instance();
 require_login();
@@ -42,10 +42,9 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('company_list_title', 'block_iomad_company_admin'));
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage));
 $returnurl = $baseurl;
@@ -235,7 +234,7 @@ if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
 
     echo $OUTPUT->single_button(new moodle_url('company_edit_form.php'),
                                                 get_string('addnewcompany', 'block_iomad_company_admin'), 'get');
-    echo $OUTPUT->single_button(new moodle_url('/my'), get_string('cancel'), 'get');
+    echo $OUTPUT->single_button(new moodle_url('/local/iomad_dashboard/index.php'), get_string('cancel'), 'get');
 
     echo '</div>';
 }

@@ -15,45 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Theme functions.
- *
- * @package    theme_iomad
- * @copyright  2016 Frédéric Massart - FMCorz.net
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   theme_iomad
+ * @copyright 2013 Howard Miller
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot.'/local/iomad/lib/user.php');
+require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
 
 /**
- * Post process the CSS tree.
+ * Parses CSS before it is cached.
  *
- * @param string $tree The CSS tree.
- * @param theme_config $theme The theme config object.
- */
-function theme_iomad_css_tree_post_processor($tree, $theme) {
-    $prefixer = new theme_iomad\autoprefixer($tree);
-    $prefixer->prefix();
-}
-
-/**
- * Inject additional SCSS.
+ * This function can make alterations and replace patterns within the CSS.
  *
+ * @param string $css The CSS
  * @param theme_config $theme The theme config object.
- * @return string
+ * @return string The parsed CSS The parsed CSS.
  */
-function theme_iomad_get_extra_scss($theme) {
-    $content = '';
-    $imageurl = $theme->setting_file_url('backgroundimage', 'backgroundimage');
+function theme_iomad_process_css($css, $theme) {
+    global $CFG;
 
-    // Sets the background image, and its settings.
-    if (!empty($imageurl)) {
-        $content .= 'body { ';
-        $content .= "background-image: url('$imageurl'); background-size: cover;";
-        $content .= ' }';
+    // Set custom CSS.
+    if (!empty($theme->settings->customcss)) {
+        $customcss = $theme->settings->customcss;
+    } else {
+        $customcss = null;
     }
+    $css = theme_iomad_set_customcss($css, $customcss);
 
-    // Always return the background image with the scss when we have it.
-    return !empty($theme->settings->scss) ? $theme->settings->scss . ' ' . $content : $content;
+    // deal with webfonts
+    $tag = '[[font:theme|astonish.woff]]';
+    $replacement = $CFG->wwwroot.'/theme/iomad/fonts/astonish.woff';
+    $css = str_replace($tag, $replacement, $css);
+
+    return $css;
 }
 
 /**
@@ -85,78 +80,139 @@ function theme_iomad_pluginfile($course, $cm, $context, $filearea, $args, $force
     send_stored_file($file, 0, 0, $forcedownload);
 }
 
+
 /**
- * Returns the main SCSS content.
+ * Adds any custom CSS to the CSS before it is cached.
  *
- * @param theme_config $theme The theme config object.
- * @return string
+ * @param string $css The original CSS.
+ * @param string $customcss The custom CSS to add.
+ * @return string The CSS which now contains our custom CSS.
  */
-function theme_iomad_get_main_scss_content($theme) {
-    global $CFG;
-
-    $scss = '';
-    $filename = !empty($theme->settings->preset) ? $theme->settings->preset : null;
-    $fs = get_file_storage();
-
-    $context = context_system::instance();
-    if ($filename == 'default.scss') {
-        $scss .= file_get_contents($CFG->dirroot . '/theme/iomad/scss/preset/default.scss');
-    } else if ($filename == 'plain.scss') {
-        $scss .= file_get_contents($CFG->dirroot . '/theme/iomad/scss/preset/plain.scss');
-    } else if ($filename && ($presetfile = $fs->get_file($context->id, 'theme_iomad', 'preset', 0, '/', $filename))) {
-        $scss .= $presetfile->get_content();
-    } else {
-        // Safety fallback - maybe new installs etc.
-        $scss .= file_get_contents($CFG->dirroot . '/theme/iomad/scss/preset/default.scss');
+function theme_iomad_set_customcss($css, $customcss) {
+    $tag = '[[setting:customcss]]';
+    $replacement = $customcss;
+    if (is_null($replacement)) {
+        $replacement = '';
     }
 
-    return $scss;
+    $css = str_replace($tag, $replacement, $css);
+
+    return $css;
 }
 
 /**
- * Get compiled css.
+ * Returns an object containing HTML for the areas affected by settings.
  *
- * @return string compiled css
+ * @param renderer_base $output Pass in $OUTPUT.
+ * @param moodle_page $page Pass in $PAGE.
+ * @return stdClass An object with the following properties:
+ *      - navbarclass A CSS class to use on the navbar. By default ''.
+ *      - heading HTML to use for the heading. A logo if one is selected or the default heading.
+ *      - footnote HTML to use as a footnote. By default ''.
  */
-function theme_iomad_get_precompiled_css() {
-    global $CFG;
-    return file_get_contents($CFG->dirroot . '/theme/iomad/style/moodle.css');
-}
+function theme_iomad_get_html_for_settings(renderer_base $output, moodle_page $page) {
+    global $CFG, $USER, $DB;
+    $return = new stdClass;
 
-/**
- * Get SCSS to prepend.
- *
- * @param theme_config $theme The theme config object.
- * @return array
- */
-function theme_iomad_get_pre_scss($theme) {
-    global $CFG;
+    $return->navbarclass = '';
+    if (!empty($page->theme->settings->invert)) {
+        $return->navbarclass .= ' navbar-inverse';
+    }
 
-    $scss = '';
-    $configurable = [
-        // Config key => [variableName, ...].
-        'brandcolor' => ['primary'],
-    ];
-
-    // Prepend variables first.
-    foreach ($configurable as $configkey => $targets) {
-        $value = isset($theme->settings->{$configkey}) ? $theme->settings->{$configkey} : null;
-        if (empty($value)) {
-            continue;
+    // get logos
+    $theme = $page->theme;
+    $logo = $theme->setting_file_url('logo', 'logo');
+    if (empty($logo)) {
+        $logo = $CFG->wwwroot.'/theme/iomad/pix/iomad_logo.png';
+    }
+    $clientlogo = '';
+    $companycss = '';
+    if ($companyid = iomad::is_company_user()) {
+        $context = context_system::instance();
+        if ($files = $DB->get_records('files', array('contextid' => $context->id, 'component' => 'theme_iomad', 'filearea' => 'companylogo', 'itemid' => $companyid))) {
+            foreach ($files as $file) {
+                if ($file->filename != '.') {
+                    $clientlogo = $CFG->wwwroot . "/pluginfile.php/{$context->id}/theme_iomad/companylogo/$companyid/{$file->filename}";
+                }
+            }
         }
-        array_map(function($target) use (&$scss, $value) {
-            $scss .= '$' . $target . ': ' . $value . ";\n";
-        }, (array) $targets);
+        company_user::load_company();
+        $companycss = ".header, .navbar { background: [[company:bgcolor_header]]; }
+                       .block .content { background: [[company:bgcolor_content]]; }";
+        foreach($USER->company as $key => $value) {
+            if (isset($value)) {
+                $companycss = preg_replace("/\[\[company:$key\]\]/", $value, $companycss);
+            }
+        }
+        $companycss .= iomad::get_company_customcss($companyid);
+        $companycss .= iomad::get_company_maincolor($companyid);
+        $companycss .= iomad::get_company_headingcolor($companyid);
+        $companycss .= iomad::get_company_linkcolor($companyid);
     }
 
-    // Prepend pre-scss.
-    if (!empty($theme->settings->scsspre)) {
-        $scss .= $theme->settings->scsspre;
+    $return->heading = '<div id="sitelogo">' . 
+        '<a href="' . $CFG->wwwroot . '" ><img src="' . $logo . '" /></a></div>';
+    $return->heading .= '<div id="siteheading">' . $output->page_heading() . '</div>';
+    if (!empty($companyid) && $clientlogo) {
+        $return->heading .= '<div id="clientlogo">' . 
+            '<a href="' . $CFG->wwwroot . '" ><img src="' . $clientlogo . '" /></a></div>';
     }
 
-    if (!empty($theme->settings->fontsize)) {
-        $scss .= '$font-size-base: ' . (1 / 100 * $theme->settings->fontsize) . "rem !default;\n";
+    $return->footnote = '';
+    if (!empty($page->theme->settings->footnote)) {
+        $return->footnote = '<div class="footnote text-center">'.$page->theme->settings->footnote.'</div>';
     }
 
-    return $scss;
+    $return->companycss = $companycss;
+
+    return $return;
+}
+
+/**
+ * All theme functions should start with theme_iomad_
+ * @deprecated since 2.5.1
+ */
+function iomad_process_css() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
+}
+
+/**
+ * All theme functions should start with theme_iomad_
+ * @deprecated since 2.5.1
+ */
+function iomad_set_logo() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
+}
+
+/**
+ * All theme functions should start with theme_iomad_
+ * @deprecated since 2.5.1
+ */
+function iomad_set_customcss() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
+}
+
+/* perficio_process_css  - Processes perficio specific tags in CSS files
+ *
+ * [[logo]] gets replaced with the full url to the company logo
+ * [[company:$property]] gets replaced with the property of the $USER->company object
+ *     available properties are: id, shortname, name, logo_filename + the fields in company->cssfields, currently  bgcolor_header and bgcolor_content
+ *
+ */
+function theme_iomad_process_company_css($css, $theme) {
+    global $USER;
+
+    company_user::load_company();
+
+    if (isset($USER->company)) {
+        // replace company properties
+        foreach($USER->company as $key => $value) {
+            if (isset($value)) {
+                $css = preg_replace("/\[\[company:$key\]\]/", $value, $css);
+            }
+        }
+
+    }
+    return $css;
+
 }

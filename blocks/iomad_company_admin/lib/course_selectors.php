@@ -20,6 +20,7 @@ require_once(dirname(__FILE__) . '/../../../local/course_selector/lib.php');
  * base class for selecting courses of a company
  */
 abstract class company_course_selector_base extends course_selector_base {
+    const MAX_COURSES_PER_PAGE = 200;
 
     protected $companyid;
     protected $hasenrollments = false;
@@ -40,7 +41,7 @@ abstract class company_course_selector_base extends course_selector_base {
     }
 
     protected function process_enrollments(&$courselist) {
-        global $CFG, $DB;
+        global $DB;
         // Locate and annotate any courses that have existing.
         // Enrollments.
         $strhasenrollments = get_string('hasenrollments', 'block_iomad_company_admin');
@@ -111,13 +112,13 @@ class current_company_course_selector extends company_course_selector_base {
     }
 
     public function find_courses($search) {
-        global $CFG, $DB;
+        global $DB, $CFG;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
         $params['departmentid'] = $this->departmentid;
         if (!empty($this->departmentid)) {
-            $departmentlist = array($this->departmentid => $this->departmentid) +
+            $departmentlist = array($this->departmentid => $this->departmentid) + 
                               company::get_department_parentnodes($this->departmentid);
         } else {
             $departmentlist = array($this->departmentid => $this->departmentid);
@@ -166,7 +167,7 @@ class current_company_course_selector extends company_course_selector_base {
                                      SELECT pc.courseid FROM {iomad_courses} pc
                                      INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
                                      WHERE pc.shared = 2
-                                     AND pc.licensed = 0
+                                     AND pc.licensed = 0 
                                      AND csc.companyid = :companyid)
                                     AND c.id IN (
                                        SELECT courseid FROM {company_course}
@@ -188,7 +189,7 @@ class current_company_course_selector extends company_course_selector_base {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
                                      $DB->count_records_sql($countfields . $sharedsql, $params) +
                                      $DB->count_records_sql($countfields . $partialsharedsql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -246,7 +247,7 @@ class all_department_course_selector extends company_course_selector_base {
     }
 
     public function find_courses($search) {
-        global $CFG, $DB;
+        global $DB, $CFG;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
@@ -313,7 +314,7 @@ class all_department_course_selector extends company_course_selector_base {
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -392,7 +393,7 @@ class potential_company_course_selector extends company_course_selector_base {
     }
 
     public function find_courses($search) {
-        global $CFG, $DB, $SITE;
+        global $DB, $SITE;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
@@ -443,7 +444,7 @@ class potential_company_course_selector extends company_course_selector_base {
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -500,7 +501,7 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
     }
 
     public function find_courses($search) {
-        global $CFG, $DB, $SITE;
+        global $DB, $SITE;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
@@ -562,7 +563,7 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -570,7 +571,7 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
         $availablecourses = $DB->get_records_sql($fields . $sql . $order, $params) +
         $DB->get_records_sql($distinctfields . $sqldistinct . $order, $params);
         if (!empty($this->showopenshared)) {
-            $availablecourses = $availablecourses +
+            $availablecourses = $availablecourses + 
             $DB->get_records_sql($distinctfields . $sqlopenshared . $order, $params);
         }
 
@@ -606,7 +607,7 @@ class any_course_selector extends course_selector_base {
      * @return array
      */
     public function find_courses($search) {
-        global $CFG, $DB;
+        global $DB;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
 
@@ -620,7 +621,7 @@ class any_course_selector extends course_selector_base {
 
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -672,7 +673,6 @@ class current_user_course_selector extends course_selector_base {
     }
 
     public function find_courses($search) {
-        global $DB;
 
         if ($search) {
             $groupname = get_string('usercoursesmatching', 'block_iomad_company_admin', $search);
@@ -680,14 +680,7 @@ class current_user_course_selector extends course_selector_base {
             $groupname = get_string('usercourses', 'block_iomad_company_admin');
         }
 
-        if ($coursearray = enrol_get_users_courses($this->user->id, true, null, 'fullname')) {
-            // Don't want license courses.
-            foreach ($coursearray as $courseid => $coursedata) {
-                if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
-                    unset($coursearray[$courseid]);
-                }
-            }
-            // Deal with any search.
+        if ($coursearray = enrol_get_users_courses($this->user->id, true, null, 'visible DESC, sortorder ASC')) {
             if (empty($search)) {
                 return array($groupname => $coursearray);
             } else {
@@ -749,7 +742,7 @@ class potential_user_course_selector extends course_selector_base {
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
         $params['siteid'] = $SITE->id;
-        $company = new company($this->companyid);
+	$company = new company($this->companyid);
         $userdepartment = $company->get_userlevel($this->user);
 
         if (!$companycourses = $DB->get_records('company_course', array('companyid' => $this->companyid), null, 'courseid')) {
@@ -803,24 +796,17 @@ class potential_user_course_selector extends course_selector_base {
                                INNER JOIN {iomad_courses} pc
                                ON c.id=pc.courseid
                                WHERE pc.shared=1
-                               AND pc.licensed != 1
-                               $currentcoursesql";
+                               AND pc.licensed != 1";
                 $partialsharedsql = " FROM {course} c
-                                    WHERE c.id IN (SELECT pc.courseid FROM {iomad_courses} pc
+                                    WHERE c.id IN (SELECT pc.courseid from {iomad_courses} pc
                                     INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
-                                       WHERE pc.shared=2 AND pc.licensed !=1 AND csc.companyid = :companyid)
-                                       $currentcoursesql";
+                                       where pc.shared=2 AND pc.licensed !=1 AND csc.companyid = :companyid)";
             } else {
-                $sharedsql = " FROM {course} c
-                               INNER JOIN {iomad_courses} pc ON c.id=pc.courseid
-                               WHERE pc.shared=1
-                               $currentcoursesql";
+                $sharedsql = " FROM {course} c INNER JOIN {iomad_courses} pc ON c.id=pc.courseid WHERE pc.shared=1";
                 $partialsharedsql = " FROM {course} c
-                                      WHERE c.id IN 
-                                         (SELECT pc.courseid WHERE {iomad_courses} pc
-                                          INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
-                                          WHERE pc.shared=2 AND csc.companyid = :companyid)
-                                      $currentcoursesql";
+                                    WHERE c.id IN (SELECT pc.courseid from {iomad_courses} pc
+                                    INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
+                                       where pc.shared=2 AND csc.companyid = :companyid)";
             }
         } else {
             $sharedsql = " FROM {course} c WHERE 1 = 2";
@@ -833,7 +819,7 @@ class potential_user_course_selector extends course_selector_base {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($countfields . $sharedsql, $params) +
             $DB->count_records_sql($countfields . $partialsharedsql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }
@@ -887,7 +873,7 @@ class current_user_license_course_selector extends course_selector_base {
     }
 
     protected function process_license_allocations(&$licensecourses, $userid) {
-        global $CFG, $DB;
+        global $DB;
         foreach ($licensecourses as $id => $course) {
             if ($DB->get_record_sql("SELECT clu.id FROM {companylicense_users} clu
                                      JOIN {companylicense} cl
@@ -909,16 +895,17 @@ class current_user_license_course_selector extends course_selector_base {
 
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
-
         $params['companyid'] = $this->companyid;
         $params['siteid'] = $SITE->id;
         $params['timestamp'] = time();
         $params['userid'] = $this->user->id;
         $params['licenseid'] = $this->licenseid;
 
-        $fields      = 'SELECT clu.id, c.fullname ';
-        $countfields = 'SELECT COUNT(clu.id)';
+        $fields      = 'SELECT ' . $this->required_fields_sql('c');
+        $countfields = 'SELECT COUNT(1)';
 
+        $distinctfields      = 'SELECT DISTINCT ' . $this->required_fields_sql('c');
+        $distinctcountfields = 'SELECT COUNT(DISTINCT c.id) ';
         $sql = " FROM {course} c,
                         {companylicense} cl,
                         {companylicense_users} clu
@@ -932,7 +919,7 @@ class current_user_license_course_selector extends course_selector_base {
         $order = ' ORDER BY c.fullname ASC';
         if (!$this->is_validating()) {
             $availablememberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($availablememberscount > $CFG->iomad_max_select_courses) {
+            if ($availablememberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $availablememberscount);
             }
         }
@@ -943,123 +930,14 @@ class current_user_license_course_selector extends course_selector_base {
         }
 
         $this->process_license_allocations($availablecourses, $this->user->id);
-
+        
         if ($search) {
             $groupname = get_string('curlicensecoursesmatching', 'block_iomad_company_admin', $search);
         } else {
             $groupname = get_string('curlicensecourses', 'block_iomad_company_admin');
         }
+
         return array($groupname => $availablecourses);
-    }
-
-    /**
-     * Get the list of courses that were selected by doing optional_param then
-     * validating the result.
-     *
-     * @return array of course objects.
-     */
-    protected function load_selected_courses() {
-        global $DB;
-
-        // See if we got anything.
-        if (!$this->multiselect) {
-            $courseids = optional_param($this->name, null, PARAM_INTEGER);
-            if (empty($courseids)) {
-                return array();
-            } else {
-                $courseids = array($courseids);
-            }
-        } else {
-            $courseids = optional_param_array($this->name, array(), PARAM_INTEGER);
-            if (empty($courseids)) {
-                return array();
-            }
-        }
-
-        // If we did, use the find_courses method to validate the ids.
-        $this->validatingcourseids = $courseids;
-        $groupedcourses = $this->find_courses('');
-        $this->validatingcourseids = null;
-
-        // Aggregate the resulting list back into a single one.
-        $courses = array();
-        foreach ($groupedcourses as $group) {
-            foreach ($group as $course) {
-                if (!isset($courses[$course->id]) && empty($course->disabled)
-                    && in_array($course->id, $courseids)) {
-                    $courses[$course->id] = $course;
-                }
-            }
-        }
-
-        // If we are only supposed to be selecting a single course, make sure we do.
-        if (!$this->multiselect && count($courses) > 1) {
-            $courses = array_slice($courses, 0, 1);
-        }
-
-        return $courses;
-    }
-
-    /**
-     * @param string $search the text to search for.
-     * @param string $u the table alias for the course table in the query being
-     *      built. May be ''.
-     * @return array an array with two elements, a fragment of SQL to go in the
-     *      where clause the query, and an array containing any required parameters.
-     *      this uses ? style placeholders.
-     */
-    protected function search_sql($search, $u) {
-        global $DB, $CFG;
-        $params = array();
-        $tests = array();
-
-        if ($u) {
-            $u .= '.';
-        }
-
-        // If we have a $search string, put a field LIKE '$search%' condition on each field.
-        if ($search) {
-            $conditions = array(
-                $conditions[] = $u . 'fullname'
-            );
-            foreach ($this->extrafields as $field) {
-                $conditions[] = $u . $field;
-            }
-            $searchparam = '%' . $search . '%';
-            $i = 0;
-            foreach ($conditions as $key => $condition) {
-                $conditions[$key] = $DB->sql_like($condition, ":con{$i}00", false, false);
-                $params["con{$i}00"] = $searchparam;
-                $i++;
-            }
-            $tests[] = '(' . implode(' OR ', $conditions) . ')';
-        }
-
-        // Add some additional sensible conditions.
-        $tests[] = $u . 'visible = 1';
-
-        // If we are being asked to exclude any courses, do that.
-        if (!empty($this->exclude)) {
-            list($coursetest, $courseparams) = $DB->get_in_or_equal($this->exclude,
-                                               SQL_PARAMS_NAMED, 'ex000', false);
-            $tests[] = $u . 'id ' . $coursetest;
-            $params = array_merge($params, $courseparams);
-        }
-
-        // If we are validating a set list of courseids, add an id IN (...) test.
-        if (!empty($this->validatingcourseids)) {
-            list($coursetest, $courseparams) = $DB->get_in_or_equal($this->validatingcourseids,
-                                               SQL_PARAMS_NAMED, 'val000');
-            $tests[] =  'clu.id ' . $coursetest;
-            $params = array_merge($params, $courseparams);
-        }
-
-        if (empty($tests)) {
-            $tests[] = '1 = 1';
-        }
-
-        // Combing the conditions and return.
-        return array(implode(' AND ', $tests), $params);
     }
 }
 
@@ -1070,13 +948,13 @@ class potential_user_license_course_selector extends course_selector_base {
      * @return array
      */
     public function __construct($name, $options) {
-        global $CFG, $DB;
+        global $DB;
 
         $this->companyid  = $options['companyid'];
         $this->user = $options['user'];
         $this->licenseid = $options['licenseid'];
         $this->license = $DB->get_record('companylicense', array('id' => $this->licenseid));
-
+ 
         parent::__construct($name, $options);
     }
 
@@ -1125,7 +1003,7 @@ class potential_user_license_course_selector extends course_selector_base {
         $order = ' ORDER BY c.fullname ASC';
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > company_course_selector_base::MAX_COURSES_PER_PAGE) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }

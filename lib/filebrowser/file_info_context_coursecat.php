@@ -61,7 +61,7 @@ class file_info_context_coursecat extends file_info {
     public function get_file_info($component, $filearea, $itemid, $filepath, $filename) {
         global $DB;
 
-        if (!core_course_category::can_view_category($this->category)) {
+        if (!$this->category->visible and !has_capability('moodle/category:viewhiddencategories', $this->context)) {
             if (empty($component)) {
                 // we can not list the category contents, so try parent, or top system
                 if ($this->category->parent and $pc = $DB->get_record('course_categories', array('id'=>$this->category->parent))) {
@@ -101,7 +101,7 @@ class file_info_context_coursecat extends file_info {
             // No coursecat description area for "system".
             return null;
         }
-        if (!core_course_category::can_view_category($this->category)) {
+        if (!$this->category->visible and !has_capability('moodle/category:viewhiddencategories', $this->context)) {
             return null;
         }
         if (!has_capability('moodle/category:manage', $this->context)) {
@@ -228,7 +228,8 @@ class file_info_context_coursecat extends file_info {
 
         foreach ($coursecats as $id => &$category) {
             context_helper::preload_from_record($category);
-            if (!core_course_category::can_view_category($category)) {
+            $context = context_coursecat::instance($category->id);
+            if (!$category->visible && !has_capability('moodle/category:viewhiddencategories', $context)) {
                 $hiddencats[$id] = $coursecats[$id];
                 unset($coursecats[$id]);
             }

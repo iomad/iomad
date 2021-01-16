@@ -319,10 +319,9 @@ class completion_info {
      * @return string HTML code for help icon, or blank if not needed
      */
     public function display_help_icon() {
-        global $PAGE, $OUTPUT, $USER;
+        global $PAGE, $OUTPUT;
         $result = '';
-        if ($this->is_enabled() && !$PAGE->user_is_editing() && $this->is_tracked_user($USER->id) && isloggedin() &&
-                !isguestuser()) {
+        if ($this->is_enabled() && !$PAGE->user_is_editing() && isloggedin() && !isguestuser()) {
             $result .= html_writer::tag('div', get_string('yourprogress','completion') .
                     $OUTPUT->help_icon('completionicons', 'completion'), array('id' => 'completionprogressid',
                     'class' => 'completionprogress'));
@@ -357,19 +356,19 @@ class completion_info {
      * @return array
      */
     public function get_completions($user_id, $criteriatype = null) {
-        $criteria = $this->get_criteria($criteriatype);
+        $criterion = $this->get_criteria($criteriatype);
 
         $completions = array();
 
-        foreach ($criteria as $criterion) {
+        foreach ($criterion as $criteria) {
             $params = array(
                 'course'        => $this->course_id,
                 'userid'        => $user_id,
-                'criteriaid'    => $criterion->id
+                'criteriaid'    => $criteria->id
             );
 
             $completion = new completion_criteria_completion($params);
-            $completion->attach_criteria($criterion);
+            $completion->attach_criteria($criteria);
 
             $completions[] = $completion;
         }
@@ -498,16 +497,7 @@ class completion_info {
      */
     public function clear_criteria() {
         global $DB;
-
-        // Remove completion criteria records for the course itself, and any records that refer to the course.
-        $select = 'course = :course OR (criteriatype = :type AND courseinstance = :courseinstance)';
-        $params = [
-            'course' => $this->course_id,
-            'type' => COMPLETION_CRITERIA_TYPE_COURSE,
-            'courseinstance' => $this->course_id,
-        ];
-
-        $DB->delete_records_select('course_completion_criteria', $select, $params);
+        $DB->delete_records('course_completion_criteria', array('course' => $this->course_id));
         $DB->delete_records('course_completion_aggr_methd', array('course' => $this->course_id));
 
         $this->delete_course_completion_data();
@@ -1377,28 +1367,5 @@ class completion_info {
         global $CFG;
         throw new moodle_exception('err_system','completion',
             $CFG->wwwroot.'/course/view.php?id='.$this->course->id,null,$error);
-    }
-}
-
-/**
- * Aggregate criteria status's as per configured aggregation method.
- *
- * @param int $method COMPLETION_AGGREGATION_* constant.
- * @param bool $data Criteria completion status.
- * @param bool|null $state Aggregation state.
- */
-function completion_cron_aggregate($method, $data, &$state) {
-    if ($method == COMPLETION_AGGREGATION_ALL) {
-        if ($data && $state !== false) {
-            $state = true;
-        } else {
-            $state = false;
-        }
-    } else if ($method == COMPLETION_AGGREGATION_ANY) {
-        if ($data) {
-            $state = true;
-        } else if (!$data && $state === null) {
-            $state = false;
-        }
     }
 }

@@ -52,16 +52,14 @@ class behat_form_editor extends behat_form_textarea {
         if ($this->running_javascript()) {
             $value = addslashes($value);
             $js = '
-(function() {
-    var editor = Y.one(document.getElementById("'.$editorid.'editable"));
-    if (editor) {
-        editor.setHTML("' . $value . '");
-    }
-    editor = Y.one(document.getElementById("'.$editorid.'"));
-    editor.set("value", "' . $value . '");
-})();
+var editor = Y.one(document.getElementById("'.$editorid.'editable"));
+if (editor) {
+    editor.setHTML("' . $value . '");
+}
+editor = Y.one(document.getElementById("'.$editorid.'"));
+editor.set("value", "' . $value . '");
 ';
-            behat_base::execute_script_in_session($this->session, $js);
+            $this->session->executeScript($js);
         } else {
             parent::set_value($value);
         }
@@ -90,7 +88,7 @@ class behat_form_editor extends behat_form_textarea {
     r.selectNodeContents(e);
     s.setSingleRange(r);
 }()); ';
-        behat_base::execute_script_in_session($this->session, $js);
+        $this->session->executeScript($js);
     }
 
     /**

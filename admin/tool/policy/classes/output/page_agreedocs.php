@@ -51,14 +51,8 @@ class page_agreedocs implements renderable, templatable {
     /** @var array $policies List of public policies objects with information about the user acceptance. */
     protected $policies = null;
 
-    /** @var array List of policy version ids that were displayed to the user to agree with. */
-    protected $listdocs = null;
-
     /** @var array $agreedocs List of policy identifiers which the user has agreed using the form. */
     protected $agreedocs = null;
-
-    /** @var array $declinedocs List of policy identifiers that the user declined. */
-    protected $declinedocs = null;
 
     /** @var string $action Form action to identify when user agreeds policies. */
     protected $action = null;
@@ -75,27 +69,23 @@ class page_agreedocs implements renderable, templatable {
     /** @var array Info or error messages to show. */
     protected $messages = [];
 
-    /** @var bool This is an existing user (rather than non-loggedin/guest). */
-    protected $isexistinguser;
-
     /**
      * Prepare the page for rendering.
      *
-     * @param array $listdocs List of policy version ids that were displayed to the user to agree with.
-     * @param array $agreedocs List of policy version ids that the user actually agreed with.
-     * @param array $declinedocs List of policy version ids that the user declined.
+     * @param array $agreedocs Array with the policy identifiers which the user has agreed using the form.
      * @param int $behalfid The userid to accept the policy versions as (such as child's id).
      * @param string $action Form action to identify when user agreeds policies.
      */
-    public function __construct(array $listdocs, array $agreedocs = [], array $declinedocs = [], $behalfid = 0, $action = null) {
+    public function __construct($agreedocs = null, $behalfid = 0, $action = null) {
         global $USER;
         $realuser = manager::get_realuser();
 
-        $this->listdocs = $listdocs;
         $this->agreedocs = $agreedocs;
-        $this->declinedocs = $declinedocs;
+        if (empty($this->agreedocs)) {
+            $this->agreedocs = [];
+        }
+
         $this->action = $action;
-        $this->isexistinguser = isloggedin() && !isguestuser();
 
         $behalfid = $behalfid ?: $USER->id;
         if ($realuser->id != $behalfid) {
@@ -104,23 +94,11 @@ class page_agreedocs implements renderable, templatable {
         }
 
         $this->policies = api::list_current_versions(policy_version::AUDIENCE_LOGGEDIN);
-
-        if (!$this->isexistinguser) {
-            // During the signup, show compulsory policies only.
-            foreach ($this->policies as $ix => $policyversion) {
-                if ($policyversion->optional == policy_version::AGREEMENT_OPTIONAL) {
-                    unset($this->policies[$ix]);
-                }
-            }
-            $this->policies = array_values($this->policies);
-        }
-
         if (empty($this->behalfid)) {
             $userid = $USER->id;
         } else {
             $userid = $this->behalfid;
         }
-
         $this->accept_and_revoke_policies();
         $this->prepare_global_page_access($userid);
         $this->prepare_user_acceptances($userid);
@@ -134,33 +112,26 @@ class page_agreedocs implements renderable, templatable {
     protected function accept_and_revoke_policies() {
         global $USER;
 
-        if ($this->isexistinguser) {
+        if (!empty($USER->id)) {
             // Existing user.
             if (!empty($this->action) && confirm_sesskey()) {
-                // The form has been sent, update policies acceptances.
+                // The form has been sent. Update policies acceptances according to $this->agreedocs.
                 $lang = current_language();
                 // Accept / revoke policies.
-                $acceptversionids = [];
-                $declineversionids = [];
-
+                $acceptversionids = array();
                 foreach ($this->policies as $policy) {
-                    if (in_array($policy->id, $this->listdocs)) {
-                        if (in_array($policy->id, $this->agreedocs)) {
-                            $acceptversionids[] = $policy->id;
-                        } else if (in_array($policy->id, $this->declinedocs)) {
-                            $declineversionids[] = $policy->id;
-                        } else {
-                            // If the policy was displayed but not answered, revoke the eventually given acceptance.
-                            api::revoke_acceptance($policy->id, $this->behalfid);
-                        }
+                    if (in_array($policy->id, $this->agreedocs)) {
+                        // Save policy version doc to accept it.
+                        $acceptversionids[] = $policy->id;
+                    } else {
+                        // Revoke policy doc.
+                        api::revoke_acceptance($policy->id, $this->behalfid);
                     }
                 }
-
+                // Accept all policy docs saved in $acceptversionids.
                 api::accept_policies($acceptversionids, $this->behalfid, null, $lang);
-                api::decline_policies($declineversionids, $this->behalfid, null, $lang);
-
                 // Show a message to let know the user he/she must agree all the policies.
-                if ((count($acceptversionids) + count($declineversionids)) != count($this->policies)) {
+                if (count($acceptversionids) != count($this->policies)) {
                     $message = (object) [
                         'type' => 'error',
                         'text' => get_string('mustagreetocontinue', 'tool_policy')
@@ -183,26 +154,15 @@ class page_agreedocs implements renderable, templatable {
         } else {
             // New user.
             if (!empty($this->action) && confirm_sesskey()) {
+                // The form has been sent.
                 $currentpolicyversionids = [];
-                $presignupcache = \cache::make('core', 'presignup');
-                $acceptances = $presignupcache->get('tool_policy_policyversionidsagreed');
-                if (!$acceptances) {
-                    $acceptances = [];
-                }
                 foreach ($this->policies as $policy) {
                     $currentpolicyversionids[] = $policy->id;
-                    if (in_array($policy->id, $this->listdocs)) {
-                        if (in_array($policy->id, $this->agreedocs)) {
-                            $acceptances[] = $policy->id;
-                        } else {
-                            $acceptances = array_values(array_diff($acceptances, [$policy->id]));
-                        }
-                    }
                 }
                 // If the user has accepted all the policies, add it to the session to let continue with the signup process.
-                $this->signupuserpolicyagreed = empty(array_diff($currentpolicyversionids, $acceptances));
-                $presignupcache->set('tool_policy_userpolicyagreed', $this->signupuserpolicyagreed);
-                $presignupcache->set('tool_policy_policyversionidsagreed', $acceptances);
+                $this->signupuserpolicyagreed = empty(array_diff($currentpolicyversionids, $this->agreedocs));
+                \cache::make('core', 'presignup')->set('tool_policy_userpolicyagreed',
+                    $this->signupuserpolicyagreed);
             } else if (empty($this->policies)) {
                 // There are no policies to agree to. Update the policyagreed value to avoid show empty consent page.
                 \cache::make('core', 'presignup')->set('tool_policy_userpolicyagreed', 1);
@@ -222,54 +182,24 @@ class page_agreedocs implements renderable, templatable {
      * Before display the consent page, the user has to view all the still-non-accepted policy docs.
      * This function checks if the non-accepted policy docs have been shown and redirect to them.
      *
-     * @param int $userid User identifier who wants to access to the consent page.
-     * @param moodle_url $returnurl URL to return after shown the policy docs.
+     * @param array $userid User identifier who wants to access to the consent page.
+     * @param url $returnurl URL to return after shown the policy docs.
      */
     protected function redirect_to_policies($userid, $returnurl = null) {
+        global $USER;
 
-        // Make a list of all policies that the user has not answered yet.
+        $acceptances = api::get_user_acceptances($userid);
         $allpolicies = $this->policies;
-
-        if ($this->isexistinguser) {
-            $acceptances = api::get_user_acceptances($userid);
-            foreach ($allpolicies as $ix => $policy) {
-                $isaccepted = api::is_user_version_accepted($userid, $policy->id, $acceptances);
-                if ($isaccepted) {
-                    // The user has accepted this policy, do not show it again.
-                    unset($allpolicies[$ix]);
-                } else if ($isaccepted === false && $policy->optional == policy_version::AGREEMENT_OPTIONAL) {
-                    // The user declined this policy but the agreement was optional, do not show it.
-                    unset($allpolicies[$ix]);
-                } else {
-                    // The user has not answered the policy yet, or the agreement is compulsory. Show it.
-                    continue;
-                }
-            }
-
-        } else {
-            $presignupcache = \cache::make('core', 'presignup');
-            $acceptances = $presignupcache->get('tool_policy_policyversionidsagreed');
-            if ($acceptances) {
-                foreach ($allpolicies as $ix => $policy) {
-                    if (in_array($policy->id, $acceptances)) {
-                        unset($allpolicies[$ix]);
-                    }
+        if (!empty($userid)) {
+            foreach ($allpolicies as $policy) {
+                if (api::is_user_version_accepted($userid, $policy->id, $acceptances)) {
+                    // If this version is accepted by the user, remove from the pending policies list.
+                    unset($allpolicies[array_search($policy, $allpolicies)]);
                 }
             }
         }
 
         if (!empty($allpolicies)) {
-            // Check if some of the to-be-accepted policies should be agreed on their own page.
-            foreach ($allpolicies as $policy) {
-                if ($policy->agreementstyle == policy_version::AGREEMENTSTYLE_OWNPAGE) {
-                    if (empty($returnurl)) {
-                        $returnurl = (new moodle_url('/admin/tool/policy/index.php'))->out_as_local_url(false);
-                    }
-                    $urlparams = ['versionid' => $policy->id, 'returnurl' => $returnurl];
-                    redirect(new moodle_url('/admin/tool/policy/view.php', $urlparams));
-                }
-            }
-
             $currentpolicyversionids = [];
             foreach ($allpolicies as $policy) {
                 $currentpolicyversionids[] = $policy->id;
@@ -300,38 +230,20 @@ class page_agreedocs implements renderable, templatable {
                 ];
                 redirect(new moodle_url('/admin/tool/policy/view.php', $urlparams));
             }
-        } else {
-            // Update the policyagreed for the user to avoid infinite loop because there are no policies to-be-accepted.
-            api::update_policyagreed($userid);
-            $this->redirect_to_previous_url();
         }
     }
 
     /**
-     * Redirect to signup page if defined or to $CFG->wwwroot if not.
+     * Redirect to $SESSION->wantsurl if defined or to $CFG->wwwroot if not.
      */
     protected function redirect_to_previous_url() {
         global $SESSION;
 
-        if ($this->isexistinguser) {
-            // Existing user.
-            if (!empty($SESSION->wantsurl)) {
-                $returnurl = $SESSION->wantsurl;
-                unset($SESSION->wantsurl);
-            } else {
-                $returnurl = new moodle_url('/admin/tool/policy/user.php');
-            }
+        if (!empty($SESSION->wantsurl)) {
+            $returnurl = $SESSION->wantsurl;
+            unset($SESSION->wantsurl);
         } else {
-            // Non-authenticated user.
-            $issignup = \cache::make('core', 'presignup')->get('tool_policy_issignup');
-            if ($issignup) {
-                // User came here from signup page - redirect back there.
-                $returnurl = new moodle_url('/login/signup.php');
-                \cache::make('core', 'presignup')->set('tool_policy_issignup', false);
-            } else {
-                // Guests should not be on this page unless it's part of signup - redirect home.
-                $returnurl = new moodle_url('/');
-            }
+            $returnurl = (new moodle_url('/admin/tool/policy/user.php'))->out();
         }
 
         redirect($returnurl);
@@ -343,35 +255,35 @@ class page_agreedocs implements renderable, templatable {
      * @param int $userid
      */
     protected function prepare_global_page_access($userid) {
-        global $PAGE, $SITE, $USER;
+        global $PAGE, $SESSION, $SITE, $USER;
 
         // Guest users or not logged users (but the users during the signup process) are not allowed to access to this page.
-        $newsignupuser = \cache::make('core', 'presignup')->get('tool_policy_issignup');
-        if (!$this->isexistinguser && !$newsignupuser) {
+        $newsignupuser = !empty($SESSION->wantsurl) && strpos($SESSION->wantsurl, 'login/signup.php') !== false;
+        if (isguestuser() || (empty($USER->id) && !$newsignupuser)) {
             $this->redirect_to_previous_url();
         }
 
         // Check for correct user capabilities.
-        if ($this->isexistinguser) {
+        if (!empty($USER->id)) {
             // For existing users, it's needed to check if they have the capability for accepting policies.
-            api::can_accept_policies($this->listdocs, $this->behalfid, true);
+            api::can_accept_policies($this->behalfid, true);
         } else {
             // For new users, the behalfid parameter is ignored.
-            if ($this->behalfid) {
+            if ($this->behalfid != $USER->id) {
                 redirect(new moodle_url('/admin/tool/policy/index.php'));
             }
         }
 
         // If the current user has the $USER->policyagreed = 1 or $userpolicyagreed = 1
-        // redirect to the return page.
-        $hasagreedsignupuser = !$this->isexistinguser && $this->signupuserpolicyagreed;
+        // and $SESSION->wantsurl is defined, redirect to the return page.
+        $hasagreedsignupuser = empty($USER->id) && $this->signupuserpolicyagreed;
         $hasagreedloggeduser = $USER->id == $userid && !empty($USER->policyagreed);
         if (!is_siteadmin() && ($hasagreedsignupuser || $hasagreedloggeduser)) {
             $this->redirect_to_previous_url();
         }
 
         $myparams = [];
-        if ($this->isexistinguser && !empty($this->behalfid) && $this->behalfid != $USER->id) {
+        if (!empty($USER->id) && !empty($this->behalfid) && $this->behalfid != $USER->id) {
             $myparams['userid'] = $this->behalfid;
         }
         $myurl = new moodle_url('/admin/tool/policy/index.php', $myparams);
@@ -396,6 +308,7 @@ class page_agreedocs implements renderable, templatable {
         global $USER;
 
         // Get all the policy version acceptances for this user.
+        $acceptances = api::get_user_acceptances($userid);
         $lang = current_language();
         foreach ($this->policies as $policy) {
             // Get a link to display the full policy document.
@@ -407,27 +320,20 @@ class page_agreedocs implements renderable, templatable {
             $policymodal = html_writer::link($policy->url, $policy->name, $policyattributes);
 
             // Check if this policy version has been agreed or not.
-            if ($this->isexistinguser) {
+            if (!empty($userid)) {
                 // Existing user.
                 $versionagreed = false;
-                $versiondeclined = false;
-                $acceptances = api::get_user_acceptances($userid);
                 $policy->versionacceptance = api::get_user_version_acceptance($userid, $policy->id, $acceptances);
                 if (!empty($policy->versionacceptance)) {
-                    // The policy version has ever been replied to before. Check if status = 1 to know if still is accepted.
-                    if ($policy->versionacceptance->status) {
-                        $versionagreed = true;
-                    } else {
-                        $versiondeclined = true;
-                    }
+                    // The policy version has ever been agreed. Check if status = 1 to know if still is accepted.
+                    $versionagreed = $policy->versionacceptance->status;
                     if ($versionagreed) {
                         if ($policy->versionacceptance->lang != $lang) {
                             // Add a message because this version has been accepted in a different language than the current one.
                             $policy->versionlangsagreed = get_string('policyversionacceptedinotherlang', 'tool_policy');
                         }
-                        $usermodified = $policy->versionacceptance->usermodified;
-                        if ($usermodified && $usermodified != $userid && $USER->id == $userid) {
-                            // Add a message because this version has been accepted on behalf of current user.
+                        if ($policy->versionacceptance->usermodified != $userid && $USER->id == $userid) {
+                            // Add a message because this version has been accepted in behalf of current user.
                             $policy->versionbehalfsagreed = get_string('policyversionacceptedinbehalf', 'tool_policy');
                         }
                     }
@@ -435,10 +341,8 @@ class page_agreedocs implements renderable, templatable {
             } else {
                 // New user.
                 $versionagreed = in_array($policy->id, $this->agreedocs);
-                $versiondeclined = false;
             }
             $policy->versionagreed = $versionagreed;
-            $policy->versiondeclined = $versiondeclined;
             $policy->policylink = html_writer::link($policy->url, $policy->name);
             $policy->policymodal = $policymodal;
         }
@@ -448,13 +352,13 @@ class page_agreedocs implements renderable, templatable {
      * Export the page data for the mustache template.
      *
      * @param renderer_base $output renderer to be used to render the page elements.
-     * @return \stdClass
+     * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
         global $USER;
 
         $myparams = [];
-        if ($this->isexistinguser && !empty($this->behalfid) && $this->behalfid != $USER->id) {
+        if (!empty($USER->id) && !empty($this->behalfid) && $this->behalfid != $USER->id) {
             $myparams['userid'] = $this->behalfid;
         }
         $data = (object) [
@@ -481,10 +385,7 @@ class page_agreedocs implements renderable, templatable {
             }
         }
 
-        // Filter out policies already shown on their own page, keep just policies to be shown here on the consent page.
-        $data->policies = array_values(array_filter($this->policies, function ($policy) {
-            return $policy->agreementstyle == policy_version::AGREEMENTSTYLE_CONSENTPAGE;
-        }));
+        $data->policies = array_values($this->policies);
 
         // If viewing docs in behalf of other user, get his/her full name and profile link.
         if (!empty($this->behalfuser)) {

@@ -55,23 +55,6 @@ $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
 
 $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
 $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-
-$typeid = $lti->typeid;
-if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
-    $typeid = $tool->id;
-}
-if ($typeid) {
-    $config = lti_get_type_type_config($typeid);
-    if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        if (!isset($SESSION->lti_initiatelogin_status)) {
-            echo lti_initiate_login($cm->course, $id, $lti, $config);
-            exit;
-        } else {
-            unset($SESSION->lti_initiatelogin_status);
-        }
-    }
-}
-
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 $context = context_module::instance($cm->id);

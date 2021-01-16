@@ -68,7 +68,6 @@ class qtype_match_test extends advanced_testcase {
         $q->stamp = make_unique_id_code();
         $q->version = make_unique_id_code();
         $q->hidden = 0;
-        $q->idnumber = null;
         $q->timecreated = time();
         $q->timemodified = time();
         $q->createdby = $USER->id;
@@ -110,26 +109,6 @@ class qtype_match_test extends advanced_testcase {
 
     public function test_can_analyse_responses() {
         $this->assertTrue($this->qtype->can_analyse_responses());
-    }
-
-    public function test_make_question_instance() {
-        $questiondata = test_question_maker::get_question_data('match', 'trickynums');
-        $question = question_bank::make_question($questiondata);
-        $this->assertEquals($questiondata->name, $question->name);
-        $this->assertEquals($questiondata->questiontext, $question->questiontext);
-        $this->assertEquals($questiondata->questiontextformat, $question->questiontextformat);
-        $this->assertEquals($questiondata->generalfeedback, $question->generalfeedback);
-        $this->assertEquals($questiondata->generalfeedbackformat, $question->generalfeedbackformat);
-        $this->assertInstanceOf('qtype_match', $question->qtype);
-        $this->assertEquals($questiondata->options->shuffleanswers, $question->shufflestems);
-
-        $this->assertEquals(
-                [14 => 'System.out.println(0);', 15 => 'System.out.println(0.0);'],
-                $question->stems);
-
-        $this->assertEquals([14 => '0', 15 => '0.0', 16 => 'NULL'], $question->choices);
-
-        $this->assertEquals([14 => 14, 15 => 15], $question->right);
     }
 
     public function test_get_random_guess_score() {

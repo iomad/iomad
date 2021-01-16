@@ -53,15 +53,6 @@ class restore_groups_setting extends restore_generic_setting {
 }
 
 /**
- * root setting to control if restore will include custom field information
- *
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright 2018 Daniel Neis Araujo
- */
-class restore_customfield_setting extends restore_generic_setting {
-}
-
-/**
  * root setting to control if restore will create role assignments
  * or no (any level), depends of @restore_users_setting
  */
@@ -236,9 +227,3 @@ class restore_activity_included_setting extends restore_activity_generic_setting
  * user information or no, depends of @restore_users_setting
  */
 class restore_activity_userinfo_setting extends restore_activity_generic_setting {}
-
-/**
- * root setting to control if restore will create content bank content or no
- */
-class restore_contentbankcontent_setting extends restore_generic_setting {
-}

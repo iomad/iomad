@@ -49,8 +49,6 @@ class company_templates_form extends moodleform {
     }
 
     public function definition_after_data() {
-        global $OUTPUT;
-
         $mform =& $this->_form;
 
         // Adding the elements in the definition_after_data function rather than in the
@@ -74,12 +72,16 @@ class company_templates_form extends moodleform {
         $mform->addElement('html', '
               </td>
               <td id="buttonscell">
-                  <p class="arrow_button">
-                    <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('add') . '"
-                           title="' . print_string('add') .'" class="btn btn-secondary"/><br />
-                    <input name="remove" id="remove" type="submit" value="'. get_string('remove').'&nbsp;'.$OUTPUT->rarrow(). '"
-                           title="'. print_string('remove') .'" class="btn btn-secondary"/><br />
-                 </p>
+                  <div id="addcontrols">
+                      <input name="add" id="add" type="submit" value="&nbsp;'.
+                       get_string('add') . '" title="Add" /><br />
+
+                  </div>
+
+                  <div id="removecontrols">
+                      <input name="remove" id="remove" type="submit" value="'.
+                       get_string('remove') . '&nbsp;" title="Remove" />
+                  </div>
               </td>
               <td id="potentialcell">');
 
@@ -155,11 +157,10 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
@@ -170,7 +171,7 @@ if ($mform->is_cancelled()) {
     if ($returnurl) {
         redirect($returnurl);
     } else {
-        redirect(new moodle_url('/my'));
+        redirect(new moodle_url('/local/iomad_dashboard/index.php'));
     }
 } else {
     $mform->process();

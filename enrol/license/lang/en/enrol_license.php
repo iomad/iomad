@@ -23,7 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['canntenrol'] = 'Enrolment is disabled or inactive';
 $string['customwelcomemessage'] = 'Custom welcome message';
 $string['defaultrole'] = 'Default role assignment';
 $string['defaultrole_desc'] = 'Select role which should be assigned to users during license enrolment';
@@ -58,7 +57,6 @@ $string['passwordinvalidhint'] = 'That enrolment key was incorrect, please try a
 (Here\'s a hint - it starts with \'{$a}\')';
 $string['pluginname'] = 'License enrolment';
 $string['pluginname_desc'] = 'The license enrolment plugin allows users to get access to courses after being assigned a license for them. Internally the enrolment is done via the manual enrolment plugin which has to be enabled in the same course.';
-$string['privacy:metadata'] = 'The LIcense enrolment plugin only shows data stored in other locations.';
 $string['requirepassword'] = 'Require enrolment key';
 $string['requirepassword_desc'] = 'Require enrolment key in new courses and prevent removing of enrolment key from existing courses.';
 $string['role'] = 'Assign role';

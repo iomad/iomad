@@ -52,22 +52,8 @@ class cohort_summary_exporter extends \core\external\exporter {
                 'default' => '',
                 'null' => NULL_ALLOWED
             ),
-            'description' => array(
-                'type' => PARAM_TEXT,
-                'default' => '',
-                'null' => NULL_ALLOWED
-            ),
-            'descriptionformat' => array(
-                'type' => PARAM_INT,
-                'default' => FORMAT_HTML,
-                'null' => NULL_ALLOWED
-            ),
             'visible' => array(
                 'type' => PARAM_BOOL,
-            ),
-            'theme' => array(
-                'type' => PARAM_THEME,
-                'null' => NULL_ALLOWED
             )
         );
     }

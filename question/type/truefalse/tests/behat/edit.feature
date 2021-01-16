@@ -22,10 +22,10 @@ Feature: Test editing a True/False question
       | Test questions   | truefalse | true-false-001 | true     |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   Scenario: Edit a True/False question
-    When I choose "Edit question" action for "true-false-001" in the question bank
+    When I click on "Edit" "link" in the "true-false-001" "table_row"
     And I set the following fields to these values:
       | Question name | |
     And I press "id_submitbutton"

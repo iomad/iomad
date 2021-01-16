@@ -61,19 +61,19 @@ function cron_run() {
     $timenow  = time();
     mtrace("Server Time: ".date('r', $timenow)."\n\n");
 
-    // Record start time and interval between the last cron runs.
-    $laststart = get_config('tool_task', 'lastcronstart');
-    set_config('lastcronstart', $timenow, 'tool_task');
-    if ($laststart) {
-        // Record the interval between last two runs (always store at least 1 second).
-        set_config('lastcroninterval', max(1, $timenow - $laststart), 'tool_task');
+    // Run all scheduled tasks.
+    while (!\core\task\manager::static_caches_cleared_since($timenow) &&
+           $task = \core\task\manager::get_next_scheduled_task($timenow)) {
+        cron_run_inner_scheduled_task($task);
+        unset($task);
     }
 
-    // Run all scheduled tasks.
-    cron_run_scheduled_tasks($timenow);
-
-    // Run adhoc tasks.
-    cron_run_adhoc_tasks($timenow);
+    // Run all adhoc tasks.
+    while (!\core\task\manager::static_caches_cleared_since($timenow) &&
+           $task = \core\task\manager::get_next_adhoc_task($timenow)) {
+        cron_run_inner_adhoc_task($task);
+        unset($task);
+    }
 
     mtrace("Cron script completed correctly");
 
@@ -81,147 +81,6 @@ function cron_run() {
     mtrace('Cron completed at ' . date('H:i:s') . '. Memory used ' . display_size(memory_get_usage()) . '.');
     $difftime = microtime_diff($starttime, microtime());
     mtrace("Execution took ".$difftime." seconds");
-}
-
-/**
- * Execute all queued scheduled tasks, applying necessary concurrency limits and time limits.
- *
- * @param   int     $timenow The time this process started.
- * @throws \moodle_exception
- */
-function cron_run_scheduled_tasks(int $timenow) {
-    // Allow a restriction on the number of scheduled task runners at once.
-    $cronlockfactory = \core\lock\lock_config::get_lock_factory('cron');
-    $maxruns = get_config('core', 'task_scheduled_concurrency_limit');
-    $maxruntime = get_config('core', 'task_scheduled_max_runtime');
-
-    $scheduledlock = null;
-    for ($run = 0; $run < $maxruns; $run++) {
-        // If we can't get a lock instantly it means runner N is already running
-        // so fail as fast as possible and try N+1 so we don't limit the speed at
-        // which we bring new runners into the pool.
-        if ($scheduledlock = $cronlockfactory->get_lock("scheduled_task_runner_{$run}", 0)) {
-            break;
-        }
-    }
-
-    if (!$scheduledlock) {
-        mtrace("Skipping processing of scheduled tasks. Concurrency limit reached.");
-        return;
-    }
-
-    $starttime = time();
-
-    // Run all scheduled tasks.
-    try {
-        while (!\core\local\cli\shutdown::should_gracefully_exit() &&
-                !\core\task\manager::static_caches_cleared_since($timenow) &&
-                $task = \core\task\manager::get_next_scheduled_task($timenow)) {
-            cron_run_inner_scheduled_task($task);
-            unset($task);
-
-            if ((time() - $starttime) > $maxruntime) {
-                mtrace("Stopping processing of scheduled tasks as time limit has been reached.");
-                break;
-            }
-        }
-    } finally {
-        // Release the scheduled task runner lock.
-        $scheduledlock->release();
-    }
-}
-
-/**
- * Execute all queued adhoc tasks, applying necessary concurrency limits and time limits.
- *
- * @param   int     $timenow The time this process started.
- * @param   int     $keepalive Keep this function alive for N seconds and poll for new adhoc tasks.
- * @param   bool    $checklimits Should we check limits?
- * @throws \moodle_exception
- */
-function cron_run_adhoc_tasks(int $timenow, $keepalive = 0, $checklimits = true) {
-    // Allow a restriction on the number of adhoc task runners at once.
-    $cronlockfactory = \core\lock\lock_config::get_lock_factory('cron');
-    $maxruns = get_config('core', 'task_adhoc_concurrency_limit');
-    $maxruntime = get_config('core', 'task_adhoc_max_runtime');
-
-    if ($checklimits) {
-        $adhoclock = null;
-        for ($run = 0; $run < $maxruns; $run++) {
-            // If we can't get a lock instantly it means runner N is already running
-            // so fail as fast as possible and try N+1 so we don't limit the speed at
-            // which we bring new runners into the pool.
-            if ($adhoclock = $cronlockfactory->get_lock("adhoc_task_runner_{$run}", 0)) {
-                break;
-            }
-        }
-
-        if (!$adhoclock) {
-            mtrace("Skipping processing of adhoc tasks. Concurrency limit reached.");
-            return;
-        }
-    }
-
-    $humantimenow = date('r', $timenow);
-    $finishtime = $timenow + $keepalive;
-    $waiting = false;
-    $taskcount = 0;
-
-    // Run all adhoc tasks.
-    while (!\core\local\cli\shutdown::should_gracefully_exit() &&
-            !\core\task\manager::static_caches_cleared_since($timenow)) {
-
-        if ($checklimits && (time() - $timenow) >= $maxruntime) {
-            if ($waiting) {
-                $waiting = false;
-                mtrace('');
-            }
-            mtrace("Stopping processing of adhoc tasks as time limit has been reached.");
-            break;
-        }
-
-        try {
-            $task = \core\task\manager::get_next_adhoc_task(time(), $checklimits);
-        } catch (Exception $e) {
-            if ($adhoclock) {
-                // Release the adhoc task runner lock.
-                $adhoclock->release();
-            }
-            throw $e;
-        }
-
-        if ($task) {
-            if ($waiting) {
-                mtrace('');
-            }
-            $waiting = false;
-            cron_run_inner_adhoc_task($task);
-            $taskcount++;
-            unset($task);
-        } else {
-            if (time() >= $finishtime) {
-                break;
-            }
-            if (!$waiting) {
-                mtrace('Waiting for more adhoc tasks to be queued ', '');
-            } else {
-                mtrace('.', '');
-            }
-            $waiting = true;
-            sleep(1);
-        }
-    }
-
-    if ($waiting) {
-        mtrace('');
-    }
-
-    mtrace("Ran {$taskcount} adhoc tasks found at {$humantimenow}");
-
-    if ($adhoclock) {
-        // Release the adhoc task runner lock.
-        $adhoclock->release();
-    }
 }
 
 /**
@@ -233,8 +92,6 @@ function cron_run_adhoc_tasks(int $timenow, $keepalive = 0, $checklimits = true)
  */
 function cron_run_inner_scheduled_task(\core\task\task_base $task) {
     global $CFG, $DB;
-
-    \core\task\logmanager::start_logging($task);
 
     $fullname = $task->get_name() . ' (' . get_class($task) . ')';
     mtrace('Execute scheduled task: ' . $fullname);
@@ -275,8 +132,6 @@ function cron_run_inner_scheduled_task(\core\task\task_base $task) {
         }
         \core\task\manager::scheduled_task_failed($task);
     } finally {
-        // Reset back to the standard admin user.
-        cron_setup_user();
         cron_prepare_core_renderer(true);
     }
     get_mailer('close');
@@ -289,9 +144,6 @@ function cron_run_inner_scheduled_task(\core\task\task_base $task) {
  */
 function cron_run_inner_adhoc_task(\core\task\adhoc_task $task) {
     global $DB, $CFG;
-
-    \core\task\logmanager::start_logging($task);
-
     mtrace("Execute adhoc task: " . get_class($task));
     cron_trace_time_and_memory();
     $predbqueries = null;
@@ -368,6 +220,89 @@ function cron_run_inner_adhoc_task(\core\task\adhoc_task $task) {
 }
 
 /**
+ * Runs a single cron task. This function assumes it is displaying output in pseudo-CLI mode.
+ *
+ * The function will fail if the task is disabled.
+ *
+ * Warning: Because this function closes the browser session, it may not be safe to continue
+ * with other processing (other than displaying the rest of the page) after using this function!
+ *
+ * @param \core\task\scheduled_task $task Task to run
+ * @return bool True if cron run successful
+ */
+function cron_run_single_task(\core\task\scheduled_task $task) {
+    global $CFG, $DB, $USER;
+
+    if (CLI_MAINTENANCE) {
+        echo "CLI maintenance mode active, cron execution suspended.\n";
+        return false;
+    }
+
+    if (moodle_needs_upgrading()) {
+        echo "Moodle upgrade pending, cron execution suspended.\n";
+        return false;
+    }
+
+    // Check task and component is not disabled.
+    $taskname = get_class($task);
+    if ($task->get_disabled()) {
+        echo "Task is disabled ($taskname).\n";
+        return false;
+    }
+    $component = $task->get_component();
+    if ($plugininfo = core_plugin_manager::instance()->get_plugin_info($component)) {
+        if ($plugininfo->is_enabled() === false && !$task->get_run_if_component_disabled()) {
+            echo "Component is not enabled ($component).\n";
+            return false;
+        }
+    }
+
+    // Enable debugging features as per config settings.
+    if (!empty($CFG->showcronsql)) {
+        $DB->set_debug(true);
+    }
+    if (!empty($CFG->showcrondebugging)) {
+        set_debugging(DEBUG_DEVELOPER, true);
+    }
+
+    // Increase time and memory limits.
+    core_php_time_limit::raise();
+    raise_memory_limit(MEMORY_EXTRA);
+
+    // Switch to admin account for cron tasks, but close the session so we don't send this stuff
+    // to the browser.
+    session_write_close();
+    $realuser = clone($USER);
+    cron_setup_user(null, null, true);
+
+    // Get lock for cron task.
+    $cronlockfactory = \core\lock\lock_config::get_lock_factory('cron');
+    if (!$cronlock = $cronlockfactory->get_lock('core_cron', 1)) {
+        echo "Unable to get cron lock.\n";
+        return false;
+    }
+    if (!$lock = $cronlockfactory->get_lock($taskname, 1)) {
+        $cronlock->release();
+        echo "Unable to get task lock for $taskname.\n";
+        return false;
+    }
+    $task->set_lock($lock);
+    if (!$task->is_blocking()) {
+        $cronlock->release();
+    } else {
+        $task->set_cron_lock($cronlock);
+    }
+
+    // Run actual tasks.
+    cron_run_inner_scheduled_task($task);
+
+    // Go back to real user account.
+    cron_setup_user($realuser, null, true);
+
+    return true;
+}
+
+/**
  * Output some standard information during cron runs. Specifically current time
  * and memory usage. This method also does gc_collect_cycles() (before displaying
  * memory usage) to try to help PHP manage memory better.
@@ -375,6 +310,133 @@ function cron_run_inner_adhoc_task(\core\task\adhoc_task $task) {
 function cron_trace_time_and_memory() {
     gc_collect_cycles();
     mtrace('... started ' . date('H:i:s') . '. Current memory use ' . display_size(memory_get_usage()) . '.');
+}
+
+/**
+ * Executes cron functions for a specific type of plugin.
+ *
+ * @param string $plugintype Plugin type (e.g. 'report')
+ * @param string $description If specified, will display 'Starting (whatever)'
+ *   and 'Finished (whatever)' lines, otherwise does not display
+ */
+function cron_execute_plugin_type($plugintype, $description = null) {
+    global $DB;
+
+    // Get list from plugin => function for all plugins
+    $plugins = get_plugin_list_with_function($plugintype, 'cron');
+
+    // Modify list for backward compatibility (different files/names)
+    $plugins = cron_bc_hack_plugin_functions($plugintype, $plugins);
+
+    // Return if no plugins with cron function to process
+    if (!$plugins) {
+        return;
+    }
+
+    if ($description) {
+        mtrace('Starting '.$description);
+    }
+
+    foreach ($plugins as $component=>$cronfunction) {
+        $dir = core_component::get_component_directory($component);
+
+        // Get cron period if specified in version.php, otherwise assume every cron
+        $cronperiod = 0;
+        if (file_exists("$dir/version.php")) {
+            $plugin = new stdClass();
+            include("$dir/version.php");
+            if (isset($plugin->cron)) {
+                $cronperiod = $plugin->cron;
+            }
+        }
+
+        // Using last cron and cron period, don't run if it already ran recently
+        $lastcron = get_config($component, 'lastcron');
+        if ($cronperiod && $lastcron) {
+            if ($lastcron + $cronperiod > time()) {
+                // do not execute cron yet
+                continue;
+            }
+        }
+
+        mtrace('Processing cron function for ' . $component . '...');
+        cron_trace_time_and_memory();
+        $pre_dbqueries = $DB->perf_get_queries();
+        $pre_time = microtime(true);
+
+        $cronfunction();
+
+        mtrace("done. (" . ($DB->perf_get_queries() - $pre_dbqueries) . " dbqueries, " .
+                round(microtime(true) - $pre_time, 2) . " seconds)");
+
+        set_config('lastcron', time(), $component);
+        core_php_time_limit::raise();
+    }
+
+    if ($description) {
+        mtrace('Finished ' . $description);
+    }
+}
+
+/**
+ * Used to add in old-style cron functions within plugins that have not been converted to the
+ * new standard API. (The standard API is frankenstyle_name_cron() in lib.php; some types used
+ * cron.php and some used a different name.)
+ *
+ * @param string $plugintype Plugin type e.g. 'report'
+ * @param array $plugins Array from plugin name (e.g. 'report_frog') to function name (e.g.
+ *   'report_frog_cron') for plugin cron functions that were already found using the new API
+ * @return array Revised version of $plugins that adds in any extra plugin functions found by
+ *   looking in the older location
+ */
+function cron_bc_hack_plugin_functions($plugintype, $plugins) {
+    global $CFG; // mandatory in case it is referenced by include()d PHP script
+
+    if ($plugintype === 'report') {
+        // Admin reports only - not course report because course report was
+        // never implemented before, so doesn't need BC
+        foreach (core_component::get_plugin_list($plugintype) as $pluginname=>$dir) {
+            $component = $plugintype . '_' . $pluginname;
+            if (isset($plugins[$component])) {
+                // We already have detected the function using the new API
+                continue;
+            }
+            if (!file_exists("$dir/cron.php")) {
+                // No old style cron file present
+                continue;
+            }
+            include_once("$dir/cron.php");
+            $cronfunction = $component . '_cron';
+            if (function_exists($cronfunction)) {
+                $plugins[$component] = $cronfunction;
+            } else {
+                debugging("Invalid legacy cron.php detected in $component, " .
+                        "please use lib.php instead");
+            }
+        }
+    } else if (strpos($plugintype, 'grade') === 0) {
+        // Detect old style cron function names
+        // Plugin gradeexport_frog used to use grade_export_frog_cron() instead of
+        // new standard API gradeexport_frog_cron(). Also applies to gradeimport, gradereport
+        foreach(core_component::get_plugin_list($plugintype) as $pluginname=>$dir) {
+            $component = $plugintype.'_'.$pluginname;
+            if (isset($plugins[$component])) {
+                // We already have detected the function using the new API
+                continue;
+            }
+            if (!file_exists("$dir/lib.php")) {
+                continue;
+            }
+            include_once("$dir/lib.php");
+            $cronfunction = str_replace('grade', 'grade_', $plugintype) . '_' .
+                    $pluginname . '_cron';
+            if (function_exists($cronfunction)) {
+                $plugins[$component] = $cronfunction;
+            }
+        }
+    }
+
+    return $plugins;
 }
 
 /**

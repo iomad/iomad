@@ -1,59 +1,5 @@
 This files describes API changes for code that uses the question API.
 
-=== 3.9 ==
-
-1) For years, the ..._questions_in_use callback has been the right way for plugins to
-   tell the core question system if questions are required. Previously this callback
-   only worked in mods. Now it works in all plugins.
-
-   At the same time, if you are still relying on the legacy ..._question_list_instances
-   callback for this, you will now get a debugging warning telling you to upgrade.
-
-2) Previously, the functions question_delete_activity, question_delete_course and
-   question_delete_course_category would echo output. This was not correct behaviour for
-   a low-level API function. Now, they no longer output. Related to this, the helper
-   function they use, question_delete_context, now always returns an empty array.
-
-   This probably won't acutally cause you any problems. However, you may previously
-   have had to add expectOutputRegex calls to your unit tests to avoid warnings about
-   risky tests. If you have done that, those tests will now fail until you delete that expectation.
-
-
-=== 3.8 ===
-
-If you have customised the display of the question bank (using $CFG->questionbankcolumns)
-then be aware that the default configuration has changed, and you may wish to make
-equivalent changes in your customised version. The old column question_name_column
-has been replaced by question_name_idnumber_tags_column. The old question_name_column
-still exists, so it is safe to continue using it.
-
-There is a new question bank column edit_menu_column which displays all actions
-in a drop-down menu, instead of as separate icons. This is now used by default.
-Specifically, it gathers all other columns which implement the new interface
-menuable_action. If you have made a custom subclasses of action_column_base,
-you probably want to implement the new interface. If your column is a simple action,
-the easiest way to do this will be to subclass menu_action_column_base. If your action
-is more complex, and does not follow the simple pattern that menu_action_column_base
-uses, then you will need to implement menuable_action yourself. The commit for
-MDL-66816 updates all the core action columns. Looking at that change should make
-it clearly the changes you need to make to your columns.
-
-
-=== 3.7 ===
-
-The code for the is_valid_number function that was duplicated in the
-qtype_numerical and qtype_multianswer plugins in the qtype_numerical_edit_form
-and qtype_multianswer_edit_form classes has been moved to a static function
-in the qtype_numerical class of the qtype_numerical plugin.
-
-The exportprocess function of the qformat_default class doesn't output a blank line
-if the result of the writequestion function is null. This permit to qformat plugins
-to ignore some questions without the need to overwrite this function.
-
-* The question_preview_cron() has been deleted. Please use \core\task\question_cron_task::execute().
-* The question_usage_statistics_cron() has been deleted. Please use \core\task\question_cron_task::execute().
-* The method question_bank::cron() has been deleted, please use question related scheduled tasks.
-
 === 3.5 ===
 
 1) The question format exportprocess function now adds a

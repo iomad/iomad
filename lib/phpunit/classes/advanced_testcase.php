@@ -56,14 +56,14 @@ abstract class advanced_testcase extends base_testcase {
 
         $this->setBackupGlobals(false);
         $this->setBackupStaticAttributes(false);
-        $this->setPreserveGlobalState(false);
+        $this->setRunTestInSeparateProcess(false);
     }
 
     /**
      * Runs the bare test sequence.
      * @return void
      */
-    final public function runBare(): void {
+    final public function runBare() {
         global $DB;
 
         if (phpunit_util::$lastdbwrites != $DB->perf_get_writes()) {
@@ -131,9 +131,6 @@ abstract class advanced_testcase extends base_testcase {
             }
             self::resetAllData(true);
         }
-
-        // Reset context cache.
-        context_helper::reset_caches();
 
         // make sure test did not forget to close transaction
         if ($DB->is_transaction_started()) {
@@ -491,6 +488,19 @@ abstract class advanced_testcase extends base_testcase {
     }
 
     /**
+     * Cleanup after all tests are executed.
+     *
+     * Note: do not forget to call this if overridden...
+     *
+     * @static
+     * @return void
+     */
+    public static function tearDownAfterClass() {
+        self::resetAllData();
+    }
+
+
+    /**
      * Reset all database tables, restore global state and clear caches and optionally purge dataroot dir.
      *
      * @param bool $detectchanges
@@ -652,63 +662,5 @@ abstract class advanced_testcase extends base_testcase {
         while (time() == $starttime) {
             usleep(50000);
         }
-    }
-
-    /**
-     * Run adhoc tasks, optionally matching the specified classname.
-     *
-     * @param   string  $matchclass The name of the class to match on.
-     * @param   int     $matchuserid The userid to match.
-     */
-    protected function runAdhocTasks($matchclass = '', $matchuserid = null) {
-        global $CFG, $DB;
-        require_once($CFG->libdir.'/cronlib.php');
-
-        $params = [];
-        if (!empty($matchclass)) {
-            if (strpos($matchclass, '\\') !== 0) {
-                $matchclass = '\\' . $matchclass;
-            }
-            $params['classname'] = $matchclass;
-        }
-
-        if (!empty($matchuserid)) {
-            $params['userid'] = $matchuserid;
-        }
-
-        $lock = $this->createMock(\core\lock\lock::class);
-        $cronlock = $this->createMock(\core\lock\lock::class);
-
-        $tasks = $DB->get_recordset('task_adhoc', $params);
-        foreach ($tasks as $record) {
-            // Note: This is for cron only.
-            // We do not lock the tasks.
-            $task = \core\task\manager::adhoc_task_from_record($record);
-
-            $user = null;
-            if ($userid = $task->get_userid()) {
-                // This task has a userid specified.
-                $user = \core_user::get_user($userid);
-
-                // User found. Check that they are suitable.
-                \core_user::require_active_user($user, true, true);
-            }
-
-            $task->set_lock($lock);
-            if (!$task->is_blocking()) {
-                $cronlock->release();
-            } else {
-                $task->set_cron_lock($cronlock);
-            }
-
-            cron_prepare_core_renderer();
-            $this->setUser($user);
-
-            $task->execute();
-            \core\task\manager::adhoc_task_complete($task);
-
-            unset($task);
-        }
-        $tasks->close();
     }
 }

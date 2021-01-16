@@ -45,8 +45,6 @@ class core_string_manager_standard implements core_string_manager {
     protected $countgetstring = 0;
     /** @var bool use disk cache */
     protected $translist;
-    /** @var array language aliases to use in the language selector */
-    protected $transaliases = [];
     /** @var cache stores list of available translations */
     protected $menucache;
     /** @var array list of cached deprecated strings */
@@ -58,14 +56,12 @@ class core_string_manager_standard implements core_string_manager {
      * @param string $otherroot location of downloaded lang packs - usually $CFG->dataroot/lang
      * @param string $localroot usually the same as $otherroot
      * @param array $translist limit list of visible translations
-     * @param array $transaliases aliases to use for the languages in the language selector
      */
-    public function __construct($otherroot, $localroot, $translist, $transaliases = []) {
+    public function __construct($otherroot, $localroot, $translist) {
         $this->otherroot    = $otherroot;
         $this->localroot    = $localroot;
         if ($translist) {
             $this->translist = array_combine($translist, $translist);
-            $this->transaliases = $transaliases;
         } else {
             $this->translist = array();
         }
@@ -427,7 +423,6 @@ class core_string_manager_standard implements core_string_manager {
 
         $countries = $this->load_component_strings('core_countries', $lang);
         core_collator::asort($countries);
-
         if (!$returnall and !empty($CFG->allcountrycodes)) {
             $enabled = explode(',', $CFG->allcountrycodes);
             $return = array();
@@ -436,10 +431,7 @@ class core_string_manager_standard implements core_string_manager {
                     $return[$c] = $countries[$c];
                 }
             }
-
-            if (!empty($return)) {
-                return $return;
-            }
+            return $return;
         }
 
         return $countries;
@@ -529,17 +521,11 @@ class core_string_manager_standard implements core_string_manager {
             }
             // Return only enabled translations.
             foreach ($cachedlist as $langcode => $langname) {
-                if (array_key_exists($langcode, $this->translist)) {
-                    $languages[$langcode] = !empty($this->transaliases[$langcode]) ? $this->transaliases[$langcode] : $langname;
+                if (isset($this->translist[$langcode])) {
+                    $languages[$langcode] = $langname;
                 }
             }
-
-            // If there are no valid enabled translations, then return all languages.
-            if (!empty($languages)) {
-                return $languages;
-            } else {
-                return $cachedlist;
-            }
+            return $languages;
         }
 
         // Get all languages available in system.
@@ -586,16 +572,11 @@ class core_string_manager_standard implements core_string_manager {
         $languages = array();
         foreach ($cachedlist as $langcode => $langname) {
             if (isset($this->translist[$langcode])) {
-                $languages[$langcode] = !empty($this->transaliases[$langcode]) ? $this->transaliases[$langcode] : $langname;
+                $languages[$langcode] = $langname;
             }
         }
 
-        // If there are no valid enabled translations, then return all languages.
-        if (!empty($languages)) {
-            return $languages;
-        } else {
-            return $cachedlist;
-        }
+        return $languages;
     }
 
     /**

@@ -28,6 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/navigationlib.php');
 
+
 class core_navigationlib_testcase extends advanced_testcase {
     /**
      * @var navigation_node
@@ -503,6 +504,7 @@ class core_navigationlib_testcase extends advanced_testcase {
         $this->assertFalse($node->exposed_in_alternative_role());
     }
 
+
     public function test_navigation_node_collection_remove_with_no_type() {
         $navigationnodecollection = new navigation_node_collection();
         $this->setup_node();
@@ -546,6 +548,7 @@ class core_navigationlib_testcase extends advanced_testcase {
     }
 }
 
+
 /**
  * This is a dummy object that allows us to call protected methods within the
  * global navigation class by prefixing the methods with `exposed_`
@@ -573,6 +576,7 @@ class exposed_global_navigation extends global_navigation {
         $this->initialised = true;
     }
 }
+
 
 class mock_initialise_global_navigation extends global_navigation {
 

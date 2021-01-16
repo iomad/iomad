@@ -1,4 +1,4 @@
-@core_message @message_popup @javascript
+@message @message_popup @javascript
 Feature: Notification popover unread notifications
   In order to be kept informed
   As a user

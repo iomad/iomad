@@ -28,13 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 class xmldb_table extends xmldb_object {
 
-    /** @var xmldb_field[] table columns */
+    /** @var array table columns */
     protected $fields;
 
-    /** @var xmldb_key[] keys */
+    /** @var array keys */
     protected $keys;
 
-    /** @var xmldb_index[] indexes */
+    /** @var array indexes */
     protected $indexes;
 
     /**
@@ -239,7 +239,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will return the array of fields in the table
-     * @return xmldb_field[]
+     * @return array
      */
     public function getFields() {
         return $this->fields;
@@ -247,7 +247,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will return the array of keys in the table
-     * @return xmldb_key[]
+     * @return array
      */
     public function getKeys() {
         return $this->keys;
@@ -255,7 +255,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will return the array of indexes in the table
-     * @return xmldb_index[]
+     * @return array
      */
     public function getIndexes() {
         return $this->indexes;
@@ -264,7 +264,7 @@ class xmldb_table extends xmldb_object {
     /**
      * Returns one xmldb_field
      * @param string $fieldname
-     * @return xmldb_field|null
+     * @return mixed
      */
     public function getField($fieldname) {
         $i = $this->findFieldInArray($fieldname);
@@ -277,7 +277,7 @@ class xmldb_table extends xmldb_object {
     /**
      * Returns the position of one field in the array.
      * @param string $fieldname
-     * @return int|null index of the field, or null if not found.
+     * @return mixed
      */
     public function findFieldInArray($fieldname) {
         foreach ($this->fields as $i => $field) {
@@ -290,7 +290,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will reorder the array of fields
-     * @return bool whether the reordering succeeded.
+     * @return bool
      */
     public function orderFields() {
         $result = $this->orderElements($this->fields);
@@ -305,7 +305,7 @@ class xmldb_table extends xmldb_object {
     /**
      * Returns one xmldb_key
      * @param string $keyname
-     * @return xmldb_key|null
+     * @return mixed
      */
     public function getKey($keyname) {
         $i = $this->findKeyInArray($keyname);
@@ -318,7 +318,7 @@ class xmldb_table extends xmldb_object {
     /**
      * Returns the position of one key in the array.
      * @param string $keyname
-     * @return int|null index of the key, or null if not found.
+     * @return mixed
      */
     public function findKeyInArray($keyname) {
         foreach ($this->keys as $i => $key) {
@@ -331,7 +331,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will reorder the array of keys
-     * @return bool whether the reordering succeeded.
+     * @return bool
      */
     public function orderKeys() {
         $result = $this->orderElements($this->keys);
@@ -346,7 +346,7 @@ class xmldb_table extends xmldb_object {
     /**
      * Returns one xmldb_index
      * @param string $indexname
-     * @return xmldb_index|null
+     * @return mixed
      */
     public function getIndex($indexname) {
         $i = $this->findIndexInArray($indexname);
@@ -359,7 +359,7 @@ class xmldb_table extends xmldb_object {
     /**
      * Returns the position of one index in the array.
      * @param string $indexname
-     * @return int|null index of the index, or null if not found.
+     * @return mixed
      */
     public function findIndexInArray($indexname) {
         foreach ($this->indexes as $i => $index) {
@@ -372,7 +372,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will reorder the array of indexes
-     * @return bool whether the reordering succeeded.
+     * @return bool
      */
     public function orderIndexes() {
         $result = $this->orderElements($this->indexes);
@@ -386,7 +386,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will set the array of fields in the table
-     * @param xmldb_field[] $fields
+     * @param array $fields
      */
     public function setFields($fields) {
         $this->fields = $fields;
@@ -394,7 +394,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will set the array of keys in the table
-     * @param xmldb_key[] $keys
+     * @param array $keys
      */
     public function setKeys($keys) {
         $this->keys = $keys;
@@ -402,7 +402,7 @@ class xmldb_table extends xmldb_object {
 
     /**
      * This function will set the array of indexes in the table
-     * @param xmldb_index[] $indexes
+     * @param array $indexes
      */
     public function setIndexes($indexes) {
         $this->indexes = $indexes;

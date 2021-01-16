@@ -2,23 +2,18 @@
 
 namespace Box\Spout\Reader\ODS;
 
-use Box\Spout\Common\Entity\Cell;
-use Box\Spout\Common\Entity\Row;
 use Box\Spout\Common\Exception\IOException;
-use Box\Spout\Common\Manager\OptionsManagerInterface;
-use Box\Spout\Reader\Common\Entity\Options;
-use Box\Spout\Reader\Common\Manager\RowManager;
-use Box\Spout\Reader\Common\XMLProcessor;
-use Box\Spout\Reader\Exception\InvalidValueException;
 use Box\Spout\Reader\Exception\IteratorNotRewindableException;
 use Box\Spout\Reader\Exception\XMLProcessingException;
 use Box\Spout\Reader\IteratorInterface;
-use Box\Spout\Reader\ODS\Creator\InternalEntityFactory;
 use Box\Spout\Reader\ODS\Helper\CellValueFormatter;
 use Box\Spout\Reader\Wrapper\XMLReader;
+use Box\Spout\Reader\Common\XMLProcessor;
 
 /**
  * Class RowIterator
+ *
+ * @package Box\Spout\Reader\ODS
  */
 class RowIterator implements IteratorInterface
 {
@@ -44,20 +39,14 @@ class RowIterator implements IteratorInterface
     /** @var Helper\CellValueFormatter Helper to format cell values */
     protected $cellValueFormatter;
 
-    /** @var RowManager Manages rows */
-    protected $rowManager;
-
-    /** @var InternalEntityFactory Factory to create entities */
-    protected $entityFactory;
-
     /** @var bool Whether the iterator has already been rewound once */
     protected $hasAlreadyBeenRewound = false;
 
-    /** @var Row The currently processed row */
-    protected $currentlyProcessedRow;
+    /** @var array Contains the data for the currently processed row (key = cell index, value = cell value) */
+    protected $currentlyProcessedRowData = [];
 
-    /** @var Row Buffer used to store the current row, while checking if there are more rows to read */
-    protected $rowBuffer;
+    /** @var array|null Buffer used to store the row data, while checking if there are more rows to read */
+    protected $rowDataBuffer = null;
 
     /** @var bool Indicates whether all rows have been read */
     protected $hasReachedEndOfFile = false;
@@ -68,8 +57,8 @@ class RowIterator implements IteratorInterface
     /** @var int Row index to be processed next (one-based) */
     protected $nextRowIndexToBeProcessed = 1;
 
-    /** @var Cell Last processed cell (because when reading cell at column N+1, cell N is processed) */
-    protected $lastProcessedCell;
+    /** @var mixed|null Value of the last processed cell (because when reading cell at column N+1, cell N is processed) */
+    protected $lastProcessedCellValue = null;
 
     /** @var int Number of times the last processed row should be repeated */
     protected $numRowsRepeated = 1;
@@ -80,30 +69,19 @@ class RowIterator implements IteratorInterface
     /** @var bool Whether at least one cell has been read for the row currently being processed */
     protected $hasAlreadyReadOneCellInCurrentRow = false;
 
+
     /**
      * @param XMLReader $xmlReader XML Reader, positioned on the "<table:table>" element
-     * @param OptionsManagerInterface $optionsManager Reader's options manager
-     * @param CellValueFormatter $cellValueFormatter Helper to format cell values
-     * @param XMLProcessor $xmlProcessor Helper to process XML files
-     * @param RowManager $rowManager Manages rows
-     * @param InternalEntityFactory $entityFactory Factory to create entities
+     * @param \Box\Spout\Reader\ODS\ReaderOptions $options Reader's current options
      */
-    public function __construct(
-        XMLReader $xmlReader,
-        OptionsManagerInterface $optionsManager,
-        CellValueFormatter $cellValueFormatter,
-        XMLProcessor $xmlProcessor,
-        RowManager $rowManager,
-        InternalEntityFactory $entityFactory
-    ) {
+    public function __construct($xmlReader, $options)
+    {
         $this->xmlReader = $xmlReader;
-        $this->shouldPreserveEmptyRows = $optionsManager->getOption(Options::SHOULD_PRESERVE_EMPTY_ROWS);
-        $this->cellValueFormatter = $cellValueFormatter;
-        $this->entityFactory = $entityFactory;
-        $this->rowManager = $rowManager;
+        $this->shouldPreserveEmptyRows = $options->shouldPreserveEmptyRows();
+        $this->cellValueFormatter = new CellValueFormatter($options->shouldFormatDates());
 
         // Register all callbacks to process different nodes when reading the XML file
-        $this->xmlProcessor = $xmlProcessor;
+        $this->xmlProcessor = new XMLProcessor($this->xmlReader);
         $this->xmlProcessor->registerCallback(self::XML_NODE_ROW, XMLProcessor::NODE_TYPE_START, [$this, 'processRowStartingNode']);
         $this->xmlProcessor->registerCallback(self::XML_NODE_CELL, XMLProcessor::NODE_TYPE_START, [$this, 'processCellStartingNode']);
         $this->xmlProcessor->registerCallback(self::XML_NODE_ROW, XMLProcessor::NODE_TYPE_END, [$this, 'processRowEndingNode']);
@@ -113,10 +91,10 @@ class RowIterator implements IteratorInterface
     /**
      * Rewind the Iterator to the first element.
      * NOTE: It can only be done once, as it is not possible to read an XML file backwards.
-     * @see http://php.net/manual/en/iterator.rewind.php
+     * @link http://php.net/manual/en/iterator.rewind.php
      *
-     * @throws \Box\Spout\Reader\Exception\IteratorNotRewindableException If the iterator is rewound more than once
      * @return void
+     * @throws \Box\Spout\Reader\Exception\IteratorNotRewindableException If the iterator is rewound more than once
      */
     public function rewind()
     {
@@ -130,7 +108,7 @@ class RowIterator implements IteratorInterface
         $this->hasAlreadyBeenRewound = true;
         $this->lastRowIndexProcessed = 0;
         $this->nextRowIndexToBeProcessed = 1;
-        $this->rowBuffer = null;
+        $this->rowDataBuffer = null;
         $this->hasReachedEndOfFile = false;
 
         $this->next();
@@ -138,7 +116,7 @@ class RowIterator implements IteratorInterface
 
     /**
      * Checks if current position is valid
-     * @see http://php.net/manual/en/iterator.valid.php
+     * @link http://php.net/manual/en/iterator.valid.php
      *
      * @return bool
      */
@@ -149,11 +127,11 @@ class RowIterator implements IteratorInterface
 
     /**
      * Move forward to next element. Empty rows will be skipped.
-     * @see http://php.net/manual/en/iterator.next.php
+     * @link http://php.net/manual/en/iterator.next.php
      *
+     * @return void
      * @throws \Box\Spout\Reader\Exception\SharedStringNotFoundException If a shared string was not found
      * @throws \Box\Spout\Common\Exception\IOException If unable to read the sheet data XML
-     * @return void
      */
     public function next()
     {
@@ -184,13 +162,13 @@ class RowIterator implements IteratorInterface
     }
 
     /**
+     * @return void
      * @throws \Box\Spout\Reader\Exception\SharedStringNotFoundException If a shared string was not found
      * @throws \Box\Spout\Common\Exception\IOException If unable to read the sheet data XML
-     * @return void
      */
     protected function readDataForNextRow()
     {
-        $this->currentlyProcessedRow = $this->entityFactory->createRow();
+        $this->currentlyProcessedRowData = [];
 
         try {
             $this->xmlProcessor->readUntilStopped();
@@ -198,7 +176,7 @@ class RowIterator implements IteratorInterface
             throw new IOException("The sheet's data cannot be read. [{$exception->getMessage()}]");
         }
 
-        $this->rowBuffer = $this->currentlyProcessedRow;
+        $this->rowDataBuffer = $this->currentlyProcessedRowData;
     }
 
     /**
@@ -209,7 +187,7 @@ class RowIterator implements IteratorInterface
     {
         // Reset data from current row
         $this->hasAlreadyReadOneCellInCurrentRow = false;
-        $this->lastProcessedCell = null;
+        $this->lastProcessedCellValue = null;
         $this->numColumnsRepeated = 1;
         $this->numRowsRepeated = $this->getNumRowsRepeatedForCurrentNode($xmlReader);
 
@@ -226,17 +204,17 @@ class RowIterator implements IteratorInterface
 
         // NOTE: expand() will automatically decode all XML entities of the child nodes
         $node = $xmlReader->expand();
-        $currentCell = $this->getCell($node);
+        $currentCellValue = $this->getCellValue($node);
 
         // process cell N only after having read cell N+1 (see below why)
         if ($this->hasAlreadyReadOneCellInCurrentRow) {
             for ($i = 0; $i < $this->numColumnsRepeated; $i++) {
-                $this->currentlyProcessedRow->addCell($this->lastProcessedCell);
+                $this->currentlyProcessedRowData[] = $this->lastProcessedCellValue;
             }
         }
 
         $this->hasAlreadyReadOneCellInCurrentRow = true;
-        $this->lastProcessedCell = $currentCell;
+        $this->lastProcessedCellValue = $currentCellValue;
         $this->numColumnsRepeated = $currentNumColumnsRepeated;
 
         return XMLProcessor::PROCESSING_CONTINUE;
@@ -247,7 +225,7 @@ class RowIterator implements IteratorInterface
      */
     protected function processRowEndingNode()
     {
-        $isEmptyRow = $this->isEmptyRow($this->currentlyProcessedRow, $this->lastProcessedCell);
+        $isEmptyRow = $this->isEmptyRow($this->currentlyProcessedRowData, $this->lastProcessedCellValue);
 
         // if the fetched row is empty and we don't want to preserve it...
         if (!$this->shouldPreserveEmptyRows && $isEmptyRow) {
@@ -257,7 +235,6 @@ class RowIterator implements IteratorInterface
 
         // if the row is empty, we don't want to return more than one cell
         $actualNumColumnsRepeated = (!$isEmptyRow) ? $this->numColumnsRepeated : 1;
-        $numCellsInCurrentlyProcessedRow = $this->currentlyProcessedRow->getNumCells();
 
         // Only add the value if the last read cell is not a trailing empty cell repeater in Excel.
         // The current count of read columns is determined by counting the values in "$this->currentlyProcessedRowData".
@@ -265,9 +242,9 @@ class RowIterator implements IteratorInterface
         // with a number-columns-repeated value equals to the number of (supported columns - used columns).
         // In Excel, the number of supported columns is 16384, but we don't want to returns rows with
         // always 16384 cells.
-        if (($numCellsInCurrentlyProcessedRow + $actualNumColumnsRepeated) !== self::MAX_COLUMNS_EXCEL) {
+        if ((count($this->currentlyProcessedRowData) + $actualNumColumnsRepeated) !== self::MAX_COLUMNS_EXCEL) {
             for ($i = 0; $i < $actualNumColumnsRepeated; $i++) {
-                $this->currentlyProcessedRow->addCell($this->lastProcessedCell);
+                $this->currentlyProcessedRowData[] = $this->lastProcessedCellValue;
             }
         }
 
@@ -298,8 +275,7 @@ class RowIterator implements IteratorInterface
     protected function getNumRowsRepeatedForCurrentNode($xmlReader)
     {
         $numRowsRepeated = $xmlReader->getAttribute(self::XML_ATTRIBUTE_NUM_ROWS_REPEATED);
-
-        return ($numRowsRepeated !== null) ? (int) $numRowsRepeated : 1;
+        return ($numRowsRepeated !== null) ? intval($numRowsRepeated) : 1;
     }
 
     /**
@@ -309,61 +285,52 @@ class RowIterator implements IteratorInterface
     protected function getNumColumnsRepeatedForCurrentNode($xmlReader)
     {
         $numColumnsRepeated = $xmlReader->getAttribute(self::XML_ATTRIBUTE_NUM_COLUMNS_REPEATED);
-
-        return ($numColumnsRepeated !== null) ? (int) $numColumnsRepeated : 1;
+        return ($numColumnsRepeated !== null) ? intval($numColumnsRepeated) : 1;
     }
 
     /**
-     * Returns the cell with (unescaped) correctly marshalled, cell value associated to the given XML node.
+     * Returns the (unescaped) correctly marshalled, cell value associated to the given XML node.
      *
      * @param \DOMNode $node
-     * @return Cell The cell set with the associated with the cell
+     * @return string|int|float|bool|\DateTime|\DateInterval|null The value associated with the cell, empty string if cell's type is void/undefined, null on error
      */
-    protected function getCell($node)
+    protected function getCellValue($node)
     {
-        try {
-            $cellValue = $this->cellValueFormatter->extractAndFormatNodeValue($node);
-            $cell = $this->entityFactory->createCell($cellValue);
-        } catch (InvalidValueException $exception) {
-            $cell = $this->entityFactory->createCell($exception->getInvalidValue());
-            $cell->setType(Cell::TYPE_ERROR);
-        }
-
-        return $cell;
+        return $this->cellValueFormatter->extractAndFormatNodeValue($node);
     }
 
     /**
      * After finishing processing each cell, a row is considered empty if it contains
-     * no cells or if the last read cell is empty.
+     * no cells or if the value of the last read cell is an empty string.
      * After finishing processing each cell, the last read cell is not part of the
      * row data yet (as we still need to apply the "num-columns-repeated" attribute).
      *
-     * @param Row $currentRow
-     * @param Cell $lastReadCell The last read cell
+     * @param array $rowData
+     * @param string|int|float|bool|\DateTime|\DateInterval|null The value of the last read cell
      * @return bool Whether the row is empty
      */
-    protected function isEmptyRow($currentRow, $lastReadCell)
+    protected function isEmptyRow($rowData, $lastReadCellValue)
     {
         return (
-            $this->rowManager->isEmpty($currentRow) &&
-            (!isset($lastReadCell) || $lastReadCell->isEmpty())
+            count($rowData) === 0 &&
+            (!isset($lastReadCellValue) || trim($lastReadCellValue) === '')
         );
     }
 
     /**
      * Return the current element, from the buffer.
-     * @see http://php.net/manual/en/iterator.current.php
+     * @link http://php.net/manual/en/iterator.current.php
      *
-     * @return Row
+     * @return array|null
      */
     public function current()
     {
-        return $this->rowBuffer;
+        return $this->rowDataBuffer;
     }
 
     /**
      * Return the key of the current element
-     * @see http://php.net/manual/en/iterator.key.php
+     * @link http://php.net/manual/en/iterator.key.php
      *
      * @return int
      */
@@ -371,6 +338,7 @@ class RowIterator implements IteratorInterface
     {
         return $this->lastRowIndexProcessed;
     }
+
 
     /**
      * Cleans up what was created to iterate over the object.

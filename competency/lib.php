@@ -38,7 +38,7 @@ use core_competency\user_evidence;
  * @return array
  */
 function core_competency_comment_add($comment, $params) {
-    global $USER, $PAGE;
+    global $USER;
 
     if (!get_config('core_competency', 'enabled')) {
         return;
@@ -132,17 +132,10 @@ function core_competency_comment_add($comment, $params) {
         $message->contexturl = $url->out(false);
         $message->contexturlname = $urlname;
 
-        $userpicture = new \user_picture($user);
-        $userpicture->size = 1; // Use f1 size.
         // Message each recipient.
         foreach ($recipients as $recipient) {
             $msgcopy = clone($message);
             $msgcopy->userto = $recipient;
-            // Generate an out-of-session token for the user receiving the message.
-            $userpicture->includetoken = $recipient;
-            $msgcopy->customdata = [
-                'notificationiconurl' => $userpicture->get_url($PAGE)->out(false),
-            ];
             message_send($msgcopy);
         }
 
@@ -208,17 +201,10 @@ function core_competency_comment_add($comment, $params) {
         $message->contexturl = $url->out(false);
         $message->contexturlname = $urlname;
 
-        $userpicture = new \user_picture($user);
-        $userpicture->size = 1; // Use f1 size.
         // Message each recipient.
         foreach ($recipients as $recipient) {
             $msgcopy = clone($message);
             $msgcopy->userto = $recipient;
-            // Generate an out-of-session token for the user receiving the message.
-            $userpicture->includetoken = $recipient;
-            $msgcopy->customdata = [
-                'notificationiconurl' => $userpicture->get_url($PAGE)->out(false),
-            ];
             message_send($msgcopy);
         }
     }

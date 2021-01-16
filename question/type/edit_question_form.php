@@ -187,8 +187,9 @@ abstract class question_edit_form extends question_wizard_form {
         $mform->setType('questiontext', PARAM_RAW);
         $mform->addRule('questiontext', null, 'required', null, 'client');
 
-        $mform->addElement('float', 'defaultmark', get_string('defaultmark', 'question'),
+        $mform->addElement('text', 'defaultmark', get_string('defaultmark', 'question'),
                 array('size' => 7));
+        $mform->setType('defaultmark', PARAM_FLOAT);
         $mform->setDefault('defaultmark', 1);
         $mform->addRule('defaultmark', null, 'required', null, 'client');
 
@@ -197,16 +198,14 @@ abstract class question_edit_form extends question_wizard_form {
         $mform->setType('generalfeedback', PARAM_RAW);
         $mform->addHelpButton('generalfeedback', 'generalfeedback', 'question');
 
-        $mform->addElement('text', 'idnumber', get_string('idnumber', 'question'), 'maxlength="100"  size="10"');
-        $mform->addHelpButton('idnumber', 'idnumber', 'question');
-        $mform->setType('idnumber', PARAM_RAW);
-
         // Any questiontype specific fields.
         $this->definition_inner($mform);
 
         if (core_tag_tag::is_enabled('core_question', 'question')) {
-            $this->add_tag_fields($mform);
+            $mform->addElement('header', 'tagsheader', get_string('tags'));
         }
+        $mform->addElement('tags', 'tags', get_string('tags'),
+                array('itemtype' => 'question', 'component' => 'core_question'));
 
         if (!empty($this->question->id)) {
             $mform->addElement('header', 'createdmodifiedheader',
@@ -304,75 +303,6 @@ abstract class question_edit_form extends question_wizard_form {
         $repeatedoptions['fraction']['default'] = 0;
         $answersoption = 'answers';
         return $repeated;
-    }
-
-    /**
-     * Add the tag and course tag fields to the mform.
-     *
-     * If the form is being built in a course context then add the field
-     * for course tags.
-     *
-     * If the question category doesn't belong to a course context or we
-     * aren't editing in a course context then add the tags element to allow
-     * tags to be added to the question category context.
-     *
-     * @param object $mform The form being built
-     */
-    protected function add_tag_fields($mform) {
-        global $CFG, $DB;
-
-        $hastagcapability = question_has_capability_on($this->question, 'tag');
-        // Is the question category in a course context?
-        $qcontext = $this->categorycontext;
-        $qcoursecontext = $qcontext->get_course_context(false);
-        $iscourseoractivityquestion = !empty($qcoursecontext);
-        // Is the current context we're editing in a course context?
-        $editingcontext = $this->contexts->lowest();
-        $editingcoursecontext = $editingcontext->get_course_context(false);
-        $iseditingcontextcourseoractivity = !empty($editingcoursecontext);
-
-        $mform->addElement('header', 'tagsheader', get_string('tags'));
-        $tags = \core_tag_tag::get_tags_by_area_in_contexts('core_question', 'question', $this->contexts->all());
-        $tagstrings = [];
-        foreach ($tags as $tag) {
-            $tagstrings[$tag->name] = $tag->name;
-        }
-
-        $showstandard = core_tag_area::get_showstandard('core_question', 'question');
-        if ($showstandard != core_tag_tag::HIDE_STANDARD) {
-            $namefield = empty($CFG->keeptagnamecase) ? 'name' : 'rawname';
-            $standardtags = $DB->get_records('tag',
-                    array('isstandard' => 1, 'tagcollid' => core_tag_area::get_collection('core', 'question')),
-                    $namefield, 'id,' . $namefield);
-            foreach ($standardtags as $standardtag) {
-                $tagstrings[$standardtag->$namefield] = $standardtag->$namefield;
-            }
-        }
-
-        $options = [
-            'tags' => true,
-            'multiple' => true,
-            'noselectionstring' => get_string('anytags', 'quiz'),
-        ];
-        $mform->addElement('autocomplete', 'tags',  get_string('tags'), $tagstrings, $options);
-
-        if (!$hastagcapability) {
-            $mform->hardFreeze('tags');
-        }
-
-        if ($iseditingcontextcourseoractivity && !$iscourseoractivityquestion) {
-            // If the question is being edited in a course or activity context
-            // and the question isn't a course or activity level question then
-            // allow course tags to be added to the course.
-            $coursetagheader = get_string('questionformtagheader', 'core_question',
-                $editingcoursecontext->get_context_name(true));
-            $mform->addElement('header', 'coursetagsheader', $coursetagheader);
-            $mform->addElement('autocomplete', 'coursetags',  get_string('tags'), $tagstrings, $options);
-
-            if (!$hastagcapability) {
-                $mform->hardFreeze('coursetags');
-            }
-        }
     }
 
     /**
@@ -794,8 +724,6 @@ abstract class question_edit_form extends question_wizard_form {
     }
 
     public function validation($fromform, $files) {
-        global $DB;
-
         $errors = parent::validation($fromform, $files);
         if (empty($fromform['makecopy']) && isset($this->question->id)
                 && ($this->question->formoptions->canedit ||
@@ -804,39 +732,9 @@ abstract class question_edit_form extends question_wizard_form {
             $errors['currentgrp'] = get_string('nopermissionmove', 'question');
         }
 
-        // Category.
-        if (empty($fromform['category'])) {
-            // User has provided an invalid category.
-            $errors['category'] = get_string('required');
-        }
-
         // Default mark.
         if (array_key_exists('defaultmark', $fromform) && $fromform['defaultmark'] < 0) {
             $errors['defaultmark'] = get_string('defaultmarkmustbepositive', 'question');
-        }
-
-        // Can only have one idnumber per category.
-        if (strpos($fromform['category'], ',') !== false) {
-            list($category, $categorycontextid) = explode(',', $fromform['category']);
-        } else {
-            $category = $fromform['category'];
-        }
-        if (isset($fromform['idnumber']) && ((string) $fromform['idnumber'] !== '')) {
-            if (empty($fromform['usecurrentcat']) && !empty($fromform['categorymoveto'])) {
-                $categoryinfo = $fromform['categorymoveto'];
-            } else {
-                $categoryinfo = $fromform['category'];
-            }
-            list($categoryid, $notused) = explode(',', $categoryinfo);
-            $conditions = 'category = ? AND idnumber = ?';
-            $params = [$categoryid, $fromform['idnumber']];
-            if (!empty($this->question->id)) {
-                $conditions .= ' AND id <> ?';
-                $params[] = $this->question->id;
-            }
-            if ($DB->record_exists_select('question', $conditions, $params)) {
-                $errors['idnumber'] = get_string('idnumbertaken', 'error');
-            }
         }
 
         return $errors;

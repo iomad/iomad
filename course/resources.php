@@ -74,8 +74,11 @@ foreach ($modinfo->cms as $cm) {
     if (!in_array($cm->modname, $availableresources)) {
         continue;
     }
-    // Exclude activities that aren't visible or have no view link (e.g. label). Account for folder being displayed inline.
-    if (!$cm->uservisible || (!$cm->has_view() && strcmp($cm->modname, 'folder') !== 0)) {
+    if (!$cm->uservisible) {
+        continue;
+    }
+    if (!$cm->has_view()) {
+        // Exclude label and similar
         continue;
     }
     $cms[$cm->id] = $cm;
@@ -137,11 +140,9 @@ foreach ($cms as $cm) {
     }
 
     $class = $cm->visible ? '' : 'class="dimmed"'; // hidden modules are dimmed
-    $url = $cm->url ?: new moodle_url("/mod/{$cm->modname}/view.php", ['id' => $cm->id]);
-
     $table->data[] = array (
         $printsection,
-        "<a $class $extra href=\"" . $url ."\">" . $icon . $cm->get_formatted_name() . "</a>",
+        "<a $class $extra href=\"".$cm->url."\">".$icon.$cm->get_formatted_name()."</a>",
         $intro);
 }
 

@@ -25,7 +25,7 @@ $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirma
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_courses, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 
 global $DB;
 
@@ -46,11 +46,10 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage));
 $returnurl = $baseurl;
@@ -129,7 +128,7 @@ if ($courses = $DB->get_recordset_sql('SELECT css.*, c.fullname
         $strshow = get_string('show', 'block_iomad_commerce');
 
         $table = new html_table();
-        $table->head = array (get_string('name'), "", "", "");
+        $table->head = array (get_string('name', 'block_iomad_commerce'), "", "", "");
         $table->align = array ("left", "center", "center", "center");
         $table->width = "600px";
 
@@ -183,7 +182,7 @@ if (iomad::has_capability('block/iomad_commerce:add_course', $context)) {
 
     echo $OUTPUT->single_button(new moodle_url('edit_course_shopsettings_form.php?createnew=1'),
                                                 get_string('addnewcourse', 'block_iomad_commerce'), 'get');
-    echo $OUTPUT->single_button(new moodle_url('/my'), get_string('cancel'), 'get');
+    echo $OUTPUT->single_button(new moodle_url('/local/iomad_dashboard/index.php'), get_string('cancel'), 'get');
 
     echo '</div>';
 }

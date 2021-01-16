@@ -72,31 +72,22 @@ abstract class icon_system {
     /**
      * Factory method
      *
-     * @param string $type Either a specific type, or null to get the default type.
+     * @param $type Either a specific type, or null to get the default type.
      * @return \core\output\icon_system
      */
     public final static function instance($type = null) {
         global $PAGE;
 
-        if (empty(self::$instance)) {
-            $iconsystem = $PAGE->theme->get_icon_system();
-            self::$instance = new $iconsystem();
-        }
-
-        if ($type === null) {
-            // No type specified. Return the icon system for the current theme.
-            return self::$instance;
-        }
-
-        if (!static::is_valid_system($type)) {
-            throw new \coding_exception("Invalid icon system requested '{$type}'");
-        }
-
-        if (is_a(self::$instance, $type) && is_a($type, get_class(self::$instance), true)) {
-            // The requested type is an exact match for the current icon system.
+        if ($type == null) {
+            if (!empty(self::$instance)) {
+                return self::$instance;
+            }
+            $type = $PAGE->theme->get_icon_system();
+            self::$instance = new $type();
+            // Default one is a singleton.
             return self::$instance;
         } else {
-            // Return the requested icon system.
+            // Not a singleton.
             return new $type();
         }
     }
@@ -108,7 +99,7 @@ abstract class icon_system {
      * @return boolean
      */
     public final static function is_valid_system($system) {
-        return class_exists($system) && is_a($system, static::class, true);
+        return class_exists($system) && is_subclass_of($system, self::class);
     }
 
     /**
@@ -162,3 +153,4 @@ abstract class icon_system {
         self::$instance = null;
     }
 }
+

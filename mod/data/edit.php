@@ -156,7 +156,6 @@ if ($rid) {
 
 $PAGE->set_title($data->name);
 $PAGE->set_heading($course->fullname);
-$PAGE->force_settings_menu(true);
 
 // Process incoming data for adding/updating records.
 
@@ -308,7 +307,7 @@ foreach ($generalnotifications as $notification) {
 }
 echo $newtext;
 
-echo '<div class="mdl-align mt-1"><input type="submit" class="btn btn-primary" name="saveandview" ' .
+echo '<div class="mdl-align m-t-1"><input type="submit" class="btn btn-primary" name="saveandview" ' .
      'value="' . get_string('saveandview', 'data') . '" />';
 if ($rid) {
     echo '&nbsp;<input type="submit" class="btn btn-primary" name="cancel" ' .

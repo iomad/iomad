@@ -21,11 +21,12 @@ Feature: Test role visibility for the badge administration page
   Scenario: Check the default roles are visible
     Given I log in as "manager1"
     And I am on "Course 1" course homepage
-    And I navigate to "Badges > Add a new badge" in current page administration
+    And I navigate to "Add a new badge" node in "Course administration > Badges"
     And I follow "Add a new badge"
     And I set the following fields to these values:
       | Name | Course Badge |
       | Description | Course badge description |
+      | issuername | Tester of course badge |
     And I upload "badges/tests/behat/badge.png" file to "Image" filemanager
     And I press "Create badge"
     And I set the field "type" to "Manual issue by role"
@@ -36,11 +37,12 @@ Feature: Test role visibility for the badge administration page
   Scenario: Check hidden roles are not visible
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Badges > Add a new badge" in current page administration
+    And I navigate to "Add a new badge" node in "Course administration > Badges"
     And I follow "Add a new badge"
     And I set the following fields to these values:
       | Name | Course Badge |
       | Description | Course badge description |
+      | issuername | Tester of course badge |
     And I upload "badges/tests/behat/badge.png" file to "Image" filemanager
     And I press "Create badge"
     And I set the following fields to these values:

@@ -14,74 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 $capabilities = array(
 
     'local/report_users:view' => array(
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW,
-            'clientreporter' => CAP_ALLOW,
-            'companyreporter' => CAP_ALLOW
+            'manager' => CAP_ALLOW
         ),
-    ),
 
-    'local/report_users:deleteentries' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
-
-    'local/report_users:deleteentriesfull' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
-
-    'local/report_users:clearentries' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
-
-    'local/report_users:addentry' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
-
-    'local/report_users:redocertificates' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
-
-    'local/report_users:updateentries' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-        ),
+        'clonepermissionsfrom' => 'moodle/site:viewreports',
     )
 );

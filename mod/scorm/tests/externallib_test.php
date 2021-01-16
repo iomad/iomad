@@ -46,15 +46,13 @@ class mod_scorm_external_testcase extends externallib_advanced_testcase {
      * Set up for every test
      */
     public function setUp() {
-        global $DB, $CFG;
+        global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        $CFG->enablecompletion = 1;
         // Setup test data.
-        $this->course = $this->getDataGenerator()->create_course(array('enablecompletion' => 1));
-        $this->scorm = $this->getDataGenerator()->create_module('scorm', array('course' => $this->course->id),
-            array('completion' => 2, 'completionview' => 1));
+        $this->course = $this->getDataGenerator()->create_course();
+        $this->scorm = $this->getDataGenerator()->create_module('scorm', array('course' => $this->course->id));
         $this->context = context_module::instance($this->scorm->cmid);
         $this->cm = get_coursemodule_from_instance('scorm', $this->scorm->id);
 
@@ -851,24 +849,16 @@ class mod_scorm_external_testcase extends externallib_advanced_testcase {
         $result = external_api::clean_returnvalue(mod_scorm_external::launch_sco_returns(), $result);
 
         $events = $sink->get_events();
-        $this->assertCount(3, $events);
-        $event = array_pop($events);
+        $this->assertCount(1, $events);
+        $event = array_shift($events);
 
         // Checking that the event contains the expected values.
         $this->assertInstanceOf('\mod_scorm\event\sco_launched', $event);
         $this->assertEquals($this->context, $event->get_context());
-        $moodleurl = new \moodle_url('/mod/scorm/player.php', array('cm' => $this->cm->id, 'scoid' => $sco->id));
+        $moodleurl = new \moodle_url('/mod/scorm/player.php', array('id' => $this->cm->id, 'scoid' => $sco->id));
         $this->assertEquals($moodleurl, $event->get_url());
         $this->assertEventContextNotUsed($event);
         $this->assertNotEmpty($event->get_name());
-
-        $event = array_shift($events);
-        $this->assertInstanceOf('\core\event\course_module_completion_updated', $event);
-
-        // Check completion status.
-        $completion = new completion_info($this->course);
-        $completiondata = $completion->get_data($this->cm);
-        $this->assertEquals(COMPLETION_VIEWED, $completiondata->completionstate);
 
         // Invalid SCO.
         try {
@@ -876,57 +866,6 @@ class mod_scorm_external_testcase extends externallib_advanced_testcase {
             $this->fail('Exception expected due to invalid SCO id.');
         } catch (moodle_exception $e) {
             $this->assertEquals('cannotfindsco', $e->errorcode);
-        }
-    }
-
-    /**
-     * Test mod_scorm_get_scorm_access_information.
-     */
-    public function test_mod_scorm_get_scorm_access_information() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-
-        $student = self::getDataGenerator()->create_user();
-        $course = self::getDataGenerator()->create_course();
-        // Create the scorm.
-        $record = new stdClass();
-        $record->course = $course->id;
-        $scorm = self::getDataGenerator()->create_module('scorm', $record);
-        $context = context_module::instance($scorm->cmid);
-
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $this->getDataGenerator()->enrol_user($student->id, $course->id, $studentrole->id, 'manual');
-
-        self::setUser($student);
-        $result = mod_scorm_external::get_scorm_access_information($scorm->id);
-        $result = external_api::clean_returnvalue(mod_scorm_external::get_scorm_access_information_returns(), $result);
-
-        // Check default values for capabilities.
-        $enabledcaps = array('canskipview', 'cansavetrack', 'canviewscores');
-
-        unset($result['warnings']);
-        foreach ($result as $capname => $capvalue) {
-            if (in_array($capname, $enabledcaps)) {
-                $this->assertTrue($capvalue);
-            } else {
-                $this->assertFalse($capvalue);
-            }
-        }
-        // Now, unassign one capability.
-        unassign_capability('mod/scorm:viewscores', $studentrole->id);
-        array_pop($enabledcaps);
-        accesslib_clear_all_caches_for_unit_testing();
-
-        $result = mod_scorm_external::get_scorm_access_information($scorm->id);
-        $result = external_api::clean_returnvalue(mod_scorm_external::get_scorm_access_information_returns(), $result);
-        unset($result['warnings']);
-        foreach ($result as $capname => $capvalue) {
-            if (in_array($capname, $enabledcaps)) {
-                $this->assertTrue($capvalue);
-            } else {
-                $this->assertFalse($capvalue);
-            }
         }
     }
 }

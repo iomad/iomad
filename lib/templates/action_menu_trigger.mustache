@@ -21,93 +21,10 @@
 
     Example context (json):
     {
-        "text": "Example link text",
-        "title": "Example link title",
-        "url": "http://example.com/link",
-        "classes": "icon menu-action",
         "instance": "1",
-        "triggerextraclasses": "",
-        "attributes": [
-            {"name": "role", "value": "menuitem" },
-            {"name": "data-title", "value": "mymoodle,admin" }
-        ],
-        "secondary": {
-            "classes": "menu  align-tr-br",
-            "attributes": [
-                {"name": "id", "value": "action-menu-0-menu"},
-                {"name": "data-rel", "value": "menu-content"},
-                {"name": "role", "value": "menu"},
-                {"name": "data-align", "value": "tr-br"}
-            ],
-            "items": [
-                {"actionmenulink":
-                    {
-                    "id": "action_link59ecf8394a68078",
-                    "disabled": false,
-                    "text": "Dashboard",
-                    "url": "http://example.com/link",
-                    "icon": {
-                        "key": "i/dashboard",
-                        "component": null,
-                        "title": "Dashboard"
-                        },
-                    "classes": "icon menu-action",
-                    "attributes": [
-                        {"name": "role", "value": "menuitem"},
-                        {"name": "data-title", "value": "mymoodle,admin"}
-                        ],
-                    "instance": 1,
-                    "showtext": true
-                    }
-                },
-                {"actionmenufiller":
-                    {
-                    "id": "action_link59ecf8394a68079",
-                    "disabled": false,
-                    "text": "",
-                    "url": "",
-                    "icon": null,
-                    "classes": "",
-                    "attributes": [
-                        {"name": "role", "value": "menuitem"}
-                        ]
-                    }
-                }
-            ]
-        }
+        "title": "Trigger me!",
+        "menutrigger": true,
+        "triggerextraclasses": ""
     }
 }}
-<div class="dropdown{{^secondary.items}} hidden{{/secondary.items}}">
-    <a href="#" tabindex="0" class="d-inline-block {{triggerextraclasses}} dropdown-toggle icon-no-margin" id="action-menu-toggle-{{instance}}" aria-label="{{title}}" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" aria-controls="action-menu-{{instance}}-menu">
-        {{{actiontext}}}
-        {{{menutrigger}}}
-            {{#icon}}
-                {{#pix}}
-                    {{key}},{{component}},{{title}}
-                {{/pix}}
-            {{/icon}}
-            {{#rawicon}}{{{.}}}{{/rawicon}}
-        {{#menutrigger}}
-        <b class="caret"></b>
-        {{/menutrigger}}
-    </a>
-    {{#secondary}}
-        <div class="dropdown-menu dropdown-menu-right {{classes}}"{{#attributes}} {{name}}="{{value}}"{{/attributes}}>
-            {{#items}}
-                {{#actionmenulink}}
-                    {{< core/action_menu_link}}
-                        {{$actionmenulinkclasses}}dropdown-item {{classes}}{{/actionmenulinkclasses}}
-                    {{/ core/action_menu_link}}
-                {{/actionmenulink}}
-                {{#actionmenufiller}}
-                    <div class="dropdown-divider" role="presentation"><span class="filler">&nbsp;</span></div>
-                {{/actionmenufiller}}
-                {{^actionmenulink}}
-                    {{^actionmenufiller}}
-                        <div class="dropdown-item">{{> core/action_menu_item }}</div>
-                    {{/actionmenufiller}}
-                {{/actionmenulink}}
-            {{/items}}
-        </div>
-    {{/secondary}}
-</div>
+<a href="#" class="{{triggerextraclasses}} toggle-display {{#menutrigger}}textmenu{{/menutrigger}}" id="action-menu-toggle-{{instance}}" title="{{title}}" role="menuitem">{{{actiontext}}}{{{menutrigger}}}{{#icon}}{{#pix}}{{key}}, {{component}}, {{title}}{{/pix}}{{/icon}}{{#rawicon}}{{{.}}}{{/rawicon}}{{#menutrigger}}<b class="caret"></b>{{/menutrigger}}</a>

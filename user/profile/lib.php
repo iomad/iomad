@@ -22,23 +22,9 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Visible to anyone who can view the user.
- * Editable by the profile owner if they have the moodle/user:editownprofile capability
- * or any user with the moodle/user:update capability.
- */
-define('PROFILE_VISIBLE_ALL', '2');
-/**
- * Visible to the profile owner or anyone with the moodle/user:viewalldetails capability.
- * Editable by the profile owner if they have the moodle/user:editownprofile capability
- * or any user with moodle/user:viewalldetails and moodle/user:update capabilities.
- */
-define('PROFILE_VISIBLE_PRIVATE', '1');
-/**
- * Only visible to users with the moodle/user:viewalldetails capability.
- * Only editable by users with the moodle/user:viewalldetails and moodle/user:update capabilities.
- */
-define('PROFILE_VISIBLE_NONE', '0');
+define ('PROFILE_VISIBLE_ALL',     '2'); // Only visible for users with moodle/user:update capability.
+define ('PROFILE_VISIBLE_PRIVATE', '1'); // Either we are viewing our own profile or we have moodle/user:update capability.
+define ('PROFILE_VISIBLE_NONE',    '0'); // Only visible for moodle/user:update capability.
 
 /**
  * Base class for the customisable profile fields.
@@ -145,14 +131,15 @@ class profile_field_base {
      * @return bool
      */
     public function edit_field($mform) {
-        if (!$this->is_editable()) {
-            return false;
-        }
+        if ($this->field->visible != PROFILE_VISIBLE_NONE
+          or has_capability('moodle/user:update', context_system::instance())) {
 
-        $this->edit_field_add($mform);
-        $this->edit_field_set_default($mform);
-        $this->edit_field_set_required($mform);
-        return true;
+            $this->edit_field_add($mform);
+            $this->edit_field_set_default($mform);
+            $this->edit_field_set_required($mform);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -161,12 +148,12 @@ class profile_field_base {
      * @return bool
      */
     public function edit_after_data($mform) {
-        if (!$this->is_editable()) {
-            return false;
+        if ($this->field->visible != PROFILE_VISIBLE_NONE
+          or has_capability('moodle/user:update', context_system::instance())) {
+            $this->edit_field_set_locked($mform);
+            return true;
         }
-
-        $this->edit_field_set_locked($mform);
-        return true;
+        return false;
     }
 
     /**
@@ -185,10 +172,6 @@ class profile_field_base {
         $data = new stdClass();
 
         $usernew->{$this->inputname} = $this->edit_save_data_preprocess($usernew->{$this->inputname}, $data);
-        if (!isset($usernew->{$this->inputname})) {
-            // Field cannot be set to null, set the default value.
-            $usernew->{$this->inputname} = $this->field->defaultdata;
-        }
 
         $data->userid  = $usernew->id;
         $data->fieldid = $this->field->id;
@@ -436,9 +419,7 @@ class profile_field_base {
             case PROFILE_VISIBLE_ALL:
                 return true;
             case PROFILE_VISIBLE_PRIVATE:
-                if ($this->is_signup_field() && (empty($this->userid) || isguestuser($this->userid))) {
-                    return true;
-                } else if ($this->userid == $USER->id) {
+                if ($this->userid == $USER->id) {
                     return true;
                 } else {
                     return has_capability('moodle/user:viewalldetails', $context);
@@ -446,41 +427,6 @@ class profile_field_base {
             default:
                 return has_capability('moodle/user:viewalldetails', $context);
         }
-    }
-
-    /**
-     * Check if the field data is editable for the current user
-     * This method should not generally be overwritten by child classes.
-     * @return bool
-     */
-    public function is_editable() {
-        global $USER;
-
-        if (!$this->is_visible()) {
-            return false;
-        }
-
-        if ($this->is_signup_field() && (empty($this->userid) || isguestuser($this->userid))) {
-            // Allow editing the field on the signup page.
-            return true;
-        }
-
-        $systemcontext = context_system::instance();
-
-        if ($this->userid == $USER->id && has_capability('moodle/user:editownprofile', $systemcontext)) {
-            return true;
-        }
-
-        if (has_capability('moodle/user:update', $systemcontext)) {
-            return true;
-        }
-
-        // IOMAD: is this a company manager and can they edit this user.
-        if ((company::check_can_manage($this->userid) || empty($this->userid)) && iomad::has_capability('block/iomad_company_admin:user_create', $systemcontext)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -628,29 +574,27 @@ function profile_load_data($user) {
  * @param int $userid id of user whose profile is being edited.
  */
 function profile_definition($mform, $userid = 0) {
+    global $CFG, $DB;
+
+    // If user is "admin" fields are displayed regardless.
+    $update = has_capability('moodle/user:update', context_system::instance());
+
     $categories = profile_get_user_fields_with_data_by_category($userid);
-
-    // IOMAD - Filter categories which only apply to this company.
-    $categories = iomad::iomad_filter_profile_categories($categories, $userid);
-
     foreach ($categories as $categoryid => $fields) {
         // Check first if *any* fields will be displayed.
-        $fieldstodisplay = [];
-
+        $display = false;
         foreach ($fields as $formfield) {
-            if ($formfield->is_editable()) {
-                $fieldstodisplay[] = $formfield;
+            if ($formfield->is_visible()) {
+                $display = true;
             }
         }
 
-        if (empty($fieldstodisplay)) {
-            continue;
-        }
-
         // Display the header and the fields.
-        $mform->addElement('header', 'category_'.$categoryid, format_string($fields[0]->get_category_name()));
-        foreach ($fieldstodisplay as $formfield) {
-            $formfield->edit_field($mform);
+        if ($display or $update) {
+            $mform->addElement('header', 'category_'.$categoryid, format_string($formfield->get_category_name()));
+            foreach ($fields as $formfield) {
+                $formfield->edit_field($mform);
+            }
         }
     }
 }
@@ -726,19 +670,7 @@ function profile_display_fields($userid) {
  * @since Moodle 3.2
  */
 function profile_get_signup_fields() {
-    global $CFG, $DB, $SESSION;
-
-    // IOMAD - Need to ignore profile fields which belong to another company.
-    if (!empty($SESSION->company)) {
-        $wheresql = " WHERE ic.id IN (
-                       SELECT profileid FROM {company} where id = :companyid)
-                     OR ic.id IN (
-                       SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profileid from {company})) ";
-        $sqlarray = array('companyid' => $SESSION->company->id);
-    } else {
-        $wheresql = " WHERE ic.id NOT IN (SELECT profileid from {company}) ";
-        $sqlarray = array();
-    }
+    global $CFG, $DB;
 
     $profilefields = array();
     // Only retrieve required custom fields (with category information)
@@ -747,10 +679,9 @@ function profile_get_signup_fields() {
                 FROM {user_info_field} uf
                 JOIN {user_info_category} ic
                 ON uf.categoryid = ic.id AND uf.signup = 1 AND uf.visible<>0
-                $wheresql
                 ORDER BY ic.sortorder ASC, uf.sortorder ASC";
 
-    if ($fields = $DB->get_records_sql($sql, $sqlarray)) {
+    if ($fields = $DB->get_records_sql($sql)) {
         foreach ($fields as $field) {
             require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
@@ -847,36 +778,14 @@ function profile_get_custom_fields($onlyinuserobject = false) {
 /**
  * Load custom profile fields into user object
  *
+ * Please note originally in 1.9 we were using the custom field names directly,
+ * but it was causing unexpected collisions when adding new fields to user table,
+ * so instead we now use 'profile_' prefix.
+ *
  * @param stdClass $user user object
  */
 function profile_load_custom_fields($user) {
     $user->profile = (array)profile_user_record($user->id);
-}
-
-/**
- * Save custom profile fields for a user.
- *
- * @param int $userid The user id
- * @param array $profilefields The fields to save
- */
-function profile_save_custom_fields($userid, $profilefields) {
-    global $DB;
-
-    if ($fields = $DB->get_records('user_info_field')) {
-        foreach ($fields as $field) {
-            if (isset($profilefields[$field->shortname])) {
-                $conditions = array('fieldid' => $field->id, 'userid' => $userid);
-                $id = $DB->get_field('user_info_data', 'id', $conditions);
-                $data = $profilefields[$field->shortname];
-                if ($id) {
-                    $DB->set_field('user_info_data', 'data', $data, array('id' => $id));
-                } else {
-                    $record = array('fieldid' => $field->id, 'userid' => $userid, 'data' => $data);
-                    $DB->insert_record('user_info_data', $record);
-                }
-            }
-        }
-    }
 }
 
 /**
@@ -930,13 +839,7 @@ function profile_has_required_custom_fields_set($userid) {
          LEFT JOIN {user_info_data} d ON (d.fieldid = f.id AND d.userid = ?)
              WHERE f.required = 1 AND f.visible > 0 AND f.locked = 0 AND d.id IS NULL";
 
-    // IOMAD - Need to ignore profile fields which belong to another company.
-    $sql .= " AND (f.categoryid IN (
-                  SELECT c.profileid FROM {company} c JOIN {company_users} cu ON (c.id = cu.companyid AND cu.userid = ?))
-                OR f.categoryid IN (
-                  SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profileid from {company}))) ";
-
-    if ($DB->record_exists_sql($sql, [$userid, $userid])) {
+    if ($DB->record_exists_sql($sql, [$userid])) {
         return false;
     }
 

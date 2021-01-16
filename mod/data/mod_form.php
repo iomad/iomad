@@ -35,13 +35,9 @@ class mod_data_mod_form extends moodleform_mod {
         $mform->addElement('selectyesno', 'manageapproved', get_string('manageapproved', 'data'));
         $mform->addHelpButton('manageapproved', 'manageapproved', 'data');
         $mform->setDefault('manageapproved', 1);
-        $mform->hideIf('manageapproved', 'approval', 'eq', 0);
+        $mform->disabledIf('manageapproved', 'approval', 'eq', 0);
 
         $mform->addElement('selectyesno', 'comments', get_string('allowcomments', 'data'));
-        if (empty($CFG->usecomments)) {
-            $mform->hardFreeze('comments');
-            $mform->setConstant('comments', 0);
-        }
 
         $countoptions = array(0=>get_string('none'))+
                         (array_combine(range(1, DATA_MAX_ENTRIES), // Keys.

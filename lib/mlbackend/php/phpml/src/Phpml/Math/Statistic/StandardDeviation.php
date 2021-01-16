@@ -9,51 +9,36 @@ use Phpml\Exception\InvalidArgumentException;
 class StandardDeviation
 {
     /**
-     * @param float[]|int[] $numbers
+     * @param array|float[] $a
+     * @param bool          $sample
+     *
+     * @return float
+     *
+     * @throws InvalidArgumentException
      */
-    public static function population(array $numbers, bool $sample = true): float
+    public static function population(array $a, $sample = true)
     {
-        $n = count($numbers);
-        if ($n === 0) {
-            throw new InvalidArgumentException('The array has zero elements');
+        if (empty($a)) {
+            throw InvalidArgumentException::arrayCantBeEmpty();
         }
+
+        $n = count($a);
 
         if ($sample && $n === 1) {
-            throw new InvalidArgumentException('The array must have at least 2 elements');
+            throw InvalidArgumentException::arraySizeToSmall(2);
         }
 
-        $mean = Mean::arithmetic($numbers);
+        $mean = Mean::arithmetic($a);
         $carry = 0.0;
-        foreach ($numbers as $val) {
-            $carry += ($val - $mean) ** 2;
+        foreach ($a as $val) {
+            $d = $val - $mean;
+            $carry += $d * $d;
         }
 
         if ($sample) {
             --$n;
         }
 
-        return ($carry / $n) ** .5;
-    }
-
-    /**
-     * Sum of squares deviations
-     * ∑⟮xᵢ - μ⟯²
-     *
-     * @param float[]|int[] $numbers
-     */
-    public static function sumOfSquares(array $numbers): float
-    {
-        if (count($numbers) === 0) {
-            throw new InvalidArgumentException('The array has zero elements');
-        }
-
-        $mean = Mean::arithmetic($numbers);
-
-        return array_sum(array_map(
-            function ($val) use ($mean) {
-                return ($val - $mean) ** 2;
-            },
-            $numbers
-        ));
+        return sqrt((float) ($carry / $n));
     }
 }

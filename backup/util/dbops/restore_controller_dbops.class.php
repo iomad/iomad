@@ -157,8 +157,7 @@ abstract class restore_controller_dbops extends restore_dbops {
             'restore_general_histories'          => 'grade_histories',
             'restore_general_questionbank'       => 'questionbank',
             'restore_general_groups'             => 'groups',
-            'restore_general_competencies'       => 'competencies',
-            'restore_general_contentbankcontent' => 'contentbankcontent'
+            'restore_general_competencies'       => 'competencies'
         );
         self::apply_admin_config_defaults($controller, $settings, true);
 
@@ -184,18 +183,6 @@ abstract class restore_controller_dbops extends restore_dbops {
             );
             self::apply_admin_config_defaults($controller, $settings, true);
         }
-        if ($controller->get_mode() == backup::MODE_IMPORT &&
-                (!$controller->get_interactive()) &&
-                $controller->get_type() == backup::TYPE_1ACTIVITY) {
-            // This is duplicate - there is no concept of defaults - these settings must be on.
-            $settings = array(
-                    'activities',
-                    'blocks',
-                    'filters',
-                    'questionbank'
-            );
-            self::force_enable_settings($controller, $settings);
-        };
 
         // Add some dependencies.
         $plan = $controller->get_plan();
@@ -247,30 +234,6 @@ abstract class restore_controller_dbops extends restore_dbops {
     }
 
     /**
-     * Turn these settings on. No defaults from admin settings.
-     *
-     * @param restore_controller $controller
-     * @param array $settings a map from admin config names to setting names (Config name => Setting name)
-     */
-    private static function force_enable_settings(restore_controller $controller, array $settings) {
-        $plan = $controller->get_plan();
-        foreach ($settings as $config => $settingname) {
-            $value = true;
-            if ($plan->setting_exists($settingname)) {
-                $setting = $plan->get_setting($settingname);
-                // We do not allow this setting to be locked for a duplicate function.
-                if ($setting->get_status() !== base_setting::NOT_LOCKED) {
-                    $setting->set_status(base_setting::NOT_LOCKED);
-                }
-                $setting->set_value($value);
-                $setting->set_status(base_setting::LOCKED_BY_CONFIG);
-            } else {
-                $controller->log('Unknown setting: ' . $settingname, BACKUP::LOG_DEBUG);
-            }
-        }
-    }
-
-    /**
      * Sets the controller settings default values from the admin config.
      *
      * @param restore_controller $controller
@@ -283,14 +246,7 @@ abstract class restore_controller_dbops extends restore_dbops {
             if ($plan->setting_exists($settingname)) {
                 $setting = $plan->get_setting($settingname);
                 $value = self::get_setting_default($config, $setting);
-                $locked = (get_config('restore',$config . '_locked') == true);
-
-                // Use the original value when this is an import and the setting is unlocked.
-                if ($controller->get_mode() == backup::MODE_IMPORT && $controller->get_interactive()) {
-                    if (!$uselocks || !$locked) {
-                        $value = $setting->get_value();
-                    }
-                }
+                $locked = (get_config('restore', $config . '_locked') == true);
 
                 // We can only update the setting if it isn't already locked by config or permission.
                 if ($setting->get_status() != base_setting::LOCKED_BY_CONFIG

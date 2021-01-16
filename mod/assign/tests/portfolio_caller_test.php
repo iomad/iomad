@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
+require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
 require_once($CFG->dirroot . '/group/lib.php');
 
 /**
@@ -54,7 +55,7 @@ class mod_assign_portfolio_caller_testcase extends advanced_testcase {
         $activityrecord = $assigngenerator->create_instance(array('course' => $course->id));
         $cm = get_coursemodule_from_instance('assign', $activityrecord->id);
         $context = context_module::instance($cm->id);
-        $assign = new mod_assign_testable_assign($context, $cm, $course);
+        $assign = new testable_assign($context, $cm, $course);
 
         $submission = $assign->get_user_submission($user->id, true);
 
@@ -104,7 +105,7 @@ class mod_assign_portfolio_caller_testcase extends advanced_testcase {
         $activityrecord = $assigngenerator->create_instance(array('course' => $course->id));
         $cm = get_coursemodule_from_instance('assign', $activityrecord->id);
         $context = context_module::instance($cm->id);
-        $assign = new mod_assign_testable_assign($context, $cm, $course);
+        $assign = new testable_assign($context, $cm, $course);
 
         $submission = $assign->get_user_submission($user->id, true);
 
@@ -153,7 +154,7 @@ class mod_assign_portfolio_caller_testcase extends advanced_testcase {
         $activityrecord = $assigngenerator->create_instance(array('course' => $course->id));
         $cm = get_coursemodule_from_instance('assign', $activityrecord->id);
         $context = context_module::instance($cm->id);
-        $assign = new mod_assign_testable_assign($context, $cm, $course);
+        $assign = new testable_assign($context, $cm, $course);
 
         $submission = $assign->get_group_submission($user->id, $groupid, true);
 
@@ -210,7 +211,7 @@ class mod_assign_portfolio_caller_testcase extends advanced_testcase {
         $activityrecord = $assigngenerator->create_instance(array('course' => $course->id));
         $cm = get_coursemodule_from_instance('assign', $activityrecord->id);
         $context = context_module::instance($cm->id);
-        $assign = new mod_assign_testable_assign($context, $cm, $course);
+        $assign = new testable_assign($context, $cm, $course);
 
         $submission = $assign->get_group_submission($user->id, $groupid,true);
 

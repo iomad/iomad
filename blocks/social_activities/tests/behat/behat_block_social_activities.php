@@ -56,11 +56,7 @@ class behat_block_social_activities extends behat_base {
     }
 
     /**
-     * Checks that the specified activity in the social activities block should have the specified editing icon.
-     *
-     * This includes items in the action menu for the item (does not require it to be open)
-     *
-     * You should be in the course page with editing mode turned on.
+     * Checks that the specified activity's action menu contains an item.
      *
      * @Then /^"(?P<activity_name_string>(?:[^"]|\\")*)" activity in social activities block should have "(?P<icon_name_string>(?:[^"]|\\")*)" editing icon$/
      * @param string $activityname
@@ -75,11 +71,7 @@ class behat_block_social_activities extends behat_base {
     }
 
     /**
-     * Checks that the specified activity in the social activities block should not have the specified editing icon.
-     *
-     * This includes items in the action menu for the item (does not require it to be open)
-     *
-     * You should be in the course page with editing mode turned on.
+     * Checks that the specified activity's action menu contains an item.
      *
      * @Then /^"(?P<activity_name_string>(?:[^"]|\\")*)" activity in social activities block should not have "(?P<icon_name_string>(?:[^"]|\\")*)" editing icon$/
      * @param string $activityname
@@ -111,7 +103,7 @@ class behat_block_social_activities extends behat_base {
     }
 
     /**
-     * Finds the element containing a specific activity in the social activity block.
+     * Clicks on the specified element inside the activity container.
      *
      * @throws ElementNotFoundException
      * @param string $element
@@ -122,12 +114,16 @@ class behat_block_social_activities extends behat_base {
     protected function get_social_block_activity_element($element, $selectortype, $activityname) {
         $activitynode = $this->get_social_block_activity_node($activityname);
 
-        $exception = new ElementNotFoundException($this->getSession(), "'{$element}' '{$selectortype}' in '${activityname}'");
-        return $this->find($selectortype, $element, $exception, $activitynode);
+        // Transforming to Behat selector/locator.
+        list($selector, $locator) = $this->transform_selector($selectortype, $element);
+        $exception = new ElementNotFoundException($this->getSession(), '"' . $element . '" "' .
+            $selectortype . '" in "' . $activityname . '" ');
+
+        return $this->find($selector, $locator, $exception, $activitynode);
     }
 
     /**
-     * Checks that the specified activity is hidden in the social activities block.
+     * Checks that the specified activity is hidden.
      *
      * @Then /^"(?P<activity_name_string>(?:[^"]|\\")*)" activity in social activities block should be hidden$/
      * @param string $activityname
@@ -137,7 +133,7 @@ class behat_block_social_activities extends behat_base {
     }
 
     /**
-     * Checks that the specified activity is hidden in the social activities block.
+     * Checks that the specified activity is hidden.
      *
      * @Then /^"(?P<activity_name_string>(?:[^"]|\\")*)" activity in social activities block should be available but hidden from course page$/
      * @param string $activityname
@@ -147,7 +143,7 @@ class behat_block_social_activities extends behat_base {
     }
 
     /**
-     * Opens an activity actions menu in the social activities block if it is not already opened.
+     * Opens an activity actions menu if it is not already opened.
      *
      * @Given /^I open "(?P<activity_name_string>(?:[^"]|\\")*)" actions menu in social activities block$/
      * @throws DriverException The step is not available when Javascript is disabled

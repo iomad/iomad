@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
+require_once($CFG->dirroot . '/question/type/gapselect/tests/helper.php');
 
 
 /**
@@ -40,7 +41,7 @@ class qtype_gapselect_test extends question_testcase {
     protected $qtype;
 
     protected function setUp() {
-        $this->qtype = question_bank::get_qtype('gapselect');
+        $this->qtype = question_bank::get_qtype('gapselect');;
     }
 
     protected function tearDown() {
@@ -49,47 +50,60 @@ class qtype_gapselect_test extends question_testcase {
 
     /**
      * Asserts that two strings containing XML are the same ignoring the line-endings.
-     *
-     * @param string $expectedxml
-     * @param string $xml
+     * @param unknown $expectedxml
+     * @param unknown $xml
      */
     public function assert_same_xml($expectedxml, $xml) {
         $this->assertEquals(str_replace("\r\n", "\n", $expectedxml),
                 str_replace("\r\n", "\n", $xml));
     }
 
-    public function test_save_question() {
-        $this->resetAfterTest();
-
-        $syscontext = context_system::instance();
-        /** @var core_question_generator $generator */
-        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $category = $generator->create_question_category(['contextid' => $syscontext->id]);
-
-        $fromform = test_question_maker::get_question_form_data('gapselect', 'missingchoiceno');
-        $fromform->category = $category->id . ',' . $syscontext->id;
-
-        $question = new stdClass();
-        $question->category = $category->id;
-        $question->qtype = 'gapselect';
-        $question->createdby = 0;
-
-        $this->qtype->save_question($question, $fromform);
-        $q = question_bank::load_question($question->id);
-        // We just want to verify that this does not cause errors,
-        // but also verify some of the outcome.
-        $this->assertEquals('The [[1]] sat on the [[2]].', $q->questiontext);
-        $this->assertEquals([1 => 1, 2 => 1], $q->places);
-        $this->assertEquals([1 => 1, 2 => 2], $q->rightchoices);
-    }
-
     /**
      * Get some test question data.
      * @return object the data to construct a question like
-     * {@link test_question_maker::make_question('gapselect')}.
+     * {@link qtype_gapselect_test_helper::make_a_gapselect_question()}.
      */
     protected function get_test_question_data() {
-        return test_question_maker::get_question_data('gapselect');
+        global $USER;
+
+        $gapselect = new stdClass();
+        $gapselect->id = 0;
+        $gapselect->category = 0;
+        $gapselect->contextid = 0;
+        $gapselect->parent = 0;
+        $gapselect->questiontextformat = FORMAT_HTML;
+        $gapselect->generalfeedbackformat = FORMAT_HTML;
+        $gapselect->defaultmark = 1;
+        $gapselect->penalty = 0.3333333;
+        $gapselect->length = 1;
+        $gapselect->stamp = make_unique_id_code();
+        $gapselect->version = make_unique_id_code();
+        $gapselect->hidden = 0;
+        $gapselect->timecreated = time();
+        $gapselect->timemodified = time();
+        $gapselect->createdby = $USER->id;
+        $gapselect->modifiedby = $USER->id;
+
+        $gapselect->name = 'Selection from drop down list question';
+        $gapselect->questiontext = 'The [[1]] brown [[2]] jumped over the [[3]] dog.';
+        $gapselect->generalfeedback = 'This sentence uses each letter of the alphabet.';
+        $gapselect->qtype = 'gapselect';
+
+        $gapselect->options = new stdClass();
+        $gapselect->options->shuffleanswers = true;
+
+        test_question_maker::set_standard_combined_feedback_fields($gapselect->options);
+
+        $gapselect->options->answers = array(
+            (object) array('answer' => 'quick', 'feedback' => '1'),
+            (object) array('answer' => 'fox', 'feedback' => '2'),
+            (object) array('answer' => 'lazy', 'feedback' => '3'),
+            (object) array('answer' => 'assiduous', 'feedback' => '3'),
+            (object) array('answer' => 'dog', 'feedback' => '2'),
+            (object) array('answer' => 'slow', 'feedback' => '1'),
+        );
+
+        return $gapselect;
     }
 
     public function test_name() {
@@ -103,7 +117,7 @@ class qtype_gapselect_test extends question_testcase {
     public function test_initialise_question_instance() {
         $qdata = $this->get_test_question_data();
 
-        $expected = test_question_maker::make_question('gapselect');
+        $expected = qtype_gapselect_test_helper::make_a_gapselect_question();
         $expected->stamp = $qdata->stamp;
         $expected->version = $qdata->version;
 
@@ -228,8 +242,7 @@ class qtype_gapselect_test extends question_testcase {
     public function test_xml_export() {
         $qdata = new stdClass();
         $qdata->id = 123;
-        $qdata->contextid = \context_system::instance()->id;
-        $qdata->idnumber = null;
+        $qdata->contextid = 0;
         $qdata->qtype = 'gapselect';
         $qdata->name = 'A select missing words question';
         $qdata->questiontext = 'Put these in order: [[1]], [[2]], [[3]].';
@@ -281,7 +294,6 @@ class qtype_gapselect_test extends question_testcase {
     <defaultgrade>3</defaultgrade>
     <penalty>0.3333333</penalty>
     <hidden>0</hidden>
-    <idnumber></idnumber>
     <shuffleanswers>1</shuffleanswers>
     <correctfeedback format="moodle_auto_format">
       <text><![CDATA[<p>Your answer is correct.</p>]]></text>

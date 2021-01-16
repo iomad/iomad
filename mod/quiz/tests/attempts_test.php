@@ -306,7 +306,6 @@ class mod_quiz_attempt_overdue_testcase extends advanced_testcase {
             $count++;
 
         }
-        $attempts->close();
         $this->assertEquals($DB->count_records_select('quiz_attempts', 'timecheckstate IS NOT NULL'), $count);
 
         $attempts = $overduehander->get_list_of_overdue_attempts(0); // before all attempts
@@ -314,7 +313,6 @@ class mod_quiz_attempt_overdue_testcase extends advanced_testcase {
         foreach ($attempts as $attempt) {
             $count++;
         }
-        $attempts->close();
         $this->assertEquals(0, $count);
 
     }

@@ -35,14 +35,8 @@ $string['folder:view'] = 'View folder content';
 $string['foldercontent'] = 'Files and subfolders';
 $string['indicator:cognitivedepth'] = 'Folder cognitive';
 $string['indicator:cognitivedepth_help'] = 'This indicator is based on the cognitive depth reached by the student in a Folder resource.';
-$string['indicator:cognitivedepthdef'] = 'Folder cognitive';
-$string['indicator:cognitivedepthdef_help'] = 'The participant has reached this percentage of the cognitive engagement offered by the Folder resources during this analysis interval (Levels = No view, View)';
-$string['indicator:cognitivedepthdef_link'] = 'Learning_analytics_indicators#Cognitive_depth';
 $string['indicator:socialbreadth'] = 'Folder social';
 $string['indicator:socialbreadth_help'] = 'This indicator is based on the social breadth reached by the student in a Folder resource.';
-$string['indicator:socialbreadthdef'] = 'Folder social';
-$string['indicator:socialbreadthdef_help'] = 'The participant has reached this percentage of the social engagement offered by the Folder resources during this analysis interval (Levels = No participation, Participant alone)';
-$string['indicator:socialbreadthdef_link'] = 'Learning_analytics_indicators#Social_breadth';
 $string['modulename'] = 'Folder';
 $string['modulename_help'] = 'The folder module enables a teacher to display a number of related files inside a single folder, reducing scrolling on the course page. A zipped folder may be uploaded and unzipped for display, or an empty folder created and files uploaded into it.
 
@@ -55,11 +49,13 @@ $string['modulenameplural'] = 'Folders';
 $string['newfoldercontent'] = 'New folder content';
 $string['page-mod-folder-x'] = 'Any folder module page';
 $string['page-mod-folder-view'] = 'Folder module main page';
-$string['privacy:metadata'] = 'The Folder resource plugin does not store any personal data.';
+$string['privacy:metadata'] = 'The mod_folder plugin does not store any personal data.';
 $string['pluginadministration'] = 'Folder administration';
 $string['pluginname'] = 'Folder';
 $string['display'] = 'Display folder contents';
-$string['display_help'] = 'If you choose to display the folder contents on a course page, there will be no link to a separate page. The description will be displayed only if \'Display description on course page\' is ticked. Note that participants view actions cannot be logged in this case.';
+$string['display_help'] = 'If you choose to display the folder contents on a course page, there  will be no link to a separate page.
+The description will be displayed only if "Display description on course page" is checked.<br />
+Also note that participants view actions can not be logged in this case.';
 $string['displaypage'] = 'On a separate page';
 $string['displayinline'] = 'Inline on a course page';
 $string['noautocompletioninline'] = 'Automatic completion on viewing of activity can not be selected together with "Display inline" option';

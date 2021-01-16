@@ -98,8 +98,8 @@ function report_participation_get_time_options($minlog) {
 function report_participation_get_action_sql($action, $modname) {
     global $CFG, $DB;
 
-    $actionsql = '';
-    $actionparams = array();
+    $crudsql = '';
+    $crudparams = array();
 
     $viewnames = array();
     $postnames = array();
@@ -229,6 +229,6 @@ function report_participation_print_filter_form($course, $timefrom, $minlog, $ac
     echo '<label for="menuroleid">'.get_string('showonly').'</label>'."\n";
     echo html_writer::select($roleoptions,'roleid',$roleid,false);
     echo '<label for="menuaction">'.get_string('showactions').'</label>'."\n";
-    echo html_writer::select($actionoptions, 'action', $action, false, ['class' => 'mr-1']);
+    echo html_writer::select($actionoptions, 'action', $action, false, ['class' => 'm-r-1']);
     echo '<input type="submit" value="'.get_string('go').'" class="btn btn-primary"/>'."\n</div></form>\n";
 }

@@ -26,10 +26,8 @@ define(['jquery',
         'tool_lp/dialogue',
         'core/str',
         'core/ajax',
-        'core/templates',
-        'core/pending'
-        ],
-       function($, notification, Dialogue, str, ajax, templates, Pending) {
+        'core/templates'],
+       function($, notification, Dialogue, str, ajax, templates) {
 
     /**
      * Constructor
@@ -50,7 +48,6 @@ define(['jquery',
      * @method configureSettings
      */
     settingsMod.prototype.configureSettings = function(e) {
-        var pendingPromise = new Pending();
         var courseid = $(e.target).closest('a').data('courseid');
         var currentValue = $(e.target).closest('a').data('pushratingstouserplans');
         var context = {
@@ -59,21 +56,16 @@ define(['jquery',
         };
         e.preventDefault();
 
-        $.when(
-            str.get_string('configurecoursecompetencysettings', 'tool_lp'),
-            templates.render('tool_lp/course_competency_settings', context),
-        )
-        .then(function(title, templateResult) {
-            this._dialogue = new Dialogue(
-                title,
-                templateResult[0],
-                this.addListeners.bind(this)
-            );
+        templates.render('tool_lp/course_competency_settings', context).done(function(html) {
+            str.get_string('configurecoursecompetencysettings', 'tool_lp').done(function(title) {
+                this._dialogue = new Dialogue(
+                    title,
+                    html,
+                    this.addListeners.bind(this)
+                );
+            }.bind(this)).fail(notification.exception);
+        }.bind(this)).fail(notification.exception);
 
-            return this._dialogue;
-        }.bind(this))
-        .then(pendingPromise.resolve)
-        .catch(notification.exception);
     };
 
     /**
@@ -116,7 +108,6 @@ define(['jquery',
      * @method saveSettings
      */
     settingsMod.prototype.saveSettings = function(e) {
-        var pendingPromise = new Pending();
         e.preventDefault();
 
         var newValue = this._find('input[name="pushratingstouserplans"]:checked').val();
@@ -126,12 +117,9 @@ define(['jquery',
         ajax.call([
             {methodname: 'core_competency_update_course_competency_settings',
               args: {courseid: courseId, settings: settings}}
-        ])[0]
-        .then(function() {
-            return this.refreshCourseCompetenciesPage();
-        }.bind(this))
-        .then(pendingPromise.resolve)
-        .catch(notification.exception);
+        ])[0].done(function() {
+            this.refreshCourseCompetenciesPage();
+        }.bind(this)).fail(notification.exception);
 
     };
 
@@ -143,23 +131,18 @@ define(['jquery',
      */
     settingsMod.prototype.refreshCourseCompetenciesPage = function() {
         var courseId = this._find('input[name="courseid"]').val();
-        var pendingPromise = new Pending();
 
         ajax.call([
             {methodname: 'tool_lp_data_for_course_competencies_page',
-              args: {courseid: courseId, moduleid: 0}}
-        ])[0]
-        .then(function(context) {
-            return templates.render('tool_lp/course_competencies_page', context);
-        })
-        .then(function(html, js) {
-            templates.replaceNode($('[data-region="coursecompetenciespage"]'), html, js);
-            this._dialogue.close();
+              args: {courseid: courseId}}
+        ])[0].done(function(context) {
+            templates.render('tool_lp/course_competencies_page', context).done(function(html, js) {
+                $('[data-region="coursecompetenciespage"]').replaceWith(html);
+                templates.runTemplateJS(js);
+                this._dialogue.close();
+            }.bind(this)).fail(notification.exception);
+        }.bind(this)).fail(notification.exception);
 
-            return;
-        }.bind(this))
-        .then(pendingPromise.resolve)
-        .catch(notification.exception);
     };
 
     return /** @alias module:tool_lp/configurecoursecompetencysettings */ settingsMod;

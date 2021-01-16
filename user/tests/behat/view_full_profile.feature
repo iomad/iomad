@@ -21,16 +21,14 @@ Feature: Access to full profiles of users
       | student2 | C1 | student |
       | teacher1 | C1 | editingteacher |
       | student3 | C2 | student |
-    And the following config values are set as admin:
-      | messaging | 1 |
 
   Scenario: Viewing full profiles with default settings
     When I log in as "student1"
-    # Another student's full profile is visible
     And I am on "Course 1" course homepage
+    # Another student's full profile is not visible
     And I navigate to course participants
     And I follow "Student 2"
-    Then I should see "Full profile"
+    Then I should not see "Full profile"
     # Teacher's full profile is visible
     And I am on "Course 1" course homepage
     And I navigate to course participants
@@ -66,14 +64,6 @@ Feature: Access to full profiles of users
     And I follow "Full profile"
     Then I should see "First access to site"
 
-  Scenario: Viewing full profiles of students as a teacher
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I navigate to course participants
-    And I follow "Student 1"
-    And I follow "Full profile"
-    Then I should see "First access to site"
-
   Scenario: Viewing own full profile
     Given I log in as "student1"
     When I follow "Profile" in the user menu
@@ -82,37 +72,33 @@ Feature: Access to full profiles of users
   @javascript
   Scenario: Viewing full profiles of someone with the course contact role
     Given I log in as "admin"
-    And I navigate to "Appearance > Courses" in site administration
+    And I navigate to "Courses" node in "Site administration > Appearance"
     And I set the following fields to these values:
       | Course creator | 1 |
     And I press "Save changes"
-    And I navigate to "Users > Permissions > Assign system roles" in site administration
+    And I navigate to "Assign system roles" node in "Site administration > Users > Permissions"
     And I follow "Course creator"
     And I click on "//div[@class='userselector']/descendant::option[contains(., 'Student 3')]" "xpath_element"
     And I press "Add"
     And I log out
-    # Message search will not return a course contact unless the searcher shares a course with them,
-    # or site-wide messaging is enabled ($CFG->messagingallusers).
     When I log in as "student1"
-    And I open messaging
-    And I search for "Student 3" in messaging
-    Then I should see "No results"
+    And I view the "Student 3" contact in the message area
+    And I click on ".profile-picture" "css_element"
+    Then I should see "First access to site"
 
   @javascript
   Scenario: View full profiles of someone in the same group in a course with separate groups.
     Given I log in as "admin"
     And I am on "Course 1" course homepage
-    And I navigate to "Edit settings" in current page administration
+    And I navigate to "Edit settings" node in "Course administration"
     And I set the following fields to these values:
       | Group mode | Separate groups |
       | Force group mode | Yes |
     And I press "Save and display"
     And I log out
-    And the following "message contacts" exist:
-      | user     | contact |
-      | student1 | student2 |
     When I log in as "student1"
     And I view the "Student 2" contact in the message area
+    And I click on ".profile-picture" "css_element"
     And I should not see "First access to site"
     And I should see "The details of this user are not available to you"
     And I log out
@@ -128,4 +114,5 @@ Feature: Access to full profiles of users
     And I log out
     And I log in as "student1"
     And I view the "Student 2" contact in the message area
+    And I click on ".profile-picture" "css_element"
     Then I should see "First access to site"

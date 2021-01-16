@@ -45,9 +45,6 @@ class grade_export_xls extends grade_export {
 
         $strgrades = get_string('grades');
 
-        // If this file was requested from a form, then mark download as complete (before sending headers).
-        \core_form\util::form_download_complete();
-
         // Calculate file name
         $shortname = format_string($this->course->shortname, true, array('context' => context_course::instance($this->course->id)));
         $downloadfilename = clean_filename("$shortname $strgrades.xls");
@@ -113,7 +110,7 @@ class grade_export_xls extends grade_export {
                 }
                 // writing feedback if requested
                 if ($this->export_feedback) {
-                    $myxls->write_string($i, $j++, $this->format_feedback($userdata->feedbacks[$itemid], $grade));
+                    $myxls->write_string($i, $j++, $this->format_feedback($userdata->feedbacks[$itemid]));
                 }
             }
             // Time exported.

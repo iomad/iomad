@@ -37,17 +37,6 @@ $functions = array(
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
     ),
 
-    'mod_forum_get_discussion_posts' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_discussion_posts',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Returns a list of forum posts for a discussion.',
-        'type' => 'read',
-        'ajax' => true,
-        'capabilities' => 'mod/forum:viewdiscussion, mod/forum:viewqandawithoutposting',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-
     'mod_forum_get_forum_discussion_posts' => array(
         'classname' => 'mod_forum_external',
         'methodname' => 'get_forum_discussion_posts',
@@ -61,17 +50,6 @@ $functions = array(
     'mod_forum_get_forum_discussions_paginated' => array(
         'classname' => 'mod_forum_external',
         'methodname' => 'get_forum_discussions_paginated',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => '** DEPRECATED ** Please do not call this function any more.
-                          Returns a list of forum discussions optionally sorted and paginated.',
-        'type' => 'read',
-        'capabilities' => 'mod/forum:viewdiscussion, mod/forum:viewqandawithoutposting',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-
-    'mod_forum_get_forum_discussions' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_forum_discussions',
         'classpath' => 'mod/forum/externallib.php',
         'description' => 'Returns a list of forum discussions optionally sorted and paginated.',
         'type' => 'read',
@@ -105,7 +83,6 @@ $functions = array(
         'classpath' => 'mod/forum/externallib.php',
         'description' => 'Create new posts into an existing discussion.',
         'type' => 'write',
-        'ajax' => true,
         'capabilities' => 'mod/forum:replypost',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
     ),
@@ -126,97 +103,6 @@ $functions = array(
         'classpath' => 'mod/forum/externallib.php',
         'description' => 'Check if the current user can add discussions in the given forum (and optionally for the given group).',
         'type' => 'read',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-
-    'mod_forum_get_forum_access_information' => array(
-        'classname'     => 'mod_forum_external',
-        'methodname'    => 'get_forum_access_information',
-        'description'   => 'Return capabilities information for a given forum.',
-        'type'          => 'read',
-        'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
-
-    'mod_forum_set_subscription_state' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'set_subscription_state',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Set the subscription state',
-        'type' => 'write',
-        'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
-
-    'mod_forum_set_lock_state' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'set_lock_state',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Set the lock state for the discussion',
-        'type' => 'write',
-        'ajax' => true,
-        'capabilities' => 'moodle/course:manageactivities',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
-
-    'mod_forum_toggle_favourite_state' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'toggle_favourite_state',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Toggle the favourite state',
-        'type' => 'write',
-        'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
-    'mod_forum_set_pin_state' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'set_pin_state',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Set the pin state',
-        'type' => 'write',
-        'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
-
-    'mod_forum_delete_post' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'delete_post',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Deletes a post or a discussion completely when the post is the discussion topic.',
-        'type' => 'write',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
-
-    'mod_forum_get_discussion_posts_by_userid' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_discussion_posts_by_userid',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Returns a list of forum posts for a discussion for a user.',
-        'type' => 'read',
-        'ajax' => true,
-        'capabilities' => 'mod/forum:viewdiscussion, mod/forum:viewqandawithoutposting',
-    ),
-    'mod_forum_get_discussion_post' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_discussion_post',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Get a particular discussion post.',
-        'type' => 'read',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-    'mod_forum_prepare_draft_area_for_post' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'prepare_draft_area_for_post',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Prepares a draft area for editing a post.',
-        'type' => 'write',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-    'mod_forum_update_discussion_post' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'update_discussion_post',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Updates a post or a discussion topic post.',
-        'type' => 'write',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
     ),
 );

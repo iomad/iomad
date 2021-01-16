@@ -48,15 +48,16 @@ class behat_permissions extends behat_base {
      */
     public function i_set_the_following_system_permissions_of_role($rolename, $table) {
 
-        $parentnodes = get_string('users', 'admin') . ' > ' .
+        $parentnodes = get_string('administrationsite') . ' > ' .
+            get_string('users', 'admin') . ' > ' .
             get_string('permissions', 'role');
 
         // Go to home page.
         $this->execute("behat_general::i_am_on_homepage");
 
         // Navigate to course management page via navigation block.
-        $this->execute("behat_navigation::i_navigate_to_in_site_administration",
-            array($parentnodes . ' > ' . get_string('defineroles', 'role'))
+        $this->execute("behat_navigation::i_navigate_to_node_in",
+            array(get_string('defineroles', 'role'), $parentnodes)
         );
 
         $this->execute("behat_general::click_link", "Edit " . $this->escape($rolename) . " role");
@@ -105,7 +106,7 @@ class behat_permissions extends behat_base {
                 $advancedtoggle->click();
 
                 // Wait for the page to load.
-                $this->getSession()->wait(self::get_timeout() * 1000, self::PAGE_READY_JS);
+                $this->getSession()->wait(self::TIMEOUT * 1000, self::PAGE_READY_JS);
             }
         } catch (Exception $e) {
             // We already are in advanced mode.
@@ -156,8 +157,7 @@ class behat_permissions extends behat_base {
     public function capability_has_permission($capabilityname, $permission) {
 
         // We already know the name, so we just need the value.
-        $radioxpath = "//table[contains(concat(' ',
- normalize-space(@class), ' '), ' rolecap ')]/descendant::input[@type='radio']" .
+        $radioxpath = "//table[@class='rolecap']/descendant::input[@type='radio']" .
             "[@name='" . $capabilityname . "'][@checked]";
 
         $checkedradio = $this->find('xpath', $radioxpath);
@@ -194,15 +194,16 @@ class behat_permissions extends behat_base {
      * @return void Executes other steps
      */
     public function i_define_the_allowed_role_assignments_for_a_role_as($rolename, $table) {
-        $parentnodes = get_string('users', 'admin') . ' > ' .
+        $parentnodes = get_string('administrationsite') . ' > ' .
+            get_string('users', 'admin') . ' > ' .
             get_string('permissions', 'role');
 
         // Go to home page.
         $this->execute("behat_general::i_am_on_homepage");
 
-        // Navigate to Define roles page via site administration menu.
-        $this->execute("behat_navigation::i_navigate_to_in_site_administration",
-                $parentnodes .' > '. get_string('defineroles', 'role')
+        // Navigate to course management page via navigation block.
+        $this->execute("behat_navigation::i_navigate_to_node_in",
+            array(get_string('defineroles', 'role'), $parentnodes)
         );
 
         $this->execute("behat_general::click_link", "Allow role assignments");
@@ -235,11 +236,11 @@ class behat_permissions extends behat_base {
 
             if ($allowed == 'Assignable') {
                 if (!$node->isChecked()) {
-                    $node->check();
+                    $node->click();
                 }
             } else if ($allowed == 'Not assignable') {
                 if ($node->isChecked()) {
-                    $node->uncheck();
+                    $node->click();
                 }
             } else {
                 throw new ExpectationException(

@@ -179,9 +179,9 @@ M.mod_quiz.nav.init = function(Y) {
                 pageno = 0;
             }
 
-            var questionidmatch = this.get('href').match(/#question-(\d+)-(\d+)/);
+            var questionidmatch = this.get('href').match(/#q(\d+)/);
             if (questionidmatch) {
-                form.set('action', form.get('action') + questionidmatch[0]);
+                form.set('action', form.get('action') + '#q' + questionidmatch[1]);
             }
 
             nav_to_page(pageno);

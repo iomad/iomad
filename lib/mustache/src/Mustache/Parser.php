@@ -149,7 +149,7 @@ class Mustache_Parser
                 case Mustache_Tokenizer::T_BLOCK_VAR:
                     if ($this->pragmaBlocks) {
                         // BLOCKS pragma is enabled, let's do this!
-                        if (isset($parent) && $parent[Mustache_Tokenizer::TYPE] === Mustache_Tokenizer::T_PARENT) {
+                        if ($parent[Mustache_Tokenizer::TYPE] === Mustache_Tokenizer::T_PARENT) {
                             $token[Mustache_Tokenizer::TYPE] = Mustache_Tokenizer::T_BLOCK_ARG;
                         }
                         $this->clearStandaloneLines($nodes, $tokens);
@@ -275,7 +275,7 @@ class Mustache_Parser
      */
     private function checkIfTokenIsAllowedInParent($parent, array $token)
     {
-        if (isset($parent) && $parent[Mustache_Tokenizer::TYPE] === Mustache_Tokenizer::T_PARENT) {
+        if ($parent[Mustache_Tokenizer::TYPE] === Mustache_Tokenizer::T_PARENT) {
             throw new Mustache_Exception_SyntaxException('Illegal content in < parent tag', $token);
         }
     }

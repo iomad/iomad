@@ -108,17 +108,6 @@ class category_bin extends base_bin {
 
         require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 
-        // As far as recycle bin is using MODE_AUTOMATED, it observes the backup_auto_storage
-        // settings (storing backups @ real location and potentially not including files).
-        // For recycle bin we want to ensure that backup files are always stored in Moodle file
-        // area and always contain the users' files. In order to achieve that, we hack the
-        // setting here via $CFG->forced_plugin_settings, so it won't interfere other operations.
-        // See MDL-65218 and MDL-35773 for more information.
-        // This hack will be removed once recycle bin switches to use its own backup mode, with
-        // own preferences and 100% separate from MOODLE_AUTOMATED.
-        // TODO: Remove this as part of MDL-65228.
-        $CFG->forced_plugin_settings['backup'] = ['backup_auto_storage' => 0, 'backup_auto_files' => 1];
-
         // Backup the course.
         $user = get_admin();
         $controller = new \backup_controller(
@@ -126,14 +115,10 @@ class category_bin extends base_bin {
             $course->id,
             \backup::FORMAT_MOODLE,
             \backup::INTERACTIVE_NO,
-            \backup::MODE_AUTOMATED,
+            \backup::MODE_GENERAL,
             $user->id
         );
         $controller->execute_plan();
-
-        // We don't need the forced setting anymore, hence unsetting it.
-        // TODO: Remove this as part of MDL-65228.
-        unset($CFG->forced_plugin_settings['backup']);
 
         // Grab the result.
         $result = $controller->get_results();
@@ -222,9 +207,9 @@ class category_bin extends base_bin {
         // Get the backup file.
         $file = reset($files);
 
-        // Get a backup temp directory name and create it.
+        // Get a temp directory name and create it.
         $tempdir = \restore_controller::get_tempdir_name($context->id, $user->id);
-        $fulltempdir = make_backup_temp_directory($tempdir);
+        $fulltempdir = make_temp_directory('/backup/' . $tempdir);
 
         // Extract the backup to tmpdir.
         $fb = get_file_packer('application/vnd.moodle.backup');
@@ -248,7 +233,7 @@ class category_bin extends base_bin {
             $tempdir,
             $course->id,
             \backup::INTERACTIVE_NO,
-            \backup::MODE_AUTOMATED,
+            \backup::MODE_GENERAL,
             $user->id,
             \backup::TARGET_NEW_COURSE
         );
@@ -303,35 +288,19 @@ class category_bin extends base_bin {
         global $DB;
 
         // Grab the course category context.
-        $context = \context_coursecat::instance($this->_categoryid, IGNORE_MISSING);
-        if (!empty($context)) {
-            // Delete the files.
-            $fs = get_file_storage();
-            $fs->delete_area_files($context->id, 'tool_recyclebin', TOOL_RECYCLEBIN_COURSECAT_BIN_FILEAREA, $item->id);
-        } else {
-            // Course category has been deleted. Find records using $item->id as this is unique for coursecat recylebin.
-            $files = $DB->get_recordset('files', [
-                'component' => 'tool_recyclebin',
-                'filearea' => TOOL_RECYCLEBIN_COURSECAT_BIN_FILEAREA,
-                'itemid' => $item->id,
-            ]);
-            $fs = get_file_storage();
-            foreach ($files as $filer) {
-                $file = $fs->get_file_instance($filer);
-                $file->delete();
-            }
-            $files->close();
+        $context = \context_coursecat::instance($this->_categoryid);
+
+        // Delete the files.
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($context->id, 'tool_recyclebin', TOOL_RECYCLEBIN_COURSECAT_BIN_FILEAREA, $item->id);
+        foreach ($files as $file) {
+            $file->delete();
         }
 
         // Delete the record.
         $DB->delete_records('tool_recyclebin_category', array(
             'id' => $item->id
         ));
-
-        // The coursecat might have been deleted, check we have a context before triggering event.
-        if (!$context) {
-            return;
-        }
 
         // Fire event.
         $event = \tool_recyclebin\event\category_bin_item_deleted::create(array(

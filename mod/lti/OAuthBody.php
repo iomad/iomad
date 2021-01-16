@@ -39,44 +39,13 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot . '/mod/lti/OAuth.php');
 require_once($CFG->dirroot . '/mod/lti/TrivialStore.php');
 
-/**
- *
- * @param int $typeid LTI type ID.
- * @param string[] $scopes  Array of scopes which give permission for the current request.
- *
- * @return string|int|boolean  The OAuth consumer key, the LTI type ID for the validated bearer token,
-                               true for requests not requiring a scope, otherwise false.
- */
-function get_oauth_key_from_headers($typeid = null, $scopes = null) {
-    global $DB;
-
-    $now = time();
-
+function get_oauth_key_from_headers() {
     $requestheaders = OAuthUtil::get_headers();
 
-    if (isset($requestheaders['Authorization'])) {
-        if (substr($requestheaders['Authorization'], 0, 6) == "OAuth ") {
-            $headerparameters = OAuthUtil::split_header($requestheaders['Authorization']);
+    if (@substr($requestheaders['Authorization'], 0, 6) == "OAuth ") {
+        $headerparameters = OAuthUtil::split_header($requestheaders['Authorization']);
 
-            return format_string($headerparameters['oauth_consumer_key']);
-        } else if (empty($scopes)) {
-            return true;
-        } else if (substr($requestheaders['Authorization'], 0, 7) == 'Bearer ') {
-            $tokenvalue = trim(substr($requestheaders['Authorization'], 7));
-            $conditions = array('token' => $tokenvalue);
-            if (!empty($typeid)) {
-                $conditions['typeid'] = intval($typeid);
-            }
-            $token = $DB->get_record('lti_access_tokens', $conditions);
-            if ($token) {
-                // Log token access.
-                $DB->set_field('lti_access_tokens', 'lastaccess', $now, array('id' => $token->id));
-                $permittedscopes = json_decode($token->scope);
-                if ((intval($token->validuntil) > $now) && !empty(array_intersect($scopes, $permittedscopes))) {
-                    return intval($token->typeid);
-                }
-            }
-        }
+        return format_string($headerparameters['oauth_consumer_key']);
     }
     return false;
 }
@@ -94,7 +63,7 @@ function handle_oauth_body_post($oauthconsumerkey, $oauthconsumersecret, $body, 
         }
     }
 
-    if (isset($requestheaders['Authorization']) && (substr($requestheaders['Authorization'], 0, 6) == "OAuth ")) {
+    if (@substr($requestheaders['Authorization'], 0, 6) == "OAuth ") {
         $headerparameters = OAuthUtil::split_header($requestheaders['Authorization']);
         $oauthbodyhash = $headerparameters['oauth_body_hash'];
     }

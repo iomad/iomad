@@ -124,26 +124,25 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
     if ($oldversion < 2017090308) {
         $systemcontext = context_system::instance();
         foreach (array('clientadministrator', 'companymanager', 'companydepartmentmanager') as $rolename) {
-            if ($role = $DB->get_record('role', array('shortname' => $rolename), '*')) {
-                assign_capability(
-                    'block/iomad_company_admin:block/iomad_company_admin:edituserpassword',
-                    CAP_ALLOW,
-                    $role->id,
-                    $systemcontext->id
-                );
-                assign_capability(
-                    'block/iomad_company_admin:block/iomad_company_admin:deleteuser',
-                    CAP_ALLOW,
-                    $role->id,
-                    $systemcontext->id
-                );
-                assign_capability(
-                    'block/iomad_company_admin:block/iomad_company_admin:suspenduser',
-                    CAP_ALLOW,
-                    $role->id,
-                    $systemcontext->id
-                );
-            }
+            $role = $DB->get_record('role', array('shortname' => $rolename), '*', MUST_EXIST);
+            assign_capability(
+                'block/iomad_company_admin:block/iomad_company_admin:edituserpassword',
+                CAP_ALLOW,
+                $role->id,
+                $systemcontext->id
+            );
+            assign_capability(
+                'block/iomad_company_admin:block/iomad_company_admin:deleteuser',
+                CAP_ALLOW,
+                $role->id,
+                $systemcontext->id
+            );
+            assign_capability(
+                'block/iomad_company_admin:block/iomad_company_admin:suspenduser',
+                CAP_ALLOW,
+                $role->id,
+                $systemcontext->id
+            );
         }
 
         // Iomad savepoint reached.
@@ -152,51 +151,11 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
 
 
     // Fix company profile categories.
-    if ($oldversion < 2017090309) {
-        if ($companies = $DB->get_records('company')) {
-            foreach ($companies as $company) {
-                if ($compcat = $DB->get_record('user_info_category', array('name' => $company->shortname))) {
-                    $company_profileid = $compcat->id;
-                    $DB->update_record('company', $company);
-                }
-            }
-        }
+    if ($oldversion < 2017090305.2) {
+        $DB->execute("update mdl_company c join mdl_user_info_category uic on c.shortname=uic.name set c.profileid = uic.id");
 
         // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2017090309, 'block', 'iomad_company_admin');
-    }
-
-    // Remove Iomad Dashboard (stuff moves to core dashboard)
-    if ($oldversion < 2018090600) {
-
-        // Update default block instance of iomad_company_admin
-        if ($instance = $DB->get_record('block_instances', ['blockname' => 'iomad_company_admin', 'pagetypepattern' => 'local-iomad-dashboard-index'])) {
-            $instance->pagetypepattern = 'my-index';
-            $DB->update_record('block_instances', $instance);
-        }
-
-        // Remove any remaining iomad dashboard instances
-        $instances = $DB->get_records('block_instances', ['pagetypepattern' => 'local-iomad-dashboard-index']);
-        foreach ($instances as $instance) {
-            blocks_delete_instance($instance);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2018090600, 'block', 'iomad_company_admin');
-    }
-
-    if ($oldversion < 2019032103) {
-
-        // Convert all profile shortnames to remove spaces.
-        if ($userprofilefields = $DB->get_records('user_info_field')) {
-            foreach ($userprofilefields as $userprofilefield) {
-                $userprofilefield->shortname = str_replace(" ", "", $userprofilefield->shortname);
-                $DB->update_record('user_info_field', $userprofilefield);
-            }
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019032103, 'block', 'iomad_company_admin');
+        upgrade_plugin_savepoint(true, 2017090305.2, 'block', 'iomad_company_admin');
     }
 
     return true;

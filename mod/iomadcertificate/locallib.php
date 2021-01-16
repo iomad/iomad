@@ -360,19 +360,7 @@ function iomadcertificate_get_issue($course, $user, $iomadcertificate, $cm) {
 
     // Check if there is an issue already, should only ever be one
     if ($certissue = $DB->get_record('iomadcertificate_issues', array('userid' => $user->id, 'iomadcertificateid' => $iomadcertificate->id))) {
-        // is this from before the user was enrolled?
-        $enrolinfo = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                          JOIN {enrol} e ON (ue.enrolid = e.id)
-                                          WHERE e.courseid = :courseid
-                                          AND e.status = 0
-                                          AND ue.userid = :userid",
-                                          array('courseid' => $course->id, 'userid' => $user->id));
-        if (empty($enrolinfo->timestart) || $certissue->timecreated > $enrolinfo->timestart) {
-            return $certissue;
-        } else {
-            // No. Remove this record.
-            $DB->delete_records('iomadcertificate_issues', array('id' => $certissue->id));
-        }
+        return $certissue;
     }
 
     // Create new iomadcertificate issue record
@@ -380,7 +368,7 @@ function iomadcertificate_get_issue($course, $user, $iomadcertificate, $cm) {
     $certissue->iomadcertificateid = $iomadcertificate->id;
     $certissue->userid = $user->id;
     $certissue->code = iomadcertificate_generate_code();
-    $certissue->timecreated = time();
+    $certissue->timecreated =  time();
     $certissue->id = $DB->insert_record('iomadcertificate_issues', $certissue);
 
     // Email to the teachers and anyone else
@@ -461,7 +449,7 @@ function iomadcertificate_get_issues($iomadcertificateid, $sort="ci.timecreated 
 
     // The picture fields also include the name fields for the user.
     $picturefields = user_picture::fields('u', get_extra_user_fields($context));
-    $users = $DB->get_records_sql("SELECT ". $DB->sql_concat("'u.id'", $DB->sql_concat("'-'", 'ci.code')) . " AS indexcode, $picturefields, u.idnumber, ci.code, ci.timecreated
+    $users = $DB->get_records_sql("SELECT $picturefields, u.idnumber, ci.code, ci.timecreated
                                      FROM {user} u
                                INNER JOIN {iomadcertificate_issues} ci
                                        ON u.id = ci.userid
@@ -864,23 +852,20 @@ function iomadcertificate_get_date($iomadcertificate, $certrecord, $course, $use
     }
 
     // Set iomadcertificate date to current time, can be overwritten later
-    if (!empty($certrecord->timecreated)) {
-        $date = $certrecord->timecreated;
-    } else {
-        if ($iomadcertificate->printdate == '2') {
-            // Get the enrolment end date
-            $sql = "SELECT MAX(c.timecompleted) as timecompleted
-                      FROM {course_completions} c
-                     WHERE c.userid = :userid
-                       AND c.course = :courseid";
-                if ($timecompleted = $DB->get_record_sql($sql, array('userid' => $userid, 'courseid' => $course->id))) {
-                if (!empty($timecompleted->timecompleted) && $date > $timecompleted->timecompleted) {
-                    $date = $timecompleted->timecompleted;
-                }
+    $date = $certrecord->timecreated;
+
+    if ($iomadcertificate->printdate == '2') {
+        // Get the enrolment end date
+        $sql = "SELECT MAX(c.timecompleted) as timecompleted
+                  FROM {course_completions} c
+                 WHERE c.userid = :userid
+                   AND c.course = :courseid";
+        if ($timecompleted = $DB->get_record_sql($sql, array('userid' => $userid, 'courseid' => $course->id))) {
+            if (!empty($timecompleted->timecompleted)) {
+                $date = $timecompleted->timecompleted;
             }
         }
-    }
-    if ($iomadcertificate->printdate > 2) {
+    } else if ($iomadcertificate->printdate > 2) {
         if ($modinfo = iomadcertificate_get_mod_grade($course, $iomadcertificate->printdate, $userid)) {
             $date = $modinfo->dategraded;
         }
@@ -941,32 +926,14 @@ function iomadcertificate_get_grade($iomadcertificate, $course, $userid = null, 
     }
 
     if ($iomadcertificate->printgrade > 0) {
-        // Check we want to add a prefix to the grade.
-        $strprefix = '';
-        if (!$valueonly) {
-            $strprefix = get_string('coursegrade', 'iomadcertificate') . ': ';
-        }
-
-        if (!empty($iomadcertificate->finalscore)) {
+        if ($iomadcertificate->printgrade == 1) {
             if ($course_item = grade_item::fetch_course_item($course->id)) {
-                $course_item->gradetype = GRADE_TYPE_VALUE;
-                $coursegrade = new stdClass;
-                $coursegrade->points = grade_format_gradevalue($iomadcertificate->finalscore, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
-                $coursegrade->percentage = grade_format_gradevalue($iomadcertificate->finalscore, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
-                $coursegrade->letter = grade_format_gradevalue($iomadcertificate->finalscore, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
-
-                if ($iomadcertificate->gradefmt == 1) {
-                    $grade = $strprefix . $coursegrade->percentage;
-                } else if ($iomadcertificate->gradefmt == 2) {
-                    $grade = $strprefix . $coursegrade->points;
-                } else if ($iomadcertificate->gradefmt == 3) {
-                    $grade = $strprefix . $coursegrade->letter;
+                // Check we want to add a prefix to the grade.
+                $strprefix = '';
+                if (!$valueonly) {
+                    $strprefix = get_string('coursegrade', 'iomadcertificate') . ': ';
                 }
 
-                return $grade;
-            }
-        } else if ($iomadcertificate->printgrade == 1) {
-            if ($course_item = grade_item::fetch_course_item($course->id)) {
                 $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
                 $course_item->gradetype = GRADE_TYPE_VALUE;
                 $coursegrade = new stdClass;

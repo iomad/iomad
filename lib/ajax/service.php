@@ -28,36 +28,15 @@
  */
 
 define('AJAX_SCRIPT', true);
-// Services can declare 'readonlysession' in their config located in db/services.php, if not present will default to false.
-define('READ_ONLY_SESSION', true);
-
-if (!empty($_GET['nosessionupdate'])) {
-    define('NO_SESSION_UPDATE', true);
-}
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/externallib.php');
 
 define('PREFERRED_RENDERER_TARGET', RENDERER_TARGET_GENERAL);
 
-$arguments = '';
-$cacherequest = false;
-if (defined('ALLOW_GET_PARAMETERS')) {
-    $arguments = optional_param('args', '', PARAM_RAW);
-    $cachekey = optional_param('cachekey', '', PARAM_INT);
-    if ($cachekey && $cachekey > 0 && $cachekey <= time()) {
-        $cacherequest = true;
-    }
-}
+$rawjson = file_get_contents('php://input');
 
-// Either we are not allowing GET parameters or we didn't use GET because
-// we did not pass a cache key or the URL was too long.
-if (empty($arguments)) {
-    $arguments = file_get_contents('php://input');
-}
-
-$requests = json_decode($arguments, true);
-
+$requests = json_decode($rawjson, true);
 if ($requests === null) {
     $lasterror = json_last_error_msg();
     throw new coding_exception('Invalid json in request: ' . $lasterror);
@@ -71,7 +50,6 @@ $settings->set_fileurl(true);
 $settings->set_filter(true);
 $settings->set_raw(false);
 
-$haserror = false;
 foreach ($requests as $request) {
     $response = array();
     $methodname = clean_param($request['methodname'], PARAM_ALPHANUMEXT);
@@ -82,19 +60,8 @@ foreach ($requests as $request) {
     $responses[$index] = $response;
     if ($response['error']) {
         // Do not process the remaining requests.
-        $haserror = true;
         break;
     }
-}
-
-if ($cacherequest && !$haserror) {
-    // 90 days only - based on Moodle point release cadence being every 3 months.
-    $lifetime = 60 * 60 * 24 * 90;
-
-    header('Expires: '. gmdate('D, d M Y H:i:s', time() + $lifetime) .' GMT');
-    header('Pragma: ');
-    header('Cache-Control: public, max-age=' . $lifetime . ', immutable');
-    header('Accept-Ranges: none');
 }
 
 echo json_encode($responses);

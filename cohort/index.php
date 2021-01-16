@@ -23,7 +23,7 @@
  */
 
 require('../config.php');
-require_once($CFG->dirroot.'/cohort/lib.php');
+require($CFG->dirroot.'/cohort/lib.php');
 require_once($CFG->libdir.'/adminlib.php');
 
 $contextid = optional_param('contextid', 0, PARAM_INT);
@@ -104,11 +104,11 @@ if ($editcontrols = cohort_edit_controls($context, $baseurl)) {
 
 // Add search form.
 $search  = html_writer::start_tag('form', array('id'=>'searchcohortquery', 'method'=>'get', 'class' => 'form-inline search-cohort'));
-$search .= html_writer::start_div('mb-1');
+$search .= html_writer::start_div('m-b-1');
 $search .= html_writer::label(get_string('searchcohort', 'cohort'), 'cohort_search_q', true,
-        array('class' => 'mr-1')); // No : in form labels!
+        array('class' => 'm-r-1')); // No : in form labels!
 $search .= html_writer::empty_tag('input', array('id' => 'cohort_search_q', 'type' => 'text', 'name' => 'search',
-        'value' => $searchquery, 'class' => 'form-control mr-1'));
+        'value' => $searchquery, 'class' => 'form-control m-r-1'));
 $search .= html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('search', 'cohort'),
         'class' => 'btn btn-secondary'));
 $search .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'contextid', 'value'=>$contextid));
@@ -154,7 +154,7 @@ foreach($cohorts['cohorts'] as $cohort) {
         $cohortmanager = has_capability('moodle/cohort:manage', $cohortcontext);
         $cohortcanassign = has_capability('moodle/cohort:assign', $cohortcontext);
 
-        $urlparams = array('id' => $cohort->id, 'returnurl' => $baseurl->out_as_local_url(false));
+        $urlparams = array('id' => $cohort->id, 'returnurl' => $baseurl->out_as_local_url());
         $showhideurl = new moodle_url('/cohort/edit.php', $urlparams + array('sesskey' => sesskey()));
         if ($cohortmanager) {
             if ($cohort->visible) {

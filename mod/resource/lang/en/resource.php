@@ -62,20 +62,14 @@ $string['forcedownload'] = 'Force download';
 $string['framesize'] = 'Frame height';
 $string['indicator:cognitivedepth'] = 'File cognitive';
 $string['indicator:cognitivedepth_help'] = 'This indicator is based on the cognitive depth reached by the student in a File resource.';
-$string['indicator:cognitivedepthdef'] = 'File cognitive';
-$string['indicator:cognitivedepthdef_help'] = 'The participant has reached this percentage of the cognitive engagement offered by the File resources during this analysis interval (Levels = No view, View)';
-$string['indicator:cognitivedepthdef_link'] = 'Learning_analytics_indicators#Cognitive_depth';
 $string['indicator:socialbreadth'] = 'File social';
 $string['indicator:socialbreadth_help'] = 'This indicator is based on the social breadth reached by the student in a File resource.';
-$string['indicator:socialbreadthdef'] = 'File social';
-$string['indicator:socialbreadthdef_help'] = 'The participant has reached this percentage of the social engagement offered by the File resources during this analysis interval (Levels = No participation, Participant alone)';
-$string['indicator:socialbreadthdef_link'] = 'Learning_analytics_indicators#Social_breadth';
 $string['legacyfiles'] = 'Migration of old course file';
 $string['legacyfilesactive'] = 'Active';
 $string['legacyfilesdone'] = 'Finished';
 $string['modifieddate'] = 'Modified {$a}';
 $string['modulename'] = 'File';
-$string['modulename_help'] = 'The file module enables a teacher to provide a file as a course resource. Where possible, the file will be displayed within the course interface; otherwise students will be prompted to download it. The file may include supporting files, for example an HTML page may have embedded images.
+$string['modulename_help'] = 'The file module enables a teacher to provide a file as a course resource. Where possible, the file will be displayed within the course interface; otherwise students will be prompted to download it. The file may include supporting files, for example an HTML page may have embedded images or Flash objects.
 
 Note that students need to have the appropriate software on their computers in order to open the file.
 
@@ -83,7 +77,7 @@ A file may be used
 
 * To share presentations given in class
 * To include a mini website as a course resource
-* To provide draft files of software programs so students can edit and submit them for assessment';
+* To provide draft files of certain software programs (eg Photoshop .psd) so students can edit and submit them for assessment';
 $string['modulename_link'] = 'mod/resource/view';
 $string['modulenameplural'] = 'Files';
 $string['notmigrated'] = 'This legacy resource type ({$a}) was not yet migrated, sorry.';
@@ -99,7 +93,7 @@ $string['popupwidth'] = 'Pop-up width (in pixels)';
 $string['popupwidthexplain'] = 'Specifies default width of popup windows.';
 $string['printintro'] = 'Display resource description';
 $string['printintroexplain'] = 'Display resource description below content? Some display types may not display description even if enabled.';
-$string['privacy:metadata'] = 'The File resource plugin does not store any personal data.';
+$string['privacy:metadata'] = 'The mod_resource plugin does not store any personal data.';
 $string['resource:addinstance'] = 'Add a new resource';
 $string['resourcecontent'] = 'Files and subfolders';
 $string['resourcedetails_sizetype'] = '{$a->size} {$a->type}';

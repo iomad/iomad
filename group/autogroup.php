@@ -99,9 +99,8 @@ if ($editform->is_cancelled()) {
     // Display only active users if the option was selected or they do not have the capability to view suspended users.
     $onlyactive = !empty($data->includeonlyactiveenrol) || !has_capability('moodle/course:viewsuspendedusers', $context);
 
-    $extrafields = get_extra_user_fields($context);
     $users = groups_get_potential_members($data->courseid, $data->roleid, $source, $orderby, !empty($data->notingroup),
-        $onlyactive, $extrafields);
+        $onlyactive);
     $usercnt = count($users);
 
     if ($data->allocateby == 'random') {
@@ -172,7 +171,7 @@ if ($editform->is_cancelled()) {
             $table->width = '90%';
         }
         $table->data  = array();
-        $viewfullnames = has_capability('moodle/site:viewfullnames', $context);
+
         foreach ($groups as $group) {
             $line = array();
             if (groups_get_group_by_name($courseid, $group['name'])) {
@@ -184,16 +183,7 @@ if ($editform->is_cancelled()) {
             if ($data->allocateby != 'no') {
                 $unames = array();
                 foreach ($group['members'] as $user) {
-                    $fullname = fullname($user, $viewfullnames);
-                    if ($extrafields) {
-                        $extrafieldsdisplay = [];
-                        foreach ($extrafields as $field) {
-                            $extrafieldsdisplay[] = s($user->{$field});
-                        }
-                        $fullname .= ' (' . implode(', ', $extrafieldsdisplay) . ')';
-                    }
-
-                    $unames[] = $fullname;
+                    $unames[] = fullname($user, true);
                 }
                 $line[] = implode(', ', $unames);
                 $line[] = count($group['members']);
@@ -232,7 +222,6 @@ if ($editform->is_cancelled()) {
             $newgroup = new stdClass();
             $newgroup->courseid = $data->courseid;
             $newgroup->name     = $group['name'];
-            $newgroup->enablemessaging = $data->enablemessaging;
             $groupid = groups_create_group($newgroup);
             $createdgroups[] = $groupid;
             foreach($group['members'] as $user) {

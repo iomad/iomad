@@ -1,6 +1,10 @@
 // stylelint-disable declaration-no-important
 
 // Common values
+
+// Sass list not in variables since it's not intended for customization.
+$positions: static, relative, absolute, fixed, sticky;
+
 @each $position in $positions {
   .position-#{$position} { position: $position !important; }
 }
@@ -23,10 +27,10 @@
   z-index: $zindex-fixed;
 }
 
-.sticky-top {
-  @supports (position: sticky) {
-    position: sticky;
-    top: 0;
-    z-index: $zindex-sticky;
-  }
-}
+// .sticky-top {
+//   @supports (position: sticky) {
+//     position: sticky;
+//     top: 0;
+//     z-index: $zindex-sticky;
+//   }
+// }

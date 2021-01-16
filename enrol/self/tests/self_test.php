@@ -61,7 +61,7 @@ class enrol_self_testcase extends advanced_testcase {
 
         $now = time();
 
-        $trace = new progress_trace_buffer(new text_progress_trace(), false);
+        $trace = new null_progress_trace();
 
         // Prepare some data.
 
@@ -133,32 +133,18 @@ class enrol_self_testcase extends advanced_testcase {
         // Execute sync - this is the same thing used from cron.
 
         $selfplugin->sync($trace, $course2->id);
-        $output = $trace->get_buffer();
-        $trace->reset_buffer();
         $this->assertEquals(10, $DB->count_records('user_enrolments'));
-        $this->assertStringContainsString('No expired enrol_self enrolments detected', $output);
+
         $this->assertTrue($DB->record_exists('user_enrolments', array('enrolid'=>$instance1->id, 'userid'=>$user1->id)));
         $this->assertTrue($DB->record_exists('user_enrolments', array('enrolid'=>$instance1->id, 'userid'=>$user2->id)));
         $this->assertTrue($DB->record_exists('user_enrolments', array('enrolid'=>$instance3->id, 'userid'=>$user1->id)));
         $this->assertTrue($DB->record_exists('user_enrolments', array('enrolid'=>$instance3->id, 'userid'=>$user3->id)));
-
         $selfplugin->sync($trace, null);
-        $output = $trace->get_buffer();
-        $trace->reset_buffer();
         $this->assertEquals(6, $DB->count_records('user_enrolments'));
         $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance1->id, 'userid'=>$user1->id)));
         $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance1->id, 'userid'=>$user2->id)));
         $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance3->id, 'userid'=>$user1->id)));
         $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance3->id, 'userid'=>$user3->id)));
-        $this->assertStringContainsString('unenrolling user ' . $user1->id . ' from course ' . $course1->id .
-            ' as they did not log in for at least 14 days', $output);
-        $this->assertStringContainsString('unenrolling user ' . $user1->id . ' from course ' . $course3->id .
-            ' as they did not log in for at least 50 days', $output);
-        $this->assertStringContainsString('unenrolling user ' . $user2->id . ' from course ' . $course1->id .
-            ' as they did not access the course for at least 14 days', $output);
-        $this->assertStringContainsString('unenrolling user ' . $user3->id . ' from course ' . $course3->id .
-            ' as they did not access the course for at least 50 days', $output);
-        $this->assertStringNotContainsString('unenrolling user ' . $user4->id, $output);
 
         $this->assertEquals(6, $DB->count_records('role_assignments'));
         $this->assertEquals(4, $DB->count_records('role_assignments', array('roleid'=>$studentrole->id)));
@@ -616,8 +602,8 @@ class enrol_self_testcase extends advanced_testcase {
         $selfplugin->enrol_user($instance1, $user2->id, $editingteacherrole->id);
 
         $this->setUser($guest);
-        $this->assertContains(get_string('noguestaccess', 'enrol'),
-                $selfplugin->can_self_enrol($instance1, true));
+        $noaccesshtml = get_string('noguestaccess', 'enrol') . $OUTPUT->continue_button(get_login_url());
+        $this->assertSame($noaccesshtml, $selfplugin->can_self_enrol($instance1, true));
 
         $this->setUser($user1);
         $this->assertTrue($selfplugin->can_self_enrol($instance1, true));
@@ -683,7 +669,7 @@ class enrol_self_testcase extends advanced_testcase {
         $context = context_course::instance($course1->id);
 
         // Get editing teacher role.
-        $editingteacherrole = $DB->get_record('role', ['shortname' => 'editingteacher']);
+        $editingteacherrole = $DB->get_record('role', ['archetype' => 'editingteacher']);
         $this->assertNotEmpty($editingteacherrole);
 
         // Enable self enrolment plugin and set to send email from course contact.
@@ -714,7 +700,7 @@ class enrol_self_testcase extends advanced_testcase {
         $this->assertEquals($user1->email, $contact->email);
 
         // Get manager role, and enrol user as manager.
-        $managerrole = $DB->get_record('role', ['shortname' => 'manager']);
+        $managerrole = $DB->get_record('role', ['archetype' => 'manager']);
         $this->assertNotEmpty($managerrole);
         $instance1->customint4 = ENROL_SEND_EMAIL_FROM_KEY_HOLDER;
         $DB->update_record('enrol', $instance1);

@@ -117,9 +117,6 @@ class message_popup_external extends external_api {
                 $notificationoutput = new \message_popup\output\popup_notification($notification);
 
                 $notificationcontext = $notificationoutput->export_for_template($renderer);
-
-                // Keep this for BC.
-                $notificationcontext->deleted = false;
                 $notificationcontexts[] = $notificationcontext;
             }
         }
@@ -165,8 +162,6 @@ class message_popup_external extends external_api {
                             'component' => new external_value(PARAM_TEXT, 'The component that generated the notification',
                                 VALUE_OPTIONAL),
                             'eventtype' => new external_value(PARAM_TEXT, 'The type of notification', VALUE_OPTIONAL),
-                            'customdata' => new external_value(PARAM_RAW, 'Custom data to be passed to the message processor.
-                                The data here is serialised using json_encode().', VALUE_OPTIONAL),
                         ), 'message'
                     )
                 ),

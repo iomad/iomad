@@ -59,11 +59,10 @@ class mod_folder_renderer extends plugin_renderer_base {
         $foldertree = new folder_tree($folder, $cm);
         if ($folder->display == FOLDER_DISPLAY_INLINE) {
             // Display module name as the name of the root directory.
-            $foldertree->dir['dirname'] = $cm->get_formatted_name(array('escape' => false));
+            $foldertree->dir['dirname'] = $cm->get_formatted_name();
         }
-        $output .= $this->output->container_start("box generalbox pt-0 pb-3 foldertree");
-        $output .= $this->render($foldertree);
-        $output .= $this->output->container_end();
+        $output .= $this->output->box($this->render($foldertree),
+                'generalbox foldertree');
 
         // Do not append the edit button on the course page.
         $downloadable = folder_archive_available($folder, $cm);
@@ -92,9 +91,7 @@ class mod_folder_renderer extends plugin_renderer_base {
         }
 
         if ($buttons) {
-            $output .= $this->output->container_start("box generalbox pt-0 pb-3 folderbuttons");
-            $output .= $buttons;
-            $output .= $this->output->container_end();
+            $output .= $this->output->box($buttons, 'generalbox folderbuttons');
         }
 
         return $output;
@@ -137,15 +134,14 @@ class mod_folder_renderer extends plugin_renderer_base {
             $filename = $file->get_filename();
             $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(),
                     $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $filename, false);
-            $filenamedisplay = clean_filename($filename);
             if (file_extension_in_typegroup($filename, 'web_image')) {
                 $image = $url->out(false, array('preview' => 'tinyicon', 'oid' => $file->get_timemodified()));
                 $image = html_writer::empty_tag('img', array('src' => $image));
             } else {
-                $image = $this->output->pix_icon(file_file_icon($file, 24), $filenamedisplay, 'moodle');
+                $image = $this->output->pix_icon(file_file_icon($file, 24), $filename, 'moodle');
             }
             $filename = html_writer::tag('span', $image, array('class' => 'fp-icon')).
-                    html_writer::tag('span', $filenamedisplay, array('class' => 'fp-filename'));
+                    html_writer::tag('span', $filename, array('class' => 'fp-filename'));
             $filename = html_writer::tag('span',
                     html_writer::link($url->out(false, array('forcedownload' => 1)), $filename),
                     array('class' => 'fp-filename-icon'));

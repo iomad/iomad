@@ -11,7 +11,8 @@ require_once('../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir.'/tablelib.php');
 
-require_admin();
+require_login();
+require_capability('moodle/site:config', context_system::instance());
 
 $returnurl = new moodle_url('/admin/settings.php', array('section'=>'manageauths'));
 

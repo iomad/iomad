@@ -48,7 +48,7 @@ use core_calendar\local\event\factories\event_factory_interface;
 function create_event($properties) {
     $record = new \stdClass();
     $record->name = 'event name';
-    $record->eventtype = 'site';
+    $record->eventtype = 'global';
     $record->repeat = 0;
     $record->repeats = 0;
     $record->timestart = time();
@@ -136,9 +136,7 @@ class action_event_test_factory implements event_factory_interface {
                 (new \DateTimeImmutable())->setTimestamp($record->timemodified)
             ),
             !empty($record->visible),
-            $subscription,
-            $record->location,
-            !empty($record->component) ? $record->component : null
+            $subscription
         );
 
         $action = new action(

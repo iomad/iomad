@@ -71,18 +71,13 @@ abstract class plagiarism_plugin {
     }
     /**
      * hook to add plagiarism specific settings to a module settings page
-     * @deprecated Since Moodle 3.9. MDL-65835 Please use {plugin name}_coursemodule_edit_post_actions() instead.
-     * @todo MDL-67526 Remove this method.
      * @param object $mform  - Moodle form
      * @param object $context - current context
      * @param string $modulename - Name of the module
      */
     public function get_form_elements_module($mform, $context, $modulename = "") {
     }
-    /**
-     * hook to save plagiarism specific settings on a module settings page
-     * @deprecated Since Moodle 3.9. MDL-65835 Please use {plugin name}_coursemodule_standard_elements() instead.
-     * @todo MDL-67526 Remove this method.
+    /* hook to save plagiarism specific settings on a module settings page
      * @param object $data - data from an mform submission.
      */
     public function save_form_elements($data) {
@@ -101,5 +96,18 @@ abstract class plagiarism_plugin {
      * @param object $cm - full cm object
      */
     public function update_status($course, $cm) {
+    }
+
+    /**
+     * Deprecated cron method.
+     *
+     * This method was added by mistake in the previous versions of Moodle, do not override it since it is never called.
+     * To implement cron you need to register a scheduled task, see https://docs.moodle.org/dev/Task_API.
+     * For backward compatibility with the old cron API the method cron() from this class can also be used.
+     *
+     * @deprecated since Moodle 3.1 MDL-52702 - please use scheduled tasks instead.
+     */
+    public function plagiarism_cron() {
+        debugging('plagiarism_plugin::plagiarism_cron() is deprecated. Please use scheduled tasks instead', DEBUG_DEVELOPER);
     }
 }

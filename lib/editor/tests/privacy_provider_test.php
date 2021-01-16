@@ -36,7 +36,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class core_editor_privacy_provider_testcase extends \core_privacy\tests\provider_testcase {
-
     /**
      * When no preference exists, there should be no export.
      */
@@ -44,21 +43,6 @@ class core_editor_privacy_provider_testcase extends \core_privacy\tests\provider
         global $USER;
         $this->resetAfterTest();
         $this->setAdminUser();
-
-        provider::export_user_preferences($USER->id);
-        $this->assertFalse(writer::with_context(\context_system::instance())->has_any_data());
-    }
-
-    /**
-     * When preference exists but is empty, there should be no export.
-     */
-    public function test_empty_preference() {
-        global $USER;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        set_user_preference('htmleditor', '');
 
         provider::export_user_preferences($USER->id);
         $this->assertFalse(writer::with_context(\context_system::instance())->has_any_data());

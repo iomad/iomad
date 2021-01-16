@@ -40,11 +40,10 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage));
 $returnurl = $baseurl;
@@ -75,7 +74,7 @@ if ($orders = $DB->get_recordset_sql("SELECT
         $table = new html_table();
         $table->head = array (get_string('reference', 'block_iomad_commerce'),
                               get_string('paymentprovider', 'block_iomad_commerce'),
-                              get_string('status'),
+                              get_string('status', 'block_iomad_commerce'),
                               get_string('company', 'block_iomad_company_admin'),
                               get_string('unprocesseditems', 'block_iomad_commerce'),
                               '');

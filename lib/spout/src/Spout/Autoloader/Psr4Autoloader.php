@@ -5,6 +5,8 @@ namespace Box\Spout\Autoloader;
 /**
  * Class Psr4Autoloader
  * @see https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader-examples.md#class-example
+ *
+ * @package Box\Spout\Autoloader
  */
 class Psr4Autoloader
 {
@@ -14,7 +16,7 @@ class Psr4Autoloader
      *
      * @var array
      */
-    protected $prefixes = [];
+    protected $prefixes = array();
 
     /**
      * Register loader with SPL autoloader stack.
@@ -23,7 +25,7 @@ class Psr4Autoloader
      */
     public function register()
     {
-        spl_autoload_register([$this, 'loadClass']);
+        spl_autoload_register(array($this, 'loadClass'));
     }
 
     /**
@@ -47,7 +49,7 @@ class Psr4Autoloader
 
         // initialize the namespace prefix array
         if (isset($this->prefixes[$prefix]) === false) {
-            $this->prefixes[$prefix] = [];
+            $this->prefixes[$prefix] = array();
         }
 
         // retain the base directory for the namespace prefix
@@ -72,7 +74,8 @@ class Psr4Autoloader
 
         // work backwards through the namespace names of the fully-qualified
         // class name to find a mapped file name
-        while (($pos = strrpos($prefix, '\\')) !== false) {
+        while (false !== $pos = strrpos($prefix, '\\')) {
+
             // retain the trailing namespace separator in the prefix
             $prefix = substr($class, 0, $pos + 1);
 
@@ -111,6 +114,7 @@ class Psr4Autoloader
 
         // look through base directories for this namespace prefix
         foreach ($this->prefixes[$prefix] as $baseDir) {
+
             // replace the namespace prefix with the base directory,
             // replace namespace separators with directory separators
             // in the relative class name, append with .php
@@ -139,10 +143,8 @@ class Psr4Autoloader
     {
         if (file_exists($file)) {
             require $file;
-
             return true;
         }
-
         return false;
     }
 }

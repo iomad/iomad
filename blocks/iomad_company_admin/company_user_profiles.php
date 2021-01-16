@@ -23,7 +23,7 @@ require_once('lib.php');
 $action   = optional_param('action', '', PARAM_ALPHA);
 $companyid = optional_param('companyid', 0, PARAM_INTEGER);
 
-$redirect = new moodle_url($CFG->wwwroot.'/blocks/iomad_company_admin/company_user_profiles.php');
+$redirect = $CFG->wwwroot.'/blocks/iomad_company_admin/company_user_profiles.php';
 
 $strchangessaved    = get_string('changessaved');
 $strcancelled       = get_string('cancelled');
@@ -46,11 +46,10 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
@@ -65,7 +64,7 @@ switch ($action) {
         if (confirm_sesskey()) {
             profile_move_field($id, $dir);
         }
-        redirect($redirect, get_string('eventuserinfofieldupdated'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($redirect);
         break;
     case 'deletefield':
         $id      = required_param('id', PARAM_INT);
@@ -74,7 +73,7 @@ switch ($action) {
         $datacount = $DB->count_records('user_info_data', array('fieldid' => $id));
         if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount === 0) {
             profile_delete_field($id);
-            redirect($redirect, get_string('eventuserinfofielddeleted'), null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect($redirect);
         }
 
         // Ask for confirmation.

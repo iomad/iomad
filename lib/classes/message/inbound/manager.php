@@ -74,7 +74,6 @@ class manager {
                 self::remove_messageinbound_handler($handler);
             }
         }
-        $existinghandlers->close();
 
         self::create_missing_messageinbound_handlers_for_component($componentname);
     }

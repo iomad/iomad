@@ -82,7 +82,7 @@ class qtype_match_renderer extends qtype_with_combined_feedback_renderer {
                             'menu' . $qa->get_qt_field_name('sub' . $key), false,
                             array('class' => 'accesshide')) .
                     html_writer::select($choices, $qa->get_qt_field_name('sub' . $key), $selected,
-                            array('0' => 'choose'), array('disabled' => $options->readonly, 'class' => 'custom-select ml-1')) .
+                            array('0' => 'choose'), array('disabled' => $options->readonly, 'class' => 'custom-select m-l-1')) .
                     ' ' . $feedbackimage, array('class' => $classes));
 
             $result .= html_writer::end_tag('tr');
@@ -124,7 +124,8 @@ class qtype_match_renderer extends qtype_with_combined_feedback_renderer {
     protected function format_choices($question) {
         $choices = array();
         foreach ($question->get_choice_order() as $key => $choiceid) {
-            $choices[$key] = format_string($question->choices[$choiceid]);
+            $choices[$key] = format_string($question->choices[$choiceid], true,
+                    array('context' => $question->contextid));
         }
         return $choices;
     }

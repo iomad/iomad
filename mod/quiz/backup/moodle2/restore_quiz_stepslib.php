@@ -59,8 +59,6 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
 
         $paths[] = new restore_path_element('quiz_question_instance',
                 '/activity/quiz/question_instances/question_instance');
-        $paths[] = new restore_path_element('quiz_slot_tags',
-                '/activity/quiz/question_instances/question_instance/tags/tag');
         $paths[] = new restore_path_element('quiz_section', '/activity/quiz/sections/section');
         $paths[] = new restore_path_element('quiz_feedback', '/activity/quiz/feedbacks/feedback');
         $paths[] = new restore_path_element('quiz_override', '/activity/quiz/overrides/override');
@@ -97,7 +95,7 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
     }
 
     protected function process_quiz($data) {
-        global $CFG, $DB, $USER;
+        global $CFG, $DB;
 
         $data = (object)$data;
         $oldid = $data->id;
@@ -231,17 +229,11 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
             } else if ($data->popup == 1) {
                 $data->browsersecurity = 'securewindow';
             } else if ($data->popup == 2) {
-                // Since 3.9 quizaccess_safebrowser replaced with a new quizaccess_seb.
-                $data->browsersecurity = '-';
-                $addsebrule = true;
+                $data->browsersecurity = 'safebrowser';
             } else {
                 $data->preferredbehaviour = '-';
             }
             unset($data->popup);
-        } else if ($data->browsersecurity == 'safebrowser') {
-            // Since 3.9 quizaccess_safebrowser replaced with a new quizaccess_seb.
-            $data->browsersecurity = '-';
-            $addsebrule = true;
         }
 
         if (!isset($data->overduehandling)) {
@@ -256,49 +248,12 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
         $newitemid = $DB->insert_record('quiz', $data);
         // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
-
-        // Process Safe Exam Browser settings for backups taken in Moodle < 3.9.
-        if (!empty($addsebrule)) {
-            $sebsettings = new stdClass();
-
-            $sebsettings->quizid = $newitemid;
-            $sebsettings->cmid = $this->task->get_moduleid();
-            $sebsettings->templateid = 0;
-            $sebsettings->requiresafeexambrowser = \quizaccess_seb\settings_provider::USE_SEB_CLIENT_CONFIG;
-            $sebsettings->showsebtaskbar = null;
-            $sebsettings->showwificontrol = null;
-            $sebsettings->showreloadbutton = null;
-            $sebsettings->showtime = null;
-            $sebsettings->showkeyboardlayout = null;
-            $sebsettings->allowuserquitseb = null;
-            $sebsettings->quitpassword = null;
-            $sebsettings->linkquitseb = null;
-            $sebsettings->userconfirmquit = null;
-            $sebsettings->enableaudiocontrol = null;
-            $sebsettings->muteonstartup = null;
-            $sebsettings->allowspellchecking = null;
-            $sebsettings->allowreloadinexam = null;
-            $sebsettings->activateurlfiltering = null;
-            $sebsettings->filterembeddedcontent = null;
-            $sebsettings->expressionsallowed = null;
-            $sebsettings->regexallowed = null;
-            $sebsettings->expressionsblocked = null;
-            $sebsettings->regexblocked = null;
-            $sebsettings->allowedbrowserexamkeys = null;
-            $sebsettings->showsebdownloadlink = 1;
-            $sebsettings->usermodified = $USER->id;
-            $sebsettings->timecreated = time();
-            $sebsettings->timemodified = time();
-
-            $DB->insert_record('quizaccess_seb_quizsettings', $sebsettings);
-        }
     }
 
     protected function process_quiz_question_instance($data) {
-        global $CFG, $DB;
+        global $DB;
 
         $data = (object)$data;
-        $oldid = $data->id;
 
         // Backwards compatibility for old field names (MDL-43670).
         if (!isset($data->questionid) && isset($data->question)) {
@@ -327,7 +282,7 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
 
         if (!property_exists($data, 'slot')) {
             // There was a question_instance in the backup file for a question
-            // that was not actually in the quiz. Drop it.
+            // that was not acutally in the quiz. Drop it.
             $this->log('question ' . $data->questionid . ' was associated with quiz ' .
                     $this->get_new_parentid('quiz') . ' but not actually used. ' .
                     'The instance has been ignored.', backup::LOG_INFO);
@@ -335,43 +290,9 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
         }
 
         $data->quizid = $this->get_new_parentid('quiz');
-        $questionmapping = $this->get_mapping('question', $data->questionid);
-        $data->questionid = $questionmapping ? $questionmapping->newitemid : false;
+        $data->questionid = $this->get_mappingid('question', $data->questionid);
 
-        if (isset($data->questioncategoryid)) {
-            $data->questioncategoryid = $this->get_mappingid('question_category', $data->questioncategoryid);
-        } else if ($questionmapping && $questionmapping->info->qtype == 'random') {
-            // Backward compatibility for backups created using Moodle 3.4 or earlier.
-            $data->questioncategoryid = $this->get_mappingid('question_category', $questionmapping->parentitemid);
-            $data->includingsubcategories = $questionmapping->info->questiontext ? 1 : 0;
-        }
-
-        $newitemid = $DB->insert_record('quiz_slots', $data);
-        // Add mapping, restore of slot tags (for random questions) need it.
-        $this->set_mapping('quiz_question_instance', $oldid, $newitemid);
-    }
-
-    /**
-     * Process a quiz_slot_tags restore
-     *
-     * @param stdClass|array $data The quiz_slot_tags data
-     */
-    protected function process_quiz_slot_tags($data) {
-        global $DB;
-
-        $data = (object)$data;
-
-        $data->slotid = $this->get_new_parentid('quiz_question_instance');
-        if ($this->task->is_samesite() && $tag = core_tag_tag::get($data->tagid, 'id, name')) {
-            $data->tagname = $tag->name;
-        } else if ($tag = core_tag_tag::get_by_name(0, $data->tagname, 'id, name')) {
-            $data->tagid = $tag->id;
-        } else {
-            $data->tagid = null;
-            $data->tagname = $tag->name;
-        }
-
-        $DB->insert_record('quiz_slot_tags', $data);
+        $DB->insert_record('quiz_slots', $data);
     }
 
     protected function process_quiz_section($data) {
@@ -417,11 +338,6 @@ class restore_quiz_activity_structure_step extends restore_questions_activity_st
 
         if ($data->groupid !== null) {
             $data->groupid = $this->get_mappingid('group', $data->groupid);
-        }
-
-        // Skip if there is no user and no group data.
-        if (empty($data->userid) && empty($data->groupid)) {
-            return;
         }
 
         $data->timeopen = $this->apply_date_offset($data->timeopen);

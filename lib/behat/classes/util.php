@@ -31,11 +31,6 @@ require_once(__DIR__ . '/behat_command.php');
 require_once(__DIR__ . '/behat_config_manager.php');
 
 require_once(__DIR__ . '/../../filelib.php');
-require_once(__DIR__ . '/../../clilib.php');
-require_once(__DIR__ . '/../../csslib.php');
-
-use Behat\Mink\Session;
-use Behat\Mink\Exception\ExpectationException;
 
 /**
  * Init/reset utilities for Behat database and dataroot
@@ -133,35 +128,6 @@ class behat_util extends testing_util {
     }
 
     /**
-     * Build theme CSS.
-     */
-    public static function build_themes() {
-        global $CFG;
-        require_once("{$CFG->libdir}/outputlib.php");
-
-        $themenames = array_keys(\core_component::get_plugin_list('theme'));
-
-        // Load the theme configs.
-        $themeconfigs = array_map(function($themename) {
-            return \theme_config::load($themename);
-        }, $themenames);
-
-        // Build the list of themes and cache them in local cache.
-        $themes = theme_build_css_for_themes($themeconfigs, ['ltr'], true);
-
-        $framework = self::get_framework();
-        $storageroot = self::get_dataroot() . "/{$framework}/themedata";
-
-        foreach ($themes as $themename => $themedata) {
-            $dirname = "{$storageroot}/{$themename}";
-            check_dir_exists($dirname);
-            foreach ($themedata as $direction => $css) {
-                file_put_contents("{$dirname}/{$direction}.css", $css);
-            }
-        }
-    }
-
-    /**
      * Drops dataroot and remove test database tables
      * @throws coding_exception
      * @return void
@@ -213,7 +179,7 @@ class behat_util extends testing_util {
 
             behat_error (BEHAT_EXITCODE_REQUIREMENT, $CFG->behat_wwwroot . ' is not available, ensure you specified ' .
                 'correct url and that the server is set up and started.' . PHP_EOL . ' More info in ' .
-                behat_command::DOCS_URL . PHP_EOL);
+                behat_command::DOCS_URL . '#Running_tests' . PHP_EOL);
         }
 
         // Check if cli version is same as web version.
@@ -377,23 +343,6 @@ class behat_util extends testing_util {
     }
 
     /**
-     * Removes config settings that were added to the main $CFG config within the Behat CLI
-     * run.
-     *
-     * Database storage is already handled by reset_database and existing config values will
-     * be reset automatically by initialise_cfg(), so we only need to remove added ones.
-     */
-    public static function remove_added_config() {
-        global $CFG;
-        if (!empty($CFG->behat_cli_added_config)) {
-            foreach ($CFG->behat_cli_added_config as $key => $value) {
-                unset($CFG->{$key});
-            }
-            unset($CFG->behat_cli_added_config);
-        }
-    }
-
-    /**
      * Reset contents of all database tables to initial values, reset caches, etc.
      */
     public static function reset_all_data() {
@@ -405,7 +354,6 @@ class behat_util extends testing_util {
 
         // Reset all static caches.
         accesslib_clear_all_caches(true);
-        accesslib_reset_role_cache();
         // Reset the nasty strings list used during the last test.
         nasty_strings::reset_used_strings();
 
@@ -423,72 +371,6 @@ class behat_util extends testing_util {
 
         // Initialise $CFG with default values. This is needed for behat cli process, so we don't have modified
         // $CFG values from the old run. @see set_config.
-        self::remove_added_config();
         initialise_cfg();
-    }
-
-    /**
-     * Restore theme CSS stored during behat setup.
-     */
-    public static function restore_saved_themes(): void {
-        global $CFG;
-
-        $themerev = theme_get_revision();
-
-        $framework = self::get_framework();
-        $storageroot = self::get_dataroot() . "/{$framework}/themedata";
-        $themenames = array_keys(\core_component::get_plugin_list('theme'));
-        $directions = ['ltr', 'rtl'];
-
-        $themeconfigs = array_map(function($themename) {
-            return \theme_config::load($themename);
-        }, $themenames);
-
-        foreach ($themeconfigs as $themeconfig) {
-            $themename = $themeconfig->name;
-            $themesubrev = theme_get_sub_revision_for_theme($themename);
-
-            $dirname = "{$storageroot}/{$themename}";
-            foreach ($directions as $direction) {
-                $cssfile = "{$dirname}/{$direction}.css";
-                if (file_exists($cssfile)) {
-                    $themeconfig->set_css_content_cache(file_get_contents($cssfile));
-                }
-            }
-        }
-    }
-
-    /**
-     * Pause execution immediately.
-     *
-     * @param Session $session
-     * @param string $message The message to show when pausing.
-     * This will be passed through cli_ansi_format so appropriate ANSI formatting and features are available.
-     */
-    public static function pause(Session $session, string $message): void {
-        $posixexists = function_exists('posix_isatty');
-
-        // Make sure this step is only used with interactive terminal (if detected).
-        if ($posixexists && !@posix_isatty(STDOUT)) {
-            throw new ExpectationException('Break point should only be used with interactive terminal.', $session);
-        }
-
-        // Save the cursor position, ring the bell, and add a new line.
-        fwrite(STDOUT, cli_ansi_format("<cursor:save><bell><newline>"));
-
-        // Output the formatted message and reset colour back to normal.
-        $formattedmessage = cli_ansi_format("{$message}<colour:normal>");
-        fwrite(STDOUT, $formattedmessage);
-
-        // Wait for input.
-        fread(STDIN, 1024);
-
-        // Move the cursor back up to the previous position, then restore the original position stored earlier, and move
-        // it back down again.
-        fwrite(STDOUT, cli_ansi_format("<cursor:up><cursor:up><cursor:restore><cursor:down><cursor:down>"));
-
-        // Add any extra lines back if the provided message was spread over multiple lines.
-        $linecount = count(explode("\n", $formattedmessage));
-        fwrite(STDOUT, str_repeat(cli_ansi_format("<cursor:down>"), $linecount - 1));
     }
 }

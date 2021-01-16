@@ -33,7 +33,8 @@ $confirm = optional_param('confirm', 0, PARAM_BOOL);
 $PAGE->set_url('/admin/antiviruses.php', array('action' => $action, 'antivirus' => $antivirus));
 $PAGE->set_context(context_system::instance());
 
-require_admin();
+require_login();
+require_capability('moodle/site:config', context_system::instance());
 
 $returnurl = "$CFG->wwwroot/$CFG->admin/settings.php?section=manageantiviruses";
 
@@ -98,10 +99,8 @@ switch ($action) {
     default:
         break;
 }
-$new = implode(',', $activeantiviruses);
-add_to_config_log('antiviruses', $CFG->antiviruses, $new, 'core');
-set_config('antiviruses', $new);
 
+set_config('antiviruses', implode(',', $activeantiviruses));
 core_plugin_manager::reset_caches();
 
 redirect ($returnurl);

@@ -27,12 +27,10 @@ namespace mod_workshop\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\deletion_criteria;
 use core_privacy\local\request\helper;
 use core_privacy\local\request\transform;
-use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -47,7 +45,6 @@ require_once($CFG->dirroot.'/mod/workshop/locallib.php');
  */
 class provider implements
         \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
         \core_privacy\local\request\user_preference_provider,
         \core_privacy\local\request\plugin\provider {
 
@@ -110,15 +107,7 @@ class provider implements
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:subsystem:corefiles');
         $collection->add_subsystem_link('core_plagiarism', [], 'privacy:metadata:subsystem:coreplagiarism');
 
-        $userprefs = self::get_user_prefs();
-        foreach ($userprefs as $userpref) {
-            if ($userpref === 'workshop_perpage') {
-                $collection->add_user_preference('workshop_perpage', 'privacy:metadata:preference:perpage');
-            } else {
-                $summary = str_replace('workshop-', '', $userpref);
-                $collection->add_user_preference($userpref, "privacy:metadata:preference:$summary");
-            }
-        }
+        $collection->add_user_preference('workshop_perpage', 'privacy:metadata:preference:perpage');
 
         return $collection;
     }
@@ -173,63 +162,6 @@ class provider implements
     }
 
     /**
-     * Get the list of users within a specific context.
-     *
-     * @param userlist $userlist To be filled list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        global $DB;
-
-        $context = $userlist->get_context();
-
-        if (!$context instanceof \context_module) {
-            return;
-        }
-
-        $params = [
-            'instanceid' => $context->instanceid,
-            'module' => 'workshop',
-        ];
-
-        // One query to fetch them all, one query to find them, one query to bring them all and into the userlist add them.
-        $sql = "SELECT ws.authorid, ws.gradeoverby, wa.reviewerid, wa.gradinggradeoverby, wr.userid
-                  FROM {course_modules} cm
-                  JOIN {modules} m ON cm.module = m.id AND m.name = :module
-                  JOIN {workshop} w ON cm.instance = w.id
-                  JOIN {workshop_submissions} ws ON ws.workshopid = w.id
-             LEFT JOIN {workshop_assessments} wa ON wa.submissionid = ws.id
-             LEFT JOIN {workshop_aggregations} wr ON wr.workshopid = w.id
-                 WHERE cm.id = :instanceid";
-
-        $userids = [];
-        $rs = $DB->get_recordset_sql($sql, $params);
-
-        foreach ($rs as $r) {
-            if ($r->authorid) {
-                $userids[$r->authorid] = true;
-            }
-            if ($r->gradeoverby) {
-                $userids[$r->gradeoverby] = true;
-            }
-            if ($r->reviewerid) {
-                $userids[$r->reviewerid] = true;
-            }
-            if ($r->gradinggradeoverby) {
-                $userids[$r->gradinggradeoverby] = true;
-            }
-            if ($r->userid) {
-                $userids[$r->userid] = true;
-            }
-        }
-
-        $rs->close();
-
-        if ($userids) {
-            $userlist->add_users(array_keys($userids));
-        }
-    }
-
-    /**
      * Export personal data stored in the given contexts.
      *
      * @param approved_contextlist $contextlist List of contexts approved for export.
@@ -267,22 +199,12 @@ class provider implements
      * @param int $userid ID of the user we are exporting data for
      */
     public static function export_user_preferences(int $userid) {
-        $userprefs = self::get_user_prefs();
-        $expandstr = get_string('expand');
-        $collapsestr = get_string('collapse');
-        foreach ($userprefs as $userpref) {
-            $userprefval = get_user_preferences($userpref, null, $userid);
-            if ($userprefval !== null) {
-                $langid = str_replace('workshop-', '', $userpref);
-                $description = get_string("privacy:metadata:preference:$langid", 'mod_workshop');
-                if ($userpref === 'workshop_perpage') {
-                    writer::export_user_preference('mod_workshop', $userpref, $userprefval,
-                            get_string('privacy:metadata:preference:perpage', 'mod_workshop'));
-                } else {
-                    writer::export_user_preference('mod_workshop', $userpref,
-                        $userprefval == 1 ? $collapsestr : $expandstr, $description);
-                }
-            }
+
+        $perpage = get_user_preferences('workshop_perpage', null, $userid);
+
+        if ($perpage !== null) {
+            writer::export_user_preference('mod_workshop', 'workshop_perpage', $perpage,
+                get_string('privacy:metadata:preference:perpage', 'mod_workshop'));
         }
     }
 
@@ -739,147 +661,5 @@ class provider implements
         foreach ($contextlist as $context) {
             \core_plagiarism\privacy\provider::delete_plagiarism_for_user($user->id, $context);
         }
-    }
-
-    /**
-     * Delete personal data for multiple users within a single workshop context.
-     *
-     * See documentation for {@link self::delete_data_for_user()} for more details on what we do and don't actually
-     * delete and why.
-     *
-     * @param approved_userlist $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        global $DB;
-
-        $context = $userlist->get_context();
-        $fs = get_file_storage();
-
-        if ($context->contextlevel != CONTEXT_MODULE) {
-            // This should not happen but let's be double sure when it comes to deleting data.
-            return;
-        }
-
-        $cm = get_coursemodule_from_id('workshop', $context->instanceid, 0, false, IGNORE_MISSING);
-
-        if (!$cm) {
-            // Probably some kind of expired context.
-            return;
-        }
-
-        $userids = $userlist->get_userids();
-
-        if (!$userids) {
-            return;
-        }
-
-        list($usersql, $userparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
-
-        // Erase sensitive data in all submissions by all the users in the given context.
-
-        $sql = "SELECT ws.id AS submissionid
-                  FROM {workshop} w
-                  JOIN {workshop_submissions} ws ON ws.workshopid = w.id
-                 WHERE w.id = :workshopid AND ws.authorid $usersql";
-
-        $params = $userparams + [
-            'workshopid' => $cm->instance,
-        ];
-
-        $submissionids = $DB->get_fieldset_sql($sql, $params);
-
-        if ($submissionids) {
-            list($submissionidsql, $submissionidparams) = $DB->get_in_or_equal($submissionids, SQL_PARAMS_NAMED);
-
-            $DB->set_field_select('workshop_submissions', 'title', get_string('privacy:request:delete:title',
-                'mod_workshop'), "id $submissionidsql", $submissionidparams);
-            $DB->set_field_select('workshop_submissions', 'content', get_string('privacy:request:delete:content',
-                'mod_workshop'), "id $submissionidsql", $submissionidparams);
-            $DB->set_field_select('workshop_submissions', 'feedbackauthor', get_string('privacy:request:delete:content',
-                'mod_workshop'), "id $submissionidsql", $submissionidparams);
-
-            $fs->delete_area_files_select($context->id, 'mod_workshop', 'submission_content',
-                $submissionidsql, $submissionidparams);
-            $fs->delete_area_files_select($context->id, 'mod_workshop', 'submission_attachment',
-                $submissionidsql, $submissionidparams);
-        }
-
-        // Erase personal data in received assessments - feedback is seen as belonging to the recipient.
-
-        $sql = "SELECT wa.id AS assessmentid
-                  FROM {workshop} w
-                  JOIN {workshop_submissions} ws ON ws.workshopid = w.id
-                  JOIN {workshop_assessments} wa ON wa.submissionid = ws.id
-                 WHERE w.id = :workshopid AND ws.authorid $usersql";
-
-        $params = $userparams + [
-            'workshopid' => $cm->instance,
-        ];
-
-        $assessmentids = $DB->get_fieldset_sql($sql, $params);
-
-        if ($assessmentids) {
-            list($assessmentidsql, $assessmentidparams) = $DB->get_in_or_equal($assessmentids, SQL_PARAMS_NAMED);
-
-            $DB->set_field_select('workshop_assessments', 'feedbackauthor', get_string('privacy:request:delete:content',
-                'mod_workshop'), "id $assessmentidsql", $assessmentidparams);
-
-            $fs->delete_area_files_select($context->id, 'mod_workshop', 'overallfeedback_content',
-                $assessmentidsql, $assessmentidparams);
-            $fs->delete_area_files_select($context->id, 'mod_workshop', 'overallfeedback_attachment',
-                $assessmentidsql, $assessmentidparams);
-        }
-
-        // Erase sensitive data in provided assessments records.
-
-        $sql = "SELECT wa.id AS assessmentid
-                  FROM {workshop} w
-                  JOIN {workshop_submissions} ws ON ws.workshopid = w.id
-                  JOIN {workshop_assessments} wa ON wa.submissionid = ws.id
-                 WHERE w.id = :workshopid AND wa.reviewerid $usersql";
-
-        $params = $userparams + [
-            'workshopid' => $cm->instance,
-        ];
-
-        $assessmentids = $DB->get_fieldset_sql($sql, $params);
-
-        if ($assessmentids) {
-            list($assessmentidsql, $assessmentidparams) = $DB->get_in_or_equal($assessmentids, SQL_PARAMS_NAMED);
-
-            $DB->set_field_select('workshop_assessments', 'feedbackreviewer', get_string('privacy:request:delete:content',
-                'mod_workshop'), "id $assessmentidsql", $assessmentidparams);
-        }
-
-        foreach ($userids as $userid) {
-            \core_plagiarism\privacy\provider::delete_plagiarism_for_user($userid, $context);
-        }
-    }
-
-    /**
-     * Get the user preferences.
-     *
-     * @return array List of user preferences
-     */
-    protected static function get_user_prefs(): array {
-        return [
-            'workshop_perpage',
-            'workshop-viewlet-allexamples-collapsed',
-            'workshop-viewlet-allsubmissions-collapsed',
-            'workshop-viewlet-assessmentform-collapsed',
-            'workshop-viewlet-assignedassessments-collapsed',
-            'workshop-viewlet-cleargrades-collapsed',
-            'workshop-viewlet-conclusion-collapsed',
-            'workshop-viewlet-examples-collapsed',
-            'workshop-viewlet-examplesfail-collapsed',
-            'workshop-viewlet-gradereport-collapsed',
-            'workshop-viewlet-instructauthors-collapsed',
-            'workshop-viewlet-instructreviewers-collapsed',
-            'workshop-viewlet-intro-collapsed',
-            'workshop-viewlet-overallfeedback-collapsed',
-            'workshop-viewlet-ownsubmission-collapsed',
-            'workshop-viewlet-publicsubmissions-collapsed',
-            'workshop-viewlet-yourgrades-collapsed'
-        ];
     }
 }

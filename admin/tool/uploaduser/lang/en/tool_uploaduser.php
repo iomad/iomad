@@ -33,21 +33,14 @@ $string['deleteerrors'] = 'Delete errors';
 $string['encoding'] = 'Encoding';
 $string['errormnetadd'] = 'Can not add remote users';
 $string['errors'] = 'Errors';
-$string['examplecsv'] = 'Example text file';
-$string['examplecsv_help'] = 'To use the example text file, download it then open it with a text or spreadsheet editor. Leave the first line unchanged, then edit the following lines (records) and add your user data, adding more lines as necessary. Save the file as CSV then upload it.
-
-The example text file may also be used for testing, as you are able to preview user data and can choose to cancel the action before user accounts are created.';
 $string['invalidupdatetype'] = 'This option cannot be selected with the chosen upload type.';
 $string['invaliduserdata'] = 'Invalid data detected for user {$a} and it has been automatically cleaned.';
-$string['invalidtheme'] = 'Theme "{$a}" is not installed and will be ignored.';
 $string['nochanges'] = 'No changes';
-$string['notheme'] = 'No theme is defined for this user.';
 $string['pluginname'] = 'User upload';
 $string['renameerrors'] = 'Rename errors';
 $string['requiredtemplate'] = 'Required. You may use template syntax here (%l = lastname, %f = firstname, %u = username). See help for details and examples.';
 $string['rowpreviewnum'] = 'Preview rows';
 $string['unassignedsysrole'] = 'Unassigned system role {$a}';
-$string['userthemesnotallowed'] = 'User themes are not enabled, so any included in the upload users file will be ignored.';
 $string['uploadpicture_baduserfield'] = 'The user attribute specified is not valid. Please, try again.';
 $string['uploadpicture_cannotmovezip'] = 'Cannot move zip file to temporary directory.';
 $string['uploadpicture_cannotprocessdir'] = 'Cannot process unzipped files.';
@@ -68,7 +61,6 @@ $string['uploadusers_help'] = 'Users may be uploaded (and optionally enrolled in
 * Each record is a series of data separated by commas (or other delimiters)
 * The first record contains a list of fieldnames defining the format of the rest of the file
 * Required fieldnames are username, password, firstname, lastname, email';
-$string['uploadusers_link'] = 'admin/tool/uploaduser/index';
 $string['uploaduserspreview'] = 'Upload users preview';
 $string['uploadusersresult'] = 'Upload users results';
 $string['uploaduser:uploaduserpictures'] = 'Upload user pictures';

@@ -1,0 +1,10 @@
+{
+  "name": "moodle-atto_multilang2-button",
+  "builds": {
+    "moodle-atto_multilang2-button": {
+      "jsfiles": [
+        "button.js"
+      ]
+    }
+  }
+}

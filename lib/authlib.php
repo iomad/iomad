@@ -111,13 +111,6 @@ class auth_plugin_base {
     var $customfields = null;
 
     /**
-     * The tag we want to prepend to any error log messages.
-     *
-     * @var string
-     */
-    protected $errorlogtag = '';
-
-    /**
      * This is the primary method that is used by the authenticate_user_login()
      * function in moodlelib.php.
      *
@@ -626,92 +619,6 @@ class auth_plugin_base {
     }
 
     /**
-     * Update a local user record from an external source.
-     * This is a lighter version of the one in moodlelib -- won't do
-     * expensive ops such as enrolment.
-     *
-     * @param string $username username
-     * @param array $updatekeys fields to update, false updates all fields.
-     * @param bool $triggerevent set false if user_updated event should not be triggered.
-     *             This will not affect user_password_updated event triggering.
-     * @param bool $suspenduser Should the user be suspended?
-     * @return stdClass|bool updated user record or false if there is no new info to update.
-     */
-    protected function update_user_record($username, $updatekeys = false, $triggerevent = false, $suspenduser = false) {
-        global $CFG, $DB;
-
-        require_once($CFG->dirroot.'/user/profile/lib.php');
-
-        // Just in case check text case.
-        $username = trim(core_text::strtolower($username));
-
-        // Get the current user record.
-        $user = $DB->get_record('user', array('username' => $username, 'mnethostid' => $CFG->mnet_localhost_id));
-        if (empty($user)) { // Trouble.
-            error_log($this->errorlogtag . get_string('auth_usernotexist', 'auth', $username));
-            print_error('auth_usernotexist', 'auth', '', $username);
-            die;
-        }
-
-        // Protect the userid from being overwritten.
-        $userid = $user->id;
-
-        $needsupdate = false;
-
-        if ($newinfo = $this->get_userinfo($username)) {
-            $newinfo = truncate_userinfo($newinfo);
-
-            if (empty($updatekeys)) { // All keys? this does not support removing values.
-                $updatekeys = array_keys($newinfo);
-            }
-
-            if (!empty($updatekeys)) {
-                $newuser = new stdClass();
-                $newuser->id = $userid;
-                // The cast to int is a workaround for MDL-53959.
-                $newuser->suspended = (int) $suspenduser;
-                // Load all custom fields.
-                $profilefields = (array) profile_user_record($user->id, false);
-                $newprofilefields = [];
-
-                foreach ($updatekeys as $key) {
-                    if (isset($newinfo[$key])) {
-                        $value = $newinfo[$key];
-                    } else {
-                        $value = '';
-                    }
-
-                    if (!empty($this->config->{'field_updatelocal_' . $key})) {
-                        if (preg_match('/^profile_field_(.*)$/', $key, $match)) {
-                            // Custom field.
-                            $field = $match[1];
-                            $currentvalue = isset($profilefields[$field]) ? $profilefields[$field] : null;
-                            $newprofilefields[$field] = $value;
-                        } else {
-                            // Standard field.
-                            $currentvalue = isset($user->$key) ? $user->$key : null;
-                            $newuser->$key = $value;
-                        }
-
-                        // Only update if it's changed.
-                        if ($currentvalue !== $value) {
-                            $needsupdate = true;
-                        }
-                    }
-                }
-            }
-
-            if ($needsupdate) {
-                user_update_user($newuser, false, $triggerevent);
-                profile_save_custom_fields($newuser->id, $newprofilefields);
-                return $DB->get_record('user', array('id' => $userid, 'deleted' => 0));
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Return the list of enabled identity providers.
      *
      * Each identity provider data contains the keys url, name and iconurl (or
@@ -757,53 +664,6 @@ class auth_plugin_base {
             $data[] = $idp;
         }
         return $data;
-    }
-
-    /**
-     * Returns information on how the specified user can change their password.
-     *
-     * @param stdClass $user A user object
-     * @return string[] An array of strings with keys subject and message
-     */
-    public function get_password_change_info(stdClass $user) : array {
-
-        global $USER;
-
-        $site = get_site();
-        $systemcontext = context_system::instance();
-
-        $data = new stdClass();
-        $data->firstname = $user->firstname;
-        $data->lastname  = $user->lastname;
-        $data->username  = $user->username;
-        $data->sitename  = format_string($site->fullname);
-        $data->admin     = generate_email_signoff();
-
-        // This is a workaround as change_password_url() is designed to allow
-        // use of the $USER global. See MDL-66984.
-        $olduser = $USER;
-        $USER = $user;
-        if ($this->can_change_password() and $this->change_password_url()) {
-            // We have some external url for password changing.
-            $data->link = $this->change_password_url()->out();
-        } else {
-            // No way to change password, sorry.
-            $data->link = '';
-        }
-        $USER = $olduser;
-
-        if (!empty($data->link) and has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
-            $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
-            $message = get_string('emailpasswordchangeinfo', '', $data);
-        } else {
-            $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
-            $message = get_string('emailpasswordchangeinfofail', '', $data);
-        }
-
-        return [
-            'subject' => $subject,
-            'message' => $message
-        ];
     }
 }
 
@@ -1026,35 +886,15 @@ function signup_validate_data($data, $files) {
     if (! validate_email($data['email'])) {
         $errors['email'] = get_string('invalidemail');
 
-    } else if (empty($CFG->allowaccountssameemail)) {
-        // Emails in Moodle as case-insensitive and accents-sensitive. Such a combination can lead to very slow queries
-        // on some DBs such as MySQL. So we first get the list of candidate users in a subselect via more effective
-        // accent-insensitive query that can make use of the index and only then we search within that limited subset.
-        $sql = "SELECT 'x'
-                  FROM {user}
-                 WHERE " . $DB->sql_equal('email', ':email1', false, true) . "
-                   AND id IN (SELECT id
-                                FROM {user}
-                               WHERE " . $DB->sql_equal('email', ':email2', false, false) . "
-                                 AND mnethostid = :mnethostid)";
-
-        $params = array(
-            'email1' => $data['email'],
-            'email2' => $data['email'],
-            'mnethostid' => $CFG->mnet_localhost_id,
-        );
-
-        // If there are other user(s) that already have the same email, show an error.
-        if ($DB->record_exists_sql($sql, $params)) {
-            $forgotpasswordurl = new moodle_url('/login/forgot_password.php');
-            $forgotpasswordlink = html_writer::link($forgotpasswordurl, get_string('emailexistshintlink'));
-            $errors['email'] = get_string('emailexists') . ' ' . get_string('emailexistssignuphint', 'moodle', $forgotpasswordlink);
-        }
+    } else if ($DB->record_exists('user', array('email' => $data['email']))) {
+        $errors['email'] = get_string('emailexists') . ' ' .
+                get_string('emailexistssignuphint', 'moodle',
+                        html_writer::link(new moodle_url('/login/forgot_password.php'), get_string('emailexistshintlink')));
     }
     if (empty($data['email2'])) {
         $errors['email2'] = get_string('missingemail');
 
-    } else if (core_text::strtolower($data['email2']) != core_text::strtolower($data['email'])) {
+    } else if ($data['email2'] != $data['email']) {
         $errors['email2'] = get_string('invalidemail');
     }
     if (!isset($errors['email'])) {
@@ -1063,16 +903,8 @@ function signup_validate_data($data, $files) {
         }
     }
 
-    // Construct fake user object to check password policy against required information.
-    $tempuser = new stdClass();
-    $tempuser->id = 1;
-    $tempuser->username = $data['username'];
-    $tempuser->firstname = $data['firstname'];
-    $tempuser->lastname = $data['lastname'];
-    $tempuser->email = $data['email'];
-
     $errmsg = '';
-    if (!check_password_policy($data['password'], $errmsg, $tempuser)) {
+    if (!check_password_policy($data['password'], $errmsg)) {
         $errors['password'] = $errmsg;
     }
 

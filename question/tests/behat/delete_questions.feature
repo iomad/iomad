@@ -22,18 +22,18 @@ Feature: A teacher can delete questions in the question bank
       | Test questions   | essay | Test question to be deleted | Write about whatever you want |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Questions" node in "Course administration > Question bank"
 
   @javascript
   Scenario: A question not used anywhere can really be deleted
-    When I choose "Delete" action for "Test question to be deleted" in the question bank
+    When I click on "Delete" "link" in the "Test question to be deleted" "table_row"
     And I press "Delete"
     And I click on "Also show old questions" "checkbox"
     Then I should not see "Test question to be deleted"
 
   @javascript
   Scenario: Deleting a question can be cancelled
-    When I choose "Delete" action for "Test question to be deleted" in the question bank
+    When I click on "Delete" "link" in the "Test question to be deleted" "table_row"
     And I press "Cancel"
     Then I should see "Test question to be deleted"
 
@@ -45,9 +45,8 @@ Feature: A teacher can delete questions in the question bank
     And I add a "True/False" question to the "Test quiz" quiz with:
       | Question name | Test used question to be deleted |
       | Question text | Write about whatever you want    |
-    And I am on "Course 1" course homepage
-    And I navigate to "Question bank > Questions" in current page administration
-    When I choose "Delete" action for "Test used question to be deleted" in the question bank
+    And I navigate to "Questions" node in "Course administration > Question bank"
+    When I click on "Delete" "link" in the "Test used question to be deleted" "table_row"
     And I press "Delete"
     Then I should not see "Test used question to be deleted"
     And I click on "Also show old questions" "checkbox"
@@ -56,14 +55,3 @@ Feature: A teacher can delete questions in the question bank
     And I follow "Test quiz"
     And I click on "Preview quiz now" "button"
     And I should see "Write about whatever you want"
-
-  @javascript
-  Scenario: A question can be deleted even if that question type is no longer installed
-    Given the following "questions" exist:
-      | questioncategory | qtype       | name            | questiontext    |
-      | Test questions   | missingtype | Broken question | Write something |
-    And I reload the page
-    When I choose "Delete" action for "Broken question" in the question bank
-    And I press "Delete"
-    And I click on "Also show old questions" "checkbox"
-    Then I should not see "Broken question"

@@ -121,6 +121,7 @@ $string['displaydesc'] = 'Whether to display the SCORM package in a new window.'
 $string['displaysettings'] = 'Display settings';
 $string['dnduploadscorm'] = 'Add a SCORM package';
 $string['domxml'] = 'DOMXML external library';
+$string['duedate'] = 'Due date';
 $string['element'] = 'Element';
 $string['enter'] = 'Enter';
 $string['entercourse'] = 'Enter course';
@@ -149,14 +150,11 @@ $string['floating'] = 'Floating';
 $string['forcecompleted'] = 'Force completed';
 $string['forcecompleted_help'] = 'If enabled, the status of the current attempt is forced to "completed". (Only applicable to SCORM 1.2 packages.)';
 $string['forcecompleteddesc'] = 'This preference sets the default value for the force completed setting';
-$string['forcenewattempts'] = 'Force new attempt';
-$string['forcenewattempts_help'] = 'There are 3 options:
+$string['forcenewattempt'] = 'Force new attempt';
+$string['forcenewattempt_help'] = 'This setting hides the "Start new attempt" checkbox and prevents review mode.
 
-* No - If a previous attempt is completed, passed or failed, the student will be provided with the option to enter in review mode or start a new attempt.
-* When previous attempt completed, passed or failed - This relies on the SCORM package setting the status of \'completed\', \'passed\' or \'failed\'.
-* Always - Each re-entry to the SCORM activity will generate a new attempt and the student will not be returned to the same point they reached in their previous attempt.';
-$string['forceattemptalways'] = 'Always';
-$string['forceattemptoncomplete'] = 'When previous attempt completed, passed or failed';
+SCORM allows a student to return to the same attempt at any point and a new attempt is not possible unless the previous attempt has been set as "completed", "passed" or "failed". If the SCORM package does not do this, the student will always re-enter the same attempt.';
+$string['forcenewattemptdesc'] = 'This setting hides the "Start new attempt" checkbox and prevents review mode. SCORM allows a student to return to the same attempt at any point and a new attempt is not possible unless the previous attempt has been set as "completed", "passed" or "failed". If the SCORM package does not do this, the student will always re-enter the same attempt.';
 $string['forcejavascript'] = 'Force users to enable JavaScript';
 $string['forcejavascript_desc'] = 'If enabled (recommended) this prevents access to SCORM objects when JavaScript is not supported/enabled in a users browser. If disabled the user may view the SCORM but API communication will fail and no grade information will be saved.';
 $string['forcejavascriptmessage'] = 'JavaScript is required to view this object, please enable JavaScript in your browser and try again.';
@@ -200,23 +198,15 @@ $string['identifier'] = 'Question identifier';
 $string['incomplete'] = 'Incomplete';
 $string['indicator:cognitivedepth'] = 'SCORM cognitive';
 $string['indicator:cognitivedepth_help'] = 'This indicator is based on the cognitive depth reached by the student in a SCORM activity.';
-$string['indicator:cognitivedepthdef'] = 'SCORM cognitive';
-$string['indicator:cognitivedepthdef_help'] = 'The participant has reached this percentage of the cognitive engagement offered by the SCORM activities during this analysis interval (Levels = No view, View, Submit, View feedback)';
-$string['indicator:cognitivedepthdef_link'] = 'Learning_analytics_indicators#Cognitive_depth';
 $string['indicator:socialbreadth'] = 'SCORM social';
 $string['indicator:socialbreadth_help'] = 'This indicator is based on the social breadth reached by the student in a SCORM activity.';
-$string['indicator:socialbreadthdef'] = 'SCORM social';
-$string['indicator:socialbreadthdef_help'] = 'The participant has reached this percentage of the social engagement offered by the SCORM activities during this analysis interval (Levels = No participation, Participant alone)';
-$string['indicator:socialbreadthdef_link'] = 'Learning_analytics_indicators#Social_breadth';
 $string['info'] = 'Info';
 $string['interactions'] = 'Interactions';
 $string['masteryoverride'] = 'Mastery score overrides status';
 $string['masteryoverride_help'] = 'If enabled and a mastery score is provided, when LMSFinish is called and a raw score has been set, status will be recalculated using the raw score and mastery score and any status provided by the SCORM (including "incomplete") will be overridden.';
 $string['masteryoverridedesc'] = 'This preference sets the default for the mastery score override setting';
-$string['myattempts'] = 'My attempts';
-$string['myaiccsessions'] = 'My AICC sessions';
 $string['repositorynotsupported'] = 'This repository does not support linking directly to an imsmanifest.xml file.';
-$string['trackid'] = 'ID';
+$string['trackid'] = 'Id';
 $string['trackid_help'] = 'This is the identifier set by your SCORM package for this question, the SCORM specification doesn\'t allow the full question text to be provided.';
 $string['trackcorrectcount'] = 'Correct count';
 $string['trackcorrectcount_help'] = 'Number of correct results for the question';
@@ -244,7 +234,6 @@ $string['trackweight'] = 'Weight';
 $string['trackweight_help'] = 'Weight assigned to the question when calculating score.';
 $string['invalidactivity'] = 'SCORM activity is incorrect';
 $string['invalidmanifestname'] = 'Only imsmanifest.xml or .zip files may be selected';
-$string['invalidstatus'] = 'Invalid status';
 $string['invalidurl'] = 'Invalid URL specified';
 $string['invalidurlhttpcheck'] = 'Invalid URL specified. Debug message:<pre>{$a->cmsg}</pre>';
 $string['invalidhacpsession'] = 'Invalid HACP session';
@@ -308,7 +297,6 @@ $string['notattempted'] = 'Not attempted';
 $string['not_corr_type'] = 'Type mismatch for tag {$a->tag}';
 $string['notopenyet'] = 'Sorry, this activity is not available until {$a}';
 $string['objectives'] = 'Objectives';
-$string['openafterclose'] = 'You have specified an open date after the close date';
 $string['optallstudents'] = 'all users';
 $string['optattemptsonly'] = 'users with attempts only';
 $string['optnoattemptsonly'] = 'users with no attempts only';
@@ -333,7 +321,7 @@ $string['pluginadministration'] = 'SCORM package administration';
 $string['pluginname'] = 'SCORM package';
 $string['popup'] = 'New window';
 $string['popuplaunched'] = 'This SCORM package has been launched in a popup window, If you have finished viewing this resource, click here to return to the course page';
-$string['popupmenu'] = 'In a drop-down menu';
+$string['popupmenu'] = 'In a drop down menu';
 $string['popupopen'] = 'Open package in a new window';
 $string['popupsblocked'] = 'It appears that popup windows are blocked, stopping this SCORM package from playing. Please check your browser settings before trying again.';
 $string['position_error'] = 'The {$a->tag} tag can\'t be child of {$a->parent} tag';
@@ -368,8 +356,9 @@ $string['results'] = 'Results';
 $string['review'] = 'Review';
 $string['reviewmode'] = 'Review mode';
 $string['rightanswer'] = 'Right answer';
-$string['scormstandard'] = 'SCORM standards mode';
-$string['scormstandarddesc'] = 'When disabled, Moodle allows SCORM 1.2 packages to store more than the specification allows, and uses Moodle full name format settings when passing the users name to the SCORM package.';
+$string['scorm12standard'] = 'Enable SCORM 1.2 standard mode';
+$string['scorm12standarddesc'] = 'Disabling this setting allows Moodle to store more data than the SCORM 1.2 specification allows.
+If your SCORM packages allow users to enter large amounts of text or if your package tries to store large amounts of data in the suspend_data field disable this.';
 $string['scoes'] = 'Learning objects';
 $string['score'] = 'Score';
 $string['scorm:addinstance'] = 'Add a new SCORM package';
@@ -450,6 +439,3 @@ $string['whatgradedesc'] = 'Whether the highest, average (mean), first or last c
 $string['width'] = 'Width';
 $string['window'] = 'Window';
 $string['youmustselectastatus'] = 'You must select a status to require';
-
-// Deprecated since Moodle 3.8.
-$string['duedate'] = 'Due date';

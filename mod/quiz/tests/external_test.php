@@ -95,10 +95,6 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         // Users enrolments.
         $this->studentrole = $DB->get_record('role', array('shortname' => 'student'));
         $this->teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
-        // Allow student to receive messages.
-        $coursecontext = context_course::instance($this->course->id);
-        assign_capability('mod/quiz:emailnotifysubmission', CAP_ALLOW, $this->teacherrole->id, $coursecontext, true);
-
         $this->getDataGenerator()->enrol_user($this->student->id, $this->course->id, $this->studentrole->id, 'manual');
         $this->getDataGenerator()->enrol_user($this->teacher->id, $this->course->id, $this->teacherrole->id, 'manual');
     }
@@ -176,7 +172,6 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         // Second quiz.
         $record = new stdClass();
         $record->course = $course2->id;
-        $record->intro = '<button>Test with HTML allowed.</button>';
         $quiz2 = self::getDataGenerator()->create_module('quiz', $record);
 
         // Execute real Moodle enrolment as we'll call unenrol() method on the instance later.
@@ -1189,21 +1184,9 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         $this->assertTrue($result['questions'][1]['flagged']);
 
         // Finish the attempt.
-        $sink = $this->redirectMessages();
         $result = mod_quiz_external::process_attempt($attempt->id, array(), true);
         $result = external_api::clean_returnvalue(mod_quiz_external::process_attempt_returns(), $result);
         $this->assertEquals(quiz_attempt::FINISHED, $result['state']);
-        $messages = $sink->get_messages();
-        $message = reset($messages);
-        $sink->close();
-        // Test customdata.
-        if (!empty($message->customdata)) {
-            $customdata = json_decode($message->customdata);
-            $this->assertEquals($quizobj->get_quizid(), $customdata->instance);
-            $this->assertEquals($quizobj->get_cmid(), $customdata->cmid);
-            $this->assertEquals($attempt->id, $customdata->attemptid);
-            $this->assertObjectHasAttribute('notificationiconurl', $customdata);
-        }
 
         // Start new attempt.
         $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
@@ -1224,29 +1207,11 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         $result = external_api::clean_returnvalue(mod_quiz_external::process_attempt_returns(), $result);
         $this->assertEquals(quiz_attempt::OVERDUE, $result['state']);
 
-        // Force grace period for time limit.
-        $quiz->timeclose = 0;
-        $quiz->timelimit = 1;
-        $quiz->graceperiod = 60;
-        $quiz->overduehandling = 'graceperiod';
-        $DB->update_record('quiz', $quiz);
-
-        $timenow = time();
-        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
-        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        $attempt = quiz_create_attempt($quizobj, 3, 2, $timenow - 10, false, $this->student->id);
-        quiz_start_new_attempt($quizobj, $quba, $attempt, 2, $timenow - 10);
-        quiz_attempt_save_started($quizobj, $quba, $attempt);
-
-        $result = mod_quiz_external::process_attempt($attempt->id, array());
-        $result = external_api::clean_returnvalue(mod_quiz_external::process_attempt_returns(), $result);
-        $this->assertEquals(quiz_attempt::OVERDUE, $result['state']);
-
         // New attempt.
         $timenow = time();
         $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
-        $attempt = quiz_create_attempt($quizobj, 4, 3, $timenow, false, $this->student->id);
+        $attempt = quiz_create_attempt($quizobj, 3, 2, $timenow, false, $this->student->id);
         quiz_start_new_attempt($quizobj, $quba, $attempt, 3, $timenow);
         quiz_attempt_save_started($quizobj, $quba, $attempt);
 
@@ -1622,8 +1587,6 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
     public function test_get_attempt_access_information() {
         global $DB;
 
-        $this->setAdminUser();
-
         // Create a new quiz with attempts.
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
         $data = array('course' => $this->course->id,
@@ -1644,7 +1607,8 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         $question = $questiongenerator->create_question('truefalse', null, array('category' => $cat->id));
         $question = $questiongenerator->create_question('essay', null, array('category' => $cat->id));
 
-        quiz_add_random_questions($quiz, 0, $cat->id, 1, false);
+        $question = $questiongenerator->create_question('random', null, array('category' => $cat->id));
+        quiz_add_quiz_question($question->id, $quiz);
 
         $quizobj = quiz::create($quiz->id, $this->student->id);
 
@@ -1706,7 +1670,7 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
      * Test get_quiz_required_qtypes
      */
     public function test_get_quiz_required_qtypes() {
-        $this->setAdminUser();
+        global $DB;
 
         // Create a new quiz.
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
@@ -1727,7 +1691,8 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         $question = $questiongenerator->create_question('truefalse', null, array('category' => $cat->id));
         $question = $questiongenerator->create_question('essay', null, array('category' => $cat->id));
 
-        quiz_add_random_questions($quiz, 0, $cat->id, 1, false);
+        $question = $questiongenerator->create_question('random', null, array('category' => $cat->id));
+        quiz_add_quiz_question($question->id, $quiz);
 
         $this->setUser($this->student);
 

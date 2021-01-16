@@ -155,20 +155,20 @@ class core_admintree_testcase extends advanced_testcase {
         global $CFG;
         $this->resetAfterTest();
 
-        $CFG->theme = 'classic';
+        $CFG->theme = 'clean';
         $executable = new admin_setting_configexecutable('test1', 'Text 1', 'Help Path', '');
 
         // Check for an invalid path.
         $result = $executable->output_html($CFG->dirroot . '/lib/tests/other/file_does_not_exist');
-        $this->assertRegexp('/class="text-danger"/', $result);
+        $this->assertRegexp('/class="patherror"/', $result);
 
         // Check for a directory.
         $result = $executable->output_html($CFG->dirroot);
-        $this->assertRegexp('/class="text-danger"/', $result);
+        $this->assertRegexp('/class="patherror"/', $result);
 
         // Check for a file which is not executable.
         $result = $executable->output_html($CFG->dirroot . '/filter/tex/readme_moodle.txt');
-        $this->assertRegexp('/class="text-danger"/', $result);
+        $this->assertRegexp('/class="patherror"/', $result);
 
         // Check for an executable file.
         if ($CFG->ostype == 'WINDOWS') {
@@ -177,7 +177,7 @@ class core_admintree_testcase extends advanced_testcase {
             $filetocheck = 'mimetex.darwin';
         }
         $result = $executable->output_html($CFG->dirroot . '/filter/tex/' . $filetocheck);
-        $this->assertRegexp('/class="text-success"/', $result);
+        $this->assertRegexp('/class="pathok"/', $result);
 
         // Check for no file specified.
         $result = $executable->output_html('');
@@ -413,29 +413,5 @@ class core_admintree_testcase extends advanced_testcase {
         // Invalid settings.
         $this->assertEquals('These entries are invalid: nonvalid site name', $adminsetting->write_setting('nonvalid site name'));
         $this->assertEquals('Empty lines are not valid', $adminsetting->write_setting("localhost\n"));
-    }
-
-    /**
-     * Verifies the $ADMIN global (adminroot cache) is properly reset when changing users, which might occur naturally during cron.
-     */
-    public function test_adminroot_cache_reset() {
-        $this->resetAfterTest();
-        global $DB;
-        // Current user is a manager at site context, which won't have access to the 'debugging' section of the admin tree.
-        $manageruser = $this->getDataGenerator()->create_user();
-        $context = context_system::instance();
-        $managerrole = $DB->get_record('role', array('shortname' => 'manager'));
-        role_assign($managerrole->id, $manageruser->id, $context->id);
-        $this->setUser($manageruser);
-        $adminroot = admin_get_root();
-        $section = $adminroot->locate('debugging');
-        $this->assertEmpty($section);
-
-        // Now, change the user to an admin user and confirm we get a new copy of the admin tree when next we ask for it.
-        $adminuser = get_admin();
-        $this->setUser($adminuser);
-        $adminroot = admin_get_root();
-        $section = $adminroot->locate('debugging');
-        $this->assertInstanceOf('\admin_settingpage', $section);
     }
 }

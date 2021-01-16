@@ -164,7 +164,7 @@ class grade extends tablelike implements selectable_items, filterable_items {
     public function original_headers() {
         return array(
             '', // For filter icon.
-            get_string('fullnameuser', 'core'),
+            get_string('firstname') . ' (' . get_string('alternatename') . ') ' . get_string('lastname'),
             get_string('range', 'grades'),
             get_string('grade', 'grades'),
             get_string('feedback', 'grades'),
@@ -198,8 +198,8 @@ class grade extends tablelike implements selectable_items, filterable_items {
             $lockicon = $OUTPUT->pix_icon('t/locked', 'grade is locked') . ' ';
         }
 
-        if (has_capability('moodle/site:viewfullnames', \context_course::instance($this->courseid))) {
-            $fullname = $lockicon . fullname($item, true);
+        if (!empty($item->alternatename)) {
+            $fullname = $lockicon . $item->alternatename . ' (' . $item->firstname . ') ' . $item->lastname;
         } else {
             $fullname = $lockicon . fullname($item);
         }
@@ -208,12 +208,11 @@ class grade extends tablelike implements selectable_items, filterable_items {
         $url = new moodle_url("/user/view.php", array('id' => $item->id, 'course' => $this->courseid));
         $iconstring = get_string('filtergrades', 'gradereport_singleview', $fullname);
         $grade->label = $fullname;
-        $userpic = $OUTPUT->user_picture($item, ['link' => false, 'visibletoscreenreaders' => false]);
 
         $line = array(
-            $OUTPUT->action_icon($this->format_link('user', $item->id), new pix_icon('t/editstring', ''), null,
-                    ['title' => $iconstring, 'aria-label' => $iconstring]),
-            html_writer::link($url, $userpic . $fullname),
+            $OUTPUT->action_icon($this->format_link('user', $item->id), new pix_icon('t/editstring', $iconstring)),
+            $OUTPUT->user_picture($item, array('visibletoscreenreaders' => false)) .
+            html_writer::link($url, $fullname),
             $this->item_range()
         );
         $lineclasses = array(

@@ -1,38 +1,6 @@
 This files describes API changes in /calendar/* ,
 information provided here is intended especially for developers.
 
-=== 3.9 ===
-* Plugins can now create their own calendar events, both standard and action ones. To do it they need to specify
-  $event->component when creating an event. Component events can not be edited or deleted manually.
-  See https://docs.moodle.org/dev/Calendar_API#Component_events
-* The following functions have been deprecated because they were no longer used:
-  - calendar_add_event_metadata()
-  - core_calendar_renderer::event()
-
-=== 3.8 ===
-* The following functions have been finally deprecated and can not be used anymore:
-  * calendar_wday_name()
-  * calendar_get_block_upcoming()
-  * calendar_print_month_selector()
-  * calendar_cron()
-  * calendar_get_mini()
-  * calendar_get_upcoming()
-* Added core_calendar_external::get_timestamps(), which allows an array containing an arbitrary number of arrays of
-  date/time data to be converted and returned as timestamps, along with an optional key.
-
-=== 3.6 ===
-* calendar_get_default_courses() function now has optional $userid parameter.
-* calendar_set_filters() function now has optional $user parameter.
-* The core_calendar\local\event\container class now provides two new helper methods for getting and setting the requesting user:
-  set_requesting_user() and get_requesting_user().
-* The following functions have been finally deprecated and can not be used anymore:
-  * calendar_preferences_button()
-* added core_calendar_get_valid_event_timestart_range callback for course events when the update_event_start_day function is used
-  in the local api.
-
-=== 3.5 ===
-* core_calendar_external::get_calendar_events now returns the categoryid for category events.
-
 === 3.4 ===
 * calendar_get_mini, and calendar_get_upcoming have been deprecated. Please update to use the new exporters and renderers.
 * added core_calendar_get_valid_event_timestart_range and core_calendar_event_timestart_updated callbacks for module events

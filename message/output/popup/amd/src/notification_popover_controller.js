@@ -52,7 +52,6 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
 
         this.markAllReadButton = this.root.find(SELECTORS.MARK_ALL_READ_BUTTON);
         this.unreadCount = 0;
-        this.lastQueried = 0;
         this.userId = this.root.attr('data-userid');
         this.container = this.root.find(SELECTORS.ALL_NOTIFICATIONS_CONTAINER);
         this.limit = 20;
@@ -61,7 +60,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
         this.initialLoad = false;
 
         // Let's find out how many unread notifications there are.
-        this.unreadCount = this.root.find(SELECTORS.COUNT_CONTAINER).html();
+        this.loadUnreadNotificationCount();
     };
 
     /**
@@ -190,6 +189,21 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
     };
 
     /**
+     * Ask the server how many unread notifications are left, render the value
+     * as a badge on the menu toggle and update the aria labels on the menu
+     * toggle.
+     *
+     * @method loadUnreadNotificationCount
+     */
+    NotificationPopoverController.prototype.loadUnreadNotificationCount = function() {
+        NotificationRepo.countUnread({useridto: this.userId}).then(function(count) {
+            this.unreadCount = count;
+            this.renderUnreadCount();
+            this.updateButtonAriaLabel();
+        }.bind(this)).catch(DebugNotification.exception);
+    };
+
+    /**
      * Find the notification element for the given id.
      *
      * @param {int} id
@@ -222,13 +236,6 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
                 notificationid: notification.id,
                 offset: offset,
             });
-
-            // Link to mark read page before loading the actual link.
-            var notificationurlparams = {
-                notificationid: notification.id
-            };
-
-            notification.contexturl = URL.relativeUrl('message/output/popup/mark_notification_read.php', notificationurlparams);
 
             var promise = Templates.render('message_popup/notification_content_item', notification)
             .then(function(html, js) {
@@ -278,7 +285,6 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
         return NotificationRepo.query(request).then(function(result) {
             var notifications = result.notifications;
             this.unreadCount = result.unreadcount;
-            this.lastQueried = Math.floor(new Date().getTime() / 1000);
             this.setLoadedAllContent(!notifications.length || notifications.length < this.limit);
             this.initialLoad = true;
             this.updateButtonAriaLabel();
@@ -305,18 +311,33 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
     NotificationPopoverController.prototype.markAllAsRead = function() {
         this.markAllReadButton.addClass('loading');
 
-        var request = {
-            useridto: this.userId,
-            timecreatedto: this.lastQueried,
-        };
-
-        return NotificationRepo.markAllAsRead(request)
+        return NotificationRepo.markAllAsRead({useridto: this.userId})
             .then(function() {
                 this.unreadCount = 0;
                 this.root.find(SELECTORS.UNREAD_NOTIFICATION).removeClass('unread');
             }.bind(this))
             .always(function() {
                 this.markAllReadButton.removeClass('loading');
+            }.bind(this));
+    };
+
+    /**
+     * Send a request to the server to mark a single notification as read and update
+     * the unread count and unread notification elements appropriately.
+     *
+     * @param {jQuery} element
+     * @return {Promise|boolean}
+     * @method markAllAsRead
+     */
+    NotificationPopoverController.prototype.markNotificationAsRead = function(element) {
+        if (!element.hasClass('unread')) {
+            return false;
+        }
+
+        return NotificationRepo.markAsRead(element.attr('data-id'))
+            .then(function() {
+                this.unreadCount--;
+                element.removeClass('unread');
             }.bind(this));
     };
 
@@ -340,12 +361,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/str', 'core/url',
         // Mark individual notification read if the user activates it.
         this.root.on(CustomEvents.events.activate, SELECTORS.NOTIFICATION_LINK, function(e) {
             var element = $(e.target).closest(SELECTORS.NOTIFICATION);
-
-            if (element.hasClass('unread')) {
-                this.unreadCount--;
-                element.removeClass('unread');
-            }
-
+            this.markNotificationAsRead(element);
             e.stopPropagation();
         }.bind(this));
 

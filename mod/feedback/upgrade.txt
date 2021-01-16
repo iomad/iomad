@@ -1,39 +1,3 @@
-=== 3.8 ===
-
-* The following functions have been finally deprecated and can not be used anymore:
-    * feedback_scale_used()
-
-=== 3.6 ===
-
-* The following functions have been finally deprecated and can not be used anymore:
-  * feedback_print_item_preview()
-  * feedback_print_item_complete()
-  * feedback_print_item_show_value()
-  * feedback_check_values()
-  * feedback_clean_input_value()
-  * feedback_get_context()
-  * feedback_create_item()
-  * feedback_delete_completedtmp()
-  * feedback_get_page_to_continue()
-  * feedback_save_values()
-  * feedback_save_guest_values()
-  * feedback_create_values()
-  * feedback_update_values()
-  * feedback_get_current_completed()
-  * feedback_is_course_in_sitecourse_map()
-  * feedback_is_feedback_in_sitecourse_map()
-  * feedback_clean_up_sitecourse_map()
-  * feedback_print_numeric_option_list()
-* Web Service functions now support an optional courseid parameter (course where user completes the feedback).
-  This new parameter was necessary to support site feedbacks.
-
-=== 3.5 ===
-
-* The following functions, previously used (exclusively) by upgrade steps are not available
-  anymore because of the upgrade cleanup performed for this version. See MDL-59159 for more info:
-    - mod_feedback_upgrade_delete_duplicate_values()
-    - mod_feedback_upgrade_courseid()
-
 === 3.3.2 ===
 
 * feedback_refresh_events() Now takes two additional parameters to refine the update to a specific instance. This function

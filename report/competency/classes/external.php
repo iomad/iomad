@@ -62,15 +62,9 @@ class external extends external_api {
             'The user id',
             VALUE_REQUIRED
         );
-        $moduleid = new external_value(
-            PARAM_INT,
-            'The module id',
-            VALUE_REQUIRED
-        );
         $params = array(
             'courseid' => $courseid,
-            'userid' => $userid,
-            'moduleid' => $moduleid,
+            'userid' => $userid
         );
         return new external_function_parameters($params);
     }
@@ -80,18 +74,16 @@ class external extends external_api {
      *
      * @param int $courseid The course id
      * @param int $userid The user id
-     * @param int $moduleid The module id
      * @return \stdClass
      */
-    public static function data_for_report($courseid, $userid, $moduleid) {
+    public static function data_for_report($courseid, $userid) {
         global $PAGE;
 
         $params = self::validate_parameters(
             self::data_for_report_parameters(),
             array(
                 'courseid' => $courseid,
-                'userid' => $userid,
-                'moduleid' => $moduleid
+                'userid' => $userid
             )
         );
         $context = context_course::instance($params['courseid']);
@@ -100,7 +92,7 @@ class external extends external_api {
             throw new coding_exception('invaliduser');
         }
 
-        $renderable = new output\report($params['courseid'], $params['userid'], $params['moduleid']);
+        $renderable = new output\report($params['courseid'], $params['userid']);
         $renderer = $PAGE->get_renderer('report_competency');
 
         $data = $renderable->export_for_template($renderer);

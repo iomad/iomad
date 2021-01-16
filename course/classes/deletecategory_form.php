@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->libdir . '/questionlib.php');
+require_once($CFG->libdir . '/coursecatlib.php');
 
 /**
  * Delete category moodleform.
@@ -36,8 +37,8 @@ require_once($CFG->libdir . '/questionlib.php');
 class core_course_deletecategory_form extends moodleform {
 
     /**
-     * The core_course_category object for that category being deleted.
-     * @var core_course_category
+     * The coursecat object for that category being deleted.
+     * @var coursecat
      */
     protected $coursecat;
 
@@ -76,23 +77,14 @@ class core_course_deletecategory_form extends moodleform {
         // Describe the contents of this category.
         $contents = '';
         if ($this->coursecat->has_children()) {
-            $contents .= html_writer::tag('li', get_string('subcategories'));
+            $contents .= '<li>' . get_string('subcategories') . '</li>';
         }
         if ($this->coursecat->has_courses()) {
-            $contents .= html_writer::tag('li', get_string('courses'));
+            $contents .= '<li>' . get_string('courses') . '</li>';
         }
         if (question_context_has_any_questions($categorycontext)) {
-            $contents .= html_writer::tag('li', get_string('questionsinthequestionbank'));
+            $contents .= '<li>' . get_string('questionsinthequestionbank') . '</li>';
         }
-
-        // Check if plugins can provide more info.
-        $pluginfunctions = $this->coursecat->get_plugins_callback_function('get_course_category_contents');
-        foreach ($pluginfunctions as $pluginfunction) {
-            if ($plugincontents = $pluginfunction($this->coursecat)) {
-                $contents .= html_writer::tag('li', $plugincontents);
-            }
-        }
-
         if (!empty($contents)) {
             $mform->addElement('static', 'emptymessage', get_string('thiscategorycontains'), html_writer::tag('ul', $contents));
         } else {
@@ -101,9 +93,7 @@ class core_course_deletecategory_form extends moodleform {
 
         // Give the options for what to do.
         $mform->addElement('select', 'fulldelete', get_string('whattodo'), $options);
-
         if (count($options) == 1) {
-            // Freeze selector if only one option available.
             $optionkeys = array_keys($options);
             $option = reset($optionkeys);
             $mform->hardFreeze('fulldelete');
@@ -115,13 +105,17 @@ class core_course_deletecategory_form extends moodleform {
             if (in_array($this->coursecat->parent, $displaylist)) {
                 $mform->setDefault('newparent', $this->coursecat->parent);
             }
-            $mform->hideIf('newparent', 'fulldelete', 'eq', '1');
+            $mform->disabledIf('newparent', 'fulldelete', 'eq', '1');
         }
 
         $mform->addElement('hidden', 'categoryid', $this->coursecat->id);
         $mform->setType('categoryid', PARAM_ALPHANUM);
         $mform->addElement('hidden', 'action', 'deletecategory');
         $mform->setType('action', PARAM_ALPHANUM);
+        $mform->addElement('hidden', 'sure');
+        // This gets set by default to ensure that if the user changes it manually we can detect it.
+        $mform->setDefault('sure', md5(serialize($this->coursecat)));
+        $mform->setType('sure', PARAM_ALPHANUM);
 
         $this->add_action_buttons(true, get_string('delete'));
     }
@@ -138,11 +132,10 @@ class core_course_deletecategory_form extends moodleform {
         if (empty($data['fulldelete']) && empty($data['newparent'])) {
             // When they have chosen the move option, they must specify a destination.
             $errors['newparent'] = get_string('required');
-            return $errors;
         }
 
-        if (!empty($data['newparent']) && !$this->coursecat->can_move_content_to($data['newparent'])) {
-            $errors['newparent'] = get_string('movecatcontentstoselected', 'error');
+        if ($data['sure'] !== md5(serialize($this->coursecat))) {
+            $errors['categorylabel'] = get_string('categorymodifiedcancel');
         }
 
         return $errors;

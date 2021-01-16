@@ -32,21 +32,19 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function xmldb_repository_flickr_upgrade($oldversion) {
-    global $CFG;
+    global $DB;
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
-    // Put any upgrade step following this.
+    $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2017082200) {
+        // Drop legacy flickr auth tokens and nsid's.
+        $DB->delete_records('user_preferences', ['name' => 'flickr_']);
+        $DB->delete_records('user_preferences', ['name' => 'flickr__nsid']);
 
-    // Automatically generated Moodle v3.7.0 release upgrade line.
-    // Put any upgrade step following this.
+        upgrade_plugin_savepoint(true, 2017082200, 'repository', 'flickr');
+    }
 
-    // Automatically generated Moodle v3.8.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.9.0 release upgrade line.
+    // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
     return true;

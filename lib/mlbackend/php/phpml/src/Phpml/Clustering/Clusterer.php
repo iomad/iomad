@@ -6,5 +6,10 @@ namespace Phpml\Clustering;
 
 interface Clusterer
 {
-    public function cluster(array $samples): array;
+    /**
+     * @param array $samples
+     *
+     * @return array
+     */
+    public function cluster(array $samples);
 }

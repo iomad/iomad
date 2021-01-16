@@ -274,6 +274,7 @@ class condition extends \core_availability\condition {
         $fieldconditionmet = true;
         // Just to be doubly sure it is a string.
         $uservalue = (string)$uservalue;
+		
         switch($operator) {
             case self::OP_CONTAINS:
                 $pos = strpos($uservalue, $value);
@@ -383,6 +384,7 @@ class condition extends \core_availability\condition {
         } else {
             $field = $this->standardfield;
         }
+		if (isset($_GET['mulutest'])) { print_r([$userid]); exit; }
 
         // If its the current user than most likely we will be able to get this information from $USER.
         // If its a regular profile field then it should already be available, if not then we have a mega problem.
@@ -399,6 +401,7 @@ class condition extends \core_availability\condition {
                     throw new \coding_exception('Requested user profile field does not exist');
                 }
             }
+
             // Checking if the custom profile fields are already available.
             if (!isset($USER->profile)) {
                 // Drat! they're not. We need to use a temp object and load them.
@@ -464,7 +467,7 @@ class condition extends \core_availability\condition {
                 return array();
             }
             $customfield = $customfields[$this->customfield];
-
+			
             // Fetch custom field value for all users.
             $values = $DB->get_records_select('user_info_data', 'fieldid = ? AND userid ' . $sql,
                     array_merge(array($customfield->id), $params),

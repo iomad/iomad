@@ -125,8 +125,8 @@ function xmldb_main_install() {
         'backup_version'        => 2008111700,
         'backup_release'        => '2.0 dev',
         'mnet_dispatcher_mode'  => 'off',
-        'sessiontimeout'        => 8 * 60 * 60, // Must be present during roles installation.
-        'stringfilters'         => '', // These two are managed in a strange way by the filters.
+        'sessiontimeout'        => 7200, // must be present during roles installation
+        'stringfilters'         => '', // These two are managed in a strange way by the filters
         'filterall'             => 0, // setting page, so have to be initialised here.
         'texteditors'           => 'atto,tinymce,textarea',
         'antiviruses'           => '',
@@ -259,21 +259,6 @@ function xmldb_main_install() {
     $guestrole          = create_role('', 'guest', '', 'guest');
     $userrole           = create_role('', 'user', '', 'user');
     $frontpagerole      = create_role('', 'frontpage', '', 'frontpage');
-    $clientadministratorid = create_role('Client Administrator', 'clientadministrator',
-                                         '(Iomad) Manages site - can create new companies and add managers etc.', 'clientadministrator');
-    $companymanagerid = create_role('Company Manager', 'companymanager',
-                                    '(Iomad) Manages individual companies - can upload users etc.', 'companymanager');
-    $companydepartmentmanagerid = create_role('Company Department Manager', 'companydepartmentmanager',
-                                              'Iomad Manages departments within companies - can upload users etc.', 'companydepartmentmanager');
-    $companycourseeditorid = create_role('Client Course Editor', 'companycourseeditor',
-                                         'Iomad Client Course Editor - can edit course content; add, delete, modify etc..', 'companycourseeditor');
-    $companycoursenoneditorid = create_role('Client Course Access', 'companycoursenoneditor',
-                                            'Iomad Client Course Access - similar to the non-editing teacher role for client admin', 'companycoursenoneditor');
-    $clientreporterid = create_role('Client Reporter Only', 'clientreporter',
-                                            'Iomad Client Report Only  - Similar to the client admin roles but allows for access to the reports only', 'clientreporter');
-    $companyreporterid = create_role('Company Reporter Only', 'companyreporter',
-                                            'Iomad Company Report Only - similar to the company manager role but allows for access to the company reports only', 'companyreporter');
-
 
     // Now is the correct moment to install capabilities - after creation of legacy roles, but before assigning of roles
     update_capabilities('moodle');
@@ -281,8 +266,8 @@ function xmldb_main_install() {
 
     // Default allow role matrices.
     foreach ($DB->get_records('role') as $role) {
-        foreach (array('assign', 'override', 'switch', 'view') as $type) {
-            $function = "core_role_set_{$type}_allowed";
+        foreach (array('assign', 'override', 'switch') as $type) {
+            $function = 'allow_'.$type;
             $allows = get_default_role_archetype_allows($type, $role->archetype);
             foreach ($allows as $allowid) {
                 $function($role->id, $allowid);
@@ -298,18 +283,10 @@ function xmldb_main_install() {
     set_role_contextlevels($studentrole,        get_default_contextlevels('student'));
     set_role_contextlevels($guestrole,          get_default_contextlevels('guest'));
     set_role_contextlevels($userrole,           get_default_contextlevels('user'));
-    set_role_contextlevels($clientadministratorid,           get_default_contextlevels('clientadministrator'));
-    set_role_contextlevels($companymanagerid,           get_default_contextlevels('companymanager'));
-    set_role_contextlevels($companydepartmentmanagerid,           get_default_contextlevels('companydepartmentmanager'));
-    set_role_contextlevels($companycourseeditorid,           get_default_contextlevels('companycourseeditor'));
-    set_role_contextlevels($companycoursenoneditorid,           get_default_contextlevels('companycoursenoneditor'));
-    set_role_contextlevels($clientreporterid,           get_default_contextlevels('clientreporter'));
-    set_role_contextlevels($companyreporterid,           get_default_contextlevels('companyreporter'));
 
-    // Init theme, JS and template revisions.
+    // Init theme and JS revisions
     set_config('themerev', time());
     set_config('jsrev', time());
-    set_config('templaterev', time());
 
     // No admin setting for this any more, GD is now required, remove in Moodle 2.6.
     set_config('gdversion', 2);
@@ -343,6 +320,6 @@ function xmldb_main_install() {
     make_default_scale();
     make_competence_scale();
 
-    require_once($CFG->dirroot . '/badges/upgradelib.php'); // Core install and upgrade related functions only for badges.
-    badges_install_default_backpacks();
+    // Add built-in prediction models.
+    \core_analytics\manager::add_builtin_models();
 }

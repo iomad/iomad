@@ -430,7 +430,7 @@ class xmldb_key extends xmldb_object {
         // The fields
         $keyfields = $this->getFields();
         if (!empty($keyfields)) {
-            $result .= "['".  implode("', '", $keyfields) . "']";
+            $result .= 'array(' . "'".  implode("', '", $keyfields) . "')";
         } else {
             $result .= 'null';
         }
@@ -447,7 +447,7 @@ class xmldb_key extends xmldb_object {
             // The reffields
             $reffields = $this->getRefFields();
             if (!empty($reffields)) {
-                $result .= "['".  implode("', '", $reffields) . "']";
+                $result .= 'array(' . "'".  implode("', '", $reffields) . "')";
             } else {
                 $result .= 'null';
             }

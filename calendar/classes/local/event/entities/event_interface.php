@@ -57,13 +57,6 @@ interface event_interface {
     public function get_description();
 
     /**
-     * Get the event's location.
-     *
-     * @return location_interface
-     */
-    public function get_location();
-
-    /**
      * Get the category object associated with the event.
      *
      * @return proxy_interface
@@ -133,10 +126,4 @@ interface event_interface {
      * @return bool true if the event is visible, false otherwise
      */
     public function is_visible();
-
-    /**
-     * Resolved event component (frankenstyle name of activity module or the component)
-     * @return string|null
-     */
-    public function get_component();
 }

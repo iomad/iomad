@@ -3,46 +3,38 @@
 namespace Box\Spout\Reader\XLSX;
 
 use Box\Spout\Common\Exception\IOException;
-use Box\Spout\Common\Helper\GlobalFunctionsHelper;
-use Box\Spout\Common\Manager\OptionsManagerInterface;
-use Box\Spout\Reader\Common\Creator\InternalEntityFactoryInterface;
-use Box\Spout\Reader\Common\Entity\Options;
-use Box\Spout\Reader\ReaderAbstract;
-use Box\Spout\Reader\XLSX\Creator\InternalEntityFactory;
-use Box\Spout\Reader\XLSX\Creator\ManagerFactory;
+use Box\Spout\Reader\AbstractReader;
+use Box\Spout\Reader\XLSX\Helper\SharedStringsHelper;
 
 /**
  * Class Reader
  * This class provides support to read data from a XLSX file
+ *
+ * @package Box\Spout\Reader\XLSX
  */
-class Reader extends ReaderAbstract
+class Reader extends AbstractReader
 {
-    /** @var ManagerFactory */
-    protected $managerFactory;
-
     /** @var \ZipArchive */
     protected $zip;
 
-    /** @var \Box\Spout\Reader\XLSX\Manager\SharedStringsManager Manages shared strings */
-    protected $sharedStringsManager;
+    /** @var \Box\Spout\Reader\XLSX\Helper\SharedStringsHelper Helper to work with shared strings */
+    protected $sharedStringsHelper;
 
     /** @var SheetIterator To iterator over the XLSX sheets */
     protected $sheetIterator;
 
+
     /**
-     * @param OptionsManagerInterface $optionsManager
-     * @param GlobalFunctionsHelper $globalFunctionsHelper
-     * @param InternalEntityFactoryInterface $entityFactory
-     * @param ManagerFactory $managerFactory
+     * Returns the reader's current options
+     *
+     * @return ReaderOptions
      */
-    public function __construct(
-        OptionsManagerInterface $optionsManager,
-        GlobalFunctionsHelper $globalFunctionsHelper,
-        InternalEntityFactoryInterface $entityFactory,
-        ManagerFactory $managerFactory
-    ) {
-        parent::__construct($optionsManager, $globalFunctionsHelper, $entityFactory);
-        $this->managerFactory = $managerFactory;
+    protected function getOptions()
+    {
+        if (!isset($this->options)) {
+            $this->options = new ReaderOptions();
+        }
+        return $this->options;
     }
 
     /**
@@ -51,8 +43,7 @@ class Reader extends ReaderAbstract
      */
     public function setTempFolder($tempFolder)
     {
-        $this->optionsManager->setOption(Options::TEMP_FOLDER, $tempFolder);
-
+        $this->getOptions()->setTempFolder($tempFolder);
         return $this;
     }
 
@@ -72,31 +63,23 @@ class Reader extends ReaderAbstract
      * and fetches all the available sheets.
      *
      * @param  string $filePath Path of the file to be read
+     * @return void
      * @throws \Box\Spout\Common\Exception\IOException If the file at the given path or its content cannot be read
      * @throws \Box\Spout\Reader\Exception\NoSheetsFoundException If there are no sheets in the file
-     * @return void
      */
     protected function openReader($filePath)
     {
-        /** @var InternalEntityFactory $entityFactory */
-        $entityFactory = $this->entityFactory;
-
-        $this->zip = $entityFactory->createZipArchive();
+        $this->zip = new \ZipArchive();
 
         if ($this->zip->open($filePath) === true) {
-            $tempFolder = $this->optionsManager->getOption(Options::TEMP_FOLDER);
-            $this->sharedStringsManager = $this->managerFactory->createSharedStringsManager($filePath, $tempFolder, $entityFactory);
+            $this->sharedStringsHelper = new SharedStringsHelper($filePath, $this->getOptions()->getTempFolder());
 
-            if ($this->sharedStringsManager->hasSharedStrings()) {
+            if ($this->sharedStringsHelper->hasSharedStrings()) {
                 // Extracts all the strings from the sheets for easy access in the future
-                $this->sharedStringsManager->extractSharedStrings();
+                $this->sharedStringsHelper->extractSharedStrings();
             }
 
-            $this->sheetIterator = $entityFactory->createSheetIterator(
-                $filePath,
-                $this->optionsManager,
-                $this->sharedStringsManager
-            );
+            $this->sheetIterator = new SheetIterator($filePath, $this->getOptions(), $this->sharedStringsHelper, $this->globalFunctionsHelper);
         } else {
             throw new IOException("Could not open $filePath for reading.");
         }
@@ -123,8 +106,8 @@ class Reader extends ReaderAbstract
             $this->zip->close();
         }
 
-        if ($this->sharedStringsManager) {
-            $this->sharedStringsManager->cleanup();
+        if ($this->sharedStringsHelper) {
+            $this->sharedStringsHelper->cleanup();
         }
     }
 }

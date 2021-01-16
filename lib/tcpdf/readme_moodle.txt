@@ -1,34 +1,11 @@
-Description of TCPDF library import 6.3.2
-==========================================
+Description of TCPDF library import 6.2.13
+===========================================
 * download library from https://github.com/tecnickcom/TCPDF/releases
-* delete examples/, tools/ VERSION and tcpdf_import.php
+* delete examples/, tools/ and tcpdf_import.php
 * remove tcpdf_import.php from composer.json
 * remove all fonts that were not already present
-* Re-apply the following commits if they are not included in the upstream version imported:
-  (and remove them from here once they are verified to be part of the upstream library)
-  * 18dabac - https://git.io/JeKfU
-  * 60c9db7 - https://git.io/JeKfT
-  * 1adcd76 - https://git.io/JeKft
-  * 5e4d999 - https://git.io/JvrxB
 * visit http://127.0.0.1/lib/tests/other/pdflibtestpage.php and view the pdf
-
-Important
----------
-A new version of the libray is being developed @ https://github.com/tecnickcom/tc-lib-pdf . Check periodically when it's ready
-and if it's a drop-in replacement for the legacy tcpdf one.
-
-2019/10/20
-----------
-Upgrade to tcpdf TCPDF 6.3.2 (MDL-66966)
-by Eloy Lafuente <stronk7@moodle.org>
-
-2019/05/06
-----------
-Upgrade to tcpdf TCPDF 6.2.26 (MDL-64794)
-by Eloy Lafuente <stronk7@moodle.org>
-
-- https://github.com/tecnickcom/TCPDF/pull/74 has been already merged upstream (6.2.16 and up), so we don't need to apply it.
-- https://github.com/tecnickcom/TCPDF/pull/91 has been already merged upstream (6.2.19 and up), so we don't need to apply it.
+* check the status of https://github.com/tecnickcom/TCPDF/pull/74 and re-apply if not merged/closed
 
 2017/10/02
 ----------

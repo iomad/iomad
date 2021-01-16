@@ -102,36 +102,4 @@ class core_outputrequirementslib_testcase extends advanced_testcase {
         // Make sure that the generated code does not contain backslashes.
         $this->assertFalse(strpos($requirecode, '\\'), "Output contains backslashes: " . $requirecode);
     }
-
-    /**
-     * Test AMD modules loading.
-     */
-    public function test_js_call_amd() {
-
-        $page = new moodle_page();
-
-        // Load an AMD module without a function call.
-        $page->requires->js_call_amd('theme_foobar/lightbox');
-
-        // Load an AMD module and call its function without parameters.
-        $page->requires->js_call_amd('theme_foobar/demo_one', 'init');
-
-        // Load an AMD module and call its function with some parameters.
-        $page->requires->js_call_amd('theme_foobar/demo_two', 'init', [
-            'foo',
-            'keyWillIgnored' => 'baz',
-            [42, 'xyz'],
-        ]);
-
-        $html = $page->requires->get_end_code();
-
-        $modname = 'theme_foobar/lightbox';
-        $this->assertContains("M.util.js_pending('{$modname}'); require(['{$modname}'], function(amd) {M.util.js_complete('{$modname}');});", $html);
-
-        $modname = 'theme_foobar/demo_one';
-        $this->assertContains("M.util.js_pending('{$modname}'); require(['{$modname}'], function(amd) {amd.init(); M.util.js_complete('{$modname}');});", $html);
-
-        $modname = 'theme_foobar/demo_two';
-        $this->assertContains("M.util.js_pending('{$modname}'); require(['{$modname}'], function(amd) {amd.init(\"foo\", \"baz\", [42,\"xyz\"]); M.util.js_complete('{$modname}');});", $html);
-    }
 }

@@ -113,12 +113,8 @@ class mod_feedback_responses_table extends table_sql {
      */
     protected function init($group = 0) {
 
-        $tablecolumns = array('userpic', 'fullname', 'groups');
-        $tableheaders = array(
-            get_string('userpic'),
-            get_string('fullnameuser'),
-            get_string('groups')
-        );
+        $tablecolumns = array('userpic', 'fullname');
+        $tableheaders = array(get_string('userpic'), get_string('fullnameuser'));
 
         $extrafields = get_extra_user_fields($this->get_context());
         $ufields = user_picture::fields('u', $extrafields, $this->useridfield);
@@ -157,7 +153,6 @@ class mod_feedback_responses_table extends table_sql {
         $this->define_headers($tableheaders);
 
         $this->sortable(true, 'lastname', SORT_ASC);
-        $this->no_sorting('groups');
         $this->collapsible(true);
         $this->set_attribute('id', 'showentrytable');
 
@@ -181,7 +176,7 @@ class mod_feedback_responses_table extends table_sql {
      * Current context
      * @return context_module
      */
-    public function get_context(): context {
+    protected function get_context() {
         return context_module::instance($this->feedbackstructure->get_cm()->id);
     }
 
@@ -194,11 +189,7 @@ class mod_feedback_responses_table extends table_sql {
         if (preg_match('/^val(\d+)$/', $column, $matches)) {
             $items = $this->feedbackstructure->get_items();
             $itemobj = feedback_get_item_class($items[$matches[1]]->typ);
-            $printval = $itemobj->get_printval($items[$matches[1]], (object) ['value' => $row->$column]);
-            if ($this->is_downloading()) {
-                $printval = html_entity_decode($printval, ENT_QUOTES);
-            }
-            return trim($printval);
+            return trim($itemobj->get_printval($items[$matches[1]], (object) ['value' => $row->$column] ));
         }
         return $row->$column;
     }
@@ -268,21 +259,6 @@ class mod_feedback_responses_table extends table_sql {
     }
 
     /**
-     * Prepares column groups for display
-     * @param array $row
-     * @return string
-     */
-    public function col_groups($row) {
-        $groups = '';
-        if ($usergrps = groups_get_all_groups($this->feedbackstructure->get_cm()->course, $row->userid, 0, 'name')) {
-            foreach ($usergrps as $group) {
-                $groups .= format_string($group->name). ' ';
-            }
-        }
-        return trim($groups);
-    }
-
-    /**
      * Adds common values to the table that do not change the number or order of entries and
      * are only needed when outputting or downloading data.
      */
@@ -300,7 +276,6 @@ class mod_feedback_responses_table extends table_sql {
         $columnscount = 0;
         $this->hasmorecolumns = max(0, count($items) - self::TABLEJOINLIMIT);
 
-        $headernamepostfix = !$this->is_downloading();
         // Add feedback response values.
         foreach ($items as $nr => $item) {
             if ($columnscount++ < self::TABLEJOINLIMIT) {
@@ -314,15 +289,7 @@ class mod_feedback_responses_table extends table_sql {
 
             $tablecolumns[] = "val{$nr}";
             $itemobj = feedback_get_item_class($item->typ);
-            $columnheader = $itemobj->get_display_name($item, $headernamepostfix);
-            if (!$this->is_downloading()) {
-                $columnheader = shorten_text($columnheader);
-            }
-            if (strval($item->label) !== '') {
-                $columnheader = get_string('nameandlabelformat', 'mod_feedback',
-                    (object)['label' => format_string($item->label), 'name' => $columnheader]);
-            }
-            $tableheaders[] = $columnheader;
+            $tableheaders[] = $itemobj->get_display_name($item);
         }
 
         // Add 'Delete entry' column.
@@ -537,6 +504,8 @@ class mod_feedback_responses_table extends table_sql {
             }
         }
         $this->build_table_chunk($chunk, $columnsgroups);
+
+        $this->rawdata->close();
     }
 
     /**
@@ -662,7 +631,6 @@ class mod_feedback_responses_table extends table_sql {
         }
         $this->query_db($this->pagesize, false);
         $this->build_table();
-        $this->close_recordset();
         return $this->dataforexternal;
     }
 }

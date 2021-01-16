@@ -186,6 +186,19 @@ class user_editadvanced_form extends moodleform {
             $mform->hardFreeze('preference_auth_forcepasswordchange');
         }
 
+        // Cannot edit firstname, lastname
+        if($user){
+          $mform->hardFreeze(array('firstname', 'lastname'));
+        }
+        
+        // Remove ability to set auth method
+        if ($mform->elementExists('preference_auth_forcepasswordchange')) {
+            $mform->removeElement('preference_auth_forcepasswordchange');
+        }
+        if ($mform->elementExists('auth')) {
+            $mform->removeElement('auth');
+        }
+
         // Admin must choose some password and supply correct email.
         if (!empty($USER->newadminuser)) {
             $mform->addRule('newpassword', get_string('required'), 'required', null, 'client');

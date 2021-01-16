@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once('lib.php');
+require_once($CFG->dirroot.'/local/iomad_dashboard/menu.php');
 
 /**
  * Company / User Admin Block
@@ -45,7 +46,8 @@ class iomad_company_select_form extends moodleform {
 
     }
 }
-
+        
+    
 class block_iomad_company_admin extends block_base {
 
     public function init() {
@@ -57,101 +59,19 @@ class block_iomad_company_admin extends block_base {
         return true;
     }
 
-    /**
-     * Iterate through db/iomadmenu.php in plugins
-     * NOTE... plugins info is cached, so purge if you change anything
-     * directories
-     * @return array
-     */
-    private function get_menu() {
-        $menus = [];
-        $plugins = get_plugins_with_function('menu', $file = 'db/iomadmenu.php', $include = true);
-        unset($plugins['block']['iomad_company_admin']);
-        $plugins['block'] = array('iomad_company_admin' => 'block_iomad_company_admin_menu') + $plugins['block'];
-        foreach ($plugins as $plugintype) {
-            foreach ($plugintype as $plugin => $menufunction) {
-                $menus += $menufunction();
-            }
-        }
-
-        return $menus;
-    }
-
-    /**
-     * Check company status when accessing this block
-     */
-    private function check_company_status() {
-        global $SESSION, $DB, $USER;
-
-        $systemcontext = context_system::instance();
-
-            // Get parameters.
-        $edit = optional_param( 'edit', null, PARAM_BOOL );
-        $company = optional_param('company', 0, PARAM_INT);
-        $showsuspendedcompanies = optional_param('showsuspendedcompanies', false, PARAM_BOOL);
-        $noticeok = optional_param('noticeok', '', PARAM_CLEAN);
-        $noticefail = optional_param('noticefail', '', PARAM_CLEAN);
-
-        $SESSION->showsuspendedcompanies = $showsuspendedcompanies;
-
-        // Set the session to a user if they are editing a company other than their own.
-        if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)
-            || $DB->get_record('company_users', array('managertype' => 1, 'companyid' => $company, 'userid' => $USER->id)))) {
-            $SESSION->currenteditingcompany = $company;
-        }
-
-        // Check if there are any companies.
-        if (!$companycount = $DB->count_records('company')) {
-
-            // If not redirect to create form.
-            redirect(new moodle_url('/blocks/iomad_company_admin/company_edit_form.php', ['createnew' => 1]));
-        }
-
-        // If we don't have one selected pick the first of these.
-        if (empty($SESSION->currenteditingcompany)) {
-            if (iomad::is_company_user()) {
-                $company = iomad::companyid();
-                $SESSION->currenteditingcompany = $company;
-            } else {
-                // Otherwise, make the first (or only) company the current one
-                $companies = $DB->get_records('company');
-                $firstcompany = reset($companies);
-                $SESSION->currenteditingcompany = $firstcompany->id;
-                $company = $firstcompany->id;
-            }
-        }
-    }
-
     public function get_content() {
         global $OUTPUT, $CFG, $SESSION, $USER;
-
-        // Deal with Access approval notifications.
-        require_once($CFG->dirroot . '/blocks/iomad_approve_access/lib.php');
-        if (approve_enrol_has_users() && empty($SESSION->approveaccesswarningshown)) {
-           \core\notification::add(get_string('userstoapprove', 'block_iomad_approve_access'), 'info');
-           $SESSION->approveaccesswarningshown = true;
-        }
 
         // TODO: Really need a cap check to prevent it being displayed at all.
 
         if ($this->content !== null) {
             return $this->content;
         }
-        $this->content = new stdClass;
-
-        // Renderer
-        $renderer = $this->page->get_renderer('block_iomad_company_admin');
-
-        // Javascript module
-        $this->page->requires->js_call_amd('block_iomad_company_admin/admin', 'init');
-
-        // Get params and session stuff
-        $this->check_company_status();
 
         $context = context_system::instance();
 
         // Selected tab.
-        $showsuspendedcompanies = optional_param('showsuspendedcompanies', false, PARAM_BOOL);
+        $selectedtab = optional_param('tabid', 0, PARAM_INT);
 
         // Set the current tab to stick.
         if (!empty($selectedtab)) {
@@ -162,121 +82,61 @@ class block_iomad_company_admin extends block_base {
             $selectedtab = 1;
         }
 
+        // Title.
+        $this->content = new stdClass();
+        $this->content->text = $this->company_selector();
+
         // If no selected company no point showing tabs.
         if (!iomad::get_my_companyid(context_system::instance(), false)) {
-            $this->content->text = '<div class="alert alert-warning">' . get_string('nocompanyselected', 'block_iomad_company_admin') . '</div>';
+            $this->content->text .= '<div class="alert alert-warning">' . get_string('nocompanyselected', 'block_iomad_company_admin') . '</div>';
             return $this->content;
         }
 
         // Build tabs.
-        $tabs = [];
-        $panes = [];
-        $url = '/my';
-        $selected = true;
+        $tabs = array();
         if (iomad::has_capability('block/iomad_company_admin:companymanagement_view', $context)) {
-            $tabs[] = [
-                'category' => 'CompanyAdmin',
-                'icon' => 'fa-building',
-                'selected' => $selected,
-                'label' => get_string('companymanagement', 'block_iomad_company_admin')
-            ];
-            $panes[1] = ['category' => 'CompanyAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
+            $tabs[1] = get_string('companymanagement', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:usermanagement_view', $context)) {
-            $tabs[] = [
-                'category' => 'UserAdmin',
-                'icon' => 'fa-user',
-                'selected' => $selected,
-                'label' => get_string('usermanagement', 'block_iomad_company_admin')
-            ];
-            $panes[2] = ['category' => 'UserAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
+            $tabs[2] = get_string('usermanagement', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $context)) {
-            $tabs[] = [
-                'category' => 'CourseAdmin',
-                'icon' => 'fa-file-text',
-                'selected' => $selected,
-                'label' => get_string('coursemanagement', 'block_iomad_company_admin')
-            ];
-            $panes[3] = ['category' => 'CourseAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
+            $tabs[3] = get_string('coursemanagement', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $context)) {
-            $tabs[] = [
-                'category' => 'LicenseAdmin',
-                'icon' => 'fa-legal',
-                'selected' => $selected,
-                'label' => get_string('licensemanagement', 'block_iomad_company_admin')
-            ];
-            $panes[4] = ['category' => 'LicenseAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
+            $tabs[4] = get_string('licensemanagement', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $context)) {
-            $tabs[] = [
-                'category' => 'CompetencyAdmin',
-                'icon' => 'fa-cubes',
-                'selected' => $selected,
-                'label' => get_string('competencymanagement', 'block_iomad_company_admin')
-            ];
-            $panes[5] = ['category' => 'CompetencyAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
+            $tabs[5] = get_string('competencymanagement', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_commerce:admin_view', $context)) {
-            $tabs[] = [
-                'category' => 'ECommerceAdmin',
-                'icon' => 'fa-truck',
-                'selected' => $selected,
-                'label' => get_string('blocktitle', 'block_iomad_commerce')
-            ];
-            $panes[6] = ['category' => 'ECommerceAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
+            $tabs[6] = get_string('blocktitle', 'block_iomad_commerce');
         }
-        if (iomad::has_capability('block/iomad_microlearning:view', $context)) {
-            $tabs[] = [
-                'category' => 'MicrolearningAdmin',
-                'icon' => 'fa-microchip',
-                'selected' => false,
-                'label' => get_string('threads', 'block_iomad_microlearning')
-            ];
-            $panes[7] = ['category' => 'MicrolearningAdmin', 'items' => [], 'selected' => $selected];
-            $selected = false;
-        }
-        if (iomad::has_capability('block/iomad_reports:view', $context)) {
-            $tabs[] = [
-                'category' => 'Reports',
-                'icon' => 'fa-bar-chart-o',
-                'selected' => $selected,
-                'label' => get_string('reports', 'block_iomad_company_admin')
-            ];
-            $panes[8] = ['category' => 'Reports', 'items' => [], 'selected' => $selected];
-            $selected = false;
-        }
+        $tabhtml = $this->gettabs($tabs, $selectedtab);
+
+        $this->content->text .= $tabhtml;
 
         // Build content for selected tab (from menu array).
-        $menus = $this->get_menu();
-
-        $somethingtodisplay = false;
+        $adminmenu = new iomad_admin_menu();
+        $menus = $adminmenu->getmenu();
+        $html = '<div class="iomadlink_container clearfix">';
         foreach ($menus as $key => $menu) {
-            $tab = $menu['tab'];
 
-            // If no 'pane' for tab then move on
-            if (empty($panes[$tab])) {
+            // If it's the wrong tab then move on.
+            if ($menu['tab'] != $selectedtab) {
                 continue;
             }
 
-            // If no capability then move on.
+            // If no capability the move on.
             if (!iomad::has_capability($menu['cap'], $context)) {
                 continue;
             }
-            $somethingtodisplay = true;
 
             // Build correct url.
             if (substr($menu['url'], 0, 1) == '/') {
                 $url = new moodle_url($menu['url']);
             } else {
-                $url = new moodle_url('/blocks/iomad_company_admin/' . $menu['url']);
+                $url = new moodle_url('/blocks/iomad_company_admin/'.$menu['url']);
             }
 
             // Get topic image icon
@@ -303,53 +163,132 @@ class block_iomad_company_admin extends block_base {
                 $action = '';
             }
 
-            // Construct tabbed entry
-            $menu['action'] = $action;
-            $menu['iconsmall'] = $iconsmall;
-            $menu['icon'] = $icon;
-            $menu['url'] = $url;
-            $panes[$tab]['items'][] = $menu;
+            // Put together link.
+            $html .= "<a href=\"$url\">";
+            $html .= '<div class="iomadlink">';
+            $html .= '<div class="iomadicon ' . $menu['style'] . '"><div class="fa fa-topic '. $icon .'"> </div>';
+            $html .= '<div class="fa fa-action '. $iconsmall .'"> </div></div>';
+            $html .= '<div class="actiondescription">' . $action . "</div>";
+            $html .= '</div>';
+            $html .= '</a>';
         }
+        $html .= '</div>';
+        $this->content->text .= $html;
 
-        // If there are no menu items to show this user...
-        if (!$somethingtodisplay) {
-            $this->content = new stdClass;
-            $this->content->text = '';
-            return $this->content;
-        }
+        // A clearfix for the floated linked.
+        $this->content->text .= '<div class="clearfix"></div>';
 
-        // Logo.
-        $logourl = $renderer->image_url('iomadlogo', 'block_iomad_company_admin');
-
-        // Company selector
-        $companyselect = $this->company_selector();
-
-        // Render block.
-        $adminblock = new block_iomad_company_admin\output\adminblock($logourl, $companyselect, $tabs, $panes);
-        $this->content = new stdClass();
-        $this->content->text = $renderer->render($adminblock);
         return $this->content;
+    }
+
+    /**
+     * Build tabs for selecting admin page
+     */
+    public function gettabs($tabs, $selected) {
+        global $OUTPUT;
+
+        $showsuspendedcompanies = optional_param('showsuspendedcompanies', false, PARAM_BOOL);
+
+        $row = array();
+
+        // Build list.
+        foreach ($tabs as $key => $tab) {
+            $row[] = new tabobject(
+                $key,
+                new moodle_url('/local/iomad_dashboard/index.php', array('tabid'=>$key,
+                                                                         'showsuspendedcompanies' => $showsuspendedcompanies)),
+                $tab
+            );
+        }
+        $html = $OUTPUT->tabtree($row, $selected);
+
+        return $html;
+    }
+
+    /* email out passwords for newly created users
+     * based on the code for 'creating passwords for new users' in cronlib.php and
+     * setnew_password_and_mail function in moodlelib.php
+     *
+     * difference is that the passwords have already been generated so that the admin could
+     * download them in a spreadsheet
+     */
+    public function cron() {
+        global $DB;
+
+        if ($DB->count_records('user_preferences', array('name' => 'iomad_send_password',
+                                                         'value' => '1'))) {
+            mtrace('creating passwords for new users');
+            $newusers = $DB->get_records_sql("SELECT u.id as id, u.email, u.firstname,
+                                                     u.lastname, u.username,
+                                                     p.id as prefid,
+                                                     p.value as prefvalue
+                                                FROM {user} u
+                                                JOIN {user_preferences} p ON u.id=p.userid
+                                                JOIN {user_preferences} p2 ON u.id=p2.userid
+                                               WHERE p.name='iomad_temporary'
+                                                 AND u.email !=''
+                                                 AND p2.name='iomad_send_password'
+                                                 AND p2.value='1' ");
+
+            mtrace('sending passwords to ' . count($newusers) . ' new users');
+
+            foreach ($newusers as $newuserid => $newuser) {
+                // Email user.
+                if ($this->mail_password($newuser, company_user::rc4decrypt($newuser->prefvalue))) {
+                    // Remove user pref.
+                    unset_user_preference('iomad_send_password', $newuser);
+                } else {
+                    trigger_error("Could not mail new user password!");
+                }
+            }
+        }
+    }
+
+    /**
+     * Send the password to the user via email.
+     *
+     * @global object
+     * @global object
+     * @param user $user A {@link $USER} object
+     * @return boolean|string Returns "true" if mail was sent OK and "false" if there was an error
+     */
+    public function mail_password($user, $password) {
+        global $CFG, $DB;
+
+        $site  = get_site();
+
+        $supportuser = generate_email_supportuser();
+
+        $a = new stdClass();
+        $a->firstname   = fullname($user, true);
+        $a->sitename    = format_string($site->fullname);
+        $a->username    = $user->username;
+        $a->newpassword = $password;
+        $a->link        = $CFG->wwwroot .'/login/';
+        $a->signoff     = generate_email_signoff();
+
+        $message = get_string('newusernewpasswordtext', '', $a);
+
+        $subject = format_string($site->fullname) .': '. get_string('newusernewpasswordsubj');
+
+        return email_to_user($user, $supportuser, $subject, $message);
     }
 
     public function company_selector() {
         global $USER, $CFG, $DB, $OUTPUT, $SESSION;
 
-        $selector = new \stdClass;
-
         // Only display if you have the correct capability, or you are not in more than one company.
-        // Just display name of current company if no choice.
+        // Just display name of current company if no choice. 
         if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
             if ($DB->count_records('company_users', array('userid' => $USER->id)) <= 1 ) {
                 $companyuser = $DB->get_record('company_users', array('userid' => $USER->id), '*', MUST_EXIST);
                 $company = $DB->get_record('company', array('id' => $companyuser->companyid), '*', MUST_EXIST);
-                $selector->companyname = $company->name;
-                $selector->onecompany = true;
-                return $selector;
+                $html = $OUTPUT->container_start(array('companyselect', 'clearfix'));
+                $html .= '<div class="alert alert-info">' . get_string('currentcompany', 'block_iomad_company_admin', $company->name) . '</div>';
+                $html .= $OUTPUT->container_end();
+                return $html;
             }
         }
-
-        // Possibly more than one company
-        $selector->onecompany = false;
 
         $content = '';
 
@@ -382,36 +321,28 @@ class block_iomad_company_admin extends block_base {
 
         // Get a list of companies.
         $companylist = company::get_companies_select($showsuspendedcompanies);
-        $select = new iomad_company_select_form(new moodle_url('/my/index.php'), $companylist, $selectedcompany);
+        $select = new iomad_company_select_form(new moodle_url('/local/iomad_dashboard/index.php'), $companylist, $selectedcompany);
         $select->set_data(array('company' => $selectedcompany, 'showsuspendedcompanies' => $showsuspendedcompanies));
-        $selector->selectform = $select->render();
+        $content = $OUTPUT->container_start('companyselect');
+        if (!empty($SESSION->currenteditingcompany)) {
+            //$content .= '<h3>'. get_string('currentcompany', 'block_iomad_company_selector').
+            //                        ' - '.$companyname .'</h3>';
+        } else {
+            //$content .= '<label label-warning>'. get_string('nocurrentcompany', 'block_iomad_company_selector').'</label>';
+        }
+        $content .= $select->render();
         if (!$showsuspendedcompanies) {
-            $selector->suspended = $OUTPUT->single_button(new moodle_url('/my/index.php',
+            $content .= $OUTPUT->single_button(new moodle_url('/local/iomad_dashboard/index.php',
                                                array('showsuspendedcompanies' => true)),
                                                get_string("show_suspended_companies", 'block_iomad_company_admin'));
         } else {
-            $selector->suspended = $OUTPUT->single_button(new moodle_url('/my/index.php',
+            $content .= $OUTPUT->single_button(new moodle_url('/local/iomad_dashboard/index.php',
                                                array('showsuspendedcompanies' => false)),
                                                get_string("hide_suspended_companies", 'block_iomad_company_admin'));
         }
+        $content .= $OUTPUT->container_end();
 
-        return $selector;
+        return $content;
     }
 
-    /**
-     * Do any additional initialization you may need at the time a new block instance is created
-     * @return boolean
-     */
-    function instance_create() {
-        global $DB;
-
-        // Bodge? Modify our own instance to make the default region the
-        // content area, not the side bar.
-        $instance = $this->instance;
-        $instance->defaultregion = 'content';
-        $instance->defaultweight = -10;
-        $DB->update_record('block_instances', $instance);
-
-        return true;
-    }
 }

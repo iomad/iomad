@@ -14,9 +14,12 @@ abstract class LayeredNetwork implements Network
     /**
      * @var Layer[]
      */
-    protected $layers = [];
+    protected $layers;
 
-    public function addLayer(Layer $layer): void
+    /**
+     * @param Layer $layer
+     */
+    public function addLayer(Layer $layer)
     {
         $this->layers[] = $layer;
     }
@@ -29,16 +32,25 @@ abstract class LayeredNetwork implements Network
         return $this->layers;
     }
 
-    public function removeLayers(): void
+    /**
+     * @return void
+     */
+    public function removeLayers()
     {
         unset($this->layers);
     }
 
+    /**
+     * @return Layer
+     */
     public function getOutputLayer(): Layer
     {
         return $this->layers[count($this->layers) - 1];
     }
 
+    /**
+     * @return array
+     */
     public function getOutput(): array
     {
         $result = [];
@@ -51,8 +63,10 @@ abstract class LayeredNetwork implements Network
 
     /**
      * @param mixed $input
+     *
+     * @return $this
      */
-    public function setInput($input): Network
+    public function setInput($input)
     {
         $firstLayer = $this->layers[0];
 

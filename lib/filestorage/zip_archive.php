@@ -145,8 +145,7 @@ class zip_archive extends file_archive {
      */
     protected function mangle_pathname($localname) {
         $result = str_replace('\\', '/', $localname);   // no MS \ separators
-        $result = preg_replace('/\.\.+\//', '', $result); // Cleanup any potential ../ transversal (any number of dots).
-        $result = preg_replace('/\.\.+/', '.', $result); // Join together any number of consecutive dots.
+        $result = preg_replace('/\.\.+/', '', $result); // prevent /.../
         $result = ltrim($result, '/');                  // no leading slash
 
         if ($result === '.') {

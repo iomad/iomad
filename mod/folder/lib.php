@@ -52,6 +52,14 @@ function folder_supports($feature) {
 }
 
 /**
+ * Returns all other caps used in module
+ * @return array
+ */
+function folder_get_extra_capabilities() {
+    return array('moodle/site:accessallgroups');
+}
+
+/**
  * This function is used by the reset_course_userdata function in moodlelib.
  * @param $data the data submitted from the reset course.
  * @return array status array
@@ -105,10 +113,6 @@ function folder_add_instance($data, $mform) {
     $draftitemid = $data->files;
 
     $data->timemodified = time();
-    // If 'showexpanded' is not set, apply the site config.
-    if (!isset($data->showexpanded)) {
-        $data->showexpanded = get_config('folder', 'showexpanded');
-    }
     $data->id = $DB->insert_record('folder', $data);
 
     // we need to use context now, so we need to make sure all needed info is already in db
@@ -466,7 +470,7 @@ function folder_cm_info_view(cm_info $cm) {
         }
         // display folder
         $renderer = $PAGE->get_renderer('mod_folder');
-        $cm->set_content($renderer->display_folder($folder), true);
+        $cm->set_content($renderer->display_folder($folder));
     }
 }
 
@@ -739,7 +743,7 @@ function folder_print_recent_activity($course, $viewfullnames, $timestart) {
     }
 
     // Build list of files.
-    echo $OUTPUT->heading(get_string('newfoldercontent', 'folder') . ':', 6);
+    echo $OUTPUT->heading(get_string('newfoldercontent', 'folder').':', 3);
     $list = html_writer::start_tag('ul', ['class' => 'unlist']);
     foreach ($newfiles as $file) {
         $filename = $file->get_filename();
@@ -784,28 +788,15 @@ function folder_check_updates_since(cm_info $cm, $from, $filter = array()) {
  *
  * @param calendar_event $event
  * @param \core_calendar\action_factory $factory
- * @param int $userid User id to use for all capability checks, etc. Set to 0 for current user (default).
  * @return \core_calendar\local\event\entities\action_interface|null
  */
 function mod_folder_core_calendar_provide_event_action(calendar_event $event,
-                                                       \core_calendar\action_factory $factory,
-                                                       int $userid = 0) {
-    global $USER;
-
-    if (!$userid) {
-        $userid = $USER->id;
-    }
-
-    $cm = get_fast_modinfo($event->courseid, $userid)->instances['folder'][$event->instance];
-
-    if (!$cm->uservisible) {
-        // The module is not visible to the user for any reason.
-        return null;
-    }
+                                                     \core_calendar\action_factory $factory) {
+    $cm = get_fast_modinfo($event->courseid)->instances['folder'][$event->instance];
 
     $completion = new \completion_info($cm->get_course());
 
-    $completiondata = $completion->get_data($cm, false, $userid);
+    $completiondata = $completion->get_data($cm, false);
 
     if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
         return null;
@@ -817,28 +808,4 @@ function mod_folder_core_calendar_provide_event_action(calendar_event $event,
         1,
         true
     );
-}
-
-/**
- * Given an array with a file path, it returns the itemid and the filepath for the defined filearea.
- *
- * @param  string $filearea The filearea.
- * @param  array  $args The path (the part after the filearea and before the filename).
- * @return array The itemid and the filepath inside the $args path, for the defined filearea.
- */
-function mod_folder_get_path_from_pluginfile(string $filearea, array $args) : array {
-    // Folder never has an itemid (the number represents the revision but it's not stored in database).
-    array_shift($args);
-
-    // Get the filepath.
-    if (empty($args)) {
-        $filepath = '/';
-    } else {
-        $filepath = '/' . implode('/', $args) . '/';
-    }
-
-    return [
-        'itemid' => 0,
-        'filepath' => $filepath,
-    ];
 }

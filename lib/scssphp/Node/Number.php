@@ -2,18 +2,18 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp\Node;
+namespace Leafo\ScssPhp\Node;
 
-use ScssPhp\ScssPhp\Compiler;
-use ScssPhp\ScssPhp\Node;
-use ScssPhp\ScssPhp\Type;
+use Leafo\ScssPhp\Compiler;
+use Leafo\ScssPhp\Node;
+use Leafo\ScssPhp\Type;
 
 /**
  * Dimension + optional units
@@ -31,7 +31,7 @@ class Number extends Node implements \ArrayAccess
     /**
      * @var integer
      */
-    static public $precision = 10;
+    static public $precision = 5;
 
     /**
      * @see http://www.w3.org/TR/2012/WD-css3-values-20120308/
@@ -100,7 +100,7 @@ class Number extends Node implements \ArrayAccess
      *
      * @param array $units
      *
-     * @return \ScssPhp\ScssPhp\Node\Number
+     * @return \Leafo\ScssPhp\Node\Number
      */
     public function coerce($units)
     {
@@ -123,7 +123,7 @@ class Number extends Node implements \ArrayAccess
     /**
      * Normalize number
      *
-     * @return \ScssPhp\ScssPhp\Node\Number
+     * @return \Leafo\ScssPhp\Node\Number
      */
     public function normalize()
     {
@@ -141,17 +141,17 @@ class Number extends Node implements \ArrayAccess
     public function offsetExists($offset)
     {
         if ($offset === -3) {
-            return ! is_null($this->sourceColumn);
+            return $this->sourceColumn !== null;
         }
 
         if ($offset === -2) {
-            return ! is_null($this->sourceLine);
+            return $this->sourceLine !== null;
         }
 
-        if ($offset === -1 ||
-            $offset === 0 ||
-            $offset === 1 ||
-            $offset === 2
+        if ($offset === -1
+            || $offset === 0
+            || $offset === 1
+            || $offset === 2
         ) {
             return true;
         }
@@ -259,7 +259,7 @@ class Number extends Node implements \ArrayAccess
     /**
      * Output number
      *
-     * @param \ScssPhp\ScssPhp\Compiler $compiler
+     * @param \Leafo\ScssPhp\Compiler $compiler
      *
      * @return string
      */
@@ -291,9 +291,8 @@ class Number extends Node implements \ArrayAccess
 
         reset($units);
         $unit = key($units);
-        $dimension = number_format($dimension, static::$precision, '.', '');
 
-        return (static::$precision ? rtrim(rtrim($dimension, '0'), '.') : $dimension) . $unit;
+        return (string) $dimension . $unit;
     }
 
     /**

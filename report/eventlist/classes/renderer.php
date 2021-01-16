@@ -41,6 +41,7 @@ class report_eventlist_renderer extends plugin_renderer_base {
      * @return string HTML to be displayed.
      */
     public function render_event_list($form, $tabledata) {
+        global $PAGE;
 
         $title = get_string('pluginname', 'report_eventlist');
 
@@ -54,9 +55,9 @@ class report_eventlist_renderer extends plugin_renderer_base {
         $html .= ob_get_contents();
         ob_end_clean();
 
-        $this->page->requires->yui_module('moodle-report_eventlist-eventfilter', 'Y.M.report_eventlist.EventFilter.init',
+        $PAGE->requires->yui_module('moodle-report_eventlist-eventfilter', 'Y.M.report_eventlist.EventFilter.init',
                 array(array('tabledata' => $tabledata)));
-        $this->page->requires->strings_for_js(array(
+        $PAGE->requires->strings_for_js(array(
             'eventname',
             'component',
             'action',
@@ -82,6 +83,7 @@ class report_eventlist_renderer extends plugin_renderer_base {
      * @return string HTML to be displayed.
      */
     public function render_event_detail($observerlist, $eventinformation) {
+        global $PAGE;
 
         $titlehtml = $this->output->header();
         $titlehtml .= $this->output->heading($eventinformation['title']);

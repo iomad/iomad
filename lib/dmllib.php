@@ -314,6 +314,10 @@ function setup_DB() {
                 $CFG->dbtype = 'pgsql';
                 break;
 
+            case 'mssql_n':
+                $CFG->dbtype = 'mssql';
+                break;
+
             case 'oci8po':
                 $CFG->dbtype = 'oci';
                 break;

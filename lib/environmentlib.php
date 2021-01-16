@@ -140,7 +140,6 @@ function environment_get_errors($environment_results) {
         $type = $environment_result->getPart();
         $info = $environment_result->getInfo();
         $status = $environment_result->getStatus();
-        $plugin = $environment_result->getPluginName();
         $error_code = $environment_result->getErrorCode();
 
         $a = new stdClass();
@@ -210,13 +209,7 @@ function environment_get_errors($environment_results) {
         // Append the restrict if there is some
         $feedbacktext .= $environment_result->strToReport($environment_result->getRestrictStr(), 'error');
 
-        if ($plugin === '') {
-            $report = '[' . get_string('coresystem') . '] ' . $report;
-        } else {
-            $report = '[' . $plugin . '] ' . $report;
-        }
-
-        $report .= ' - ' . html_to_text($feedbacktext);
+        $report .= html_to_text($feedbacktext);
 
         if ($environment_result->getPart() == 'custom_check'){
             $errors[] = array($info, $report);
@@ -1055,19 +1048,6 @@ function environment_check_database($version, $env_select) {
         return $result;
     }
 
-    // Check if the DB Vendor has been properly configured.
-    // Hack: this is required when playing with MySQL and MariaDB since they share the same PHP module and base DB classes,
-    // whilst they are slowly evolving using separate directions though MariaDB is still an "almost" drop-in replacement.
-    $dbvendorismysql = ($current_vendor === 'mysql');
-    $dbtypeismariadb = (stripos($dbinfo['description'], 'mariadb') !== false);
-    if ($dbvendorismysql && $dbtypeismariadb) {
-        $result->setStatus(false);
-        $result->setLevel($level);
-        $result->setInfo($current_vendor . ' (' . $dbinfo['description'] . ')');
-        $result->setFeedbackStr('environmentmariadbwrongdbtype');
-        return $result;
-    }
-
 /// And finally compare them, saving results
     if (version_compare($current_version, $needed_version, '>=')) {
         $result->setStatus(true);
@@ -1623,26 +1603,4 @@ function restrict_php_version_71(&$result) {
  */
 function restrict_php_version_72(&$result) {
     return restrict_php_version($result, '7.2');
-}
-
-/**
- * Check if the current PHP version is greater than or equal to
- * PHP version 7.3.
- *
- * @param object $result an environment_results instance
- * @return bool result of version check
- */
-function restrict_php_version_73(&$result) {
-    return restrict_php_version($result, '7.3');
-}
-
-/**
- * Check if the current PHP version is greater than or equal to
- * PHP version 7.4.
- *
- * @param object $result an environment_results instance
- * @return bool result of version check
- */
-function restrict_php_version_74(&$result) {
-    return restrict_php_version($result, '7.4');
 }

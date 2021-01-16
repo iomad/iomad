@@ -85,32 +85,6 @@ class upgrade_requires_exception extends moodle_exception {
 }
 
 /**
- * Exception thrown when attempting to install a plugin that declares incompatibility with moodle version
- *
- * @package    core
- * @subpackage upgrade
- * @copyright  2019 Peter Burnett <peterburnett@catalyst-au.net>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class plugin_incompatible_exception extends moodle_exception {
-    /**
-     * Constructor function for exception
-     *
-     * @param \core\plugininfo\base $plugin The plugin causing the exception
-     * @param int $pluginversion The version of the plugin causing the exception
-     */
-    public function __construct($plugin, $pluginversion) {
-        global $CFG;
-        $a = new stdClass();
-        $a->pluginname      = $plugin;
-        $a->pluginversion   = $pluginversion;
-        $a->moodleversion   = $CFG->branch;
-
-        parent::__construct('pluginunsupported', 'error', "$CFG->wwwroot/$CFG->admin/index.php", $a);
-    }
-}
-
-/**
  * @package    core
  * @subpackage upgrade
  * @copyright  2009 Petr Skoda {@link http://skodak.org}
@@ -409,8 +383,8 @@ function upgrade_block_savepoint($result, $version, $blockname, $allowabort=true
  * @category upgrade
  * @param bool $result false if upgrade step failed, true if completed
  * @param string or float $version main version
- * @param string $type The type of the plugin.
- * @param string $plugin The name of the plugin.
+ * @param string $type name of plugin
+ * @param string $dir location of plugin
  * @param bool $allowabort allow user to abort script execution here
  * @return void
  */
@@ -456,37 +430,6 @@ function upgrade_stale_php_files_present() {
     global $CFG;
 
     $someexamplesofremovedfiles = array(
-        // Removed in 3.9.
-        '/course/classes/output/modchooser_item.php',
-        '/course/yui/build/moodle-course-modchooser/moodle-course-modchooser-min.js',
-        '/course/yui/src/modchooser/js/modchooser.js',
-        '/h5p/classes/autoloader.php',
-        '/lib/adodb/readme.txt',
-        '/lib/maxmind/GeoIp2/Compat/JsonSerializable.php',
-        // Removed in 3.8.
-        '/lib/amd/src/modal_confirm.js',
-        '/lib/fonts/font-awesome-4.7.0/css/font-awesome.css',
-        '/lib/jquery/jquery-3.2.1.min.js',
-        '/lib/recaptchalib.php',
-        '/lib/sessionkeepalive_ajax.php',
-        '/lib/yui/src/checknet/js/checknet.js',
-        '/question/amd/src/qbankmanager.js',
-        // Removed in 3.7.
-        '/lib/form/yui/src/showadvanced/js/showadvanced.js',
-        '/lib/tests/output_external_test.php',
-        '/message/amd/src/message_area.js',
-        '/message/templates/message_area.mustache',
-        '/question/yui/src/qbankmanager/build.json',
-        // Removed in 3.6.
-        '/lib/classes/session/memcache.php',
-        '/lib/eventslib.php',
-        '/lib/form/submitlink.php',
-        '/lib/medialib.php',
-        '/lib/password_compat/lib/password.php',
-        // Removed in 3.5.
-        '/lib/dml/mssql_native_moodle_database.php',
-        '/lib/dml/mssql_native_moodle_recordset.php',
-        '/lib/dml/mssql_native_moodle_temptables.php',
         // Removed in 3.4.
         '/auth/README.txt',
         '/calendar/set.php',
@@ -612,13 +555,6 @@ function upgrade_plugins($type, $startcallback, $endcallback, $verbose) {
             }
         }
 
-        // Throw exception if plugin is incompatible with moodle version.
-        if (!empty($plugin->incompatible)) {
-            if ($CFG->branch <= $plugin->incompatible) {
-                throw new plugin_incompatible_exception($component, $plugin->version);
-            }
-        }
-
         // try to recover from interrupted install.php if needed
         if (file_exists($fullplug.'/db/install.php')) {
             if (get_config($plugin->fullname, 'installrunning')) {
@@ -631,8 +567,8 @@ function upgrade_plugins($type, $startcallback, $endcallback, $verbose) {
                     update_capabilities($component);
                     log_update_descriptions($component);
                     external_update_descriptions($component);
+                    events_update_definition($component);
                     \core\task\manager::reset_scheduled_tasks_for_component($component);
-                    \core_analytics\manager::update_default_models_for_component($component);
                     message_update_providers($component);
                     \core\message\inbound\manager::update_handlers_for_component($component);
                     if ($type === 'message') {
@@ -670,8 +606,8 @@ function upgrade_plugins($type, $startcallback, $endcallback, $verbose) {
             update_capabilities($component);
             log_update_descriptions($component);
             external_update_descriptions($component);
+            events_update_definition($component);
             \core\task\manager::reset_scheduled_tasks_for_component($component);
-            \core_analytics\manager::update_default_models_for_component($component);
             message_update_providers($component);
             \core\message\inbound\manager::update_handlers_for_component($component);
             if ($type === 'message') {
@@ -704,8 +640,8 @@ function upgrade_plugins($type, $startcallback, $endcallback, $verbose) {
             update_capabilities($component);
             log_update_descriptions($component);
             external_update_descriptions($component);
+            events_update_definition($component);
             \core\task\manager::reset_scheduled_tasks_for_component($component);
-            \core_analytics\manager::update_default_models_for_component($component);
             message_update_providers($component);
             \core\message\inbound\manager::update_handlers_for_component($component);
             if ($type === 'message') {
@@ -812,8 +748,8 @@ function upgrade_plugins_modules($startcallback, $endcallback, $verbose) {
                     update_capabilities($component);
                     log_update_descriptions($component);
                     external_update_descriptions($component);
+                    events_update_definition($component);
                     \core\task\manager::reset_scheduled_tasks_for_component($component);
-                    \core_analytics\manager::update_default_models_for_component($component);
                     message_update_providers($component);
                     \core\message\inbound\manager::update_handlers_for_component($component);
                     upgrade_plugin_mnet_functions($component);
@@ -847,8 +783,8 @@ function upgrade_plugins_modules($startcallback, $endcallback, $verbose) {
             update_capabilities($component);
             log_update_descriptions($component);
             external_update_descriptions($component);
+            events_update_definition($component);
             \core\task\manager::reset_scheduled_tasks_for_component($component);
-            \core_analytics\manager::update_default_models_for_component($component);
             message_update_providers($component);
             \core\message\inbound\manager::update_handlers_for_component($component);
             upgrade_plugin_mnet_functions($component);
@@ -884,8 +820,8 @@ function upgrade_plugins_modules($startcallback, $endcallback, $verbose) {
             update_capabilities($component);
             log_update_descriptions($component);
             external_update_descriptions($component);
+            events_update_definition($component);
             \core\task\manager::reset_scheduled_tasks_for_component($component);
-            \core_analytics\manager::update_default_models_for_component($component);
             message_update_providers($component);
             \core\message\inbound\manager::update_handlers_for_component($component);
             upgrade_plugin_mnet_functions($component);
@@ -1006,8 +942,8 @@ function upgrade_plugins_blocks($startcallback, $endcallback, $verbose) {
                     update_capabilities($component);
                     log_update_descriptions($component);
                     external_update_descriptions($component);
+                    events_update_definition($component);
                     \core\task\manager::reset_scheduled_tasks_for_component($component);
-                    \core_analytics\manager::update_default_models_for_component($component);
                     message_update_providers($component);
                     \core\message\inbound\manager::update_handlers_for_component($component);
                     upgrade_plugin_mnet_functions($component);
@@ -1047,8 +983,8 @@ function upgrade_plugins_blocks($startcallback, $endcallback, $verbose) {
             update_capabilities($component);
             log_update_descriptions($component);
             external_update_descriptions($component);
+            events_update_definition($component);
             \core\task\manager::reset_scheduled_tasks_for_component($component);
-            \core_analytics\manager::update_default_models_for_component($component);
             message_update_providers($component);
             \core\message\inbound\manager::update_handlers_for_component($component);
             core_tag_area::reset_definitions_for_component($component);
@@ -1083,8 +1019,8 @@ function upgrade_plugins_blocks($startcallback, $endcallback, $verbose) {
             update_capabilities($component);
             log_update_descriptions($component);
             external_update_descriptions($component);
+            events_update_definition($component);
             \core\task\manager::reset_scheduled_tasks_for_component($component);
-            \core_analytics\manager::update_default_models_for_component($component);
             message_update_providers($component);
             \core\message\inbound\manager::update_handlers_for_component($component);
             upgrade_plugin_mnet_functions($component);
@@ -1777,9 +1713,6 @@ function install_core($version, $verbose) {
     remove_dir($CFG->tempdir.'', true);
     make_temp_directory('', true);
 
-    remove_dir($CFG->backuptempdir.'', true);
-    make_backup_temp_directory('', true);
-
     remove_dir($CFG->dataroot.'/muc', true);
     make_writable_directory($CFG->dataroot.'/muc', true);
 
@@ -1800,8 +1733,8 @@ function install_core($version, $verbose) {
         // Continue with the installation
         log_update_descriptions('moodle');
         external_update_descriptions('moodle');
+        events_update_definition('moodle');
         \core\task\manager::reset_scheduled_tasks_for_component('moodle');
-        \core_analytics\manager::update_default_models_for_component('moodle');
         message_update_providers('moodle');
         \core\message\inbound\manager::update_handlers_for_component('moodle');
         core_tag_area::reset_definitions_for_component('moodle');
@@ -1868,8 +1801,8 @@ function upgrade_core($version, $verbose) {
         update_capabilities('moodle');
         log_update_descriptions('moodle');
         external_update_descriptions('moodle');
+        events_update_definition('moodle');
         \core\task\manager::reset_scheduled_tasks_for_component('moodle');
-        \core_analytics\manager::update_default_models_for_component('moodle');
         message_update_providers('moodle');
         \core\message\inbound\manager::update_handlers_for_component('moodle');
         core_tag_area::reset_definitions_for_component('moodle');
@@ -2407,22 +2340,6 @@ function check_is_https(environment_results $result) {
 }
 
 /**
- * Check if the site is using 64 bits PHP.
- *
- * @param  environment_results $result
- * @return environment_results|null updated results object, or null if the site is using 64 bits PHP.
- */
-function check_sixtyfour_bits(environment_results $result) {
-
-    if (PHP_INT_SIZE === 4) {
-         $result->setInfo('php not 64 bits');
-         $result->setStatus(false);
-         return $result;
-    }
-    return null;
-}
-
-/**
  * Assert the upgrade key is provided, if it is defined.
  *
  * The upgrade key can be defined in the main config.php as $CFG->upgradekey. If
@@ -2439,7 +2356,6 @@ function check_upgrade_key($upgradekeyhash) {
     if (isset($CFG->config_php_settings['upgradekey'])) {
         if ($upgradekeyhash === null or $upgradekeyhash !== sha1($CFG->config_php_settings['upgradekey'])) {
             if (!$PAGE->headerprinted) {
-                $PAGE->set_title(get_string('upgradekeyreq', 'admin'));
                 $output = $PAGE->get_renderer('core', 'admin');
                 echo $output->upgradekey_form_page(new moodle_url('/admin/index.php', array('cache' => 0)));
                 die();
@@ -2611,4 +2527,170 @@ function check_libcurl_version(environment_results $result) {
     }
 
     return null;
+}
+
+/**
+ * Fix how auth plugins are called in the 'config_plugins' table.
+ *
+ * For legacy reasons, the auth plugins did not always use their frankenstyle
+ * component name in the 'plugin' column of the 'config_plugins' table. This is
+ * a helper function to correctly migrate the legacy settings into the expected
+ * and consistent way.
+ *
+ * @param string $plugin the auth plugin name such as 'cas', 'manual' or 'mnet'
+ */
+function upgrade_fix_config_auth_plugin_names($plugin) {
+    global $CFG, $DB, $OUTPUT;
+
+    $legacy = (array) get_config('auth/'.$plugin);
+    $current = (array) get_config('auth_'.$plugin);
+
+    // I don't want to rely on array_merge() and friends here just in case
+    // there was some crazy setting with a numerical name.
+
+    if ($legacy) {
+        $new = $legacy;
+    } else {
+        $new = [];
+    }
+
+    if ($current) {
+        foreach ($current as $name => $value) {
+            if (isset($legacy[$name]) && ($legacy[$name] !== $value)) {
+                // No need to pollute the output during unit tests.
+                if (!empty($CFG->upgraderunning)) {
+                    $message = get_string('settingmigrationmismatch', 'core_auth', [
+                        'plugin' => 'auth_'.$plugin,
+                        'setting' => s($name),
+                        'legacy' => s($legacy[$name]),
+                        'current' => s($value),
+                    ]);
+                    echo $OUTPUT->notification($message, \core\output\notification::NOTIFY_ERROR);
+
+                    upgrade_log(UPGRADE_LOG_NOTICE, 'auth_'.$plugin, 'Setting values mismatch detected',
+                        'SETTING: '.$name. ' LEGACY: '.$legacy[$name].' CURRENT: '.$value);
+                }
+            }
+
+            $new[$name] = $value;
+        }
+    }
+
+    foreach ($new as $name => $value) {
+        set_config($name, $value, 'auth_'.$plugin);
+        unset_config($name, 'auth/'.$plugin);
+    }
+}
+
+/**
+ * Populate the auth plugin settings with defaults if needed.
+ *
+ * As a result of fixing the auth plugins config storage, many settings would
+ * be falsely reported as new ones by admin/upgradesettings.php. We do not want
+ * to confuse admins so we try to reduce the bewilderment by pre-populating the
+ * config_plugins table with default values. This should be done only for
+ * disabled auth methods. The enabled methods have their settings already
+ * stored, so reporting actual new settings for them is valid.
+ *
+ * @param string $plugin the auth plugin name such as 'cas', 'manual' or 'mnet'
+ */
+function upgrade_fix_config_auth_plugin_defaults($plugin) {
+    global $CFG;
+
+    $pluginman = core_plugin_manager::instance();
+    $enabled = $pluginman->get_enabled_plugins('auth');
+
+    if (isset($enabled[$plugin])) {
+        // Do not touch settings of enabled auth methods.
+        return;
+    }
+
+    // We can't directly use {@link core\plugininfo\auth::load_settings()} here
+    // because the plugins are not fully upgraded yet. Instead, we emulate what
+    // that method does. We fetch a temporary instance of the plugin's settings
+    // page to get access to the settings and their defaults. Note we are not
+    // adding that temporary instance into the admin tree. Yes, this is a hack.
+
+    $plugininfo = $pluginman->get_plugin_info('auth_'.$plugin);
+    $adminroot = admin_get_root();
+    $ADMIN = $adminroot;
+    $auth = $plugininfo;
+
+    $section = $plugininfo->get_settings_section_name();
+    $settingspath = $plugininfo->full_path('settings.php');
+
+    if (file_exists($settingspath)) {
+        $settings = new admin_settingpage($section, 'Emulated settings page for auth_'.$plugin, 'moodle/site:config');
+        include($settingspath);
+
+        if ($settings) {
+            // Consistently with what admin/cli/upgrade.php does, apply the default settings twice.
+            // I assume this is done for theoretical cases when a default value depends on an other.
+            admin_apply_default_settings($settings, false);
+            admin_apply_default_settings($settings, false);
+        }
+    }
+}
+
+/**
+ * Search for a given theme in any of the parent themes of a given theme.
+ *
+ * @param string $needle The name of the theme you want to search for
+ * @param string $themename The name of the theme you want to search for
+ * @param string $checkedthemeforparents The name of all the themes already checked
+ * @return bool True if found, false if not.
+ */
+function upgrade_theme_is_from_family($needle, $themename, $checkedthemeforparents = []) {
+    global $CFG;
+
+    // Once we've started checking a theme, don't start checking it again. Prevent recursion.
+    if (!empty($checkedthemeforparents[$themename])) {
+        return false;
+    }
+    $checkedthemeforparents[$themename] = true;
+
+    if ($themename == $needle) {
+        return true;
+    }
+
+    if ($themedir = upgrade_find_theme_location($themename)) {
+        $THEME = new stdClass();
+        require($themedir . '/config.php');
+        $theme = $THEME;
+    } else {
+        return false;
+    }
+
+    if (empty($theme->parents)) {
+        return false;
+    }
+
+    // Recursively search through each parent theme.
+    foreach ($theme->parents as $parent) {
+        if (upgrade_theme_is_from_family($needle, $parent, $checkedthemeforparents)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Finds the theme location and verifies the theme has all needed files.
+ *
+ * @param string $themename The name of the theme you want to search for
+ * @return string full dir path or null if not found
+ * @see \theme_config::find_theme_location()
+ */
+function upgrade_find_theme_location($themename) {
+    global $CFG;
+
+    if (file_exists("$CFG->dirroot/theme/$themename/config.php")) {
+        $dir = "$CFG->dirroot/theme/$themename";
+    } else if (!empty($CFG->themedir) and file_exists("$CFG->themedir/$themename/config.php")) {
+        $dir = "$CFG->themedir/$themename";
+    } else {
+        return null;
+    }
+
+    return $dir;
 }

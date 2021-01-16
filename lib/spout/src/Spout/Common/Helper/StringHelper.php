@@ -7,6 +7,8 @@ namespace Box\Spout\Common\Helper;
  * This class provides helper functions to work with strings and multibyte strings.
  *
  * @codeCoverageIgnore
+ *
+ * @package Box\Spout\Common\Helper
  */
 class StringHelper
 {
@@ -48,7 +50,6 @@ class StringHelper
     public function getCharFirstOccurrencePosition($char, $string)
     {
         $position = $this->hasMbstringSupport ? mb_strpos($string, $char) : strpos($string, $char);
-
         return ($position !== false) ? $position : -1;
     }
 
@@ -65,7 +66,6 @@ class StringHelper
     public function getCharLastOccurrencePosition($char, $string)
     {
         $position = $this->hasMbstringSupport ? mb_strrpos($string, $char) : strrpos($string, $char);
-
         return ($position !== false) ? $position : -1;
     }
 }

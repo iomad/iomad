@@ -25,10 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/grade/grading/form/lib.php');
-require_once($CFG->dirroot.'/lib/filelib.php');
-
-/** rubric: Used to compare our gradeitem_type against. */
-const RUBRIC = 'rubric';
 
 /**
  * This controller encapsulates the rubric grading logic
@@ -386,7 +382,7 @@ class gradingform_rubric_controller extends gradingform_controller {
     public function get_options() {
         $options = self::get_default_options();
         if (!empty($this->definition->options)) {
-            $thisoptions = json_decode($this->definition->options, true); // Assoc. array is expected.
+            $thisoptions = json_decode($this->definition->options);
             foreach ($thisoptions as $option => $value) {
                 $options[$option] = $value;
             }

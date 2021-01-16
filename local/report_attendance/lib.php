@@ -76,7 +76,7 @@ class attendancerep{
                 continue;
             }
             $coursefull = $DB->get_record('course', array('id' => $course->course));
-            $courseselect[$coursefull->id] = format_string($coursefull->fullname, true, 1);
+            $courseselect[$coursefull->id] = $coursefull->fullname;
         }
         return $courseselect;
     }

@@ -40,15 +40,15 @@
     }} data-year="{{date.year}}"{{!
     }} data-view="month"{{!
     }}>
+    {{> core_calendar/header }}
     {{> core_calendar/month_navigation }}
     {{> core/overlay_loading}}
-    <table id="month-detailed-{{uniqid}}" class="calendarmonth calendartable mb-0">
+    <table id="month-detailed-{{uniqid}}" class="calendarmonth calendartable card-deck m-b-0">
         <thead>
             <tr>
                 {{# daynames }}
                 <th class="header text-xs-center">
-                    <span class="sr-only">{{fullname}}</span>
-                    <span aria-hidden="true">{{shortname}}</span>
+                    {{shortname}}
                 </th>
                 {{/ daynames }}
             </tr>
@@ -71,29 +71,23 @@
                         data-drop-zone="month-view-day"
                         data-region="day"
                         data-new-event-timestamp="{{neweventtimestamp}}">
-                        <div class="d-none d-md-block hidden-phone text-xs-center">
-                            <span class="sr-only">{{daytitle}}</span>
+                        <div class="hidden-sm-down hidden-phone text-xs-center">
                             {{#hasevents}}
-                                <a data-action="view-day-link" href="#" class="aalink day" aria-label="{{viewdaylinktitle}}"
-                                    data-year="{{date.year}}" data-month="{{date.mon}}" data-day="{{mday}}"
-                                    data-courseid="{{courseid}}" data-categoryid="{{categoryid}}"
-                                    data-timestamp="{{timestamp}}">{{mday}}</a>
+                                <a data-action="view-day-link" href="{{viewdaylink}}" class="day" title="{{viewdaylinktitle}}">{{mday}}</a>
                             {{/hasevents}}
                             {{^hasevents}}
-                                <span aria-hidden="true">{{mday}}</span>
+                                {{mday}}
                             {{/hasevents}}
                             {{#hasevents}}
                                 <div data-region="day-content">
                                     <ul>
                                         {{#events}}
                                         {{#underway}}
-                                            <li class="events-underway">[{{{name}}}]</li>
+                                            <li class="events-underway">[{{name}}]</li>
                                         {{/underway}}
                                         {{^underway}}
                                             <li data-region="event-item"
-                                                dava-event-component="{{component}}"
-                                                data-event-eventtype="{{eventtype}}"
-                                                data-eventtype-{{normalisedeventtype}}="1"
+                                                data-eventtype-{{calendareventtype}}="1"
                                                 {{#draggable}}
                                                     draggable="true"
                                                     data-drag-type="move"
@@ -112,11 +106,11 @@
                                                 {{/draggable}}>
 
                                                 <a data-action="view-event" data-event-id="{{id}}" href="{{url}}" title="{{name}}">
-                                                    <span class="calendar-circle calendar_event_{{normalisedeventtype}}">
+                                                    <span class="badge badge-circle calendar_event_{{calendareventtype}}">
                                                         &nbsp;
                                                     </span>
                                                     {{> core_calendar/event_icon}}
-                                                    <span class="eventname">{{{name}}}</span>
+                                                    <span class="eventname">{{name}}</span>
                                                 </a>
                                             </li>
                                         {{/underway}}
@@ -125,16 +119,14 @@
                                 </div>
                             {{/hasevents}}
                         </div>
-                        <div class="d-md-none hidden-desktop hidden-tablet">
-                            <span class="sr-only">{{daytitle}}</span>
+                        <div class="hidden-md-up hidden-desktop hidden-tablet">
                             {{#hasevents}}
-                                <a data-action="view-day-link" href="#" class="day aalink" aria-label="{{viewdaylinktitle}}"
-                                    data-year="{{date.year}}" data-month="{{date.mon}}" data-day="{{mday}}"
-                                    data-courseid="{{courseid}}" data-categoryid="{{categoryid}}"
-                                    data-timestamp="{{timestamp}}">{{mday}}</a>
+                                <a data-action="view-day-link" href="{{viewdaylink}}" class="day" title="{{viewdaylinktitle}}">{{mday}}</a>
                             {{/hasevents}}
                             {{^hasevents}}
-                                <span aria-hidden="true">{{mday}}</span>
+                                <div data-region="day-content">
+                                    {{mday}}
+                                </div>
                             {{/hasevents}}
                         </div>
                     </td>

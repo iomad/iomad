@@ -12,7 +12,8 @@ Feature: Read-only forms should work
     And the following "activities" exist:
       | activity   | name | intro                                                                        | course | idnumber |
       | label      | L1   | <a href="../lib/tests/fixtures/readonlyform.php?sections=1">Fixture link</a> | C1     | label1   |
-    Given I am on the "C1" "Course" page logged in as "admin"
+    And I log in as "admin"
+    And I am on "Course 1" course homepage
     And I follow "Fixture link"
     When I expand all fieldsets
     Then the field "Name" matches value "Important information"
@@ -25,7 +26,8 @@ Feature: Read-only forms should work
     And the following "activities" exist:
       | activity   | name | intro                                                                        | course | idnumber |
       | label      | L1   | <a href="../lib/tests/fixtures/readonlyform.php?sections=2">Fixture link</a> | C1     | label1   |
-    Given I am on the "C1" "Course" page logged in as "admin"
+    And I log in as "admin"
+    And I am on "Course 1" course homepage
     And I follow "Fixture link"
     When I expand all fieldsets
     Then the field "Name" matches value "Important information"

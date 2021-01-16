@@ -32,11 +32,11 @@ Feature: Test duplicating a quiz containing an Assay question
       | Confirmation | Filename | test_backup.mbz |
     And I restore "test_backup.mbz" backup into a new course using this options:
       | Schema | Course name | Course 2 |
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
     And I should see "essay-001"
     And I should see "essay-002"
     And I should see "essay-003"
-    And I choose "Edit question" action for "essay-001" in the question bank
+    And I click on "Edit" "link" in the "essay-001" "table_row"
     Then the following fields match these values:
       | Question name              | essay-001                                               |
       | Question text              | Please write a story about a frog.                      |
@@ -44,7 +44,7 @@ Feature: Test duplicating a quiz containing an Assay question
       | Response format            | HTML editor                                             |
       | Require text               | Require the student to enter text                       |
     And I press "Cancel"
-    And I choose "Edit question" action for "essay-002" in the question bank
+    And I click on "Edit" "link" in the "essay-002" "table_row"
     Then the following fields match these values:
       | Question name              | essay-002                                               |
       | Question text              | Please write a story about a frog.                      |
@@ -52,7 +52,7 @@ Feature: Test duplicating a quiz containing an Assay question
       | Response format            | HTML editor with file picker                            |
       | Require text               | Require the student to enter text                       |
     And I press "Cancel"
-    And I choose "Edit question" action for "essay-003" in the question bank
+    And I click on "Edit" "link" in the "essay-003" "table_row"
     Then the following fields match these values:
       | Question name              | essay-003                                               |
       | Question text              | Please write a story about a frog.                      |

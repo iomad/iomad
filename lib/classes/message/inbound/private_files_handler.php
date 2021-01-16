@@ -26,8 +26,6 @@ namespace core\message\inbound;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/filelib.php');
-
 /**
  * A Handler to store attachments sent in e-mails as private files.
  *
@@ -100,17 +98,15 @@ class private_files_handler extends handler {
         $uploadedfiles  = array();
         $failedfiles    = array();
 
-        $usedspace = file_get_user_used_space();
         $fs = get_file_storage();
         foreach ($data->attachments as $attachmenttype => $attachments) {
             foreach ($attachments as $attachment) {
                 mtrace("--- Processing attachment '{$attachment->filename}'");
 
-                if ($maxbytes != USER_CAN_IGNORE_FILE_SIZE_LIMITS &&
-                        ($attachment->filesize + $usedspace) > $maxbytes) {
+                if (file_is_draft_area_limit_reached($itemid, $maxbytes, $attachment->filesize)) {
                     // The user quota will be exceeded if this file is included.
                     $skippedfiles[] = $attachment;
-                    mtrace("---- Skipping attachment. User will be over quota.");
+                    mtrace("---- Skipping attacment. User will be over quota.");
                     continue;
                 }
 
@@ -136,9 +132,8 @@ class private_files_handler extends handler {
                     // File created successfully.
                     mtrace("---- File uploaded successfully as {$record->filename}.");
                     $uploadedfiles[] = $attachment;
-                    $usedspace += $attachment->filesize;
                 } else {
-                    mtrace("---- Skipping attachment. Unknown failure during creation.");
+                    mtrace("---- Skipping attacment. Unknown failure during creation.");
                     $failedfiles[] = $attachment;
                 }
             }

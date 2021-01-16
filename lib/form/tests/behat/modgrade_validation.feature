@@ -19,7 +19,7 @@ Feature: Using the activity grade form element
 
   Scenario: Being able to change the grade type, scale and maximum grade when there are no grades
     Given I log in as "admin"
-    And I navigate to "Grades > Scales" in site administration
+    And I navigate to "Scales" node in "Site administration > Grades"
     And I press "Add a new scale"
     And I set the following fields to these values:
       | Name  | ABCDEF |
@@ -66,7 +66,7 @@ Feature: Using the activity grade form element
   @javascript
   Scenario: Attempting to change the scale when grades already exist in rating activity
     Given I log in as "admin"
-    And I navigate to "Grades > Scales" in site administration
+    And I navigate to "Scales" node in "Site administration > Grades"
     And I press "Add a new scale"
     And I set the following fields to these values:
       | Name  | ABCDEF |
@@ -92,7 +92,7 @@ Feature: Using the activity grade form element
     And I log in as "student1"
     And I am on "Course 1" course homepage
     And I follow "Test forum name"
-    And I click on "Add a new discussion topic" "link"
+    And I press "Add a new discussion topic"
     And I set the following fields to these values:
       | Subject  | Discussion subject |
       | Message | Discussion message |
@@ -119,7 +119,7 @@ Feature: Using the activity grade form element
   @javascript
   Scenario: Attempting to change the scale when grades already exist in non-rating activity
     Given I log in as "admin"
-    And I navigate to "Grades > Scales" in site administration
+    And I navigate to "Scales" node in "Site administration > Grades"
     And I press "Add a new scale"
     And I set the following fields to these values:
       | Name  | ABCDEF |
@@ -144,7 +144,7 @@ Feature: Using the activity grade form element
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I set the field "Grade" to "C"
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I follow "Edit settings"
     When I expand all fieldsets
     Then I should see "Some grades have already been awarded, so the grade type and scale cannot be changed"
@@ -170,7 +170,7 @@ Feature: Using the activity grade form element
     And I log in as "student1"
     And I am on "Course 1" course homepage
     And I follow "Test forum name"
-    And I click on "Add a new discussion topic" "link"
+    And I press "Add a new discussion topic"
     And I set the following fields to these values:
       | Subject  | Discussion subject |
       | Message | Discussion message |
@@ -186,7 +186,7 @@ Feature: Using the activity grade form element
     And I navigate to "Edit settings" in current page administration
     When I expand all fieldsets
     Then I should see "You cannot change the type, as grades already exist for this item."
-    And I set the field "Ratings > Maximum grade" to "50"
+    And I set the field "Maximum grade" to "50"
     And I press "Save and display"
     And I should see "You cannot change the maximum grade when grades already exist for an activity with ratings"
 
@@ -203,7 +203,7 @@ Feature: Using the activity grade form element
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I set the field "Grade out of 100" to "50"
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I follow "Edit settings"
     When I expand all fieldsets
     Then I should see "Some grades have already been awarded, so the grade type cannot be changed. If you wish to change the maximum grade, you must first choose whether or not to rescale existing grades."

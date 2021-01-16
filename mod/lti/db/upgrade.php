@@ -59,129 +59,102 @@
  * @return boolean
  */
 function xmldb_lti_upgrade($oldversion) {
-    global $CFG, $DB, $OUTPUT;
+    global $CFG, $DB;
 
     $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2016041800) {
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    if ($oldversion < 2019031300) {
-        // Define table lti_access_tokens to be updated.
+        // Define field description to be added to lti_types.
         $table = new xmldb_table('lti_types');
+        $field = new xmldb_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timemodified');
 
-        // Define field ltiversion to be added to lti_types.
-        $field = new xmldb_field('ltiversion', XMLDB_TYPE_CHAR, 10, null, XMLDB_NOTNULL, null, null, 'coursevisible');
-
-        // Conditionally launch add field ltiversion.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-            $DB->set_field_select('lti_types', 'ltiversion', 'LTI-1p0', 'toolproxyid IS NULL');
-            $DB->set_field_select('lti_types', 'ltiversion', 'LTI-2p0', 'toolproxyid IS NOT NULL');
-        }
-
-        // Define field clientid to be added to lti_types.
-        $field = new xmldb_field('clientid', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'ltiversion');
-
-        // Conditionally launch add field clientid.
+        // Conditionally launch add field description.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // Define index clientid (unique) to be added to lti_types.
-        $index = new xmldb_index('clientid', XMLDB_INDEX_UNIQUE, array('clientid'));
-
-        // Conditionally launch add index clientid.
-        if (!$dbman->index_exists($table, $index)) {
-            $dbman->add_index($table, $index);
-        }
-
-        require_once($CFG->dirroot . '/mod/lti/upgradelib.php');
-
-        $warning = mod_lti_verify_private_key();
-        if (!empty($warning)) {
-            echo $OUTPUT->notification($warning, 'notifyproblem');
-        }
-
         // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2019031300, 'lti');
+        upgrade_mod_savepoint(true, 2016041800, 'lti');
     }
 
-    if ($oldversion < 2019031301) {
-        // Define table lti_access_tokens to be created.
-        $table = new xmldb_table('lti_access_tokens');
-
-        // Adding fields to table lti_access_tokens.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('typeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('scope', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-        $table->add_field('token', XMLDB_TYPE_CHAR, '128', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('validuntil', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('lastaccess', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-
-        // Adding keys to table lti_access_tokens.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_key('typeid', XMLDB_KEY_FOREIGN, array('typeid'), 'lti_types', array('id'));
-
-        // Add an index.
-        $table->add_index('token', XMLDB_INDEX_UNIQUE, array('token'));
-
-        // Conditionally launch create table for lti_access_tokens.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2019031301, 'lti');
-    }
-
-    if ($oldversion < 2019031302) {
-        // Define field typeid to be added to lti_tool_settings.
-        $table = new xmldb_table('lti_tool_settings');
-        $field = new xmldb_field('typeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'toolproxyid');
-
-        // Conditionally launch add field typeid.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define key typeid (foreign) to be added to lti_tool_settings.
-        $table = new xmldb_table('lti_tool_settings');
-        $key = new xmldb_key('typeid', XMLDB_KEY_FOREIGN, ['typeid'], 'lti_types', ['id']);
-
-        // Launch add key typeid.
-        $dbman->add_key($table, $key);
-
-        // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2019031302, 'lti');
-    }
-
-    // Automatically generated Moodle v3.7.0 release upgrade line.
+    // Moodle v3.1.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.8.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2016052301) {
 
-    // Automatically generated Moodle v3.9.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    if ($oldversion < 2020061501) {
-
-        // Changing type of field instructorcustomparameters on table lti to text.
-        $table = new xmldb_table('lti');
-        $field = new xmldb_field('instructorcustomparameters', XMLDB_TYPE_TEXT, null, null, null, null, null,
-                'instructorchoiceallowsetting');
+        // Changing type of field value on table lti_types_config to text.
+        $table = new xmldb_table('lti_types_config');
+        $field = new xmldb_field('value', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'name');
 
         // Launch change of type for field value.
         $dbman->change_field_type($table, $field);
 
         // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2020061501, 'lti');
+        upgrade_mod_savepoint(true, 2016052301, 'lti');
+    }
+
+    // Automatically generated Moodle v3.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Automatically generated Moodle v3.3.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Automatically generated Moodle v3.4.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2017111301) {
+
+        // A bug in the LTI plugin incorrectly inserted a grade item for
+        // LTI instances which were set to not allow grading.
+        // The change finds any LTI which does not have grading enabled,
+        // and updates any grades to delete them.
+
+        $ltis = $DB->get_recordset_sql("
+                SELECT
+                       l.id,
+                       l.course,
+                       l.instructorchoiceacceptgrades,
+                       t.enabledcapability,
+                       t.toolproxyid,
+                       tc.value AS acceptgrades
+                  FROM {lti} l
+            INNER JOIN {grade_items} gt
+                    ON l.id = gt.iteminstance
+             LEFT JOIN {lti_types} t
+                    ON t.id = l.typeid
+             LEFT JOIN {lti_types_config} tc
+                    ON tc.typeid = t.id AND tc.name = 'acceptgrades'
+                 WHERE gt.itemmodule = 'lti'
+                   AND gt.itemtype = 'mod'
+        ");
+
+        foreach ($ltis as $lti) {
+            $acceptgrades = true;
+            if (empty($lti->toolproxyid)) {
+                $typeacceptgrades = isset($lti->acceptgrades) ? $lti->acceptgrades : 2;
+                if (!($typeacceptgrades == 1 ||
+                        ($typeacceptgrades == 2 && $lti->instructorchoiceacceptgrades == 1))) {
+                    $acceptgrades = false;
+                }
+            } else {
+                $enabledcapabilities = explode("\n", $lti->enabledcapability);
+                $acceptgrades = in_array('Result.autocreate', $enabledcapabilities);
+            }
+
+            if (!$acceptgrades) {
+                // Required when doing CLI upgrade.
+                require_once($CFG->libdir . '/gradelib.php');
+                grade_update('mod/lti', $lti->course, 'mod', 'lti', $lti->id, 0, null, array('deleted' => 1));
+            }
+
+        }
+
+        $ltis->close();
+
+        upgrade_mod_savepoint(true, 2017111301, 'lti');
     }
 
     return true;
+
 }

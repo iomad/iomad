@@ -33,9 +33,9 @@ require_once('lib.php');
 require_once($CFG->dirroot.'/local/email/lib.php');
 
 $id = optional_param('id', $USER->id, PARAM_INT);    // User id; -1 if creating new user.
-$cancelemailchange = optional_param('cancelemailchange', 0, PARAM_INT);   // Course id (defaults to Site).
 
 require_login();
+$PAGE->https_required();
 
 $url = new moodle_url('/blocks/iomad_company_admin/editadvanced.php');
 if ($id !== $USER->id) {
@@ -62,11 +62,10 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($listtext, $listurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $listtext, $listurl);
 
 if ($id == -1) {
     // Creating new user.
@@ -101,11 +100,6 @@ if ($user->deleted) {
     echo $OUTPUT->heading(get_string('userdeleted'));
     echo $OUTPUT->footer();
     die;
-}
-
-// Process email change cancellation.
-if ($cancelemailchange) {
-    cancel_email_update($user->id);
 }
 
 // Load user preferences.
@@ -223,10 +217,6 @@ if ($usernew = $userform->get_data()) {
 
     // Update preferences.
     useredit_update_user_preference($usernew);
-    if (empty($usernew->preference_auth_forcepasswordchange)) {
-        $usernew->preference_auth_forcepasswordchange = 0;
-    }
-    set_user_preference('auth_forcepasswordchange', $usernew->preference_auth_forcepasswordchange, $usernew->id);
 
     // Update tags.
     if (!empty($CFG->usetags)) {
@@ -272,8 +262,10 @@ if ($usernew = $userform->get_data()) {
             admin_apply_default_settings(null , false);
             // Redirect to admin/ to continue with installation.
             redirect("$CFG->wwwroot/$CFG->admin/");
-        } else {
+        } else if($course and $course->id){
             redirect("$CFG->wwwroot/user/view.php?id=$USER->id&course=$course->id");
+        } else {
+            redirect("$CFG->wwwroot/user/view.php?id=$USER->id");
         }
     } else {
         \core\session\manager::gc(); // Remove stale sessions.

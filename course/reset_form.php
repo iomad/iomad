@@ -41,9 +41,9 @@ class course_reset_form extends moodleform {
 
         $mform->addElement('header', 'generalheader', get_string('general'));
 
-        $mform->addElement('date_time_selector', 'reset_start_date', get_string('startdate'), array('optional' => true));
+        $mform->addElement('date_selector', 'reset_start_date', get_string('startdate'), array('optional'=>true));
         $mform->addHelpButton('reset_start_date', 'startdate');
-        $mform->addElement('date_time_selector', 'reset_end_date', get_string('enddate'), array('optional' => true));
+        $mform->addElement('date_selector', 'reset_end_date', get_string('enddate'), array('optional' => true));
         $mform->addHelpButton('reset_end_date', 'enddate');
         $mform->addElement('checkbox', 'reset_events', get_string('deleteevents', 'calendar'));
         $mform->addElement('checkbox', 'reset_notes', get_string('deletenotes', 'notes'));
@@ -77,11 +77,15 @@ class course_reset_form extends moodleform {
         $mform->addElement('header', 'groupheader', get_string('groups'));
 
         $mform->addElement('checkbox', 'reset_groups_remove', get_string('deleteallgroups', 'group'));
+        $mform->setAdvanced('reset_groups_remove');
         $mform->addElement('checkbox', 'reset_groups_members', get_string('removegroupsmembers', 'group'));
+        $mform->setAdvanced('reset_groups_members');
         $mform->disabledIf('reset_groups_members', 'reset_groups_remove', 'checked');
 
         $mform->addElement('checkbox', 'reset_groupings_remove', get_string('deleteallgroupings', 'group'));
+        $mform->setAdvanced('reset_groupings_remove');
         $mform->addElement('checkbox', 'reset_groupings_members', get_string('removegroupingsmembers', 'group'));
+        $mform->setAdvanced('reset_groupings_members');
         $mform->disabledIf('reset_groupings_members', 'reset_groupings_remove', 'checked');
 
         $unsupported_mods = array();

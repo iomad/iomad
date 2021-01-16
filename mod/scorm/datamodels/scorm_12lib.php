@@ -29,11 +29,7 @@ function get_scorm_default (&$userdata, $scorm, $scoid, $attempt, $mode) {
     global $USER;
 
     $userdata->student_id = $USER->username;
-    if (empty(get_config('scorm', 'scormstandard'))) {
-        $userdata->student_name = fullname($USER);
-    } else {
-        $userdata->student_name = $USER->lastname .', '. $USER->firstname;
-    }
+    $userdata->student_name = $USER->lastname .', '. $USER->firstname;
 
     if ($usertrack = scorm_get_tracks($scoid, $USER->id, $attempt)) {
         foreach ($usertrack as $key => $value) {

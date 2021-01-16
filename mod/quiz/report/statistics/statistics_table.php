@@ -26,8 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-use \core_question\statistics\questions\calculated_question_summary;
-
 /**
  * This table has one row for each question in the quiz, with sub-rows when
  * random questions and variants appear.
@@ -135,34 +133,11 @@ class quiz_statistics_table extends flexible_table {
     }
 
     /**
-     * Open a div tag to wrap statistics table.
-     */
-    public function  wrap_html_start() {
-        // Horrible Moodle 2.0 wide-content work-around.
-        if (!$this->is_downloading()) {
-            echo html_writer::start_tag('div', array('id' => 'tablecontainer',
-                    'class' => 'statistics-tablecontainer'));
-        }
-    }
-
-    /**
-     * Close a statistics table div.
-     */
-    public function wrap_html_finish() {
-        if (!$this->is_downloading()) {
-            echo html_writer::end_tag('div');
-        }
-    }
-
-    /**
      * The question number.
      * @param \core_question\statistics\questions\calculated $questionstat stats for the question.
      * @return string contents of this table cell.
      */
     protected function col_number($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            return '';
-        }
         if (!isset($questionstat->question->number)) {
             return '';
         }
@@ -185,11 +160,7 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_icon($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            return '';
-        } else {
-            return print_question_icon($questionstat->question, true);
-        }
+        return print_question_icon($questionstat->question, true);
     }
 
     /**
@@ -198,12 +169,8 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_actions($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            return '';
-        } else {
-            return quiz_question_action_icons($this->quiz, $this->cmid,
-                    $questionstat->question, $this->baseurl, $questionstat->variant);
-        }
+        return quiz_question_action_icons($this->quiz, $this->cmid,
+                $questionstat->question, $this->baseurl, $questionstat->variant);
     }
 
     /**
@@ -260,16 +227,13 @@ class quiz_statistics_table extends flexible_table {
                 // Question in a slot, we are not on a page showing structural analysis of one slot,
                 // we don't want linking on those pages.
                 $number = $questionstat->question->number;
-                $israndomquestion = $questionstat->question->qtype == 'random';
                 $url = new moodle_url($baseurl, array('slot' => $questionstat->slot));
-
-                if ($this->is_calculated_question_summary($questionstat)) {
-                    // Only make the random question summary row name link to the slot structure
-                    // analysis page with specific text to clearly indicate the link to the user.
-                    // Random and variant question rows will render the name without a link to improve clarity
-                    // in the UI.
-                    $name = html_writer::div(get_string('rangeofvalues', 'quiz_statistics'));
-                } else if (!$israndomquestion && !$questionstat->get_variants() && !$questionstat->get_sub_question_ids()) {
+                if ($questionstat->get_variants() || $questionstat->get_sub_question_ids()) {
+                    // Question can be broken down into sub-questions or variants. Link will show structural analysis page.
+                    $name = html_writer::link($url,
+                                              $name,
+                                              array('title' => get_string('slotstructureanalysis', 'quiz_statistics', $number)));
+                } else {
                     // Question cannot be broken down into sub-questions or variants. Link will show response analysis page.
                     $name = html_writer::link($url,
                                               $name,
@@ -283,9 +247,7 @@ class quiz_statistics_table extends flexible_table {
             $name = html_writer::tag('div', $name, array('class' => 'dubious'));
         }
 
-        if ($this->is_calculated_question_summary($questionstat)) {
-            $name .= html_writer::link($url, get_string('viewanalysis', 'quiz_statistics'));
-        } else if (!empty($questionstat->minmedianmaxnotice)) {
+        if (!empty($questionstat->minmedianmaxnotice)) {
             $name = get_string($questionstat->minmedianmaxnotice, 'quiz_statistics') . '<br />' . $name;
         }
 
@@ -299,16 +261,11 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_s($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('s');
-            $min = $min ?: 0;
-            $max = $max ?: 0;
-            return $this->format_range($min, $max);
-        } else if (!isset($questionstat->s)) {
+        if (!isset($questionstat->s)) {
             return 0;
-        } else {
-            return $questionstat->s;
         }
+
+        return $questionstat->s;
     }
 
     /**
@@ -317,14 +274,11 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_facility($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('facility');
-            return $this->format_percentage_range($min, $max);
-        } else if (is_null($questionstat->facility)) {
+        if (is_null($questionstat->facility)) {
             return '';
-        } else {
-            return $this->format_percentage($questionstat->facility);
         }
+
+        return number_format($questionstat->facility*100, 2) . '%';
     }
 
     /**
@@ -333,14 +287,11 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_sd($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('sd');
-            return $this->format_percentage_range($min, $max);
-        } else if (is_null($questionstat->sd) || $questionstat->maxmark == 0) {
+        if (is_null($questionstat->sd) || $questionstat->maxmark == 0) {
             return '';
-        } else {
-            return $this->format_percentage($questionstat->sd / $questionstat->maxmark);
         }
+
+        return number_format($questionstat->sd*100 / $questionstat->maxmark, 2) . '%';
     }
 
     /**
@@ -349,14 +300,11 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_random_guess_score($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('randomguessscore');
-            return $this->format_percentage_range($min, $max);
-        } else if (is_null($questionstat->randomguessscore)) {
+        if (is_null($questionstat->randomguessscore)) {
             return '';
-        } else {
-            return $this->format_percentage($questionstat->randomguessscore);
         }
+
+        return number_format($questionstat->randomguessscore * 100, 2).'%';
     }
 
     /**
@@ -367,19 +315,7 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_intended_weight($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('maxmark');
-
-            if (is_null($min) && is_null($max)) {
-                return '';
-            } else {
-                $min = quiz_report_scale_summarks_as_percentage($min, $this->quiz);
-                $max = quiz_report_scale_summarks_as_percentage($max, $this->quiz);
-                return $this->format_range($min, $max);
-            }
-        } else {
-            return quiz_report_scale_summarks_as_percentage($questionstat->maxmark, $this->quiz);
-        }
+        return quiz_report_scale_summarks_as_percentage($questionstat->maxmark, $this->quiz);
     }
 
     /**
@@ -391,22 +327,11 @@ class quiz_statistics_table extends flexible_table {
     protected function col_effective_weight($questionstat) {
         global $OUTPUT;
 
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('effectiveweight');
-
-            if (is_null($min) && is_null($max)) {
-                return '';
-            } else {
-                list( , $negcovar) = $questionstat->get_min_max_of('negcovar');
-                if ($negcovar) {
-                    $min = get_string('negcovar', 'quiz_statistics');
-                }
-
-                return $this->format_range($min, $max);
-            }
-        } else if (is_null($questionstat->effectiveweight)) {
+        if (is_null($questionstat->effectiveweight)) {
             return '';
-        } else if ($questionstat->negcovar) {
+        }
+
+        if ($questionstat->negcovar) {
             $negcovar = get_string('negcovar', 'quiz_statistics');
 
             if (!$this->is_downloading()) {
@@ -416,9 +341,9 @@ class quiz_statistics_table extends flexible_table {
             }
 
             return $negcovar;
-        } else {
-            return $this->format_percentage($questionstat->effectiveweight, false);
         }
+
+        return number_format($questionstat->effectiveweight, 2) . '%';
     }
 
     /**
@@ -429,26 +354,11 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_discrimination_index($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('discriminationindex');
-
-            if (isset($max)) {
-                $min = $min ?: 0;
-            }
-
-            if (is_numeric($min)) {
-                $min = $this->format_percentage($min, false);
-            }
-            if (is_numeric($max)) {
-                $max = $this->format_percentage($max, false);
-            }
-
-            return $this->format_range($min, $max);
-        } else if (!is_numeric($questionstat->discriminationindex)) {
+        if (!is_numeric($questionstat->discriminationindex)) {
             return $questionstat->discriminationindex;
-        } else {
-            return $this->format_percentage($questionstat->discriminationindex, false);
         }
+
+        return number_format($questionstat->discriminationindex, 2) . '%';
     }
 
     /**
@@ -458,19 +368,11 @@ class quiz_statistics_table extends flexible_table {
      * @return string contents of this table cell.
      */
     protected function col_discriminative_efficiency($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            list($min, $max) = $questionstat->get_min_max_of('discriminativeefficiency');
-
-            if (!is_numeric($min) && !is_numeric($max)) {
-                return '';
-            } else {
-                return $this->format_percentage_range($min, $max, false);
-            }
-        } else if (!is_numeric($questionstat->discriminativeefficiency)) {
+        if (!is_numeric($questionstat->discriminativeefficiency)) {
             return '';
-        } else {
-            return $this->format_percentage($questionstat->discriminativeefficiency, false);
         }
+
+        return number_format($questionstat->discriminativeefficiency, 2) . '%';
     }
 
     /**
@@ -479,86 +381,24 @@ class quiz_statistics_table extends flexible_table {
      * @return bool is this question possibly not pulling it's weight?
      */
     protected function is_dubious_question($questionstat) {
-        if ($this->is_calculated_question_summary($questionstat)) {
-            // We only care about the minimum value here.
-            // If the minimum value is less than the threshold, then we know that there is at least one value below the threshold.
-            list($discriminativeefficiency) = $questionstat->get_min_max_of('discriminativeefficiency');
-        } else {
-            $discriminativeefficiency = $questionstat->discriminativeefficiency;
-        }
-
-        if (!is_numeric($discriminativeefficiency)) {
+        if (!is_numeric($questionstat->discriminativeefficiency)) {
             return false;
         }
 
-        return $discriminativeefficiency < 15;
+        return $questionstat->discriminativeefficiency < 15;
     }
 
-    /**
-     * Check if the given stats object is an instance of calculated_question_summary.
-     *
-     * @param  \core_question\statistics\questions\calculated $questionstat Stats object
-     * @return bool
-     */
-    protected function is_calculated_question_summary($questionstat) {
-        return $questionstat instanceof calculated_question_summary;
-    }
-
-    /**
-     * Format inputs to represent a range between $min and $max.
-     * This function does not check if $min is less than $max or not.
-     * If both $min and $max are equal to null, this function returns an empty string.
-     *
-     * @param string|null $min The minimum value in the range
-     * @param string|null $max The maximum value in the range
-     * @return string
-     */
-    protected function format_range(string $min = null, string $max = null) {
-        if (is_null($min) && is_null($max)) {
-            return '';
-        } else {
-            $a = new stdClass();
-            $a->min = $min;
-            $a->max = $max;
-
-            return get_string('rangebetween', 'quiz_statistics', $a);
+    public function  wrap_html_start() {
+        // Horrible Moodle 2.0 wide-content work-around.
+        if (!$this->is_downloading()) {
+            echo html_writer::start_tag('div', array('id' => 'tablecontainer',
+                    'class' => 'statistics-tablecontainer'));
         }
     }
 
-    /**
-     * Format a number to a localised percentage with specified decimal points.
-     *
-     * @param float $number The number being formatted
-     * @param bool $fraction An indicator for whether the number is a fraction or is already multiplied by 100
-     * @param int $decimals Sets the number of decimal points
-     * @return string
-     */
-    protected function format_percentage(float $number, bool $fraction = true, int $decimals = 2) {
-        $coefficient = $fraction ? 100 : 1;
-        return get_string('percents', 'moodle', format_float($number * $coefficient, $decimals));
-    }
-
-    /**
-     * Format $min and $max to localised percentages and form a string that represents a range between them.
-     * This function does not check if $min is less than $max or not.
-     * If both $min and $max are equal to null, this function returns an empty string.
-     *
-     * @param float|null $min The minimum value of the range
-     * @param float|null $max The maximum value of the range
-     * @param bool $fraction An indicator for whether min and max are a fractions or are already multiplied by 100
-     * @param int $decimals Sets the number of decimal points
-     * @return string A formatted string that represents a range between $min to $max.
-     */
-    protected function format_percentage_range(float $min = null, float $max = null, bool $fraction = true, int $decimals = 2) {
-        if (is_null($min) && is_null($max)) {
-            return '';
-        } else {
-            $min = $min ?: 0;
-            $max = $max ?: 0;
-            return $this->format_range(
-                    $this->format_percentage($min, $fraction, $decimals),
-                    $this->format_percentage($max, $fraction, $decimals)
-            );
+    public function wrap_html_finish() {
+        if (!$this->is_downloading()) {
+            echo html_writer::end_tag('div');
         }
     }
 }

@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+
 /**
  * Functional test for accesslib.php
  *
@@ -822,7 +823,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         foreach ($allroles as $role) {
             // Get localised name from lang pack.
-            // Iomad - only original Moodle roles are localised.
+            // Iomad - only original Moodle roles are localised. 
             if ($role->id < 9) {
                 $this->assertSame('', $role->name);
             }
@@ -2206,13 +2207,14 @@ class core_accesslib_testcase extends advanced_testcase {
         $count += $DB->count_records('block_instances');
         $totalcount = $DB->count_records('context');
         //$missing = $DB->get_records_sql("select * from {block_instances} where id not in (select instanceid from {context} where contextlevel=80)");
-        //var_dump($missing);
+        //var_dump($missing);  
         $concounts = $DB->get_records_sql("select contextlevel, count(*) from {context} group by contextlevel");
         //var_dump($concounts);
 //echo "count is $count, totalcount is $totalcount"; die;
         $this->assertEquals($count, $DB->count_records('context'));
         $this->assertEquals(0, $DB->count_records('context', array('depth'=>0)));
         $this->assertEquals(0, $DB->count_records('context', array('path'=>null)));
+
 
         // Test context_helper::get_level_name() method.
 
@@ -2221,6 +2223,7 @@ class core_accesslib_testcase extends advanced_testcase {
             $name = context_helper::get_level_name($level);
             $this->assertNotEmpty($name);
         }
+
 
         // Test context::instance_by_id(), context_xxx::instance() methods.
 
@@ -2268,6 +2271,7 @@ class core_accesslib_testcase extends advanced_testcase {
             $this->assertTrue(true);
         }
 
+
         // Test $context->get_url(), $context->get_context_name(), $context->get_capabilities() methods.
 
         $testcontexts = array();
@@ -2313,6 +2317,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals($frontpagecontext, $frontpagepagecontext->get_course_context(true));
         $this->assertEquals($frontpagecontext, $frontpagepageblockcontext->get_course_context(true));
 
+
         // Test $context->get_parent_context(), $context->get_parent_contexts(), $context->get_parent_context_ids() methods.
 
         $userid = reset($testusers);
@@ -2343,6 +2348,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals($frontpagecontext, $frontpagepagecontext->get_parent_context());
         $this->assertEquals($frontpagecontext, $frontpageblockcontext->get_parent_context());
         $this->assertEquals($frontpagepagecontext, $frontpagepageblockcontext->get_parent_context());
+
 
         // Test $context->get_child_contexts() method.
 
@@ -2387,12 +2393,14 @@ class core_accesslib_testcase extends advanced_testcase {
         unset($countcourses);
         unset($countblocks);
 
+
         // Test context_helper::reset_caches() method.
 
         context_helper::reset_caches();
         $this->assertEquals(0, context_inspection::test_context_cache_size());
         context_course::instance($SITE->id);
         $this->assertEquals(1, context_inspection::test_context_cache_size());
+
 
         // Test context preloading.
 
@@ -2445,6 +2453,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         accesslib_clear_all_caches_for_unit_testing(); // Must be done after assign_capability().
 
+
         // Test role_assign(), role_unassign(), role_unassign_all() functions.
 
         $context = context_course::instance($testcourses[1]);
@@ -2460,6 +2469,7 @@ class core_accesslib_testcase extends advanced_testcase {
         unset($context);
 
         accesslib_clear_all_caches_for_unit_testing(); // Just in case.
+
 
         // Test has_capability(), get_users_by_capability(), role_switch(), reload_all_capabilities() and friends functions.
 
@@ -2713,6 +2723,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         // Now let's do all the remaining tests that break our carefully prepared fake site.
 
+
         // Test $context->mark_dirty() method.
 
         $DB->delete_records('cache_flags', array());
@@ -2721,6 +2732,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $dirty = get_cache_flags('accesslib/dirtycontexts', time()-2);
         $this->assertTrue(isset($dirty[$systemcontext->path]));
         $this->assertTrue(isset($ACCESSLIB_PRIVATE->dirtycontexts[$systemcontext->path]));
+
 
         // Test $context->reload_if_dirty() method.
 
@@ -2744,6 +2756,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $pagecontext->reload_if_dirty();
         $this->assertFalse(isset($USER->access['test']));
 
+
         // Test context_helper::build_all_paths() method.
 
         $oldcontexts = $DB->get_records('context', array(), 'id');
@@ -2754,6 +2767,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals($oldcontexts, $newcontexts);
         unset($oldcontexts);
         unset($newcontexts);
+
 
         // Test $context->reset_paths() method.
 
@@ -2777,6 +2791,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals(0, $DB->count_records('context', array('depth'=>0)));
         $this->assertEquals(0, $DB->count_records('context', array('path'=>null)));
 
+
         // Test $context->update_moved() method.
 
         accesslib_clear_all_caches(false);
@@ -2796,6 +2811,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertTrue(isset($dirty[$oldpath]));
         $this->assertTrue(isset($dirty[$context->path]));
 
+
         // Test $context->delete_content() method.
 
         context_helper::reset_caches();
@@ -2805,6 +2821,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $context->delete_content();
         $this->assertTrue($DB->record_exists('context', array('id'=>$context->id)));
         $this->assertEquals(0, $DB->count_records('block_instances', array('parentcontextid'=>$context->id)));
+
 
         // Test $context->delete() method.
 
@@ -2825,6 +2842,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals(0, $DB->count_records('block_instances', array('parentcontextid'=>$context->id)));
         context_module::instance($testpages[4]);
 
+
         // Test context_helper::delete_instance() method.
 
         context_helper::reset_caches();
@@ -2840,6 +2858,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->assertEquals(0, context_inspection::test_context_cache_size());
         $this->assertFalse($DB->record_exists('context', array('contextlevel'=>CONTEXT_COURSE, 'instanceid'=>$lastcourse)));
         context_course::instance($lastcourse);
+
 
         // Test context_helper::create_instances() method.
 
@@ -2878,6 +2897,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $count += $DB->count_records('block_instances');
         $this->assertEquals($count, $DB->count_records('context'));
 
+
         // Test context cache size restrictions.
 
         $testusers= array();
@@ -2905,6 +2925,8 @@ class core_accesslib_testcase extends advanced_testcase {
         context_user::instance($testusers[102]);
         $this->assertEquals($prevsize+1, context_inspection::test_context_cache_size());
         unset($testusers);
+
+
 
         // Test basic test of legacy functions.
         // Note: watch out, the fake site might be pretty borked already.

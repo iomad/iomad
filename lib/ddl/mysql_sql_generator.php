@@ -321,27 +321,6 @@ class mysql_sql_generator extends sql_generator {
         return $sqls;
     }
 
-    public function getAlterFieldSQL($xmldb_table, $xmldb_field, $skip_type_clause = NULL, $skip_default_clause = NULL, $skip_notnull_clause = NULL)
-    {
-        $tablename = $xmldb_table->getName();
-        $dbcolumnsinfo = $this->mdb->get_columns($tablename);
-
-        if (($this->mdb->has_breaking_change_sqlmode()) &&
-            ($dbcolumnsinfo[$xmldb_field->getName()]->meta_type == 'X') &&
-            ($xmldb_field->getType() == XMLDB_TYPE_INTEGER)) {
-            // Ignore 1292 ER_TRUNCATED_WRONG_VALUE Truncated incorrect INTEGER value: '%s'.
-            $altercolumnsqlorig = $this->alter_column_sql;
-            $this->alter_column_sql = str_replace('ALTER TABLE', 'ALTER IGNORE TABLE', $this->alter_column_sql);
-            $result = parent::getAlterFieldSQL($xmldb_table, $xmldb_field, $skip_type_clause, $skip_default_clause, $skip_notnull_clause);
-            // Restore the original ALTER SQL statement pattern.
-            $this->alter_column_sql = $altercolumnsqlorig;
-
-            return $result;
-        }
-
-        return parent::getAlterFieldSQL($xmldb_table, $xmldb_field, $skip_type_clause, $skip_default_clause, $skip_notnull_clause);
-    }
-
     /**
      * Given one correct xmldb_table, returns the SQL statements
      * to create temporary table (inside one array).
@@ -384,6 +363,7 @@ class mysql_sql_generator extends sql_generator {
         $sqlarr = parent::getDropTableSQL($xmldb_table);
         if ($this->temptables->is_temptable($xmldb_table->getName())) {
             $sqlarr = preg_replace('/^DROP TABLE/', "DROP TEMPORARY TABLE", $sqlarr);
+            $this->temptables->delete_temptable($xmldb_table->getName());
         }
         return $sqlarr;
     }
@@ -509,7 +489,7 @@ class mysql_sql_generator extends sql_generator {
         $fieldsql = $this->getFieldSQL($xmldb_table, $xmldb_field_clone);
 
         $sql = 'ALTER TABLE ' . $this->getTableName($xmldb_table) . ' CHANGE ' .
-               $this->getEncQuoted($xmldb_field->getName()) . ' ' . $fieldsql;
+               $xmldb_field->getName() . ' ' . $fieldsql;
 
         return array($sql);
     }

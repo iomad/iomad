@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
@@ -106,7 +107,7 @@ $functions = array(
         'type' => 'read',
         'ajax' => true,
     ),
-
+   
     'local_iomad_learningpath_getprospectiveusers' => array(
         'classname' => 'local_iomad_learningpath_external',
         'methodname' => 'getprospectiveusers',

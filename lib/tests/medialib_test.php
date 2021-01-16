@@ -17,14 +17,13 @@
 /**
  * Test classes for handling embedded media (audio/video).
  *
- * @package   core
- * @category  test
+ * @package core_media
+ * @category phpunit
  * @copyright 2012 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
-require_once(__DIR__ . '/fixtures/testable_core_media_player.php');
 
 /**
  * Test script for media embedding.
@@ -130,7 +129,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for get_players
+     * Test for core_media_renderer get_players
      */
     public function test_get_players() {
         // All players are initially disabled (except link, which you can't).
@@ -159,7 +158,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for can_embed_url
+     * Test for core_media_renderer can_embed_url
      */
     public function test_can_embed_url() {
         // All players are initially disabled, so mp4 cannot be rendered.
@@ -189,7 +188,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for embed_url.
+     * Test for core_media_renderer embed_url.
      * Checks multiple format/fallback support.
      */
     public function test_embed_url_fallbacks() {
@@ -265,7 +264,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for embed_url.
+     * Test for core_media_renderer embed_url.
      * Check SWF works including the special option required to enable it
      */
     public function test_embed_url_swf() {
@@ -303,7 +302,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for embed_url.
+     * Test for core_media_renderer embed_url.
      * Checks the EMBED_OR_BLANK option.
      */
     public function test_embed_or_blank() {
@@ -326,7 +325,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for embed_url.
+     * Test for core_media_renderer embed_url.
      * Checks that size is passed through correctly to player objects and tests
      * size support in html5video output.
      */
@@ -359,7 +358,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for embed_url.
+     * Test for core_media_renderer embed_url.
      * Checks that name is passed through correctly to player objects and tests
      * name support in html5video output.
      */
@@ -380,7 +379,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for split_alternatives.
+     * Test for core_media_renderer split_alternatives.
      */
     public function test_split_alternatives() {
         $mediamanager = core_media_manager::instance();
@@ -417,7 +416,7 @@ class core_medialib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for embed_alternatives (with multiple urls)
+     * Test for core_media_renderer embed_alternatives (with multiple urls)
      */
     public function test_embed_alternatives() {
         // Most aspects of this are same as single player so let's just try
@@ -495,5 +494,43 @@ class core_medialib_testcase extends advanced_testcase {
             $out .= str_replace('core_media_player_', '', preg_replace('/^media_(.*)_plugin$/', '$1', get_class($player)));
         }
         return $out;
+    }
+}
+
+/**
+ * Media player stub for testing purposes.
+ */
+class media_test_plugin extends core_media_player {
+    /** @var array Array of supported extensions */
+    public $ext;
+    /** @var int Player rank */
+    public $rank;
+    /** @var int Arbitrary number */
+    public $num;
+
+    /**
+     * @param int $num Number (used in output)
+     * @param int $rank Player rank
+     * @param array $ext Array of supported extensions
+     */
+    public function __construct($num = 1, $rank = 13, $ext = array('mp3', 'flv', 'f4v', 'mp4')) {
+        $this->ext = $ext;
+        $this->rank = $rank;
+        $this->num = $num;
+    }
+
+    public function embed($urls, $name, $width, $height, $options) {
+        self::pick_video_size($width, $height);
+        $contents = "\ntestsource=". join("\ntestsource=", $urls) .
+            "\ntestname=$name\ntestwidth=$width\ntestheight=$height\n<!--FALLBACK-->\n";
+        return html_writer::span($contents, 'mediaplugin mediaplugin_test');
+    }
+
+    public function get_supported_extensions() {
+        return $this->ext;
+    }
+
+    public function get_rank() {
+        return 10;
     }
 }

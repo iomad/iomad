@@ -51,8 +51,6 @@ class report implements renderable, templatable {
     protected $context;
     /** @var int $courseid */
     protected $courseid;
-    /** @var int $moduleid */
-    protected $moduleid;
     /** @var array $competencies */
     protected $competencies;
 
@@ -61,12 +59,10 @@ class report implements renderable, templatable {
      *
      * @param int $courseid The course id
      * @param int $userid The user id
-     * @param int $moduleid The module id
      */
-    public function __construct($courseid, $userid, $moduleid) {
+    public function __construct($courseid, $userid) {
         $this->courseid = $courseid;
         $this->userid = $userid;
-        $this->moduleid = $moduleid;
         $this->context = context_course::instance($courseid);
     }
 
@@ -81,10 +77,6 @@ class report implements renderable, templatable {
 
         $data = new stdClass();
         $data->courseid = $this->courseid;
-        $data->moduleid = $this->moduleid;
-        if (empty($data->moduleid)) {
-            $data->moduleid = 0;
-        }
 
         $course = $DB->get_record('course', array('id' => $this->courseid));
         $coursecontext = context_course::instance($course->id);
@@ -101,23 +93,6 @@ class report implements renderable, templatable {
         $data->usercompetencies = array();
         $coursecompetencies = api::list_course_competencies($this->courseid);
         $usercompetencycourses = api::list_user_competencies_in_course($this->courseid, $user->id);
-        if ($this->moduleid > 0) {
-            $modulecompetencies = api::list_course_module_competencies_in_course_module($this->moduleid);
-            foreach ($usercompetencycourses as $ucid => $usercompetency) {
-                $found = false;
-                foreach ($modulecompetencies as $mcid => $modulecompetency) {
-                    if ($modulecompetency->get('competencyid') == $usercompetency->get('competencyid')) {
-                        $found = true;
-                        break;
-                    }
-                }
-
-                if (!$found) {
-                    // We need to filter out this competency.
-                    unset($usercompetencycourses[$ucid]);
-                }
-            }
-        }
 
         $helper = new performance_helper();
         foreach ($usercompetencycourses as $usercompetencycourse) {

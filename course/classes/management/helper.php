@@ -52,10 +52,10 @@ class helper {
      * Returns course details in an array ready to be printed.
      *
      * @global \moodle_database $DB
-     * @param \core_course_list_element $course
+     * @param \course_in_list $course
      * @return array
      */
-    public static function get_course_detail_array(\core_course_list_element $course) {
+    public static function get_course_detail_array(\course_in_list $course) {
         global $DB;
 
         $canaccess = $course->can_access();
@@ -72,7 +72,7 @@ class helper {
             }
         }
 
-        $category = \core_course_category::get($course->category);
+        $category = \coursecat::get($course->category);
         $categoryurl = new \moodle_url('/course/management.php', array('categoryid' => $course->category));
         $categoryname = $category->get_formatted_name();
 
@@ -164,12 +164,10 @@ class helper {
     /**
      * Returns an array of actions that can be performed upon a category being shown in a list.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @return array
      */
-    public static function get_category_listitem_actions(\core_course_category $category) {
-        global $CFG;
-
+    public static function get_category_listitem_actions(\coursecat $category) {
         $manageurl = new \moodle_url('/course/management.php', array('categoryid' => $category->id));
         $baseurl = new \moodle_url($manageurl, array('sesskey' => \sesskey()));
         $actions = array();
@@ -201,13 +199,13 @@ class helper {
         if ($category->can_change_sortorder()) {
             $actions['moveup'] = array(
                 'url' => new \moodle_url($baseurl, array('action' => 'movecategoryup')),
-                'icon' => new \pix_icon('t/up', new \lang_string('moveup')),
-                'string' => new \lang_string('moveup')
+                'icon' => new \pix_icon('t/up', new \lang_string('up')),
+                'string' => new \lang_string('up')
             );
             $actions['movedown'] = array(
                 'url' => new \moodle_url($baseurl, array('action' => 'movecategorydown')),
-                'icon' => new \pix_icon('t/down', new \lang_string('movedown')),
-                'string' => new \lang_string('movedown')
+                'icon' => new \pix_icon('t/down', new \lang_string('down')),
+                'string' => new \lang_string('down')
             );
         }
 
@@ -244,7 +242,7 @@ class helper {
         }
 
         // Delete.
-        if (!empty($category->move_content_targets_list()) || $category->can_delete_full()) {
+        if ($category->can_delete_full()) {
             $actions['delete'] = array(
                 'url' => new \moodle_url($baseurl, array('action' => 'deletecategory')),
                 'icon' => new \pix_icon('t/delete', new \lang_string('delete')),
@@ -282,28 +280,6 @@ class helper {
             );
         }
 
-        // Context locking.
-        if (!empty($CFG->contextlocking) && has_capability('moodle/site:managecontextlocks', $category->get_context())) {
-            $parentcontext = $category->get_context()->get_parent_context();
-            if (empty($parentcontext) || !$parentcontext->locked) {
-                if ($category->get_context()->locked) {
-                    $lockicon = 'i/unlock';
-                    $lockstring = get_string('managecontextunlock', 'admin');
-                } else {
-                    $lockicon = 'i/lock';
-                    $lockstring = get_string('managecontextlock', 'admin');
-                }
-                $actions['managecontextlock'] = [
-                    'url' => new \moodle_url('/admin/lock.php', [
-                            'id' => $category->get_context()->id,
-                            'returnurl' => $manageurl->out_as_local_url(false),
-                        ]),
-                    'icon' => new \pix_icon($lockicon, $lockstring),
-                    'string' => $lockstring,
-                ];
-            }
-        }
-
         // Cohorts.
         if ($category->can_review_cohorts()) {
             $actions['cohorts'] = array(
@@ -330,26 +306,6 @@ class helper {
                 'string' => new \lang_string('restorecourse', 'admin')
             );
         }
-        // Recyclebyn.
-        if (\tool_recyclebin\category_bin::is_enabled()) {
-            $categorybin = new \tool_recyclebin\category_bin($category->id);
-            if ($categorybin->can_view()) {
-                $autohide = get_config('tool_recyclebin', 'autohide');
-                if ($autohide) {
-                    $items = $categorybin->get_items();
-                } else {
-                    $items = [];
-                }
-                if (!$autohide || !empty($items)) {
-                    $pluginname = get_string('pluginname', 'tool_recyclebin');
-                    $actions['recyclebin'] = [
-                       'url' => new \moodle_url('/admin/tool/recyclebin/index.php', ['contextid' => $category->get_context()->id]),
-                       'icon' => new \pix_icon('trash', $pluginname, 'tool_recyclebin'),
-                       'string' => $pluginname
-                    ];
-                }
-            }
-        }
 
         return $actions;
     }
@@ -357,11 +313,11 @@ class helper {
     /**
      * Returns an array of actions for a course listitem.
      *
-     * @param \core_course_category $category
-     * @param \core_course_list_element $course
-     * @return array
+     * @param \coursecat $category
+     * @param \course_in_list $course
+     * @return string
      */
-    public static function get_course_listitem_actions(\core_course_category $category, \core_course_list_element $course) {
+    public static function get_course_listitem_actions(\coursecat $category, \course_in_list $course) {
         $baseurl = new \moodle_url(
             '/course/management.php',
             array('courseid' => $course->id, 'categoryid' => $course->category, 'sesskey' => \sesskey())
@@ -373,14 +329,6 @@ class helper {
                 'url' => new \moodle_url('/course/edit.php', array('id' => $course->id, 'returnto' => 'catmanage')),
                 'icon' => new \pix_icon('t/edit', \get_string('edit')),
                 'attributes' => array('class' => 'action-edit')
-            );
-        }
-        // Copy.
-        if (self::can_copy_course($course->id)) {
-            $actions[] = array(
-                'url' => new \moodle_url('/backup/copy.php', array('id' => $course->id, 'returnto' => 'catmanage')),
-                'icon' => new \pix_icon('t/copy', \get_string('copycourse')),
-                'attributes' => array('class' => 'action-copy')
             );
         }
         // Delete.
@@ -408,12 +356,12 @@ class helper {
         if ($category->can_resort_courses()) {
             $actions[] = array(
                 'url' => new \moodle_url($baseurl, array('action' => 'movecourseup')),
-                'icon' => new \pix_icon('t/up', \get_string('moveup')),
+                'icon' => new \pix_icon('t/up', \get_string('up')),
                 'attributes' => array('data-action' => 'moveup', 'class' => 'action-moveup')
             );
             $actions[] = array(
                 'url' => new \moodle_url($baseurl, array('action' => 'movecoursedown')),
-                'icon' => new \pix_icon('t/down', \get_string('movedown')),
+                'icon' => new \pix_icon('t/down', \get_string('down')),
                 'attributes' => array('data-action' => 'movedown', 'class' => 'action-movedown')
             );
         }
@@ -423,18 +371,20 @@ class helper {
     /**
      * Returns an array of actions that can be performed on the course being displayed.
      *
-     * @param \core_course_list_element $course
+     * @param \course_in_list $course
      * @return array
      */
-    public static function get_course_detail_actions(\core_course_list_element $course) {
+    public static function get_course_detail_actions(\course_in_list $course) {
         $params = array('courseid' => $course->id, 'categoryid' => $course->category, 'sesskey' => \sesskey());
         $baseurl = new \moodle_url('/course/management.php', $params);
         $actions = array();
         // View.
-        $actions['view'] = array(
-            'url' => new \moodle_url('/course/view.php', array('id' => $course->id)),
-            'string' => \get_string('view')
-        );
+        if ($course->is_uservisible()) {
+            $actions['view'] = array(
+                'url' => new \moodle_url('/course/view.php', array('id' => $course->id)),
+                'string' => \get_string('view')
+            );
+        }
         // Edit.
         if ($course->can_edit()) {
             $actions['edit'] = array(
@@ -490,15 +440,14 @@ class helper {
     /**
      * Resorts the courses within a category moving the given course up by one.
      *
-     * @param \core_course_list_element $course
-     * @param \core_course_category $category
+     * @param \course_in_list $course
+     * @param \coursecat $category
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_course_change_sortorder_up_one(\core_course_list_element $course,
-                                                                 \core_course_category $category) {
+    public static function action_course_change_sortorder_up_one(\course_in_list $course, \coursecat $category) {
         if (!$category->can_resort_courses()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_resort');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_resort');
         }
         return \course_change_sortorder_by_one($course, true);
     }
@@ -506,15 +455,14 @@ class helper {
     /**
      * Resorts the courses within a category moving the given course down by one.
      *
-     * @param \core_course_list_element $course
-     * @param \core_course_category $category
+     * @param \course_in_list $course
+     * @param \coursecat $category
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_course_change_sortorder_down_one(\core_course_list_element $course,
-                                                                   \core_course_category $category) {
+    public static function action_course_change_sortorder_down_one(\course_in_list $course, \coursecat $category) {
         if (!$category->can_resort_courses()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_resort');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_resort');
         }
         return \course_change_sortorder_by_one($course, false);
     }
@@ -530,8 +478,8 @@ class helper {
         if (is_int($courserecordorid)) {
             $courserecordorid = get_course($courserecordorid);
         }
-        $course = new \core_course_list_element($courserecordorid);
-        $category = \core_course_category::get($course->category);
+        $course = new \course_in_list($courserecordorid);
+        $category = \coursecat::get($course->category);
         return self::action_course_change_sortorder_up_one($course, $category);
     }
 
@@ -546,8 +494,8 @@ class helper {
         if (is_int($courserecordorid)) {
             $courserecordorid = get_course($courserecordorid);
         }
-        $course = new \core_course_list_element($courserecordorid);
-        $category = \core_course_category::get($course->category);
+        $course = new \course_in_list($courserecordorid);
+        $category = \coursecat::get($course->category);
         return self::action_course_change_sortorder_down_one($course, $category);
     }
 
@@ -561,7 +509,7 @@ class helper {
      */
     public static function action_course_change_sortorder_after_course($courserecordorid, $moveaftercourseid) {
         $course = \get_course($courserecordorid);
-        $category = \core_course_category::get($course->category);
+        $category = \coursecat::get($course->category);
         if (!$category->can_resort_courses()) {
             $url = '/course/management.php?categoryid='.$course->category;
             throw new \moodle_exception('nopermissions', 'error', $url, \get_string('resortcourses', 'moodle'));
@@ -570,31 +518,29 @@ class helper {
     }
 
     /**
-     * Makes a course visible given a \core_course_list_element object.
+     * Makes a course visible given a \course_in_list object.
      *
-     * @param \core_course_list_element $course
+     * @param \course_in_list $course
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_course_show(\core_course_list_element $course) {
+    public static function action_course_show(\course_in_list $course) {
         if (!$course->can_change_visibility()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null,
-                'core_course_list_element::can_change_visbility');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'course_in_list::can_change_visbility');
         }
         return course_change_visibility($course->id, true);
     }
 
     /**
-     * Makes a course hidden given a \core_course_list_element object.
+     * Makes a course hidden given a \course_in_list object.
      *
-     * @param \core_course_list_element $course
+     * @param \course_in_list $course
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_course_hide(\core_course_list_element $course) {
+    public static function action_course_hide(\course_in_list $course) {
         if (!$course->can_change_visibility()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null,
-                'core_course_list_element::can_change_visbility');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'course_in_list::can_change_visbility');
         }
         return course_change_visibility($course->id, false);
     }
@@ -610,7 +556,7 @@ class helper {
         if (is_int($courserecordorid)) {
             $courserecordorid = get_course($courserecordorid);
         }
-        $course = new \core_course_list_element($courserecordorid);
+        $course = new \course_in_list($courserecordorid);
         return self::action_course_show($course);
     }
 
@@ -625,20 +571,20 @@ class helper {
         if (is_int($courserecordorid)) {
             $courserecordorid = get_course($courserecordorid);
         }
-        $course = new \core_course_list_element($courserecordorid);
+        $course = new \course_in_list($courserecordorid);
         return self::action_course_hide($course);
     }
 
     /**
      * Resort a categories subcategories shifting the given category up one.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_category_change_sortorder_up_one(\core_course_category $category) {
+    public static function action_category_change_sortorder_up_one(\coursecat $category) {
         if (!$category->can_change_sortorder()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_change_sortorder');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_change_sortorder');
         }
         return $category->change_sortorder_by_one(true);
     }
@@ -646,13 +592,13 @@ class helper {
     /**
      * Resort a categories subcategories shifting the given category down one.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_category_change_sortorder_down_one(\core_course_category $category) {
+    public static function action_category_change_sortorder_down_one(\coursecat $category) {
         if (!$category->can_change_sortorder()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_change_sortorder');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_change_sortorder');
         }
         return $category->change_sortorder_by_one(false);
     }
@@ -664,7 +610,7 @@ class helper {
      * @return bool
      */
     public static function action_category_change_sortorder_up_one_by_id($categoryid) {
-        $category = \core_course_category::get($categoryid);
+        $category = \coursecat::get($categoryid);
         return self::action_category_change_sortorder_up_one($category);
     }
 
@@ -675,72 +621,72 @@ class helper {
      * @return bool
      */
     public static function action_category_change_sortorder_down_one_by_id($categoryid) {
-        $category = \core_course_category::get($categoryid);
+        $category = \coursecat::get($categoryid);
         return self::action_category_change_sortorder_down_one($category);
     }
 
     /**
-     * Makes a category hidden given a core_course_category object.
+     * Makes a category hidden given a \coursecat record.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_category_hide(\core_course_category $category) {
+    public static function action_category_hide(\coursecat $category) {
         if (!$category->can_change_visibility()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_change_visbility');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_change_visbility');
         }
         $category->hide();
         return true;
     }
 
     /**
-     * Makes a category visible given a core_course_category object.
+     * Makes a category visible given a \coursecat record.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_category_show(\core_course_category $category) {
+    public static function action_category_show(\coursecat $category) {
         if (!$category->can_change_visibility()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_change_visbility');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_change_visbility');
         }
         $category->show();
         return true;
     }
 
     /**
-     * Makes a category visible given a course category id or database record.
+     * Makes a category visible given a \coursecat id or database record.
      *
      * @param int|\stdClass $categoryid
      * @return bool
      */
     public static function action_category_show_by_id($categoryid) {
-        return self::action_category_show(\core_course_category::get($categoryid));
+        return self::action_category_show(\coursecat::get($categoryid));
     }
 
     /**
-     * Makes a category hidden given a course category id or database record.
+     * Makes a category hidden given a \coursecat id or database record.
      *
      * @param int|\stdClass $categoryid
      * @return bool
      */
     public static function action_category_hide_by_id($categoryid) {
-        return self::action_category_hide(\core_course_category::get($categoryid));
+        return self::action_category_hide(\coursecat::get($categoryid));
     }
 
     /**
      * Resorts the sub categories of the given category.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @param string $sort One of idnumber or name.
      * @param bool $cleanup If true cleanup will be done, if false you will need to do it manually later.
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_category_resort_subcategories(\core_course_category $category, $sort, $cleanup = true) {
+    public static function action_category_resort_subcategories(\coursecat $category, $sort, $cleanup = true) {
         if (!$category->can_resort_subcategories()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_resort');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_resort');
         }
         return $category->resort_subcategories($sort, $cleanup);
     }
@@ -748,15 +694,15 @@ class helper {
     /**
      * Resorts the courses within the given category.
      *
-     * @param \core_course_category $category
+     * @param \coursecat $category
      * @param string $sort One of fullname, shortname or idnumber
      * @param bool $cleanup If true cleanup will be done, if false you will need to do it manually later.
      * @return bool
      * @throws \moodle_exception
      */
-    public static function action_category_resort_courses(\core_course_category $category, $sort, $cleanup = true) {
+    public static function action_category_resort_courses(\coursecat $category, $sort, $cleanup = true) {
         if (!$category->can_resort_courses()) {
-            throw new \moodle_exception('permissiondenied', 'error', '', null, 'core_course_category::can_resort');
+            throw new \moodle_exception('permissiondenied', 'error', '', null, 'coursecat::can_resort');
         }
         return $category->resort_courses($sort, $cleanup);
     }
@@ -764,14 +710,13 @@ class helper {
     /**
      * Moves courses out of one category and into a new category.
      *
-     * @param \core_course_category $oldcategory The category we are moving courses out of.
-     * @param \core_course_category $newcategory The category we are moving courses into.
+     * @param \coursecat $oldcategory The category we are moving courses out of.
+     * @param \coursecat $newcategory The category we are moving courses into.
      * @param array $courseids The ID's of the courses we want to move.
      * @return bool True on success.
      * @throws \moodle_exception
      */
-    public static function action_category_move_courses_into(\core_course_category $oldcategory,
-                                                             \core_course_category $newcategory, array $courseids) {
+    public static function action_category_move_courses_into(\coursecat $oldcategory, \coursecat $newcategory, array $courseids) {
         global $DB;
 
         list($where, $params) = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
@@ -792,7 +737,7 @@ class helper {
      */
     public static function get_management_viewmodes() {
         return array(
-            'combined' => new \lang_string('categoriesandcourses'),
+            'combined' => new \lang_string('categoriesandcoures'),
             'categories' => new \lang_string('categories'),
             'courses' => new \lang_string('courses')
         );
@@ -828,14 +773,13 @@ class helper {
             $searchcriteria = array('modulelist' => $modulelist);
         }
 
-        $topcat = \core_course_category::top();
-        $courses = $topcat->search_courses($searchcriteria, array(
+        $courses = \coursecat::get(0)->search_courses($searchcriteria, array(
             'recursive' => true,
             'offset' => $page * $perpage,
             'limit' => $perpage,
             'sort' => array('fullname' => 1)
         ));
-        $totalcount = $topcat->search_courses_count($searchcriteria, array('recursive' => true));
+        $totalcount = \coursecat::get(0)->search_courses_count($searchcriteria, array('recursive' => true));
 
         return array($courses, \count($courses), $totalcount);
     }
@@ -846,7 +790,7 @@ class helper {
      * This function works much the same way as action_category_move_courses_into however it allows courses from multiple
      * categories to be moved into a single category.
      *
-     * @param int|\core_course_category $categoryorid The category to move them into.
+     * @param int|\coursecat $categoryorid The category to move them into.
      * @param array|int $courseids An array of course id's or optionally just a single course id.
      * @return bool True on success or false on failure.
      * @throws \moodle_exception
@@ -861,10 +805,10 @@ class helper {
         if (count($courseids) === 0) {
             return false;
         }
-        if ($categoryorid instanceof \core_course_category) {
+        if ($categoryorid instanceof \coursecat) {
             $moveto = $categoryorid;
         } else {
-            $moveto = \core_course_category::get($categoryorid);
+            $moveto = \coursecat::get($categoryorid);
         }
         if (!$moveto->can_move_courses_out_of() || !$moveto->can_move_courses_into()) {
             throw new \moodle_exception('cannotmovecourses');
@@ -880,7 +824,7 @@ class helper {
             }
             $catid = $courses[$id]->category;
             if (!isset($checks[$catid])) {
-                $coursecat = \core_course_category::get($catid);
+                $coursecat = \coursecat::get($catid);
                 $checks[$catid] = $coursecat->can_move_courses_out_of() && $coursecat->can_move_courses_into();
             }
             if (!$checks[$catid]) {
@@ -911,7 +855,7 @@ class helper {
      */
     public static function get_category_children_visibility($categoryid) {
         global $DB;
-        $category = \core_course_category::get($categoryid);
+        $category = \coursecat::get($categoryid);
         $select = $DB->sql_like('path', ':path');
         $path = $category->path . '/%';
 
@@ -925,10 +869,10 @@ class helper {
     /**
      * Records when a category is expanded or collapsed so that when the user
      *
-     * @param \core_course_category $coursecat The category we're working with.
+     * @param \coursecat $coursecat The category we're working with.
      * @param bool $expanded True if the category is expanded now.
      */
-    public static function record_expanded_category(\core_course_category $coursecat, $expanded = true) {
+    public static function record_expanded_category(\coursecat $coursecat, $expanded = true) {
         // If this ever changes we are going to reset it and reload the categories as required.
         self::$expandedcategories = null;
         $categoryid = $coursecat->id;
@@ -976,7 +920,7 @@ class helper {
      * Returns the categories that should be expanded when displaying the interface.
      *
      * @param int|null $withpath If specified a path to require as the parent.
-     * @return \core_course_category[] An array of Category ID's to expand.
+     * @return \coursecat[] An array of Category ID's to expand.
      */
     public static function get_expanded_categories($withpath = null) {
         if (self::$expandedcategories === null) {
@@ -1003,25 +947,5 @@ class helper {
         } else {
             return array($parent);
         }
-    }
-
-    /**
-     * Get an array of the capabilities required to copy a course.
-     *
-     * @return array
-     */
-    public static function get_course_copy_capabilities(): array {
-        return array('moodle/backup:backupcourse', 'moodle/restore:restorecourse', 'moodle/course:view', 'moodle/course:create');
-    }
-
-    /**
-     * Returns true if the current user can copy this course.
-     *
-     * @param int $courseid
-     * @return bool
-     */
-    public static function can_copy_course(int $courseid): bool {
-        $coursecontext = \context_course::instance($courseid);
-        return has_all_capabilities(self::get_course_copy_capabilities(), $coursecontext);
     }
 }

@@ -19,10 +19,11 @@ $capabilities = array(
     'local/report_companies:view' => array(
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW,
-            'clientreporter' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
         ),
+
+        'clonepermissionsfrom' => 'moodle/site:viewreports',
     )
 );

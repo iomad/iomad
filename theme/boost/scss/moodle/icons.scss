@@ -8,25 +8,11 @@ $icon-height: 16px;
 $icon-big-width: 64px;
 $icon-big-height: 64px;
 
-// stylelint-disable
-$iconsizes: () !default;
-$iconsizes: map-merge((
-  0: 0,
-  1: ($icon-width * .25),
-  2: ($icon-width * .5),
-  3: $icon-width,
-  4: ($icon-width * 1.5),
-  5: ($icon-width * 2),
-  6: ($icon-width * 2.5),
-  7: ($icon-width * 3)
-), $iconsizes);
-// stylelint-enable
-
 .icon {
     font-size: $icon-height;
     width: $icon-width;
     height: $icon-height;
-    // vertical-align: middle;
+    vertical-align: middle;
     margin: 0;
     padding: 0;
     box-sizing: content-box;
@@ -41,18 +27,41 @@ $iconsizes: map-merge((
         height: $icon-big-height;
         font-size: $icon-big-height;
     }
+}
 
-    &.movetarget {
-        width: 80px;
-    }
+$icon-color: $body-color !default;
+
+a .icon {
+    color: $icon-color;
 }
 
 .navbar-dark a .icon {
     color: $navbar-dark-color !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.action-menu-item a:first-of-type > .icon {
+a:first-of-type > .icon,
+span:first-of-type > .icon {
     margin-left: 0.5rem;
+}
+
+// Fix the first icon for an action menu. This rule exists to reverse the
+// icon margin defined in the a:first-of-type > .icon rule.
+.action-menu .dropdown a:first-of-type > .icon {
+    margin-left: 0;
+}
+
+.pull-xs-right {
+    // Now we need to override the .action-menu .dropdown a:first-of-type > .icon
+    // rule above for when actions menus are in the pull-xs-right class.
+    .dropdown a .icon {
+        margin-left: 0;
+        margin-right: 0.5rem;
+    }
+
+    .icon {
+        margin-right: 0;
+        margin-left: 0.5rem;
+    }
 }
 
 // YUI 2 Tree View icons must not have a margin left.
@@ -77,30 +86,7 @@ $iconsizes: map-merge((
     margin: 0;
 }
 
-.icon-no-margin {
-    .icon {
-        margin-left: 0;
-        margin-right: 0;
-        margin-top: 0;
-        margin-bottom: 0;
-    }
-}
-
 .icon-large > .icon {
     width: ($icon-width * 2);
     height: ($icon-height * 2);
-}
-
-@each $size, $length in $iconsizes {
-    .icon-size-#{$size} {
-        .icon {
-            height: $length !important; /* stylelint-disable-line declaration-no-important */
-            width: $length !important; /* stylelint-disable-line declaration-no-important */
-            font-size: $length !important; /* stylelint-disable-line declaration-no-important */
-        }
-    }
-}
-
-.helplink .icon {
-    margin-left: 0.5rem;
 }

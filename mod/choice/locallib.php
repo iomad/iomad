@@ -52,14 +52,13 @@ function choice_set_events($choice) {
         if ((!empty($choice->timeopen)) && ($choice->timeopen > 0)) {
             // Calendar event exists so update it.
             $event->name         = get_string('calendarstart', 'choice', $choice->name);
-            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule);
             $event->timestart    = $choice->timeopen;
             $event->timesort     = $choice->timeopen;
             $event->visible      = instance_is_visible('choice', $choice);
             $event->timeduration = 0;
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event, false);
+            $calendarevent->update($event);
         } else {
             // Calendar event is on longer needed.
             $calendarevent = calendar_event::load($event->id);
@@ -69,8 +68,7 @@ function choice_set_events($choice) {
         // Event doesn't exist so create one.
         if ((!empty($choice->timeopen)) && ($choice->timeopen > 0)) {
             $event->name         = get_string('calendarstart', 'choice', $choice->name);
-            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule);
             $event->courseid     = $choice->course;
             $event->groupid      = 0;
             $event->userid       = 0;
@@ -80,7 +78,7 @@ function choice_set_events($choice) {
             $event->timesort     = $choice->timeopen;
             $event->visible      = instance_is_visible('choice', $choice);
             $event->timeduration = 0;
-            calendar_event::create($event, false);
+            calendar_event::create($event);
         }
     }
 
@@ -93,14 +91,13 @@ function choice_set_events($choice) {
         if ((!empty($choice->timeclose)) && ($choice->timeclose > 0)) {
             // Calendar event exists so update it.
             $event->name         = get_string('calendarend', 'choice', $choice->name);
-            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule);
             $event->timestart    = $choice->timeclose;
             $event->timesort     = $choice->timeclose;
             $event->visible      = instance_is_visible('choice', $choice);
             $event->timeduration = 0;
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event, false);
+            $calendarevent->update($event);
         } else {
             // Calendar event is on longer needed.
             $calendarevent = calendar_event::load($event->id);
@@ -110,8 +107,7 @@ function choice_set_events($choice) {
         // Event doesn't exist so create one.
         if ((!empty($choice->timeclose)) && ($choice->timeclose > 0)) {
             $event->name         = get_string('calendarend', 'choice', $choice->name);
-            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('choice', $choice, $choice->coursemodule);
             $event->courseid     = $choice->course;
             $event->groupid      = 0;
             $event->userid       = 0;
@@ -121,7 +117,7 @@ function choice_set_events($choice) {
             $event->timesort     = $choice->timeclose;
             $event->visible      = instance_is_visible('choice', $choice);
             $event->timeduration = 0;
-            calendar_event::create($event, false);
+            calendar_event::create($event);
         }
     }
 }

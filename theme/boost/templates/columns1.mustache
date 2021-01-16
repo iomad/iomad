@@ -36,37 +36,39 @@
          "bodyattributes":""
     }
 }}
-{{> theme_boost/head }}
+{{{ output.doctype }}}
+<html {{{ output.htmlattributes }}}>
+<head>
+    <title>{{{ output.page_title }}}</title>
+    <link rel="shortcut icon" href="{{{ output.favicon }}}" />
+    {{{ output.standard_head_html }}}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
 <body {{{ bodyattributes }}}>
-{{> core/local/toast/wrapper}}
 
-<div id="page-wrapper" class="d-print-block">
+<div id="page-wrapper">
 
     {{{ output.standard_top_of_body_html }}}
 
-    <div id="page" class="container-fluid d-print-block">
-        <div id="page-content" class="row pb-3 d-print-block">
-            <div id="region-main-box" class="col-12">
-                <section id="region-main" aria-label="{{#str}}content{{/str}}">
+    <div id="page" class="container-fluid">
+        <div id="page-content" class="row">
+            <div id="region-main-box" class="col-xs-12">
+                <section id="region-main">
+                    <div class="card card-block">
                     {{{ output.course_content_header }}}
                     {{{ output.main_content }}}
                     {{{ output.activity_navigation }}}
                     {{{ output.course_content_footer }}}
+                    </div>
                 </section>
             </div>
         </div>
     </div>
-
-    {{{ output.standard_after_main_region_html }}}
-
 </div>
 {{{ output.standard_end_of_body_html }}}
 </body>
 </html>
 {{#js}}
-M.util.js_pending('theme_boost/loader');
-require(['theme_boost/loader'], function() {
-    M.util.js_complete('theme_boost/loader');
-});
+require(['theme_boost/loader']);
 {{/js}}

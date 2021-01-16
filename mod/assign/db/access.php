@@ -33,8 +33,6 @@ $capabilities = array(
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -56,8 +54,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -69,8 +65,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
             'student' => CAP_ALLOW,
         )
@@ -83,7 +77,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
@@ -101,8 +94,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'gradereport/grader:view'
@@ -113,7 +104,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -124,7 +114,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/grade:manage'
@@ -135,7 +124,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/grade:manage'
@@ -146,7 +134,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/grade:manage'
@@ -157,7 +144,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
         'clonepermissionsfrom' => 'moodle/grade:manage'
@@ -168,8 +154,6 @@ $capabilities = array(
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
             'teacher' => CAP_ALLOW
         )
@@ -191,8 +175,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )
     ),
@@ -202,17 +184,6 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/assign:showhiddengrader' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         )

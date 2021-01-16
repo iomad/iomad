@@ -155,7 +155,6 @@ class qtype_multichoice_attempt_upgrader_test extends question_attempt_upgrader_
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'none',
-                'showstandardinstruction' => 0,
                 'shownumcorrect' => '0',
             ),
             'hints' => array (
@@ -267,7 +266,7 @@ class qtype_multichoice_attempt_upgrader_test extends question_attempt_upgrader_
                     'fraction' => 0.9,
                     'timecreated' => 1278604597,
                     'userid' => null,
-                    'data' => array('-comment' => 'Well done!', '-mark' => '0.9', '-maxmark' => 1),
+                    'data' => array('-comment' => 'Well done!', '-mark' => '0.9', '-maxmark' => '1'),
                 ),
             ),
         );
@@ -375,7 +374,6 @@ class qtype_multichoice_attempt_upgrader_test extends question_attempt_upgrader_
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -557,7 +555,6 @@ class qtype_multichoice_attempt_upgrader_test extends question_attempt_upgrader_
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -754,7 +751,6 @@ class qtype_multichoice_attempt_upgrader_test extends question_attempt_upgrader_
                 'partiallycorrectfeedback' => 'Your answer is partially correct.',
                 'incorrectfeedback' => 'Your answer is incorrect.',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -977,7 +973,6 @@ class qtype_multichoice_attempt_upgrader_test extends question_attempt_upgrader_
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -1119,7 +1114,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -1344,7 +1338,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -1590,7 +1583,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'partiallycorrectfeedback' => 'This is a very polemical source which clearly has a standpoint. Whether or not you would use this material would be largely dependent on your reseach question. If you did use it, you would need to be clear that you would require academic sources that would support the claims being made.<br /><br />',
                 'incorrectfeedback' => 'This is a very polemical source which clearly has a standpoint. Whether or not you would use this material would be largely dependent on your reseach question. If you did use it, you would need to be clear that you would require academic sources that would support the claims being made.<br /><br />',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -1793,7 +1785,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -2032,7 +2023,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'none',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -2234,7 +2224,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
             ),
             'hints' => false,
         );
@@ -2453,7 +2442,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'single' => '1',
                 'shuffleanswers' => '0',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
                 'correctfeedback' => '',
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',
@@ -2664,7 +2652,6 @@ public function test_multichoice_deferredfeedback_qsession140() {
                 'single' => '1',
                 'shuffleanswers' => '0',
                 'answernumbering' => 'abc',
-                'showstandardinstruction' => 0,
                 'correctfeedback' => '',
                 'partiallycorrectfeedback' => '',
                 'incorrectfeedback' => '',

@@ -32,9 +32,8 @@
     $shibbolethauth = get_auth_plugin('shibboleth');
 
     // Check whether Shibboleth is configured properly
-    $readmeurl = (new moodle_url('/auth/shibboleth/README.txt'))->out();
     if (empty($pluginconfig->user_attribute)) {
-        print_error('shib_not_set_up_error', 'auth_shibboleth', '', $readmeurl);
+        print_error('shib_not_set_up_error', 'auth_shibboleth');
      }
 
 /// If we can find the Shibboleth attribute, save it in session and return to main login page
@@ -50,10 +49,9 @@
         $frm->password = generate_password(8);
 
     /// Check if the user has actually submitted login data to us
-        $reason = null;
 
         if ($shibbolethauth->user_login($frm->username, $frm->password)
-                && $user = authenticate_user_login($frm->username, $frm->password, false, $reason, false)) {
+                && $user = authenticate_user_login($frm->username, $frm->password)) {
             complete_user_login($user);
 
             if (user_not_fully_set_up($USER, true)) {
@@ -92,7 +90,7 @@
     elseif (!empty($_SERVER['HTTP_SHIB_APPLICATION_ID']) || !empty($_SERVER['Shib-Application-ID'])) {
         print_error('shib_no_attributes_error', 'auth_shibboleth' , '', '\''.$pluginconfig->user_attribute.'\', \''.$pluginconfig->field_map_firstname.'\', \''.$pluginconfig->field_map_lastname.'\' and \''.$pluginconfig->field_map_email.'\'');
     } else {
-        print_error('shib_not_set_up_error', 'auth_shibboleth', '', $readmeurl);
+        print_error('shib_not_set_up_error', 'auth_shibboleth');
     }
 
 

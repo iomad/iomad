@@ -48,23 +48,19 @@ function user_create_user($user, $updatepassword = true, $triggerevent = true) {
     }
 
     // Check username.
-    if (trim($user->username) === '') {
-        throw new moodle_exception('invalidusernameblank');
-    }
-
     if ($user->username !== core_text::strtolower($user->username)) {
         throw new moodle_exception('usernamelowercase');
-    }
-
-    if ($user->username !== core_user::clean_field($user->username, 'username')) {
-        throw new moodle_exception('invalidusername');
+    } else {
+        if ($user->username !== core_user::clean_field($user->username, 'username')) {
+            throw new moodle_exception('invalidusername');
+        }
     }
 
     // Save the password in a temp value for later.
     if ($updatepassword && isset($user->password)) {
 
         // Check password toward the password policy.
-        if (!check_password_policy($user->password, $errmsg, $user)) {
+        if (!check_password_policy($user->password, $errmsg)) {
             throw new moodle_exception($errmsg);
         }
 
@@ -126,10 +122,6 @@ function user_create_user($user, $updatepassword = true, $triggerevent = true) {
         \core\event\user_created::create_from_userid($newuserid)->trigger();
     }
 
-    // Purge the associated caches for the current user only.
-    $presignupcache = \cache::make('core', 'presignup');
-    $presignupcache->purge_current_user();
-
     return $newuserid;
 }
 
@@ -165,7 +157,7 @@ function user_update_user($user, $updatepassword = true, $triggerevent = true) {
     if ($updatepassword && isset($user->password)) {
 
         // Check password toward the password policy.
-        if (!check_password_policy($user->password, $errmsg, $user)) {
+        if (!check_password_policy($user->password, $errmsg)) {
             throw new moodle_exception($errmsg);
         }
 
@@ -246,7 +238,7 @@ function user_get_default_fields() {
         'institution', 'interests', 'firstaccess', 'lastaccess', 'auth', 'confirmed',
         'idnumber', 'lang', 'theme', 'timezone', 'mailformat', 'description', 'descriptionformat',
         'city', 'url', 'country', 'profileimageurlsmall', 'profileimageurl', 'customfields',
-        'groups', 'roles', 'preferences', 'enrolledcourses', 'suspended', 'lastcourseaccess'
+        'groups', 'roles', 'preferences', 'enrolledcourses', 'suspended'
     );
 }
 
@@ -343,7 +335,7 @@ function user_get_user_details($user, $course = null, array $userfields = array(
             $userdetails['lastname'] = $user->lastname;
         }
     }
-    $userdetails['fullname'] = fullname($user, $canviewfullnames);
+    $userdetails['fullname'] = fullname($user);
 
     if (in_array('customfields', $userfields)) {
         $categories = profile_get_user_fields_with_data_by_category($user->id);
@@ -471,24 +463,12 @@ function user_get_user_details($user, $course = null, array $userfields = array(
         }
     }
 
-    // Hidden fields restriction to lastaccess field applies to both site and course access time.
-    if (in_array('lastcourseaccess', $userfields) && (!isset($hiddenfields['lastaccess']) or $isadmin)) {
-        if (isset($user->lastcourseaccess)) {
-            $userdetails['lastcourseaccess'] = $user->lastcourseaccess;
-        } else {
-            $userdetails['lastcourseaccess'] = 0;
-        }
-    }
-
-    if (in_array('email', $userfields) && (
-            $currentuser
-            or (!isset($hiddenfields['email']) and (
-                $user->maildisplay == core_user::MAILDISPLAY_EVERYONE
-                or ($user->maildisplay == core_user::MAILDISPLAY_COURSE_MEMBERS_ONLY and enrol_sharing_course($user, $USER))
-                or $canviewuseremail  // TODO: Deprecate/remove for MDL-37479.
-            ))
-            or in_array('email', $showuseridentityfields)
-       )) {
+    if (in_array('email', $userfields) && ($isadmin // The admin is allowed the users email.
+      or $currentuser // Of course the current user is as well.
+      or $canviewuseremail  // This is a capability in course context, it will be false in usercontext.
+      or in_array('email', $showuseridentityfields)
+      or $user->maildisplay == 1
+      or ($user->maildisplay == 2 and enrol_sharing_course($user, $USER)))) {
         $userdetails['email'] = $user->email;
     }
 
@@ -606,6 +586,9 @@ function user_get_user_details_courses($user) {
     global $USER;
     $userdetails = null;
 
+    // Get the courses that the user is enrolled in (only active).
+    $courses = enrol_get_users_courses($user->id, true);
+
     $systemprofile = false;
     if (can_view_user_details_cap($user) || ($user->id == $USER->id) || has_coursecontact_role($user->id)) {
         $systemprofile = true;
@@ -616,10 +599,8 @@ function user_get_user_details_courses($user) {
         $userdetails = user_get_user_details($user, null);
     } else {
         // Try through course profile.
-        // Get the courses that the user is enrolled in (only active).
-        $courses = enrol_get_users_courses($user->id, true);
         foreach ($courses as $course) {
-            if (user_can_view_profile($user, $course)) {
+            if (can_view_user_details_cap($user, $course) || ($user->id == $USER->id) || has_coursecontact_role($user->id)) {
                 $userdetails = user_get_user_details($user, $course);
             }
         }
@@ -762,17 +743,7 @@ function user_convert_text_to_menu_items($text, $page) {
             $child->pix = $pixpath;
         } else {
             // Check for the specified image existing.
-            if (strpos($bits[2], '../') === 0) {
-                // The string starts with '../'.
-                // Strip off the first three characters - this should be the pix path.
-                $pixpath = substr($bits[2], 3);
-            } else if (strpos($bits[2], '/') === false) {
-                // There is no / in the path. Prefix it with 't/', which is the default path.
-                $pixpath = "t/{$bits[2]}";
-            } else {
-                // There is a '/' in the path - this is either a URL, or a standard pix path with no changes required.
-                $pixpath = $bits[2];
-            }
+            $pixpath = "t/" . $bits[2];
             if ($page->theme->resolve_image_location($pixpath, 'moodle', true)) {
                 // Use the image.
                 $child->pix = $pixpath;
@@ -853,7 +824,7 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
 
     // Get basic user metadata.
     $returnobject->metadata['userid'] = $user->id;
-    $returnobject->metadata['userfullname'] = fullname($user);
+    $returnobject->metadata['userfullname'] = fullname($user, true);
     $returnobject->metadata['userprofileurl'] = new moodle_url('/user/profile.php', array(
         'id' => $user->id
     ));
@@ -925,7 +896,7 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
         // Save values for the real user, as $user will be full of data for the
         // user the user is disguised as.
         $returnobject->metadata['realuserid'] = $realuser->id;
-        $returnobject->metadata['realuserfullname'] = fullname($realuser);
+        $returnobject->metadata['realuserfullname'] = fullname($realuser, true);
         $returnobject->metadata['realuserprofileurl'] = new moodle_url('/user/profile.php', array(
             'id' => $realuser->id
         ));
@@ -1180,33 +1151,6 @@ function user_can_view_profile($user, $course = null, $usercontext = null) {
         return true;
     }
 
-    // Use callbacks so that (primarily) local plugins can prevent or allow profile access.
-    $forceallow = false;
-    $plugintypes = get_plugins_with_function('control_view_profile');
-    foreach ($plugintypes as $plugins) {
-        foreach ($plugins as $pluginfunction) {
-            $result = $pluginfunction($user, $course, $usercontext);
-            switch ($result) {
-                case core_user::VIEWPROFILE_DO_NOT_PREVENT:
-                    // If the plugin doesn't stop access, just continue to next plugin or use
-                    // default behaviour.
-                    break;
-                case core_user::VIEWPROFILE_FORCE_ALLOW:
-                    // Record that we are definitely going to allow it (unless another plugin
-                    // returns _PREVENT).
-                    $forceallow = true;
-                    break;
-                case core_user::VIEWPROFILE_PREVENT:
-                    // If any plugin returns PREVENT then we return false, regardless of what
-                    // other plugins said.
-                    return false;
-            }
-        }
-    }
-    if ($forceallow) {
-        return true;
-    }
-
     // Course contacts have visible profiles always.
     if (has_coursecontact_role($user->id)) {
         return true;
@@ -1288,68 +1232,263 @@ function user_get_tagged_users($tag, $exclusivemode = false, $fromctx = 0, $ctx 
 }
 
 /**
- * Returns SQL that can be used to limit a query to a period where the user last accessed / did not access a course.
+ * Returns the SQL used by the participants table.
  *
- * @param int $accesssince The unix timestamp to compare to users' last access
- * @param string $tableprefix
- * @param bool $haveaccessed Whether to match against users who HAVE accessed since $accesssince (optional)
- * @return string
+ * @param int $courseid The course id
+ * @param int $groupid The groupid, 0 means all groups
+ * @param int $accesssince The time since last access, 0 means any time
+ * @param int $roleid The role id, 0 means all roles
+ * @param int $enrolid The enrolment id, 0 means all enrolment methods will be returned.
+ * @param int $statusid The user enrolment status, -1 means all enrolments regardless of the status will be returned, if allowed.
+ * @param string|array $search The search that was performed, empty means perform no search
+ * @param string $additionalwhere Any additional SQL to add to where
+ * @param array $additionalparams The additional params
+ * @return array
  */
-function user_get_course_lastaccess_sql($accesssince = null, $tableprefix = 'ul', $haveaccessed = false) {
-    return user_get_lastaccess_sql('timeaccess', $accesssince, $tableprefix, $haveaccessed);
+function user_get_participants_sql($courseid, $groupid = 0, $accesssince = 0, $roleid = 0, $enrolid = 0, $statusid = -1,
+                                   $search = '', $additionalwhere = '', $additionalparams = array()) {
+    global $DB, $USER;
+
+    // Get the context.
+    $context = \context_course::instance($courseid, MUST_EXIST);
+
+    $isfrontpage = ($courseid == SITEID);
+
+    // Default filter settings. We only show active by default, especially if the user has no capability to review enrolments.
+    $onlyactive = true;
+    $onlysuspended = false;
+    if (has_capability('moodle/course:enrolreview', $context)) {
+        switch ($statusid) {
+            case ENROL_USER_ACTIVE:
+                // Nothing to do here.
+                break;
+            case ENROL_USER_SUSPENDED:
+                $onlyactive = false;
+                $onlysuspended = true;
+                break;
+            default:
+                // If the user has capability to review user enrolments, but statusid is set to -1, set $onlyactive to false.
+                $onlyactive = false;
+                break;
+        }
+    }
+
+    list($esql, $params) = get_enrolled_sql($context, null, $groupid, $onlyactive, $onlysuspended, $enrolid);
+
+    $joins = array('FROM {user} u');
+    $wheres = array();
+
+    $userfields = get_extra_user_fields($context);
+    $userfieldssql = user_picture::fields('u', $userfields);
+
+    if ($isfrontpage) {
+        $select = "SELECT $userfieldssql, u.lastaccess";
+        $joins[] = "JOIN ($esql) e ON e.id = u.id"; // Everybody on the frontpage usually.
+        if ($accesssince) {
+            $wheres[] = user_get_user_lastaccess_sql($accesssince);
+        }
+    } else {
+        $select = "SELECT $userfieldssql, COALESCE(ul.timeaccess, 0) AS lastaccess";
+        $joins[] = "JOIN ($esql) e ON e.id = u.id"; // Course enrolled users only.
+        // Not everybody has accessed the course yet.
+        $joins[] = 'LEFT JOIN {user_lastaccess} ul ON (ul.userid = u.id AND ul.courseid = :courseid)';
+        $params['courseid'] = $courseid;
+        if ($accesssince) {
+            $wheres[] = user_get_course_lastaccess_sql($accesssince);
+        }
+    }
+
+    // Performance hacks - we preload user contexts together with accounts.
+    $ccselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
+    $ccjoin = 'LEFT JOIN {context} ctx ON (ctx.instanceid = u.id AND ctx.contextlevel = :contextlevel)';
+    $params['contextlevel'] = CONTEXT_USER;
+    $select .= $ccselect;
+    $joins[] = $ccjoin;
+
+    // Limit list to users with some role only.
+    if ($roleid) {
+        // We want to query both the current context and parent contexts.
+        list($relatedctxsql, $relatedctxparams) = $DB->get_in_or_equal($context->get_parent_context_ids(true),
+            SQL_PARAMS_NAMED, 'relatedctx');
+
+        $wheres[] = "u.id IN (SELECT userid FROM {role_assignments} WHERE roleid = :roleid AND contextid $relatedctxsql)";
+        $params = array_merge($params, array('roleid' => $roleid), $relatedctxparams);
+    }
+
+    if (!empty($search)) {
+        if (!is_array($search)) {
+            $search = [$search];
+        }
+        foreach ($search as $index => $keyword) {
+            $searchkey1 = 'search' . $index . '1';
+            $searchkey2 = 'search' . $index . '2';
+            $searchkey3 = 'search' . $index . '3';
+            $searchkey4 = 'search' . $index . '4';
+            $searchkey5 = 'search' . $index . '5';
+            $searchkey6 = 'search' . $index . '6';
+            $searchkey7 = 'search' . $index . '7';
+
+            $conditions = array();
+            // Search by fullname.
+            $fullname = $DB->sql_fullname('u.firstname', 'u.lastname');
+            $conditions[] = $DB->sql_like($fullname, ':' . $searchkey1, false, false);
+
+            // Search by email.
+            $email = $DB->sql_like('email', ':' . $searchkey2, false, false);
+            if (!in_array('email', $userfields)) {
+                $maildisplay = 'maildisplay' . $index;
+                $userid1 = 'userid' . $index . '1';
+                // Prevent users who hide their email address from being found by others
+                // who aren't allowed to see hidden email addresses.
+                $email = "(". $email ." AND (" .
+                        "u.maildisplay <> :$maildisplay " .
+                        "OR u.id = :$userid1". // User can always find himself.
+                        "))";
+                $params[$maildisplay] = core_user::MAILDISPLAY_HIDE;
+                $params[$userid1] = $USER->id;
+            }
+            $conditions[] = $email;
+
+            // Search by idnumber.
+            $idnumber = $DB->sql_like('idnumber', ':' . $searchkey3, false, false);
+            if (!in_array('idnumber', $userfields)) {
+                $userid2 = 'userid' . $index . '2';
+                // Users who aren't allowed to see idnumbers should at most find themselves
+                // when searching for an idnumber.
+                $idnumber = "(". $idnumber . " AND u.id = :$userid2)";
+                $params[$userid2] = $USER->id;
+            }
+            $conditions[] = $idnumber;
+
+            // Search by middlename.
+            $middlename = $DB->sql_like('middlename', ':' . $searchkey4, false, false);
+            $conditions[] = $middlename;
+
+            // Search by alternatename.
+            $alternatename = $DB->sql_like('alternatename', ':' . $searchkey5, false, false);
+            $conditions[] = $alternatename;
+
+            // Search by firstnamephonetic.
+            $firstnamephonetic = $DB->sql_like('firstnamephonetic', ':' . $searchkey6, false, false);
+            $conditions[] = $firstnamephonetic;
+
+            // Search by lastnamephonetic.
+            $lastnamephonetic = $DB->sql_like('lastnamephonetic', ':' . $searchkey7, false, false);
+            $conditions[] = $lastnamephonetic;
+
+            $wheres[] = "(". implode(" OR ", $conditions) .") ";
+            $params[$searchkey1] = "%$keyword%";
+            $params[$searchkey2] = "%$keyword%";
+            $params[$searchkey3] = "%$keyword%";
+            $params[$searchkey4] = "%$keyword%";
+            $params[$searchkey5] = "%$keyword%";
+            $params[$searchkey6] = "%$keyword%";
+            $params[$searchkey7] = "%$keyword%";
+        }
+    }
+
+    if (!empty($additionalwhere)) {
+        $wheres[] = $additionalwhere;
+        $params = array_merge($params, $additionalparams);
+    }
+
+    $from = implode("\n", $joins);
+    if ($wheres) {
+        $where = 'WHERE ' . implode(' AND ', $wheres);
+    } else {
+        $where = '';
+    }
+
+    return array($select, $from, $where, $params);
 }
 
 /**
- * Returns SQL that can be used to limit a query to a period where the user last accessed / did not access the system.
+ * Returns the total number of participants for a given course.
  *
- * @param int $accesssince The unix timestamp to compare to users' last access
- * @param string $tableprefix
- * @param bool $haveaccessed Whether to match against users who HAVE accessed since $accesssince (optional)
- * @return string
+ * @param int $courseid The course id
+ * @param int $groupid The groupid, 0 means all groups
+ * @param int $accesssince The time since last access, 0 means any time
+ * @param int $roleid The role id, 0 means all roles
+ * @param int $enrolid The applied filter for the user enrolment ID.
+ * @param int $status The applied filter for the user's enrolment status.
+ * @param string|array $search The search that was performed, empty means perform no search
+ * @param string $additionalwhere Any additional SQL to add to where
+ * @param array $additionalparams The additional params
+ * @return int
  */
-function user_get_user_lastaccess_sql($accesssince = null, $tableprefix = 'u', $haveaccessed = false) {
-    return user_get_lastaccess_sql('lastaccess', $accesssince, $tableprefix, $haveaccessed);
+function user_get_total_participants($courseid, $groupid = 0, $accesssince = 0, $roleid = 0, $enrolid = 0, $statusid = -1,
+                                     $search = '', $additionalwhere = '', $additionalparams = array()) {
+    global $DB;
+
+    list($select, $from, $where, $params) = user_get_participants_sql($courseid, $groupid, $accesssince, $roleid, $enrolid,
+        $statusid, $search, $additionalwhere, $additionalparams);
+
+    return $DB->count_records_sql("SELECT COUNT(u.id) $from $where", $params);
 }
 
 /**
- * Returns SQL that can be used to limit a query to a period where the user last accessed or
- * did not access something recorded by a given table.
+ * Returns the participants for a given course.
  *
- * @param string $columnname The name of the access column to check against
- * @param int $accesssince The unix timestamp to compare to users' last access
- * @param string $tableprefix The query prefix of the table to check
- * @param bool $haveaccessed Whether to match against users who HAVE accessed since $accesssince (optional)
+ * @param int $courseid The course id
+ * @param int $groupid The group id
+ * @param int $accesssince The time since last access
+ * @param int $roleid The role id
+ * @param int $enrolid The applied filter for the user enrolment ID.
+ * @param int $status The applied filter for the user's enrolment status.
+ * @param string $search The search that was performed
+ * @param string $additionalwhere Any additional SQL to add to where
+ * @param array $additionalparams The additional params
+ * @param string $sort The SQL sort
+ * @param int $limitfrom return a subset of records, starting at this point (optional).
+ * @param int $limitnum return a subset comprising this many records (optional, required if $limitfrom is set).
+ * @return moodle_recordset
+ */
+function user_get_participants($courseid, $groupid = 0, $accesssince, $roleid, $enrolid = 0, $statusid, $search,
+                               $additionalwhere = '', $additionalparams = array(), $sort = '', $limitfrom = 0, $limitnum = 0) {
+    global $DB;
+
+    list($select, $from, $where, $params) = user_get_participants_sql($courseid, $groupid, $accesssince, $roleid, $enrolid,
+        $statusid, $search, $additionalwhere, $additionalparams);
+
+    return $DB->get_recordset_sql("$select $from $where $sort", $params, $limitfrom, $limitnum);
+}
+
+/**
+ * Returns SQL that can be used to limit a query to a period where the user last accessed a course.
+ *
+ * @param int $accesssince The time since last access
+ * @param string $tableprefix
  * @return string
  */
-function user_get_lastaccess_sql($columnname, $accesssince, $tableprefix, $haveaccessed = false) {
+function user_get_course_lastaccess_sql($accesssince = null, $tableprefix = 'ul') {
     if (empty($accesssince)) {
         return '';
     }
 
-    // Only users who have accessed since $accesssince.
-    if ($haveaccessed) {
-        if ($accesssince == -1) {
-            // Include all users who have logged in at some point.
-            $sql = "({$tableprefix}.{$columnname} IS NOT NULL AND {$tableprefix}.{$columnname} != 0)";
-        } else {
-            // Users who have accessed since the specified time.
-            $sql = "{$tableprefix}.{$columnname} IS NOT NULL AND {$tableprefix}.{$columnname} != 0
-                AND {$tableprefix}.{$columnname} >= {$accesssince}";
-        }
+    if ($accesssince == -1) { // Never.
+        return $tableprefix . '.timeaccess = 0';
     } else {
-        // Only users who have not accessed since $accesssince.
+        return $tableprefix . '.timeaccess != 0 AND ul.timeaccess < ' . $accesssince;
+    }
+}
 
-        if ($accesssince == -1) {
-            // Users who have never accessed.
-            $sql = "({$tableprefix}.{$columnname} IS NULL OR {$tableprefix}.{$columnname} = 0)";
-        } else {
-            // Users who have not accessed since the specified time.
-            $sql = "({$tableprefix}.{$columnname} IS NULL
-                    OR ({$tableprefix}.{$columnname} != 0 AND {$tableprefix}.{$columnname} < {$accesssince}))";
-        }
+/**
+ * Returns SQL that can be used to limit a query to a period where the user last accessed the system.
+ *
+ * @param int $accesssince The time since last access
+ * @param string $tableprefix
+ * @return string
+ */
+function user_get_user_lastaccess_sql($accesssince = null, $tableprefix = 'u') {
+    if (empty($accesssince)) {
+        return '';
     }
 
-    return $sql;
+    if ($accesssince == -1) { // Never.
+        return $tableprefix . '.lastaccess = 0';
+    } else {
+        return $tableprefix . '.lastaccess != 0 AND u.lastaccess < ' . $accesssince;
+    }
 }
 
 /**
@@ -1365,39 +1504,3 @@ function core_user_inplace_editable($itemtype, $itemid, $newvalue) {
         return \core_user\output\user_roles_editable::update($itemid, $newvalue);
     }
 }
-
-/**
- * Map an internal field name to a valid purpose from: "https://www.w3.org/TR/WCAG21/#input-purposes"
- *
- * @param integer $userid
- * @param string $fieldname
- * @return string $purpose (empty string if there is no mapping).
- */
-function user_edit_map_field_purpose($userid, $fieldname) {
-    global $USER;
-
-    $currentuser = ($userid == $USER->id) && !\core\session\manager::is_loggedinas();
-    // These are the fields considered valid to map and auto fill from a browser.
-    // We do not include fields that are in a collapsed section by default because
-    // the browser could auto-fill the field and cause a new value to be saved when
-    // that field was never visible.
-    $validmappings = array(
-        'username' => 'username',
-        'password' => 'current-password',
-        'firstname' => 'given-name',
-        'lastname' => 'family-name',
-        'middlename' => 'additional-name',
-        'email' => 'email',
-        'country' => 'country',
-        'lang' => 'language'
-    );
-
-    $purpose = '';
-    // Only set a purpose when editing your own user details.
-    if ($currentuser && isset($validmappings[$fieldname])) {
-        $purpose = ' autocomplete="' . $validmappings[$fieldname] . '" ';
-    }
-
-    return $purpose;
-}
-

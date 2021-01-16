@@ -190,8 +190,7 @@ class user extends tablelike implements selectable_items {
         $grade->label = $item->get_name();
 
         $line = array(
-            $OUTPUT->action_icon($this->format_link('grade', $item->id), new pix_icon('t/editstring', ''), null,
-                    ['title' => $iconstring, 'aria-label' => $iconstring]),
+            $OUTPUT->action_icon($this->format_link('grade', $item->id), new pix_icon('t/editstring', $iconstring)),
             $this->format_icon($item) . $lockicon . $itemlabel,
             $this->category($item),
             new range($item)

@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
  * Privacy Subsystem implementation for mnetservice_enrol.
  *
@@ -21,20 +20,14 @@
  * @copyright  2018 Carlos Escobedo <carlos@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 namespace mnetservice_enrol\privacy;
-
 defined('MOODLE_INTERNAL') || die();
-
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\context;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\transform;
 use core_privacy\local\request\writer;
-use core_privacy\local\request\userlist;
-use core_privacy\local\request\approved_userlist;
-
 /**
  * Privacy Subsystem for mnetservice_enrol implementing metadata and plugin providers.
  *
@@ -43,9 +36,7 @@ use core_privacy\local\request\approved_userlist;
  */
 class provider implements
         \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
         \core_privacy\local\request\plugin\provider {
-
     /**
      * Returns meta data about this system.
      *
@@ -68,7 +59,6 @@ class provider implements
 
         return $collection;
     }
-
     /**
      * Get the list of contexts that contain user information for the specified user.
      *
@@ -90,28 +80,6 @@ class provider implements
         $contextlist->add_from_sql($sql, $params);
         return $contextlist;
     }
-
-    /**
-     * Get the list of users within a specific context.
-     *
-     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if (!$context instanceof \context_user) {
-            return;
-        }
-
-        $params = ['userid' => $context->instanceid];
-
-        $sql = "SELECT userid
-                  FROM {mnetservice_enrol_enrolments}
-                 WHERE userid = :userid";
-
-        $userlist->add_from_sql('userid', $sql, $params);
-    }
-
     /**
      * Export all user data for the specified user, in the specified contexts.
      *
@@ -163,7 +131,6 @@ class provider implements
                 (object)$data
             );
     }
-
     /**
      * Delete all data for all users in the specified context.
      *
@@ -175,20 +142,6 @@ class provider implements
             static::delete_user_data($context->instanceid);
         }
     }
-
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param approved_userlist $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if ($context instanceof \context_user) {
-            static::delete_user_data($context->instanceid);
-        }
-    }
-
     /**
      * Delete all user data for the specified user, in the specified contexts.
      *
@@ -207,7 +160,6 @@ class provider implements
             }
         }
     }
-
     /**
      * This does the deletion of user data for the mnetservice_enrolments.
      *

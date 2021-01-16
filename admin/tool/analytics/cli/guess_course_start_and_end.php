@@ -173,8 +173,7 @@ function tool_analytics_calculate_course_dates($course, $options) {
         $formatoptions = $format->get_format_options();
 
         // Change this for a course formats API level call in MDL-60702.
-        if ((get_class($format) == 'format_weeks' || is_subclass_of($format, 'format_weeks')) &&
-                method_exists($format, 'update_end_date') && $formatoptions['automaticenddate']) {
+        if (method_exists($format, 'update_end_date') && $formatoptions['automaticenddate']) {
             // Special treatment for weeks-based formats with automatic end date.
 
             if ($options['update']) {
@@ -205,9 +204,9 @@ function tool_analytics_calculate_course_dates($course, $options) {
 
                 $updateit = false;
                 if ($course->enddate < $course->startdate) {
-                    $notification .= PHP_EOL . '  ' . get_string('errorendbeforestart', 'course', userdate($course->enddate));
+                    $notification .= PHP_EOL . '  ' . get_string('errorendbeforestart', 'analytics', userdate($course->enddate));
                 } else if ($course->startdate + (YEARSECS + (WEEKSECS * 4)) > $course->enddate) {
-                    $notification .= PHP_EOL . '  ' . get_string('coursetoolong', 'course');
+                    $notification .= PHP_EOL . '  ' . get_string('coursetoolong', 'analytics');
                 } else {
                     $notification .= PHP_EOL . '  ' . get_string('enddate') . ': ' . userdate($course->enddate);
                     $updateit = true;

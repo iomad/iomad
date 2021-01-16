@@ -108,7 +108,20 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
 
     public function js_call() {
         global $PAGE;
-        $PAGE->requires->js_call_amd('qtype_ddimageortext/form', 'init');
+        $maxsizes = new stdClass();
+        $maxsizes->bgimage = new stdClass();
+        $maxsizes->bgimage->width = QTYPE_DDIMAGEORTEXT_BGIMAGE_MAXWIDTH;
+        $maxsizes->bgimage->height = QTYPE_DDIMAGEORTEXT_BGIMAGE_MAXHEIGHT;
+        $maxsizes->dragimage = new stdClass();
+        $maxsizes->dragimage->width = QTYPE_DDIMAGEORTEXT_DRAGIMAGE_MAXWIDTH;
+        $maxsizes->dragimage->height = QTYPE_DDIMAGEORTEXT_DRAGIMAGE_MAXHEIGHT;
+
+        $params = array('maxsizes' => $maxsizes,
+                        'topnode' => 'fieldset#id_previewareaheader');
+
+        $PAGE->requires->yui_module('moodle-qtype_ddimageortext-form',
+                                        'M.qtype_ddimageortext.init_form',
+                                        array($params));
     }
 
     // Drag items.
@@ -137,7 +150,7 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
                                             array('class' => 'dragitemtype'));
         $options = array();
         for ($i = 1; $i <= self::MAX_GROUPS; $i += 1) {
-            $options[$i] = question_utils::int_to_letter($i);
+            $options[$i] = $i;
         }
         $grouparray[] = $mform->createElement('select', 'draggroup',
                                                 get_string('group', 'qtype_gapselect'),
@@ -153,7 +166,7 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
 
         $draggableimageitem[] = $mform->createElement('text', 'draglabel',
                                                 get_string('label', 'qtype_ddimageortext'),
-                                                array('size' => 30, 'class' => 'tweakcss draglabel'));
+                                                array('size' => 30, 'class' => 'tweakcss'));
         $mform->setType('draglabel', PARAM_RAW); // These are validated manually.
         return $draggableimageitem;
     }
@@ -257,8 +270,8 @@ class qtype_ddimageortext_edit_form extends qtype_ddtoimage_edit_form_base {
         for ($dragindex = 0; $dragindex < $data['noitems']; $dragindex++) {
             $label = $data['draglabel'][$dragindex];
             if ($data['drags'][$dragindex]['dragitemtype'] == 'word') {
-                $allowedtags = '<br><sub><sup><b><i><strong><em><span>';
-                $errormessage = get_string('formerror_disallowedtags', 'qtype_ddimageortext', s($allowedtags));
+                $allowedtags = '<br><sub><sup><b><i><strong><em>';
+                $errormessage = get_string('formerror_disallowedtags', 'qtype_ddimageortext');
             } else {
                 $allowedtags = '';
                 $errormessage = get_string('formerror_noallowedtags', 'qtype_ddimageortext');

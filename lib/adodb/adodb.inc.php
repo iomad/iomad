@@ -2,7 +2,7 @@
 /*
  * Set tabs to 4 for best viewing.
  *
- * Latest version is available at http://adodb.org/
+ * Latest version is available at http://adodb.sourceforge.net
  *
  * This is the main include file for ADOdb.
  * Database specific drivers are stored in the adodb/drivers/adodb-*.inc.php
@@ -14,7 +14,7 @@
 /**
 	\mainpage
 
-	@version   v5.20.16  12-Jan-2020
+	@version   v5.20.9  21-Dec-2016
 	@copyright (c) 2000-2013 John Lim (jlim#natsoft.com). All rights reserved.
 	@copyright (c) 2014      Damien Regad, Mark Newnham and the ADOdb community
 
@@ -29,6 +29,9 @@
 	Informix, PostgreSQL, FrontBase, Interbase (Firebird and Borland variants), Foxpro, Access,
 	ADO, SAP DB, SQLite and ODBC. We have had successful reports of connecting to Progress and
 	other databases via ODBC.
+
+	Latest Download at http://adodb.sourceforge.net/
+
  */
 
 if (!defined('_ADODB_LAYER')) {
@@ -221,10 +224,16 @@ if (!defined('_ADODB_LAYER')) {
 			}
 		}
 
+
+		// Initialize random number generator for randomizing cache flushes
+		// -- note Since PHP 4.2.0, the seed  becomes optional and defaults to a random value if omitted.
+		// MDL-41198 Removed random seed initialization.
+		// srand(((double)microtime())*1000000);
+
 		/**
 		 * ADODB version as a string.
 		 */
-		$ADODB_vers = 'v5.20.16  12-Jan-2020';
+		$ADODB_vers = 'v5.20.9  21-Dec-2016';
 
 		/**
 		 * Determines whether recordset->RecordCount() is used.
@@ -423,7 +432,6 @@ if (!defined('_ADODB_LAYER')) {
 	var $databaseType = '';		/// RDBMS currently in use, eg. odbc, mysql, mssql
 	var $database = '';			/// Name of database to be used.
 	var $host = '';				/// The hostname of the database server
-	var $port = '';				/// The port of the database server
 	var $user = '';				/// The username which is used to connect to the database server.
 	var $password = '';			/// Password for the username. For security, we no longer store it.
 	var $debug = false;			/// if set to true will output sql statements
@@ -626,26 +634,6 @@ if (!defined('_ADODB_LAYER')) {
 	}
 
 	/**
-	 * Parses the hostname to extract the port.
-	 * Overwrites $this->host and $this->port, only if a port is specified.
-	 * The Hostname can be fully or partially qualified,
-	 * ie: "db.mydomain.com:5432" or "ldaps://ldap.mydomain.com:636"
-	 * Any specified scheme such as ldap:// or ldaps:// is maintained.
-	 */
-	protected function parseHostNameAndPort() {
-		$parsed_url = parse_url($this->host);
-		if (is_array($parsed_url) && isset($parsed_url['host']) && isset($parsed_url['port'])) {
-			if ( isset($parsed_url['scheme']) ) {
-				// If scheme is specified (ie: ldap:// or ldaps://, make sure we retain that.
-				$this->host = $parsed_url['scheme'] . "://" . $parsed_url['host'];
-			} else {
-				$this->host = $parsed_url['host'];
-			}
-			$this->port = $parsed_url['port'];
-		}
-	}
-
-	/**
 	 * Connect to database
 	 *
 	 * @param [argHostname]		Host to connect to
@@ -660,9 +648,9 @@ if (!defined('_ADODB_LAYER')) {
 		if ($argHostname != "") {
 			$this->host = $argHostname;
 		}
-		// Overwrites $this->host and $this->port if a port is specified.
-		$this->parseHostNameAndPort();
-
+		if ( strpos($this->host, ':') > 0 && isset($this->port) ) {
+			list($this->host, $this->port) = explode(":", $this->host, 2);
+        	}
 		if ($argUsername != "") {
 			$this->user = $argUsername;
 		}
@@ -743,9 +731,9 @@ if (!defined('_ADODB_LAYER')) {
 		if ($argHostname != "") {
 			$this->host = $argHostname;
 		}
-		// Overwrites $this->host and $this->port if a port is specified.
-		$this->parseHostNameAndPort();
-
+		if ( strpos($this->host, ':') > 0 && isset($this->port) ) {
+			list($this->host, $this->port) = explode(":", $this->host, 2);
+	        }
 		if ($argUsername != "") {
 			$this->user = $argUsername;
 		}
@@ -1509,9 +1497,6 @@ if (!defined('_ADODB_LAYER')) {
 	 * @return		the recordset ($rs->databaseType == 'array')
 	 */
 	function SelectLimit($sql,$nrows=-1,$offset=-1, $inputarr=false,$secs2cache=0) {
-		$nrows = (int)$nrows;
-		$offset = (int)$offset;
-
 		if ($this->hasTop && $nrows > 0) {
 			// suggested by Reinhard Balling. Access requires top after distinct
 			// Informix requires first before distinct - F Riosa
@@ -1526,7 +1511,7 @@ if (!defined('_ADODB_LAYER')) {
 					// access includes ties in result
 					if ($isaccess) {
 						$sql = preg_replace(
-						'/(^\s*select\s+(distinctrow|distinct)?)/i','\\1 '.$this->hasTop.' '.$nrows.' ',$sql);
+						'/(^\s*select\s+(distinctrow|distinct)?)/i','\\1 '.$this->hasTop.' '.((integer)$nrows).' ',$sql);
 
 						if ($secs2cache != 0) {
 							$ret = $this->CacheExecute($secs2cache, $sql,$inputarr);
@@ -1536,10 +1521,10 @@ if (!defined('_ADODB_LAYER')) {
 						return $ret; // PHP5 fix
 					} else if ($ismssql){
 						$sql = preg_replace(
-						'/(^\s*select\s+(distinctrow|distinct)?)/i','\\1 '.$this->hasTop.' '.$nrows.' ',$sql);
+						'/(^\s*select\s+(distinctrow|distinct)?)/i','\\1 '.$this->hasTop.' '.((integer)$nrows).' ',$sql);
 					} else {
 						$sql = preg_replace(
-						'/(^\s*select\s)/i','\\1 '.$this->hasTop.' '.$nrows.' ',$sql);
+						'/(^\s*select\s)/i','\\1 '.$this->hasTop.' '.((integer)$nrows).' ',$sql);
 					}
 			} else {
 				$nn = $nrows + $offset;
@@ -2407,7 +2392,6 @@ if (!defined('_ADODB_LAYER')) {
 	 */
 	function Close() {
 		$rez = $this->_close();
-		$this->_queryID = false;
 		$this->_connectionID = false;
 		return $rez;
 	}
@@ -3055,61 +3039,6 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 		return $rs;
 	}
 
-	/**
-	 * Get the last error recorded by PHP and clear the message.
-	 *
-	 * By clearing the message, it becomes possible to detect whether a new error
-	 * has occurred, even when it is the same error as before being repeated.
-	 *
-	 * @return array|null Array if an error has previously occurred. Null otherwise.
-	 */
-	protected function resetLastError() {
-		$error = error_get_last();
-
-		if (is_array($error)) {
-			$error['message'] = '';
-		}
-
-		return $error;
-	}
-
-	/**
-	 * Compare a previously stored error message with the last error recorded by PHP
-	 * to determine whether a new error has occured.
-	 *
-	 * @param array|null $old Optional. Previously stored return value of error_get_last().
-	 *
-	 * @return string The error message if a new error has occured
-	 *                or an empty string if no (new) errors have occured..
-	 */
-	protected function getChangedErrorMsg($old = null) {
-		$new = error_get_last();
-
-		if (is_null($new)) {
-			// No error has occured yet at all.
-			return '';
-		}
-
-		if (is_null($old)) {
-			// First error recorded.
-			return $new['message'];
-		}
-
-		$changed = false;
-		foreach($new as $key => $value) {
-			if ($new[$key] !== $old[$key]) {
-				$changed = true;
-				break;
-			}
-		}
-
-		if ($changed === true) {
-			return $new['message'];
-		}
-
-		return '';
-	}
-
 } // end class ADOConnection
 
 
@@ -3350,7 +3279,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 	}
 
 	function __destruct() {
-		$this->Close();
+		@$this->Close();
 	}
 
 	function getIterator() {
@@ -3386,118 +3315,62 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 
 
 	/**
-	 * Generate a SELECT tag from a recordset, and return the HTML markup.
+	 * Generate a SELECT tag string from a recordset, and return the string.
+	 * If the recordset has 2 cols, we treat the 1st col as the containing
+	 * the text to display to the user, and 2nd col as the return value. Default
+	 * strings are compared with the FIRST column.
 	 *
-	 * If the recordset has 2 columns, we treat the first one as the text to
-	 * display to the user, and the second as the return value. Extra columns
-	 * are discarded.
+	 * @param name			name of SELECT tag
+	 * @param [defstr]		the value to hilite. Use an array for multiple hilites for listbox.
+	 * @param [blank1stItem]	true to leave the 1st item in list empty
+	 * @param [multiple]		true for listbox, false for popup
+	 * @param [size]		#rows to show for listbox. not used by popup
+	 * @param [selectAttr]		additional attributes to defined for SELECT tag.
+	 *				useful for holding javascript onChange='...' handlers.
+	 & @param [compareFields0]	when we have 2 cols in recordset, we compare the defstr with
+	 *				column 0 (1st col) if this is true. This is not documented.
 	 *
-	 * @param string       $name            Name of SELECT tag
-	 * @param string|array $defstr          The value to highlight. Use an array for multiple highlight values.
-	 * @param bool|string $blank1stItem     True to create an empty item (default), False not to add one;
-	 *                                      'string' to set its label and 'value:string' to assign a value to it.
-	 * @param bool         $multiple        True for multi-select list
-	 * @param int          $size            Number of rows to show (applies to multi-select box only)
-	 * @param string       $selectAttr      Additional attributes to defined for SELECT tag,
-	 *                                      useful for holding javascript onChange='...' handlers, CSS class, etc.
-	 * @param bool         $compareFirstCol When true (default), $defstr is compared against the value (column 2),
-	 *                                      while false will compare against the description (column 1).
+	 * @return HTML
 	 *
-	 * @return string HTML
+	 * changes by glen.davies@cce.ac.nz to support multiple hilited items
 	 */
-	function getMenu($name, $defstr = '', $blank1stItem = true, $multiple = false,
-					 $size = 0, $selectAttr = '', $compareFirstCol = true)
+	function GetMenu($name,$defstr='',$blank1stItem=true,$multiple=false,
+			$size=0, $selectAttr='',$compareFields0=true)
 	{
 		global $ADODB_INCLUDED_LIB;
 		if (empty($ADODB_INCLUDED_LIB)) {
 			include(ADODB_DIR.'/adodb-lib.inc.php');
 		}
-		return _adodb_getmenu($this, $name, $defstr, $blank1stItem, $multiple,
-			$size, $selectAttr, $compareFirstCol);
+		return _adodb_getmenu($this, $name,$defstr,$blank1stItem,$multiple,
+			$size, $selectAttr,$compareFields0);
 	}
 
-	/**
-	 * Generate a SELECT tag with groups from a recordset, and return the HTML markup.
-	 *
-	 * The recordset must have 3 columns and be ordered by the 3rd column. The
-	 * first column contains the text to display to the user, the second is the
-	 * return value and the third is the option group. Extra columns are discarded.
-	 * Default strings are compared with the SECOND column.
-	 *
-	 * @param string       $name            Name of SELECT tag
-	 * @param string|array $defstr          The value to highlight. Use an array for multiple highlight values.
-	 * @param bool|string $blank1stItem     True to create an empty item (default), False not to add one;
-	 *                                      'string' to set its label and 'value:string' to assign a value to it.
-	 * @param bool         $multiple        True for multi-select list
-	 * @param int          $size            Number of rows to show (applies to multi-select box only)
-	 * @param string       $selectAttr      Additional attributes to defined for SELECT tag,
-	 *                                      useful for holding javascript onChange='...' handlers, CSS class, etc.
-	 * @param bool         $compareFirstCol When true (default), $defstr is compared against the value (column 2),
-	 *                                      while false will compare against the description (column 1).
-	 *
-	 * @return string HTML
-	 */
-	function getMenuGrouped($name, $defstr = '', $blank1stItem = true, $multiple = false,
-							$size = 0, $selectAttr = '', $compareFirstCol = true)
-	{
-		global $ADODB_INCLUDED_LIB;
-		if (empty($ADODB_INCLUDED_LIB)) {
-			include(ADODB_DIR.'/adodb-lib.inc.php');
-		}
-		return _adodb_getmenu_gp($this, $name, $defstr, $blank1stItem, $multiple,
-			$size, $selectAttr, $compareFirstCol);
-	}
+
 
 	/**
-	 * Generate a SELECT tag from a recordset, and return the HTML markup.
+	 * Generate a SELECT tag string from a recordset, and return the string.
+	 * If the recordset has 2 cols, we treat the 1st col as the containing
+	 * the text to display to the user, and 2nd col as the return value. Default
+	 * strings are compared with the SECOND column.
 	 *
-	 * Same as GetMenu(), except that default strings are compared with the
-	 * FIRST column (the description).
-	 *
-	 * @param string       $name            Name of SELECT tag
-	 * @param string|array $defstr          The value to highlight. Use an array for multiple highlight values.
-	 * @param bool|string $blank1stItem     True to create an empty item (default), False not to add one;
-	 *                                      'string' to set its label and 'value:string' to assign a value to it.
-	 * @param bool         $multiple        True for multi-select list
-	 * @param int          $size            Number of rows to show (applies to multi-select box only)
-	 * @param string       $selectAttr      Additional attributes to defined for SELECT tag,
-	 *                                      useful for holding javascript onChange='...' handlers, CSS class, etc.
-	 *
-	 * @return string HTML
-	 *
-	 * @deprecated 5.21.0 Use getMenu() with $compareFirstCol = false instead.
 	 */
-	function getMenu2($name, $defstr = '', $blank1stItem = true, $multiple = false,
-					  $size = 0, $selectAttr = '')
-	{
-		return $this->getMenu($name, $defstr, $blank1stItem, $multiple,
+	function GetMenu2($name,$defstr='',$blank1stItem=true,$multiple=false,$size=0, $selectAttr='') {
+		return $this->GetMenu($name,$defstr,$blank1stItem,$multiple,
 			$size, $selectAttr,false);
 	}
 
-	/**
-	 * Generate a SELECT tag with groups from a recordset, and return the HTML markup.
-	 *
-	 * Same as GetMenuGrouped(), except that default strings are compared with the
-	 * FIRST column (the description).
-	 *
-	 * @param string       $name            Name of SELECT tag
-	 * @param string|array $defstr          The value to highlight. Use an array for multiple highlight values.
-	 * @param bool|string $blank1stItem     True to create an empty item (default), False not to add one;
-	 *                                      'string' to set its label and 'value:string' to assign a value to it.
-	 * @param bool         $multiple        True for multi-select list
-	 * @param int          $size            Number of rows to show (applies to multi-select box only)
-	 * @param string       $selectAttr      Additional attributes to defined for SELECT tag,
-	 *                                      useful for holding javascript onChange='...' handlers, CSS class, etc.
-	 *
-	 * @return string HTML
-	 *
-	 * @deprecated 5.21.0 Use getMenuGrouped() with $compareFirstCol = false instead.
-	 */
-	function getMenu3($name, $defstr = '', $blank1stItem = true, $multiple = false,
-					  $size = 0, $selectAttr = '')
+	/*
+		Grouped Menu
+	*/
+	function GetMenu3($name,$defstr='',$blank1stItem=true,$multiple=false,
+			$size=0, $selectAttr='')
 	{
-		return $this->getMenuGrouped($name, $defstr, $blank1stItem, $multiple,
-			$size, $selectAttr, false);
+		global $ADODB_INCLUDED_LIB;
+		if (empty($ADODB_INCLUDED_LIB)) {
+			include(ADODB_DIR.'/adodb-lib.inc.php');
+		}
+		return _adodb_getmenu_gp($this, $name,$defstr,$blank1stItem,$multiple,
+			$size, $selectAttr,false);
 	}
 
 	/**
@@ -4745,8 +4618,8 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 				$class = $db; break;
 		}
 
-		$file = "drivers/adodb-$db.inc.php";
-		@include_once(ADODB_DIR . '/' . $file);
+		$file = ADODB_DIR."/drivers/adodb-".$db.".inc.php";
+		@include_once($file);
 		$ADODB_LASTDB = $class;
 		if (class_exists("ADODB_" . $class)) {
 			return $class;

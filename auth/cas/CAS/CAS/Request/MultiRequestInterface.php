@@ -64,7 +64,7 @@ interface CAS_Request_MultiRequestInterface
     /**
      * Retrieve the number of requests added to this batch.
      *
-     * @return int number of request elements
+     * @return number of request elements
      */
     public function getNumRequests ();
 

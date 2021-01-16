@@ -40,7 +40,7 @@ class company_users_form extends moodleform {
     }
 
     public function definition_after_data() {
-        global $USER, $OUTPUT;
+        global $USER;
         $mform =& $this->_form;
 
         // Adding the elements in the definition_after_data function rather than in the definition function
@@ -53,7 +53,7 @@ class company_users_form extends moodleform {
         if (count($this->potentialusers->find_users('')) || count($this->currentusers->find_users(''))) {
 
             $mform->addElement('html', '<table summary=""
-                                        class="companyuserstable addremovetable generaltable generalbox boxaligncenter"
+                                        class="companyusertable addremovetable generaltable generalbox boxaligncenter"
                                         cellspacing="0">
                 <tr>
                   <td id="existingcell">');
@@ -63,12 +63,16 @@ class company_users_form extends moodleform {
             $mform->addElement('html', '
                   </td>
                   <td id="buttonscell">
-                      <p class="arrow_button">
-                        <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('add') . '"
-                               title="' . print_string('add') .'" class="btn btn-secondary"/><br />
-                        <input name="remove" id="remove" type="submit" value="'. get_string('remove').'&nbsp;'.$OUTPUT->rarrow(). '"
-                               title="'. print_string('remove') .'" class="btn btn-secondary"/><br />
-                     </p>
+                      <div id="addcontrols">
+                          <input name="add" id="add" type="submit" value="&nbsp;' .
+                           get_string('add') . '" title="Add" /><br />
+
+                      </div>
+
+                      <div id="removecontrols">
+                          <input name="remove" id="remove" type="submit" value="' .
+                           get_string('remove') . '&nbsp;" title="Remove" />
+                      </div>
                   </td>
                   <td id="potentialcell">');
 
@@ -87,7 +91,7 @@ class company_users_form extends moodleform {
     }
 
     public function process() {
-        global $DB, $USER, $OUTPUT;
+        global $DB;
 
         if ($this->selectedcompany) {
             $company = new company($this->selectedcompany);
@@ -99,15 +103,6 @@ class company_users_form extends moodleform {
                 $userstoassign = $this->potentialusers->get_selected_users();
                 if (!empty($userstoassign)) {
 
-                    // Check if the company has gone over the user quota.
-                     $company = new company($this->selectedcompany);
-                     if (!$company->check_usercount(count($userstoassign))) {
-                        $maxusers = $company->get('maxusers');
-                        $returnurl = new moodle_url('/blocks/iomad_company_admin/company_users_form.php');
-                        print_error('maxuserswarning', 'block_iomad_company_admin', $returnurl, $maxusers);
-                    }
-
-                    // Process them.
                     foreach ($userstoassign as $adduser) {
                         $allow = true;
 
@@ -115,22 +110,6 @@ class company_users_form extends moodleform {
                             $user = $DB->get_record('user', array('id' => $adduser->id));
                             // Add user to default company department.
                             $company->assign_user_to_company($adduser->id);
-
-                            \core\event\user_updated::create_from_userid($adduser->id)->trigger();
-
-                            // Fire an event for this.
-                            $eventother = array('companyid' => $company->id,
-                                                'companyname' => $companyshortname,
-                                                'usertype' => 0,
-                                                'usertypename' => '',
-                                                'oldcompany' => json_encode(array()));
-
-                            $event = \block_iomad_company_admin\event\company_user_assigned::create(array('context' => context_system::instance(),
-                                                                                                          'userid' => $USER->id,
-                                                                                                          'objectid' => $company->id,
-                                                                                                          'relateduserid' => $adduser->id,
-                                                                                                           'other' => $eventother));
-                            $event->trigger();
                         }
                     }
 
@@ -141,29 +120,23 @@ class company_users_form extends moodleform {
 
             // Process incoming unassignments.
             if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
-                $company = new company($this->selectedcompany);
                 $userstounassign = $this->currentusers->get_selected_users();
                 if (!empty($userstounassign)) {
                     foreach ($userstounassign as $removeuser) {
-                        // Remove the user from the company.
-                        $company->unassign_user_from_company($removeuser->id);
+                        // Check if the user was a company manager.
+                        if ($DB->get_records('company_users', array('userid' => $removeuser->id, 'managertype' => 1))) {
+                            $companymanagerrole = $DB->get_record('role', array('shortname' => 'companymanager'));
+                            role_unassign($companymanagerrole->id, $removeuser->id, $this->context->id);
+                        }
+                        if ($DB->get_records('company_users', array('userid' => $removeuser->id, 'managertype' => 2))) {
+                            $departmentmanagerrole = $DB->get_record('role', array('shortname' => 'departmentmanager'));
+                            role_unassign($departmentmanagerrole->id, $removeuser->id, $this->context->id);
+                        }
+                        $DB->delete_records('company_users', array('userid' => $removeuser->id));
+                        // Deal with the company theme.
+                        $DB->set_field('user', 'theme', '', array('id' => $removeuser->id));
 
-                        // Fire the user updated event.
-                        \core\event\user_updated::create_from_userid($removeuser->id)->trigger();
 
-                        // Fire an event for this.
-                        $eventother = array('companyid' => 0,
-                                            'companyname' => '',
-                                            'usertype' => 0,
-                                            'usertypename' => '',
-                                            'oldcompany' => json_encode($company));
-
-                        $event = \block_iomad_company_admin\event\company_user_unassigned::create(array('context' => context_system::instance(),
-                                                                                                      'userid' => $USER->id,
-                                                                                                      'objectid' => 0,
-                                                                                                      'relateduserid' => $removeuser->id,
-                                                                                                       'other' => $eventother));
-                        $event->trigger();
                     }
 
                     $this->potentialusers->invalidate_selected_users();
@@ -174,6 +147,7 @@ class company_users_form extends moodleform {
 
     }
 }
+
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 
@@ -198,15 +172,13 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
-$company = new company($companyid);
 
 $usersform = new company_users_form($PAGE->url, $context, $companyid);
 
@@ -214,7 +186,7 @@ if ($usersform->is_cancelled()) {
     if ($returnurl) {
         redirect($returnurl);
     } else {
-        redirect(new moodle_url('/my'));
+        redirect(new moodle_url('/local/iomad_dashboard/index.php'));
     }
 } else {
     $usersform->process();

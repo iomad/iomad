@@ -53,18 +53,6 @@ abstract class badge_award_selector_base extends user_selector_base {
     protected $issuerid = null;
 
     /**
-     * The return address. Accepts either a string or a moodle_url.
-     * @var string $url
-     */
-    public $url;
-
-    /**
-     * The current group being displayed.
-     * @var int $currentgroup
-     */
-    public $currentgroup;
-
-    /**
      * Constructor method
      * @param string $name
      * @param array $options
@@ -89,15 +77,6 @@ abstract class badge_award_selector_base extends user_selector_base {
         if (isset($options['issuerrole'])) {
             $this->issuerrole = $options['issuerrole'];
         }
-        if (isset($options['url'])) {
-            $this->url = $options['url'];
-        }
-        if (isset($options['currentgroup'])) {
-            $this->currentgroup = $options['currentgroup'];
-        } else {
-            // Returns group active in course, changes the group by default if 'group' page param present.
-            $this->currentgroup = groups_get_course_group($COURSE, true);
-        }
     }
 
     /**
@@ -113,26 +92,7 @@ abstract class badge_award_selector_base extends user_selector_base {
         $options['badgeid'] = $this->badgeid;
         $options['issuerid'] = $this->issuerid;
         $options['issuerrole'] = $this->issuerrole;
-        // These will be used to filter potential badge recipients when searching.
-        $options['currentgroup'] = $this->currentgroup;
         return $options;
-    }
-
-    /**
-     * Restricts the selection of users to display, according to the groups they belong.
-     *
-     * @return array
-     */
-    protected function get_groups_sql() {
-        $groupsql = '';
-        $groupwheresql = '';
-        $groupwheresqlparams = array();
-        if ($this->currentgroup) {
-            $groupsql = ' JOIN {groups_members} gm ON gm.userid = u.id ';
-            $groupwheresql = ' AND gm.groupid = :gr_grpid ';
-            $groupwheresqlparams = array('gr_grpid' => $this->currentgroup);
-        }
-        return array($groupsql, $groupwheresql, $groupwheresqlparams);
     }
 }
 
@@ -181,10 +141,8 @@ class badge_potential_users_selector extends badge_award_selector_base {
             $wherecondition = ' WHERE ' . implode(' AND ', $whereconditions);
         }
 
-        list($groupsql, $groupwheresql, $groupwheresqlparams) = $this->get_groups_sql();
-
         list($esql, $eparams) = get_enrolled_sql($this->context, 'moodle/badges:earnbadge', 0, true);
-        $params = array_merge($params, $eparams, $groupwheresqlparams);
+        $params = array_merge($params, $eparams);
 
         $fields      = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(u.id)';
@@ -195,9 +153,7 @@ class badge_potential_users_selector extends badge_award_selector_base {
         $sql = " FROM {user} u JOIN ($esql) je ON je.id = u.id
                  LEFT JOIN {badge_manual_award} bm
                      ON (bm.recipientid = u.id AND bm.badgeid = :badgeid AND bm.issuerrole = :issuerrole)
-                 $groupsql
-                 $wherecondition AND bm.id IS NULL
-                 $groupwheresql";
+                 $wherecondition AND bm.id IS NULL";
 
         list($sort, $sortparams) = users_order_by_sql('u', $search, $this->accesscontext);
         $order = ' ORDER BY ' . $sort;
@@ -248,16 +204,12 @@ class badge_existing_users_selector extends badge_award_selector_base {
         $fields = $this->required_fields_sql('u');
         list($sort, $sortparams) = users_order_by_sql('u', $search, $this->accesscontext);
 
-        list($groupsql, $groupwheresql, $groupwheresqlparams) = $this->get_groups_sql();
-
-        $params = array_merge($params, $eparams, $sortparams, $groupwheresqlparams);
+        $params = array_merge($params, $eparams, $sortparams);
         $recipients = $DB->get_records_sql("SELECT $fields
                 FROM {user} u
                 JOIN ($esql) je ON je.id = u.id
                 JOIN {badge_manual_award} s ON s.recipientid = u.id
-                $groupsql
                 WHERE $wherecondition AND s.badgeid = :badgeid AND s.issuerrole = :issuerrole
-                $groupwheresql
                 ORDER BY $sort", $params);
 
         return array(get_string('existingrecipients', 'badges') => $recipients);

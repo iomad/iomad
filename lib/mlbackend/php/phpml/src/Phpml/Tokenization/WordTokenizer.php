@@ -6,6 +6,11 @@ namespace Phpml\Tokenization;
 
 class WordTokenizer implements Tokenizer
 {
+    /**
+     * @param string $text
+     *
+     * @return array
+     */
     public function tokenize(string $text): array
     {
         $tokens = [];

@@ -113,7 +113,7 @@
     min-height: 260px;
 }
 
-#registration-form-container .card {
+#registration-form-container .well {
     margin-bottom: 0;
 }
 
@@ -121,7 +121,7 @@
     margin-bottom: 0;
 }
 
-#registration-choice-container .card {
+#registration-choice-container .well {
     text-align: center;
 }
 

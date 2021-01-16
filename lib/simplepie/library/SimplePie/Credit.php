@@ -112,8 +112,10 @@ class SimplePie_Credit
 		{
 			return $this->role;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -127,8 +129,10 @@ class SimplePie_Credit
 		{
 			return $this->scheme;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -142,7 +146,10 @@ class SimplePie_Credit
 		{
 			return $this->name;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 }
+

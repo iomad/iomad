@@ -63,8 +63,8 @@ if ($iomadcertificate->orientation == 'L') {
 } else { // Portrait
     $x = 10;
     $y = 76;
-    $sealx = 90;
-    $sealy = 50;
+    $sealx = 40;
+    $sealy = 200;
     $sigx = 130;
     $sigy = 230;
     $custx = 30;
@@ -245,8 +245,9 @@ $pdf->SetTextColor(0, 0, 120);
 $pdf->SetTextColor(0, 0, 0);
 iomadcertificate_print_text($pdf, $x, $y + 20, $alignment, 'freeserif', '', 20, get_string('companycertify', 'iomadcertificate'));
 iomadcertificate_print_text($pdf, $x, $y + 34, $alignment, 'freeserif', '', 30, fullname($certuser));
-iomadcertificate_print_text($pdf, $x, $y + 53, $alignment, 'freeserif', '', 20, get_string('companydetails', 'iomadcertificate'));
+iomadcertificate_print_text($pdf, $x, $y + 53, $alignment, 'freeserif', '', 20, get_string('companydetailsone', 'iomadcertificate'));
 iomadcertificate_print_text($pdf, $x, $y + 68, $alignment, 'freeserif', '', 20, $course->fullname);
-iomadcertificate_print_text($pdf, $x, $y + 86, $alignment, 'freeserif', '', 14, $dategradestring);
+iomadcertificate_print_text($pdf, $x, $y + 83, $alignment, 'freeserif', '', 20, get_string('companydetailstwo', 'iomadcertificate'));
+iomadcertificate_print_text($pdf, $x, $y + 100, $alignment, 'freeserif', '', 14, $dategradestring);
 iomadcertificate_print_text($pdf, $x, $codey, 'C', 'freeserif', '', 10, iomadcertificate_get_code($iomadcertificate, $certrecord));
 iomadcertificate_print_text($pdf, $custx, $custy, $alignment, null, null, null, $iomadcertificate->customtext);

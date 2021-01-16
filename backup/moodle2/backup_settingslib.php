@@ -75,15 +75,6 @@ class backup_groups_setting extends backup_generic_setting {
 }
 
 /**
- * root setting to control if backup will include custom field information
- *
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright 2018 Daniel Neis Araujo
- */
-class backup_customfield_setting extends backup_generic_setting {
-}
-
-/**
  * root setting to control if backup will include activities or no.
  * A lot of other settings (_included at activity levels)
  * are dependent of this setting
@@ -199,9 +190,3 @@ class backup_activity_included_setting extends activity_backup_setting {}
  * user information or no, depends of @backup_users_setting
  */
 class backup_activity_userinfo_setting extends activity_backup_setting {}
-
-/**
- * Root setting to control if backup will include content bank content or no
- */
-class backup_contentbankcontent_setting extends backup_generic_setting {
-}

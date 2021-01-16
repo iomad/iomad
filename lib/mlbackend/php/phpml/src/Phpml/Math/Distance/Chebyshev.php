@@ -4,16 +4,32 @@ declare(strict_types=1);
 
 namespace Phpml\Math\Distance;
 
-/**
- * Class Chebyshev
- */
-class Chebyshev extends Distance
+use Phpml\Exception\InvalidArgumentException;
+use Phpml\Math\Distance;
+
+class Chebyshev implements Distance
 {
     /**
-     * {@inheritdoc}
+     * @param array $a
+     * @param array $b
+     *
+     * @return float
+     *
+     * @throws InvalidArgumentException
      */
     public function distance(array $a, array $b): float
     {
-        return max($this->deltas($a, $b));
+        if (count($a) !== count($b)) {
+            throw InvalidArgumentException::arraySizeNotMatch();
+        }
+
+        $differences = [];
+        $count = count($a);
+
+        for ($i = 0; $i < $count; ++$i) {
+            $differences[] = abs($a[$i] - $b[$i]);
+        }
+
+        return max($differences);
     }
 }

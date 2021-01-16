@@ -75,14 +75,14 @@ class mod_page_mod_form extends moodleform_mod {
         if (array_key_exists(RESOURCELIB_DISPLAY_POPUP, $options)) {
             $mform->addElement('text', 'popupwidth', get_string('popupwidth', 'page'), array('size'=>3));
             if (count($options) > 1) {
-                $mform->hideIf('popupwidth', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
+                $mform->disabledIf('popupwidth', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
             }
             $mform->setType('popupwidth', PARAM_INT);
             $mform->setDefault('popupwidth', $config->popupwidth);
 
             $mform->addElement('text', 'popupheight', get_string('popupheight', 'page'), array('size'=>3));
             if (count($options) > 1) {
-                $mform->hideIf('popupheight', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
+                $mform->disabledIf('popupheight', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
             }
             $mform->setType('popupheight', PARAM_INT);
             $mform->setDefault('popupheight', $config->popupheight);
@@ -92,8 +92,6 @@ class mod_page_mod_form extends moodleform_mod {
         $mform->setDefault('printheading', $config->printheading);
         $mform->addElement('advcheckbox', 'printintro', get_string('printintro', 'page'));
         $mform->setDefault('printintro', $config->printintro);
-        $mform->addElement('advcheckbox', 'printlastmodified', get_string('printlastmodified', 'page'));
-        $mform->setDefault('printlastmodified', $config->printlastmodified);
 
         // add legacy files flag only if used
         if (isset($this->current->legacyfiles) and $this->current->legacyfiles != RESOURCELIB_LEGACYFILES_NO) {
@@ -115,36 +113,26 @@ class mod_page_mod_form extends moodleform_mod {
         $mform->setDefault('revision', 1);
     }
 
-    /**
-     * Enforce defaults here.
-     *
-     * @param array $defaultvalues Form defaults
-     * @return void
-     **/
-    public function data_preprocessing(&$defaultvalues) {
+    function data_preprocessing(&$default_values) {
         if ($this->current->instance) {
             $draftitemid = file_get_submitted_draft_itemid('page');
-            $defaultvalues['page']['format'] = $defaultvalues['contentformat'];
-            $defaultvalues['page']['text']   = file_prepare_draft_area($draftitemid, $this->context->id, 'mod_page',
-                    'content', 0, page_get_editor_options($this->context), $defaultvalues['content']);
-            $defaultvalues['page']['itemid'] = $draftitemid;
+            $default_values['page']['format'] = $default_values['contentformat'];
+            $default_values['page']['text']   = file_prepare_draft_area($draftitemid, $this->context->id, 'mod_page', 'content', 0, page_get_editor_options($this->context), $default_values['content']);
+            $default_values['page']['itemid'] = $draftitemid;
         }
-        if (!empty($defaultvalues['displayoptions'])) {
-            $displayoptions = unserialize($defaultvalues['displayoptions']);
+        if (!empty($default_values['displayoptions'])) {
+            $displayoptions = unserialize($default_values['displayoptions']);
             if (isset($displayoptions['printintro'])) {
-                $defaultvalues['printintro'] = $displayoptions['printintro'];
+                $default_values['printintro'] = $displayoptions['printintro'];
             }
             if (isset($displayoptions['printheading'])) {
-                $defaultvalues['printheading'] = $displayoptions['printheading'];
-            }
-            if (isset($displayoptions['printlastmodified'])) {
-                $defaultvalues['printlastmodified'] = $displayoptions['printlastmodified'];
+                $default_values['printheading'] = $displayoptions['printheading'];
             }
             if (!empty($displayoptions['popupwidth'])) {
-                $defaultvalues['popupwidth'] = $displayoptions['popupwidth'];
+                $default_values['popupwidth'] = $displayoptions['popupwidth'];
             }
             if (!empty($displayoptions['popupheight'])) {
-                $defaultvalues['popupheight'] = $displayoptions['popupheight'];
+                $default_values['popupheight'] = $displayoptions['popupheight'];
             }
         }
     }

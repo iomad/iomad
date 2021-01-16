@@ -43,6 +43,7 @@ Feature: In an assignment, teacher can view the feedback for a previous attempt.
     And I am on "Course 1" course homepage
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration
+    And I click on "Edit" "link" in the "Submitted for grading" "table_row"
     And I click on "Grade" "link" in the "Submitted for grading" "table_row"
     And I should see "Page 1 of 3"
     And I click on ".navigate-next-button" "css_element"
@@ -54,9 +55,9 @@ Feature: In an assignment, teacher can view the feedback for a previous attempt.
     And I press "Save changes"
     And I wait until the page is ready
     And I should see "The changes to the grade and feedback were saved"
-    And I press "OK"
+    And I press "Ok"
     And I follow "View a different attempt"
-    And I click on "Attempt 1" "radio" in the "View a different attempt" "dialogue"
+    And I click on "//div[contains(@class, 'moodle-dialogue-bd')]//label[2]" "xpath_element"
     And I press "View"
     And I wait until the page is ready
     And I should see "You are editing the feedback for a previous attempt. This is attempt 1 out of 2."

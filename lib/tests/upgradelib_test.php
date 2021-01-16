@@ -651,6 +651,100 @@ class core_upgradelib_testcase extends advanced_testcase {
     }
 
     /**
+     * Create two pages with blocks, delete one page and make sure upgrade script deletes orphaned blocks
+     */
+    public function test_delete_block_positions() {
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/my/lib.php');
+        $this->resetAfterTest();
+
+        // Make sure each block on system dashboard page has a position.
+        $systempage = $DB->get_record('my_pages', array('userid' => null, 'private' => MY_PAGE_PRIVATE));
+        $systemcontext = context_system::instance();
+        $blockinstances = $DB->get_records('block_instances', array('parentcontextid' => $systemcontext->id,
+            'pagetypepattern' => 'my-index', 'subpagepattern' => $systempage->id));
+        $this->assertNotEmpty($blockinstances);
+        foreach ($blockinstances as $bi) {
+            $DB->insert_record('block_positions', ['subpage' => $systempage->id, 'pagetype' => 'my-index', 'contextid' => $systemcontext->id,
+                'blockinstanceid' => $bi->id, 'visible' => 1, 'weight' => $bi->defaultweight]);
+        }
+
+        // Create two users and make two copies of the system dashboard.
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $page1 = my_copy_page($user1->id, MY_PAGE_PRIVATE, 'my-index');
+        $page2 = my_copy_page($user2->id, MY_PAGE_PRIVATE, 'my-index');
+
+        $context1 = context_user::instance($user1->id);
+        $context2 = context_user::instance($user2->id);
+
+        // Delete second page without deleting block positions.
+        $DB->delete_records('my_pages', ['id' => $page2->id]);
+
+        // Blocks are still here.
+        $this->assertEquals(count($blockinstances), $DB->count_records('block_positions', ['subpage' => $page1->id, 'pagetype' => 'my-index', 'contextid' => $context1->id]));
+        $this->assertEquals(count($blockinstances), $DB->count_records('block_positions', ['subpage' => $page2->id, 'pagetype' => 'my-index', 'contextid' => $context2->id]));
+
+        // Run upgrade script that should delete orphaned block_positions.
+        upgrade_block_positions();
+
+        // First user still has all his block_positions, second user does not.
+        $this->assertEquals(count($blockinstances), $DB->count_records('block_positions', ['subpage' => $page1->id, 'pagetype' => 'my-index', 'contextid' => $context1->id]));
+        $this->assertEquals(0, $DB->count_records('block_positions', ['subpage' => $page2->id, 'pagetype' => 'my-index']));
+    }
+
+    /**
+     * Test the conversion of auth plugin settings names.
+     */
+    public function test_upgrade_fix_config_auth_plugin_names() {
+        $this->resetAfterTest();
+
+        // Let the plugin auth_foo use legacy format only.
+        set_config('name1', 'val1', 'auth/foo');
+        set_config('name2', 'val2', 'auth/foo');
+
+        // Let the plugin auth_bar use new format only.
+        set_config('name1', 'val1', 'auth_bar');
+        set_config('name2', 'val2', 'auth_bar');
+
+        // Let the plugin auth_baz use a mix of legacy and new format, with no conflicts.
+        set_config('name1', 'val1', 'auth_baz');
+        set_config('name1', 'val1', 'auth/baz');
+        set_config('name2', 'val2', 'auth/baz');
+        set_config('name3', 'val3', 'auth_baz');
+
+        // Let the plugin auth_qux use a mix of legacy and new format, with conflicts.
+        set_config('name1', 'val1', 'auth_qux');
+        set_config('name1', 'val2', 'auth/qux');
+
+        // Execute the migration.
+        upgrade_fix_config_auth_plugin_names('foo');
+        upgrade_fix_config_auth_plugin_names('bar');
+        upgrade_fix_config_auth_plugin_names('baz');
+        upgrade_fix_config_auth_plugin_names('qux');
+
+        // Assert that legacy settings are gone and no new were introduced.
+        $this->assertEmpty((array) get_config('auth/foo'));
+        $this->assertEmpty((array) get_config('auth/bar'));
+        $this->assertEmpty((array) get_config('auth/baz'));
+        $this->assertEmpty((array) get_config('auth/qux'));
+
+        // Assert values were simply kept where there was no conflict.
+        $this->assertSame('val1', get_config('auth_foo', 'name1'));
+        $this->assertSame('val2', get_config('auth_foo', 'name2'));
+
+        $this->assertSame('val1', get_config('auth_bar', 'name1'));
+        $this->assertSame('val2', get_config('auth_bar', 'name2'));
+
+        $this->assertSame('val1', get_config('auth_baz', 'name1'));
+        $this->assertSame('val2', get_config('auth_baz', 'name2'));
+        $this->assertSame('val3', get_config('auth_baz', 'name3'));
+
+        // Assert the new format took precedence in case of conflict.
+        $this->assertSame('val1', get_config('auth_qux', 'name1'));
+    }
+
+    /**
      * Create a collection of test themes to test determining parent themes.
      *
      * @return Url to the path containing the test themes
@@ -687,6 +781,45 @@ class core_upgradelib_testcase extends advanced_testcase {
         $vthemedir = \org\bovigo\vfs\vfsStream::setup('themes', null, $themedircontent);
 
         return \org\bovigo\vfs\vfsStream::url('themes');
+    }
+
+    /**
+     * Test finding theme locations.
+     */
+    public function test_upgrade_find_theme_location() {
+        global $CFG;
+
+        $this->resetAfterTest();
+
+        $CFG->themedir = $this->create_testthemes();
+
+        $this->assertSame($CFG->dirroot . '/theme/boost', upgrade_find_theme_location('boost'));
+        $this->assertSame($CFG->dirroot . '/theme/clean', upgrade_find_theme_location('clean'));
+        $this->assertSame($CFG->dirroot . '/theme/bootstrapbase', upgrade_find_theme_location('bootstrapbase'));
+
+        $this->assertSame($CFG->themedir . '/testtheme', upgrade_find_theme_location('testtheme'));
+        $this->assertSame($CFG->themedir . '/childoftesttheme', upgrade_find_theme_location('childoftesttheme'));
+    }
+
+    /**
+     * Test figuring out if theme is or is a child of a certain theme.
+     */
+    public function test_upgrade_theme_is_from_family() {
+        global $CFG;
+
+        $this->resetAfterTest();
+
+        $CFG->themedir = $this->create_testthemes();
+
+        $this->assertTrue(upgrade_theme_is_from_family('boost', 'boost'), 'Boost is a boost theme');
+        $this->assertTrue(upgrade_theme_is_from_family('bootstrapbase', 'clean'), 'Clean is a bootstrap base theme');
+        $this->assertFalse(upgrade_theme_is_from_family('boost', 'clean'), 'Clean is not a boost theme');
+
+        $this->assertTrue(upgrade_theme_is_from_family('testtheme', 'childoftesttheme'), 'childoftesttheme is a testtheme');
+        $this->assertFalse(upgrade_theme_is_from_family('testtheme', 'orphantheme'), 'ofphantheme is not a testtheme');
+        $this->assertTrue(upgrade_theme_is_from_family('testtheme', 'infinite'), 'Infinite loop with testtheme parent is true');
+        $this->assertFalse(upgrade_theme_is_from_family('testtheme', 'loop'), 'Infinite loop without testtheme parent is false');
+        $this->assertTrue(upgrade_theme_is_from_family('testtheme', 'themewithbrokenparent'), 'No error on broken parent');
     }
 
     /**
@@ -759,325 +892,32 @@ class core_upgradelib_testcase extends advanced_testcase {
     }
 
     /**
-     * Check that orphaned files are deleted.
+     * Check that entries in the block_instances table are coverted over correctly.
+     *
+     * @dataProvider encoded_strings_dataprovider
+     * @param string $original The original base64_encoded block config setting.
+     * @param string $expected The expected base64_encoded block config setting.
      */
-    public function test_upgrade_delete_orphaned_file_records() {
-        global $DB, $CFG;
-        require_once($CFG->dirroot . '/repository/lib.php');
-
-        $this->resetAfterTest();
-        // Create user.
-        $generator = $this->getDataGenerator();
-        $user = $generator->create_user();
-        $this->setUser($user);
-        $usercontext = context_user::instance($user->id);
-        $syscontext = context_system::instance();
-
-        $fs = get_file_storage();
-
-        $userrepository = array();
-        $newstoredfile = array();
-        $repositorypluginname = array('user', 'areafiles');
-
-        // Create two repositories with one file in each.
-        foreach ($repositorypluginname as $key => $value) {
-            // Override repository permission.
-            $capability = 'repository/' . $value . ':view';
-            $guestroleid = $DB->get_field('role', 'id', array('shortname' => 'guest'));
-            assign_capability($capability, CAP_ALLOW, $guestroleid, $syscontext->id, true);
-
-            $args = array();
-            $args['type'] = $value;
-            $repos = repository::get_instances($args);
-            $userrepository[$key] = reset($repos);
-
-            $this->assertInstanceOf('repository', $userrepository[$key]);
-
-            $component = 'user';
-            $filearea  = 'private';
-            $itemid    = $key;
-            $filepath  = '/';
-            $filename  = 'userfile.txt';
-
-            $filerecord = array(
-                'contextid' => $usercontext->id,
-                'component' => $component,
-                'filearea'  => $filearea,
-                'itemid'    => $itemid,
-                'filepath'  => $filepath,
-                'filename'  => $filename,
-            );
-
-            $content = 'Test content';
-            $originalfile = $fs->create_file_from_string($filerecord, $content);
-            $this->assertInstanceOf('stored_file', $originalfile);
-
-            $newfilerecord = array(
-                'contextid' => $syscontext->id,
-                'component' => 'core',
-                'filearea'  => 'phpunit',
-                'itemid'    => $key,
-                'filepath'  => $filepath,
-                'filename'  => $filename,
-            );
-            $ref = $fs->pack_reference($filerecord);
-            $newstoredfile[$key] = $fs->create_file_from_reference($newfilerecord, $userrepository[$key]->id, $ref);
-
-            // Look for references by repository ID.
-            $files = $fs->get_external_files($userrepository[$key]->id);
-            $file = reset($files);
-            $this->assertEquals($file, $newstoredfile[$key]);
-        }
-
-        // Make one file orphaned by deleting first repository.
-        $DB->delete_records('repository_instances', array('id' => $userrepository[0]->id));
-        $DB->delete_records('repository_instance_config', array('instanceid' => $userrepository[0]->id));
-
-        upgrade_delete_orphaned_file_records();
-
-        $files = $fs->get_external_files($userrepository[0]->id);
-        $file = reset($files);
-        $this->assertFalse($file);
-
-        $files = $fs->get_external_files($userrepository[1]->id);
-        $file = reset($files);
-        $this->assertEquals($file, $newstoredfile[1]);
-    }
-
-    /**
-     * Test that the previous records are updated according to the reworded actions.
-     * @return null
-     */
-    public function test_upgrade_rename_prediction_actions_useful_incorrectly_flagged() {
+    public function test_upgrade_fix_block_instance_configuration($original, $expected) {
         global $DB;
 
         $this->resetAfterTest();
-        $this->setAdminUser();
 
-        $models = $DB->get_records('analytics_models');
-        $upcomingactivitiesdue = null;
-        $noteaching = null;
-        foreach ($models as $model) {
-            if ($model->target === '\\core_user\\analytics\\target\\upcoming_activities_due') {
-                $upcomingactivitiesdue = new \core_analytics\model($model);
-            }
-            if ($model->target === '\\core_course\\analytics\\target\\no_teaching') {
-                $noteaching = new \core_analytics\model($model);
-            }
-        }
+        $data = new stdClass();
+        $data->blockname = 'html';
+        $data->parentcontextid = 1;
+        $data->showinsubcontexts = 0;
+        $data->requirebytheme = 0;
+        $data->pagetypepattern = 'admin-setting-frontpagesettings';
+        $data->defaultregion = 'side-post';
+        $data->defaultweight = 1;
+        $data->timecreated = time();
+        $data->timemodified = time();
 
-        // Upcoming activities due generating some insights.
-        $course1 = $this->getDataGenerator()->create_course();
-        $attrs = ['course' => $course1, 'duedate' => time() + WEEKSECS - DAYSECS];
-        $assign = $this->getDataGenerator()->get_plugin_generator('mod_assign')->create_instance($attrs);
-        $student = $this->getDataGenerator()->create_user();
-        $usercontext = \context_user::instance($student->id);
-        $this->getDataGenerator()->enrol_user($student->id, $course1->id, 'student');
-        $upcomingactivitiesdue->predict();
-        list($ignored, $predictions) = $upcomingactivitiesdue->get_predictions($usercontext, true);
-        $prediction = reset($predictions);
-
-        $predictionaction = (object)[
-            'predictionid' => $prediction->get_prediction_data()->id,
-            'userid' => 2,
-            'actionname' => 'fixed',
-            'timecreated' => time()
-        ];
-        $DB->insert_record('analytics_prediction_actions', $predictionaction);
-        $predictionaction->actionname = 'notuseful';
-        $DB->insert_record('analytics_prediction_actions', $predictionaction);
-
-        upgrade_rename_prediction_actions_useful_incorrectly_flagged();
-
-        $this->assertEquals(0, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_FIXED]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_USEFUL]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_NOT_USEFUL]));
-        $this->assertEquals(0, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_INCORRECTLY_FLAGGED]));
-
-        // No teaching generating some insights.
-        $course2 = $this->getDataGenerator()->create_course(['startdate' => time() + (2 * DAYSECS)]);
-        $noteaching->predict();
-        list($ignored, $predictions) = $noteaching->get_predictions(\context_system::instance(), true);
-        $prediction = reset($predictions);
-
-        $predictionaction = (object)[
-            'predictionid' => $prediction->get_prediction_data()->id,
-            'userid' => 2,
-            'actionname' => 'notuseful',
-            'timecreated' => time()
-        ];
-        $DB->insert_record('analytics_prediction_actions', $predictionaction);
-        $predictionaction->actionname = 'fixed';
-        $DB->insert_record('analytics_prediction_actions', $predictionaction);
-
-        upgrade_rename_prediction_actions_useful_incorrectly_flagged();
-
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_FIXED]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_USEFUL]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_NOT_USEFUL]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_INCORRECTLY_FLAGGED]));
-
-        // We also check that there are no records incorrectly switched in upcomingactivitiesdue.
-        $upcomingactivitiesdue->clear();
-
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_FIXED]));
-        $this->assertEquals(0, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_USEFUL]));
-        $this->assertEquals(0, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_NOT_USEFUL]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_INCORRECTLY_FLAGGED]));
-
-        $upcomingactivitiesdue->predict();
-        list($ignored, $predictions) = $upcomingactivitiesdue->get_predictions($usercontext, true);
-        $prediction = reset($predictions);
-
-        $predictionaction = (object)[
-            'predictionid' => $prediction->get_prediction_data()->id,
-            'userid' => 2,
-            'actionname' => 'fixed',
-            'timecreated' => time()
-        ];
-        $DB->insert_record('analytics_prediction_actions', $predictionaction);
-        $predictionaction->actionname = 'notuseful';
-        $DB->insert_record('analytics_prediction_actions', $predictionaction);
-
-        upgrade_rename_prediction_actions_useful_incorrectly_flagged();
-
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_FIXED]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_USEFUL]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_NOT_USEFUL]));
-        $this->assertEquals(1, $DB->count_records('analytics_prediction_actions',
-            ['actionname' => \core_analytics\prediction::ACTION_INCORRECTLY_FLAGGED]));
-    }
-
-    /**
-     * Test the functionality of the {@link upgrade_convert_hub_config_site_param_names()} function.
-     */
-    public function test_upgrade_convert_hub_config_site_param_names() {
-
-        $config = (object) [
-            // This is how site settings related to registration at https://moodle.net are stored.
-            'site_name_httpsmoodlenet' => 'Foo Site',
-            'site_language_httpsmoodlenet' => 'en',
-            'site_emailalert_httpsmoodlenet' => 1,
-            // These are unexpected relics of a value as registered at the old http://hub.moodle.org site.
-            'site_name_httphubmoodleorg' => 'Bar Site',
-            'site_description_httphubmoodleorg' => 'Old description',
-            // This is the target value we are converting to - here it already somehow exists.
-            'site_emailalert' => 0,
-            // This is a setting not related to particular hub.
-            'custom' => 'Do not touch this',
-            // A setting defined for multiple alternative hubs.
-            'site_foo_httpfirsthuborg' => 'First',
-            'site_foo_httpanotherhubcom' => 'Another',
-            'site_foo_httpyetanotherhubcom' => 'Yet another',
-            // A setting defined for multiple alternative hubs and one referential one.
-            'site_bar_httpfirsthuborg' => 'First',
-            'site_bar_httpanotherhubcom' => 'Another',
-            'site_bar_httpsmoodlenet' => 'One hub to rule them all!',
-            'site_bar_httpyetanotherhubcom' => 'Yet another',
-        ];
-
-        $converted = upgrade_convert_hub_config_site_param_names($config, 'https://moodle.net');
-
-        // Values defined for the moodle.net take precedence over the ones defined for other hubs.
-        $this->assertSame($converted->site_name, 'Foo Site');
-        $this->assertSame($converted->site_bar, 'One hub to rule them all!');
-        $this->assertNull($converted->site_name_httpsmoodlenet);
-        $this->assertNull($converted->site_bar_httpfirsthuborg);
-        $this->assertNull($converted->site_bar_httpanotherhubcom);
-        $this->assertNull($converted->site_bar_httpyetanotherhubcom);
-        // Values defined for alternative hubs only do not have any guaranteed value. Just for convenience, we use the first one.
-        $this->assertSame($converted->site_foo, 'First');
-        $this->assertNull($converted->site_foo_httpfirsthuborg);
-        $this->assertNull($converted->site_foo_httpanotherhubcom);
-        $this->assertNull($converted->site_foo_httpyetanotherhubcom);
-        // Values that are already defined with the new name format are kept.
-        $this->assertSame($converted->site_emailalert, 0);
-        // Eventual custom values not following the expected hub-specific naming format, are kept.
-        $this->assertSame($converted->custom, 'Do not touch this');
-    }
-
-    /**
-     * Test the functionality of the {@link upgrade_analytics_fix_contextids_defaults} function.
-     */
-    public function test_upgrade_analytics_fix_contextids_defaults() {
-        global $DB, $USER;
-
-        $this->resetAfterTest();
-
-        $model = (object)[
-            'name' => 'asd',
-            'target' => 'ou',
-            'indicators' => '[]',
-            'version' => '1',
-            'timecreated' => time(),
-            'timemodified' => time(),
-            'usermodified' => $USER->id,
-            'contextids' => ''
-        ];
-        $DB->insert_record('analytics_models', $model);
-
-        $model->contextids = null;
-        $DB->insert_record('analytics_models', $model);
-
-        unset($model->contextids);
-        $DB->insert_record('analytics_models', $model);
-
-        $model->contextids = '0';
-        $DB->insert_record('analytics_models', $model);
-
-        $model->contextids = 'null';
-        $DB->insert_record('analytics_models', $model);
-
-        $select = $DB->sql_compare_text('contextids') . ' = :zero OR ' . $DB->sql_compare_text('contextids') . ' = :null';
-        $params = ['zero' => '0', 'null' => 'null'];
-        $this->assertEquals(2, $DB->count_records_select('analytics_models', $select, $params));
-
-        upgrade_analytics_fix_contextids_defaults();
-
-        $this->assertEquals(0, $DB->count_records_select('analytics_models', $select, $params));
-    }
-
-    /**
-     * Test the functionality of {@link upgrade_core_licenses} function.
-     */
-    public function test_upgrade_core_licenses() {
-        global $CFG, $DB;
-
-        $this->resetAfterTest();
-
-        // Emulate that upgrade is in process.
-        $CFG->upgraderunning = time();
-
-        $deletedcorelicenseshortname = 'unknown';
-        $DB->delete_records('license', ['shortname' => $deletedcorelicenseshortname]);
-
-        upgrade_core_licenses();
-
-        $expectedshortnames = ['allrightsreserved', 'cc', 'cc-nc', 'cc-nc-nd', 'cc-nc-sa', 'cc-nd', 'cc-sa', 'public'];
-        $licenses = $DB->get_records('license');
-
-        foreach ($licenses as $license) {
-            $this->assertContains($license->shortname, $expectedshortnames);
-            $this->assertObjectHasAttribute('custom', $license);
-            $this->assertObjectHasAttribute('sortorder', $license);
-        }
-        // A core license which was deleted prior to upgrade should not be reinstalled.
-        $actualshortnames = $DB->get_records_menu('license', null, '', 'id, shortname');
-        $this->assertNotContains($deletedcorelicenseshortname, $actualshortnames);
+        $data->configdata = $original;
+        $entryid = $DB->insert_record('block_instances', $data);
+        upgrade_fix_block_instance_configuration();
+        $record = $DB->get_record('block_instances', ['id' => $entryid]);
+        $this->assertEquals($expected, $record->configdata);
     }
 }

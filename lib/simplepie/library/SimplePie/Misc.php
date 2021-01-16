@@ -217,8 +217,10 @@ class SimplePie_Misc
 		{
 			return substr_replace($url, 'itpc', 0, 4);
 		}
-
-		return $url;
+		else
+		{
+			return $url;
+		}
 	}
 
 	public static function array_merge_recursive($array1, $array2)
@@ -232,9 +234,9 @@ class SimplePie_Misc
 			else
 			{
 				$array1[$key] = $value;
-			}
+			}            
 		}
-
+		
 		return $array1;
 	}
 
@@ -274,8 +276,10 @@ class SimplePie_Misc
 		{
 			return chr($integer);
 		}
-
-		return strtoupper($match[0]);
+		else
+		{
+			return strtoupper($match[0]);
+		}
 	}
 
 	/**
@@ -339,9 +343,11 @@ class SimplePie_Misc
 		{
 			return $return;
 		}
-
 		// If we can't do anything, just fail
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 
 	protected static function change_encoding_mbstring($data, $input, $output)
@@ -1852,8 +1858,10 @@ class SimplePie_Misc
 		{
 			return trim($mime);
 		}
-
-		return trim(substr($mime, 0, $pos));
+		else
+		{
+			return trim(substr($mime, 0, $pos));
+		}
 	}
 
 	public static function atom_03_construct_type($attribs)
@@ -1886,8 +1894,10 @@ class SimplePie_Misc
 					return SIMPLEPIE_CONSTRUCT_NONE | $mode;
 			}
 		}
-
-		return SIMPLEPIE_CONSTRUCT_TEXT | $mode;
+		else
+		{
+			return SIMPLEPIE_CONSTRUCT_TEXT | $mode;
+		}
 	}
 
 	public static function atom_10_construct_type($attribs)
@@ -1937,8 +1947,10 @@ class SimplePie_Misc
 				return SIMPLEPIE_CONSTRUCT_BASE64;
 			}
 		}
-
-		return SIMPLEPIE_CONSTRUCT_TEXT;
+		else
+		{
+			return SIMPLEPIE_CONSTRUCT_TEXT;
+		}
 	}
 
 	public static function is_isegment_nz_nc($string)
@@ -1995,9 +2007,11 @@ class SimplePie_Misc
 		{
 			return chr(0xf0 | ($codepoint >> 18)) . chr(0x80 | (($codepoint >> 12) & 0x3f)) . chr(0x80 | (($codepoint >> 6) & 0x3f)) . chr(0x80 | ($codepoint & 0x3f));
 		}
-
-		// U+FFFD REPLACEMENT CHARACTER
-		return "\xEF\xBF\xBD";
+		else
+		{
+			// U+FFFD REPLACEMENT CHARACTER
+			return "\xEF\xBF\xBD";
+		}
 	}
 
 	/**
@@ -2201,8 +2215,10 @@ function embed_wmedia(width, height, link) {
 		{
 			return filemtime(dirname(__FILE__) . '/Core.php');
 		}
-
-		return filemtime(__FILE__);
+		else
+		{
+			return filemtime(__FILE__);
+		}
 	}
 
 	/**
@@ -2260,3 +2276,4 @@ function embed_wmedia(width, height, link) {
 		// No-op
 	}
 }
+

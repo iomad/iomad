@@ -24,7 +24,7 @@
 
 $string['anycollection'] = 'Any';
 $string['anytype'] = 'All';
-$string['configtitle'] = 'Tags block title';
+$string['configtitle'] = 'Block title';
 $string['disabledtags'] = 'Tags are disabled';
 $string['defaultdisplay'] = 'Display tags';
 $string['pluginname'] = 'Tags';

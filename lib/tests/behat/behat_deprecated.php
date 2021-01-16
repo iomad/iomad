@@ -42,76 +42,44 @@ use Behat\Mink\Exception\ElementNotFoundException as ElementNotFoundException,
 class behat_deprecated extends behat_base {
 
     /**
-     * Click link in navigation tree that matches the text in parentnode/s (seperated using greater-than character if more than one)
+     * Sets the specified value to the field.
      *
-     * @throws ExpectationException
-     * @param string $nodetext navigation node to click.
-     * @param string $parentnodes comma seperated list of parent nodes.
-     * @return void
-     * @deprecated since Moodle 3.6 MDL-57281 - please do not use this definition step any more.
-     * @todo MDL-63004 This will be deleted in Moodle 4.0.
+     * @Given /^I set the field "(?P<field_string>(?:[^"]|\\")*)" to multiline$/
+     * @throws ElementNotFoundException Thrown by behat_base::find
+     * @param string $field
+     * @param PyStringNode $value
+     * @deprecated since Moodle 3.2 MDL-55406 - please do not use this step any more.
      */
-    public function i_navigate_to_node_in($nodetext, $parentnodes) {
-        $alternative[] = 'I navigate to "PATH" in current page administration';
-        $alternative[] = 'I navigate to "PATH" in site administration';
-        $alternative[] = 'I navigate to "TAB1 > TAB2" in the course gradebook';
-        $alternative[] = 'I navigate to course participants';
-        $alternative[] = 'If some items are not available without Navigation block at all, one can use combination of:
-                              I add the "Navigation" block if not present
-                              I click on "LINK" "link" in the "Navigation" "block"';
+    public function i_set_the_field_to_multiline($field, PyStringNode $value) {
 
+        $alternative = 'I set the field "' . $this->escape($field) . '"  to multiline:';
         $this->deprecated_message($alternative);
 
-        $parentnodes = array_map('trim', explode('>', $parentnodes));
-        $nodelist = array_merge($parentnodes, [$nodetext]);
-        $firstnode = array_shift($nodelist);
-
-        if ($firstnode === get_string('administrationsite')) {
-            $this->execute('behat_theme_boost_behat_navigation::i_select_from_flat_navigation_drawer',
-                    array(get_string('administrationsite')));
-            $this->execute('behat_theme_boost_behat_navigation::select_on_administration_page', array($nodelist));
-            return;
-        }
-
-        if ($firstnode === get_string('sitepages')) {
-            if ($nodetext === get_string('calendar', 'calendar')) {
-                $this->execute('behat_theme_boost_behat_navigation::i_select_from_flat_navigation_drawer',
-                        array(($nodetext)));
-            } else {
-                // TODO MDL-57120 other links under "Site pages" are not accessible without navigation block.
-                $this->execute('behat_theme_boost_behat_navigation::select_node_in_navigation',
-                        array($nodetext, $parentnodes));
-            }
-            return;
-        }
-
-        if ($firstnode === get_string('courseadministration')) {
-            // Administration menu is available only on the main course page where settings in Administration
-            // block (original purpose of the step) are available on every course page.
-            $this->execute('behat_theme_boost_behat_navigation::go_to_main_course_page', array());
-        }
-
-        $this->execute('behat_theme_boost_behat_navigation::select_from_administration_menu', array($nodelist));
+        $this->execute('behat_forms::i_set_the_field_to_multiline', array($field, $value));
     }
 
     /**
-     * Docks a block. Editing mode should be previously enabled.
-     * @throws ExpectationException
-     * @param string $blockname
-     * @return void
-     * @deprecated since Moodle 3.7 MDL-64506 - please do not use this definition step any more.
-     * @todo MDL-65215 This will be deleted in Moodle 4.1.
+     * Click on a given link in the moodle-actionmenu that is currently open.
+     * @Given /^I follow "(?P<link_string>(?:[^"]|\\")*)" in the open menu$/
+     * @param string $linkstring the text (or id, etc.) of the link to click.
+     * @deprecated since Moodle 3.2 MDL-55839 - please do not use this step any more.
      */
-    public function i_dock_block($blockname) {
+    public function i_follow_in_the_open_menu($linkstring) {
+        $alternative = 'I choose "' . $this->escape($linkstring) . '" from the open action menu';
+        $this->deprecated_message($alternative, true);
+    }
 
-        $message = "Block docking is no longer used as of MDL-64506. Please update your tests.";
-        $this->deprecated_message($message);
+    /**
+     * Navigates to the course gradebook and selects a specified item from the grade navigation tabs.
+     * @Given /^I go to "(?P<gradepath_string>(?:[^"]|\\")*)" in the course gradebook$/
+     * @param string $gradepath
+     * @deprecated since Moodle 3.3 MDL-57282 - please do not use this step any more.
+     */
+    public function i_go_to_in_the_course_gradebook($gradepath) {
+        $alternative = 'I navigate to "' . $this->escape($gradepath) . '"  in the course gradebook';
+        $this->deprecated_message($alternative);
 
-        // Looking for both title and alt.
-        $xpath = "//input[@type='image'][@title='" . get_string('dockblock', 'block', $blockname) . "' or @alt='" . get_string('addtodock', 'block') . "']";
-        $this->execute('behat_general::i_click_on_in_the',
-                array($xpath, "xpath_element", $this->escape($blockname), "block")
-        );
+        $this->execute('behat_grade::i_navigate_to_in_the_course_gradebook', $gradepath);
     }
 
     /**

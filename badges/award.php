@@ -90,19 +90,6 @@ if (empty($acceptedroles)) {
     die();
 }
 
-// Get groupmode and currentgroup before going further.
-$groupmode = groups_get_course_groupmode($COURSE);  // Groups are being used.
-$currentgroup = groups_get_course_group($COURSE, true); // Get active group.
-
-// Check groupmode (SEPARATEGROUPS), currentgroup and capability (or admin).
-if ($groupmode == SEPARATEGROUPS && empty($currentgroup) &&
-    !has_capability('moodle/site:accessallgroups', $context) && !is_siteadmin() ) {
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string("notingroup"));
-    echo $OUTPUT->footer();
-    die();
-}
-
 if (count($acceptedroles) > 1) {
     // If there is more than one role that can award a badge, prompt user to make a selection.
     // If it is an admin, include all accepted roles, otherwise only the ones that current user has in this context.
@@ -164,10 +151,8 @@ $options = array(
         'badgeid' => $badge->id,
         'context' => $context,
         'issuerid' => $USER->id,
-        'issuerrole' => $issuerrole->roleid,
-        'currentgroup' => $currentgroup,
-        'url' => $url,
-    );
+        'issuerrole' => $issuerrole->roleid
+        );
 $existingselector = new badge_existing_users_selector('existingrecipients', $options);
 $recipientselector = new badge_potential_users_selector('potentialrecipients', $options);
 $recipientselector->set_existing_recipients($existingselector->find_users(''));
@@ -207,9 +192,6 @@ if ($award && data_submitted() && has_capability('moodle/badges:awardbadge', $co
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($strrecipients);
-
-// Print group selector/dropdown menu (find out current groups mode).
-groups_print_course_menu($COURSE, $url);
 
 if (count($acceptedroles) > 1) {
     echo $OUTPUT->box($roleselect);

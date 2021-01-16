@@ -17,7 +17,7 @@
 /**
  * Strings for component 'search_solr'.
  *
- * @package   search_solr
+ * @package   core_search
  * @copyright Prateek Sachan {@link http://prateeksachan.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,7 +26,6 @@ $string['connectionerror'] = 'The specified Solr server is not available or the 
 $string['connectionsettings'] = 'Connection settings';
 $string['errorcreatingschema'] = 'Error creating the Solr schema: {$a}';
 $string['errorvalidatingschema'] = 'Error validating Solr schema: field {$a->fieldname} does not exist. Please <a href="{$a->setupurl}">follow this link</a> to set up the required fields.';
-$string['errorsolr'] = 'The Solr search engine reported an error: {$a}';
 $string['extensionerror'] = 'The Apache Solr PHP extension is not installed. Please check the documentation.';
 $string['fileindexing'] = 'Enable file indexing';
 $string['fileindexing_help'] = 'If your Solr install supports it, this feature allows Moodle to send files to be indexed.<br/>

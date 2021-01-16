@@ -23,7 +23,7 @@ Feature: Posting to forums in a course with no groups behaves correctly
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I follow "Standard forum"
-    When I click on "Add a new discussion topic" "link"
+    When I click on "Add a new discussion topic" "button"
     Then I should not see "Post a copy to all groups"
     And I set the following fields to these values:
       | Subject | Teacher -> All participants |
@@ -36,7 +36,7 @@ Feature: Posting to forums in a course with no groups behaves correctly
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I follow "Separate forum"
-    When I click on "Add a new discussion topic" "link"
+    When I click on "Add a new discussion topic" "button"
     Then I should not see "Post a copy to all groups"
     And I set the following fields to these values:
       | Subject | Teacher -> All participants |
@@ -49,7 +49,7 @@ Feature: Posting to forums in a course with no groups behaves correctly
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I follow "Visible forum"
-    When I click on "Add a new discussion topic" "link"
+    When I click on "Add a new discussion topic" "button"
     Then I should not see "Post a copy to all groups"
     And I set the following fields to these values:
       | Subject | Teacher -> All participants |
@@ -62,7 +62,7 @@ Feature: Posting to forums in a course with no groups behaves correctly
     Given I log in as "student1"
     And I am on "Course 1" course homepage
     And I follow "Standard forum"
-    When I click on "Add a new discussion topic" "link"
+    When I click on "Add a new discussion topic" "button"
     Then I should not see "Post a copy to all groups"
     And I set the following fields to these values:
       | Subject | Student -> All participants |
@@ -75,12 +75,12 @@ Feature: Posting to forums in a course with no groups behaves correctly
     Given I log in as "student1"
     And I am on "Course 1" course homepage
     When I follow "Separate forum"
-    Then I should see "You are not able to create a discussion because you are not a member of any group."
+    Then I should see "You do not have permission to add a new discussion topic for all participants."
     And I should not see "Add a new discussion topic"
 
-  Scenario: Students cannot post in forum with visible groups
+  Scenario: Teachers can post in forum with visible groups
     Given I log in as "student1"
     And I am on "Course 1" course homepage
     When I follow "Visible forum"
-    Then I should see "You are not able to create a discussion because you are not a member of any group."
+    Then I should see "You do not have permission to add a new discussion topic for all participants."
     And I should not see "Add a new discussion topic"

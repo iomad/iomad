@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->libdir . "/phpunit/classes/restore_date_testcase.php");
+require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
 
 /**
  * Restore date tests.
@@ -45,7 +46,7 @@ class mod_assign_restore_date_testcase extends restore_date_testcase {
         $record = ['cutoffdate' => 100, 'allowsubmissionsfromdate' => 100, 'duedate' => 100, 'timemodified' => 100];
         list($course, $assign) = $this->create_course_and_module('assign', $record);
         $cm = $DB->get_record('course_modules', ['course' => $course->id, 'instance' => $assign->id]);
-        $assignobj = new mod_assign_testable_assign(context_module::instance($cm->id), $cm, $course);
+        $assignobj = new testable_assign(context_module::instance($cm->id), $cm, $course);
         $submission = $assignobj->get_user_submission($USER->id, true);
         $grade = $assignobj->get_user_grade($USER->id, true);
 

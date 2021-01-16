@@ -50,6 +50,8 @@ if (!isset($SESSION->xmldb)) {
 // Some previous checks
 $site = get_site();
 
+require_login();
+require_capability('moodle/site:config', context_system::instance());
 
 // Body of the script, based on action, we delegate the work
 $action = optional_param ('action', 'main_view', PARAM_ALPHAEXT);

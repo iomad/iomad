@@ -102,24 +102,15 @@ define(['jquery',
      * @return {Promise}
      */
     Grade.prototype.display = function() {
-        M.util.js_pending('tool_lp/grade_dialogue:display');
-        return $.when(
-            Str.get_string('rate', 'tool_lp'),
-            this._render()
-        )
-        .then(function(title, templateResult) {
-            this._popup = new Dialogue(
-                title,
-                templateResult[0],
-                function() {
-                    this._afterRender();
-                    M.util.js_complete('tool_lp/grade_dialogue:display');
-                }.bind(this)
-            );
-
-            return this._popup;
-        }.bind(this))
-        .catch(Notification.exception);
+        return this._render().then(function(html) {
+            return Str.get_string('rate', 'tool_lp').then(function(title) {
+                this._popup = new Dialogue(
+                    title,
+                    html,
+                    this._afterRender.bind(this)
+                );
+            }.bind(this));
+        }.bind(this)).fail(Notification.exception);
     };
 
     /**

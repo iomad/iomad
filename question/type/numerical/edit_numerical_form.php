@@ -57,8 +57,9 @@ class qtype_numerical_edit_form extends question_edit_form {
         $repeated = parent::get_per_answer_fields($mform, $label, $gradeoptions,
                 $repeatedoptions, $answersoption);
 
-        $tolerance = $mform->createElement('float', 'tolerance',
+        $tolerance = $mform->createElement('text', 'tolerance',
                 get_string('answererror', 'qtype_numerical'), array('size' => 15));
+        $repeatedoptions['tolerance']['type'] = PARAM_FLOAT;
         $repeatedoptions['tolerance']['default'] = 0;
         $elements = $repeated[0]->getElements();
         $elements[0]->setSize(15);
@@ -90,8 +91,9 @@ class qtype_numerical_edit_form extends question_edit_form {
                 get_string('unithandling', 'qtype_numerical'), $unitoptions);
 
         $penaltygrp = array();
-        $penaltygrp[] = $mform->createElement('float', 'unitpenalty',
+        $penaltygrp[] = $mform->createElement('text', 'unitpenalty',
                 get_string('unitpenalty', 'qtype_numerical'), array('size' => 6));
+        $mform->setType('unitpenalty', PARAM_FLOAT);
         $mform->setDefault('unitpenalty', 0.1000000);
 
         $unitgradingtypes = array(
@@ -146,6 +148,7 @@ class qtype_numerical_edit_form extends question_edit_form {
         $repeatedoptions['unit']['disabledif'] = array('unitrole', 'eq', qtype_numerical::UNITNONE);
         $repeatedoptions['unit']['type'] = PARAM_NOTAGS;
         $repeatedoptions['multiplier']['disabledif'] = array('unitrole', 'eq', qtype_numerical::UNITNONE);
+        $repeatedoptions['multiplier']['type'] = PARAM_NUMBER;
 
         $mform->disabledIf('addunits', 'unitrole', 'eq', qtype_numerical::UNITNONE);
 
@@ -183,7 +186,7 @@ class qtype_numerical_edit_form extends question_edit_form {
     protected function unit_group($mform) {
         $grouparray = array();
         $grouparray[] = $mform->createElement('text', 'unit', get_string('unit', 'qtype_numerical'), array('size'=>10));
-        $grouparray[] = $mform->createElement('float', 'multiplier',
+        $grouparray[] = $mform->createElement('text', 'multiplier',
                 get_string('multiplier', 'qtype_numerical'), array('size'=>10));
 
         return $grouparray;
@@ -210,11 +213,6 @@ class qtype_numerical_edit_form extends question_edit_form {
             unset($this->_form->_defaultValues["tolerance[{$key}]"]);
 
             $question->tolerance[$key] = $answer->tolerance;
-
-            if (is_numeric($question->answer[$key])) {
-                $question->answer[$key] = format_float($question->answer[$key], -1);
-            }
-
             $key++;
         }
 
@@ -293,7 +291,7 @@ class qtype_numerical_edit_form extends question_edit_form {
                 if ($data['fraction'][$key] == 1) {
                     $maxgrade = true;
                 }
-                if ($answer !== '*' && $data['tolerance'][$key] === false) {
+                if ($answer !== '*' && !is_numeric($data['tolerance'][$key])) {
                     $errors['answeroptions['.$key.']'] =
                             get_string('xmustbenumeric', 'qtype_numerical',
                                 get_string('acceptederror', 'qtype_numerical'));
@@ -321,7 +319,22 @@ class qtype_numerical_edit_form extends question_edit_form {
      * @return bool whether this is a valid answer.
      */
     protected function is_valid_answer($answer, $data) {
-        return $answer == '*' || qtype_numerical::is_valid_number($answer);
+        return $answer == '*' || $this->is_valid_number($answer);
+    }
+
+    /**
+     * Validate that a string is a nubmer formatted correctly for the current locale.
+     * @param string $x a string
+     * @return bool whether $x is a number that the numerical question type can interpret.
+     */
+    protected function is_valid_number($x) {
+        if (is_null($this->ap)) {
+            $this->ap = new qtype_numerical_answer_processor(array());
+        }
+
+        list($value, $unit) = $this->ap->apply_units($x);
+
+        return !is_null($value) && !$unit;
     }
 
     /**
@@ -363,7 +376,7 @@ class qtype_numerical_edit_form extends question_edit_form {
             if (empty($trimmedmultiplier)) {
                 $errors['units[' . $key . ']'] =
                         get_string('youmustenteramultiplierhere', 'qtype_numerical');
-            } else if ($trimmedmultiplier === false) {
+            } else if (!is_numeric($trimmedmultiplier)) {
                 $errors['units[' . $key . ']'] =
                         get_string('xmustbenumeric', 'qtype_numerical',
                             get_string('multiplier', 'qtype_numerical'));

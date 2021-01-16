@@ -145,7 +145,7 @@ $filemanagercontext = $editoroptions['context'];
 $filemanageroptions = array('maxbytes'       => $CFG->maxbytes,
                              'subdirs'        => 0,
                              'maxfiles'       => 1,
-                             'accepted_types' => 'optimised_image');
+                             'accepted_types' => 'web_image');
 file_prepare_draft_area($draftitemid, $filemanagercontext->id, 'user', 'newicon', 0, $filemanageroptions);
 $user->imagefile = $draftitemid;
 // Create form.
@@ -154,21 +154,7 @@ $userform = new user_editadvanced_form(new moodle_url($PAGE->url, array('returnt
     'filemanageroptions' => $filemanageroptions,
     'user' => $user));
 
-
-// Deciding where to send the user back in most cases.
-if ($returnto === 'profile') {
-    if ($course->id != SITEID) {
-        $returnurl = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $course->id));
-    } else {
-        $returnurl = new moodle_url('/user/profile.php', array('id' => $user->id));
-    }
-} else {
-    $returnurl = new moodle_url('/user/preferences.php', array('userid' => $user->id));
-}
-
-if ($userform->is_cancelled()) {
-    redirect($returnurl);
-} else if ($usernew = $userform->get_data()) {
+if ($usernew = $userform->get_data()) {
     $usercreated = false;
 
     if (empty($usernew->auth)) {
@@ -306,6 +292,15 @@ if ($userform->is_cancelled()) {
             // Somebody double clicked when editing admin user during install.
             redirect("$CFG->wwwroot/$CFG->admin/");
         } else {
+            if ($returnto === 'profile') {
+                if ($course->id != SITEID) {
+                    $returnurl = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $course->id));
+                } else {
+                    $returnurl = new moodle_url('/user/profile.php', array('id' => $user->id));
+                }
+            } else {
+                $returnurl = new moodle_url('/user/preferences.php', array('userid' => $user->id));
+            }
             redirect($returnurl);
         }
     } else {

@@ -4,7 +4,7 @@ namespace Sabberworm\CSS\Value;
 
 class CSSFunction extends ValueList {
 
-	protected $sName;
+	private $sName;
 
 	public function __construct($sName, $aArguments, $sSeparator = ',', $iLineNo = 0) {
 		if($aArguments instanceof RuleValueList) {

@@ -24,6 +24,8 @@
 
 require('../../../config.php');
 
+define('AIRNOTIFIER_PUBLICURL', 'https://messages.moodle.net');
+
 $PAGE->set_url(new moodle_url('/message/output/airnotifier/requestaccesskey.php'));
 $PAGE->set_context(context_system::instance());
 
@@ -46,7 +48,7 @@ $msg = "";
 
 // If we are requesting a key to the official message system, verify first that this site is registered.
 // This check is also done in Airnotifier.
-if (strpos($CFG->airnotifierurl, message_airnotifier_manager::AIRNOTIFIER_PUBLICURL) !== false ) {
+if (strpos($CFG->airnotifierurl, AIRNOTIFIER_PUBLICURL) !== false ) {
     $adminrenderer = $PAGE->get_renderer('core', 'admin');
     $msg = $adminrenderer->warn_if_not_registered();
     if ($msg) {
@@ -59,55 +61,17 @@ if (strpos($CFG->airnotifierurl, message_airnotifier_manager::AIRNOTIFIER_PUBLIC
     }
 }
 
-echo $OUTPUT->header();
-
 $manager = new message_airnotifier_manager();
-$warnings = [];
 
 if ($key = $manager->request_accesskey()) {
     set_config('airnotifieraccesskey', $key);
-    $msg = $OUTPUT->box(get_string('keyretrievedsuccessfully', 'message_airnotifier'), 'generalbox alert alert-success');
-
-    // Check mobile notifications.
-    $processors = get_message_processors();
-    $enabled = false;
-    foreach ($processors as $processor => $status) {
-        if ($processor == 'airnotifier' && $status->enabled) {
-            $enabled = true;
-        }
-    }
-
-    if (!$enabled) {
-        // Airnotifier processor isn't enabled. Warn the user.
-        $warnings[] = [
-            'msg' => get_string('mobilenotificationsdisabledwarning', 'tool_mobile'),
-            'linkmsg' => get_string('enableprocessor', 'message_airnotifier'),
-            'linkurl' => new moodle_url('/admin/message.php'),
-        ];
-    }
-
-    if (empty($CFG->enablemobilewebservice)) {
-        // Mobile web services not enabled. Warn the user.
-        $warnings[] = [
-            'msg' => get_string('mobilenotconfiguredwarning', 'admin'),
-            'linkmsg' => get_string('enablemobilewebservice', 'admin'),
-            'linkurl' => new moodle_url('/admin/settings.php', ['section' => 'mobilesettings']),
-        ];
-    }
+    $msg = get_string('keyretrievedsuccessfully', 'message_airnotifier');
 } else {
-    $msg = $OUTPUT->box(get_string('errorretrievingkey', 'message_airnotifier'), 'generalbox alert alert-danger');
-}
-
-// Display the warnings.
-foreach ($warnings as $warning) {
-    if (!empty($warning['linkurl'])) {
-        $warning['msg'] = $warning['msg'] . '&nbsp;' . html_writer::tag('a', $warning['linkmsg'], ['href' => $warning['linkurl']]);
-    }
-
-    $msg .= $OUTPUT->box($warning['msg'], 'generalbox alert alert-warning');
+    $msg = get_string('errorretrievingkey', 'message_airnotifier');
 }
 
 $msg .= $OUTPUT->continue_button($returl);
 
+echo $OUTPUT->header();
 echo $OUTPUT->box($msg, 'generalbox ');
 echo $OUTPUT->footer();

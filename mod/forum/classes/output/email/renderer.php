@@ -56,16 +56,9 @@ class renderer extends \mod_forum_renderer {
      */
     public function format_message_text($cm, $post) {
         $context = \context_module::instance($cm->id);
-        $message = file_rewrite_pluginfile_urls(
-            $post->message,
-            'pluginfile.php',
+        $message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php',
             $context->id,
-            'mod_forum',
-            'post',
-            $post->id,
-            [
-                'includetoken' => true,
-            ]);
+            'mod_forum', 'post', $post->id);
         $options = new \stdClass();
         $options->para = true;
         $options->context = $context;

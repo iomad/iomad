@@ -42,11 +42,10 @@
 </head>
 
 <body {{{ output.body_attributes }}}>
-{{> core/local/toast/wrapper}}
 
 {{{ output.standard_top_of_body_html }}}
 <div id="page">
-    <div id="page-content" class="d-block">
+    <div id="page-content">
         {{{ output.main_content }}}
     </div>
 </div>
@@ -54,8 +53,5 @@
 </body>
 </html>
 {{#js}}
-M.util.js_pending('theme_boost/loader');
-require(['theme_boost/loader'], function() {
-  M.util.js_complete('theme_boost/loader');
-});
+require(['theme_boost/loader']);
 {{/js}}

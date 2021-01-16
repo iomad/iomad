@@ -84,12 +84,11 @@ class external_api {
                 $function->classpath = $CFG->dirroot.'/'.$function->classpath;
             }
             if (!file_exists($function->classpath)) {
-                throw new coding_exception('Cannot find file ' . $function->classpath .
-                        ' with external function implementation');
+                throw new coding_exception('Cannot find file with external function implementation');
             }
             require_once($function->classpath);
             if (!class_exists($function->classname)) {
-                throw new coding_exception('Cannot find external class ' . $function->classname);
+                throw new coding_exception('Cannot find external class');
             }
         }
 
@@ -100,16 +99,13 @@ class external_api {
 
         // Make sure the implementaion class is ok.
         if (!method_exists($function->classname, $function->methodname)) {
-            throw new coding_exception('Missing implementation method ' .
-                    $function->classname . '::' . $function->methodname);
+            throw new coding_exception('Missing implementation method of '.$function->classname.'::'.$function->methodname);
         }
         if (!method_exists($function->classname, $function->parameters_method)) {
-            throw new coding_exception('Missing parameters description method ' .
-                    $function->classname . '::' . $function->parameters_method);
+            throw new coding_exception('Missing parameters description');
         }
         if (!method_exists($function->classname, $function->returns_method)) {
-            throw new coding_exception('Missing returned values description method ' .
-                    $function->classname . '::' . $function->returns_method);
+            throw new coding_exception('Missing returned values description');
         }
         if (method_exists($function->classname, $function->deprecated_method)) {
             if (call_user_func(array($function->classname, $function->deprecated_method)) === true) {
@@ -121,16 +117,14 @@ class external_api {
         // Fetch the parameters description.
         $function->parameters_desc = call_user_func(array($function->classname, $function->parameters_method));
         if (!($function->parameters_desc instanceof external_function_parameters)) {
-            throw new coding_exception($function->classname . '::' . $function->parameters_method .
-                    ' did not return a valid external_function_parameters object.');
+            throw new coding_exception('Invalid parameters description');
         }
 
         // Fetch the return values description.
         $function->returns_desc = call_user_func(array($function->classname, $function->returns_method));
         // Null means void result or result is ignored.
         if (!is_null($function->returns_desc) and !($function->returns_desc instanceof external_description)) {
-            throw new coding_exception($function->classname . '::' . $function->returns_method .
-                    ' did not return a valid external_description object');
+            throw new coding_exception('Invalid return description');
         }
 
         // Now get the function description.
@@ -167,11 +161,6 @@ class external_api {
             } else {
                 $function->loginrequired = true;
             }
-            if (isset($functions[$function->name]['readonlysession'])) {
-                $function->readonlysession = $functions[$function->name]['readonlysession'];
-            } else {
-                $function->readonlysession = false;
-            }
         }
 
         return $function;
@@ -193,13 +182,7 @@ class external_api {
 
         require_once($CFG->libdir . "/pagelib.php");
 
-        $externalfunctioninfo = static::external_function_info($function);
-
-        // Eventually this should shift into the various handlers and not be handled via config.
-        $readonlysession = $externalfunctioninfo->readonlysession ?? false;
-        if (!$readonlysession || empty($CFG->enable_read_only_sessions)) {
-            \core\session\manager::restart_with_write_lock();
-        }
+        $externalfunctioninfo = self::external_function_info($function);
 
         $currentpage = $PAGE;
         $currentcourse = $COURSE;
@@ -223,12 +206,12 @@ class external_api {
             }
 
             // Do not allow access to write or delete webservices as a public user.
-            if ($externalfunctioninfo->loginrequired && !WS_SERVER) {
+            if ($externalfunctioninfo->loginrequired) {
                 if (defined('NO_MOODLE_COOKIES') && NO_MOODLE_COOKIES && !PHPUNIT_TEST) {
-                    throw new moodle_exception('servicerequireslogin', 'webservice');
+                    throw new moodle_exception('servicenotavailable', 'webservice');
                 }
                 if (!isloggedin()) {
-                    throw new moodle_exception('servicerequireslogin', 'webservice');
+                    throw new moodle_exception('servicenotavailable', 'webservice');
                 } else {
                     require_sesskey();
                 }
@@ -238,28 +221,11 @@ class external_api {
             $params = call_user_func($callable,
                                      $externalfunctioninfo->parameters_desc,
                                      $args);
-            $params = array_values($params);
 
-            // Allow any Moodle plugin a chance to override this call. This is a convenient spot to
-            // make arbitrary behaviour customisations. The overriding plugin could call the 'real'
-            // function first and then modify the results, or it could do a completely separate
-            // thing.
-            $callbacks = get_plugins_with_function('override_webservice_execution');
-            $result = false;
-            foreach ($callbacks as $plugintype => $plugins) {
-                foreach ($plugins as $plugin => $callback) {
-                    $result = $callback($externalfunctioninfo, $params);
-                    if ($result !== false) {
-                        break 2;
-                    }
-                }
-            }
-
-            // If the function was not overridden, call the real one.
-            if ($result === false) {
-                $callable = array($externalfunctioninfo->classname, $externalfunctioninfo->methodname);
-                $result = call_user_func_array($callable, $params);
-            }
+            // Execute - gulp!
+            $callable = array($externalfunctioninfo->classname, $externalfunctioninfo->methodname);
+            $result = call_user_func_array($callable,
+                                           array_values($params));
 
             // Validate the return parameters.
             if ($externalfunctioninfo->returns_desc !== null) {
@@ -269,7 +235,7 @@ class external_api {
 
             $response['error'] = false;
             $response['data'] = $result;
-        } catch (Throwable $e) {
+        } catch (Exception $e) {
             $exception = get_exception_info($e);
             unset($exception->a);
             $exception->backtrace = format_backtrace($exception->backtrace, true);
@@ -414,9 +380,8 @@ class external_api {
                     return (bool)$response;
                 }
             }
-            $responsetype = gettype($response);
             $debuginfo = 'Invalid external api response: the value is "' . $response .
-                    '" of PHP type "' . $responsetype . '", the server was expecting "' . $description->type . '" type';
+                    '", the server was expecting "' . $description->type . '" type';
             try {
                 return validate_param($response, $description->type, $description->allownull, $debuginfo);
             } catch (invalid_parameter_exception $e) {
@@ -790,8 +755,7 @@ function external_generate_token($tokentype, $serviceorid, $userid, $contextorid
     if (!empty($iprestriction)) {
         $newtoken->iprestriction = $iprestriction;
     }
-    // Generate the private token, it must be transmitted only via https.
-    $newtoken->privatetoken = random_string(64);
+    $newtoken->privatetoken = null;
     $DB->insert_record('external_tokens', $newtoken);
     return $newtoken->token;
 }
@@ -932,25 +896,21 @@ function external_validate_format($format) {
  * @param string $str The string to be filtered. Should be plain text, expect
  * possibly for multilang tags.
  * @param boolean $striplinks To strip any link in the result text. Moodle 1.8 default changed from false to true! MDL-8713
- * @param context|int $contextorid The id of the context for the string or the context (affects filters).
+ * @param int $contextid The id of the context for the string (affects filters).
  * @param array $options options array/object or courseid
  * @return string text
  * @since Moodle 3.0
  */
-function external_format_string($str, $contextorid, $striplinks = true, $options = array()) {
+function external_format_string($str, $contextid, $striplinks = true, $options = array()) {
 
     // Get settings (singleton).
     $settings = external_settings::get_instance();
-    if (empty($contextorid)) {
+    if (empty($contextid)) {
         throw new coding_exception('contextid is required');
     }
 
     if (!$settings->get_raw()) {
-        if (is_object($contextorid) && is_a($contextorid, 'context')) {
-            $context = $contextorid;
-        } else {
-            $context = context::instance_by_id($contextorid);
-        }
+        $context = context::instance_by_id($contextid);
         $options['context'] = $context;
         $options['filter'] = isset($options['filter']) && !$options['filter'] ? false : $settings->get_filter();
         $str = format_string($str, $striplinks, $options);
@@ -984,7 +944,7 @@ function external_format_string($str, $contextorid, $striplinks = true, $options
  *
  * @param string $text The content that may contain ULRs in need of rewriting.
  * @param int $textformat The text format.
- * @param context|int $contextorid This parameter and the next two identify the file area to use.
+ * @param int $contextid This parameter and the next two identify the file area to use.
  * @param string $component
  * @param string $filearea helps identify the file area.
  * @param int $itemid helps identify the file area.
@@ -993,28 +953,17 @@ function external_format_string($str, $contextorid, $striplinks = true, $options
  * @since Moodle 2.3
  * @since Moodle 3.2 component, filearea and itemid are optional parameters
  */
-function external_format_text($text, $textformat, $contextorid, $component = null, $filearea = null, $itemid = null,
+function external_format_text($text, $textformat, $contextid, $component = null, $filearea = null, $itemid = null,
                                 $options = null) {
     global $CFG;
 
     // Get settings (singleton).
     $settings = external_settings::get_instance();
 
-    if (is_object($contextorid) && is_a($contextorid, 'context')) {
-        $context = $contextorid;
-        $contextid = $context->id;
-    } else {
-        $context = null;
-        $contextid = $contextorid;
-    }
-
     if ($component and $filearea and $settings->get_fileurl()) {
         require_once($CFG->libdir . "/filelib.php");
         $text = file_rewrite_pluginfile_urls($text, $settings->get_file(), $contextid, $component, $filearea, $itemid);
     }
-
-    // Note that $CFG->forceclean does not apply here if the client requests for the raw database content.
-    // This is consistent with web clients that are still able to load non-cleaned text into editors, too.
 
     if (!$settings->get_raw()) {
         $options = (array)$options;
@@ -1030,7 +979,7 @@ function external_format_text($text, $textformat, $contextorid, $component = nul
 
         $options['filter'] = isset($options['filter']) && !$options['filter'] ? false : $settings->get_filter();
         $options['para'] = isset($options['para']) ? $options['para'] : false;
-        $options['context'] = !is_null($context) ? $context : context::instance_by_id($contextid);
+        $options['context'] = context::instance_by_id($contextid);
         $options['allowid'] = isset($options['allowid']) ? $options['allowid'] : true;
 
         $text = format_text($text, $textformat, $options);
@@ -1214,9 +1163,6 @@ class external_settings {
     /** @var string In which file should the urls be rewritten */
     private $file = 'webservice/pluginfile.php';
 
-    /** @var string The session lang */
-    private $lang = '';
-
     /**
      * Constructor - protected - can not be instanciated
      */
@@ -1319,24 +1265,6 @@ class external_settings {
     public function get_file() {
         return $this->file;
     }
-
-    /**
-     * Set lang
-     *
-     * @param string $lang
-     */
-    public function set_lang($lang) {
-        $this->lang = $lang;
-    }
-
-    /**
-     * Get lang
-     *
-     * @return string
-     */
-    public function get_lang() {
-        return $this->lang;
-    }
 }
 
 /**
@@ -1352,53 +1280,18 @@ class external_util {
     /**
      * Validate a list of courses, returning the complete course objects for valid courses.
      *
-     * Each course has an additional 'contextvalidated' field, this will be set to true unless
-     * you set $keepfails, in which case it will be false if validation fails for a course.
-     *
      * @param  array $courseids A list of course ids
      * @param  array $courses   An array of courses already pre-fetched, indexed by course id.
      * @param  bool $addcontext True if the returned course object should include the full context object.
-     * @param  bool $keepfails  True to keep all the course objects even if validation fails
      * @return array            An array of courses and the validation warnings
      */
-    public static function validate_courses($courseids, $courses = array(), $addcontext = false,
-            $keepfails = false) {
-        global $DB;
-
+    public static function validate_courses($courseids, $courses = array(), $addcontext = false) {
         // Delete duplicates.
         $courseids = array_unique($courseids);
         $warnings = array();
 
         // Remove courses which are not even requested.
-        $courses = array_intersect_key($courses, array_flip($courseids));
-
-        // For any courses NOT loaded already, get them in a single query (and preload contexts)
-        // for performance. Preserve ordering because some tests depend on it.
-        $newcourseids = [];
-        foreach ($courseids as $cid) {
-            if (!array_key_exists($cid, $courses)) {
-                $newcourseids[] = $cid;
-            }
-        }
-        if ($newcourseids) {
-            list ($listsql, $listparams) = $DB->get_in_or_equal($newcourseids);
-
-            // Load list of courses, and preload associated contexts.
-            $contextselect = context_helper::get_preload_record_columns_sql('x');
-            $newcourses = $DB->get_records_sql("
-                            SELECT c.*, $contextselect
-                              FROM {course} c
-                              JOIN {context} x ON x.instanceid = c.id
-                             WHERE x.contextlevel = ? AND c.id $listsql",
-                    array_merge([CONTEXT_COURSE], $listparams));
-            foreach ($newcourseids as $cid) {
-                if (array_key_exists($cid, $newcourses)) {
-                    $course = $newcourses[$cid];
-                    context_helper::preload_from_record($course);
-                    $courses[$course->id] = $course;
-                }
-            }
-        }
+        $courses =  array_intersect_key($courses, array_flip($courseids));
 
         foreach ($courseids as $cid) {
             // Check the user can function in this context.
@@ -1406,16 +1299,14 @@ class external_util {
                 $context = context_course::instance($cid);
                 external_api::validate_context($context);
 
+                if (!isset($courses[$cid])) {
+                    $courses[$cid] = get_course($cid);
+                }
                 if ($addcontext) {
                     $courses[$cid]->context = $context;
                 }
-                $courses[$cid]->contextvalidated = true;
             } catch (Exception $e) {
-                if ($keepfails) {
-                    $courses[$cid]->contextvalidated = false;
-                } else {
-                    unset($courses[$cid]);
-                }
+                unset($courses[$cid]);
                 $warnings[] = array(
                     'item' => 'course',
                     'itemid' => $cid,

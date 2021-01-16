@@ -56,17 +56,17 @@ class tool_usertours_theme_filter_testcase extends advanced_testcase {
                 true,
             ],
             'Multiple values set including matching; Matches' => [
-                ['boost', 'classic'],
+                ['boost', 'clean'],
                 'boost',
                 true,
             ],
             'Single value set; No match' => [
-                ['classic'],
+                ['clean'],
                 'boost',
                 false,
             ],
             'Multiple values set; No match' => [
-                ['classic', 'artificial'],
+                ['clean', 'artificial'],
                 'boost',
                 false,
             ],

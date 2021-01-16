@@ -29,8 +29,9 @@ require('../../../config.php');
 require_once($CFG->libdir.'/cronlib.php');
 
 // Basic security checks.
-require_admin();
+require_login();
 $context = context_system::instance();
+require_capability('moodle/site:config', $context);
 
 // Get task and check the parameter is valid.
 $taskname = required_param('task', PARAM_RAW_TRIMMED);
@@ -39,16 +40,13 @@ if (!$task) {
     print_error('cannotfindinfo', 'error', $taskname);
 }
 
-$returnurl = new moodle_url('/admin/tool/task/scheduledtasks.php',
-        ['lastchanged' => get_class($task)]);
-
 // If actually doing the clear, then carry out the task and redirect to the scheduled task page.
 if (optional_param('confirm', 0, PARAM_INT)) {
     require_sesskey();
 
     \core\task\manager::clear_fail_delay($task);
 
-    redirect($returnurl);
+    redirect(new moodle_url('/admin/tool/task/scheduledtasks.php'));
 }
 
 // Start output.
@@ -63,8 +61,9 @@ echo $OUTPUT->header();
 // they confirm.
 echo $OUTPUT->confirm(get_string('clearfaildelay_confirm', 'tool_task', $task->get_name()),
         new single_button(new moodle_url('/admin/tool/task/clear_fail_delay.php',
-                ['task' => $taskname, 'confirm' => 1, 'sesskey' => sesskey()]),
+                array('task' => $taskname, 'confirm' => 1, 'sesskey' => sesskey())),
                 get_string('clear')),
-        new single_button($returnurl, get_string('cancel'), false));
+        new single_button(new moodle_url('/admin/tool/task/scheduledtasks.php'),
+                get_string('cancel'), false));
 
 echo $OUTPUT->footer();

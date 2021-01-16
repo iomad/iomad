@@ -33,17 +33,11 @@
 
 .path-grade-report-grader {
     #region-main {
-        overflow-x: visible;
         min-width: 100%;
         width: auto;
-        display: inline-flex;
-        flex-direction: column;
         & > .card {
             width: auto;
             overflow-x: initial;
-        }
-        div[role="main"] {
-            flex: 1 1 auto;
         }
     }
     [data-region="blocks-column"] {
@@ -70,6 +64,8 @@
         margin-bottom: 1em;
 
         .action {
+            @extend .btn;
+            @extend .btn-lg;
             display: inline-block;
             position: relative;
             vertical-align: top;
@@ -93,6 +89,17 @@
 #page-grade-grading-form-rubric-edit {
     .gradingform_rubric_editform .status {
         font-size: 70%;
+    }
+}
+
+.gradingform_rubric.editor {
+    .addlevel,
+    .addcriterion {
+        input {
+            // Fallback for IE8: we use Bootstrap 2's button styles normally, but
+            // IE8 ignores background-image: linear-gradient rules.
+            background: #fff none no-repeat top left;
+        }
     }
 }
 
@@ -174,12 +181,13 @@
                 }
 
                 .addlevel {
-                    vertical-align: top;
-                    padding-top: 6px;
+                    vertical-align: middle;
 
                     input {
+                        @extend .btn;
+                        background-position: 0 0;
                         height: 30px;
-                        line-height: 1rem;
+                        margin-right: 5px;
                     }
                 }
             }
@@ -187,6 +195,7 @@
 
         .addcriterion {
             margin-left: 5px;
+            @extend .btn;
             padding: 0;
 
             input {
@@ -220,36 +229,6 @@
                     margin-left: 5px;
                     margin-right: 12px;
                 }
-            }
-        }
-    }
-}
-.grade-display {
-    .description {
-        font-size: 1rem;
-    }
-}
-.criterion {
-    .description {
-        font-size: 1rem;
-    }
-
-    .criterion-toggle {
-        .expanded-icon {
-            display: block;
-        }
-
-        .collapsed-icon {
-            display: none;
-        }
-
-        &.collapsed {
-            .expanded-icon {
-                display: none;
-            }
-
-            .collapsed-icon {
-                display: block;
             }
         }
     }
@@ -380,14 +359,13 @@
 /**
  * Grader report.
  */
-.path-grade-report-grader {
+.path-grade-report {
     .gradeparent {
         table {
             @include border-radius($border-radius);
         }
 
-        tr .cell,
-        .floater .cell {
+        tr .cell {
             background-color: $pagination-bg;
         }
 
@@ -396,11 +374,9 @@
             border-color: $table-border-color;
         }
 
-        .userrow.odd .cell,
-        .floater .cell.odd,
-        .heading .cell,
-        .cell.category,
-        .avg .cell {
+        tr:nth-of-type(even) .cell,
+        .floater .cell,
+        .avg {
             background-color: $gray-lightest;
         }
 

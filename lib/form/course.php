@@ -64,53 +64,51 @@ class MoodleQuickForm_course extends MoodleQuickForm_autocomplete {
      *
      * @param string $elementname Element name
      * @param mixed $elementlabel Label(s) for an element
-     * @param mixed $attributes Array of typical HTML attributes plus additional options, such as:
+     * @param array $options Options to control the element's display
+     *                       Valid options are:
      *                       'multiple' - boolean multi select
      *                       'exclude' - array or int, list of course ids to never show
      *                       'requiredcapabilities' - array of capabilities. Uses ANY to combine them.
      *                       'limittoenrolled' - boolean Limits to enrolled courses.
      *                       'includefrontpage' - boolean Enables the frontpage to be selected.
-     *                       'onlywithcompletion' - boolean Limits to courses where completion is enabled.
      */
-    public function __construct($elementname = null, $elementlabel = null, $attributes = array()) {
-        if (!is_array($attributes)) {
-            $attributes = [];
+    public function __construct($elementname = null, $elementlabel = null, $options = array()) {
+        if (isset($options['multiple'])) {
+            $this->multiple = $options['multiple'];
         }
-        if (isset($attributes['multiple'])) {
-            $this->multiple = $attributes['multiple'];
-        }
-        if (isset($attributes['exclude'])) {
-            $this->exclude = $attributes['exclude'];
+        if (isset($options['exclude'])) {
+            $this->exclude = $options['exclude'];
             if (!is_array($this->exclude)) {
                 $this->exclude = array($this->exclude);
             }
-            unset($attributes['exclude']);
         }
-        if (isset($attributes['requiredcapabilities'])) {
-            $this->requiredcapabilities = $attributes['requiredcapabilities'];
-            unset($attributes['requiredcapabilities']);
+        if (isset($options['requiredcapabilities'])) {
+            $this->requiredcapabilities = $options['requiredcapabilities'];
         }
-        if (isset($attributes['limittoenrolled'])) {
-            $this->limittoenrolled = $attributes['limittoenrolled'];
-            unset($attributes['limittoenrolled']);
+        if (isset($options['limittoenrolled'])) {
+            $this->limittoenrolled = $options['limittoenrolled'];
         }
 
-        $attributes += array(
+        $validattributes = array(
             'ajax' => 'core/form-course-selector',
             'data-requiredcapabilities' => implode(',', $this->requiredcapabilities),
             'data-exclude' => implode(',', $this->exclude),
             'data-limittoenrolled' => (int)$this->limittoenrolled
         );
-        if (!empty($attributes['includefrontpage'])) {
-            $attributes['data-includefrontpage'] = SITEID;
-            unset($attributes['includefrontpage']);
+        if ($this->multiple) {
+            $validattributes['multiple'] = 'multiple';
         }
-        if (!empty($attributes['onlywithcompletion'])) {
-            $attributes['data-onlywithcompletion'] = 1;
-            unset($attributes['onlywithcompletion']);
+        if (isset($options['noselectionstring'])) {
+            $validattributes['noselectionstring'] = $options['noselectionstring'];
+        }
+        if (isset($options['placeholder'])) {
+            $validattributes['placeholder'] = $options['placeholder'];
+        }
+        if (!empty($options['includefrontpage'])) {
+            $validattributes['data-includefrontpage'] = SITEID;
         }
 
-        parent::__construct($elementname, $elementlabel, array(), $attributes);
+        parent::__construct($elementname, $elementlabel, array(), $validattributes);
     }
 
     /**
@@ -125,7 +123,7 @@ class MoodleQuickForm_course extends MoodleQuickForm_autocomplete {
         $coursestofetch = array();
 
         foreach ($values as $onevalue) {
-            if ($onevalue && !$this->optionExists($onevalue) &&
+            if ((!$this->optionExists($onevalue)) &&
                     ($onevalue !== '_qf__force_multiselect_submission')) {
                 array_push($coursestofetch, $onevalue);
             }
@@ -148,13 +146,12 @@ class MoodleQuickForm_course extends MoodleQuickForm_autocomplete {
                 WHERE c.id ". $whereclause." ORDER BY c.sortorder";
         $list = $DB->get_records_sql($sql, array('contextcourse' => CONTEXT_COURSE) + $params);
 
-        $mycourses = enrol_get_my_courses(null, null, 0, array_keys($list));
         $coursestoselect = array();
         foreach ($list as $course) {
             context_helper::preload_from_record($course);
             $context = context_course::instance($course->id);
             // Make sure we can see the course.
-            if (!array_key_exists($course->id, $mycourses) && !core_course_category::can_view_course_info($course)) {
+            if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', $context)) {
                 continue;
             }
             $label = format_string(get_course_display_name_for_list($course), true, ['context' => $context]);

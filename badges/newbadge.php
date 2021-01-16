@@ -26,6 +26,7 @@
 
 require_once(__DIR__ . '/../config.php');
 require_once($CFG->libdir . '/badgeslib.php');
+require_once($CFG->dirroot . '/badges/edit_form.php');
 
 $type = required_param('type', PARAM_INT);
 $courseid = optional_param('id', 0, PARAM_INT);
@@ -61,12 +62,13 @@ if (($type == BADGE_TYPE_COURSE) && ($course = $DB->get_record('course', array('
 
 require_capability('moodle/badges:createbadge', $PAGE->context);
 
-badges_local_backpack_js(true);
+$PAGE->requires->js('/badges/backpack.js');
+$PAGE->requires->js_init_call('check_site_access', null, false);
 
 $fordb = new stdClass();
 $fordb->id = null;
 
-$form = new \core_badges\form\badge($PAGE->url, array('action' => 'new'));
+$form = new edit_details_form($PAGE->url, array('action' => 'new'));
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/badges/index.php', array('type' => $type, 'id' => $courseid)));
@@ -75,29 +77,14 @@ if ($form->is_cancelled()) {
     $now = time();
 
     $fordb->name = $data->name;
-    $fordb->version = $data->version;
-    $fordb->language = $data->language;
     $fordb->description = $data->description;
-    $fordb->imageauthorname = $data->imageauthorname;
-    $fordb->imageauthoremail = $data->imageauthoremail;
-    $fordb->imageauthorurl = $data->imageauthorurl;
-    $fordb->imagecaption = $data->imagecaption;
     $fordb->timecreated = $now;
     $fordb->timemodified = $now;
     $fordb->usercreated = $USER->id;
     $fordb->usermodified = $USER->id;
-
-    if (badges_open_badges_backpack_api() == OPEN_BADGES_V1) {
-        $fordb->issuername = $data->issuername;
-        $fordb->issuerurl = $data->issuerurl;
-        $fordb->issuercontact = $data->issuercontact;
-    } else {
-        $url = parse_url($CFG->wwwroot);
-        $fordb->issuerurl = $url['scheme'] . '://' . $url['host'];
-        $fordb->issuername = $CFG->badges_defaultissuername;
-        $fordb->issuercontact = $CFG->badges_defaultissuercontact;
-    }
-
+    $fordb->issuername = $data->issuername;
+    $fordb->issuerurl = $data->issuerurl;
+    $fordb->issuercontact = $data->issuercontact;
     $fordb->expiredate = ($data->expiry == 1) ? $data->expiredate : null;
     $fordb->expireperiod = ($data->expiry == 2) ? $data->expireperiod : null;
     $fordb->type = $type;

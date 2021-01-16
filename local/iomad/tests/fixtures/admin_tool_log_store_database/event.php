@@ -26,6 +26,7 @@ namespace logstore_database\event;
 
 defined('MOODLE_INTERNAL') || die();
 
+
 class unittest_executed extends \core\event\base {
     public static function get_name() {
         return 'xxx';

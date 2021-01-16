@@ -68,7 +68,7 @@ class qtype_multianswer_renderer extends qtype_renderer {
         }
 
         $this->page->requires->js_init_call('M.qtype_multianswer.init',
-                array('#' . $qa->get_outer_question_div_unique_id()), false, array(
+                array('#q' . $qa->get_slot()), false, array(
                     'name'     => 'qtype_multianswer',
                     'fullpath' => '/question/type/multianswer/module.js',
                     'requires' => array('base', 'node', 'event', 'overlay'),
@@ -222,7 +222,7 @@ class qtype_multianswer_textfield_renderer extends qtype_multianswer_subq_render
             'value' => $response,
             'id' => $qa->get_qt_field_name($fieldname),
             'size' => $size,
-            'class' => 'form-control mb-1',
+            'class' => 'form-control',
         );
         if ($options->readonly) {
             $inputattributes['readonly'] = 'readonly';
@@ -245,7 +245,7 @@ class qtype_multianswer_textfield_renderer extends qtype_multianswer_subq_render
                         $qa, 'question', 'answerfeedback', $matchinganswer->id),
                 s($correctanswer->answer), $options);
 
-        $output = html_writer::start_tag('span', array('class' => 'subquestion form-inline d-inline'));
+        $output = html_writer::start_tag('span', array('class' => 'subquestion form-inline'));
         $output .= html_writer::tag('label', get_string('answer'),
                 array('class' => 'subq accesshide', 'for' => $inputattributes['id']));
         $output .= html_writer::empty_tag('input', $inputattributes);

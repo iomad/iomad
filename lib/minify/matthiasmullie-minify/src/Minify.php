@@ -1,13 +1,5 @@
 <?php
-/**
- * Abstract minifier class
- *
- * Please report bugs on https://github.com/matthiasmullie/minify/issues
- *
- * @author Matthias Mullie <minify@mullie.eu>
- * @copyright Copyright (c) 2012, Matthias Mullie. All rights reserved
- * @license MIT License
- */
+
 namespace MatthiasMullie\Minify;
 
 use MatthiasMullie\Minify\Exceptions\IOException;
@@ -18,7 +10,6 @@ use Psr\Cache\CacheItemInterface;
  *
  * Please report bugs on https://github.com/matthiasmullie/minify/issues
  *
- * @package Minify
  * @author Matthias Mullie <minify@mullie.eu>
  * @copyright Copyright (c) 2012, Matthias Mullie. All rights reserved
  * @license MIT License
@@ -239,12 +230,6 @@ abstract class Minify
             foreach ($this->patterns as $i => $pattern) {
                 list($pattern, $replacement) = $pattern;
 
-                // we can safely ignore patterns for positions we've unset earlier,
-                // because we know these won't show up anymore
-                if (array_key_exists($i, $positions) == false) {
-                    continue;
-                }
-
                 // no need to re-run matches that are still in the part of the
                 // content that hasn't been processed
                 if ($positions[$i] >= 0) {
@@ -252,18 +237,19 @@ abstract class Minify
                 }
 
                 $match = null;
-                if (preg_match($pattern, $content, $match, PREG_OFFSET_CAPTURE)) {
+                if (preg_match($pattern, $content, $match)) {
                     $matches[$i] = $match;
 
                     // we'll store the match position as well; that way, we
                     // don't have to redo all preg_matches after changing only
                     // the first (we'll still know where those others are)
-                    $positions[$i] = $match[0][1];
+                    $positions[$i] = strpos($content, $match[0]);
                 } else {
                     // if the pattern couldn't be matched, there's no point in
                     // executing it again in later runs on this same content;
                     // ignore this one until we reach end of content
-                    unset($matches[$i], $positions[$i]);
+                    unset($matches[$i]);
+                    $positions[$i] = strlen($content);
                 }
             }
 
@@ -278,7 +264,7 @@ abstract class Minify
             // other found was not inside what the first found)
             $discardLength = min($positions);
             $firstPattern = array_search($discardLength, $positions);
-            $match = $matches[$firstPattern][0][0];
+            $match = $matches[$firstPattern][0];
 
             // execute the pattern that matches earliest in the content string
             list($pattern, $replacement) = $this->patterns[$firstPattern];
@@ -286,7 +272,7 @@ abstract class Minify
 
             // figure out which part of the string was unmatched; that's the
             // part we'll execute the patterns on again next
-            $content = (string) substr($content, $discardLength);
+            $content = substr($content, $discardLength);
             $unmatched = (string) substr($content, strpos($content, $match) + strlen($match));
 
             // move the replaced part to $processed and prepare $content to
@@ -410,16 +396,6 @@ abstract class Minify
      */
     protected function canImportFile($path)
     {
-        $parsed = parse_url($path);
-        if (
-            // file is elsewhere
-            isset($parsed['host']) ||
-            // file responds to queries (may change, or need to bypass cache)
-            isset($parsed['query'])
-        ) {
-            return false;
-        }
-
         return strlen($path) < PHP_MAXPATHLEN && @is_file($path) && is_readable($path);
     }
 

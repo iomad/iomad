@@ -385,52 +385,6 @@ class base_block_testcase extends advanced_testcase {
     }
 
     /**
-     * Tests the block version of get_contexts_to_reindex, which is supposed to return all the
-     * block contexts in order of date added.
-     */
-    public function test_get_contexts_to_reindex() {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        // Create course and activity module.
-        $generator = $this->getDataGenerator();
-        $course = $generator->create_course();
-        $coursecontext = \context_course::instance($course->id);
-        $page = $generator->create_module('page', ['course' => $course->id]);
-        $pagecontext = \context_module::instance($page->cmid);
-
-        // Create blocks on course page, with time modified non-sequential.
-        $configdata = base64_encode(serialize(new \stdClass()));
-        $instance = (object)['blockname' => 'mockblock', 'parentcontextid' => $coursecontext->id,
-                'showinsubcontexts' => 0, 'pagetypepattern' => 'course-view-*', 'defaultweight' => 0,
-                'timecreated' => 1, 'timemodified' => 100, 'configdata' => $configdata];
-        $blockid1 = $DB->insert_record('block_instances', $instance);
-        $context1 = \context_block::instance($blockid1);
-        $instance->timemodified = 120;
-        $blockid2 = $DB->insert_record('block_instances', $instance);
-        $context2 = \context_block::instance($blockid2);
-        $instance->timemodified = 110;
-        $blockid3 = $DB->insert_record('block_instances', $instance);
-        $context3 = \context_block::instance($blockid3);
-
-        // Create another block on the activity page (not included).
-        $instance->parentcontextid = $pagecontext->id;
-        $blockid4 = $DB->insert_record('block_instances', $instance);
-        \context_block::instance($blockid4);
-
-        // Check list of contexts.
-        $area = new block_mockblock\search\area();
-        $contexts = iterator_to_array($area->get_contexts_to_reindex(), false);
-        $expected = [
-            $context2,
-            $context3,
-            $context1
-        ];
-        $this->assertEquals($expected, $contexts);
-    }
-
-    /**
      * Gets a search document object from the fake search area.
      *
      * @param int $courseid Course id in document
@@ -443,23 +397,5 @@ class base_block_testcase extends advanced_testcase {
         $docdata = ['id' => $blockinstanceid, 'courseid' => $courseid,
                 'areaid' => $area->get_area_id(), 'itemid' => 0];
         return $engine->to_document($area, $docdata);
-    }
-
-    /**
-     * Test document icon.
-     */
-    public function test_get_doc_icon() {
-        $baseblock = $this->getMockBuilder('\core_search\base_block')
-            ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
-
-        $document = $this->getMockBuilder('\core_search\document')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $result = $baseblock->get_doc_icon($document);
-
-        $this->assertEquals('e/anchor', $result->get_name());
-        $this->assertEquals('moodle', $result->get_component());
     }
 }

@@ -58,10 +58,7 @@ class backup_quiz_activity_structure_step extends backup_questions_activity_stru
         $qinstances = new backup_nested_element('question_instances');
 
         $qinstance = new backup_nested_element('question_instance', array('id'), array(
-            'slot', 'page', 'requireprevious', 'questionid', 'questioncategoryid', 'includingsubcategories', 'maxmark'));
-
-        $qinstancetags = new backup_nested_element('tags');
-        $qinstancetag = new backup_nested_element('tag', array('id'), array('tagid', 'tagname'));
+            'slot', 'page', 'requireprevious', 'questionid', 'maxmark'));
 
         $sections = new backup_nested_element('sections');
 
@@ -101,9 +98,6 @@ class backup_quiz_activity_structure_step extends backup_questions_activity_stru
         $quiz->add_child($qinstances);
         $qinstances->add_child($qinstance);
 
-        $qinstance->add_child($qinstancetags);
-        $qinstancetags->add_child($qinstancetag);
-
         $quiz->add_child($sections);
         $sections->add_child($section);
 
@@ -125,9 +119,6 @@ class backup_quiz_activity_structure_step extends backup_questions_activity_stru
         $qinstance->set_source_table('quiz_slots',
                 array('quizid' => backup::VAR_PARENTID));
 
-        $qinstancetag->set_source_table('quiz_slot_tags',
-                array('slotid' => backup::VAR_PARENTID));
-
         $section->set_source_table('quiz_sections',
                 array('quizid' => backup::VAR_PARENTID));
 
@@ -140,13 +131,6 @@ class backup_quiz_activity_structure_step extends backup_questions_activity_stru
             $overrideparams['userid'] = backup_helper::is_sqlparam(null);
 
         }
-
-        // Skip group overrides if not including groups.
-        $groupinfo = $this->get_setting_value('groups');
-        if (!$groupinfo) {
-            $overrideparams['groupid'] = backup_helper::is_sqlparam(null);
-        }
-
         $override->set_source_table('quiz_overrides', $overrideparams);
 
         // All the rest of elements only happen if we are including user info.

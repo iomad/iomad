@@ -97,8 +97,8 @@ class core_weblib_format_text_testcase extends advanced_testcase {
     }
 
     public function test_format_text_overflowdiv() {
-        $this->assertEquals('<div class="no-overflow"><p>Hello world</p></div>',
-                format_text('<p>Hello world</p>', FORMAT_HTML, array('overflowdiv' => true)));
+        $this->assertEquals('<div class="no-overflow"><p>:-)</p></div>',
+                format_text('<p>:-)</p>', FORMAT_HTML, array('overflowdiv' => true)));
     }
 
     /**
@@ -161,81 +161,6 @@ class core_weblib_format_text_testcase extends advanced_testcase {
                 '<div class="text_to_html">ᛋᛏᚫᚾᛞ ᛒᚣ ᚦᛖ ᚷᚱᛖᚣ ᛋᛏᚩᚾᛖ ᚻᚹᛁᛚᛖ ᚦᛖ ᚦᚱᚢᛋᚻ ᚾᚩᚳᛋ ᚫᚾᛞ ᚦᛖ ᛋᛖᛏᛏᛁᚾᚷ ᛋᚢᚾ ᚹᛁᚦ ᚦᛖ ᛚᚫᛋᛏ ᛚᛁᚷᚻᛏ ᚩᚠ ᛞᚢᚱᛁᚾᛋ ᛞᚫᚣ ᚹ' .
                 'ᛁᛚᛚ ᛋᚻᛁᚾᛖ ᚢᛈᚩᚾ ᚦᛖ ᚳᛖᚣᚻᚩᛚᛖ</div>'
             ]
-        ];
-    }
-
-    /**
-     * Test ability to force cleaning of otherwise non-cleaned content.
-     *
-     * @dataProvider format_text_cleaning_testcases
-     *
-     * @param string $input Input text
-     * @param string $nocleaned Expected output of format_text() with noclean=true
-     * @param string $cleaned Expected output of format_text() with noclean=false
-     */
-    public function test_format_text_cleaning($input, $nocleaned, $cleaned) {
-        global $CFG;
-        $this->resetAfterTest();
-
-        $CFG->forceclean = false;
-        $actual = format_text($input, FORMAT_HTML, ['filter' => false, 'noclean' => false]);
-        $this->assertEquals($cleaned, $actual);
-
-        $CFG->forceclean = true;
-        $actual = format_text($input, FORMAT_HTML, ['filter' => false, 'noclean' => false]);
-        $this->assertEquals($cleaned, $actual);
-
-        $CFG->forceclean = false;
-        $actual = format_text($input, FORMAT_HTML, ['filter' => false, 'noclean' => true]);
-        $this->assertEquals($nocleaned, $actual);
-
-        $CFG->forceclean = true;
-        $actual = format_text($input, FORMAT_HTML, ['filter' => false, 'noclean' => true]);
-        $this->assertEquals($cleaned, $actual);
-    }
-
-    /**
-     * Data provider for the test_format_text_cleaning testcase
-     *
-     * @return array of testcases (string)testcasename => [(string)input, (string)nocleaned, (string)cleaned]
-     */
-    public function format_text_cleaning_testcases() {
-        return [
-            'JavaScript' => [
-                'Hello <script type="text/javascript">alert("XSS");</script> world',
-                'Hello <script type="text/javascript">alert("XSS");</script> world',
-                'Hello  world',
-            ],
-            'Inline frames' => [
-                'Let us go phishing! <iframe src="https://1.2.3.4/google.com"></iframe>',
-                'Let us go phishing! <iframe src="https://1.2.3.4/google.com"></iframe>',
-                'Let us go phishing! ',
-            ],
-            'Malformed A tags' => [
-                '<a onmouseover="alert(document.cookie)">xxs link</a>',
-                '<a onmouseover="alert(document.cookie)">xxs link</a>',
-                '<a>xxs link</a>',
-            ],
-            'Malformed IMG tags' => [
-                '<IMG """><SCRIPT>alert("XSS")</SCRIPT>">',
-                '<IMG """><SCRIPT>alert("XSS")</SCRIPT>">',
-                '"&gt;',
-            ],
-            'On error alert' => [
-                '<IMG SRC=/ onerror="alert(String.fromCharCode(88,83,83))"></img>',
-                '<IMG SRC=/ onerror="alert(String.fromCharCode(88,83,83))"></img>',
-                '<img src="/" alt="" />',
-            ],
-            'IMG onerror and javascript alert encode' => [
-                '<img src=x onerror="&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000083&#0000083&#0000039&#0000041">',
-                '<img src=x onerror="&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000083&#0000083&#0000039&#0000041">',
-                '<img src="x" alt="x" />',
-            ],
-            'DIV background-image' => [
-                '<DIV STYLE="background-image: url(javascript:alert(\'XSS\'))">',
-                '<DIV STYLE="background-image: url(javascript:alert(\'XSS\'))">',
-                '<div></div>',
-            ],
         ];
     }
 }

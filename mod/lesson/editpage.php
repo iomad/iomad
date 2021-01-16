@@ -32,11 +32,8 @@ $pageid = required_param('pageid', PARAM_INT);
 $id     = required_param('id', PARAM_INT);         // Course Module ID
 $qtype  = optional_param('qtype', 0, PARAM_INT);
 $edit   = optional_param('edit', false, PARAM_BOOL);
-$returnto = optional_param('returnto', null, PARAM_LOCALURL);
-
-if (!empty($returnto)) {
-    $returnto = new moodle_url($returnto);
-} else {
+$returnto = optional_param('returnto', null, PARAM_URL);
+if (empty($returnto)) {
     $returnto = new moodle_url('/mod/lesson/edit.php', array('id' => $id));
     $returnto->set_anchor('lesson-' . $pageid);
 }
@@ -140,8 +137,6 @@ if ($edit) {
         }
         $answerscount++;
     }
-    // Let the lesson pages make updates if required.
-    $data = $editpage->update_form_data($data);
 
     $mform->set_data($data);
     $PAGE->navbar->add(get_string('edit'), new moodle_url('/mod/lesson/edit.php', array('id'=>$id)));

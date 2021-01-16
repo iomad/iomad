@@ -2,17 +2,17 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp\Formatter;
+namespace Leafo\ScssPhp\Formatter;
 
-use ScssPhp\ScssPhp\Formatter;
-use ScssPhp\ScssPhp\Formatter\OutputBlock;
+use Leafo\ScssPhp\Formatter;
+use Leafo\ScssPhp\Formatter\OutputBlock;
 
 /**
  * Crunched formatter
@@ -51,29 +51,10 @@ class Crunched extends Formatter
             }
         }
 
-        $this->write($inner . implode($glue, $block->lines));
+        echo $inner . implode($glue, $block->lines);
 
         if (! empty($block->children)) {
-            $this->write($this->break);
+            echo $this->break;
         }
-    }
-
-    /**
-     * Output block selectors
-     *
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $block
-     */
-    protected function blockSelectors(OutputBlock $block)
-    {
-        $inner = $this->indentStr();
-
-        $this->write(
-            $inner
-            . implode(
-                $this->tagSeparator,
-                str_replace([' > ', ' + ', ' ~ '], ['>', '+', '~'], $block->selectors)
-            )
-            . $this->open . $this->break
-        );
     }
 }

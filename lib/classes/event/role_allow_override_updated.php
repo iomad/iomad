@@ -42,7 +42,6 @@ class role_allow_override_updated extends base {
     protected function init() {
         $this->data['crud'] = 'u';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'role_allow_override';
     }
 
     /**
@@ -60,9 +59,7 @@ class role_allow_override_updated extends base {
      * @return string
      */
     public function get_description() {
-        $action = ($this->other['allow']) ? 'allow' : 'stop allowing';
-        return "The user with id '$this->userid' modified the role with id '" . $this->other['targetroleid']
-            . "' to $action users with that role from overriding the role with id '" . $this->objectid . "' to users";
+        return "The user with id '$this->userid' updated Allow role overrides.";
     }
 
     /**

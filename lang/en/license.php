@@ -22,7 +22,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Core licenses.
 $string['allrightsreserved'] = 'All rights reserved';
 $string['cc'] = 'Creative Commons';
 $string['cc-nc'] = 'Creative Commons - No Commercial';
@@ -31,10 +30,4 @@ $string['cc-nc-sa'] = 'Creative Commons - No Commercial ShareAlike';
 $string['cc-nd'] = 'Creative Commons - NoDerivs';
 $string['cc-sa'] = 'Creative Commons - ShareAlike';
 $string['public'] = 'Public domain';
-$string['unknown'] = 'Licence not specified';
-
-// Error messages.
-$string['cannotdeletecore'] = 'Cannot delete a standard licence';
-$string['cannotdeletelicenseinuse'] = 'Cannot delete a licence which is currently assigned to one or more files';
-$string['licensenotfoundshortname'] = 'Cannot find a licence with the short name \'{$a}\'';
-$string['missinglicensesortorder'] = 'Cannot set licence order, one or more installed licences is missing from new order';
+$string['unknown'] = 'Other';

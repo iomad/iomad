@@ -49,13 +49,17 @@ class block_myoverview extends block_base {
         if (isset($this->content)) {
             return $this->content;
         }
-        $group = get_user_preferences('block_myoverview_user_grouping_preference');
-        $sort = get_user_preferences('block_myoverview_user_sort_preference');
-        $view = get_user_preferences('block_myoverview_user_view_preference');
-        $paging = get_user_preferences('block_myoverview_user_paging_preference');
-        $customfieldvalue = get_user_preferences('block_myoverview_user_grouping_customfieldvalue_preference');
 
-        $renderable = new \block_myoverview\output\main($group, $sort, $view, $paging, $customfieldvalue);
+        // Check if the tab to select wasn't passed in the URL, if so see if the user has any preference.
+        if (!$tab = optional_param('myoverviewtab', null, PARAM_ALPHA)) {
+            // Check if the user has no preference, if so get the site setting.
+            if (!$tab = get_user_preferences('block_myoverview_last_tab')) {
+                $config = get_config('block_myoverview');
+                $tab = $config->defaulttab;
+            }
+        }
+
+        $renderable = new \block_myoverview\output\main($tab);
         $renderer = $this->page->get_renderer('block_myoverview');
 
         $this->content = new stdClass();
@@ -75,43 +79,11 @@ class block_myoverview extends block_base {
     }
 
     /**
-     * Allow the block to have a configuration page.
+     * This block does contain a configuration settings.
      *
      * @return boolean
      */
     public function has_config() {
         return true;
     }
-
-    /**
-     * Return the plugin config settings for external functions.
-     *
-     * @return stdClass the configs for both the block instance and plugin
-     * @since Moodle 3.8
-     */
-    public function get_config_for_external() {
-        // Return all settings for all users since it is safe (no private keys, etc..).
-        $configs = get_config('block_myoverview');
-
-        // Get the customfield values (if any).
-        if ($configs->displaygroupingcustomfield) {
-            $group = get_user_preferences('block_myoverview_user_grouping_preference');
-            $sort = get_user_preferences('block_myoverview_user_sort_preference');
-            $view = get_user_preferences('block_myoverview_user_view_preference');
-            $paging = get_user_preferences('block_myoverview_user_paging_preference');
-            $customfieldvalue = get_user_preferences('block_myoverview_user_grouping_customfieldvalue_preference');
-
-            $renderable = new \block_myoverview\output\main($group, $sort, $view, $paging, $customfieldvalue);
-            $customfieldsexport = $renderable->get_customfield_values_for_export();
-            if (!empty($customfieldsexport)) {
-                $configs->customfieldsexport = json_encode($customfieldsexport);
-            }
-        }
-
-        return (object) [
-            'instance' => new stdClass(),
-            'plugin' => $configs,
-        ];
-    }
 }
-

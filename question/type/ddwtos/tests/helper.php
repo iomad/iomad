@@ -34,7 +34,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class qtype_ddwtos_test_helper extends question_test_helper {
     public function get_test_questions() {
-        return array('fox', 'maths', 'oddgroups', 'missingchoiceno', 'infinite');
+        return array('fox', 'maths');
     }
 
     /**
@@ -75,9 +75,7 @@ class qtype_ddwtos_test_helper extends question_test_helper {
     }
 
     /**
-     * This is a simple question with choices in three groups.
-     *
-     * @return stdClass data to create a ddwtos question.
+     * @return stdClass date to create a ddwtos question.
      */
     public function get_ddwtos_question_form_data_fox() {
         $fromform = new stdClass();
@@ -93,58 +91,6 @@ class qtype_ddwtos_test_helper extends question_test_helper {
             array('answer' => 'slow',      'choicegroup' => '1'),
             array('answer' => 'dog',       'choicegroup' => '2'),
             array('answer' => 'assiduous', 'choicegroup' => '3'),
-        );
-        test_question_maker::set_standard_combined_feedback_form_data($fromform);
-        $fromform->shownumcorrect = 0;
-        $fromform->penalty = 0.3333333;
-
-        return $fromform;
-    }
-
-    /**
-     * Similar to the 'fox' example above, but using different, non-continuous group numbers.
-     *
-     * @return stdClass data to create a ddwtos question.
-     */
-    public function get_ddwtos_question_form_data_oddgroups() {
-        $fromform = new stdClass();
-
-        $fromform->name = 'Drag-and-drop words with strange groups';
-        $fromform->questiontext = array('text' => 'The [[1]] brown [[2]] jumped over the [[3]] dog.', 'format' => FORMAT_HTML);
-        $fromform->defaultmark = 1.0;
-        $fromform->generalfeedback = array('text' => 'This sentence uses each letter of the alphabet.', 'format' => FORMAT_HTML);
-        $fromform->choices = array(
-            array('answer' => 'quick',     'choicegroup' => '5'),
-            array('answer' => 'fox',       'choicegroup' => '7'),
-            array('answer' => 'lazy',      'choicegroup' => '3'),
-            array('answer' => 'slow',      'choicegroup' => '5'),
-            array('answer' => 'dog',       'choicegroup' => '7'),
-            array('answer' => 'assiduous', 'choicegroup' => '3'),
-        );
-        test_question_maker::set_standard_combined_feedback_form_data($fromform);
-        $fromform->shownumcorrect = 0;
-        $fromform->penalty = 0.3333333;
-
-        return $fromform;
-    }
-
-    /**
-     * Get data required to save a drag-drop into text question where the author
-     * missed out one of the group numbers.
-     *
-     * @return stdClass data to create a ddwtos question.
-     */
-    public function get_ddwtos_question_form_data_missingchoiceno() {
-        $fromform = new stdClass();
-
-        $fromform->name = 'Drag-drop into text question with one index missing';
-        $fromform->questiontext = ['text' => 'The [[1]] sat on the [[3]].', 'format' => FORMAT_HTML];
-        $fromform->defaultmark = 1.0;
-        $fromform->generalfeedback = array('text' => 'The right answer is: "The cat sat on the mat."', 'format' => FORMAT_HTML);
-        $fromform->choices = array(
-                array('answer' => 'cat', 'choicegroup' => '1'),
-                array('answer' => '',    'choicegroup' => '1'),
-                array('answer' => 'mat', 'choicegroup' => '1'),
         );
         test_question_maker::set_standard_combined_feedback_form_data($fromform);
         $fromform->shownumcorrect = 0;
@@ -185,29 +131,5 @@ class qtype_ddwtos_test_helper extends question_test_helper {
         $dd->textfragments = array('7 ', ' 11 ', ' 13 ', ' 17 ', ' 19 = 3');
 
         return $dd;
-    }
-
-    /**
-     * This is a simple question with infinite mode.
-     *
-     * @return stdClass data to create a ddwtos question.
-     */
-    public function get_ddwtos_question_form_data_infinite() {
-        $fromform = new stdClass();
-
-        $fromform->name = 'Drag-and-drop infinite question';
-        $fromform->questiontext = ['text' => 'One [[1]] Two [[2]] Three [[3]]', 'format' => FORMAT_HTML];
-        $fromform->defaultmark = 1.0;
-        $fromform->generalfeedback = ['text' => 'This is general feedback', 'format' => FORMAT_HTML];
-        $fromform->choices = [
-                ['answer' => 'Option1', 'choicegroup' => '1', 'infinite' => true],
-                ['answer' => 'Option2', 'choicegroup' => '1', 'infinite' => true],
-                ['answer' => 'Option3', 'choicegroup' => '1', 'infinite' => true]
-        ];
-        test_question_maker::set_standard_combined_feedback_form_data($fromform);
-        $fromform->shownumcorrect = 0;
-        $fromform->penalty = 0.3333333;
-
-        return $fromform;
     }
 }

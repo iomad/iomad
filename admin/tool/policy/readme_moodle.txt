@@ -1,19 +1,22 @@
-jQuery EU Cookie Law popups 1.1.3
+jQuery EU Cookie Law popups 1.0.1
 -------------
 https://github.com/wimagguc/jquery-eu-cookie-law-popup
 
 Instructions to import 'jQuery EU Cookie Law popups' into Moodle:
 
-1. Download the latest release from https://github.com/wimagguc/jquery-eu-cookie-law-popup/releases
+1. Download the latest release from https://github.com/wimagguc/jquery-eu-cookie-law-popup
 2. Copy 'js/jquery-eu-cookie-law-popup.js' into 'amd/src/jquery-eu-cookie-law-popup.js':
 
    2.a. Replace jquery reference
 ------------------
 (function($) {
 ------------------
-with
+
+to
 ------------------
-define(['jquery'],function($) {
+define(
+['jquery'],
+function($) {
 ------------------
 
    2.b. Remove initialisation code. It will be added and configured only in the pages where is needed
@@ -26,7 +29,6 @@ $(document).ready( function() {
       'popupText' : 'We use them to give you the best experience. If you continue using our website, we\'ll assume that you are happy to receive all cookies on this website.'
     });
   }
-});
 ------------------
 
    2.c. Remove code
@@ -34,16 +36,11 @@ $(document).ready( function() {
 $(document).bind("user_cookie_consent_changed", function(event, object) {
   console.log("User cookie consent changed: " + $(object).attr('consent') );
 });
-------------------
 
-   2.d. Replace
-------------------
 }(jQuery));
 ------------------
-with
-------------------
-});
-------------------
+
+   2.d. Add /*eslint-ignore*/ to the beginning of the file
 
 3. Copy the following styles from 'css/jquery-eu-cookie-law-popup.css' into the
 "jquery-eu-cookie-law-popup styles" section in 'styles.css':
@@ -58,6 +55,4 @@ with
    Add "tool_policy styles" to the end of the styles file.
 
 4. Execute grunt to compile js
-   grunt amd
-
-5. Update version number in admin/tool/policy/thirdpartylibs.xml
+   grunt js

@@ -28,43 +28,19 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
 require_once($CFG->dirroot . '/user/editlib.php');
-require_once('lib.php');
 
 class login_signup_form extends moodleform implements renderable, templatable {
     function definition() {
-        global $USER, $CFG, $SESSION;
+        global $USER, $CFG;
 
-        // Iomad
-        if (!empty($SESSION->company)) {
-            $this->company = $SESSION->company;
-        }
         $mform = $this->_form;
 
-        // Iomad
-        if (!empty($this->company)) {
-            if ($CFG->local_iomad_signup_useemail) {
-                $mform->addElement('header', 'choosepassword', get_string('choosepassword', 'local_iomad_signup'), '');
-                $mform->addElement('html', get_string('emailasusernamehelp', 'local_iomad_signup'));
+        $mform->addElement('header', 'createuserandpass', get_string('createuserandpass'), '');
 
-                $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
-                $mform->setType('email', PARAM_RAW_TRIMMED);
-                $mform->addRule('email', get_string('missingemail'), 'required', null, 'server');
 
-                $mform->addElement('text', 'email2', get_string('emailagain'), 'maxlength="100" size="25"');
-                $mform->setType('email2', PARAM_RAW_TRIMMED);
-                $mform->addRule('email2', get_string('missingemail'), 'required', null, 'server');
-            } else {
-                $mform->addElement('header', 'createuserandpass', get_string('createuserandpass'), '');
-                $mform->addElement('text', 'username', get_string('username'), 'maxlength="100" size="12"');
-                $mform->setType('username', PARAM_NOTAGS);
-                $mform->addRule('username', get_string('missingusername'), 'required', null, 'server');
-            }
-        } else {
-            $mform->addElement('header', 'createuserandpass', get_string('createuserandpass'), '');
-            $mform->addElement('text', 'username', get_string('username'), 'maxlength="100" size="12"');
-            $mform->setType('username', PARAM_NOTAGS);
-            $mform->addRule('username', get_string('missingusername'), 'required', null, 'server');
-        }
+        $mform->addElement('text', 'username', get_string('username'), 'maxlength="100" size="12" autocapitalize="none"');
+        $mform->setType('username', PARAM_RAW);
+        $mform->addRule('username', get_string('missingusername'), 'required', null, 'client');
 
         if (!empty($CFG->passwordpolicy)){
             $mform->addElement('static', 'passwordpolicyinfo', '', print_password_policy());
@@ -75,15 +51,15 @@ class login_signup_form extends moodleform implements renderable, templatable {
 
         $mform->addElement('header', 'supplyinfo', get_string('supplyinfo'),'');
 
-        if (empty($this->company) || !$CFG->local_iomad_signup_useemail) {
-            $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
-            $mform->setType('email', PARAM_RAW_TRIMMED);
-            $mform->addRule('email', get_string('missingemail'), 'required', null, 'server');
+        $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
+        $mform->setType('email', core_user::get_property_type('email'));
+        $mform->addRule('email', get_string('missingemail'), 'required', null, 'client');
+        $mform->setForceLtr('email');
 
-            $mform->addElement('text', 'email2', get_string('emailagain'), 'maxlength="100" size="25"');
-            $mform->setType('email2', PARAM_RAW_TRIMMED);
-            $mform->addRule('email2', get_string('missingemail'), 'required', null, 'server');
-        }
+        $mform->addElement('text', 'email2', get_string('emailagain'), 'maxlength="100" size="25"');
+        $mform->setType('email2', core_user::get_property_type('email'));
+        $mform->addRule('email2', get_string('missingemail'), 'required', null, 'client');
+        $mform->setForceLtr('email2');
 
         $namefields = useredit_get_required_name_fields();
         foreach ($namefields as $field) {
@@ -121,23 +97,10 @@ class login_signup_form extends moodleform implements renderable, templatable {
             $mform->closeHeaderBefore('recaptcha_element');
         }
 
-        // Hook for plugins to extend form definition.
-        core_login_extend_signup_form($mform);
-
         // Add "Agree to sitepolicy" controls. By default it is a link to the policy text and a checkbox but
         // it can be implemented differently in custom sitepolicy handlers.
         $manager = new \core_privacy\local\sitepolicy\manager();
         $manager->signup_form($mform);
-
-        // Iomad
-        if (!empty($this->company)) {
-            $mform->addElement('hidden', 'companyid', $this->company->id);
-            $mform->addElement('hidden', 'code', $this->company->shortname);
-            $mform->addElement('hidden', 'departmentid', $this->company->deptid);
-            $mform->setType('companyid', PARAM_INT);
-            $mform->setType('departmentid', PARAM_INT);
-            $mform->setType('code', PARAM_CLEAN);
-        }
 
         // buttons
         $this->add_action_buttons(true, get_string('createaccount'));
@@ -163,12 +126,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
      *         or an empty array if everything is OK (true allowed for backwards compatibility too).
      */
     public function validation($data, $files) {
-        global $CFG;
-
         $errors = parent::validation($data, $files);
-
-        // Extend validation for any form extensions from plugins.
-        $errors = array_merge($errors, core_login_validate_extend_signup_form($data));
 
         if (signup_captcha_enabled()) {
             $recaptchaelement = $this->_form->getElement('recaptcha_element');
@@ -179,12 +137,6 @@ class login_signup_form extends moodleform implements renderable, templatable {
                 }
             } else {
                 $errors['recaptcha_element'] = get_string('missingrecaptchachallengefield');
-            }
-        }
-
-        if (!empty($this->company)) {
-            if ($CFG->local_iomad_signup_useemail) {
-                $data['username'] = $data['email'];
             }
         }
 

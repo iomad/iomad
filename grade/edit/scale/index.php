@@ -92,8 +92,7 @@ switch ($action) {
                     'sesskey' =>  sesskey(),
                     'deleteconfirmed'=> 1));
 
-            echo $OUTPUT->confirm(get_string('scaleconfirmdelete', 'grades', $scale->get_name()), $confirmurl,
-                "index.php?id={$courseid}");
+            echo $OUTPUT->confirm(get_string('scaleconfirmdelete', 'grades', $scale->name), $confirmurl, "index.php?id={$courseid}");
             echo $OUTPUT->footer();
             die;
         } else {
@@ -116,7 +115,7 @@ if ($courseid and $scales = grade_scale::fetch_all_local($courseid)) {
     $data = array();
     foreach($scales as $scale) {
         $line = array();
-        $line[] = $scale->get_name() .'<div class="scale_options">'.str_replace(",", ", ", $scale->scale).'</div>';
+        $line[] = format_string($scale->name).'<div class="scale_options">'.str_replace(",",", ",$scale->scale).'</div>';
 
         $used = $scale->is_used();
         $line[] = $used ? get_string('yes') : get_string('no');
@@ -142,7 +141,7 @@ if ($scales = grade_scale::fetch_all_global()) {
     $data = array();
     foreach($scales as $scale) {
         $line = array();
-        $line[] = $scale->get_name().'<div class="scale_options">'.str_replace(",", ", ", $scale->scale).'</div>';
+        $line[] = format_string($scale->name).'<div class="scale_options">'.str_replace(",",", ",$scale->scale).'</div>';
 
         $used = $scale->is_used();
         $line[] = $used ? get_string('yes') : get_string('no');

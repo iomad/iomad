@@ -17,7 +17,7 @@
 {{!
     @template block_mycourses/completed-view
 
-    This template renders the completed view for the mycourses block.
+    This template renders the completed view for the myoverview block.
 
     Example context (json):
     {}
@@ -40,25 +40,31 @@
                                 {{ summary}}
                             </div>
                             <div class="finalresults">
-                                <div class="ml-auto mt-auto w-50 p-t-1">
-                                    <div class="progress bg-white border">
-                                        <div class="progress-bar bar" role="progressbar" aria-valuenow="{{progress}}" style="width: {{progress}}%" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <div class="small">
-                                        <span class="sr-only">{{#str}}aria:courseprogress, block_mycourses{{/str}}</span>
-                                        <strong>{{progress}}%</strong> {{#str}}complete, block_mycourses{{/str}}
-                                        <strong>{{#str}} timecompleted, local_report_completion {{/str}}</strong> {{ timecompleted }}
-                                        {{#timeexpires}}
-                                            <strong>({{#str}} timeexpires, local_report_completion {{/str}}</strong> {{ timeexpires }})
-                                        {{/timeexpires}}
-                                        <strong>{{#str}} finalscore, block_mycourses,  {{ finalscore }}</strong> {{/str}}
-                                    </div>
-                                </div>
-                                {{#certificate}}
-                                    <div class = "certificatediv">
-                                        <a class="btn btn-secondary" href="{{ certificate }}">{{#str}} downloadcert, block_mycourses {{/str}}</a></p>
-                                    </div>
-                                {{/certificate}}
+                                <p>
+                                    <span class="finaltimecompleted">
+                                        {{#str}} timecompleted, local_report_completion {{/str}} {{ timecompleted }}
+                                    </span>
+                                    {{#timeexpires}}
+                                        <span class="finaltimeexpires">
+                                            ({{#str}} timeexpires, local_report_completion {{/str}} {{ timeexpires }})
+                                        </span>
+                                    {{/timeexpires}}
+                                </p>
+                                <p>
+                                    <span class="finalscore">
+                                        {{#str}} finalscore, block_mycourses,  {{ finalscore }} {{/str}}
+                                    </span>
+                                    {{#certificate}}
+                                        <span class="finalcertificate">
+                                            <a class="btn btn-info" href="{{ certificate }}">{{#str}} downloadcert, block_mycourses {{/str}}</a>
+                                        </span>
+                                    {{/certificate}}
+                                    {{^certificate}}
+                                        <span class="finalcertificate">
+                                            {{#str}} nocerttodownload, block_mycourses {{/str}}
+                                        </span>
+                                    {{/certificate}}
+                                </p>
                             </div>
                         </div>
                     </div>

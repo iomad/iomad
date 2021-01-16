@@ -35,9 +35,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['application/dash_xml'] = 'Dynamic Adaptive Streaming over HTTP (MPEG-DASH)';
 $string['application/epub_zip'] = 'EPUB ebook';
-$string['application/json'] = '{$a->MIMETYPE2} text';
 $string['application/msword'] = 'Word document';
 $string['application/pdf'] = 'PDF document';
 $string['application/vnd.moodle.backup'] = 'Moodle backup';
@@ -58,7 +56,6 @@ $string['application/x-iwork-keynote-sffkey'] = 'iWork Keynote presentation';
 $string['application/x-iwork-numbers-sffnumbers'] = 'iWork Numbers spreadsheet';
 $string['application/x-iwork-pages-sffpages'] = 'iWork Pages document';
 $string['application/x-javascript'] = 'JavaScript source';
-$string['application/x-mpegURL'] = 'HTTP Live Streaming (HLS)';
 $string['application/x-mspublisher'] = 'Publisher document';
 $string['application/x-shockwave-flash'] = 'Flash animation';
 $string['application/xhtml_xml'] = 'XHTML document';
@@ -73,8 +70,6 @@ $string['group:html_audio'] = 'Audio files natively supported by browsers';
 $string['group:html_track'] = 'HTML track files';
 $string['group:html_video'] = 'Video files natively supported by browsers';
 $string['group:image'] = 'Image files';
-$string['group:media_source'] = 'Streaming media';
-$string['group:optimised_image'] = 'Image files to be optimised, such as badges';
 $string['group:presentation'] = 'Presentation files';
 $string['group:sourcecode'] = 'Source code';
 $string['group:spreadsheet'] = 'Spreadsheet files';

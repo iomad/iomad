@@ -39,7 +39,7 @@ Feature: In an assignment, teachers grade multiple students on one page
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I wait until the page is ready
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     Then I should see "1" in the "Needs grading" "table_row"
@@ -62,7 +62,7 @@ Feature: In an assignment, teachers grade multiple students on one page
       | enableoutcomes | 1 |
     When I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Outcomes" in current page administration
+    And I navigate to "Outcomes" node in "Course administration"
     And I follow "Edit outcomes"
     And I press "Add a new outcome"
     And I follow "Add a new scale"
@@ -71,7 +71,7 @@ Feature: In an assignment, teachers grade multiple students on one page
       | Scale | Noob, Nub, 1337, HaXor |
     And I press "Save changes"
     And I am on "Course 1" course homepage
-    And I navigate to "Outcomes" in current page administration
+    And I navigate to "Outcomes" node in "Course administration"
     And I follow "Edit outcomes"
     And I press "Add a new outcome"
     And I set the following fields to these values:
@@ -113,7 +113,7 @@ Feature: In an assignment, teachers grade multiple students on one page
       | M8d skillZ! | 1337 |
       | Feedback comments | I'm the teacher first feedback |
     And I press "Save changes"
-    And I press "OK"
+    And I press "Ok"
     And I click on "Edit settings" "link"
     And I follow "Test assignment name"
     And I navigate to "View all submissions" in current page administration

@@ -84,8 +84,6 @@ if (!empty($id)) {
     // Assign a default empty value for the lti_icon.
     $type->lti_icon = '';
     $type->lti_secureicon = '';
-
-    $type->lti_clientid = null;
 }
 
 $pageurl = new moodle_url('/mod/lti/typessettings.php');
@@ -121,8 +119,7 @@ if (lti_request_is_using_ssl() && !empty($type->lti_secureicon)) {
     $type->oldicon = $type->lti_icon;
 }
 
-$form = new mod_lti_edit_types_form($pageurl,
-    (object)array('isadmin' => true, 'istool' => false, 'id' => $id, 'clientid' => $type->lti_clientid));
+$form = new mod_lti_edit_types_form($pageurl, (object)array('isadmin' => true, 'istool' => false));
 
 if ($data = $form->get_data()) {
     $type = new stdClass();

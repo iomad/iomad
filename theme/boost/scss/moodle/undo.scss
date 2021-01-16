@@ -117,7 +117,8 @@ body:not(.jsenabled) .dropdown:hover > .dropdown-menu {
     margin-top: -6px; // We need to move it up to counter the arrows as they introduce hover bugs.
 }
 
-// Enable scroll in the language menu.
+// Extends bootstrapbase/less/bootstrap/navbar.less
+// to enable scroll in the language menu.
 body:not(.jsenabled) .langmenu:hover > .dropdown-menu,
 .langmenu.open > .dropdown-menu {
     display: block;
@@ -125,8 +126,15 @@ body:not(.jsenabled) .langmenu:hover > .dropdown-menu,
     overflow-y: auto;
 }
 
+// Extends bootstrapbase/less/bootstrap/type.less
+// to enable ol lists to use a larger number set.
+
+ol {
+    margin: 0 0 $line-height-base / 2 2.5em;
+}
+
 // Set menus in the fixed header to scroll vertically when they are longer than the page.
-.navbar.fixed-top .dropdown .dropdown-menu {
+.navbar-static-top .dropdown .dropdown-menu {
     max-height: calc(100vh - #{$navbar-height});
     overflow-y: auto;
 }
@@ -136,143 +144,6 @@ body:not(.jsenabled) .langmenu:hover > .dropdown-menu,
     &.active .page-link {
         @include plain-hover-focus {
             z-index: inherit;
-        }
-    }
-}
-/* Force positioning of popover arrows.
- *
- * The Css prefixer used in Moodle does not support complex calc statements used
- * in Bootstrap 4 CSS. For example:
- * calc((0.5rem + 1px) * -1); is stripped out by lib/php-css-parser/Parser.php.
- * See MDL-61879. For now the arrow positions of popovers are fixed until this is resolved.
- */
-.bs-popover-right .arrow,
-.bs-popover-auto[x-placement^="right"] .arrow {
-    left: -9px;
-}
-.bs-popover-left .arrow,
-.bs-popover-auto[x-placement^="left"] .arrow {
-    right: -9px;
-}
-.bs-popover-top .arrow,
-.bs-popover-auto[x-placement^="top"] .arrow {
-    bottom: -9px;
-}
-.bs-popover-bottom .arrow,
-.bs-popover-auto[x-placement^="bottom"] .arrow {
-    top: -9px;
-}
-
-// Fixes an issue on Safari when the .custom-select is inside a .card class.
-.custom-select {
-    word-wrap: normal;
-}
-
-/* Add commented out carousel transistions back in.
- *
- * The Css prefixer used in Moodle breaks on @supports syntax, See MDL-61515.
- */
-.carousel-item-next.carousel-item-left,
-.carousel-item-prev.carousel-item-right {
-    transform: translateX(0);
-}
-.carousel-item-next,
-.active.carousel-item-right {
-    transform: translateX(100%);
-}
-.carousel-item-prev,
-.active.carousel-item-left {
-    transform: translateX(-100%);
-}
-
-/**
- * Reset all of the forced style on the page.
- * - Remove borders on header and content.
- * - Remove most of the vertical padding.
- * - Make the content region flex grow so it pushes things like the
- *   next activity selector to the bottom of the page.
- */
-$allow-reset-style: true !default;
-
-@if $allow-reset-style {
-    body.reset-style {
-        #page-header {
-            .card {
-                border: none;
-
-                .page-header-headings {
-                    h1 {
-                        margin-bottom: 0;
-                    }
-                }
-
-                .card-body {
-                    @include media-breakpoint-down(sm) {
-                        padding-left: 0;
-                        padding-right: 0;
-                    }
-                }
-            }
-
-            & > div {
-                padding-top: 0 !important;  /* stylelint-disable-line declaration-no-important */
-                padding-bottom: 0 !important;  /* stylelint-disable-line declaration-no-important */
-            }
-        }
-
-        #page-content {
-            padding-bottom: 0 !important;  /* stylelint-disable-line declaration-no-important */
-
-            #region-main-box {
-                #region-main {
-                    border: none;
-                    display: inline-flex;
-                    flex-direction: column;
-                    padding: 0;
-                    height: 100%;
-                    width: 100%;
-                    padding-left: $card-spacer-x;
-                    padding-right: $card-spacer-x;
-                    vertical-align: top;
-
-                    div[role="main"] {
-                        flex: 1 0 auto;
-                    }
-
-                    .activity-navigation {
-                        overflow: hidden;
-                    }
-
-                    &.has-blocks {
-                        width: calc(100% - #{$blocks-plus-gutter});
-
-                        @include media-breakpoint-down(lg) {
-                            width: 100%;
-                        }
-                    }
-
-                    @include media-breakpoint-down(sm) {
-                        padding-left: 0;
-                        padding-right: 0;
-                    }
-                }
-
-                [data-region="blocks-column"] {
-                    margin-left: auto;
-                }
-
-                @include media-breakpoint-down(lg) {
-                    display: flex;
-                    flex-direction: column;
-                }
-            }
-        }
-
-        select,
-        input,
-        textarea,
-        .btn:not(.btn-icon) {
-            border-radius: $border-radius-lg;
         }
     }
 }

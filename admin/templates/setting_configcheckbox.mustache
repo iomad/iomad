@@ -25,7 +25,6 @@
     * value - yes value
     * id - element id
     * checked - boole
-    * readonly - bool
 
     Example context (json):
     {
@@ -33,11 +32,10 @@
         "no": "False",
         "value": "True",
         "id": "test0",
-        "checked": "checked",
-        "readonly": false
+        "checked": "checked"
     }
 }}
 <div class="form-checkbox defaultsnext">
     <input type="hidden" name="{{name}}" value="{{no}}">
-    <input {{#readonly}}disabled{{/readonly}} type="checkbox" name="{{name}}" value="{{value}}" id="{{id}}" {{#checked}}checked{{/checked}}>
+    <input type="checkbox" name="{{name}}" value="{{value}}" id="{{id}}" {{#checked}}checked{{/checked}}>
 </div>

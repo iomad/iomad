@@ -22,11 +22,11 @@ Feature: Test editing a Short answer question
       | Test questions   | shortanswer | shortanswer-001 for editing | frogtoad |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   @javascript @_switch_window
   Scenario: Edit a Short answer question
-    When I choose "Edit question" action for "shortanswer-001" in the question bank
+    When I click on "Edit" "link" in the "shortanswer-001 for editing" "table_row"
     And I set the following fields to these values:
       | Question name | |
     And I press "id_submitbutton"
@@ -35,14 +35,14 @@ Feature: Test editing a Short answer question
       | Question name | Edited shortanswer-001 name |
     And I press "id_submitbutton"
     Then I should see "Edited shortanswer-001 name"
-    When I choose "Edit question" action for "Edited shortanswer-001" in the question bank
+    When I click on "Edit" "link" in the "Edited shortanswer-001 name" "table_row"
     And I set the following fields to these values:
       | id_answer_1          | newt                       |
       | id_fraction_1        | 70%                        |
       | id_feedback_1        | Newt is an OK good answer. |
     And I press "id_submitbutton"
     Then I should see "Edited shortanswer-001 name"
-    When I choose "Preview" action for "Edited shortanswer-001" in the question bank
+    When I click on "Preview" "link" in the "Edited shortanswer-001 name" "table_row"
     And I switch to "questionpreview" window
     Then I should see "Name an amphibian:"
     # Set behaviour options

@@ -27,12 +27,9 @@ namespace mod_scorm\privacy;
 defined('MOODLE_INTERNAL') || die();
 
 use core_privacy\local\metadata\collection;
-use core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
-use core_privacy\local\request\helper;
+use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\transform;
-use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 /**
@@ -43,7 +40,6 @@ use core_privacy\local\request\writer;
  */
 class provider implements
         \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
         \core_privacy\local\request\plugin\provider {
 
     /**
@@ -107,36 +103,6 @@ class provider implements
     }
 
     /**
-     * Get the list of users who have data within a context.
-     *
-     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if (!is_a($context, \context_module::class)) {
-            return;
-        }
-
-        $sql = "SELECT ss.userid
-                  FROM {%s} ss
-                  JOIN {modules} m
-                    ON m.name = 'scorm'
-                  JOIN {course_modules} cm
-                    ON cm.instance = ss.scormid
-                   AND cm.module = m.id
-                  JOIN {context} ctx
-                    ON ctx.instanceid = cm.id
-                   AND ctx.contextlevel = :modlevel
-                 WHERE ctx.id = :contextid";
-
-        $params = ['modlevel' => CONTEXT_MODULE, 'contextid' => $context->id];
-
-        $userlist->add_from_sql('userid', sprintf($sql, 'scorm_scoes_track'), $params);
-        $userlist->add_from_sql('userid', sprintf($sql, 'scorm_aicc_session'), $params);
-    }
-
-    /**
      * Export all user data for the specified user, in the specified contexts.
      *
      * @param approved_contextlist $contextlist The approved contexts to export information for.
@@ -156,18 +122,10 @@ class provider implements
             return;
         }
 
-        $user = $contextlist->get_user();
-        $userid = $user->id;
-        // Get SCORM data.
-        foreach ($contexts as $contextid) {
-            $context = \context::instance_by_id($contextid);
-            $data = helper::get_context_data($context, $user);
-            writer::with_context($context)->export_data([], $data);
-            helper::export_context_files($context, $user);
-        }
+        $userid = $contextlist->get_user()->id;
+        list($insql, $inparams) = $DB->get_in_or_equal($contexts, SQL_PARAMS_NAMED);
 
         // Get scoes_track data.
-        list($insql, $inparams) = $DB->get_in_or_equal($contexts, SQL_PARAMS_NAMED);
         $sql = "SELECT ss.id,
                        ss.attempt,
                        ss.element,
@@ -194,17 +152,14 @@ class provider implements
         }
         $scoestracks->close();
 
-        // The scoes_track data is organised in: {Course name}/{SCORM activity name}/{My attempts}/{Attempt X}/data.json
+        // The scoes_track data is organised in: {Course name}/{SCORM activity name}/attempt-X.json.
         // where X is the attempt number.
         array_walk($alldata, function($attemptsdata, $contextid) {
             $context = \context::instance_by_id($contextid);
             array_walk($attemptsdata, function($data, $attempt) use ($context) {
-                $subcontext = [
-                    get_string('myattempts', 'scorm'),
-                    get_string('attempt', 'scorm'). " $attempt"
-                ];
-                writer::with_context($context)->export_data(
-                    $subcontext,
+                writer::with_context($context)->export_related_data(
+                    [],
+                    'attempt-'.$attempt,
                     (object)['scoestrack' => $data]
                 );
             });
@@ -244,15 +199,13 @@ class provider implements
         }
         $aiccsessions->close();
 
-        // The aicc_session data is organised in: {Course name}/{SCORM activity name}/{My AICC sessions}/data.json
+        // The aicc_session data is organised in: {Course name}/{SCORM activity name}/aiccsession.json.
         // In this case, the attempt hasn't been included in the json file because it can be null.
         array_walk($alldata, function($data, $contextid) {
             $context = \context::instance_by_id($contextid);
-            $subcontext = [
-                get_string('myaiccsessions', 'scorm')
-            ];
-            writer::with_context($context)->export_data(
-                $subcontext,
+            writer::with_context($context)->export_related_data(
+                [],
+                'aiccsession',
                 (object)['sessions' => $data]
             );
         });
@@ -318,40 +271,6 @@ class provider implements
                  WHERE ss.userid = :userid
                    AND ctx.id $insql";
         $params = array_merge($inparams, ['userid' => $userid]);
-
-        static::delete_data('scorm_scoes_track', $sql, $params);
-        static::delete_data('scorm_aicc_session', $sql, $params);
-    }
-
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param   approved_userlist       $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        global $DB;
-        $context = $userlist->get_context();
-
-        if (!is_a($context, \context_module::class)) {
-            return;
-        }
-
-        // Prepare SQL to gather all completed IDs.
-        $userids = $userlist->get_userids();
-        list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
-
-        $sql = "SELECT ss.id
-                  FROM {%s} ss
-                  JOIN {modules} m
-                    ON m.name = 'scorm'
-                  JOIN {course_modules} cm
-                    ON cm.instance = ss.scormid
-                   AND cm.module = m.id
-                  JOIN {context} ctx
-                    ON ctx.instanceid = cm.id
-                 WHERE ctx.id = :contextid
-                   AND ss.userid $insql";
-        $params = array_merge($inparams, ['contextid' => $context->id]);
 
         static::delete_data('scorm_scoes_track', $sql, $params);
         static::delete_data('scorm_aicc_session', $sql, $params);

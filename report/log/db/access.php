@@ -35,8 +35,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
 
@@ -50,8 +48,6 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
 

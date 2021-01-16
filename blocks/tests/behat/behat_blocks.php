@@ -46,13 +46,15 @@ class behat_blocks extends behat_base {
      * @param string $blockname
      */
     public function i_add_the_block($blockname) {
-        $addblock = get_string('addblock');
-        $this->execute('behat_navigation::i_select_from_flat_navigation_drawer', $addblock);
+        $this->execute('behat_forms::i_set_the_field_to',
+            array("bui_addblock", $this->escape($blockname))
+        );
 
+        // If we are running without javascript we need to submit the form.
         if (!$this->running_javascript()) {
-            $this->execute('behat_general::i_click_on_in_the', [$blockname, 'link_exact', '#region-main', 'css_element']);
-        } else {
-            $this->execute('behat_general::i_click_on_in_the', [$blockname, 'link_exact', $addblock, 'dialogue']);
+            $this->execute('behat_general::i_click_on_in_the',
+                array(get_string('go'), "button", "#add_block", "css_element")
+            );
         }
     }
 
@@ -68,6 +70,21 @@ class behat_blocks extends behat_base {
         } catch (ElementNotFoundException $e) {
             $this->execute('behat_blocks::i_add_the_block', [$blockname]);
         }
+    }
+
+    /**
+     * Docks a block. Editing mode should be previously enabled.
+     *
+     * @Given /^I dock "(?P<block_name_string>(?:[^"]|\\")*)" block$/
+     * @param string $blockname
+     */
+    public function i_dock_block($blockname) {
+
+        // Looking for both title and alt.
+        $xpath = "//input[@type='image'][@title='" . get_string('dockblock', 'block', $blockname) . "' or @alt='" . get_string('addtodock', 'block') . "']";
+        $this->execute('behat_general::i_click_on_in_the',
+            array($xpath, "xpath_element", $this->escape($blockname), "block")
+        );
     }
 
     /**
@@ -91,7 +108,7 @@ class behat_blocks extends behat_base {
         }
 
         $this->execute('behat_general::i_click_on_in_the',
-                array("a[data-toggle='dropdown']", "css_element", $this->escape($blockname), "block")
+            array("a[role='menuitem']", "css_element", $this->escape($blockname), "block")
         );
     }
 
@@ -120,17 +137,7 @@ class behat_blocks extends behat_base {
      * @param string $blockname
      */
     public function the_add_block_selector_should_contain_block($blockname) {
-        $addblock = get_string('addblock');
-        $this->execute('behat_navigation::i_select_from_flat_navigation_drawer', $addblock);
-
-        $cancelstr = get_string('cancel');
-        if (!$this->running_javascript()) {
-            $this->execute('behat_general::should_exist_in_the', [$blockname, 'link_exact', '#region-main', 'css_element']);
-            $this->execute('behat_general::i_click_on_in_the', [$cancelstr, 'link_exact', '#region-main', 'css_element']);
-        } else {
-            $this->execute('behat_general::should_exist_in_the', [$blockname, 'link_exact', $addblock, 'dialogue']);
-            $this->execute('behat_general::i_click_on_in_the', [$cancelstr, 'button', $addblock, 'dialogue']);
-        }
+        $this->execute('behat_forms::the_select_box_should_contain', [get_string('addblock'), $blockname]);
     }
 
     /**
@@ -140,16 +147,6 @@ class behat_blocks extends behat_base {
      * @param string $blockname
      */
     public function the_add_block_selector_should_not_contain_block($blockname) {
-        $addblock = get_string('addblock');
-        $this->execute('behat_navigation::i_select_from_flat_navigation_drawer', $addblock);
-
-        $cancelstr = get_string('cancel');
-        if (!$this->running_javascript()) {
-            $this->execute('behat_general::should_not_exist_in_the', [$blockname, 'link_exact', '#region-main', 'css_element']);
-            $this->execute('behat_general::i_click_on_in_the', [$cancelstr, 'link_exact', '#region-main', 'css_element']);
-        } else {
-            $this->execute('behat_general::should_not_exist_in_the', [$blockname, 'link_exact', $addblock, 'dialogue']);
-            $this->execute('behat_general::i_click_on_in_the', [$cancelstr, 'button', $addblock, 'dialogue']);
-        }
+        $this->execute('behat_forms::the_select_box_should_not_contain', [get_string('addblock'), $blockname]);
     }
 }

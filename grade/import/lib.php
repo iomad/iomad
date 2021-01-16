@@ -112,7 +112,7 @@ function grade_import_commit($courseid, $importcode, $importfeedback=true, $verb
 
                 // make the grades array for update_grade
                 foreach ($grades as $grade) {
-                    if (!$importfeedback || $grade->feedback === null) {
+                    if (!$importfeedback) {
                         $grade->feedback = false; // ignore it
                     }
                     if ($grade->importonlyfeedback) {

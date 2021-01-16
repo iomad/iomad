@@ -5,6 +5,8 @@ namespace Box\Spout\Writer\Common\Helper;
 /**
  * Class CellHelper
  * This class provides helper functions when working with cells
+ *
+ * @package Box\Spout\Writer\Common\Helper
  */
 class CellHelper
 {
@@ -34,12 +36,56 @@ class CellHelper
                 $cellIndex = chr($capitalAAsciiValue + $modulus) . $cellIndex;
 
                 // substracting 1 because it's zero-based
-                $columnIndex = (int) ($columnIndex / 26) - 1;
+                $columnIndex = intval($columnIndex / 26) - 1;
+
             } while ($columnIndex >= 0);
 
             self::$columnIndexToCellIndexCache[$originalColumnIndex] = $cellIndex;
         }
 
         return self::$columnIndexToCellIndexCache[$originalColumnIndex];
+    }
+
+    /**
+     * @param $value
+     * @return bool Whether the given value is considered "empty"
+     */
+    public static function isEmpty($value)
+    {
+        return ($value === null || $value === '');
+    }
+
+    /**
+     * @param $value
+     * @return bool Whether the given value is a non empty string
+     */
+    public static function isNonEmptyString($value)
+    {
+        return (gettype($value) === 'string' && $value !== '');
+    }
+
+    /**
+     * Returns whether the given value is numeric.
+     * A numeric value is from type "integer" or "double" ("float" is not returned by gettype).
+     *
+     * @param $value
+     * @return bool Whether the given value is numeric
+     */
+    public static function isNumeric($value)
+    {
+        $valueType = gettype($value);
+        return ($valueType === 'integer' || $valueType === 'double');
+    }
+
+    /**
+     * Returns whether the given value is boolean.
+     * "true"/"false" and 0/1 are not booleans.
+     *
+     * @param $value
+     * @return bool Whether the given value is boolean
+     */
+    public static function isBoolean($value)
+    {
+        return gettype($value) === 'boolean';
     }
 }

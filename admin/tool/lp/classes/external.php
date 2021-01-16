@@ -205,7 +205,7 @@ class external extends external_api {
         self::validate_context($framework->get_context());
         $output = $PAGE->get_renderer('tool_lp');
 
-        $renderable = new output\manage_competencies_page($framework, $params['search'], $framework->get_context(), null);
+        $renderable = new output\manage_competencies_page($framework, $params['search'], $framework->get_context());
 
         $data = $renderable->export_for_template($output);
 
@@ -363,13 +363,7 @@ class external extends external_api {
             'The course id',
             VALUE_REQUIRED
         );
-        $moduleid = new external_value(
-            PARAM_INT,
-            'The module id',
-            VALUE_DEFAULT,
-            0
-        );
-        $params = array('courseid' => $courseid, 'moduleid' => $moduleid);
+        $params = array('courseid' => $courseid);
         return new external_function_parameters($params);
     }
 
@@ -377,18 +371,16 @@ class external extends external_api {
      * Loads the data required to render the course_competencies_page template.
      *
      * @param int $courseid The course id to check.
-     * @param int $moduleid The module id to check (0 for no filter).
      * @return boolean
      */
-    public static function data_for_course_competencies_page($courseid, $moduleid) {
+    public static function data_for_course_competencies_page($courseid) {
         global $PAGE;
         $params = self::validate_parameters(self::data_for_course_competencies_page_parameters(), array(
             'courseid' => $courseid,
-            'moduleid' => $moduleid,
         ));
         self::validate_context(context_course::instance($params['courseid']));
 
-        $renderable = new output\course_competencies_page($params['courseid'], $params['moduleid']);
+        $renderable = new output\course_competencies_page($params['courseid']);
         $renderer = $PAGE->get_renderer('tool_lp');
 
         $data = $renderable->export_for_template($renderer);
@@ -428,12 +420,8 @@ class external extends external_api {
                     ))
                 ),
                 'comppath' => competency_path_exporter::get_read_structure(),
-                'plans' => new external_multiple_structure(
-                    plan_exporter::get_read_structure()
-                ),
             ))),
             'manageurl' => new external_value(PARAM_LOCALURL, 'Url to the manage competencies page.'),
-            'pluginbaseurl' => new external_value(PARAM_LOCALURL, 'Url to the course competencies page.'),
         ));
 
     }

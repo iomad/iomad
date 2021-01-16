@@ -25,7 +25,6 @@ function($, ajax, str, notification) {
     var manager = {
         deleteItem: function(e) {
             e.preventDefault();
-            var targetUrl = $(e.currentTarget).attr('href');
 
             str.get_strings([
                 {
@@ -44,15 +43,11 @@ function($, ajax, str, notification) {
                     key:        'no',
                     component:  'moodle'
                 }
-            ])
-            .then(function(s) {
-                notification.confirm(s[0], s[1], s[2], s[3], function() {
-                    window.location = targetUrl;
-                });
-
-                return;
-            })
-            .catch();
+            ]).done(function(s) {
+                notification.confirm(s[0], s[1], s[2], s[3], $.proxy(function() {
+                    window.location = $(this).attr('href');
+                }, e.currentTarget));
+            });
         },
 
         setup: function() {

@@ -4,10 +4,10 @@
 
 if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
 
+
 // "systempaths" settingpage
 $temp = new admin_settingpage('systempaths', new lang_string('systempaths','admin'));
-$temp->add(new admin_setting_configexecutable('pathtophp', new lang_string('pathtophp', 'admin'),
-    new lang_string('configpathtophp', 'admin'), ''));
+
 $temp->add(new admin_setting_configexecutable('pathtodu', new lang_string('pathtodu', 'admin'), new lang_string('configpathtodu', 'admin'), ''));
 $temp->add(new admin_setting_configexecutable('aspellpath', new lang_string('aspellpath', 'admin'), new lang_string('edhelpaspellpath'), ''));
 $temp->add(new admin_setting_configexecutable('pathtodot', new lang_string('pathtodot', 'admin'), new lang_string('pathtodot_help', 'admin'), ''));
@@ -44,10 +44,15 @@ $temp = new admin_settingpage('sessionhandling', new lang_string('sessionhandlin
 if (empty($CFG->session_handler_class) and $DB->session_lock_supported()) {
     $temp->add(new admin_setting_configcheckbox('dbsessions', new lang_string('dbsessions', 'admin'), new lang_string('configdbsessions', 'admin'), 0));
 }
-
-$temp->add(new admin_setting_configduration('sessiontimeout', new lang_string('sessiontimeout', 'admin'),
-    new lang_string('configsessiontimeout', 'admin'), 8 * 60 * 60));
-
+$temp->add(new admin_setting_configselect('sessiontimeout', new lang_string('sessiontimeout', 'admin'), new lang_string('configsessiontimeout', 'admin'), 7200, array(14400 => new lang_string('numhours', '', 4),
+                                                                                                                                                      10800 => new lang_string('numhours', '', 3),
+                                                                                                                                                      7200 => new lang_string('numhours', '', 2),
+                                                                                                                                                      5400 => new lang_string('numhours', '', '1.5'),
+                                                                                                                                                      3600 => new lang_string('numminutes', '', 60),
+                                                                                                                                                      2700 => new lang_string('numminutes', '', 45),
+                                                                                                                                                      1800 => new lang_string('numminutes', '', 30),
+                                                                                                                                                      900 => new lang_string('numminutes', '', 15),
+                                                                                                                                                      300 => new lang_string('numminutes', '', 5))));
 $temp->add(new admin_setting_configtext('sessioncookie', new lang_string('sessioncookie', 'admin'), new lang_string('configsessioncookie', 'admin'), '', PARAM_ALPHANUM));
 $temp->add(new admin_setting_configtext('sessioncookiepath', new lang_string('sessioncookiepath', 'admin'), new lang_string('configsessioncookiepath', 'admin'), '', PARAM_RAW));
 $temp->add(new admin_setting_configtext('sessioncookiedomain', new lang_string('sessioncookiedomain', 'admin'), new lang_string('configsessioncookiedomain', 'admin'), '', PARAM_RAW, 50));
@@ -92,10 +97,7 @@ $options = array(
     GETREMOTEADDR_SKIP_HTTP_CLIENT_IP => 'HTTP_X_FORWARDED_FOR, REMOTE_ADDR',
     GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR => 'HTTP_CLIENT, REMOTE_ADDR',
     GETREMOTEADDR_SKIP_HTTP_X_FORWARDED_FOR|GETREMOTEADDR_SKIP_HTTP_CLIENT_IP => 'REMOTE_ADDR');
-$temp->add(new admin_setting_configselect('getremoteaddrconf', new lang_string('getremoteaddrconf', 'admin'),
-    new lang_string('configgetremoteaddrconf', 'admin'),
-    GETREMOTEADDR_SKIP_DEFAULT, $options));
-$temp->add(new admin_setting_configtext('reverseproxyignore', new lang_string('reverseproxyignore', 'admin'), new lang_string('configreverseproxyignore', 'admin'), ''));
+$temp->add(new admin_setting_configselect('getremoteaddrconf', new lang_string('getremoteaddrconf', 'admin'), new lang_string('configgetremoteaddrconf', 'admin'), 0, $options));
 
 $temp->add(new admin_setting_heading('webproxy', new lang_string('webproxy', 'admin'), new lang_string('webproxyinfo', 'admin')));
 $temp->add(new admin_setting_configtext('proxyhost', new lang_string('proxyhost', 'admin'), new lang_string('configproxyhost', 'admin'), '', PARAM_HOST));
@@ -170,15 +172,10 @@ $temp->add(new admin_setting_configselect('tempdatafoldercleanup', new lang_stri
 
 $ADMIN->add('server', $temp);
 
-    $temp->add(new admin_setting_configduration('filescleanupperiod',
-        new lang_string('filescleanupperiod', 'admin'),
-        new lang_string('filescleanupperiod_help', 'admin'),
-        86400));
+
 
 $ADMIN->add('server', new admin_externalpage('environment', new lang_string('environment','admin'), "$CFG->wwwroot/$CFG->admin/environment.php"));
 $ADMIN->add('server', new admin_externalpage('phpinfo', new lang_string('phpinfo'), "$CFG->wwwroot/$CFG->admin/phpinfo.php"));
-$ADMIN->add('server', new admin_externalpage('testoutgoingmailconf', new lang_string('testoutgoingmailconf', 'admin'),
-            new moodle_url("$CFG->wwwroot/$CFG->admin/testoutgoingmailconf.php"), 'moodle/site:config', true));
 
 
 // "performance" settingpage
@@ -214,100 +211,6 @@ $temp->add(new admin_setting_configtext('curltimeoutkbitrate', new lang_string('
 $ADMIN->add('server', $temp);
 
 
-$ADMIN->add('server', new admin_category('taskconfig', new lang_string('taskadmintitle', 'admin')));
-$temp = new admin_settingpage('taskprocessing', new lang_string('taskprocessing','admin'));
-$temp->add(
-    new admin_setting_configtext(
-        'task_scheduled_concurrency_limit',
-        new lang_string('task_scheduled_concurrency_limit', 'admin'),
-        new lang_string('task_scheduled_concurrency_limit_desc', 'admin'),
-        3,
-        PARAM_INT
-    )
-);
-
-$temp->add(
-    new admin_setting_configduration(
-        'task_scheduled_max_runtime',
-        new lang_string('task_scheduled_max_runtime', 'admin'),
-        new lang_string('task_scheduled_max_runtime_desc', 'admin'),
-        30 * MINSECS
-    )
-);
-
-$temp->add(
-    new admin_setting_configtext(
-        'task_adhoc_concurrency_limit',
-        new lang_string('task_adhoc_concurrency_limit', 'admin'),
-        new lang_string('task_adhoc_concurrency_limit_desc', 'admin'),
-        3,
-        PARAM_INT
-    )
-);
-
-$temp->add(
-    new admin_setting_configduration(
-        'task_adhoc_max_runtime',
-        new lang_string('task_adhoc_max_runtime', 'admin'),
-        new lang_string('task_adhoc_max_runtime_desc', 'admin'),
-        30 * MINSECS
-    )
-);
-$ADMIN->add('taskconfig', $temp);
-
-$temp = new admin_settingpage('tasklogging', new lang_string('tasklogging','admin'));
-$temp->add(
-    new admin_setting_configselect(
-        'task_logmode',
-        new lang_string('task_logmode', 'admin'),
-        new lang_string('task_logmode_desc', 'admin'),
-        \core\task\logmanager::MODE_ALL,
-        [
-            \core\task\logmanager::MODE_ALL => new lang_string('task_logmode_all', 'admin'),
-            \core\task\logmanager::MODE_FAILONLY => new lang_string('task_logmode_failonly', 'admin'),
-            \core\task\logmanager::MODE_NONE => new lang_string('task_logmode_none', 'admin'),
-        ]
-    )
-);
-$temp->add(
-    new admin_setting_configcheckbox(
-        'task_logtostdout',
-        new lang_string('task_logtostdout', 'admin'),
-        new lang_string('task_logtostdout_desc', 'admin'),
-        1
-    )
-);
-
-if (\core\task\logmanager::uses_standard_settings()) {
-    $temp->add(
-        new admin_setting_configduration(
-            'task_logretention',
-            new \lang_string('task_logretention', 'admin'),
-            new \lang_string('task_logretention_desc', 'admin'),
-            28 * DAYSECS
-        )
-    );
-
-    $temp->add(
-        new admin_setting_configtext(
-            'task_logretainruns',
-            new \lang_string('task_logretainruns', 'admin'),
-            new \lang_string('task_logretainruns_desc', 'admin'),
-            20,
-            PARAM_INT
-        )
-    );
-}
-$ADMIN->add('taskconfig', $temp);
-
-if (\core\task\logmanager::uses_standard_settings()) {
-    $ADMIN->add('taskconfig', new admin_externalpage(
-        'tasklogs',
-        new lang_string('tasklogs','admin'),
-        "{$CFG->wwwroot}/{$CFG->admin}/tasklogs.php"
-    ));
-}
-
 // E-mail settings.
 $ADMIN->add('server', new admin_category('email', new lang_string('categoryemail', 'admin')));
 
@@ -337,10 +240,6 @@ $temp->add(new admin_setting_configtextarea('allowedemaildomains',
         new lang_string('allowedemaildomains', 'admin'),
         new lang_string('configallowedemaildomains', 'admin'),
         ''));
-$url = new moodle_url('/admin/testoutgoingmailconf.php');
-$link = html_writer::link($url, get_string('testoutgoingmailconf', 'admin'));
-$temp->add(new admin_setting_heading('testoutgoinmailc', new lang_string('testoutgoingmailconf', 'admin'),
-        new lang_string('testoutgoingmaildetail', 'admin', $link)));
 $temp->add(new admin_setting_heading('emaildoesnotfit', new lang_string('doesnotfit', 'admin'),
         new lang_string('doesnotfitdetail', 'admin')));
 $charsets = get_list_of_charsets();
@@ -363,8 +262,6 @@ $choices = array(new lang_string('never', 'admin'),
                  new lang_string('onlynoreply', 'admin'));
 $temp->add(new admin_setting_configselect('emailfromvia', new lang_string('emailfromvia', 'admin'),
           new lang_string('configemailfromvia', 'admin'), 1, $choices));
-    $temp->add(new admin_setting_configtext('emailsubjectprefix', new lang_string('emailsubjectprefix', 'admin'),
-        new lang_string('configemailsubjectprefix', 'admin'), '', PARAM_RAW));
 
 $ADMIN->add('email', $temp);
 

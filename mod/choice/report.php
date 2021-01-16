@@ -68,7 +68,7 @@
         $PAGE->set_title(format_string($choice->name).": $strresponses");
         $PAGE->set_heading($course->fullname);
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(format_string($choice->name), 2, null);
+        echo $OUTPUT->heading($choice->name, 2, null);
         /// Check to see if groups are being used in this choice
         $groupmode = groups_get_activity_groupmode($cm);
         if ($groupmode) {
@@ -101,9 +101,7 @@
         require_once("$CFG->libdir/odslib.class.php");
 
     /// Calculate file name
-        $shortname = format_string($course->shortname, true, array('context' => $context));
-        $choicename = format_string($choice->name, true, array('context' => $context));
-        $filename = clean_filename("$shortname " . strip_tags($choicename)) . '.ods';
+        $filename = clean_filename("$course->shortname ".strip_tags(format_string($choice->name,true))).'.ods';
     /// Creating a workbook
         $workbook = new MoodleODSWorkbook("-");
     /// Send HTTP headers
@@ -162,9 +160,7 @@
         require_once("$CFG->libdir/excellib.class.php");
 
     /// Calculate file name
-        $shortname = format_string($course->shortname, true, array('context' => $context));
-        $choicename = format_string($choice->name, true, array('context' => $context));
-        $filename = clean_filename("$shortname " . strip_tags($choicename)) . '.xls';
+        $filename = clean_filename("$course->shortname ".strip_tags(format_string($choice->name,true))).'.xls';
     /// Creating a workbook
         $workbook = new MoodleExcelWorkbook("-");
     /// Send HTTP headers
@@ -219,9 +215,7 @@
 
     // print text file
     if ($download == "txt" && has_capability('mod/choice:downloadresponses', $context)) {
-        $shortname = format_string($course->shortname, true, array('context' => $context));
-        $choicename = format_string($choice->name, true, array('context' => $context));
-        $filename = clean_filename("$shortname " . strip_tags($choicename)) . '.txt';
+        $filename = clean_filename("$course->shortname ".strip_tags(format_string($choice->name,true))).'.txt';
 
         header("Content-Type: application/download\n");
         header("Content-Disposition: attachment; filename=\"$filename\"");
@@ -291,7 +285,7 @@
 
         $downloadlist = html_writer::tag('ul', implode('', $downloadoptions), array('class' => 'list-inline inline'));
         $downloadlist .= html_writer::tag('div', '', array('class' => 'clearfloat'));
-        echo html_writer::tag('div',$downloadlist, array('class' => 'downloadreport mt-1'));
+        echo html_writer::tag('div',$downloadlist, array('class' => 'downloadreport m-t-1'));
     }
     echo $OUTPUT->footer();
 

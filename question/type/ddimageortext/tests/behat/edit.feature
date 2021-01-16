@@ -22,11 +22,11 @@ Feature: Test editing a drag and drop onto image questions
       | Test questions   | ddimageortext | Drag onto image | xsection |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   @javascript
   Scenario: Edit a drag and drop onto image question
-    And I choose "Edit question" action for "Drag onto image" in the question bank
+    When I click on "Edit" "link" in the "Drag onto image" "table_row"
     And I set the following fields to these values:
       | Question name | Edited question name |
     And I press "id_submitbutton"

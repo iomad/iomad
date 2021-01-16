@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Phpml\Classification\Ensemble;
 
-use Phpml\Classification\Classifier;
-use Phpml\Classification\DecisionTree;
-use Phpml\Exception\InvalidArgumentException;
 use Phpml\Helper\Predictable;
 use Phpml\Helper\Trainable;
-use ReflectionClass;
+use Phpml\Classification\Classifier;
+use Phpml\Classification\DecisionTree;
 
 class Bagging implements Classifier
 {
-    use Trainable;
-    use Predictable;
+    use Trainable, Predictable;
 
     /**
      * @var int
      */
     protected $numSamples;
+
+    /**
+     * @var array
+     */
+    private $targets = [];
 
     /**
      * @var int
@@ -32,7 +34,7 @@ class Bagging implements Classifier
     protected $numClassifier;
 
     /**
-     * @var string
+     * @var Classifier
      */
     protected $classifier = DecisionTree::class;
 
@@ -44,7 +46,7 @@ class Bagging implements Classifier
     /**
      * @var array
      */
-    protected $classifiers = [];
+    protected $classifiers;
 
     /**
      * @var float
@@ -52,9 +54,16 @@ class Bagging implements Classifier
     protected $subsetRatio = 0.7;
 
     /**
+     * @var array
+     */
+    private $samples = [];
+
+    /**
      * Creates an ensemble classifier with given number of base classifiers
      * Default number of base classifiers is 50.
      * The more number of base classifiers, the better performance but at the cost of procesing time
+     *
+     * @param int $numClassifier
      */
     public function __construct(int $numClassifier = 50)
     {
@@ -66,18 +75,19 @@ class Bagging implements Classifier
      * e.g., random samples drawn from the original dataset with replacement (allow repeats),
      * to train each base classifier.
      *
+     * @param float $ratio
+     *
      * @return $this
      *
-     * @throws InvalidArgumentException
+     * @throws \Exception
      */
     public function setSubsetRatio(float $ratio)
     {
         if ($ratio < 0.1 || $ratio > 1.0) {
-            throw new InvalidArgumentException('Subset ratio should be between 0.1 and 1.0');
+            throw new \Exception("Subset ratio should be between 0.1 and 1.0");
         }
 
         $this->subsetRatio = $ratio;
-
         return $this;
     }
 
@@ -89,6 +99,9 @@ class Bagging implements Classifier
      * given in the order they are in the constructor of the classifier and parameter
      * names are neglected.
      *
+     * @param string $classifier
+     * @param array $classifierOptions
+     *
      * @return $this
      */
     public function setClassifer(string $classifier, array $classifierOptions = [])
@@ -99,7 +112,11 @@ class Bagging implements Classifier
         return $this;
     }
 
-    public function train(array $samples, array $targets): void
+    /**
+     * @param array $samples
+     * @param array $targets
+     */
+    public function train(array $samples, array $targets)
     {
         $this->samples = array_merge($this->samples, $samples);
         $this->targets = array_merge($this->targets, $targets);
@@ -110,20 +127,24 @@ class Bagging implements Classifier
         $this->classifiers = $this->initClassifiers();
         $index = 0;
         foreach ($this->classifiers as $classifier) {
-            [$samples, $targets] = $this->getRandomSubset($index);
+            list($samples, $targets) = $this->getRandomSubset($index);
             $classifier->train($samples, $targets);
             ++$index;
         }
     }
 
-    protected function getRandomSubset(int $index): array
+    /**
+     * @param int $index
+     * @return array
+     */
+    protected function getRandomSubset(int $index)
     {
         $samples = [];
         $targets = [];
         srand($index);
         $bootstrapSize = $this->subsetRatio * $this->numSamples;
         for ($i = 0; $i < $bootstrapSize; ++$i) {
-            $rand = random_int(0, $this->numSamples - 1);
+            $rand = rand(0, $this->numSamples - 1);
             $samples[] = $this->samples[$rand];
             $targets[] = $this->targets[$rand];
         }
@@ -131,40 +152,50 @@ class Bagging implements Classifier
         return [$samples, $targets];
     }
 
-    protected function initClassifiers(): array
+    /**
+     * @return array
+     */
+    protected function initClassifiers()
     {
         $classifiers = [];
         for ($i = 0; $i < $this->numClassifier; ++$i) {
-            $ref = new ReflectionClass($this->classifier);
-            /** @var Classifier $obj */
-            $obj = count($this->classifierOptions) === 0 ? $ref->newInstance() : $ref->newInstanceArgs($this->classifierOptions);
+            $ref = new \ReflectionClass($this->classifier);
+            if ($this->classifierOptions) {
+                $obj = $ref->newInstanceArgs($this->classifierOptions);
+            } else {
+                $obj = $ref->newInstance();
+            }
 
             $classifiers[] = $this->initSingleClassifier($obj);
         }
-
         return $classifiers;
     }
 
-    protected function initSingleClassifier(Classifier $classifier): Classifier
+    /**
+     * @param Classifier $classifier
+     *
+     * @return Classifier
+     */
+    protected function initSingleClassifier($classifier)
     {
         return $classifier;
     }
 
     /**
+     * @param array $sample
      * @return mixed
      */
     protected function predictSample(array $sample)
     {
         $predictions = [];
         foreach ($this->classifiers as $classifier) {
-            /** @var Classifier $classifier */
+            /* @var $classifier Classifier */
             $predictions[] = $classifier->predict($sample);
         }
 
         $counts = array_count_values($predictions);
         arsort($counts);
         reset($counts);
-
         return key($counts);
     }
 }

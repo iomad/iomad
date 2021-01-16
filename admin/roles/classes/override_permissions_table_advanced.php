@@ -66,9 +66,9 @@ class core_role_override_permissions_table_advanced extends core_role_capability
         $rowattributes = parent::get_row_attributes($capability);
         if ($this->permissions[$capability->name] !== 0) {
             if (empty($rowattributes['class'])) {
-                $rowattributes['class'] = "overriddenpermission table-warning";
+                $rowattributes['class'] = "overriddenpermission";
             } else {
-                $rowattributes['class'] .= " overriddenpermission table-warning";
+                $rowattributes['class'] .= " overriddenpermission";
             }
         }
         return $rowattributes;

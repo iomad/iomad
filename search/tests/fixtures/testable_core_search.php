@@ -72,8 +72,8 @@ class testable_core_search extends \core_search\manager {
      *
      * @return array
      */
-    public function get_areas_user_accesses($limitcourseids = false, $limitcontextids = false) {
-        return parent::get_areas_user_accesses($limitcourseids, $limitcontextids);
+    public function get_areas_user_accesses($limitcourseids = false) {
+        return parent::get_areas_user_accesses($limitcourseids);
     }
 
     /**
@@ -117,18 +117,5 @@ class testable_core_search extends \core_search\manager {
      */
     public static function fake_current_time($faketime = 0.0) {
         static::$phpunitfaketime = $faketime;
-    }
-
-    /**
-     * Makes build_limitcourseids method public for testing.
-     *
-     * @param \stdClass $formdata Submitted search form data.
-     *
-     * @return array|bool
-     */
-    public function build_limitcourseids(\stdClass $formdata) {
-        $limitcourseids = parent::build_limitcourseids($formdata);
-
-        return $limitcourseids;
     }
 }

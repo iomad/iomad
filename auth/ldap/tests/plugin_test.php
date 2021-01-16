@@ -36,36 +36,7 @@ defined('MOODLE_INTERNAL') || die();
 
 class auth_ldap_plugin_testcase extends advanced_testcase {
 
-    /**
-     * Data provider for auth_ldap tests
-     *
-     * Used to ensure that all the paged stuff works properly, irrespectively
-     * of the pagesize configured (that implies all the chunking and paging
-     * built in the plugis is doing its work consistently). Both searching and
-     * not searching within subcontexts.
-     *
-     * @return array[]
-     */
-    public function auth_ldap_provider() {
-        $pagesizes = [1, 3, 5, 1000];
-        $subcontexts = [0, 1];
-        $combinations = [];
-        foreach ($pagesizes as $pagesize) {
-            foreach ($subcontexts as $subcontext) {
-                $combinations["pagesize {$pagesize}, subcontexts {$subcontext}"] = [$pagesize, $subcontext];
-            }
-        }
-        return $combinations;
-    }
-
-    /**
-     * General auth_ldap testcase
-     *
-     * @dataProvider auth_ldap_provider
-     * @param int $pagesize Value to be configured in settings controlling page size.
-     * @param int $subcontext Value to be configured in settings controlling searching in subcontexts.
-     */
-    public function test_auth_ldap(int $pagesize, int $subcontext) {
+    public function test_auth_ldap() {
         global $CFG, $DB;
 
         if (!extension_loaded('ldap')) {
@@ -108,19 +79,16 @@ class auth_ldap_plugin_testcase extends advanced_testcase {
         $o['ou']          = 'users';
         ldap_add($connection, 'ou='.$o['ou'].','.$topdn, $o);
 
-        $createdusers = array();
         for ($i=1; $i<=5; $i++) {
             $this->create_ldap_user($connection, $topdn, $i);
-            $createdusers[] = 'username' . $i;
         }
 
         // Set up creators group.
-        $assignedroles = array('username1', 'username2');
         $o = array();
         $o['objectClass'] = array('posixGroup');
         $o['cn']          = 'creators';
         $o['gidNumber']   = 1;
-        $o['memberUid']   = $assignedroles;
+        $o['memberUid']   = array('username1', 'username2');
         ldap_add($connection, 'cn='.$o['cn'].','.$topdn, $o);
 
         $creatorrole = $DB->get_record('role', array('shortname'=>'coursecreator'));
@@ -132,12 +100,12 @@ class auth_ldap_plugin_testcase extends advanced_testcase {
         set_config('start_tls', 0, 'auth_ldap');
         set_config('ldap_version', 3, 'auth_ldap');
         set_config('ldapencoding', 'utf-8', 'auth_ldap');
-        set_config('pagesize', $pagesize, 'auth_ldap');
+        set_config('pagesize', '2', 'auth_ldap');
         set_config('bind_dn', TEST_AUTH_LDAP_BIND_DN, 'auth_ldap');
         set_config('bind_pw', TEST_AUTH_LDAP_BIND_PW, 'auth_ldap');
         set_config('user_type', 'rfc2307', 'auth_ldap');
         set_config('contexts', 'ou=users,'.$topdn, 'auth_ldap');
-        set_config('search_sub', $subcontext, 'auth_ldap');
+        set_config('search_sub', 0, 'auth_ldap');
         set_config('opt_deref', LDAP_DEREF_NEVER, 'auth_ldap');
         set_config('user_attribute', 'cn', 'auth_ldap');
         set_config('memberattribute', 'memberuid', 'auth_ldap');
@@ -177,23 +145,15 @@ class auth_ldap_plugin_testcase extends advanced_testcase {
         // Check events, 5 users created with 2 users having roles.
         $this->assertCount(7, $events);
         foreach ($events as $index => $event) {
-            $username = $DB->get_field('user', 'username', array('id' => $event->relateduserid)); // Get username.
-
-            if ($event->eventname === '\core\event\user_created') {
-                $this->assertContains($username, $createdusers);
-                unset($events[$index]); // Remove matching event.
-
-            } else if ($event->eventname === '\core\event\role_assigned') {
-                $this->assertContains($username, $assignedroles);
-                unset($events[$index]); // Remove matching event.
-
-            } else {
-                $this->fail('Unexpected event found: ' . $event->eventname);
+            $usercreatedindex = array(0, 2, 4, 5, 6);
+            $roleassignedindex = array (1, 3);
+            if (in_array($index, $usercreatedindex)) {
+                $this->assertInstanceOf('\core\event\user_created', $event);
+            }
+            if (in_array($index, $roleassignedindex)) {
+                $this->assertInstanceOf('\core\event\role_assigned', $event);
             }
         }
-        // If all the user_created and role_assigned events have matched
-        // then the $events array should be now empty.
-        $this->assertCount(0, $events);
 
         $this->assertEquals(5, $DB->count_records('user', array('auth'=>'ldap')));
         $this->assertEquals(2, $DB->count_records('role_assignments'));

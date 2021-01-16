@@ -63,9 +63,7 @@ abstract class file_system {
         } else {
             $path = $this->get_remote_path_from_storedfile($file);
         }
-        if (readfile_allow_large($path, $file->get_filesize()) === false) {
-            throw new file_exception('storedfilecannotreadfile', $file->get_filename());
-        }
+        readfile_allow_large($path, $file->get_filesize());
     }
 
     /**
@@ -82,7 +80,7 @@ abstract class file_system {
      * @param bool $fetchifnotfound Whether to attempt to fetch from the remote path if not found.
      * @return string full path to pool file with file content
      */
-    public function get_local_path_from_storedfile(stored_file $file, $fetchifnotfound = false) {
+    protected function get_local_path_from_storedfile(stored_file $file, $fetchifnotfound = false) {
         return $this->get_local_path_from_hash($file->get_contenthash(), $fetchifnotfound);
     }
 
@@ -96,7 +94,7 @@ abstract class file_system {
      * @param stored_file $file The file to serve.
      * @return string full path to pool file with file content
      */
-    public function get_remote_path_from_storedfile(stored_file $file) {
+    protected function get_remote_path_from_storedfile(stored_file $file) {
         return $this->get_remote_path_from_hash($file->get_contenthash(), false);
     }
 
@@ -418,36 +416,16 @@ abstract class file_system {
     protected function get_imageinfo_from_path($path) {
         $imageinfo = getimagesize($path);
 
-        if (!is_array($imageinfo)) {
-            return false; // Nothing to process, the file was not recognised as image by GD.
-        }
-
         $image = array(
                 'width'     => $imageinfo[0],
                 'height'    => $imageinfo[1],
                 'mimetype'  => image_type_to_mime_type($imageinfo[2]),
             );
-
         if (empty($image['width']) or empty($image['height']) or empty($image['mimetype'])) {
             // GD can not parse it, sorry.
             return false;
         }
         return $image;
-    }
-
-    /**
-     * Serve file content using X-Sendfile header.
-     * Please make sure that all headers are already sent and the all
-     * access control checks passed.
-     *
-     * This alternate method to xsendfile() allows an alternate file system
-     * to use the full file metadata and avoid extra lookups.
-     *
-     * @param stored_file $file The file to send
-     * @return bool success
-     */
-    public function xsendfile_file(stored_file $file): bool {
-        return $this->xsendfile($file->get_contenthash());
     }
 
     /**
@@ -463,16 +441,6 @@ abstract class file_system {
         require_once($CFG->libdir . "/xsendfilelib.php");
 
         return xsendfile($this->get_remote_path_from_hash($contenthash));
-    }
-
-    /**
-     * Returns true if filesystem is configured to support xsendfile.
-     *
-     * @return bool
-     */
-    public function supports_xsendfile() {
-        global $CFG;
-        return !empty($CFG->xsendfile);
     }
 
     /**

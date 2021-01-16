@@ -9,6 +9,10 @@ use Phpml\Exception\InvalidArgumentException;
 class Accuracy
 {
     /**
+     * @param array $actualLabels
+     * @param array $predictedLabels
+     * @param bool  $normalize
+     *
      * @return float|int
      *
      * @throws InvalidArgumentException
@@ -16,7 +20,7 @@ class Accuracy
     public static function score(array $actualLabels, array $predictedLabels, bool $normalize = true)
     {
         if (count($actualLabels) != count($predictedLabels)) {
-            throw new InvalidArgumentException('Size of given arrays does not match');
+            throw InvalidArgumentException::arraySizeNotMatch();
         }
 
         $score = 0;

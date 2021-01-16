@@ -177,23 +177,21 @@ class acceptances_table extends \table_sql {
         $filterstatus = $this->acceptancesfilter->get_status_filter();
         if ($filterstatus == 1) {
             $this->sql->from .= " $join AND a{$v}.status=1";
-        } else if ($filterstatus == 2) {
-            $this->sql->from .= " $join AND a{$v}.status=0";
         } else {
             $this->sql->from .= " LEFT $join";
         }
 
-        $this->sql->from .= " LEFT JOIN {user} m ON m.id = a{$v}.usermodified AND m.id <> u.id AND a{$v}.status IS NOT NULL";
+        $this->sql->from .= " LEFT JOIN {user} m ON m.id = a{$v}.usermodified AND m.id <> u.id AND a{$v}.status = 1";
 
         $this->sql->params['versionid' . $v] = $v;
 
         if ($filterstatus === 0) {
-            $this->sql->where .= " AND a{$v}.status IS NULL";
+            $this->sql->where .= " AND (a{$v}.status IS NULL OR a{$v}.status = 0)";
         }
 
-        $this->add_column_header('status' . $v, get_string('response', 'tool_policy'));
-        $this->add_column_header('timemodified', get_string('responseon', 'tool_policy'));
-        $this->add_column_header('usermodified' . $v, get_string('responseby', 'tool_policy'));
+        $this->add_column_header('status' . $v, get_string('agreed', 'tool_policy'), true, 'mdl-align');
+        $this->add_column_header('timemodified', get_string('agreedon', 'tool_policy'));
+        $this->add_column_header('usermodified' . $v, get_string('agreedby', 'tool_policy'));
         $this->add_column_header('note', get_string('acceptancenote', 'tool_policy'), false);
     }
 
@@ -209,13 +207,11 @@ class acceptances_table extends \table_sql {
             $join = "JOIN {tool_policy_acceptances} a{$v} ON a{$v}.userid = u.id AND a{$v}.policyversionid=:versionid{$v}";
             if ($filterstatus == 1) {
                 $this->sql->from .= " {$join} AND a{$v}.status=1";
-            } else if ($filterstatus == 2) {
-                $this->sql->from .= " {$join} AND a{$v}.status=0";
             } else {
                 $this->sql->from .= " LEFT {$join}";
             }
             $this->sql->params['versionid' . $v] = $v;
-            $this->add_column_header('status' . $v, $versionname);
+            $this->add_column_header('status' . $v, $versionname, true, 'mdl-align');
             $statusall[] = "COALESCE(a{$v}.status, 0)";
         }
         $this->sql->fields .= ",".join('+', $statusall)." AS statusall";
@@ -223,7 +219,7 @@ class acceptances_table extends \table_sql {
         if ($filterstatus === 0) {
             $statussql = [];
             foreach ($this->versionids as $v => $versionname) {
-                $statussql[] = "a{$v}.status IS NULL";
+                $statussql[] = "a{$v}.status IS NULL OR a{$v}.status = 0";
             }
             $this->sql->where .= " AND (u.policyagreed = 0 OR ".join(" OR ", $statussql).")";
         }
@@ -419,12 +415,12 @@ class acceptances_table extends \table_sql {
      */
     public function wrap_html_start() {
         echo \html_writer::start_tag('form',
-            ['action' => new \moodle_url('/admin/tool/policy/accept.php')]);
+            ['action' => new \moodle_url('/admin/tool/policy/accept.php'), 'data-action' => 'acceptmodal']);
         echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
         echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'returnurl',
             'value' => $this->get_return_url()]);
         foreach (array_keys($this->versionids) as $versionid) {
-            echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'versionids[]',
+            echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => "versionids[{$versionid}]",
                 'value' => $versionid]);
         }
     }
@@ -437,9 +433,8 @@ class acceptances_table extends \table_sql {
     public function wrap_html_finish() {
         global $PAGE;
         if ($this->canagreeany) {
-            echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'accept']);
-            echo \html_writer::empty_tag('input', ['type' => 'submit', 'data-action' => 'acceptmodal',
-                'value' => get_string('consentbulk', 'tool_policy'), 'class' => 'btn btn-primary mt-1']);
+            echo \html_writer::empty_tag('input', ['type' => 'submit',
+                'value' => get_string('consentbulk', 'tool_policy'), 'class' => 'btn btn-primary']);
             $PAGE->requires->js_call_amd('tool_policy/acceptmodal', 'getInstance', [\context_system::instance()->id]);
         }
         echo "</form>\n";
@@ -534,15 +529,10 @@ class acceptances_table extends \table_sql {
         $onbehalf = false;
         $versions = $versionid ? [$versionid => $this->versionids[$versionid]] : $this->versionids; // List of versions.
         $accepted = []; // List of versionids that user has accepted.
-        $declined = [];
 
         foreach ($versions as $v => $name) {
-            if ($row->{'status' . $v} !== null) {
-                if (empty($row->{'status' . $v})) {
-                    $declined[] = $v;
-                } else {
-                    $accepted[] = $v;
-                }
+            if (!empty($row->{'status' . $v})) {
+                $accepted[] = $v;
                 $agreedby = $row->{'usermodified' . $v};
                 if ($agreedby && $agreedby != $row->id) {
                     $onbehalf = true;
@@ -550,13 +540,25 @@ class acceptances_table extends \table_sql {
             }
         }
 
-        $ua = new user_agreement($row->id, $accepted, $declined, $this->get_return_url(), $versions, $onbehalf, $row->canaccept);
+        if ($versionid) {
+            $str = new \lang_string($accepted ? 'yes' : 'no');
+        } else {
+            $str = new \lang_string('acceptancecount', 'tool_policy', (object)[
+                'agreedcount' => count($accepted),
+                'policiescount' => count($versions)
+            ]);
+        }
 
         if ($this->is_downloading()) {
-            return $ua->export_for_download();
-
+            return $str->out();
         } else {
-            return $this->output->render($ua);
+            $s = $this->output->render(new user_agreement($row->id, $accepted, $this->get_return_url(),
+                $versions, $onbehalf, $row->canaccept));
+            if (!$versionid) {
+                $s .= '<br>' . \html_writer::link(new \moodle_url('/admin/tool/policy/user.php',
+                        ['userid' => $row->id, 'returnurl' => $this->get_return_url()]), $str);
+            }
+            return $s;
         }
     }
 

@@ -169,7 +169,7 @@ if (empty($scorm->popup) || $displaymode == 'popup') {
         $exiturl = course_get_url($course, $cm->sectionnum);
     }
 
-    $exitlink = html_writer::link($exiturl, $strexit, array('title' => $strexit, 'class' => 'btn btn-secondary'));
+    $exitlink = html_writer::link($exiturl, $strexit, array('title' => $strexit));
     $PAGE->set_button($exitlink);
 }
 
@@ -282,9 +282,11 @@ if (file_exists($CFG->dirroot.'/mod/scorm/datamodels/'.$scorm->version.'.php')) 
     include_once($CFG->dirroot.'/mod/scorm/datamodels/scorm_12.php');
 }
 
-// Add the keepalive system to keep checking for a connection.
-\core\session\manager::keepalive('networkdropped', 'mod_scorm', 30, 10);
-
+// Add the checknet system to keep checking for a connection.
+$PAGE->requires->string_for_js('networkdropped', 'mod_scorm');
+$PAGE->requires->yui_module('moodle-core-checknet', 'M.core.checknet.init', array(array(
+    'message' => array('networkdropped', 'mod_scorm'),
+)));
 echo $OUTPUT->footer();
 
 // Set the start time of this SCO.

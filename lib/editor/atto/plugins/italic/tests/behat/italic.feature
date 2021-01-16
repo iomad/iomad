@@ -15,7 +15,7 @@ Feature: Atto italic button
     And I set the field "Text editor" to "Plain text area"
     And I press "Save changes"
     And I click on "Edit profile" "link" in the "region-main" "region"
-    Then I should see "<em>Tower of Pisa</em>"
+    Then I should see "<i>Tower of Pisa</i>"
 
   @javascript
   Scenario: Toggle italics in some text
@@ -31,5 +31,5 @@ Feature: Atto italic button
     And I set the field "Text editor" to "Plain text area"
     And I press "Save changes"
     And I click on "Edit profile" "link" in the "region-main" "region"
-    Then I should not see "<em>GHD - for hair</em>"
+    Then I should not see "<i>GHD - for hair</i>"
     And I should see "GHD - for hair"

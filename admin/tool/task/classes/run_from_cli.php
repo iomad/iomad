@@ -17,9 +17,6 @@
 /**
  * Form for scheduled tasks admin pages.
  *
- * @deprecated since Moodle 3.9 MDL-63580. Please use the \core\task\manager.
- * @todo final deprecation. To be removed in Moodle 4.3 MDL-63594.
- *
  * @package    tool_task
  * @copyright  2018 Toni Barbera <toni@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -58,9 +55,7 @@ class run_from_cli {
      * @return bool
      */
     public static function is_runnable():bool {
-        debugging('run_from_cli class is deprecated. Please use \core\task\manager::run_from_cli() instead.',
-            DEBUG_DEVELOPER);
-        return \core\task\manager::is_runnable();
+        return self::find_php_cli_path() !== false;
     }
 
     /**
@@ -71,8 +66,30 @@ class run_from_cli {
      * @throws \moodle_exception
      */
     public static function execute(\core\task\task_base $task):bool {
-        debugging('run_from_cli class is deprecated. Please use \core\task\manager::run_from_cli() instead.',
-            DEBUG_DEVELOPER);
-        return \core\task\manager::run_from_cli($task);
+        global $CFG;
+
+        if (!self::is_runnable()) {
+            $redirecturl = new \moodle_url('/admin/settings.php', ['section' => 'systempaths']);
+            throw new \moodle_exception('cannotfindthepathtothecli', 'tool_task', $redirecturl->out());
+        } else {
+            // Shell-escaped path to the PHP binary.
+            $phpbinary = escapeshellarg(self::find_php_cli_path());
+
+            // Shell-escaped path CLI script.
+            $pathcomponents = [$CFG->dirroot, $CFG->admin, 'tool', 'task', 'cli', 'schedule_task.php'];
+            $scriptpath     = escapeshellarg(implode(DIRECTORY_SEPARATOR, $pathcomponents));
+
+            // Shell-escaped task name.
+            $classname = get_class($task);
+            $taskarg   = escapeshellarg("--execute={$classname}");
+
+            // Build the CLI command.
+            $command = "{$phpbinary} {$scriptpath} {$taskarg}";
+
+            // Execute it.
+            passthru($command);
+        }
+
+        return true;
     }
 }

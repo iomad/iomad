@@ -10,18 +10,11 @@ class Gaussian implements ActivationFunction
 {
     /**
      * @param float|int $value
+     *
+     * @return float
      */
     public function compute($value): float
     {
-        return exp(- $value ** 2);
-    }
-
-    /**
-     * @param float|int $value
-     * @param float|int $calculatedvalue
-     */
-    public function differentiate($value, $calculatedvalue): float
-    {
-        return -2 * $value * $calculatedvalue;
+        return exp(-pow($value, 2));
     }
 }

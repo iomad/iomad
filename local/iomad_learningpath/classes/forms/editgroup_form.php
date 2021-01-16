@@ -15,12 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Edit/create group
+ * Edit/create group 
  *
  * @package    local_iomadlearninpath
  * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 namespace local_iomad_learningpath\forms;
 
@@ -53,7 +54,6 @@ class editgroup_form extends moodleform {
         $mform->setType('name', PARAM_TEXT);
         $mform->addHelpButton('name', 'groupname', 'local_iomad_learningpath');
         $mform->addRule('name', get_string('required'), 'required');
-        $mform->addElement('selectyesno', 'sequence', get_string('sequential', 'local_iomad_learningpath'));
 
         // Buttons
         $this->add_action_buttons();

@@ -145,15 +145,9 @@ abstract class base_message extends \core_search\base {
             $userfield) {
         global $DB;
 
-        if ($userfield == 'useridto') {
-            $userfield = 'mcm.userid';
-        } else {
-            $userfield = 'm.useridfrom';
-        }
-
         // Set up basic query.
         $where = $userfield . ' != :noreplyuser AND ' . $userfield .
-                ' != :supportuser AND m.timecreated >= :modifiedfrom';
+                ' != :supportuser AND timecreated >= :modifiedfrom';
         $params = [
             'noreplyuser' => \core_user::NOREPLY_USER,
             'supportuser' => \core_user::SUPPORT_USER,
@@ -185,35 +179,6 @@ abstract class base_message extends \core_search\base {
                 throw new \coding_exception('Unexpected contextlevel: ' . $context->contextlevel);
         }
 
-        $sql = "SELECT m.*, mcm.userid as useridto
-                  FROM {messages} m
-            INNER JOIN {message_conversations} mc
-                    ON m.conversationid = mc.id
-            INNER JOIN {message_conversation_members} mcm
-                    ON mcm.conversationid = mc.id
-                 WHERE mcm.userid != m.useridfrom
-                   AND $where
-              ORDER BY m.timecreated ASC";
-        return $DB->get_recordset_sql($sql, $params);
-    }
-
-    /**
-     * Returns an icon instance for the document.
-     *
-     * @param \core_search\document $doc
-     *
-     * @return \core_search\document_icon
-     */
-    public function get_doc_icon(\core_search\document $doc) : \core_search\document_icon {
-        return new \core_search\document_icon('t/message');
-    }
-
-    /**
-     * Returns a list of category names associated with the area.
-     *
-     * @return array
-     */
-    public function get_category_names() {
-        return [\core_search\manager::SEARCH_AREA_CATEGORY_USERS];
+        return $DB->get_recordset_select('message_read', $where, $params, 'timeread ASC');
     }
 }

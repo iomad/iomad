@@ -57,7 +57,7 @@ abstract class basic_testcase extends base_testcase {
      * Runs the bare test sequence and log any changes in global state or database.
      * @return void
      */
-    final public function runBare(): void {
+    final public function runBare() {
         global $DB;
 
         try {

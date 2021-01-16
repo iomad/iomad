@@ -194,42 +194,6 @@ class mod_feedback_lib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test calendar event provide action open, viewed by a different user.
-     */
-    public function test_feedback_core_calendar_provide_event_action_open_for_user() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $now = time();
-        $user = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $course = $this->getDataGenerator()->create_course();
-        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id, 'manual');
-
-        $feedback = $this->getDataGenerator()->create_module('feedback', ['course' => $course->id,
-            'timeopen' => $now - DAYSECS, 'timeclose' => $now + DAYSECS]);
-        $event = $this->create_action_event($course->id, $feedback->id, FEEDBACK_EVENT_TYPE_OPEN);
-        $factory = new \core_calendar\action_factory();
-
-        $this->setUser($user2);
-
-        // User2 checking their events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user2->id);
-        $this->assertNull($actionevent);
-
-        // User2 checking $user's events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user->id);
-        $this->assertInstanceOf('\core_calendar\local\event\value_objects\action', $actionevent);
-        $this->assertEquals(get_string('answerquestions', 'feedback'), $actionevent->get_name());
-        $this->assertInstanceOf('moodle_url', $actionevent->get_url());
-        $this->assertEquals(1, $actionevent->get_item_count());
-        $this->assertTrue($actionevent->is_actionable());
-    }
-
-    /**
      * Test calendar event provide action closed.
      */
     public function test_feedback_core_calendar_provide_event_action_closed() {
@@ -243,38 +207,6 @@ class mod_feedback_lib_testcase extends advanced_testcase {
 
         $factory = new \core_calendar\action_factory();
         $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory);
-
-        // No event on the dashboard if feedback is closed.
-        $this->assertNull($actionevent);
-    }
-
-    /**
-     * Test calendar event provide action closed, viewed by a different user.
-     */
-    public function test_feedback_core_calendar_provide_event_action_closed_for_user() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $course = $this->getDataGenerator()->create_course();
-        $user = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id, 'manual');
-
-        $feedback = $this->getDataGenerator()->create_module('feedback', array('course' => $course->id,
-            'timeclose' => time() - DAYSECS));
-        $event = $this->create_action_event($course->id, $feedback->id, FEEDBACK_EVENT_TYPE_OPEN);
-        $factory = new \core_calendar\action_factory();
-        $this->setUser($user2);
-
-        // User2 checking their events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user2->id);
-        $this->assertNull($actionevent);
-
-        // User2 checking $user's events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user->id);
 
         // No event on the dashboard if feedback is closed.
         $this->assertNull($actionevent);
@@ -296,44 +228,6 @@ class mod_feedback_lib_testcase extends advanced_testcase {
 
         $factory = new \core_calendar\action_factory();
         $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory);
-
-        $this->assertInstanceOf('\core_calendar\local\event\value_objects\action', $actionevent);
-        $this->assertEquals(get_string('answerquestions', 'feedback'), $actionevent->get_name());
-        $this->assertInstanceOf('moodle_url', $actionevent->get_url());
-        $this->assertEquals(1, $actionevent->get_item_count());
-        $this->assertFalse($actionevent->is_actionable());
-    }
-
-    /**
-     * Test calendar event action open in future, viewed by a different user.
-     *
-     * @throws coding_exception
-     */
-    public function test_feedback_core_calendar_provide_event_action_open_in_future_for_user() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $course = $this->getDataGenerator()->create_course();
-        $user = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id, 'manual');
-
-        $feedback = $this->getDataGenerator()->create_module('feedback', ['course' => $course->id,
-            'timeopen' => time() + DAYSECS]);
-        $event = $this->create_action_event($course->id, $feedback->id, FEEDBACK_EVENT_TYPE_OPEN);
-
-        $factory = new \core_calendar\action_factory();
-        $this->setUser($user2);
-
-        // User2 checking their events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user2->id);
-        $this->assertNull($actionevent);
-
-        // User2 checking $user's events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user->id);
 
         $this->assertInstanceOf('\core_calendar\local\event\value_objects\action', $actionevent);
         $this->assertEquals(get_string('answerquestions', 'feedback'), $actionevent->get_name());
@@ -366,43 +260,6 @@ class mod_feedback_lib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test calendar event with no time specified, viewed by a different user.
-     *
-     * @throws coding_exception
-     */
-    public function test_feedback_core_calendar_provide_event_action_no_time_specified_for_user() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $course = $this->getDataGenerator()->create_course();
-        $user = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id, 'manual');
-
-        $feedback = $this->getDataGenerator()->create_module('feedback', ['course' => $course->id]);
-        $event = $this->create_action_event($course->id, $feedback->id, FEEDBACK_EVENT_TYPE_OPEN);
-
-        $factory = new \core_calendar\action_factory();
-        $this->setUser($user2);
-
-        // User2 checking their events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user2->id);
-        $this->assertNull($actionevent);
-
-        // User2 checking $user's events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user->id);
-
-        $this->assertInstanceOf('\core_calendar\local\event\value_objects\action', $actionevent);
-        $this->assertEquals(get_string('answerquestions', 'feedback'), $actionevent->get_name());
-        $this->assertInstanceOf('moodle_url', $actionevent->get_url());
-        $this->assertEquals(1, $actionevent->get_item_count());
-        $this->assertTrue($actionevent->is_actionable());
-    }
-
-    /**
      * A user that can not submit feedback should not have an action.
      */
     public function test_feedback_core_calendar_provide_event_action_can_not_submit() {
@@ -422,45 +279,12 @@ class mod_feedback_lib_testcase extends advanced_testcase {
 
         $this->setUser($user);
         assign_capability('mod/feedback:complete', CAP_PROHIBIT, $studentrole->id, $context);
+        $context->mark_dirty();
 
         $factory = new \core_calendar\action_factory();
         $action = mod_feedback_core_calendar_provide_event_action($event, $factory);
 
         $this->assertNull($action);
-    }
-
-    /**
-     * A user that can not submit feedback should not have an action, viewed by a different user.
-     */
-    public function test_feedback_core_calendar_provide_event_action_can_not_submit_for_user() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $user = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $course = $this->getDataGenerator()->create_course();
-        $feedback = $this->getDataGenerator()->create_module('feedback', ['course' => $course->id]);
-        $event = $this->create_action_event($course->id, $feedback->id, FEEDBACK_EVENT_TYPE_OPEN);
-        $cm = get_coursemodule_from_instance('feedback', $feedback->id);
-        $context = context_module::instance($cm->id);
-        $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id, 'manual');
-
-        assign_capability('mod/feedback:complete', CAP_PROHIBIT, $studentrole->id, $context);
-        $factory = new \core_calendar\action_factory();
-        $this->setUser($user2);
-
-        // User2 checking their events.
-
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user2->id);
-        $this->assertNull($actionevent);
-
-        // User2 checking $user's events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user->id);
-
-        $this->assertNull($actionevent);
     }
 
     /**
@@ -496,114 +320,6 @@ class mod_feedback_lib_testcase extends advanced_testcase {
         $action = mod_feedback_core_calendar_provide_event_action($event, $factory);
 
         $this->assertNull($action);
-    }
-
-    /**
-     * A user that has already submitted feedback should not have an action, viewed by a different user.
-     */
-    public function test_feedback_core_calendar_provide_event_action_already_submitted_for_user() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        $user = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $course = $this->getDataGenerator()->create_course();
-        $feedback = $this->getDataGenerator()->create_module('feedback', ['course' => $course->id]);
-        $event = $this->create_action_event($course->id, $feedback->id, FEEDBACK_EVENT_TYPE_OPEN);
-        $cm = get_coursemodule_from_instance('feedback', $feedback->id);
-        $context = context_module::instance($cm->id);
-
-        $this->setUser($user);
-
-        $record = [
-            'feedback' => $feedback->id,
-            'userid' => $user->id,
-            'timemodified' => time(),
-            'random_response' => 0,
-            'anonymous_response' => FEEDBACK_ANONYMOUS_NO,
-            'courseid' => 0,
-        ];
-        $DB->insert_record('feedback_completed', (object) $record);
-
-        $factory = new \core_calendar\action_factory();
-        $this->setUser($user2);
-
-        // User2 checking their events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user2->id);
-        $this->assertNull($actionevent);
-
-        // User2 checking $user's events.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $user->id);
-
-        $this->assertNull($actionevent);
-    }
-
-    public function test_feedback_core_calendar_provide_event_action_already_completed() {
-        $this->resetAfterTest();
-        set_config('enablecompletion', 1);
-        $this->setAdminUser();
-
-        // Create the activity.
-        $course = $this->getDataGenerator()->create_course(array('enablecompletion' => 1));
-        $feedback = $this->getDataGenerator()->create_module('feedback', array('course' => $course->id),
-            array('completion' => 2, 'completionview' => 1, 'completionexpected' => time() + DAYSECS));
-
-        // Get some additional data.
-        $cm = get_coursemodule_from_instance('feedback', $feedback->id);
-
-        // Create a calendar event.
-        $event = $this->create_action_event($course->id, $feedback->id,
-            \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED);
-
-        // Mark the activity as completed.
-        $completion = new completion_info($course);
-        $completion->set_module_viewed($cm);
-
-        // Create an action factory.
-        $factory = new \core_calendar\action_factory();
-
-        // Decorate action event.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory);
-
-        // Ensure result was null.
-        $this->assertNull($actionevent);
-    }
-
-    public function test_feedback_core_calendar_provide_event_action_already_completed_for_user() {
-        $this->resetAfterTest();
-        set_config('enablecompletion', 1);
-        $this->setAdminUser();
-
-        // Create the activity.
-        $course = $this->getDataGenerator()->create_course(array('enablecompletion' => 1));
-        $feedback = $this->getDataGenerator()->create_module('feedback', array('course' => $course->id),
-            array('completion' => 2, 'completionview' => 1, 'completionexpected' => time() + DAYSECS));
-
-        // Enrol a student in the course.
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
-
-        // Get some additional data.
-        $cm = get_coursemodule_from_instance('feedback', $feedback->id);
-
-        // Create a calendar event.
-        $event = $this->create_action_event($course->id, $feedback->id,
-            \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED);
-
-        // Mark the activity as completed for the student.
-        $completion = new completion_info($course);
-        $completion->set_module_viewed($cm, $student->id);
-
-        // Create an action factory.
-        $factory = new \core_calendar\action_factory();
-
-        // Decorate action event for the student.
-        $actionevent = mod_feedback_core_calendar_provide_event_action($event, $factory, $student->id);
-
-        // Ensure result was null.
-        $this->assertNull($actionevent);
     }
 
     /**
@@ -1135,28 +851,5 @@ class mod_feedback_lib_testcase extends advanced_testcase {
         // A course_module_updated event should be fired if the module
         // was successfully modified.
         $this->assertNotEmpty($moduleupdatedevents);
-    }
-
-    /**
-     * A user who does not have capabilities to add events to the calendar should be able to create an feedback.
-     */
-    public function test_creation_with_no_calendar_capabilities() {
-        $this->resetAfterTest();
-        $course = self::getDataGenerator()->create_course();
-        $context = context_course::instance($course->id);
-        $user = self::getDataGenerator()->create_and_enrol($course, 'editingteacher');
-        $roleid = self::getDataGenerator()->create_role();
-        self::getDataGenerator()->role_assign($roleid, $user->id, $context->id);
-        assign_capability('moodle/calendar:manageentries', CAP_PROHIBIT, $roleid, $context, true);
-        $generator = self::getDataGenerator()->get_plugin_generator('mod_feedback');
-        // Create an instance as a user without the calendar capabilities.
-        $this->setUser($user);
-        $time = time();
-        $params = array(
-            'course' => $course->id,
-            'timeopen' => $time + 200,
-            'timeclose' => $time + 2000,
-        );
-        $generator->create_instance($params);
     }
 }

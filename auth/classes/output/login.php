@@ -70,10 +70,6 @@ class login implements renderable, templatable {
     public $signupurl;
     /** @var string The user name to pre-fill the form with. */
     public $username;
-    /** @var string The csrf token to limit login to requests that come from the login form. */
-    public $logintoken;
-    /** @var string Maintenance message, if Maintenance is enabled. */
-    public $maintenance;
 
     /**
      * Constructor.
@@ -82,22 +78,17 @@ class login implements renderable, templatable {
      * @param string $username The username to display.
      */
     public function __construct(array $authsequence, $username = '') {
-        global $CFG;
+        global $CFG, $SESSION;
 
         $this->username = $username;
 
         $this->canloginasguest = $CFG->guestloginbutton and !isguestuser();
         $this->canloginbyemail = !empty($CFG->authloginviaemail);
         $this->cansignup = $CFG->registerauth == 'email' || !empty($CFG->registerauth);
-        if ($CFG->rememberusername == 0) {
-            $this->cookieshelpicon = new help_icon('cookiesenabledonlysession', 'core');
-            $this->rememberusername = false;
-        } else {
-            $this->cookieshelpicon = new help_icon('cookiesenabled', 'core');
-            $this->rememberusername = true;
-        }
+        $this->cookieshelpicon = new help_icon('cookiesenabled', 'core');
 
         $this->autofocusform = !empty($CFG->loginpageautofocus);
+        $this->rememberusername = isset($CFG->rememberusername) and $CFG->rememberusername == 2;
 
         $this->forgotpasswordurl = new moodle_url('/login/forgot_password.php');
         $this->loginurl = new moodle_url('/login/index.php');
@@ -111,13 +102,8 @@ class login implements renderable, templatable {
             $this->instructions = get_string('loginsteps', 'core', 'signup.php');
         }
 
-        if ($CFG->maintenance_enabled == true && !empty($CFG->maintenance_message)) {
-            $this->maintenance = $CFG->maintenance_message;
-        }
-
         // Identity providers.
         $this->identityproviders = \auth_plugin_base::get_identity_providers($authsequence);
-        $this->logintoken = \core\session\manager::get_login_token();
     }
 
     /**
@@ -150,8 +136,6 @@ class login implements renderable, templatable {
         $data->rememberusername = $this->rememberusername;
         $data->signupurl = $this->signupurl->out(false);
         $data->username = $this->username;
-        $data->logintoken = $this->logintoken;
-        $data->maintenance = format_text($this->maintenance, FORMAT_MOODLE);
 
         return $data;
     }

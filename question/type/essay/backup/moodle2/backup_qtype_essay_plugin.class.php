@@ -51,7 +51,7 @@ class backup_qtype_essay_plugin extends backup_qtype_plugin {
         $essay = new backup_nested_element('essay', array('id'), array(
                 'responseformat', 'responserequired', 'responsefieldlines',
                 'attachments', 'attachmentsrequired', 'graderinfo',
-                'graderinfoformat', 'responsetemplate', 'responsetemplateformat', 'filetypeslist'));
+                'graderinfoformat', 'responsetemplate', 'responsetemplateformat'));
 
         // Now the own qtype tree.
         $pluginwrapper->add_child($essay);

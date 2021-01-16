@@ -25,7 +25,6 @@
     * id - element id
     * value - element value
     * haspreviewconfig - show preview of selected color
-    * readonly - bool
 
     Example context (json):
     {
@@ -33,12 +32,8 @@
         "name": "name0",
         "id": "id0",
         "value": "#555655",
-        "readonly": false,
         "haspreviewconfig": false
     }
-}}
-{{!
-    Setting configcolourpicker.
 }}
 <div class="form-colourpicker defaultsnext">
     <div class="admin_colourpicker clearfix">
@@ -46,7 +41,7 @@
             {{>core/pix_icon}}
         {{/icon}}
     </div>
-    <input type="text" name="{{name}}" id="{{id}}" value="{{value}}" size="12" class="form-control text-ltr" {{#readonly}}disabled{{/readonly}}>
+    <input type="text" name="{{name}}" id="{{id}}" value="{{value}}" size="12" class="text-ltr">
     {{#haspreviewconfig}}
         <input type="button" id="{{id}}_preview" value={{#quote}}{{#str}}preview{{/str}}{{/quote}} class="admin_colourpicker_preview">
     {{/haspreviewconfig}}

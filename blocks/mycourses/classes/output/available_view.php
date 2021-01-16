@@ -67,7 +67,7 @@ class available_view implements renderable, templatable {
             // get the course display info.
             $context = \context_course::instance($notstarted->courseid);
             $course = $DB->get_record("course", array("id"=>$notstarted->courseid));
-            $courseobj = new \core_course_list_element($course);
+            $courseobj = new \course_in_list($course);
 
             $exporter = new course_summary_exporter($course, ['context' => $context]);
             $exportedcourse = $exporter->export($output);
@@ -78,7 +78,7 @@ class available_view implements renderable, templatable {
             foreach ($courseobj->get_course_overviewfiles() as $file) {
                 $isimage = $file->is_valid_image();
                 if (!$isimage) {
-                    $imageurl = null;
+                    $imageurl = $this->output->pix_icon(file_file_icon($file, 24), $file->get_filename(), 'moodle');
                 } else {
                     $imageurl = file_encode_url("$CFG->wwwroot/pluginfile.php",
                                 '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
@@ -87,6 +87,7 @@ class available_view implements renderable, templatable {
             }
             $exportedcourse = $exporter->export($output);
             $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $notstarted->courseid));
+            $exportedcourse->fullname = $notstated->coursefullname;
             $exportedcourse->image = $imageurl;
             $exportedcourse->summary = $coursesummary;
             $availableview['courses'][] = $exportedcourse;
@@ -96,7 +97,7 @@ class available_view implements renderable, templatable {
             // get the course display info.
             $context = \context_course::instance($notstarted->courseid);
             $course = $DB->get_record("course", array("id"=>$notstarted->courseid));
-            $courseobj = new \core_course_list_element($course);
+            $courseobj = new \course_in_list($course);
 
             $exporter = new course_summary_exporter($course, ['context' => $context]);
             $exportedcourse = $exporter->export($output);
@@ -123,6 +124,7 @@ class available_view implements renderable, templatable {
             }
             $exportedcourse = $exporter->export($output);
             $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $notstarted->courseid));
+            $exportedcourse->fullname = $notstarted->coursefullname;
             $exportedcourse->image = $imageurl;
             $exportedcourse->summary = $coursesummary;
             $availableview['courses'][] = $exportedcourse;

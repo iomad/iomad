@@ -103,8 +103,10 @@ class SimplePie_Rating
 		{
 			return $this->scheme;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -118,7 +120,9 @@ class SimplePie_Rating
 		{
 			return $this->value;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 }

@@ -23,86 +23,50 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      2.9
  */
+define(['jquery', './tether', 'core/event'], function(jQuery, Tether, Event) {
 
-import $ from 'jquery';
-import Aria from './aria';
-import Bootstrap from './bootstrap/index';
-import Pending from 'core/pending';
-import Scroll from './scroll';
-import setupBootstrapPendingChecks from './pending';
+    window.jQuery = jQuery;
+    window.Tether = Tether;
 
-/**
- * Rember the last visited tabs.
- */
-const rememberTabs = () => {
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-        var hash = $(e.target).attr('href');
-        if (history.replaceState) {
-            history.replaceState(null, null, hash);
-        } else {
-            location.hash = hash;
-        }
+    require(['theme_boost/util',
+            'theme_boost/alert',
+            'theme_boost/button',
+            'theme_boost/carousel',
+            'theme_boost/collapse',
+            'theme_boost/dropdown',
+            'theme_boost/modal',
+            'theme_boost/scrollspy',
+            'theme_boost/tab',
+            'theme_boost/tooltip',
+            'theme_boost/popover'],
+            function() {
+
+        // We do twice because: https://github.com/twbs/bootstrap/issues/10547
+        jQuery('body').popover({
+            trigger: 'focus',
+            selector: "[data-toggle=popover][data-trigger!=hover]"
+        });
+
+        jQuery("html").popover({
+            container: "body",
+            selector: "[data-toggle=popover][data-trigger=hover]",
+            trigger: "hover",
+            delay: {
+                hide: 500
+            }
+        });
+
+        // We need to call popover automatically if nodes are added to the page later.
+        Event.getLegacyEvents().done(function(events) {
+            jQuery(document).on(events.FILTER_CONTENT_UPDATED, function() {
+                jQuery('body').popover({
+                    selector: '[data-toggle="popover"]',
+                    trigger: 'focus'
+                });
+            });
+        });
     });
-    var hash = window.location.hash;
-    if (hash) {
-       $('.nav-link[href="' + hash + '"]').tab('show');
-    }
-};
 
-/**
- * Enable all popovers
- *
- */
-const enablePopovers = () => {
-    $('body').popover({
-        container: 'body',
-        selector: '[data-toggle="popover"]',
-        trigger: 'focus',
-    });
 
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && e.target.closest('[data-toggle="popover"]')) {
-            $(e.target).popover('hide');
-        }
-    });
-};
-
-/**
- * Enable tooltips
- *
- */
-const enableTooltips = () => {
-    $('body').tooltip({
-        container: 'body',
-        selector: '[data-toggle="tooltip"]',
-    });
-};
-
-const pendingPromise = new Pending('theme_boost/loader:init');
-
-// Add pending promise event listeners to relevant Bootstrap custom events.
-setupBootstrapPendingChecks();
-
-// Remember the last visited tabs.
-rememberTabs();
-
-// Enable all popovers.
-enablePopovers();
-
-// Enable all tooltips.
-enableTooltips();
-
-// Add scroll handling.
-(new Scroll()).init();
-
-// Disables flipping the dropdowns up and getting hidden behind the navbar.
-$.fn.dropdown.Constructor.Default.flip = false;
-
-// Setup Aria helpers for Bootstrap features.
-Aria.init();
-
-pendingPromise.resolve();
-
-export {
-    Bootstrap,
-};
+    return {};
+});

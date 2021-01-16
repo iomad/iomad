@@ -111,32 +111,18 @@ class userrep {
                         } else {
                             $u->timecompleted = 0;
                             $u->status = 'inprogress';
-                            $u->certsource = null;
                             ++$inprogress;
                         }
 
                     } else {
                         $u->timestarted = 0;
                         $u->status = 'notstarted';
-                        $u->certsource = null;
                         ++$notstarted;
                     }
                     if (!empty($completioninfo->finalscore)) {
                         $u->result = round($completioninfo->finalscore, 0);
                     } else {
                         $u->result = '';
-                    }
-                    $user = $DB->get_record('user', array('id' => $userid));
-                    if (!empty($u->certsource) &&
-                        (is_enrolled(context_course::instance($courseid), $user) ||
-                         $DB->get_record_sql("SELECT id FROM {course_completions}
-                                              WHERE userid = :userid
-                                              AND course = :courseid
-                                              AND timecompleted IS NOT NULL",
-                                              array('userid' => $userid, 'courseid' => $courseid)))) {
-                        $u->canbecleared = true;
-                    } else {
-                        $u->canbecleared = false;
                     }
                     $datum->completion->{$completioninfo->id} = $u;
 
@@ -149,7 +135,6 @@ class userrep {
                         $u->timestarted = 0;
                         $u->status = 'notstarted';
                         $u->certsource = null;
-                        $u->canbecleared = true;
                         ++$notstarted;
                         $datum->completion->$courseid = $u;
                     }
@@ -164,7 +149,6 @@ class userrep {
                 $u->timestarted = 0;
                 $u->status = 'notstarted';
                 $u->certsource = null;
-                $u->canbecleared = true;
                 ++$notstarted;
                 $datum->completion->$courseid = $u;
                 $data[$courseid] = $datum;
@@ -180,7 +164,6 @@ class userrep {
                 $u->timestarted = 0;
                 $u->status = 'notstarted';
                 $u->certsource = null;
-                $u->canbecleared = true;
                 ++$notstarted;
                 $datum->completion->$courseid = $u;
                 $data[$courseid] = $datum;
@@ -202,6 +185,7 @@ class userrep {
      */
     private static function populate_temporary_completion($tempcomptablename, $userid, $courseid=0, $showhistoric=false) {
         global $DB;
+
 
         // Create a temporary table to hold the userids.
         $dbman = $DB->get_manager();

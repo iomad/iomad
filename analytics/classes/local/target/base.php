@@ -85,16 +85,6 @@ abstract class base extends \core_analytics\calculable {
     abstract protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false);
 
     /**
-     * Can the provided time-splitting method be used on this target?.
-     *
-     * Time-splitting methods not matching the target requirements will not be selectable by models based on this target.
-     *
-     * @param  \core_analytics\local\time_splitting\base $timesplitting
-     * @return bool
-     */
-    abstract public function can_use_timesplitting(\core_analytics\local\time_splitting\base $timesplitting): bool;
-
-    /**
      * Is this target generating insights?
      *
      * Defaults to true.
@@ -102,15 +92,6 @@ abstract class base extends \core_analytics\calculable {
      * @return bool
      */
     public static function uses_insights() {
-        return true;
-    }
-
-    /**
-     * Should the insights of this model be linked from reports?
-     *
-     * @return bool
-     */
-    public function link_insights_report(): bool {
         return true;
     }
 
@@ -124,108 +105,50 @@ abstract class base extends \core_analytics\calculable {
     }
 
     /**
-     * Update the last analysis time on analysable processed or always.
-     *
-     * If you overwrite this method to return false the last analysis time
-     * will only be recorded in DB when the element successfully analysed. You can
-     * safely return false for lightweight targets.
-     *
-     * @return bool
-     */
-    public function always_update_analysis_time(): bool {
-        return true;
-    }
-
-    /**
      * Suggested actions for a user.
      *
      * @param \core_analytics\prediction $prediction
      * @param bool $includedetailsaction
-     * @param bool $isinsightuser                       Force all the available actions to be returned as it the user who
-     *                                                  receives the insight is the one logged in.
      * @return \core_analytics\prediction_action[]
      */
-    public function prediction_actions(\core_analytics\prediction $prediction, $includedetailsaction = false,
-            $isinsightuser = false) {
+    public function prediction_actions(\core_analytics\prediction $prediction, $includedetailsaction = false) {
         global $PAGE;
 
         $predictionid = $prediction->get_prediction_data()->id;
-        $contextid = $prediction->get_prediction_data()->contextid;
-        $modelid = $prediction->get_prediction_data()->modelid;
+
+        $PAGE->requires->js_call_amd('report_insights/actions', 'init', array($predictionid));
 
         $actions = array();
 
-        if ($this->link_insights_report() && $includedetailsaction) {
+        if ($includedetailsaction) {
 
-            $predictionurl = new \moodle_url('/report/insights/prediction.php', array('id' => $predictionid));
-            $detailstext = $this->get_view_details_text();
+            $predictionurl = new \moodle_url('/report/insights/prediction.php',
+                array('id' => $predictionid));
 
             $actions[] = new \core_analytics\prediction_action(\core_analytics\prediction::ACTION_PREDICTION_DETAILS, $prediction,
-                $predictionurl, new \pix_icon('t/preview', $detailstext),
-                $detailstext, false, [], \core_analytics\action::TYPE_NEUTRAL);
+                $predictionurl, new \pix_icon('t/preview', get_string('viewprediction', 'analytics')),
+                get_string('viewprediction', 'analytics'));
         }
+
+        // Flag as fixed / solved.
+        $fixedattrs = array(
+            'data-prediction-id' => $predictionid,
+            'data-prediction-methodname' => 'report_insights_set_fixed_prediction'
+        );
+        $actions[] = new \core_analytics\prediction_action(\core_analytics\prediction::ACTION_FIXED,
+            $prediction, new \moodle_url(''), new \pix_icon('t/check', get_string('fixedack', 'analytics')),
+            get_string('fixedack', 'analytics'), false, $fixedattrs);
+
+        // Flag as not useful.
+        $notusefulattrs = array(
+            'data-prediction-id' => $predictionid,
+            'data-prediction-methodname' => 'report_insights_set_notuseful_prediction'
+        );
+        $actions[] = new \core_analytics\prediction_action(\core_analytics\prediction::ACTION_NOT_USEFUL,
+            $prediction, new \moodle_url(''), new \pix_icon('t/delete', get_string('notuseful', 'analytics')),
+            get_string('notuseful', 'analytics'), false, $notusefulattrs);
 
         return $actions;
-    }
-
-    /**
-     * Suggested bulk actions for a user.
-     *
-     * @param  \core_analytics\prediction[]     $predictions List of predictions suitable for the bulk actions to use.
-     * @return \core_analytics\bulk_action[]                 The list of bulk actions.
-     */
-    public function bulk_actions(array $predictions) {
-
-        $analyserclass = $this->get_analyser_class();
-        if ($analyserclass::one_sample_per_analysable()) {
-            // Default actions are useful / not useful.
-            $actions = [
-                \core_analytics\default_bulk_actions::useful(),
-                \core_analytics\default_bulk_actions::not_useful()
-            ];
-
-        } else {
-            // Accept and not applicable.
-
-            $actions = [
-                \core_analytics\default_bulk_actions::accept(),
-                \core_analytics\default_bulk_actions::not_applicable()
-            ];
-
-            if (!self::based_on_assumptions()) {
-                // We include incorrectly flagged.
-                $actions[] = \core_analytics\default_bulk_actions::incorrectly_flagged();
-            }
-        }
-
-        return $actions;
-    }
-
-    /**
-     * Adds the JS required to run the bulk actions.
-     */
-    public function add_bulk_actions_js() {
-        global $PAGE;
-        $PAGE->requires->js_call_amd('report_insights/actions', 'initBulk', ['.insights-bulk-actions']);
-    }
-
-    /**
-     * Returns the view details link text.
-     * @return string
-     */
-    private function get_view_details_text() {
-        if ($this->based_on_assumptions()) {
-            $analyserclass = $this->get_analyser_class();
-            if ($analyserclass::one_sample_per_analysable()) {
-                $detailstext = get_string('viewinsightdetails', 'analytics');
-            } else {
-                $detailstext = get_string('viewdetails', 'analytics');
-            }
-        } else {
-            $detailstext = get_string('viewprediction', 'analytics');
-        }
-
-        return $detailstext;
     }
 
     /**
@@ -250,33 +173,61 @@ abstract class base extends \core_analytics\calculable {
      *
      * @param int $modelid
      * @param \context[] $samplecontexts
-     * @param  \core_analytics\prediction[] $predictions
      * @return void
      */
-    public function generate_insight_notifications($modelid, $samplecontexts, array $predictions = []) {
-        // Delegate the processing of insights to the insights_generator.
-        $insightsgenerator = new \core_analytics\insights_generator($modelid, $this);
-        $insightsgenerator->generate($samplecontexts, $predictions);
+    public function generate_insight_notifications($modelid, $samplecontexts) {
+
+        foreach ($samplecontexts as $context) {
+
+            $insightinfo = new \stdClass();
+            $insightinfo->insightname = $this->get_name();
+            $insightinfo->contextname = $context->get_context_name();
+            $subject = get_string('insightmessagesubject', 'analytics', $insightinfo);
+
+            $users = $this->get_insights_users($context);
+
+            if (!$coursecontext = $context->get_course_context(false)) {
+                $coursecontext = \context_course::instance(SITEID);
+            }
+
+            foreach ($users as $user) {
+
+                $message = new \core\message\message();
+                $message->component = 'moodle';
+                $message->name = 'insights';
+
+                $message->userfrom = get_admin();
+                $message->userto = $user;
+
+                $insighturl = new \moodle_url('/report/insights/insights.php?modelid=' . $modelid . '&contextid=' . $context->id);
+                $message->subject = $subject;
+                // Same than the subject.
+                $message->contexturlname = $message->subject;
+                $message->courseid = $coursecontext->instanceid;
+
+                $message->fullmessage = get_string('insightinfomessage', 'analytics', $insighturl->out(false));
+                $message->fullmessageformat = FORMAT_PLAIN;
+                $message->fullmessagehtml = get_string('insightinfomessagehtml', 'analytics', $insighturl->out());
+                $message->smallmessage = get_string('insightinfomessage', 'analytics', $insighturl->out(false));
+                $message->contexturl = $insighturl->out(false);
+
+                message_send($message);
+            }
+        }
+
     }
 
     /**
      * Returns the list of users that will receive insights notifications.
      *
      * Feel free to overwrite if you need to but keep in mind that moodle/analytics:listinsights
-     * or moodle/analytics:listowninsights capability is required to access the list of insights.
+     * capability is required to access the list of insights.
      *
      * @param \context $context
      * @return array
      */
-    public function get_insights_users(\context $context) {
-        if ($context->contextlevel === CONTEXT_USER) {
-            if (!has_capability('moodle/analytics:listowninsights', $context, $context->instanceid)) {
-                $users = [];
-            } else {
-                $users = [$context->instanceid => \core_user::get_user($context->instanceid)];
-            }
-
-        } else if ($context->contextlevel >= CONTEXT_COURSE) {
+    protected function get_insights_users(\context $context) {
+        if ($context->contextlevel >= CONTEXT_COURSE) {
             // At course level or below only enrolled users although this is not ideal for
             // teachers assigned at category level.
             $users = get_enrolled_users($context, 'moodle/analytics:listinsights');
@@ -284,73 +235,6 @@ abstract class base extends \core_analytics\calculable {
             $users = get_users_by_capability($context, 'moodle/analytics:listinsights');
         }
         return $users;
-    }
-
-    /**
-     * URL to the insight.
-     *
-     * @param  int $modelid
-     * @param  \context $context
-     * @return \moodle_url
-     */
-    public function get_insight_context_url($modelid, $context) {
-        return new \moodle_url('/report/insights/insights.php?modelid=' . $modelid . '&contextid=' . $context->id);
-    }
-
-    /**
-     * The insight notification subject.
-     *
-     * This is just a default message, you should overwrite it for a custom insight message.
-     *
-     * @param  int $modelid
-     * @param  \context $context
-     * @return string
-     */
-    public function get_insight_subject(int $modelid, \context $context) {
-        return get_string('insightmessagesubject', 'analytics', $context->get_context_name());
-    }
-
-    /**
-     * Returns the body message for an insight with multiple predictions.
-     *
-     * This default method is executed when the analysable used by the model generates multiple insight
-     * for each analysable (one_sample_per_analysable === false)
-     *
-     * @param  \context     $context
-     * @param  string       $contextname
-     * @param  \stdClass    $user
-     * @param  \moodle_url  $insighturl
-     * @return string[]                     The plain text message and the HTML message
-     */
-    public function get_insight_body(\context $context, string $contextname, \stdClass $user, \moodle_url $insighturl): array {
-        global $OUTPUT;
-
-        $fullmessage = get_string('insightinfomessageplain', 'analytics', $insighturl->out(false));
-        $fullmessagehtml = $OUTPUT->render_from_template('core_analytics/insight_info_message',
-            ['url' => $insighturl->out(false), 'insightinfomessage' => get_string('insightinfomessagehtml', 'analytics')]
-        );
-
-        return [$fullmessage, $fullmessagehtml];
-    }
-
-    /**
-     * Returns the body message for an insight for a single prediction.
-     *
-     * This default method is executed when the analysable used by the model generates one insight
-     * for each analysable (one_sample_per_analysable === true)
-     *
-     * @param  \context                             $context
-     * @param  \stdClass                            $user
-     * @param  \core_analytics\prediction           $prediction
-     * @param  \core_analytics\action[]             $actions        Passed by reference to remove duplicate links to actions.
-     * @return array                                                Plain text msg, HTML message and the main URL for this
-     *                                                              insight (you can return null if you are happy with the
-     *                                                              default insight URL calculated in prediction_info())
-     */
-    public function get_insight_body_for_prediction(\context $context, \stdClass $user, \core_analytics\prediction $prediction,
-            array &$actions) {
-        // No extra message by default.
-        return [FORMAT_PLAIN => '', FORMAT_HTML => '', 'url' => null];
     }
 
     /**

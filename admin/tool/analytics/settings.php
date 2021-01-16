@@ -24,7 +24,5 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if (\core_analytics\manager::is_analytics_enabled()) {
-    $ADMIN->add('analytics', new admin_externalpage('analyticmodels', get_string('analyticmodels', 'tool_analytics'),
-        "$CFG->wwwroot/$CFG->admin/tool/analytics/index.php", 'moodle/analytics:managemodels'));
-}
+$ADMIN->add('analytics', new admin_externalpage('analyticmodels', get_string('analyticmodels', 'tool_analytics'),
+    "$CFG->wwwroot/$CFG->admin/tool/analytics/index.php", 'moodle/analytics:managemodels'));

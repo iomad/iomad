@@ -22,8 +22,6 @@
  * @package core_user
  */
 
-require_once($CFG->dirroot . '/user/lib.php');
-
 /**
  * Cancels the requirement for a user to update their email address.
  *
@@ -186,12 +184,21 @@ function useredit_update_user_preference($usernew) {
 }
 
 /**
- * @deprecated since Moodle 3.2
+ * Updates the provided users profile picture based upon the expected fields returned from the edit or edit_advanced forms.
+ *
+ * @deprecated since Moodle 3.2 MDL-51789 - please use core_user::update_picture() instead.
+ * @todo MDL-54858 This will be deleted in Moodle 3.6.
  * @see core_user::update_picture()
+ *
+ * @global moodle_database $DB
+ * @param stdClass $usernew An object that contains some information about the user being updated
+ * @param moodleform $userform The form that was submitted to edit the form (unused)
+ * @param array $filemanageroptions
+ * @return bool True if the user was updated, false if it stayed the same.
  */
-function useredit_update_picture() {
-    throw new coding_exception('useredit_update_picture() can not be used anymore. Please use ' .
-        'core_user::update_picture() instead.');
+function useredit_update_picture(stdClass $usernew, moodleform $userform, $filemanageroptions = array()) {
+    debugging('useredit_update_picture() is deprecated. Please use core_user::update_picture() instead.', DEBUG_DEVELOPER);
+    return core_user::update_picture($usernew, $filemanageroptions);
 }
 
 /**
@@ -249,7 +256,7 @@ function useredit_update_interests($user, $interests) {
  * @param stdClass $user
  */
 function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions, $user) {
-    global $CFG, $USER, $DB, $PAGE;
+    global $CFG, $USER, $DB;
 
     if ($user->id > 0) {
         useredit_load_preferences($user, false);
@@ -260,8 +267,7 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
 
     // Add the necessary names.
     foreach (useredit_get_required_name_fields() as $fullname) {
-        $purpose = user_edit_map_field_purpose($user->id, $fullname);
-        $mform->addElement('text', $fullname,  get_string($fullname),  'maxlength="100" size="30"' . $purpose);
+        $mform->addElement('text', $fullname,  get_string($fullname),  'maxlength="100" size="30"');
         if ($stringman->string_exists('missing'.$fullname, 'core')) {
             $strmissingfield = get_string('missing'.$fullname, 'core');
         } else {
@@ -274,23 +280,18 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
     $enabledusernamefields = useredit_get_enabled_name_fields();
     // Add the enabled additional name fields.
     foreach ($enabledusernamefields as $addname) {
-        $purpose = user_edit_map_field_purpose($user->id, $addname);
-        $mform->addElement('text', $addname,  get_string($addname), 'maxlength="100" size="30"' . $purpose);
+        $mform->addElement('text', $addname,  get_string($addname), 'maxlength="100" size="30"');
         $mform->setType($addname, PARAM_NOTAGS);
     }
 
     // Do not show email field if change confirmation is pending.
     if ($user->id > 0 and !empty($CFG->emailchangeconfirmation) and !empty($user->preference_newemail)) {
-        // IOMAD - Change to allow a manager to cancel the email request change.
-        $pageurl = $PAGE->url;
-        $pageurl .= "&amp;cancelemailchange=1";
         $notice = get_string('emailchangepending', 'auth', $user);
-        $notice .= '<br /><a href="'. $pageurl . '">'
+        $notice .= '<br /><a href="edit.php?cancelemailchange=1&amp;id='.$user->id.'">'
                 . get_string('emailchangecancel', 'auth') . '</a>';
         $mform->addElement('static', 'emailpending', get_string('email'), $notice);
     } else {
-        $purpose = user_edit_map_field_purpose($user->id, 'email');
-        $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="30"' . $purpose);
+        $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="30"');
         $mform->addRule('email', $strrequired, 'required', null, 'client');
         $mform->setType('email', PARAM_RAW_TRIMMED);
     }
@@ -301,11 +302,6 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
     $choices['2'] = get_string('emaildisplaycourse');
     $mform->addElement('select', 'maildisplay', get_string('emaildisplay'), $choices);
     $mform->setDefault('maildisplay', core_user::get_property_default('maildisplay'));
-    $mform->addHelpButton('maildisplay', 'emaildisplay');
-
-    $mform->addElement('text', 'moodlenetprofile', get_string('moodlenetprofile', 'user'));
-    $mform->setType('moodlenetprofile', PARAM_NOTAGS);
-    $mform->addHelpButton('moodlenetprofile', 'moodlenetprofile', 'user');
 
     $mform->addElement('text', 'city', get_string('city'), 'maxlength="120" size="21"');
     $mform->setType('city', PARAM_TEXT);
@@ -313,10 +309,9 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
         $mform->setDefault('city', $CFG->defaultcity);
     }
 
-    $purpose = user_edit_map_field_purpose($user->id, 'country');
     $choices = get_string_manager()->get_list_of_countries();
     $choices = array('' => get_string('selectacountry') . '...') + $choices;
-    $mform->addElement('select', 'country', get_string('selectacountry'), $choices, $purpose);
+    $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
     if (!empty($CFG->country)) {
         $mform->setDefault('country', core_user::get_property_default('country'));
     }
@@ -329,14 +324,6 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
     } else {
         $choices = core_date::get_list_of_timezones($user->timezone, true);
         $mform->addElement('select', 'timezone', get_string('timezone'), $choices);
-    }
-
-    if ($user->id < 0) {
-        $purpose = user_edit_map_field_purpose($user->id, 'lang');
-        $translations = get_string_manager()->get_list_of_translations();
-        $mform->addElement('select', 'lang', get_string('preferredlanguage'), $translations, $purpose);
-        $lang = empty($user->lang) ? $CFG->lang : $user->lang;
-        $mform->setDefault('lang', $lang);
     }
 
     if (!empty($CFG->allowuserthemes)) {
@@ -352,7 +339,7 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
     }
 
     $mform->addElement('editor', 'description_editor', get_string('userdescription'), null, $editoroptions);
-    $mform->setType('description_editor', PARAM_RAW);
+    $mform->setType('description_editor', PARAM_CLEANHTML);
     $mform->addHelpButton('description_editor', 'userdescription');
 
     if (empty($USER->newadminuser)) {
@@ -381,8 +368,7 @@ function useredit_shared_definition(&$mform, $editoroptions, $filemanageroptions
     if (count($disabledusernamefields) > 0) {
         $mform->addElement('header', 'moodle_additional_names', get_string('additionalnames'));
         foreach ($disabledusernamefields as $allname) {
-            $purpose = user_edit_map_field_purpose($user->id, $allname);
-            $mform->addElement('text', $allname, get_string($allname), 'maxlength="100" size="30"' . $purpose);
+            $mform->addElement('text', $allname, get_string($allname), 'maxlength="100" size="30"');
             $mform->setType($allname, PARAM_NOTAGS);
         }
     }

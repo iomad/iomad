@@ -8,9 +8,11 @@
                 <a href="editgroup.php?learningpath={{ path.id }}&id={{ id }}" title="{{# str }}editgroup, local_iomad_learningpath{{/ str }}">
                     <i class="fa fa-cog fa-2x text-muted"></i>
                 </a>
-                <a href="editgroup.php?learningpath={{ path.id }}&delete={{ id }}" title="{{# str }}deletegroup, local_iomad_learningpath{{/ str }}">
-                    <i class="fa fa-trash fa-2x text-muted"></i>
-                </a>
+                {{# showdelete }}
+                    <a href="editgroup.php?learningpath={{ path.id }}&delete={{ id }}" title="{{# str }}deletegroup, local_iomad_learningpath{{/ str }}">
+                        <i class="fa fa-trash fa-2x text-muted"></i>
+                    </a>
+                {{/ showdelete }}
             </div>
         </div>
         <div class="row">

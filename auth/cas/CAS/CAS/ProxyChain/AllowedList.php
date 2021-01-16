@@ -98,7 +98,7 @@ class CAS_ProxyChain_AllowedList
      *
      * @param array $list List of proxies from the proxy ticket validation.
      *
-     * @return bool if any chain fully matches the supplied list
+     * @return if any chain fully matches the supplied list
      */
     public function contains(array $list)
     {

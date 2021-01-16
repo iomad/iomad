@@ -748,21 +748,8 @@ class assign_grading_summary implements renderable {
     public $teamsubmission = false;
     /** @var boolean warnofungroupedusers - Do we need to warn people that there are users without groups */
     public $warnofungroupedusers = false;
-    /** @var boolean relativedatesmode - Is the course a relative dates mode course or not */
-    public $courserelativedatesmode = false;
-    /** @var int coursestartdate - start date of the course as a unix timestamp*/
-    public $coursestartdate;
     /** @var boolean cangrade - Can the current user grade students? */
     public $cangrade = false;
-    /** @var boolean isvisible - Is the assignment's context module visible to students? */
-    public $isvisible = true;
-
-    /** @var string no warning needed about group submissions */
-    const WARN_GROUPS_NO = false;
-    /** @var string warn about group submissions, as groups are required */
-    const WARN_GROUPS_REQUIRED = 'warnrequired';
-    /** @var string warn about group submissions, as some will submit as 'Default group' */
-    const WARN_GROUPS_OPTIONAL = 'warnoptional';
 
     /**
      * constructor
@@ -777,11 +764,7 @@ class assign_grading_summary implements renderable {
      * @param int $coursemoduleid
      * @param int $submissionsneedgradingcount
      * @param bool $teamsubmission
-     * @param string $warnofungroupedusers
-     * @param bool $courserelativedatesmode true if the course is using relative dates, false otherwise.
-     * @param int $coursestartdate unix timestamp representation of the course start date.
      * @param bool $cangrade
-     * @param bool $isvisible
      */
     public function __construct($participantcount,
                                 $submissiondraftsenabled,
@@ -794,10 +777,7 @@ class assign_grading_summary implements renderable {
                                 $submissionsneedgradingcount,
                                 $teamsubmission,
                                 $warnofungroupedusers,
-                                $courserelativedatesmode,
-                                $coursestartdate,
-                                $cangrade = true,
-                                $isvisible = true) {
+                                $cangrade = true) {
         $this->participantcount = $participantcount;
         $this->submissiondraftsenabled = $submissiondraftsenabled;
         $this->submissiondraftscount = $submissiondraftscount;
@@ -809,10 +789,7 @@ class assign_grading_summary implements renderable {
         $this->submissionsneedgradingcount = $submissionsneedgradingcount;
         $this->teamsubmission = $teamsubmission;
         $this->warnofungroupedusers = $warnofungroupedusers;
-        $this->courserelativedatesmode = $courserelativedatesmode;
-        $this->coursestartdate = $coursestartdate;
         $this->cangrade = $cangrade;
-        $this->isvisible = $isvisible;
     }
 }
 
@@ -945,12 +922,6 @@ class assign_files implements renderable {
         }
         foreach ($dir['files'] as $file) {
             $file->portfoliobutton = '';
-
-            $file->timemodified = userdate(
-                $file->get_timemodified(),
-                get_string('strftimedatetime', 'langconfig')
-            );
-
             if (!empty($CFG->enableportfolios)) {
                 require_once($CFG->libdir . '/portfoliolib.php');
                 $button = new portfolio_add_button();

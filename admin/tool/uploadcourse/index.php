@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/coursecatlib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 
 admin_externalpage_setup('tooluploadcourse');
@@ -77,12 +78,6 @@ if ($form2data = $mform2->is_cancelled()) {
 
     $options = (array) $form2data->options;
     $defaults = (array) $form2data->defaults;
-
-    // Custom field defaults.
-    $customfields = tool_uploadcourse_helper::get_custom_course_field_names();
-    foreach ($customfields as $customfield) {
-        $defaults[$customfield] = $form2data->{$customfield};
-    }
 
     // Restorefile deserves its own logic because formslib does not really appreciate
     // when the name of a filepicker is an array...

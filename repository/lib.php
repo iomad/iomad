@@ -3115,14 +3115,21 @@ final class repository_type_form extends moodleform {
  *          accepted_types
  */
 function initialise_filepicker($args) {
-    global $CFG, $USER, $PAGE;
+    global $CFG, $USER, $PAGE, $OUTPUT;
     static $templatesinitialized = array();
     require_once($CFG->libdir . '/licenselib.php');
 
     $return = new stdClass();
-
-    $licenses = license_manager::get_licenses();
-
+    $licenses = array();
+    if (!empty($CFG->licenses)) {
+        $array = explode(',', $CFG->licenses);
+        foreach ($array as $license) {
+            $l = new stdClass();
+            $l->shortname = $license;
+            $l->fullname = get_string($license, 'license');
+            $licenses[] = $l;
+        }
+    }
     if (!empty($CFG->sitedefaultlicense)) {
         $return->defaultlicense = $CFG->sitedefaultlicense;
     }
@@ -3166,8 +3173,6 @@ function initialise_filepicker($args) {
         $return->externallink = true;
     }
 
-    $return->rememberuserlicensepref = (bool) get_config(null, 'rememberuserlicensepref');
-
     $return->userprefs = array();
     $return->userprefs['recentrepository'] = get_user_preferences('filepicker_recentrepository', '');
     $return->userprefs['recentlicense'] = get_user_preferences('filepicker_recentlicense', '');
@@ -3202,105 +3207,5 @@ function initialise_filepicker($args) {
     if (sizeof($templates)) {
         $PAGE->requires->js_init_call('M.core_filepicker.set_templates', array($templates), true);
     }
-    return $return;
-}
-
-/**
- * Convenience function to handle deletion of files.
- *
- * @param object $context The context where the delete is called
- * @param string $component component
- * @param string $filearea filearea
- * @param int $itemid the item id
- * @param array $files Array of files object with each item having filename/filepath as values
- * @return array $return Array of strings matching up to the parent directory of the deleted files
- * @throws coding_exception
- */
-function repository_delete_selected_files($context, string $component, string $filearea, $itemid, array $files) {
-    $fs = get_file_storage();
-    $return = [];
-
-    foreach ($files as $selectedfile) {
-        $filename = clean_filename($selectedfile->filename);
-        $filepath = clean_param($selectedfile->filepath, PARAM_PATH);
-        $filepath = file_correct_filepath($filepath);
-
-        if ($storedfile = $fs->get_file($context->id, $component, $filearea, $itemid, $filepath, $filename)) {
-            $parentpath = $storedfile->get_parent_directory()->get_filepath();
-            if ($storedfile->is_directory()) {
-                $files = $fs->get_directory_files($context->id, $component, $filearea, $itemid, $filepath, true);
-                foreach ($files as $file) {
-                    $file->delete();
-                }
-                $storedfile->delete();
-                $return[$parentpath] = "";
-            } else {
-                if ($result = $storedfile->delete()) {
-                    $return[$parentpath] = "";
-                }
-            }
-        }
-    }
-
-    return $return;
-}
-
-/**
- * Convenience function to handle deletion of files.
- *
- * @param object $context The context where the delete is called
- * @param string $component component
- * @param string $filearea filearea
- * @param int $itemid the item id
- * @param array $files Array of files object with each item having filename/filepath as values
- * @return array $return Array of strings matching up to the parent directory of the deleted files
- * @throws coding_exception
- */
-function repository_download_selected_files($context, string $component, string $filearea, $itemid, array $files) {
-    global $USER;
-    $return = false;
-
-    $zipper = get_file_packer('application/zip');
-    $fs = get_file_storage();
-    // Archive compressed file to an unused draft area.
-    $newdraftitemid = file_get_unused_draft_itemid();
-    $filestoarchive = [];
-
-    foreach ($files as $selectedfile) {
-        $filename = $selectedfile->filename ? clean_filename($selectedfile->filename) : '.'; // Default to '.' for root.
-        $filepath = clean_param($selectedfile->filepath, PARAM_PATH); // Default to '/' for downloadall.
-        $filepath = file_correct_filepath($filepath);
-        $area = file_get_draft_area_info($itemid, $filepath);
-        if ($area['filecount'] == 0 && $area['foldercount'] == 0) {
-            continue;
-        }
-
-        $storedfile = $fs->get_file($context->id, $component, $filearea, $itemid, $filepath, $filename);
-        // If it is empty we are downloading a directory.
-        $archivefile = $storedfile->get_filename();
-        if (!$filename || $filename == '.' ) {
-            $foldername = explode('/', trim($filepath, '/'));
-            $folder = trim(array_pop($foldername), '/');
-            $archivefile = $folder ?? '/';
-        }
-
-        $filestoarchive[$archivefile] = $storedfile;
-    }
-    $zippedfile = get_string('files') . '.zip';
-    if ($newfile =
-        $zipper->archive_to_storage(
-            $filestoarchive,
-            $context->id,
-            $component,
-            $filearea,
-            $newdraftitemid,
-            "/",
-            $zippedfile, $USER->id)
-    ) {
-        $return = new stdClass();
-        $return->fileurl = moodle_url::make_draftfile_url($newdraftitemid, '/', $zippedfile)->out();
-        $return->filepath = $filepath;
-    }
-
     return $return;
 }

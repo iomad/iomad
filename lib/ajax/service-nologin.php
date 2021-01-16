@@ -28,6 +28,4 @@
  */
 
 define('NO_MOODLE_COOKIES', true);
-define('ALLOW_GET_PARAMETERS', true);
-
 require_once('service.php');

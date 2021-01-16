@@ -71,9 +71,7 @@ function lti_parse_message_id($xml) {
 function lti_parse_grade_replace_message($xml) {
     $node = $xml->imsx_POXBody->replaceResultRequest->resultRecord->sourcedGUID->sourcedId;
     $resultjson = json_decode((string)$node);
-    if ( is_null($resultjson) ) {
-        throw new Exception('Invalid sourcedId in result message');
-    }
+
     $node = $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->textString;
 
     $score = (string) $node;
@@ -102,9 +100,6 @@ function lti_parse_grade_replace_message($xml) {
 function lti_parse_grade_read_message($xml) {
     $node = $xml->imsx_POXBody->readResultRequest->resultRecord->sourcedGUID->sourcedId;
     $resultjson = json_decode((string)$node);
-    if ( is_null($resultjson) ) {
-        throw new Exception('Invalid sourcedId in result message');
-    }
 
     $parsed = new stdClass();
     $parsed->instanceid = $resultjson->data->instanceid;
@@ -121,9 +116,6 @@ function lti_parse_grade_read_message($xml) {
 function lti_parse_grade_delete_message($xml) {
     $node = $xml->imsx_POXBody->deleteResultRequest->resultRecord->sourcedGUID->sourcedId;
     $resultjson = json_decode((string)$node);
-    if ( is_null($resultjson) ) {
-        throw new Exception('Invalid sourcedId in result message');
-    }
 
     $parsed = new stdClass();
     $parsed->instanceid = $resultjson->data->instanceid;
@@ -154,7 +146,7 @@ function lti_accepts_grades($ltiinstance) {
         }
     } else {
         $enabledcapabilities = explode("\n", $ltitype->enabledcapability);
-        $acceptsgrades = in_array('Result.autocreate', $enabledcapabilities) || in_array('BasicOutcome.url', $enabledcapabilities);
+        $acceptsgrades = in_array('Result.autocreate', $enabledcapabilities);
     }
 
     return $acceptsgrades;

@@ -15,7 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $string['report_companies:view'] = 'View companies report';
-$string['childcompany'] = 'This is a child company. Parent is \'{$a}\'';
 $string['companies'] = 'Companies';
 $string['completed'] = 'Completed';
 $string['course'] = 'Course';
@@ -28,8 +27,8 @@ $string['nousers'] = 'No users specified for this company';
 $string['overview'] = 'Overview';
 $string['pluginname'] = 'Iomad company overview report';
 $string['privacy:metadata'] = 'The Local Iomad company overview report only shows data stored in other locations.';
-$string['totalusercount'] = 'Total number of users : {$a}';
-$string['totalcoursecount'] = 'Total number of courses : {$a}';
+$string['totalusercount'] = 'Total number of users : ';
+$string['totalcoursecount'] = 'Total number of courses :';
 $string['courses'] = 'Company courses';
 $string['nocourses'] = 'No courses specified for this company';
 $string['completionreportlink'] = 'Completion information';

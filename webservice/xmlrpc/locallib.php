@@ -133,9 +133,8 @@ class webservice_xmlrpc_server extends webservice_base_server {
      * @param Exception $ex
      */
     protected function send_error($ex = null) {
-        $this->response = $this->generate_error($ex);
         $this->send_headers();
-        echo $this->response;
+        echo $this->generate_error($ex);
     }
 
     /**

@@ -166,11 +166,11 @@ $tag-font-weight: bold !default;
 }
 
 @mixin pull-left() {
-    float: left !important; /* stylelint-disable-line declaration-no-important */
+    @include float-left();
 }
 
 @mixin pull-right() {
-    float: right !important; /* stylelint-disable-line declaration-no-important */
+    @include float-right();
 }
 
 .custom-select {
@@ -212,6 +212,13 @@ $bs4aspacers: map-merge((
     .#{$abbrev}-x-#{$size} {
       #{$prop}-left: $length !important;
     }
+  }
+}
+
+// Adding compatibility for col-xs-* classes.
+@for $i from 1 through $grid-columns {
+  .col-xs-#{$i} {
+    @extend .col-#{$i};
   }
 }
 

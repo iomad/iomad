@@ -131,12 +131,15 @@ abstract class convert_helper {
      * @return boolean true if moodle2 format detected, false otherwise
      */
     public static function detect_moodle2_format($tempdir) {
-        $dirpath = make_backup_temp_directory($tempdir, false);
+        global $CFG;
+
+        $dirpath    = $CFG->tempdir . '/backup/' . $tempdir;
+        $filepath   = $dirpath . '/moodle_backup.xml';
+
         if (!is_dir($dirpath)) {
             throw new convert_helper_exception('tmp_backup_directory_not_found', $dirpath);
         }
 
-        $filepath = $dirpath . '/moodle_backup.xml';
         if (!file_exists($filepath)) {
             return false;
         }

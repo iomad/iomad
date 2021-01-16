@@ -37,7 +37,7 @@ $string['draggableword'] = 'Draggable text';
 $string['dropbackground'] = 'Background image for dragging markers onto';
 $string['dropzone'] = 'Drop zone {$a}';
 $string['dropzoneheader'] = 'Drop zones';
-$string['formerror_disallowedtags'] = 'Only "{$a}" tags are allowed in this draggable text.';
+$string['formerror_disallowedtags'] = 'Sorry, HTML tags are not allowed in draggable text.';
 $string['formerror_noallowedtags'] = 'HTML tags are not allowed in this text which is the alt text for a draggable image.';
 $string['formerror_noytop'] = 'You must provide a value for the y coordinate for the top left corner of this drop area. You can drag and drop the drop area above to set the coordinates or enter them manually here.';
 $string['formerror_noxleft'] = 'You must provide a value for the x coordinate for the top left corner of this drop area. You can drag and drop the drop area above to set the coordinates or enter them manually here.';
@@ -58,9 +58,7 @@ $string['pluginname_help'] = 'Drag and drop onto image questions require the res
 $string['pluginname_link'] = 'question/type/ddimageortext';
 $string['pluginnameadding'] = 'Adding drag and drop onto image';
 $string['pluginnameediting'] = 'Editing drag and drop onto image';
-$string['pluginnamesummary'] = 'Images or text labels are dragged and dropped into drop zones on a background image.
-
-Note: This question type is not accessible to users who are visually impaired.';
+$string['pluginnamesummary'] = 'Images or text labels are dragged and dropped into drop zones on a background image.';
 $string['previewareaheader'] = 'Preview';
 $string['previewareamessage'] = 'Select a background image, specify draggable items and define drop zones on the background image into which they must be dragged.';
 $string['privacy:metadata'] = 'The Drag and drop onto image question type plugin does not store any personal data.';
@@ -72,4 +70,3 @@ $string['summarisechoiceno'] = 'Item {$a}';
 $string['summariseplaceno'] = 'Drop zone {$a}';
 $string['xleft'] = 'Left';
 $string['ytop'] = 'Top';
-$string['deletedchoice'] = '[Deleted choice]';

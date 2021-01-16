@@ -21,10 +21,6 @@
 
 require_once('PEAR.php');
 require_once('HTML/Common.php');
-/**
- * Static utility methods.
- */
-require_once('HTML/QuickForm/utils.php');
 
 $GLOBALS['HTML_QUICKFORM_ELEMENT_TYPES'] =
         array(
@@ -838,15 +834,9 @@ class HTML_QuickForm extends HTML_Common {
 
         } elseif (false !== ($pos = strpos($elementName, '['))) {
             $base = substr($elementName, 0, $pos);
-            $keys = str_replace(
-                array('\\', '\'', ']', '['), array('\\\\', '\\\'', '', "']['"),
-                substr($elementName, $pos + 1, -1)
-            );
-            $idx  = "['" . $keys . "']";
-            $keyArray = explode("']['", $keys);
-
+            $idx  = "['" . str_replace(array(']', '['), array('', "']['"), substr($elementName, $pos + 1, -1)) . "']";
             if (isset($this->_submitValues[$base])) {
-                $value = HTML_QuickForm_utils::recursiveValue($this->_submitValues[$base], $keyArray, NULL);
+                $value = eval("return (isset(\$this->_submitValues['{$base}']{$idx})) ? \$this->_submitValues['{$base}']{$idx} : null;");
             }
 
             if ((is_array($value) || null === $value) && isset($this->_submitFiles[$base])) {

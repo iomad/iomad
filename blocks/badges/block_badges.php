@@ -67,7 +67,7 @@ class block_badges extends block_base {
     }
 
     public function get_content() {
-        global $USER, $CFG;
+        global $USER, $PAGE, $CFG;
 
         if ($this->content !== null) {
             return $this->content;

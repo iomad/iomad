@@ -2,14 +2,14 @@
 /**
  * SCSSPHP
  *
- * @copyright 2012-2019 Leaf Corcoran
+ * @copyright 2012-2017 Leaf Corcoran
  *
  * @license http://opensource.org/licenses/MIT MIT
  *
- * @link http://scssphp.github.io/scssphp
+ * @link http://leafo.github.io/scssphp
  */
 
-namespace ScssPhp\ScssPhp\Formatter;
+namespace Leafo\ScssPhp\Formatter;
 
 /**
  * Output block
@@ -44,22 +44,7 @@ class OutputBlock
     public $children;
 
     /**
-     * @var \ScssPhp\ScssPhp\Formatter\OutputBlock
+     * @var \Leafo\ScssPhp\Formatter\OutputBlock
      */
     public $parent;
-
-    /**
-     * @var string
-     */
-    public $sourceName;
-
-    /**
-     * @var integer
-     */
-    public $sourceLine;
-
-    /**
-     * @var integer
-     */
-    public $sourceColumn;
 }

@@ -187,6 +187,7 @@ class userlicallocrep {
     private static function populate_temporary_completion($tempcomptablename, $userid, $courseid=0, $showhistoric=false) {
         global $DB;
 
+
         // Create a temporary table to hold the userids.
         $dbman = $DB->get_manager();
 
@@ -239,6 +240,8 @@ class userlicallocrep {
 
         return array($dbman, $table);
     }
+
+
 
     /**
      * 'Delete' user from course

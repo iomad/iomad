@@ -34,4 +34,4 @@ $string['language'] = 'اللغة';
 $string['moodlelogo'] = 'شعار مودل';
 $string['next'] = 'التالي';
 $string['previous'] = 'السابق';
-$string['reload'] = 'إعادة التحميل';
+$string['reload'] = 'إعادة تحميل';

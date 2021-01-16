@@ -508,6 +508,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             'block/iomad_company_admin:assign_department_manager',
             'block/iomad_company_admin:company_manager',
             'block/iomad_company_admin:allocate_licenses',
+            'local/iomad_dashboard:view'
         );
 
         if ($DB->get_records('role_capabilities', array('roleid' => $companydepartmentmanagerid))) {
@@ -541,6 +542,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             'block/iomad_company_admin:company_manager',
             'block/iomad_company_admin:company_user_profiles',
             'block/iomad_company_admin:createcourse',
+            'local/iomad_dashboard:view'
 
         );
 
@@ -886,6 +888,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         if ($companymanager = $DB->get_record( 'role', array( 'shortname' => 'companymanager') )) {
             $companymanagerid = $companymanager->id;
             $companymanagercaps = array(
+                'local/iomad_dashboard:view',
                 'block/iomad_reports:view',
                 'local_report_attendance:view',
                 'local_report_completion:view',
@@ -903,13 +906,14 @@ function xmldb_local_iomad_upgrade($oldversion) {
                                          array( 'shortname' => 'companydepartmentmanager'))) {
             $companydepartmentmanagerid = $companydepartmentmanager->id;
             $companydepartmentmanagercaps = array(
+                'local/iomad_dashboard:view',
                 'block/iomad_reports:view',
                 'local_report_attendance:view',
                 'local_report_completion:view',
                 'local_report_users:view',
                 'local_report_scorm_overview:view',
             );
-
+    
             foreach ($companydepartmentmanagercaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companydepartmentmanagerid, $systemcontext->id );
             }
@@ -920,13 +924,14 @@ function xmldb_local_iomad_upgrade($oldversion) {
                                                      array('shortname' => 'clientadministrator'))) {
             $clientadministratorid = $clientadministrator->id;
             $clientadministratorcaps = array(
+                'local/iomad_dashboard:view',
                 'block/iomad_reports:view',
                 'local_report_attendance:view',
                 'local_report_completion:view',
                 'local_report_users:view',
                 'local_report_scorm_overview:view',
             );
-
+    
             foreach ($clientadministratorcaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $clientadministratorid, $systemcontext->id );
             }
@@ -964,7 +969,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
     }
 
     if ($oldversion < 2014052702) {
-
+        
         // Define new table company_role_restriction
         $table = new xmldb_table('company_role_restriction');
 
@@ -1034,7 +1039,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                         }
                     }
                 } else {
-                    list($enrolcourseid, $enroluserid) = current($enrolrecords);
+                    list($enrolcourseid, $enroluserid) = each($enrolrecords);
                     $licenseuser->licensecourseid = $enrolcourseid;
                     $DB->update_record('companylicense_users', $licenseuser);
                 }
@@ -1163,6 +1168,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
+
 
         // Define table iomad_templates to be created.
         $table = new xmldb_table('iomad_templates');
@@ -1306,25 +1312,25 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 assign_capability( $cap, CAP_ALLOW, $companymanager->id, $systemcontext->id );
             }
         }
-
+        
         if ($companydepartmentmanager = $DB->get_record( 'role', array( 'shortname' => 'companydepartmentmanager') )) {
             foreach ($companydepartmentmanagercaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companydepartmentmanager->id, $systemcontext->id );
             }
         }
-
+        
         if ($companycourseeditor = $DB->get_record( 'role', array( 'shortname' => 'companycourseeditor') )) {
             foreach ($companycourseeditorcaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companycourseeditor->id, $systemcontext->id );
             }
         }
-
+        
         if ($companycoursenoneditor = $DB->get_record( 'role', array( 'shortname' => 'companycoursenoneditor') )) {
             foreach ($companycoursenoneditorcaps as $cap) {
                 assign_capability( $cap, CAP_ALLOW, $companycoursenoneditor->id, $systemcontext->id );
             }
         }
-
+        
         // Remove moodle/my:manageblocks capability from authenticated user
         if ($authenticateduser = $DB->get_record('role', array('shortname' => 'user'))) {
             assign_capability('moodle/my:manageblocks', CAP_PREVENT, $authenticateduser->id, $systemcontext->id, true);
@@ -1692,12 +1698,12 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // They do not exist.
         $roles = $DB->get_records('role');
         foreach ($roles as $role) {
-            unassign_capability('block/iomad_company_admin:view', $role->id);
-            unassign_capability('block/side_bar_block:editblock', $role->id);
-            unassign_capability('block/side_bar_block:viewblock', $role->id);
-            unassign_capability('enrol/authorize:manage', $role->id);
-            unassign_capability('mod/certificate:manage', $role->id);
-            unassign_capability('mod/certificate:view', $role->id);
+            unassign_capability('block/iomad_company_admin:view', $role->id); 
+            unassign_capability('block/side_bar_block:editblock', $role->id); 
+            unassign_capability('block/side_bar_block:viewblock', $role->id); 
+            unassign_capability('enrol/authorize:manage', $role->id); 
+            unassign_capability('mod/certificate:manage', $role->id); 
+            unassign_capability('mod/certificate:view', $role->id); 
         }
 
         // Fix capability typo in company department manager role
@@ -1781,412 +1787,6 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2017090311, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2017090313) {
-
-        // Define table company_transient_tokens to be created.
-        $table = new xmldb_table('company_transient_tokens');
-
-        // Adding fields to table company_transient_tokens.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('expires', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('token', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-
-        // Adding keys to table company_transient_tokens.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-        // Conditionally launch create table for company_transient_tokens.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2017090313, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2018122700) {
-
-        // Define field notifyperiod to be added to iomad_courses.
-        $table = new xmldb_table('iomad_courses');
-        $field = new xmldb_field('notifyperiod', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'warncompletion');
-
-        // Conditionally launch add field notifyperiod.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field expireafter to be added to iomad_courses.
-        $table = new xmldb_table('iomad_courses');
-        $field = new xmldb_field('expireafter', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'notifyperiod');
-
-        // Conditionally launch add field expireafter.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Perform clear up on courses data which may have become out of step.
-
-        $sql = 'SELECT ic.courseid FROM {iomad_courses} ic
-                LEFT OUTER JOIN {course} c ON c.id = ic.courseid
-                WHERE c.id IS NULL';
-        $deletedcourses = $DB->get_fieldset_sql($sql);
-
-        foreach ($deletedcourses as $deletedcourse) {
-
-            // Clear everything from the iomad_courses table.
-            $DB->delete_records('iomad_courses', array('courseid' => $deletedcourse));
-
-            // Remove the course from company allocation tables.
-            $DB->delete_records('company_course', array('courseid' => $deletedcourse));
-
-            // Remove the course from company created course tables.
-            $DB->delete_records('company_created_courses', array('courseid' => $deletedcourse));
-
-            // Remove the course from company shared courses tables.
-            $DB->delete_records('company_shared_courses', array('courseid' => $deletedcourse));
-
-            // Deal with licenses allocations.
-            $DB->delete_records('companylicense_users', array('licensecourseid' => $deletedcourse));
-            $courselicenses = $DB->get_records('companylicense_courses', array('courseid' => $deletedcourse));
-            foreach ($courselicenses as $courselicense) {
-                // Delete the course from the license.
-                $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
-                // Does the license have any courses left?
-                if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
-                    company::update_license_usage($courselicense->licenseid);
-                } else {
-                    // Delete the license.  It no longer is valid.
-                    $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
-                }
-            }
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2018122700, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019012900) {
-
-        // Define field maxusers to be added to company.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('maxusers', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'hostname');
-
-        // Conditionally launch add field maxusers.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019012900, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019012901) {
-
-        // Define field warnnotstarted to be added to iomad_courses.
-        $table = new xmldb_table('iomad_courses');
-        $field = new xmldb_field('warnnotstarted', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'expireafter');
-
-        // Conditionally launch add field warnnotstarted.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019012901, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030100) {
-
-        // Define field hasgrade to be added to iomad_courses.
-        $table = new xmldb_table('iomad_courses');
-        $field = new xmldb_field('hasgrade', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'warnnotstarted');
-
-        // Conditionally launch add field hasgrade.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030100, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030101) {
-
-        $validcourseids = $DB->get_fieldset_select('course', 'id', true);
-        if ($validcourseids) {
-            list($sql, $params) = $DB->get_in_or_equal($validcourseids);
-
-            // Clear any non existant references from the iomad tables.
-            $DB->delete_records_select('iomad_courses', "NOT courseid $sql", $params);
-            $DB->delete_records_select('company_course', "NOT courseid $sql", $params);
-            $DB->delete_records_select('company_created_courses', "NOT courseid $sql", $params);
-            $DB->delete_records_select('company_shared_courses', "NOT courseid $sql", $params);
-            $DB->delete_records_select('companylicense_users', "NOT licensecourseid $sql", $params);
-
-            // Find broken licenses and delete missing courses.
-            $licenses = $DB->get_fieldset_select('companylicense_courses', 'licenseid', "NOT courseid $sql", $params);
-            $DB->delete_records_select('companylicense_courses', "NOT courseid $sql", $params);
-
-            // Delete any licenses that are left empty.
-            $sql = 'SELECT l.id
-                    FROM {companylicense} l
-                    LEFT OUTER JOIN {companylicense_courses} c ON l.id = c.licenseid
-                    WHERE c.id IS NULL';
-            $deletedlicenses = $DB->get_fieldset_sql($sql);
-            if ($deletedlicenses) {
-                list($sql, $params) = $DB->get_in_or_equal($deletedlicenses);
-                $DB->delete_records_select('companylicense', "id $sql", $params);
-            }
-
-            // Remove deleted licenses fromm affected list.
-            $licenses = array_diff(array_values($licenses), $deletedlicenses);
-
-            // Update usage of affected licenses.
-            foreach ($licenses as $license) {
-                company::update_license_usage($license);
-            }
-        }
-
-        // Define key licenseid (foreign) to be added to companylicense_users.
-        $table = new xmldb_table('companylicense_users');
-        $key = new xmldb_key('licenseid', XMLDB_KEY_FOREIGN, array('licenseid'), 'companylicense', array('id'));
-
-        // Launch add key licenseid.
-        $dbman->add_key($table, $key);
-
-        // Define key licensecourseid (foreign) to be added to companylicense_users.
-        $table = new xmldb_table('companylicense_users');
-        $key = new xmldb_key('licensecourseid', XMLDB_KEY_FOREIGN, array('licensecourseid'), 'course', array('id'));
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030101, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030102) {
-
-        // Define field humanallocation to be added to companylicense.
-        $table = new xmldb_table('companylicense');
-        $field = new xmldb_field('humanallocation', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'allocation');
-
-        // Conditionally launch add field humanallocation.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Add the right value to the new human allocation.
-        if ($licenses = $DB->get_records('companylicense')) {
-            foreach ($licenses as $license) {
-                if (empty($license->program)) {
-                    $DB->set_field('companylicense', 'humanallocation', $license->allocation, array('id' => $license->id));
-                } else {
-                    // Get the number of courses.
-                    $coursecount = $DB->count_records('companylicense_courses', array('licenseid' => $license->id));
-                    $DB->set_field('companylicense', 'humanallocation', $license->allocation / $coursecount, array('id' => $license->id));
-                }
-            }
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030102, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030103) {
-
-        // Update the existing roles to have the correct archetypes.
-        $rolesarray = array('clientadministrator', 'companymanager', 'companydepartmentmanager', 'companycourseeditor', 'companycoursenoneditor');
-        foreach ($rolesarray as $role) {
-            if ($rolerec = $DB->get_record('role', array('shortname' => $role))) {
-                $DB->set_field('role', 'archetype', $role, array('id' => $rolerec->id));
-                if (!$DB->record_exists('role_context_levels', array('roleid' => $rolerec->id, 'contextlevel' => CONTEXT_SYSTEM))) {
-                    $DB->insert_record('role_context_levels', array('roleid' => $rolerec->id, 'contextlevel' => CONTEXT_SYSTEM));
-                }
-            }
-        }
-
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030103, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030104) {
-
-       // Create new Company reporter role.
-        if (!$companyreporter = $DB->get_record( 'role', array( 'shortname' => 'companyreporter') )) {
-            $companyreporterid = create_role( 'Company Report Only', 'companyreporter',
-            '(Iomad) Access to company reports only..', 'companyreporter');
-        } else {
-            $companyreporterid = $companyreporter->id;
-        }
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $companyreporterid );
-        if (empty($levels)) {
-            $level = new stdClass;
-            $level->roleid = $companyreporterid;
-            $level->contextlevel = CONTEXT_SYSTEM;
-            $DB->insert_record( 'role_context_levels', $level );
-        }
-
-        update_capabilities('companyreporter');
-
-       // Create new Client reporter role.
-        if (!$clientreporter = $DB->get_record( 'role', array( 'shortname' => 'clientreporter') )) {
-            $clientreporterid = create_role( 'Client Report Only', 'clientreporter',
-            '(Iomad) CLient access to all company reports only..', 'clientreporter');
-        } else {
-            $clientreporterid = $clientreporter->id;
-        }
-
-        // If not done already, allow assignment at system context.
-        $levels = get_role_contextlevels( $clientreporterid );
-        if (empty($levels)) {
-            $level = new stdClass;
-            $level->roleid = $clientreporterid;
-            $level->contextlevel = CONTEXT_SYSTEM;
-            $DB->insert_record( 'role_context_levels', $level );
-        }
-
-        update_capabilities('clientreporter');
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030104, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030106) {
-
-        // Define field cutoffdate to be added to companylicense.
-        $table = new xmldb_table('companylicense');
-        $field = new xmldb_field('cutoffdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'instant');
-
-        // Conditionally launch add field cutoffdate.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field validto to be added to company.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('validto', XMLDB_TYPE_INTEGER, '20', null, null, null, null, 'maxusers');
-
-        // Conditionally launch add field validto.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field suspendafter to be added to company.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('suspendafter', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'validto');
-
-        // Conditionally launch add field suspendafter.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Define field terminated to be added to company.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('terminated', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'suspendafter');
-
-        // Conditionally launch add field terminated.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030106, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030107) {
-
-        // Rename field terminated on table company to companyterminated.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('terminated', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'suspendafter');
-
-        // Launch rename field companyterminated.
-        $dbman->rename_field($table, $field, 'companyterminated');
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030107, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030108) {
-
-        // Define field previousemailtemplateid to be added to company.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('previousemailtemplateid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'previousroletemplateid');
-
-        // Conditionally launch add field previousemailtemplateid.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030108, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030109) {
-
-        // Security issue that users may be tagged as educators when they shouldn't have been.
-        if ($CFG->iomad_autoenrol_managers) {
-            // Remove any company user educator entry where not a manager.
-            $affected = $DB->get_records('company_users', array('managertype' => 0, 'educator' => 1));
-            foreach ($affected as $companyuser) {
-                $DB->set_field('company_users', 'educator', 0, array('id' => $companyuser->id));
-            }
-        } else {
-            // Get the potentials.
-            $affectedusers = array();
-            $companyusers = $DB->get_records('company_users', array('managertype' => 0, 'educator' => 1));
-            foreach ($companyusers as $companyuser) {
-                if ($DB->get_records_sql("SELECT id FROM {logstore_standard_log}
-                                          WHERE userid = :userid
-                                          AND " . $DB->sql_like('eventname', ':eventname') . "
-                                          AND " . $DB->sql_like('other', ':other'),
-                                          array('userid' => $companyuser->userid,
-                                                'eventname' => '%company_user_assigned',
-                                                'other' => '%Course educator%'))) {
-                    continue;
-                } else {
-                    $affectedusers[$companyuser->id] = $companyuser;
-                }
-                // Deal with the erroneous users.
-                foreach ($affectedusers as $affecteduser) {
-                    company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
-                }
-            } 
-        }
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030109, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030111) {
-
-        // Define field code to be added to company.
-        $table = new xmldb_table('company');
-        $field = new xmldb_field('code', XMLDB_TYPE_CHAR, '25', null, null, null, null, 'shortname');
-
-        // Conditionally launch add field code.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030111, 'local', 'iomad');
-    }
-
-    if ($oldversion < 2019030113) {
-
-        // Define field clearonexpire to be added to companylicense.
-        $table = new xmldb_table('companylicense');
-        $field = new xmldb_field('clearonexpire', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'cutoffdate');
-
-        // Conditionally launch add field clearonexpire.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Iomad savepoint reached.
-        upgrade_plugin_savepoint(true, 2019030113, 'local', 'iomad');
     }
 
     return $result;

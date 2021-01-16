@@ -342,10 +342,10 @@ $definitions = array(
         'staticaccelerationsize' => 3
     ),
 
-    // Caches the time of the last message in a conversation.
+    // Caches the time of the last message between two users.
     'message_time_last_message_between_users' => array(
         'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => true, // The conversation id is used.
+        'simplekeys' => true, // The id of the sender and recipient is used.
         'simplevalues' => true,
         'datasource' => '\core_message\time_last_message_between_users',
     ),
@@ -382,91 +382,6 @@ $definitions = array(
         'mode' => cache_store::MODE_SESSION,
         'simplekeys' => true,
         'simpledata' => true,
-        'ttl' => 1800
+        'ttl' => 1800,
     ),
-
-    // Caches the first time we analysed models' analysables.
-    'modelfirstanalyses' => array(
-        'mode' => cache_store::MODE_REQUEST,
-        'simplekeys' => true,
-        'simpledata' => true,
-    ),
-
-    // Cache the list of portfolio instances for the logged in user
-    // in the portfolio_add_button constructor to avoid loading the
-    // same data multiple times.
-    'portfolio_add_button_portfolio_instances' => [
-        'mode' => cache_store::MODE_REQUEST,
-        'simplekeys' => true,
-        'staticacceleration' => true
-    ],
-
-    // Cache the user dates for courses set to relative dates mode.
-    'course_user_dates' => [
-        'mode' => cache_store::MODE_REQUEST,
-        'simplekeys' => true,
-        'simpledata' => true,
-        'staticacceleration' => true
-    ],
-
-    // Information generated during the calculation of indicators.
-    'calculablesinfo' => [
-        'mode' => cache_store::MODE_REQUEST,
-        'simplekeys' => false,
-        'simpledata' => false,
-    ],
-
-    // The list of content items (activities, resources and their subtypes) that can be added to a course for a user.
-    'user_course_content_items' => [
-        'mode' => cache_store::MODE_REQUEST,
-        'simplekeys' => true,
-    ],
-
-    // The list of favourited content items (activities, resources and their subtypes) for a user.
-    'user_favourite_course_content_items' => [
-        'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => true,
-    ],
-
-    \core_course\local\service\content_item_service::RECOMMENDATION_CACHE => [
-        'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => true,
-    ],
-
-    // Caches contentbank extensions management.
-    'contentbank_enabled_extensions' => [
-        'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => true,
-        'simpledata' => true,
-        'staticacceleration' => true,
-    ],
-    'contentbank_context_extensions' => [
-        'mode' => cache_store::MODE_REQUEST,
-        'simplekeys' => true,
-        'simpledata' => true,
-        'staticacceleration' => true,
-    ],
-
-    // Language strings for H5P content-type libraries.
-    // Key "{$libraryname}/{$language}"" contains translations for a given library and language.
-    // Key "$libraryname" has a list of all of the available languages for the library.
-    'h5p_content_type_translations' => [
-        'mode' => cache_store::MODE_APPLICATION,
-        'simpledata' => true,
-    ],
-
-    // Cache the grade letters for faster retrival.
-    'grade_letters' => [
-        'mode'                   => cache_store::MODE_REQUEST,
-        'simplekeys'             => true,
-        'staticacceleration'     => true,
-        'staticaccelerationsize' => 100
-    ],
-
-    // Cache for licenses.
-    'license' => [
-        'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => true,
-        'simpledata' => false,
-    ],
 );

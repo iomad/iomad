@@ -147,8 +147,10 @@ class SimplePie_Item
 		{
 			return $this->data['child'][$namespace][$tag];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -364,8 +366,10 @@ class SimplePie_Item
 		{
 			return $this->get_content(true);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -403,16 +407,18 @@ class SimplePie_Item
 		{
 			return $this->get_description(true);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
-
+	
 	/**
 	 * Get the media:thumbnail of the item
 	 *
 	 * Uses `<media:thumbnail>`
 	 *
-	 *
+	 * 
 	 * @return array|null
 	 */
 	public function get_thumbnail()
@@ -429,7 +435,7 @@ class SimplePie_Item
 			}
 		}
 		return $this->data['thumbnail'];
-	}
+	}	
 
 	/**
 	 * Get a category for the item
@@ -445,8 +451,10 @@ class SimplePie_Item
 		{
 			return $categories[$key];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -469,15 +477,15 @@ class SimplePie_Item
 			$label = null;
 			if (isset($category['attribs']['']['term']))
 			{
-				$term = $this->sanitize($category['attribs']['']['term'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$term = $this->sanitize($category['attribs']['']['term'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			if (isset($category['attribs']['']['scheme']))
 			{
-				$scheme = $this->sanitize($category['attribs']['']['scheme'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$scheme = $this->sanitize($category['attribs']['']['scheme'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			if (isset($category['attribs']['']['label']))
 			{
-				$label = $this->sanitize($category['attribs']['']['label'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$label = $this->sanitize($category['attribs']['']['label'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			$categories[] = $this->registry->create('Category', array($term, $scheme, $label, $type));
 		}
@@ -485,10 +493,10 @@ class SimplePie_Item
 		{
 			// This is really the label, but keep this as the term also for BC.
 			// Label will also work on retrieving because that falls back to term.
-			$term = $this->sanitize($category['data'], SIMPLEPIE_CONSTRUCT_TEXT);
+			$term = $this->sanitize($category['data'], SIMPLEPIE_CONSTRUCT_HTML);
 			if (isset($category['attribs']['']['domain']))
 			{
-				$scheme = $this->sanitize($category['attribs']['']['domain'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$scheme = $this->sanitize($category['attribs']['']['domain'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			else
 			{
@@ -500,19 +508,21 @@ class SimplePie_Item
 		$type = 'subject';
 		foreach ((array) $this->get_item_tags(SIMPLEPIE_NAMESPACE_DC_11, $type) as $category)
 		{
-			$categories[] = $this->registry->create('Category', array($this->sanitize($category['data'], SIMPLEPIE_CONSTRUCT_TEXT), null, null, $type));
+			$categories[] = $this->registry->create('Category', array($this->sanitize($category['data'], SIMPLEPIE_CONSTRUCT_HTML), null, null, $type));
 		}
 		foreach ((array) $this->get_item_tags(SIMPLEPIE_NAMESPACE_DC_10, $type) as $category)
 		{
-			$categories[] = $this->registry->create('Category', array($this->sanitize($category['data'], SIMPLEPIE_CONSTRUCT_TEXT), null, null, $type));
+			$categories[] = $this->registry->create('Category', array($this->sanitize($category['data'], SIMPLEPIE_CONSTRUCT_HTML), null, null, $type));
 		}
 
 		if (!empty($categories))
 		{
 			return array_unique($categories);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -529,8 +539,10 @@ class SimplePie_Item
 		{
 			return $authors[$key];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -547,8 +559,10 @@ class SimplePie_Item
 		{
 			return $contributors[$key];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -557,7 +571,7 @@ class SimplePie_Item
 	 * Uses `<atom:contributor>`
 	 *
 	 * @since 1.1
-	 * @return SimplePie_Author[]|null List of {@see SimplePie_Author} objects
+	 * @return array|null List of {@see SimplePie_Author} objects
 	 */
 	public function get_contributors()
 	{
@@ -611,8 +625,10 @@ class SimplePie_Item
 		{
 			return array_unique($contributors);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -621,7 +637,7 @@ class SimplePie_Item
 	 * Uses `<atom:author>`, `<author>`, `<dc:creator>` or `<itunes:author>`
 	 *
 	 * @since Beta 2
-	 * @return SimplePie_Author[]|null List of {@see SimplePie_Author} objects
+	 * @return array|null List of {@see SimplePie_Author} objects
 	 */
 	public function get_authors()
 	{
@@ -633,7 +649,7 @@ class SimplePie_Item
 			$email = null;
 			if (isset($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['name'][0]['data']))
 			{
-				$name = $this->sanitize($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['name'][0]['data'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$name = $this->sanitize($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['name'][0]['data'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			if (isset($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['uri'][0]['data']))
 			{
@@ -641,7 +657,7 @@ class SimplePie_Item
 			}
 			if (isset($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['email'][0]['data']))
 			{
-				$email = $this->sanitize($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['email'][0]['data'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$email = $this->sanitize($author['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['email'][0]['data'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			if ($name !== null || $email !== null || $uri !== null)
 			{
@@ -655,7 +671,7 @@ class SimplePie_Item
 			$email = null;
 			if (isset($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['name'][0]['data']))
 			{
-				$name = $this->sanitize($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['name'][0]['data'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$name = $this->sanitize($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['name'][0]['data'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			if (isset($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['url'][0]['data']))
 			{
@@ -663,7 +679,7 @@ class SimplePie_Item
 			}
 			if (isset($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['email'][0]['data']))
 			{
-				$email = $this->sanitize($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['email'][0]['data'], SIMPLEPIE_CONSTRUCT_TEXT);
+				$email = $this->sanitize($author[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_03]['email'][0]['data'], SIMPLEPIE_CONSTRUCT_HTML);
 			}
 			if ($name !== null || $email !== null || $url !== null)
 			{
@@ -672,19 +688,19 @@ class SimplePie_Item
 		}
 		if ($author = $this->get_item_tags(SIMPLEPIE_NAMESPACE_RSS_20, 'author'))
 		{
-			$authors[] = $this->registry->create('Author', array(null, null, $this->sanitize($author[0]['data'], SIMPLEPIE_CONSTRUCT_TEXT)));
+			$authors[] = $this->registry->create('Author', array(null, null, $this->sanitize($author[0]['data'], SIMPLEPIE_CONSTRUCT_HTML)));
 		}
 		foreach ((array) $this->get_item_tags(SIMPLEPIE_NAMESPACE_DC_11, 'creator') as $author)
 		{
-			$authors[] = $this->registry->create('Author', array($this->sanitize($author['data'], SIMPLEPIE_CONSTRUCT_TEXT), null, null));
+			$authors[] = $this->registry->create('Author', array($this->sanitize($author['data'], SIMPLEPIE_CONSTRUCT_HTML), null, null));
 		}
 		foreach ((array) $this->get_item_tags(SIMPLEPIE_NAMESPACE_DC_10, 'creator') as $author)
 		{
-			$authors[] = $this->registry->create('Author', array($this->sanitize($author['data'], SIMPLEPIE_CONSTRUCT_TEXT), null, null));
+			$authors[] = $this->registry->create('Author', array($this->sanitize($author['data'], SIMPLEPIE_CONSTRUCT_HTML), null, null));
 		}
 		foreach ((array) $this->get_item_tags(SIMPLEPIE_NAMESPACE_ITUNES, 'author') as $author)
 		{
-			$authors[] = $this->registry->create('Author', array($this->sanitize($author['data'], SIMPLEPIE_CONSTRUCT_TEXT), null, null));
+			$authors[] = $this->registry->create('Author', array($this->sanitize($author['data'], SIMPLEPIE_CONSTRUCT_HTML), null, null));
 		}
 
 		if (!empty($authors))
@@ -699,8 +715,10 @@ class SimplePie_Item
 		{
 			return $authors;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -725,8 +743,10 @@ class SimplePie_Item
 		{
 			return $this->sanitize($return[0]['data'], SIMPLEPIE_CONSTRUCT_TEXT);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -805,8 +825,10 @@ class SimplePie_Item
 					return date($date_format, $this->data['date']['parsed']);
 			}
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -854,8 +876,10 @@ class SimplePie_Item
 					return date($date_format, $this->data['updated']['parsed']);
 			}
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -881,8 +905,10 @@ class SimplePie_Item
 		{
 			return strftime($date_format, $date);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -943,8 +969,10 @@ class SimplePie_Item
 		{
 			return $enclosure->get_link();
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -962,8 +990,10 @@ class SimplePie_Item
 		{
 			return $links[$key];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -1043,8 +1073,10 @@ class SimplePie_Item
 		{
 			return $this->data['links'][$rel];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -1064,8 +1096,10 @@ class SimplePie_Item
 		{
 			return $enclosures[$key];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -2888,8 +2922,10 @@ class SimplePie_Item
 		{
 			return $this->data['enclosures'];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -2914,8 +2950,10 @@ class SimplePie_Item
 		{
 			return (float) $match[1];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -2944,8 +2982,10 @@ class SimplePie_Item
 		{
 			return (float) $match[2];
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -2960,7 +3000,10 @@ class SimplePie_Item
 		{
 			return $this->registry->create('Source', array($this, $return[0]));
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 }
+

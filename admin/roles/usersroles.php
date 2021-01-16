@@ -45,7 +45,7 @@ $PAGE->set_pagelayout('admin');
 
 // Check login and permissions.
 if ($course->id == SITEID) {
-    require_login(null, false);
+    require_login();
     $PAGE->set_context($usercontext);
 } else {
     require_login($course);

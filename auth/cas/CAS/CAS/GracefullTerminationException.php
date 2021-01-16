@@ -53,9 +53,9 @@ implements CAS_Exception
      * with our tests.
      *
      * @param string $message Message Text
-     * @param int $code    Error code
+     * @param string $code    Error code
      *
-     * @return self
+     * @return void
      */
     public function __construct ($message = 'Terminate Gracefully', $code = 0)
     {

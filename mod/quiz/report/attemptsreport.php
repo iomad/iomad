@@ -125,8 +125,7 @@ abstract class quiz_attempts_report extends quiz_default_report {
             return array($currentgroup, $empty, $empty, $empty);
         }
 
-        $studentsjoins = get_enrolled_with_capabilities_join($this->context, '',
-                array('mod/quiz:attempt', 'mod/quiz:reviewmyattempts'));
+        $studentsjoins = get_enrolled_with_capabilities_join($this->context);
 
         if (empty($currentgroup)) {
             return array($currentgroup, $studentsjoins, $empty, $studentsjoins);
@@ -203,10 +202,24 @@ abstract class quiz_attempts_report extends quiz_default_report {
             $headers[] = get_string('firstname');
         }
 
-        $extrafields = get_extra_user_fields($this->context);
+        // When downloading, some extra fields are always displayed (because
+        // there's no space constraint) so do not include in extra-field list.
+        $extrafields = get_extra_user_fields($this->context,
+                $table->is_downloading() ? array('institution', 'department', 'email') : array());
         foreach ($extrafields as $field) {
             $columns[] = $field;
             $headers[] = get_user_field_name($field);
+        }
+
+        if ($table->is_downloading()) {
+            $columns[] = 'institution';
+            $headers[] = get_string('institution');
+
+            $columns[] = 'department';
+            $headers[] = get_string('department');
+
+            $columns[] = 'email';
+            $headers[] = get_string('email');
         }
     }
 
@@ -352,7 +365,7 @@ abstract class quiz_attempts_report extends quiz_default_report {
                          WHERE {$allowedjoins->wheres} AND quiza.id = :attemptid";
             }
             $params = $allowedjoins->params + array('attemptid' => $attemptid);
-            $attempt = $DB->get_record_sql($sql, $params, IGNORE_MULTIPLE);
+            $attempt = $DB->get_record_sql($sql, $params);
             if (!$attempt || $attempt->quiz != $quiz->id || $attempt->preview != 0) {
                 // Ensure the attempt exists, belongs to this quiz and belongs to
                 // a student included in the report. If not skip.

@@ -449,32 +449,13 @@ class quiz_statistics_report extends quiz_default_report {
      *                                                                                               variants.
      */
     protected function output_quiz_structure_analysis_table($questionstats) {
+        $tooutput = array();
         $limitvariants = !$this->table->is_downloading();
         foreach ($questionstats->get_all_slots() as $slot) {
             // Output the data for these question statistics.
-            $structureanalysis = $questionstats->structure_analysis_for_one_slot($slot, $limitvariants);
-            if (is_null($structureanalysis)) {
-                $this->table->add_separator();
-            } else {
-                foreach ($structureanalysis as $row) {
-                    $bgcssclass = '';
-                    // The only way to identify in this point of the report if a row is a summary row
-                    // is checking if it's a instance of calculated_question_summary class.
-                    if ($row instanceof \core_question\statistics\questions\calculated_question_summary) {
-                        // Apply a custom css class to summary row to remove border and reduce paddings.
-                        $bgcssclass = 'quiz_statistics-summaryrow';
-
-                        // For question that contain a summary row, we add a "hidden" row in between so the report
-                        // display both rows with same background color.
-                        $this->table->add_data_keyed([], 'd-none hidden');
-                    }
-
-                    $this->table->add_data_keyed($this->table->format_row($row), $bgcssclass);
-                }
-            }
+            $tooutput = array_merge($tooutput, $questionstats->structure_analysis_for_one_slot($slot, $limitvariants));
         }
-
-        $this->table->finish_output(!$this->table->is_downloading());
+        $this->table->format_and_add_array_of_rows($tooutput);
     }
 
     /**
@@ -548,8 +529,7 @@ class quiz_statistics_report extends quiz_default_report {
         $questions = quiz_report_get_significant_questions($quiz);
 
         // Only load main question not sub questions.
-        $questionstatistics = $DB->get_records_select('question_statistics',
-                'hashcode = ? AND slot IS NOT NULL AND variant IS NULL',
+        $questionstatistics = $DB->get_records_select('question_statistics', 'hashcode = ? AND slot IS NOT NULL',
             [$qubaids->get_hash_code()]);
 
         // Configure what to display.

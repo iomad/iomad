@@ -43,8 +43,6 @@
                         "revision": "2.0",
                         "hasarchived": true,
                         "timeaccepted": "1 Mar 2018",
-                        "iscurrent": true,
-                        "isoptional": false,
                         "agreement": {
                             "onbehalf": false,
                             "status": false,
@@ -62,8 +60,6 @@
                         "note": "Based on parent's agreement via email",
                         "hasarchived": false,
                         "timeaccepted": "15 Feb 2018",
-                        "iscurrent": true,
-                        "isoptional": false,
                         "agreement": {
                             "onbehalf": true,
                             "status": true,
@@ -84,10 +80,10 @@
     <tr>
         <th>{{#str}} policydocname, tool_policy {{/str}}</th>
         <th>{{#str}} policydocrevision, tool_policy {{/str}}</th>
-        <th>{{#str}} response, tool_policy {{/str}}</th>
-        <th>{{#str}} responseon, tool_policy {{/str}}</th>
+        <th>{{#str}} agreed, tool_policy {{/str}}</th>
+        <th>{{#str}} agreedon, tool_policy {{/str}}</th>
         {{#hasonbehalfagreements}}
-        <th>{{#str}} responseby, tool_policy {{/str}}</th>
+        <th>{{#str}} agreedby, tool_policy {{/str}}</th>
         <th>{{#str}} acceptancenote, tool_policy {{/str}}</th>
         {{/hasonbehalfagreements}}
         <th></th>
@@ -110,8 +106,7 @@
                         </td>
                         <td>
                             <a href="{{viewurl}}">{{{revision}}}</a>
-                            {{#iscurrent}}<span class="badge badge-success">{{#str}} status1, tool_policy {{/str}}</span>{{/iscurrent}}
-                            {{#isoptional}}<span class="badge badge-info">{{#str}} policydocoptionalyes, tool_policy {{/str}}</span>{{/isoptional}}
+                            {{#iscurrent}}<span class="label label-success">{{#str}} status1, tool_policy {{/str}}{{/iscurrent}}
                         </td>
                         <td>
                             {{>tool_policy/user_agreement}}

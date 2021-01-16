@@ -1,73 +1,43 @@
-// stylelint-disable declaration-no-important
+// Width
+
+.w-100 { width: 100% !important; }
 
 // Margin and Padding
 
-@each $breakpoint in map-keys($grid-breakpoints) {
-  @include media-breakpoint-up($breakpoint) {
-    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+.m-x-auto {
+  margin-right: auto !important;
+  margin-left:  auto !important;
+}
 
-    @each $prop, $abbrev in (margin: m, padding: p) {
-      @each $size, $length in $spacers {
-        .#{$abbrev}#{$infix}-#{$size} { #{$prop}: $length !important; }
-        .#{$abbrev}t#{$infix}-#{$size},
-        .#{$abbrev}y#{$infix}-#{$size} {
-          #{$prop}-top: $length !important;
-        }
-        .#{$abbrev}r#{$infix}-#{$size},
-        .#{$abbrev}x#{$infix}-#{$size} {
-          #{$prop}-right: $length !important;
-        }
-        .#{$abbrev}b#{$infix}-#{$size},
-        .#{$abbrev}y#{$infix}-#{$size} {
-          #{$prop}-bottom: $length !important;
-        }
-        .#{$abbrev}l#{$infix}-#{$size},
-        .#{$abbrev}x#{$infix}-#{$size} {
-          #{$prop}-left: $length !important;
-        }
-      }
-    }
+@each $prop, $abbrev in (margin: m, padding: p) {
+  @each $size, $lengths in $spacers {
+    $length-x:   map-get($lengths, x);
+    $length-y:   map-get($lengths, y);
 
-    // Negative margins (e.g., where `.mb-n1` is negative version of `.mb-1`)
-    @each $size, $length in $spacers {
-      @if $size != 0 {
-        .m#{$infix}-n#{$size} { margin: -$length !important; }
-        .mt#{$infix}-n#{$size},
-        .my#{$infix}-n#{$size} {
-          margin-top: -$length !important;
-        }
-        .mr#{$infix}-n#{$size},
-        .mx#{$infix}-n#{$size} {
-          margin-right: -$length !important;
-        }
-        .mb#{$infix}-n#{$size},
-        .my#{$infix}-n#{$size} {
-          margin-bottom: -$length !important;
-        }
-        .ml#{$infix}-n#{$size},
-        .mx#{$infix}-n#{$size} {
-          margin-left: -$length !important;
-        }
-      }
-    }
+    .#{$abbrev}-a-#{$size} { #{$prop}:        $length-y $length-x !important; } // a = All sides
+    .#{$abbrev}-t-#{$size} { #{$prop}-top:    $length-y !important; }
+    .#{$abbrev}-r-#{$size} { #{$prop}-right:  $length-x !important; }
+    .#{$abbrev}-b-#{$size} { #{$prop}-bottom: $length-y !important; }
+    .#{$abbrev}-l-#{$size} { #{$prop}-left:   $length-x !important; }
 
-    // Some special margin utils
-    .m#{$infix}-auto { margin: auto !important; }
-    .mt#{$infix}-auto,
-    .my#{$infix}-auto {
-      margin-top: auto !important;
+    // Axes
+    .#{$abbrev}-x-#{$size} {
+      #{$prop}-right:  $length-x !important;
+      #{$prop}-left:   $length-x !important;
     }
-    .mr#{$infix}-auto,
-    .mx#{$infix}-auto {
-      margin-right: auto !important;
-    }
-    .mb#{$infix}-auto,
-    .my#{$infix}-auto {
-      margin-bottom: auto !important;
-    }
-    .ml#{$infix}-auto,
-    .mx#{$infix}-auto {
-      margin-left: auto !important;
+    .#{$abbrev}-y-#{$size} {
+      #{$prop}-top:    $length-y !important;
+      #{$prop}-bottom: $length-y !important;
     }
   }
+}
+
+// Positioning
+
+.pos-f-t {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: $zindex-navbar-fixed;
 }

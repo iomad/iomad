@@ -16,22 +16,3 @@
 
 $string['pluginname'] = 'Iomad completion tracking';
 $string['privacy:metadata'] = 'The Local Iomad completion tracking plugin only shows data stored in other locations.';
-$string['privacy:metadata:local_iomad_track:id'] = 'Local iomad track id';
-$string['privacy:metadata:local_iomad_track:courseid'] = 'Course id';
-$string['privacy:metadata:local_iomad_track:coursename'] = 'Course name.';
-$string['privacy:metadata:local_iomad_track:userid'] = 'User id';
-$string['privacy:metadata:local_iomad_track:companyid'] = 'User company id';
-$string['privacy:metadata:local_iomad_track:timecompleted'] = 'Course time completed';
-$string['privacy:metadata:local_iomad_track:timeenrolled'] = 'Course time enrolled';
-$string['privacy:metadata:local_iomad_track:timestarted'] = 'Course time started';
-$string['privacy:metadata:local_iomad_track:finalscore'] = 'Course final score';
-$string['privacy:metadata:local_iomad_track:licenseid'] = 'Licese id';
-$string['privacy:metadata:local_iomad_track:licensename'] = 'License name';
-$string['privacy:metadata:local_iomad_track:licenseallocated'] = 'Unix timestamp of time license was allocated';
-$string['privacy:metadata:local_iomad_track:modifiedtime'] = 'Record modified time';
-$string['privacy:metadata:local_iomad_track'] = 'Local iomad track user information';
-$string['privacy:metadata:local_iomad_track_certs:id'] = 'Local iomad track certificate record id';
-$string['privacy:metadata:local_iomad_track_certs:trackid'] = 'Certificate track id';
-$string['privacy:metadata:local_iomad_track_certs:filename'] = 'Certificate filename';
-$string['privacy:metadata:local_iomad_track_certs'] = 'Local iomad track certificate info';
-$string['fixtracklicensetask'] = 'Iomad track fix license tracking details adhoc task';

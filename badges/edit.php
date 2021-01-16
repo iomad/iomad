@@ -26,10 +26,10 @@
 
 require_once(__DIR__ . '/../config.php');
 require_once($CFG->libdir . '/badgeslib.php');
-require_once($CFG->libdir . '/filelib.php');
+require_once($CFG->dirroot . '/badges/edit_form.php');
 
 $badgeid = required_param('id', PARAM_INT);
-$action = optional_param('action', 'badge', PARAM_TEXT);
+$action = optional_param('action', 'details', PARAM_TEXT);
 
 require_login();
 
@@ -84,27 +84,19 @@ $editoroptions = array(
         );
 $badge = file_prepare_standard_editor($badge, 'message', $editoroptions, $context);
 
-$formclass = '\core_badges\form' . '\\' . $action;
-$form = new $formclass($currenturl, array('badge' => $badge, 'action' => $action, 'editoroptions' => $editoroptions));
+$form_class = 'edit_' . $action . '_form';
+$form = new $form_class($currenturl, array('badge' => $badge, 'action' => $action, 'editoroptions' => $editoroptions));
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/badges/overview.php', array('id' => $badgeid)));
 } else if ($form->is_submitted() && $form->is_validated() && ($data = $form->get_data())) {
-    if ($action == 'badge') {
+    if ($action == 'details') {
         $badge->name = $data->name;
-        $badge->version = trim($data->version);
-        $badge->language = $data->language;
         $badge->description = $data->description;
-        $badge->imageauthorname = $data->imageauthorname;
-        $badge->imageauthoremail = $data->imageauthoremail;
-        $badge->imageauthorurl = $data->imageauthorurl;
-        $badge->imagecaption = $data->imagecaption;
         $badge->usermodified = $USER->id;
-        if (badges_open_badges_backpack_api() == OPEN_BADGES_V1) {
-            $badge->issuername = $data->issuername;
-            $badge->issuerurl = $data->issuerurl;
-            $badge->issuercontact = $data->issuercontact;
-        }
+        $badge->issuername = $data->issuername;
+        $badge->issuerurl = $data->issuerurl;
+        $badge->issuercontact = $data->issuercontact;
         $badge->expiredate = ($data->expiry == 1) ? $data->expiredate : null;
         $badge->expireperiod = ($data->expiry == 2) ? $data->expireperiod : null;
 

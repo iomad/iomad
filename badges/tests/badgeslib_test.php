@@ -30,8 +30,6 @@ global $CFG;
 require_once($CFG->libdir . '/badgeslib.php');
 require_once($CFG->dirroot . '/badges/lib.php');
 
-use core_badges\helper;
-
 class core_badges_badgeslib_testcase extends advanced_testcase {
     protected $badgeid;
     protected $course;
@@ -40,14 +38,14 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
     protected $coursebadge;
     protected $assertion;
 
-    /** @var $assertion2 to define json format for Open badge version 2 */
-    protected $assertion2;
-
     protected function setUp() {
         global $DB, $CFG;
         $this->resetAfterTest(true);
+
         $CFG->enablecompletion = true;
+
         $user = $this->getDataGenerator()->create_user();
+
         $fordb = new stdClass();
         $fordb->id = null;
         $fordb->name = "Test badge with 'apostrophe' and other friends (<>&@#)";
@@ -62,24 +60,14 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $fordb->expiredate = null;
         $fordb->expireperiod = null;
         $fordb->type = BADGE_TYPE_SITE;
-        $fordb->version = 1;
-        $fordb->language = 'en';
         $fordb->courseid = null;
         $fordb->messagesubject = "Test message subject";
         $fordb->message = "Test message body";
         $fordb->attachment = 1;
         $fordb->notification = 0;
-        $fordb->imageauthorname = "Image Author 1";
-        $fordb->imageauthoremail = "author@example.com";
-        $fordb->imageauthorurl = "http://author-url.example.com";
-        $fordb->imagecaption = "Test caption image";
         $fordb->status = BADGE_STATUS_INACTIVE;
 
         $this->badgeid = $DB->insert_record('badge', $fordb, true);
-
-        // Set the default Issuer (because OBv2 needs them).
-        set_config('badges_defaultissuername', $fordb->issuername);
-        set_config('badges_defaultissuercontact', $fordb->issuercontact);
 
         // Create a course with activity and auto completion tracking.
         $this->course = $this->getDataGenerator()->create_course(array('enablecompletion' => true));
@@ -93,6 +81,7 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $maninstance = $DB->get_record('enrol', array('courseid' => $this->course->id, 'enrol' => 'manual'), '*', MUST_EXIST);
         $manplugin->enrol_user($maninstance, $this->user->id, $studentrole->id);
         $this->assertEquals(1, $DB->count_records('user_enrolments'));
+
         $completionauto = array('completion' => COMPLETION_TRACKING_AUTOMATIC);
         $this->module = $this->getDataGenerator()->create_module('forum', array('course' => $this->course->id), $completionauto);
 
@@ -100,66 +89,12 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $fordb->type = BADGE_TYPE_COURSE;
         $fordb->courseid = $this->course->id;
         $fordb->status = BADGE_STATUS_ACTIVE;
+
         $this->coursebadge = $DB->insert_record('badge', $fordb, true);
-
-        // Insert Endorsement.
-        $endorsement = new stdClass();
-        $endorsement->badgeid = $this->coursebadge;
-        $endorsement->issuername = "Issuer 123";
-        $endorsement->issueremail = "issuer123@email.com";
-        $endorsement->issuerurl = "https://example.org/issuer-123";
-        $endorsement->dateissued = 1524567747;
-        $endorsement->claimid = "https://example.org/robotics-badge.json";
-        $endorsement->claimcomment = "Test endorser comment";
-        $DB->insert_record('badge_endorsement', $endorsement, true);
-
-        // Insert related badges.
-        $badge = new badge($this->coursebadge);
-        $clonedid = $badge->make_clone();
-        $badgeclone = new badge($clonedid);
-        $badgeclone->status = BADGE_STATUS_ACTIVE;
-        $badgeclone->save();
-
-        $relatebadge = new stdClass();
-        $relatebadge->badgeid = $this->coursebadge;
-        $relatebadge->relatedbadgeid = $clonedid;
-        $relatebadge->relatedid = $DB->insert_record('badge_related', $relatebadge, true);
-
-        // Insert a aligment.
-        $alignment = new stdClass();
-        $alignment->badgeid = $this->coursebadge;
-        $alignment->targetname = 'CCSS.ELA-Literacy.RST.11-12.3';
-        $alignment->targeturl = 'http://www.corestandards.org/ELA-Literacy/RST/11-12/3';
-        $alignment->targetdescription = 'Test target description';
-        $alignment->targetframework = 'CCSS.RST.11-12.3';
-        $alignment->targetcode = 'CCSS.RST.11-12.3';
-        $DB->insert_record('badge_alignment', $alignment, true);
-
         $this->assertion = new stdClass();
         $this->assertion->badge = '{"uid":"%s","recipient":{"identity":"%s","type":"email","hashed":true,"salt":"%s"},"badge":"%s","verify":{"type":"hosted","url":"%s"},"issuedOn":"%d","evidence":"%s"}';
         $this->assertion->class = '{"name":"%s","description":"%s","image":"%s","criteria":"%s","issuer":"%s"}';
         $this->assertion->issuer = '{"name":"%s","url":"%s","email":"%s"}';
-        // Format JSON-LD for Openbadge specification version 2.0.
-        $this->assertion2 = new stdClass();
-        $this->assertion2->badge = '{"recipient":{"identity":"%s","type":"email","hashed":true,"salt":"%s"},' .
-            '"badge":{"name":"%s","description":"%s","image":"%s",' .
-            '"criteria":{"id":"%s","narrative":"%s"},"issuer":{"name":"%s","url":"%s","email":"%s",' .
-            '"@context":"https:\/\/w3id.org\/openbadges\/v2","id":"%s","type":"Issuer"},' .
-            '"@context":"https:\/\/w3id.org\/openbadges\/v2","id":"%s","type":"BadgeClass","version":"%s",' .
-            '"@language":"en","related":[{"id":"%s","version":"%s","@language":"%s"}],"endorsement":"%s",' .
-            '"alignments":[{"targetName":"%s","targetUrl":"%s","targetDescription":"%s","targetFramework":"%s",' .
-            '"targetCode":"%s"}]},"verify":{"type":"hosted","url":"%s"},"issuedOn":"%s","evidence":"%s",' .
-            '"@context":"https:\/\/w3id.org\/openbadges\/v2","type":"Assertion","id":"%s"}';
-
-        $this->assertion2->class = '{"name":"%s","description":"%s","image":"%s",' .
-            '"criteria":{"id":"%s","narrative":"%s"},"issuer":{"name":"%s","url":"%s","email":"%s",' .
-            '"@context":"https:\/\/w3id.org\/openbadges\/v2","id":"%s","type":"Issuer"},' .
-            '"@context":"https:\/\/w3id.org\/openbadges\/v2","id":"%s","type":"BadgeClass","version":"%s",' .
-            '"@language":"%s","related":[{"id":"%s","version":"%s","@language":"%s"}],"endorsement":"%s",' .
-            '"alignments":[{"targetName":"%s","targetUrl":"%s","targetDescription":"%s","targetFramework":"%s",' .
-            '"targetCode":"%s"}]}';
-        $this->assertion2->issuer = '{"name":"%s","url":"%s","email":"%s",' .
-            '"@context":"https:\/\/w3id.org\/openbadges\/v2","id":"%s","type":"Issuer"}';
     }
 
     public function test_create_badge() {
@@ -172,27 +107,21 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
     public function test_clone_badge() {
         $badge = new badge($this->badgeid);
         $newid = $badge->make_clone();
-        $clonedbadge = new badge($newid);
+        $cloned_badge = new badge($newid);
 
-        $this->assertEquals($badge->description, $clonedbadge->description);
-        $this->assertEquals($badge->issuercontact, $clonedbadge->issuercontact);
-        $this->assertEquals($badge->issuername, $clonedbadge->issuername);
-        $this->assertEquals($badge->issuercontact, $clonedbadge->issuercontact);
-        $this->assertEquals($badge->issuerurl, $clonedbadge->issuerurl);
-        $this->assertEquals($badge->expiredate, $clonedbadge->expiredate);
-        $this->assertEquals($badge->expireperiod, $clonedbadge->expireperiod);
-        $this->assertEquals($badge->type, $clonedbadge->type);
-        $this->assertEquals($badge->courseid, $clonedbadge->courseid);
-        $this->assertEquals($badge->message, $clonedbadge->message);
-        $this->assertEquals($badge->messagesubject, $clonedbadge->messagesubject);
-        $this->assertEquals($badge->attachment, $clonedbadge->attachment);
-        $this->assertEquals($badge->notification, $clonedbadge->notification);
-        $this->assertEquals($badge->version, $clonedbadge->version);
-        $this->assertEquals($badge->language, $clonedbadge->language);
-        $this->assertEquals($badge->imagecaption, $clonedbadge->imagecaption);
-        $this->assertEquals($badge->imageauthorname, $clonedbadge->imageauthorname);
-        $this->assertEquals($badge->imageauthoremail, $clonedbadge->imageauthoremail);
-        $this->assertEquals($badge->imageauthorurl, $clonedbadge->imageauthorurl);
+        $this->assertEquals($badge->description, $cloned_badge->description);
+        $this->assertEquals($badge->issuercontact, $cloned_badge->issuercontact);
+        $this->assertEquals($badge->issuername, $cloned_badge->issuername);
+        $this->assertEquals($badge->issuercontact, $cloned_badge->issuercontact);
+        $this->assertEquals($badge->issuerurl, $cloned_badge->issuerurl);
+        $this->assertEquals($badge->expiredate, $cloned_badge->expiredate);
+        $this->assertEquals($badge->expireperiod, $cloned_badge->expireperiod);
+        $this->assertEquals($badge->type, $cloned_badge->type);
+        $this->assertEquals($badge->courseid, $cloned_badge->courseid);
+        $this->assertEquals($badge->message, $cloned_badge->message);
+        $this->assertEquals($badge->messagesubject, $cloned_badge->messagesubject);
+        $this->assertEquals($badge->attachment, $cloned_badge->attachment);
+        $this->assertEquals($badge->notification, $cloned_badge->notification);
     }
 
     public function test_badge_status() {
@@ -208,45 +137,6 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $badge->delete();
         // We don't actually delete badges. We archive them.
         $this->assertAttributeEquals(BADGE_STATUS_ARCHIVED, 'status', $badge);
-    }
-
-    /**
-     * Really delete the badge.
-     */
-    public function test_delete_badge_for_real() {
-        global $DB;
-
-        $badge = new badge($this->badgeid);
-
-        $newid1 = $badge->make_clone();
-        $newid2 = $badge->make_clone();
-        $newid3 = $badge->make_clone();
-
-        // Insert related badges to badge 1.
-        $badge->add_related_badges([$newid1, $newid2, $newid3]);
-
-        // Another badge.
-        $badge2 = new badge($newid2);
-        // Make badge 1 related for badge 2.
-        $badge2->add_related_badges([$this->badgeid]);
-
-        // Confirm that the records about this badge about its relations have been removed as well.
-        $relatedsql = 'badgeid = :badgeid OR relatedbadgeid = :relatedbadgeid';
-        $relatedparams = array(
-            'badgeid' => $this->badgeid,
-            'relatedbadgeid' => $this->badgeid
-        );
-        // Badge 1 has 4 related records. 3 where it's the badgeid, 1 where it's the relatedbadgeid.
-        $this->assertEquals(4, $DB->count_records_select('badge_related', $relatedsql, $relatedparams));
-
-        // Delete the badge for real.
-        $badge->delete(false);
-
-        // Confirm that the badge itself has been removed.
-        $this->assertFalse($DB->record_exists('badge', ['id' => $this->badgeid]));
-
-        // Confirm that the records about this badge about its relations have been removed as well.
-        $this->assertFalse($DB->record_exists_select('badge_related', $relatedsql, $relatedparams));
     }
 
     public function test_create_badge_criteria() {
@@ -297,28 +187,12 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
     }
 
     public function test_badge_awards() {
-        global $DB;
         $this->preventResetByRollback(); // Messaging is not compatible with transactions.
         $badge = new badge($this->badgeid);
         $user1 = $this->getDataGenerator()->create_user();
 
-        $sink = $this->redirectMessages();
-
-        $DB->set_field_select('message_processors', 'enabled', 0, "name <> 'email'");
-        set_user_preference('message_provider_moodle_badgerecipientnotice_loggedoff', 'email', $user1);
-
-        $badge->issue($user1->id, false);
-        $this->assertDebuggingCalled(); // Expect debugging while baking a badge via phpunit.
+        $badge->issue($user1->id, true);
         $this->assertTrue($badge->is_issued($user1->id));
-
-        $messages = $sink->get_messages();
-        $sink->close();
-        $this->assertCount(1, $messages);
-        $message = array_pop($messages);
-        // Check we have the expected data.
-        $customdata = json_decode($message->customdata);
-        $this->assertObjectHasAttribute('notificationiconurl', $customdata);
-        $this->assertObjectHasAttribute('hash', $customdata);
 
         $user2 = $this->getDataGenerator()->create_user();
         $badge->issue($user2->id, true);
@@ -365,12 +239,6 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
             $badge->attachment = 1;
             $badge->notification = 0;
             $badge->status = BADGE_STATUS_INACTIVE;
-            $badge->version = "Version $i";
-            $badge->language = "en";
-            $badge->imagecaption = "Image caption $i";
-            $badge->imageauthorname = "Image author's name $i";
-            $badge->imageauthoremail = "author$i@example.com";
-            $badge->imageauthorname = "Image author's name $i";
 
             $badgeid = $DB->insert_record('badge', $badge, true);
             $badges[$badgeid] = new badge($badgeid);
@@ -446,12 +314,6 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $badge->attachment = 1;
         $badge->notification = 0;
         $badge->status = BADGE_STATUS_ACTIVE;
-        $badge->version = "Version $i";
-        $badge->language = "en";
-        $badge->imagecaption = "Image caption";
-        $badge->imageauthorname = "Image author's name";
-        $badge->imageauthoremail = "author@example.com";
-        $badge->imageauthorname = "Image author's name";
 
         $badgeid = $DB->insert_record('badge', $badge, true);
         $badges[$badgeid] = new badge($badgeid);
@@ -620,38 +482,6 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test badges observer when cohort_member_added event is fired.
-     */
-    public function test_badges_observer_cohort_criteria_review() {
-        global $CFG;
-
-        require_once("$CFG->dirroot/cohort/lib.php");
-
-        $cohort = $this->getDataGenerator()->create_cohort();
-
-        $this->preventResetByRollback(); // Messaging is not compatible with transactions.
-        $badge = new badge($this->badgeid);
-        $this->assertFalse($badge->is_issued($this->user->id));
-
-        // Set up the badge criteria.
-        $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
-        $criteriaoverall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteriaoverall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
-        $criteriaoverall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY, 'cohort_cohorts' => array('0' => $cohort->id)));
-
-        // Make the badge active.
-        $badge->set_status(BADGE_STATUS_ACTIVE);
-
-        // Add the user to the cohort.
-        cohort_add_member($cohort->id, $this->user->id);
-
-        // Verify that the badge was awarded.
-        $this->assertDebuggingCalled();
-        $this->assertTrue($badge->is_issued($this->user->id));
-
-    }
-
-    /**
      * Test badges assertion generated when a badge is issued.
      */
     public function test_badges_assertion() {
@@ -676,24 +506,13 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
 
         // Get assertion.
         $award = reset($awards);
-        $assertion = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V1);
+        $assertion = new core_badges_assertion($award->uniquehash);
         $testassertion = $this->assertion;
 
         // Make sure JSON strings have the same structure.
         $this->assertStringMatchesFormat($testassertion->badge, json_encode($assertion->get_badge_assertion()));
         $this->assertStringMatchesFormat($testassertion->class, json_encode($assertion->get_badge_class()));
         $this->assertStringMatchesFormat($testassertion->issuer, json_encode($assertion->get_issuer()));
-
-        // Test Openbadge specification version 2.
-        // Get assertion version 2.
-        $award = reset($awards);
-        $assertion2 = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V2);
-        $testassertion2 = $this->assertion2;
-
-        // Make sure JSON strings have the same structure.
-        $this->assertStringMatchesFormat($testassertion2->badge, json_encode($assertion2->get_badge_assertion()));
-        $this->assertStringMatchesFormat($testassertion2->class, json_encode($assertion2->get_badge_class()));
-        $this->assertStringMatchesFormat($testassertion2->issuer, json_encode($assertion2->get_issuer()));
     }
 
     /**
@@ -759,156 +578,5 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $nodes = $reflector->getProperty('nodes');
         $nodes->setAccessible(true);
         $this->assertArrayHasKey('localbadges', $nodes->getValue($tree));
-    }
-
-    /**
-     * Test insert and update endorsement with a site badge.
-     */
-    public function test_badge_endorsement() {
-        $badge = new badge($this->badgeid);
-
-        // Insert Endorsement.
-        $endorsement = new stdClass();
-        $endorsement->badgeid = $this->badgeid;
-        $endorsement->issuername = "Issuer 123";
-        $endorsement->issueremail = "issuer123@email.com";
-        $endorsement->issuerurl = "https://example.org/issuer-123";
-        $endorsement->dateissued = 1524567747;
-        $endorsement->claimid = "https://example.org/robotics-badge.json";
-        $endorsement->claimcomment = "Test endorser comment";
-
-        $badge->save_endorsement($endorsement);
-        $endorsement1 = $badge->get_endorsement();
-        $this->assertEquals($endorsement->badgeid, $endorsement1->badgeid);
-        $this->assertEquals($endorsement->issuername, $endorsement1->issuername);
-        $this->assertEquals($endorsement->issueremail, $endorsement1->issueremail);
-        $this->assertEquals($endorsement->issuerurl, $endorsement1->issuerurl);
-        $this->assertEquals($endorsement->dateissued, $endorsement1->dateissued);
-        $this->assertEquals($endorsement->claimid, $endorsement1->claimid);
-        $this->assertEquals($endorsement->claimcomment, $endorsement1->claimcomment);
-
-        // Update Endorsement.
-        $endorsement1->issuername = "Issuer update";
-        $badge->save_endorsement($endorsement1);
-        $endorsement2 = $badge->get_endorsement();
-        $this->assertEquals($endorsement1->id, $endorsement2->id);
-        $this->assertEquals($endorsement1->issuername, $endorsement2->issuername);
-    }
-
-    /**
-     * Test insert and delete related badge with a site badge.
-     */
-    public function test_badge_related() {
-        $badge = new badge($this->badgeid);
-        $newid1 = $badge->make_clone();
-        $newid2 = $badge->make_clone();
-        $newid3 = $badge->make_clone();
-
-        // Insert an related badge.
-        $badge->add_related_badges([$newid1, $newid2, $newid3]);
-        $this->assertCount(3, $badge->get_related_badges());
-
-        // Only get related is active.
-        $clonedbage1 = new badge($newid1);
-        $clonedbage1->status = BADGE_STATUS_ACTIVE;
-        $clonedbage1->save();
-        $this->assertCount(1, $badge->get_related_badges(true));
-
-        // Delete an related badge.
-        $badge->delete_related_badge($newid2);
-        $this->assertCount(2, $badge->get_related_badges());
-    }
-
-    /**
-     * Test insert, update, delete alignment with a site badge.
-     */
-    public function test_alignments() {
-        $badge = new badge($this->badgeid);
-
-        // Insert a alignment.
-        $alignment1 = new stdClass();
-        $alignment1->badgeid = $this->badgeid;
-        $alignment1->targetname = 'CCSS.ELA-Literacy.RST.11-12.3';
-        $alignment1->targeturl = 'http://www.corestandards.org/ELA-Literacy/RST/11-12/3';
-        $alignment1->targetdescription = 'Test target description';
-        $alignment1->targetframework = 'CCSS.RST.11-12.3';
-        $alignment1->targetcode = 'CCSS.RST.11-12.3';
-        $alignment2 = clone $alignment1;
-        $newid1 = $badge->save_alignment($alignment1);
-        $newid2 = $badge->save_alignment($alignment2);
-        $alignments1 = $badge->get_alignments();
-        $this->assertCount(2, $alignments1);
-
-        $this->assertEquals($alignment1->badgeid, $alignments1[$newid1]->badgeid);
-        $this->assertEquals($alignment1->targetname, $alignments1[$newid1]->targetname);
-        $this->assertEquals($alignment1->targeturl, $alignments1[$newid1]->targeturl);
-        $this->assertEquals($alignment1->targetdescription, $alignments1[$newid1]->targetdescription);
-        $this->assertEquals($alignment1->targetframework, $alignments1[$newid1]->targetframework);
-        $this->assertEquals($alignment1->targetcode, $alignments1[$newid1]->targetcode);
-
-        // Update aligment.
-        $alignments1[$newid1]->targetname = 'CCSS.ELA-Literacy.RST.11-12.3 update';
-        $badge->save_alignment($alignments1[$newid1], $alignments1[$newid1]->id);
-        $alignments2 = $badge->get_alignments();
-        $this->assertEquals($alignments1[$newid1]->id, $alignments2[$newid1]->id);
-        $this->assertEquals($alignments1[$newid1]->targetname, $alignments2[$newid1]->targetname);
-
-        // Delete alignment.
-        $badge->delete_alignment($alignments1[$newid2]->id);
-        $this->assertCount(1, $badge->get_alignments());
-    }
-
-    /**
-     * Test badges_delete_site_backpack().
-     *
-     */
-    public function test_badges_delete_site_backpack(): void {
-        global $DB;
-
-        $this->setAdminUser();
-
-        // Create one backpack.
-        $total = $DB->count_records('badge_external_backpack');
-        $this->assertEquals(1, $total);
-
-        $data = new \stdClass();
-        $data->apiversion = OPEN_BADGES_V2P1;
-        $data->backpackapiurl = 'https://dc.imsglobal.org/obchost/ims/ob/v2p1';
-        $data->backpackweburl = 'https://dc.imsglobal.org';
-        badges_create_site_backpack($data);
-        $backpack = $DB->get_record('badge_external_backpack', ['backpackweburl' => $data->backpackweburl]);
-        $user1 = $this->getDataGenerator()->create_user();
-        $user2 = $this->getDataGenerator()->create_user();
-        // User1 is connected to the backpack to be removed and has 2 collections.
-        $backpackuser1 = helper::create_fake_backpack(['userid' => $user1->id, 'externalbackpackid' => $backpack->id]);
-        helper::create_fake_backpack_collection(['backpackid' => $backpackuser1->id]);
-        helper::create_fake_backpack_collection(['backpackid' => $backpackuser1->id]);
-        // User2 is connected to a different backpack and has 1 collection.
-        $backpackuser2 = helper::create_fake_backpack(['userid' => $user2->id]);
-        helper::create_fake_backpack_collection(['backpackid' => $backpackuser2->id]);
-
-        $total = $DB->count_records('badge_external_backpack');
-        $this->assertEquals(2, $total);
-        $total = $DB->count_records('badge_backpack');
-        $this->assertEquals(2, $total);
-        $total = $DB->count_records('badge_external');
-        $this->assertEquals(3, $total);
-
-        // Remove the backpack created previously.
-        $result = badges_delete_site_backpack($backpack->id);
-        $this->assertTrue($result);
-
-        $total = $DB->count_records('badge_external_backpack');
-        $this->assertEquals(1, $total);
-
-        $total = $DB->count_records('badge_backpack');
-        $this->assertEquals(1, $total);
-
-        $total = $DB->count_records('badge_external');
-        $this->assertEquals(1, $total);
-
-        // Try to remove an non-existent backpack.
-        $result = badges_delete_site_backpack($backpack->id);
-        $this->assertFalse($result);
     }
 }

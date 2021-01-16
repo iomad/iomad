@@ -56,24 +56,10 @@
 }}
 <nav id="competency-path-{{uniqid}}">
     <small>
-        {{#showlinks}}
-        <a href="{{pluginbaseurl}}/competencies.php?competencyframeworkid={{framework.id}}&pagecontextid={{pagecontextid}}" >
-            {{{framework.name}}}
-        </a>
-        {{/showlinks}}
-        {{^showlinks}}
-        {{{framework.name}}}
-        {{/showlinks}}
+        <a href="{{pluginbaseurl}}/competencies.php?competencyframeworkid={{framework.id}}&pagecontextid={{pagecontextid}}" >{{{framework.name}}}</a>
         /
         {{#ancestors}}
-            {{#showlinks}}
-            <a href="{{pluginbaseurl}}/competencies.php?competencyid={{id}}">
-                {{{name}}}
-            </a>
-            {{/showlinks}}
-            {{^showlinks}}
-                {{{name}}}
-            {{/showlinks}}
+            <a data-action="competency-dialogue" href="#" data-id="{{id}}">{{{name}}}</a>
             {{^last}}<span> / </span>{{/last}}
         {{/ancestors}}
     </small>

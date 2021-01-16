@@ -2,7 +2,7 @@
 
 
 /*
-@version   v5.20.16  12-Jan-2020
+@version   v5.20.9  21-Dec-2016
 @copyright (c) 2000-2013 John Lim (jlim#natsoft.com). All rights reserved.
 @copyright (c) 2014      Damien Regad, Mark Newnham and the ADOdb community
   Released under both BSD license and Lesser GPL library license.
@@ -90,13 +90,4 @@ class ADODB_pdo_oci extends ADODB_pdo_base {
 		else
 			return $retarr;
 	}
-
-    /**
-     * @param bool $auto_commit
-     * @return void
-     */
-    function SetAutoCommit($auto_commit)
-    {
-        $this->_connectionID->setAttribute(PDO::ATTR_AUTOCOMMIT, $auto_commit);
-    }
 }

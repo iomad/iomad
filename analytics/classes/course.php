@@ -132,21 +132,18 @@ class course implements \core_analytics\analysable {
      * Use self::instance() instead to get cached copies of the course. Instances obtained
      * through this constructor will not be cached.
      *
-     * @param int|\stdClass $course Course id or mdl_course record
-     * @param \context|null $context
+     * Lazy load of course data, students and teachers.
+     *
+     * @param int|\stdClass $course Course id
      * @return void
      */
-    public function __construct($course, ?\context $context = null) {
+    public function __construct($course) {
 
         if (is_scalar($course)) {
             $this->course = new \stdClass();
             $this->course->id = $course;
         } else {
             $this->course = $course;
-        }
-
-        if (!is_null($context)) {
-            $this->coursecontext = $context;
         }
     }
 
@@ -156,10 +153,9 @@ class course implements \core_analytics\analysable {
      * Lazy load of course data, students and teachers.
      *
      * @param int|\stdClass $course Course object or course id
-     * @param \context|null $context
      * @return \core_analytics\course
      */
-    public static function instance($course, ?\context $context = null) {
+    public static function instance($course) {
 
         $courseid = $course;
         if (!is_scalar($courseid)) {
@@ -170,7 +166,7 @@ class course implements \core_analytics\analysable {
             return self::$cachedinstance;
         }
 
-        $cachedinstance = new \core_analytics\course($course, $context);
+        $cachedinstance = new \core_analytics\course($course);
         self::$cachedinstance = $cachedinstance;
         self::$cachedid = (int)$courseid;
         return self::$cachedinstance;

@@ -31,22 +31,21 @@ class Converter implements ConverterInterface
     /**
      * @param string $from The original base path (directory, not file!)
      * @param string $to   The new base path (directory, not file!)
-     * @param string $root Root directory (defaults to `getcwd`)
      */
-    public function __construct($from, $to, $root = '')
+    public function __construct($from, $to)
     {
         $shared = $this->shared($from, $to);
         if ($shared === '') {
             // when both paths have nothing in common, one of them is probably
             // absolute while the other is relative
-            $root = $root ?: getcwd();
-            $from = strpos($from, $root) === 0 ? $from : preg_replace('/\/+/', '/', $root.'/'.$from);
-            $to = strpos($to, $root) === 0 ? $to : preg_replace('/\/+/', '/', $root.'/'.$to);
+            $cwd = getcwd();
+            $from = strpos($from, $cwd) === 0 ? $from : $cwd.'/'.$from;
+            $to = strpos($to, $cwd) === 0 ? $to : $cwd.'/'.$to;
 
             // or traveling the tree via `..`
             // attempt to resolve path, or assume it's fine if it doesn't exist
-            $from = @realpath($from) ?: $from;
-            $to = @realpath($to) ?: $to;
+            $from = realpath($from) ?: $from;
+            $to = realpath($to) ?: $to;
         }
 
         $from = $this->dirname($from);
@@ -156,7 +155,7 @@ class Converter implements ConverterInterface
         $to = mb_substr($this->to, mb_strlen($shared));
 
         // add .. for every directory that needs to be traversed to new path
-        $to = str_repeat('../', count(array_filter(explode('/', $to))));
+        $to = str_repeat('../', mb_substr_count($to, '/'));
 
         return $to.ltrim($path, '/');
     }
@@ -170,11 +169,11 @@ class Converter implements ConverterInterface
      */
     protected function dirname($path)
     {
-        if (@is_file($path)) {
+        if (is_file($path)) {
             return dirname($path);
         }
 
-        if (@is_dir($path)) {
+        if (is_dir($path)) {
             return rtrim($path, '/');
         }
 

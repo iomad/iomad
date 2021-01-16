@@ -69,8 +69,7 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $this->getDataGenerator()->enrol_user($this->teacher->id, $this->course->id, $this->teacherrole->id, 'manual');
 
         // Create first pages.
-        $this->firstpage = $this->getDataGenerator()->get_plugin_generator('mod_wiki')->create_first_page($this->wiki,
-            array('tags' => array('Cats', 'Dogs')));
+        $this->firstpage = $this->getDataGenerator()->get_plugin_generator('mod_wiki')->create_first_page($this->wiki);
     }
 
     /**
@@ -617,10 +616,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedfirstpage['caneditpage'] = true; // No groups and students have 'mod/wiki:editpage' capability.
         $expectedfirstpage['firstpage'] = true;
         $expectedfirstpage['contentformat'] = 1;
-        $expectedfirstpage['tags'] = \core_tag\external\util::get_item_tags('mod_wiki', 'wiki_pages', $this->firstpage->id);
-        // Cast to expected.
-        $expectedfirstpage['tags'][0]['isstandard'] = (bool) $expectedfirstpage['tags'][0]['isstandard'];
-        $expectedfirstpage['tags'][1]['isstandard'] = (bool) $expectedfirstpage['tags'][1]['isstandard'];
         $expectedpages[] = $expectedfirstpage;
 
         $result = mod_wiki_external::get_subwiki_pages($this->wiki->id);
@@ -645,7 +640,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectednewpage['caneditpage'] = true; // No groups and students have 'mod/wiki:editpage' capability.
         $expectednewpage['firstpage'] = false;
         $expectednewpage['contentformat'] = 1;
-        $expectednewpage['tags'] = array();
         array_unshift($expectedpages, $expectednewpage); // Add page to the beginning since it orders by title by default.
 
         $result = mod_wiki_external::get_subwiki_pages($this->wiki->id);
@@ -698,7 +692,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedteacherpage['caneditpage'] = true;
         $expectedteacherpage['firstpage'] = true;
         $expectedteacherpage['contentformat'] = 1;
-        $expectedteacherpage['tags'] = array();
         $expectedpages = array($expectedteacherpage);
 
         $result = mod_wiki_external::get_subwiki_pages($indwiki->id, 0, $this->teacher->id);
@@ -710,7 +703,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedstudentpage['caneditpage'] = true;
         $expectedstudentpage['firstpage'] = true;
         $expectedstudentpage['contentformat'] = 1;
-        $expectedstudentpage['tags'] = array();
         $expectedpages = array($expectedstudentpage);
 
         $result = mod_wiki_external::get_subwiki_pages($indwiki->id, 0, $this->student->id);
@@ -746,7 +738,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = true; // User belongs to group and has 'mod/wiki:editpage' capability.
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikisep->id, $this->group1->id);
@@ -769,7 +760,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = true;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikisep->id, 0);
@@ -793,7 +783,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = true; // User belongs to group and has 'mod/wiki:editpage' capability.
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikivis->id, $this->group1->id);
@@ -805,7 +794,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = false; // User doesn't belong to group so he can't edit the page.
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikivis->id, $this->group2->id);
@@ -817,7 +805,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = false;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikivis->id, 0);
@@ -840,7 +827,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = true;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikisepind->id, $this->group1->id, $this->student->id);
@@ -864,7 +850,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = false;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikisepind->id, $this->group1->id, $this->student2->id);
@@ -887,7 +872,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = true;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikivisind->id, $this->group1->id, $this->student->id);
@@ -899,7 +883,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = false;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikivisind->id, $this->group2->id, $this->teacher->id);
@@ -911,7 +894,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['caneditpage'] = false;
         $expectedpage['firstpage'] = true;
         $expectedpage['contentformat'] = 1;
-        $expectedpage['tags'] = array();
         $expectedpages = array($expectedpage);
 
         $result = mod_wiki_external::get_subwiki_pages($this->wikivisind->id, 0, $this->teacher->id);
@@ -1005,12 +987,8 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
             'cachedcontent' => $this->firstpage->cachedcontent,
             'contentformat' => 1,
             'caneditpage' => true,
-            'version' => 1,
-            'tags' => \core_tag\external\util::get_item_tags('mod_wiki', 'wiki_pages', $this->firstpage->id),
+            'version' => 1
         );
-        // Cast to expected.
-        $expectedpage['tags'][0]['isstandard'] = (bool) $expectedpage['tags'][0]['isstandard'];
-        $expectedpage['tags'][1]['isstandard'] = (bool) $expectedpage['tags'][1]['isstandard'];
 
         $result = mod_wiki_external::get_page_contents($this->firstpage->id);
         $result = external_api::clean_returnvalue(mod_wiki_external::get_page_contents_returns(), $result);
@@ -1022,7 +1000,6 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
         $expectedpage['id'] = $newpage->id;
         $expectedpage['title'] = $newpage->title;
         $expectedpage['cachedcontent'] = $newpage->cachedcontent;
-        $expectedpage['tags'] = array();
 
         $result = mod_wiki_external::get_page_contents($newpage->id);
         $result = external_api::clean_returnvalue(mod_wiki_external::get_page_contents_returns(), $result);
@@ -1051,8 +1028,7 @@ class mod_wiki_external_testcase extends externallib_advanced_testcase {
             'cachedcontent' => $this->fpsepg1indstu->cachedcontent,
             'contentformat' => 1,
             'caneditpage' => true,
-            'version' => 1,
-            'tags' => array(),
+            'version' => 1
         );
 
         $result = mod_wiki_external::get_page_contents($this->fpsepg1indstu->id);

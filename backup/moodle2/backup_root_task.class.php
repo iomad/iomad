@@ -110,12 +110,6 @@ class backup_root_task extends backup_task {
         $this->add_setting($blocks);
         $this->converter_deps($blocks, $converters);
 
-        // Define files.
-        $files = new backup_generic_setting('files', base_setting::IS_BOOLEAN, true);
-        $files->set_ui(new backup_setting_ui_checkbox($files, get_string('rootsettingfiles', 'backup')));
-        $this->add_setting($files);
-        $this->converter_deps($files, $converters);
-
         // Define filters
         $filters = new backup_generic_setting('filters', base_setting::IS_BOOLEAN, true);
         $filters->set_ui(new backup_setting_ui_checkbox($filters, get_string('rootsettingfilters', 'backup')));
@@ -174,15 +168,5 @@ class backup_root_task extends backup_task {
         $competencies = new backup_competencies_setting();
         $competencies->set_ui(new backup_setting_ui_checkbox($competencies, get_string('rootsettingcompetencies', 'backup')));
         $this->add_setting($competencies);
-
-        // Define custom fields inclusion setting if custom fields are used.
-        $customfields = new backup_customfield_setting('customfield', base_setting::IS_BOOLEAN, true);
-        $customfields->set_ui(new backup_setting_ui_checkbox($customfields, get_string('rootsettingcustomfield', 'backup')));
-        $this->add_setting($customfields);
-
-        // Define content bank content inclusion setting.
-        $contentbank = new backup_contentbankcontent_setting('contentbankcontent', base_setting::IS_BOOLEAN, true);
-        $contentbank->set_ui(new backup_setting_ui_checkbox($contentbank, get_string('rootsettingcontentbankcontent', 'backup')));
-        $this->add_setting($contentbank);
     }
 }

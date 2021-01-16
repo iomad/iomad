@@ -75,8 +75,9 @@ abstract class framework_selector_base {
                 'strings' => array(
                     array('previouslyselectedframeworks', 'local_framework_selector', '%%SEARCHTERM%%'),
                     array('nomatchingframeworks', 'local_framework_selector', '%%SEARCHTERM%%'),
-                    array('none')
+                    array('none', 'local_framework_selector')
                 ));
+
 
     // Public API.
 
@@ -542,7 +543,7 @@ abstract class framework_selector_base {
                 $groupedframeworks = array(get_string('nomatchingframeworks', 'local_framework_selector',
                 $search) => array());
             } else {
-                $groupedframeworks = array(get_string('none') => array());
+                $groupedframeworks = array(get_string('none', 'local_framework_selector') => array());
             }
         } else if ($this->autoselectunique && count($groupedframeworks) == 1 &&
                 count(reset($groupedframeworks)) == 1) {
@@ -621,7 +622,7 @@ abstract class framework_selector_base {
      * @return string the caption for the search button.
      */
     protected function search_button_caption() {
-        return get_string('search');
+        return get_string('search', 'local_framework_selector');
     }
 
     // Initialise one of the option checkboxes, either from

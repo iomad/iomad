@@ -25,7 +25,7 @@
 function mycourses_get_my_completion($datefrom = 0) {
     global $DB, $USER, $CFG;
 
-    $companyid = iomad::get_my_companyid(context_system::instance(), false);
+    $companyid = iomad::get_my_companyid(context_system::instance());
 
     // Check if there is a iomadcertificate module.
     if ($certmodule = $DB->get_record('modules', array('name' => 'iomadcertificate'))) {
@@ -41,17 +41,17 @@ function mycourses_get_my_completion($datefrom = 0) {
                                        JOIN {course} c ON (c.id = cc.courseid)
                                        WHERE cc.userid = :userid
                                        AND c.visible = 1
-                                       AND cc.timecompleted IS NOT NULL",
+                                       ORDER BY c.fullname, cc.timecompleted DESC",
                                        array('userid' => $USER->id));
-    $myinprogress = $DB->get_records_sql("SELECT cc.id, cc.userid, cc.courseid as courseid, c.fullname as coursefullname, c.summary as coursesummary
-                                          FROM {local_iomad_track} cc
-                                          JOIN {course} c ON (c.id = cc.courseid)
+    $myinprogress = $DB->get_records_sql("SELECT cc.id, cc.userid, cc.course as courseid, c.fullname as coursefullname, c.summary as coursesummary
+                                          FROM {course_completions} cc
+                                          JOIN {course} c ON (c.id = cc.course)
                                           JOIN {user_enrolments} ue ON (ue.userid = cc.userid)
                                           JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = c.id)
                                           WHERE cc.userid = :userid
                                           AND c.visible = 1
                                           AND cc.timecompleted IS NULL
-                                          AND ue.timestart != 0",
+                              AND ue.timestart != 0",
                                           array('userid' => $USER->id));
 
     // We dont care about these.  If you have enrolled then you are started.
@@ -69,8 +69,7 @@ function mycourses_get_my_completion($datefrom = 0) {
     // Get courses which are available as self sign up and assigned to the company.
     // First we discount everything else we have in progress.
     $myusedcourses = array();
-    foreach ($myinprogress as $id => $inprogress) {
-        $myinprogress[$id]->coursefullname = format_string($inprogress->coursefullname);
+    foreach ($myinprogress as $inprogress) {
         $myusedcourses[$inprogress->courseid] = $inprogress->courseid;
     }
     if (!empty($myusedcourses)) {
@@ -105,22 +104,21 @@ function mycourses_get_my_completion($datefrom = 0) {
                                                         $inprogresssql",
                                                         array('enrol' => 'self'));
         foreach ($companyselfenrolcourses as $companyselfenrolcourse) {
-            $companyselfenrolcourse->coursefullname = format_string($companyselfenrolcourse->coursefullname);
             $myavailablecourses[$companyselfenrolcourse->coursefullname] = $companyselfenrolcourse;
         }
         foreach ($sharedselfenrolcourses as $sharedselfenrolcourse) {
-            $sharedselfenrolcourse->coursefullname = format_string($sharedselfenrolcourse->coursefullname);
             $myavailablecourses[$sharedselfenrolcourse->coursefullname] = $sharedselfenrolcourse;
         }
     }
     foreach($mynotstartedlicense as $licensedcourse) {
-        $licensedcourse->coursefullname = format_string($licensedcourse->coursefullname);
         $myavailablecourses[$licensedcourse->coursefullname] = $licensedcourse;
     }
 
+    // Put them into alpahbetical order.
+    ksort($myavailablecourses, SORT_NATURAL | SORT_FLAG_CASE);
+
     // Deal with completed course scores and links for certificates.
     foreach ($mycompleted as $id => $completed) {
-	$mycompleted[$id]->coursefullname = format_string($completed->coursefullname);
         // Deal with the iomadcertificate info.
         if ($hasiomadcertificate) {
             if ($iomadcertificateinfo = $DB->get_record('iomadcertificate',
@@ -151,11 +149,6 @@ function mycourses_get_my_completion($datefrom = 0) {
         $mycompleted[$id]->certificate = $certstring;
 
     }
-
-    // Put them into alpahbetical order.
-    ksort($myavailablecourses, SORT_NATURAL | SORT_FLAG_CASE);
-    ksort($myinprogress, SORT_NATURAL | SORT_FLAG_CASE);
-    ksort($mycompleted, SORT_NATURAL | SORT_FLAG_CASE);
 
     $mycompletions->mycompleted = $mycompleted;
     $mycompletions->myinprogress = $myinprogress;
@@ -188,7 +181,6 @@ function mycourses_get_my_archive($dateto = 0) {
 
     // Deal with completed course scores and links for certificates.
     foreach ($myarchive as $id => $archive) {
-	$myarchive[$id]->coursefullname = format_string($archive->coursefullname);
         // Deal with the iomadcertificate info.
         if ($hasiomadcertificate) {
             if ($iomadcertificateinfo = $DB->get_record('iomadcertificate',
@@ -219,3 +211,5 @@ function mycourses_get_my_archive($dateto = 0) {
 
     return $mycompletions;
 }
+
+

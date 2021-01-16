@@ -23,7 +23,7 @@ $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirma
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_classrooms, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per page.
 
 global $DB, $email;
 
@@ -46,11 +46,10 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
@@ -83,7 +82,7 @@ if ($delete and confirm_sesskey()) {
 
         if ( $DB->delete_records('classroom', array('id' => $delete)) ) {
             $transaction->allow_commit();
-            redirect($returnurl, get_string('classroomdeletedok', 'block_iomad_company_admin'), null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect($returnurl);
         } else {
             $transaction->rollback();
             echo $OUTPUT->header();
@@ -154,7 +153,7 @@ if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $context))
 }
 
 // exit button
-$link = new moodle_url('/my');
+$link = new moodle_url('/local/iomad_dashboard/index.php');
 echo '<a class="btn btn-primary" href="' . $link . '">' . get_string('todashboard', 'block_iomad_company_admin') . '</a>';
 
 echo $OUTPUT->footer();

@@ -60,19 +60,19 @@
 
 {{#behalfuser}}
 <div class="clearfix">
-    <div class="float-right mb-2">
+    <div class="pull-right m-b-2">
         {{# str }} viewconsentpageforuser, tool_policy, {{{ . }}} {{/ str }}
     </div>
 </div>
 {{/behalfuser}}
 
 <div class="clearfix">
-    <div class="float-left">
+    <div class="pull-left">
         <h2>{{# str }}consentpagetitle, tool_policy{{/ str }}</h2>
     </div>
 </div>
 
-<div class="clearfix mt-2">
+<div class="clearfix m-t-2">
     <h3>{{# str }}agreepolicies, tool_policy {{/ str }}</h3>
 </div>
 <hr>
@@ -80,39 +80,20 @@
 
 {{#policies}}
 
-<input value="{{id}}" name="listdoc[]" type="hidden">
-
-<div class="agreedoc-policy clearfix mt-2 mb-1">
+<div class="agreedoc-policy clearfix m-t-2 m-b-1">
     <h3>{{{name}}}</h3>
     <div class="agreedoc-content">
-        <div class="agreedoc-summary mb-2">
+        <div class="agreedoc-summary m-b-2">
           {{{summary}}}
         </div>
         <div class="agreedoc-msg">
             {{# str }}refertofullpolicytext, tool_policy, {{{policymodal}}} {{/ str }}
         </div>
-        <div class="agreedoc-form mt-1">
-            {{#optional}}
-            <div class="agreedoc-radios">
-                <div class="agreedoc-radios-1">
-                    <label>
-                        <input type="radio" name="status{{id}}" value="1" {{#versionagreed}}checked="{{.}}"{{/versionagreed}}>
-                        {{# str }}iagree, tool_policy, {{{name}}} {{/ str }}
-                    </label>
-                </div>
-                <div class="agreedoc-radios-0">
-                    <label>
-                        <input type="radio" name="status{{id}}" value="0" {{#versiondeclined}}checked="{{.}}"{{/versiondeclined}}>
-                        {{# str }}idontagree, tool_policy, {{{name}}} {{/ str }}
-                    </label>
-                </div>
-            </div>
-            {{/optional}}
-            {{^optional}}
+        <div class="agreedoc-form m-t-1">
             <div class="agreedoc-checkbox">
                 <label>
-                    <input value="1" name="status{{id}}" {{#versionagreed}}checked="{{.}}"{{/versionagreed}} type="checkbox">
-                    {{# str }}iagree, tool_policy, {{{name}}} {{/ str }}
+                    <input value="{{id}}" name="agreedoc[]" {{#versionagreed}}checked="{{.}}"{{/versionagreed}} type="checkbox">
+                    <strong>{{# str }}iagree, tool_policy, {{{name}}} {{/ str }}</strong>
                     <i class="icon fa fa-exclamation-circle text-danger fa-fw" title="{{# str }} required {{/ str }}" ></i>
                 </label>
             </div>
@@ -124,7 +105,6 @@
                         <li><small>{{{.}}}</small></li>
                     {{/versionbehalfsagreed}}
             </ul>
-            {{/optional}}
         </div>
     </div>
 </div>
@@ -143,6 +123,6 @@
 {{#js}}
 // Initialise the JS for the modal window which displays the policy versions.
 require(['tool_policy/policyactions'], function(ActionsMod) {
-    ActionsMod.init('[data-action="view"]');
+    ActionsMod.init();
 });
 {{/js}}

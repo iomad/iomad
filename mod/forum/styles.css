@@ -122,6 +122,10 @@
     margin: 0 .3em;
 }
 
+.path-mod-forum .forumheaderlist .picture {
+    width: 35px;
+}
+
 .path-mod-forum .forumheaderlist .discussion .starter {
     vertical-align: middle;
 }
@@ -135,7 +139,8 @@
     text-align: right;
 }
 
-.path-mod-forum .forumheaderlist .replies {
+.path-mod-forum .forumheaderlist .replies,
+.path-mod-forum .forumheaderlist .discussion .author {
     white-space: nowrap;
 }
 
@@ -216,12 +221,6 @@
     margin: 5px 0;
 }
 
-.discussion-list .userpicture,
-.discussion-list .grouppicture {
-    height: 35px;
-    width: 35px;
-}
-
 /** Styles for search.php */
 #page-mod-forum-search .introcontent {
     padding: 15px;
@@ -254,7 +253,7 @@ span.unread {
 }
 
 /* Forumpost hash anchor target */
-.path-mod-forum :target > .forumpost:before {
+.path-mod-forum :target ~ .forumpost:before {
     display: block;
     content: '';
     width: 4px;
@@ -273,7 +272,22 @@ span.unread {
 .path-mod-forum .discussion-nav ul {
     margin: 0;
     list-style: none;
-    padding-left: 0;
+}
+
+.path-mod-forum .discussion-nav .prev-discussion:before {
+    /*rtl:raw:
+    content: ' ► ';
+    */
+    /*rtl:remove*/
+    content: ' ◄ ';
+}
+
+.path-mod-forum .discussion-nav .next-discussion:after {
+    /*rtl:raw:
+    content: ' ◄ ';
+    */
+    /*rtl:remove*/
+    content: ' ► ';
 }
 
 .path-mod-forum .discussion-nav .next-discussion {
@@ -292,80 +306,17 @@ span.unread {
     background: url([[pix:mod_forum|t/unsubscribed]]) no-repeat -9999px -9999px;
 }
 
-.path-mod-forum .discussionsubscription,
-.path-mod-forum .discussion-settings-menu,
 .path-mod-forum .discussionsubscription {
     margin-top: -10px;
     text-align: right;
     margin-bottom: 10px;
 }
 
-.path-mod-forum .discussionsubscription > a > img,
-.path-mod-forum .discussionlock > a > img,
-.path-mod-forum .favourite-discussion > a > img,
-.path-mod-forum .discussion-settings-menu > a > img {
+.path-mod-forum .discussionsubscription > a > img {
     width: 12px;
     padding: 0 4px;
 }
 
 #page-mod-forum-view img.timedpost {
     margin-right: 5px;
-}
-
-.path-mod-forum article .nav .nav-link:first-of-type {
-    margin-left: auto;
-}
-.path-mod-forum.dir-rtl article .nav .nav-link:first-of-type {
-    margin-left: 0;
-    margin-right: auto;
-}
-
-.path-mod-forum article .nav .nav-link + .nav-link {
-    border-left: 1px solid #ddd;
-}
-
-.privatereplyinfo {
-    font-size: 80%;
-}
-
-.forum-post-container:focus {
-    outline: 0;
-}
-
-/* This style is copied directly from the Bootstrap reboot file which adds button outline */
-/* stylelint-disable declaration-block-no-duplicate-properties */
-.post-actions .btn:focus {
-    outline: 1px dotted;
-    outline: 5px auto -webkit-focus-ring-color;
-}
-
-.forum-post-container:focus > .focus-target {
-    outline: 1px dotted;
-    outline: 5px auto -webkit-focus-ring-color;
-}
-/* stylelint-enable declaration-block-no-duplicate-properties */
-
-/* Forum grading non striked through line */
-.hr-sect {
-    display: flex;
-    flex-basis: 100%;
-    font-weight: bold;
-    align-items: center;
-    margin: 8px 0;
-}
-.hr-sect::before,
-.hr-sect::after {
-    content: "";
-    flex-grow: 1;
-    background: rgba(0, 0, 0, 0.35);
-    height: 1px;
-    font-size: 0;
-    line-height: 0;
-}
-.hr-sect::before {
-    margin-right: 15px;
-}
-
-.hr-sect::after {
-    margin-left: 15px;
 }

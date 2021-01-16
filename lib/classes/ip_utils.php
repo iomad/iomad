@@ -224,43 +224,4 @@ final class ip_utils {
         }
         return false;
     }
-
-    /**
-     * Is an ip in a given list of subnets?
-     *
-     * @param string $ip - the IP to test against the list
-     * @param string $list - the list of IP subnets
-     * @param string $delim a delimiter of the list
-     * @return bool
-     */
-    public static function is_ip_in_subnet_list($ip, $list, $delim = "\n") {
-        $list = explode($delim, $list);
-        foreach ($list as $line) {
-            $tokens = explode('#', $line);
-            $subnet = trim($tokens[0]);
-            if (address_in_subnet($ip, $subnet)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Return IP address for given hostname, or null on failure
-     *
-     * @param string $hostname
-     * @return string|null
-     */
-    public static function get_ip_address(string $hostname): ?string {
-        if (self::is_domain_name($hostname)) {
-            $address = gethostbyname($hostname);
-
-            // If address is different from hostname, we have success.
-            if (strcasecmp($address, $hostname) !== 0) {
-                return $address;
-            }
-        }
-
-        return null;
-    }
 }

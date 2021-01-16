@@ -55,8 +55,6 @@ function(
      */
     var ModalDelete = function(root) {
         Modal.call(this, root);
-
-        this.setRemoveOnClose(true);
     };
 
     ModalDelete.TYPE = 'core_calendar-modal_delete';

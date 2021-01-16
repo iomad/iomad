@@ -59,8 +59,6 @@ if ($frm = data_submitted() and confirm_sesskey()) {
         // Invalidate the course groups cache seeing as we've changed it.
         cache_helper::invalidate_by_definition('core', 'groupdata', array(), array($courseid));
 
-        // Invalidate the user_group_groupings cache, too.
-        cache_helper::purge_by_definition('core', 'user_group_groupings');
     } else if (isset($frm->remove) and !empty($frm->removeselect)) {
         foreach ($frm->removeselect as $groupid) {
             // Ask this method not to purge the cache, we'll do it ourselves afterwards.
@@ -68,9 +66,6 @@ if ($frm = data_submitted() and confirm_sesskey()) {
         }
         // Invalidate the course groups cache seeing as we've changed it.
         cache_helper::invalidate_by_definition('core', 'groupdata', array(), array($courseid));
-
-        // Invalidate the user_group_groupings cache, too.
-        cache_helper::purge_by_definition('core', 'user_group_groupings');
     }
 }
 
@@ -92,8 +87,7 @@ $currentmembersoptions = '';
 $currentmemberscount = 0;
 if ($currentmembers) {
     foreach($currentmembers as $group) {
-        $currentmembersoptions .= '<option value="' . $group->id . '." title="' . format_string($group->name) . '">' .
-                format_string($group->name) . '</option>';
+        $currentmembersoptions .= '<option value="'.$group->id.'.">'.format_string($group->name).'</option>';
         $currentmemberscount ++;
     }
 
@@ -113,8 +107,7 @@ $potentialmembersoptions = '';
 $potentialmemberscount = 0;
 if ($potentialmembers) {
     foreach($potentialmembers as $group) {
-        $potentialmembersoptions .= '<option value="' . $group->id . '." title="' . format_string($group->name) . '">' .
-                format_string($group->name) . '</option>';
+        $potentialmembersoptions .= '<option value="'.$group->id.'.">'.format_string($group->name).'</option>';
         $potentialmemberscount ++;
     }
 } else {

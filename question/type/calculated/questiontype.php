@@ -61,7 +61,6 @@ class qtype_calculated extends question_type {
         // First get the datasets and default options.
         // The code is used for calculated, calculatedsimple and calculatedmulti qtypes.
         global $CFG, $DB, $OUTPUT;
-        parent::get_question_options($question);
         if (!$question->options = $DB->get_record('question_calculated_options',
                 array('question' => $question->id))) {
             $question->options = new stdClass();
@@ -731,12 +730,14 @@ class qtype_calculated extends question_type {
     public function custom_generator_tools_part($mform, $idx, $j) {
 
         $minmaxgrp = array();
-        $minmaxgrp[] = $mform->createElement('float', "calcmin[{$idx}]",
+        $minmaxgrp[] = $mform->createElement('text', "calcmin[{$idx}]",
                 get_string('calcmin', 'qtype_calculated'));
-        $minmaxgrp[] = $mform->createElement('float', "calcmax[{$idx}]",
+        $minmaxgrp[] = $mform->createElement('text', "calcmax[{$idx}]",
                 get_string('calcmax', 'qtype_calculated'));
         $mform->addGroup($minmaxgrp, 'minmaxgrp',
                 get_string('minmax', 'qtype_calculated'), ' - ', false);
+        $mform->setType("calcmin[{$idx}]", PARAM_FLOAT);
+        $mform->setType("calcmax[{$idx}]", PARAM_FLOAT);
 
         $precisionoptions = range(0, 10);
         $mform->addElement('select', "calclength[{$idx}]",
@@ -753,6 +754,7 @@ class qtype_calculated extends question_type {
         foreach ($datasetdefs as $datasetdef) {
             if (preg_match('~^(uniform|loguniform):([^:]*):([^:]*):([0-9]*)$~',
                     $datasetdef->options, $regs)) {
+                $defid = "{$datasetdef->type}-{$datasetdef->category}-{$datasetdef->name}";
                 $formdata["calcdistribution[{$idx}]"] = $regs[1];
                 $formdata["calcmin[{$idx}]"] = $regs[2];
                 $formdata["calcmax[{$idx}]"] = $regs[3];
@@ -1782,6 +1784,17 @@ class qtype_calculated extends question_type {
             $text .= get_string('nosharedwildcard', 'qtype_calculated');
         }
         return $text;
+    }
+
+    public function find_math_equations($text) {
+        // Returns the possible dataset names found in the text as an array.
+        // The array has the dataset name for both key and value.
+        $equations = array();
+        while (preg_match('~\{=([^[:space:]}]*)}~', $text, $regs)) {
+            $equations[] = $regs[1];
+            $text = str_replace($regs[0], '', $text);
+        }
+        return $equations;
     }
 
     public function get_virtual_qtype() {

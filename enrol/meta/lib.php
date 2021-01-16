@@ -120,12 +120,10 @@ class enrol_meta_plugin extends enrol_plugin {
         require_once("$CFG->dirroot/enrol/meta/locallib.php");
 
         // Support creating multiple at once.
-        if (isset($fields['customint1']) && is_array($fields['customint1'])) {
+        if (is_array($fields['customint1'])) {
             $courses = array_unique($fields['customint1']);
-        } else if (isset($fields['customint1'])) {
-            $courses = array($fields['customint1']);
         } else {
-            $courses = array(null); // Strange? Yes, but that's how it's working or instance is not created ever.
+            $courses = array($fields['customint1']);
         }
         foreach ($courses as $courseid) {
             if (!empty($fields['customint2']) && $fields['customint2'] == ENROL_META_CREATE_GROUP) {
@@ -183,6 +181,17 @@ class enrol_meta_plugin extends enrol_plugin {
 
         require_once("$CFG->dirroot/enrol/meta/locallib.php");
         enrol_meta_sync($instance->courseid);
+    }
+
+    /**
+     * Called for all enabled enrol plugins that returned true from is_cron_required().
+     * @return void
+     */
+    public function cron() {
+        global $CFG;
+
+        require_once("$CFG->dirroot/enrol/meta/locallib.php");
+        enrol_meta_sync();
     }
 
     /**

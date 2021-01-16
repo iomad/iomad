@@ -35,8 +35,6 @@ use core\oauth2\issuer;
 use core\oauth2\client;
 
 require_once($CFG->libdir.'/authlib.php');
-require_once($CFG->dirroot.'/user/lib.php');
-require_once($CFG->dirroot.'/user/profile/lib.php');
 
 /**
  * Plugin for oauth2 authentication.
@@ -112,7 +110,7 @@ class auth extends \auth_plugin_base {
      * @return bool true means automatically copy data from ext to user table
      */
     public function is_synchronised_with_external() {
-        return true;
+        return false;
     }
 
     /**
@@ -303,62 +301,6 @@ class auth extends \auth_plugin_base {
     }
 
     /**
-     * Update user data according to data sent by authorization server.
-     *
-     * @param array $externaldata data from authorization server
-     * @param stdClass $userdata Current data of the user to be updated
-     * @return stdClass The updated user record, or the existing one if there's nothing to be updated.
-     */
-    private function update_user(array $externaldata, $userdata) {
-        $user = (object) [
-            'id' => $userdata->id,
-        ];
-
-        // We can only update if the default authentication type of the user is set to OAuth2 as well. Otherwise, we might mess
-        // up the user data of other users that use different authentication mechanisms (e.g. linked logins).
-        if ($userdata->auth !== $this->authtype) {
-            return $userdata;
-        }
-
-        // Go through each field from the external data.
-        foreach ($externaldata as $fieldname => $value) {
-            if (!in_array($fieldname, $this->userfields)) {
-                // Skip if this field doesn't belong to the list of fields that can be synced with the OAuth2 issuer.
-                continue;
-            }
-
-            if (!property_exists($userdata, $fieldname)) {
-                // Just in case this field is on the list, but not part of the user data. This shouldn't happen though.
-                continue;
-            }
-
-            // Get the old value.
-            $oldvalue = (string)$userdata->$fieldname;
-
-            // Get the lock configuration of the field.
-            $lockvalue = $this->config->{'field_lock_' . $fieldname};
-
-            // We should update fields that meet the following criteria:
-            // - Lock value set to 'unlocked'; or 'unlockedifempty', given the current value is empty.
-            // - The value has changed.
-            if ($lockvalue === 'unlocked' || ($lockvalue === 'unlockedifempty' && empty($oldvalue))) {
-                $value = (string)$value;
-                if ($oldvalue !== $value) {
-                    $user->$fieldname = $value;
-                }
-            }
-        }
-        // Update the user data.
-        user_update_user($user, false);
-
-        // Save user profile data.
-        profile_save_data($user);
-
-        // Refresh user for $USER variable.
-        return get_complete_user_data('id', $user->id);
-    }
-
-    /**
      * Confirm the new user as registered.
      *
      * @param string $username
@@ -455,9 +397,8 @@ class auth extends \auth_plugin_base {
             }
         }
 
-        $issuer = $client->get_issuer();
         // First we try and find a defined mapping.
-        $linkedlogin = api::match_username_to_user($userinfo['username'], $issuer);
+        $linkedlogin = api::match_username_to_user($userinfo['username'], $client->get_issuer());
 
         if (!empty($linkedlogin) && empty($linkedlogin->get('confirmtoken'))) {
             $mappeduser = get_complete_user_data('id', $linkedlogin->get('userid'));
@@ -475,9 +416,8 @@ class auth extends \auth_plugin_base {
                 $SESSION->loginerrormsg = get_string('invalidlogin');
                 $client->log_out();
                 redirect(new moodle_url('/login/index.php'));
-            } else if ($mappeduser && ($mappeduser->confirmed || !$issuer->get('requireconfirmation'))) {
-                // Update user fields.
-                $userinfo = $this->update_user($userinfo, $mappeduser);
+            } else if ($mappeduser && $mappeduser->confirmed) {
+                $userinfo = (array) $mappeduser;
                 $userwasmapped = true;
             } else {
                 // Trigger login failed event.
@@ -504,7 +444,7 @@ class auth extends \auth_plugin_base {
             redirect(new moodle_url('/login/index.php'));
         }
 
-
+        $issuer = $client->get_issuer();
         if (!$issuer->is_valid_login_domain($oauthemail)) {
             // Trigger login failed event.
             $failurereason = AUTH_LOGIN_UNAUTHORISED;
@@ -535,7 +475,7 @@ class auth extends \auth_plugin_base {
                     exit();
                 } else {
                     \auth_oauth2\api::link_login($userinfo, $issuer, $moodleuser->id, true);
-                    $userinfo = $this->update_user($userinfo, $moodleuser);
+                    $userinfo = get_complete_user_data('id', $moodleuser->id);
                     // No redirect, we will complete this login.
                 }
 
@@ -601,6 +541,7 @@ class auth extends \auth_plugin_base {
                     // Create a new confirmed account.
                     $newuser = \auth_oauth2\api::create_new_confirmed_account($userinfo, $issuer);
                     $userinfo = get_complete_user_data('id', $newuser->id);
+
                     // No redirect, we will complete this login.
                 }
             }
@@ -612,31 +553,5 @@ class auth extends \auth_plugin_base {
         complete_user_login($user);
         $this->update_picture($user);
         redirect($redirecturl);
-    }
-
-    /**
-     * Returns information on how the specified user can change their password.
-     * The password of the oauth2 accounts is not stored in Moodle.
-     *
-     * @param stdClass $user A user object
-     * @return string[] An array of strings with keys subject and message
-     */
-    public function get_password_change_info(stdClass $user) : array {
-        $site = get_site();
-
-        $data = new stdClass();
-        $data->firstname = $user->firstname;
-        $data->lastname  = $user->lastname;
-        $data->username  = $user->username;
-        $data->sitename  = format_string($site->fullname);
-        $data->admin     = generate_email_signoff();
-
-        $message = get_string('emailpasswordchangeinfo', 'auth_oauth2', $data);
-        $subject = get_string('emailpasswordchangeinfosubject', 'auth_oauth2', format_string($site->fullname));
-
-        return [
-            'subject' => $subject,
-            'message' => $message
-        ];
     }
 }

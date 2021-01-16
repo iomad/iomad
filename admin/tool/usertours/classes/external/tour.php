@@ -70,9 +70,9 @@ class tour extends external_api {
 
         \tool_usertours\event\tour_started::create([
             'contextid' => $context->id,
-            'objectid'  => $tour->get_id(),
+            'objectid'  => $tourid,
             'other'     => [
-                'pageurl' => $params['pageurl'],
+                'pageurl' => $pageurl,
             ],
         ])->trigger();
 
@@ -104,7 +104,7 @@ class tour extends external_api {
             'tourconfig'    => new external_single_structure([
                 'name'      => new external_value(PARAM_RAW, 'Tour Name'),
                 'steps'     => new external_multiple_structure(self::step_structure_returns()),
-            ], 'Tour config', VALUE_OPTIONAL)
+            ])
         ]);
     }
 

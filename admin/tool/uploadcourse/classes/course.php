@@ -285,15 +285,6 @@ class tool_uploadcourse_course {
     }
 
     /**
-     * Return array of valid fields for default values
-     *
-     * @return array
-     */
-    protected function get_valid_fields() {
-        return array_merge(self::$validfields, \tool_uploadcourse_helper::get_custom_course_field_names());
-    }
-
-    /**
      * Assemble the course data based on defaults.
      *
      * This returns the final data to be passed to create_course().
@@ -302,7 +293,7 @@ class tool_uploadcourse_course {
      * @return array
      */
     protected function get_final_create_data($data) {
-        foreach ($this->get_valid_fields() as $field) {
+        foreach (self::$validfields as $field) {
             if (!isset($data[$field]) && isset($this->defaults[$field])) {
                 $data[$field] = $this->defaults[$field];
             }
@@ -325,9 +316,9 @@ class tool_uploadcourse_course {
         global $DB;
         $newdata = array();
         $existingdata = $DB->get_record('course', array('shortname' => $this->shortname));
-        foreach ($this->get_valid_fields() as $field) {
+        foreach (self::$validfields as $field) {
             if ($missingonly) {
-                if (isset($existingdata->$field) and $existingdata->$field !== '') {
+                if (!is_null($existingdata->$field) and $existingdata->$field !== '') {
                     continue;
                 }
             }
@@ -356,7 +347,7 @@ class tool_uploadcourse_course {
     /**
      * Get the directory of the object to restore.
      *
-     * @return string|false|null subdirectory in $CFG->backuptempdir/..., false when an error occured
+     * @return string|false|null subdirectory in $CFG->tempdir/backup/..., false when an error occured
      *                           and null when there is simply nothing.
      */
     protected function get_restore_content_dir() {
@@ -419,12 +410,6 @@ class tool_uploadcourse_course {
         if (!empty($this->shortname) || is_numeric($this->shortname)) {
             if ($this->shortname !== clean_param($this->shortname, PARAM_TEXT)) {
                 $this->error('invalidshortname', new lang_string('invalidshortname', 'tool_uploadcourse'));
-                return false;
-            }
-
-            // Ensure we don't overflow the maximum length of the shortname field.
-            if (core_text::strlen($this->shortname) > 255) {
-                $this->error('invalidshortnametoolong', new lang_string('invalidshortnametoolong', 'tool_uploadcourse', 255));
                 return false;
             }
         }
@@ -491,12 +476,6 @@ class tool_uploadcourse_course {
             foreach ($errors as $key => $message) {
                 $this->error($key, $message);
             }
-            return false;
-        }
-
-        // Ensure we don't overflow the maximum length of the fullname field.
-        if (!empty($coursedata['fullname']) && core_text::strlen($coursedata['fullname']) > 254) {
-            $this->error('invalidfullnametoolong', new lang_string('invalidfullnametoolong', 'tool_uploadcourse', 254));
             return false;
         }
 
@@ -613,23 +592,6 @@ class tool_uploadcourse_course {
             $coursedata['enddate'] = strtotime($coursedata['enddate']);
         }
 
-        // If lang is specified, check the user is allowed to set that field.
-        if (!empty($coursedata['lang'])) {
-            if ($exists) {
-                $courseid = $DB->get_field('course', 'id', ['shortname' => $this->shortname]);
-                if (!has_capability('moodle/course:setforcedlanguage', context_course::instance($courseid))) {
-                    $this->error('cannotforcelang', new lang_string('cannotforcelang', 'tool_uploadcourse'));
-                    return false;
-                }
-            } else {
-                $catcontext = context_coursecat::instance($coursedata['category']);
-                if (!guess_if_creator_will_have_course_capability('moodle/course:setforcedlanguage', $catcontext)) {
-                    $this->error('cannotforcelang', new lang_string('cannotforcelang', 'tool_uploadcourse'));
-                    return false;
-                }
-            }
-        }
-
         // Ultimate check mode vs. existence.
         switch ($mode) {
             case tool_uploadcourse_processor::MODE_CREATE_NEW:
@@ -708,64 +670,21 @@ class tool_uploadcourse_course {
             $coursedata[$rolekey] = $rolename;
         }
 
-        // Custom fields. If the course already exists and mode isn't set to force creation, we can use its context.
-        if ($exists && $mode !== tool_uploadcourse_processor::MODE_CREATE_ALL) {
-            $context = context_course::instance($coursedata['id']);
-        } else {
-            // The category ID is taken from the defaults if it exists, otherwise from course data.
-            $context = context_coursecat::instance($this->defaults['category'] ?? $coursedata['category']);
-        }
-        $customfielddata = tool_uploadcourse_helper::get_custom_course_field_data($this->rawdata, $this->defaults, $context,
-            $errors);
-        if (!empty($errors)) {
-            foreach ($errors as $key => $message) {
-                $this->error($key, $message);
-            }
-
-            return false;
-        }
-
-        foreach ($customfielddata as $name => $value) {
-            $coursedata[$name] = $value;
-        }
-
         // Some validation.
         if (!empty($coursedata['format']) && !in_array($coursedata['format'], tool_uploadcourse_helper::get_course_formats())) {
             $this->error('invalidcourseformat', new lang_string('invalidcourseformat', 'tool_uploadcourse'));
             return false;
         }
 
-        // Add data for course format options.
-        if (isset($coursedata['format']) || $exists) {
-            if (isset($coursedata['format'])) {
-                $courseformat = course_get_format((object)['format' => $coursedata['format']]);
-            } else {
-                $courseformat = course_get_format($existingdata);
-            }
-            $coursedata += $courseformat->validate_course_format_options($this->rawdata);
-        }
+        // TODO MDL-59259 allow to set course format options for the current course format.
 
-        // Special case, 'numsections' is not a course format option any more but still should apply from the template course,
-        // if any, and otherwise from defaults.
+        // Special case, 'numsections' is not a course format option any more but still should apply from defaults.
         if (!$exists || !array_key_exists('numsections', $coursedata)) {
             if (isset($this->rawdata['numsections']) && is_numeric($this->rawdata['numsections'])) {
                 $coursedata['numsections'] = (int)$this->rawdata['numsections'];
-            } else if (isset($this->options['templatecourse'])) {
-                $numsections = tool_uploadcourse_helper::get_coursesection_count($this->options['templatecourse']);
-                if ($numsections != 0) {
-                    $coursedata['numsections'] = $numsections;
-                } else {
-                    $coursedata['numsections'] = get_config('moodlecourse', 'numsections');
-                }
             } else {
                 $coursedata['numsections'] = get_config('moodlecourse', 'numsections');
             }
-        }
-
-        // Visibility can only be 0 or 1.
-        if (!empty($coursedata['visible']) AND !($coursedata['visible'] == 0 OR $coursedata['visible'] == 1)) {
-            $this->error('invalidvisibilitymode', new lang_string('invalidvisibilitymode', 'tool_uploadcourse'));
-            return false;
         }
 
         // Saving data.
@@ -902,31 +821,36 @@ class tool_uploadcourse_course {
             unset($method['delete']);
             unset($method['disable']);
 
-            if ($todelete) {
+            if (!empty($instance) && $todelete) {
                 // Remove the enrolment method.
-                if ($instance) {
-                    $plugin = $enrolmentplugins[$instance->enrol];
-                    $plugin->delete_instance($instance);
+                foreach ($instances as $instance) {
+                    if ($instance->enrol == $enrolmethod) {
+                        $plugin = $enrolmentplugins[$instance->enrol];
+                        $plugin->delete_instance($instance);
+                        break;
+                    }
                 }
             } else if (!empty($instance) && $todisable) {
                 // Disable the enrolment.
-                $plugin = $enrolmentplugins[$instance->enrol];
-                $plugin->update_status($instance, ENROL_INSTANCE_DISABLED);
-                $enrol_updated = true;
+                foreach ($instances as $instance) {
+                    if ($instance->enrol == $enrolmethod) {
+                        $plugin = $enrolmentplugins[$instance->enrol];
+                        $plugin->update_status($instance, ENROL_INSTANCE_DISABLED);
+                        $enrol_updated = true;
+                        break;
+                    }
+                }
             } else {
                 $plugin = null;
-
-                $status = ($todisable) ? ENROL_INSTANCE_DISABLED : ENROL_INSTANCE_ENABLED;
-
                 if (empty($instance)) {
                     $plugin = $enrolmentplugins[$enrolmethod];
-                    $instanceid = $plugin->add_default_instance($course);
-                    $instance = $DB->get_record('enrol', ['id' => $instanceid]);
+                    $instance = new stdClass();
+                    $instance->id = $plugin->add_default_instance($course);
                     $instance->roleid = $plugin->get_config('roleid');
-                    $plugin->update_status($instance, $status);
+                    $instance->status = ENROL_INSTANCE_ENABLED;
                 } else {
                     $plugin = $enrolmentplugins[$instance->enrol];
-                    $plugin->update_status($instance, $status);
+                    $plugin->update_status($instance, ENROL_INSTANCE_ENABLED);
                 }
 
                 // Now update values.

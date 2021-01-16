@@ -131,8 +131,10 @@ class SimplePie_Caption
 		{
 			return $this->endTime;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -147,8 +149,10 @@ class SimplePie_Caption
 		{
 			return $this->lang;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -162,8 +166,10 @@ class SimplePie_Caption
 		{
 			return $this->startTime;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -177,8 +183,10 @@ class SimplePie_Caption
 		{
 			return $this->text;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -192,7 +200,10 @@ class SimplePie_Caption
 		{
 			return $this->type;
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 }
+

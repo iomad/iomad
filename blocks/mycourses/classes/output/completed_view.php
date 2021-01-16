@@ -66,7 +66,7 @@ class completed_view implements renderable, templatable {
         foreach ($this->mycompletion->mycompleted as $mid => $completed) {
             $context = \context_course::instance($completed->courseid);
             $course = $DB->get_record("course", array("id"=>$completed->courseid));
-            $courseobj = new \core_course_list_element($course);
+            $courseobj = new \course_in_list($course);
 
             $exporter = new course_summary_exporter($course, ['context' => $context]);
             $exportedcourse = $exporter->export($output);
@@ -81,7 +81,7 @@ class completed_view implements renderable, templatable {
             foreach ($courseobj->get_course_overviewfiles() as $file) {
                 $isimage = $file->is_valid_image();
                 if (!$isimage) {
-                    $imageurl = null;
+                    $imageurl = $this->output->pix_icon(file_file_icon($file, 24), $file->get_filename(), 'moodle');
                 } else {
                     $imageurl = file_encode_url("$CFG->wwwroot/pluginfile.php",
                                 '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
@@ -97,6 +97,7 @@ class completed_view implements renderable, templatable {
             }
             $exportedcourse = $exporter->export($output);
             $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $completed->courseid));
+            $exportedcourse->fullname = $completed->coursefullname;
             $exportedcourse->image = $imageurl;
             $exportedcourse->summary = $coursesummary;
             $exportedcourse->timecompleted = date($CFG->iomad_date_format, $completed->timecompleted);
@@ -105,8 +106,6 @@ class completed_view implements renderable, templatable {
                     $exportedcourse->timeexpires = date($CFG->iomad_date_format, $completed->timecompleted + $iomadcourserec->validlength * 24 * 60 * 60 );
                 }
             }
-            $exportedcourse->progress = 100;
-            $exportedcourse->hasprogress = true;
             $exportedcourse->finalscore = intval($completed->finalgrade);
             $exportedcourse->certificate = $completed->certificate;
             $completedview['courses'][] = $exportedcourse;

@@ -24,47 +24,23 @@
 
 namespace block_online_users\privacy;
 
-use core_privacy\local\metadata\collection;
-use core_privacy\local\request\writer;
-use core_privacy\local\request\transform;
-
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Privacy Subsystem for block_online_users.
+ * Privacy Subsystem for block_online_users implementing null_provider.
  *
  * @copyright  2018 Zig Tan <zig@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\user_preference_provider {
+class provider implements \core_privacy\local\metadata\null_provider {
 
     /**
-     * Describe all the places where this plugin stores personal data.
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
      *
-     * @param collection $collection Collection of items to add metadata to.
-     * @return collection Collection with our added items.
+     * @return  string
      */
-    public static function get_metadata(collection $collection) : collection {
-
-        $collection->add_user_preference('block_online_users_uservisibility',
-                'privacy:metadata:preference:uservisibility');
-
-        return $collection;
-    }
-
-    /**
-     * Export user preferences controlled by this plugin.
-     *
-     * @param int $userid ID of the user we are exporting data form.
-     */
-    public static function export_user_preferences(int $userid) {
-
-        $uservisibility = get_user_preferences('block_online_users_uservisibility', 1, $userid);
-
-        writer::export_user_preference('block_online_users',
-                'block_online_users_uservisibility', transform::yesno($uservisibility),
-                get_string('privacy:metadata:preference:uservisibility', 'block_online_users'));
+    public static function get_reason() : string {
+        return 'privacy:metadata';
     }
 }

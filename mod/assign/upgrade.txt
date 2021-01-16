@@ -1,40 +1,5 @@
 This files describes API changes in the assign code.
 
-=== 3.9 ===
-
-* The following functions, previously used (exclusively) by upgrade steps are not available anymore because of the upgrade cleanup performed for this version. See MDL-65809 for more info:
-    - get_assignments_with_rescaled_null_grades()
-
-=== 3.8 ===
-* The allow_image_conversion method has been added to the submissionplugins. It determines whether the submission plugin
-  allows image conversion or not. By default conversion is not allowed (except when overwritten in the submission plugin)
-* Webservice function mod_assign_get_submission_status, return value 'warnofungroupedusers', changed from PARAM_BOOL to PARAM_ALPHA. See the description for possible values.
-* The following functions have been finally deprecated and can not be used anymore:
-    * assign_scale_used()
-
-=== 3.7 ===
-* Submissions plugins should implement the "remove" function to remove data when "Remove submission" is used.
-
-=== 3.6 ===
-* The mod_assign_base_testcase unit test base class has been deprecated.
-  It encouraged poor unit test design and led to significant performance issues with unit tests. See MDL-55609 for
-  further information.
-* The function can_grade() now has optional $user parameter.
-* Feedback plugins can now specify whether or not they want to attach files to the
-  feedback that is stored in the gradebook via the new method files_for_gradebook().
-  An example of what this method would return is -
-  [
-      'contextid' => $modulecontext->id,
-      'component' => ASSIGNFEEDBACK_XYZ_COMPONENT,
-      'filearea' => ASSIGNFEEDBACK_XYZ_FILEAREA,
-      'itemid' => $grade->id
-  ]
-
-=== 3.5 ===
-* Functions assign:get_assign_grading_summary_renderable, assign:can_view_submission, assign:count_submissions_with_status,
-  assign:count_submissions_need_grading and mod_assign_external::get_submission_status now admit an additional group parameter.
-  This parameter can be used to force those functions to retrieve data only for the given group.
-
 === 3.4 ===
 * assign::add_attempt requires that set_most_recent_team_submission() be called if attempting to use this function with a team
   submission.

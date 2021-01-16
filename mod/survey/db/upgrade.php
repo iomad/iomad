@@ -22,21 +22,33 @@
 defined('MOODLE_INTERNAL') || die();
 
 function xmldb_survey_upgrade($oldversion) {
-    global $CFG;
+    global $DB;
+    $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
+    // Moodle v3.1.0 release upgrade line.
+    // Put any upgrade step following this.
+    if ($oldversion < 2016061400) {
+
+        // Define field completionsubmit to be added to survey.
+        $table = new xmldb_table('survey');
+        $field = new xmldb_field('completionsubmit', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'questions');
+
+        // Conditionally launch add field completionsubmit.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Survey savepoint reached.
+        upgrade_mod_savepoint(true, 2016061400, 'survey');
+    }
+
+    // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
+    // Automatically generated Moodle v3.3.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.7.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.8.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Automatically generated Moodle v3.9.0 release upgrade line.
+    // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
     return true;

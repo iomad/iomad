@@ -2,16 +2,16 @@
 
 namespace Box\Spout\Reader\CSV;
 
+use Box\Spout\Reader\AbstractReader;
 use Box\Spout\Common\Exception\IOException;
-use Box\Spout\Reader\Common\Entity\Options;
-use Box\Spout\Reader\CSV\Creator\InternalEntityFactory;
-use Box\Spout\Reader\ReaderAbstract;
 
 /**
  * Class Reader
  * This class provides support to read data from a CSV file.
+ *
+ * @package Box\Spout\Reader\CSV
  */
-class Reader extends ReaderAbstract
+class Reader extends AbstractReader
 {
     /** @var resource Pointer to the file to be written */
     protected $filePointer;
@@ -23,6 +23,19 @@ class Reader extends ReaderAbstract
     protected $originalAutoDetectLineEndings;
 
     /**
+     * Returns the reader's current options
+     *
+     * @return ReaderOptions
+     */
+    protected function getOptions()
+    {
+        if (!isset($this->options)) {
+            $this->options = new ReaderOptions();
+        }
+        return $this->options;
+    }
+
+    /**
      * Sets the field delimiter for the CSV.
      * Needs to be called before opening the reader.
      *
@@ -31,8 +44,7 @@ class Reader extends ReaderAbstract
      */
     public function setFieldDelimiter($fieldDelimiter)
     {
-        $this->optionsManager->setOption(Options::FIELD_DELIMITER, $fieldDelimiter);
-
+        $this->getOptions()->setFieldDelimiter($fieldDelimiter);
         return $this;
     }
 
@@ -45,8 +57,7 @@ class Reader extends ReaderAbstract
      */
     public function setFieldEnclosure($fieldEnclosure)
     {
-        $this->optionsManager->setOption(Options::FIELD_ENCLOSURE, $fieldEnclosure);
-
+        $this->getOptions()->setFieldEnclosure($fieldEnclosure);
         return $this;
     }
 
@@ -59,8 +70,20 @@ class Reader extends ReaderAbstract
      */
     public function setEncoding($encoding)
     {
-        $this->optionsManager->setOption(Options::ENCODING, $encoding);
+        $this->getOptions()->setEncoding($encoding);
+        return $this;
+    }
 
+    /**
+     * Sets the EOL for the CSV.
+     * Needs to be called before opening the reader.
+     *
+     * @param string $endOfLineCharacter used to properly get lines from the CSV file.
+     * @return Reader
+     */
+    public function setEndOfLineCharacter($endOfLineCharacter)
+    {
+        $this->getOptions()->setEndOfLineCharacter($endOfLineCharacter);
         return $this;
     }
 
@@ -79,8 +102,8 @@ class Reader extends ReaderAbstract
      * If setEncoding() was not called, it assumes that the file is encoded in UTF-8.
      *
      * @param  string $filePath Path of the CSV file to be read
-     * @throws \Box\Spout\Common\Exception\IOException
      * @return void
+     * @throws \Box\Spout\Common\Exception\IOException
      */
     protected function openReader($filePath)
     {
@@ -92,12 +115,9 @@ class Reader extends ReaderAbstract
             throw new IOException("Could not open file $filePath for reading.");
         }
 
-        /** @var InternalEntityFactory $entityFactory */
-        $entityFactory = $this->entityFactory;
-
-        $this->sheetIterator = $entityFactory->createSheetIterator(
+        $this->sheetIterator = new SheetIterator(
             $this->filePointer,
-            $this->optionsManager,
+            $this->getOptions(),
             $this->globalFunctionsHelper
         );
     }
@@ -111,6 +131,7 @@ class Reader extends ReaderAbstract
     {
         return $this->sheetIterator;
     }
+
 
     /**
      * Closes the reader. To be used after reading the file.

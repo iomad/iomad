@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A two column layout for the iomadboost theme.
+ * A two column layout for the boost theme.
  *
- * @package   theme_iomadboost
+ * @package   theme_boost
  * @copyright 2016 Damyon Wiese
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 user_preference_allow_ajax_update('drawer-open-nav', PARAM_ALPHA);
 require_once($CFG->libdir . '/behat/lib.php');
 
-if (isloggedin()) {
+if (isloggedin() && !behat_is_test_site()) {
     $navdraweropen = (get_user_preferences('drawer-open-nav', 'true') == 'true');
 } else {
     $navdraweropen = false;
@@ -39,9 +39,7 @@ if ($navdraweropen) {
 $bodyattributes = $OUTPUT->body_attributes($extraclasses);
 $blockshtml = $OUTPUT->blocks('side-pre');
 $hasblocks = strpos($blockshtml, 'data-block=') !== false;
-$buildregionmainsettings = !$PAGE->include_region_main_settings_in_header_actions();
-// If the settings menu will be included in the header then don't add it here.
-$regionmainsettingsmenu = $buildregionmainsettings ? $OUTPUT->region_main_settings_menu() : false;
+$regionmainsettingsmenu = $OUTPUT->region_main_settings_menu();
 $templatecontext = [
     'sitename' => format_string($SITE->shortname, true, ['context' => context_course::instance(SITEID), "escape" => false]),
     'output' => $OUTPUT,
@@ -53,8 +51,18 @@ $templatecontext = [
     'hasregionmainsettingsmenu' => !empty($regionmainsettingsmenu)
 ];
 
-$nav = $PAGE->flatnav;
-$templatecontext['flatnavigation'] = $nav;
-$templatecontext['firstcollectionlabel'] = $nav->get_collectionlabel();
-echo $OUTPUT->render_from_template('theme_iomadboost/columns2', $templatecontext);
+// Add Iomad link
+$systemcontext = context_system::instance();
+if (has_capability('local/iomad_dashboard:view', $systemcontext)) {
+    $url = new moodle_url('/local/iomad_dashboard/index.php');
+    $iomaddashboard = navigation_node::create(get_string('iomaddashboard', 'theme_iomadboost'), $url);
+    $flat = new flat_navigation_node($iomaddashboard, 0);
+    $flat->set_showdivider(true);
+    $flat->key = 'iomad';
+    $PAGE->flatnav->add($flat);
+}
+
+$templatecontext['flatnavigation'] = $PAGE->flatnav;
+
+echo $OUTPUT->render_from_template('theme_boost/columns2', $templatecontext);
 

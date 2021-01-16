@@ -607,14 +607,13 @@ function data_set_events($data) {
         if ($data->timeavailablefrom > 0) {
             // Calendar event exists so update it.
             $event->name         = get_string('calendarstart', 'data', $data->name);
-            $event->description  = format_module_intro('data', $data, $data->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('data', $data, $data->coursemodule);
             $event->timestart    = $data->timeavailablefrom;
             $event->timesort     = $data->timeavailablefrom;
             $event->visible      = instance_is_visible('data', $data);
             $event->timeduration = 0;
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event, false);
+            $calendarevent->update($event);
         } else {
             // Calendar event is on longer needed.
             $calendarevent = calendar_event::load($event->id);
@@ -624,8 +623,7 @@ function data_set_events($data) {
         // Event doesn't exist so create one.
         if (isset($data->timeavailablefrom) && $data->timeavailablefrom > 0) {
             $event->name         = get_string('calendarstart', 'data', $data->name);
-            $event->description  = format_module_intro('data', $data, $data->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('data', $data, $data->coursemodule);
             $event->courseid     = $data->course;
             $event->groupid      = 0;
             $event->userid       = 0;
@@ -635,7 +633,7 @@ function data_set_events($data) {
             $event->timesort     = $data->timeavailablefrom;
             $event->visible      = instance_is_visible('data', $data);
             $event->timeduration = 0;
-            calendar_event::create($event, false);
+            calendar_event::create($event);
         }
     }
 
@@ -648,14 +646,13 @@ function data_set_events($data) {
         if ($data->timeavailableto > 0) {
             // Calendar event exists so update it.
             $event->name         = get_string('calendarend', 'data', $data->name);
-            $event->description  = format_module_intro('data', $data, $data->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('data', $data, $data->coursemodule);
             $event->timestart    = $data->timeavailableto;
             $event->timesort     = $data->timeavailableto;
             $event->visible      = instance_is_visible('data', $data);
             $event->timeduration = 0;
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event, false);
+            $calendarevent->update($event);
         } else {
             // Calendar event is on longer needed.
             $calendarevent = calendar_event::load($event->id);
@@ -665,8 +662,7 @@ function data_set_events($data) {
         // Event doesn't exist so create one.
         if (isset($data->timeavailableto) && $data->timeavailableto > 0) {
             $event->name         = get_string('calendarend', 'data', $data->name);
-            $event->description  = format_module_intro('data', $data, $data->coursemodule, false);
-            $event->format       = FORMAT_HTML;
+            $event->description  = format_module_intro('data', $data, $data->coursemodule);
             $event->courseid     = $data->course;
             $event->groupid      = 0;
             $event->userid       = 0;
@@ -676,7 +672,7 @@ function data_set_events($data) {
             $event->timesort     = $data->timeavailableto;
             $event->visible      = instance_is_visible('data', $data);
             $event->timeduration = 0;
-            calendar_event::create($event, false);
+            calendar_event::create($event);
         }
     }
 }
@@ -1425,7 +1421,6 @@ function data_approve_entry($entryid, $approve) {
 
 /**
  * Populate the field contents of a new record with the submitted data.
- * An event has been previously triggered upon the creation of the new record in data_add_record().
  *
  * @param  stdClass $data           database object
  * @param  stdClass $context        context object
@@ -1454,6 +1449,18 @@ function data_add_fields_contents_to_new_record($data, $context, $recordid, $fie
     foreach ($processeddata->fields as $fieldname => $field) {
         $field->update_content($recordid, $datarecord->$fieldname, $fieldname);
     }
+
+    // Trigger an event for updating this record.
+    $event = \mod_data\event\record_created::create(array(
+        'objectid' => $recordid,
+        'context' => $context,
+        'courseid' => $data->course,
+        'other' => array(
+            'dataid' => $data->id
+        )
+    ));
+    $event->add_record_snapshot('data', $data);
+    $event->trigger();
 }
 
 /**

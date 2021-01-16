@@ -71,7 +71,8 @@ class enrol_self_external extends external_api {
 
         $enrolinstance = $DB->get_record('enrol', array('id' => $params['instanceid']), '*', MUST_EXIST);
         $course = $DB->get_record('course', array('id' => $enrolinstance->courseid), '*', MUST_EXIST);
-        if (!core_course_category::can_view_course_info($course) && !can_access_course($course)) {
+        $context = context_course::instance($course->id);
+        if (!$course->visible and !has_capability('moodle/course:viewhiddencourses', $context)) {
             throw new moodle_exception('coursehidden');
         }
 
@@ -146,7 +147,7 @@ class enrol_self_external extends external_api {
         $context = context_course::instance($course->id);
         self::validate_context(context_system::instance());
 
-        if (!core_course_category::can_view_course_info($course)) {
+        if (!$course->visible and !has_capability('moodle/course:viewhiddencourses', $context)) {
             throw new moodle_exception('coursehidden');
         }
 

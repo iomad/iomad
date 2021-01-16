@@ -164,14 +164,6 @@ class assign_feedback_editpdf extends assign_feedback_plugin {
 
         $renderer = $PAGE->get_renderer('assignfeedback_editpdf');
 
-        // Links to download the generated pdf...
-        if ($attempt > -1 && page_editor::has_annotations_or_comments($grade->id, false)) {
-            $html = $this->assignment->render_area_files('assignfeedback_editpdf',
-                                                         document_services::FINAL_PDF_FILEAREA,
-                                                         $grade->id);
-            $mform->addElement('static', 'editpdf_files', get_string('downloadfeedback', 'assignfeedback_editpdf'), $html);
-        }
-
         $widget = $this->get_widget($userid, $grade, false);
 
         $html = $renderer->render($widget);
@@ -340,11 +332,12 @@ class assign_feedback_editpdf extends assign_feedback_plugin {
     }
 
     /**
-     * Determine if ghostscript is available and working.
+     * Automatically enable or disable editpdf feedback plugin based on
+     * whether the ghostscript path is set correctly.
      *
      * @return bool
      */
-    public function is_available() {
+    public function is_enabled() {
         if ($this->enabledcache === null) {
             $testpath = assignfeedback_editpdf\pdf::test_gs_path(false);
             $this->enabledcache = ($testpath->status == assignfeedback_editpdf\pdf::GSPATH_OK);
@@ -352,12 +345,12 @@ class assign_feedback_editpdf extends assign_feedback_plugin {
         return $this->enabledcache;
     }
     /**
-     * Prevent enabling this plugin if ghostscript is not available.
+     * Automatically hide the setting for the editpdf feedback plugin.
      *
      * @return bool false
      */
     public function is_configurable() {
-        return $this->is_available();
+        return false;
     }
 
     /**

@@ -117,8 +117,10 @@ class SimplePie_Decode_HTML_Entities
 			$this->consumed .= $this->data[$this->position];
 			return $this->data[$this->position++];
 		}
-
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -137,8 +139,10 @@ class SimplePie_Decode_HTML_Entities
 			$this->position += $len;
 			return $data;
 		}
-
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -608,3 +612,4 @@ class SimplePie_Decode_HTML_Entities
 		}
 	}
 }
+

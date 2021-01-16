@@ -26,9 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/grade/grading/form/lib.php');
 
-/** guide: Used to compare our gradeitem_type against. */
-const MARKING_GUIDE = 'guide';
-
 /**
  * This controller encapsulates the guide grading logic
  *
@@ -999,16 +996,4 @@ class gradingform_guide_instance extends gradingform_instance {
             $gradingformelement->getName(), $value, $this->validationerrors);
         return $html;
     }
-}
-
-/**
- * Get the icon mapping for font-awesome.
- *
- * @return array
- */
-function gradingform_guide_get_fontawesome_icon_map(): array {
-    return [
-        'gradingform_guide:info' => 'fa-info-circle',
-        'gradingform_guide:plus' => 'fa-plus',
-    ];
 }

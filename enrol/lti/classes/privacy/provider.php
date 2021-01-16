@@ -17,7 +17,6 @@
  * Privacy Subsystem implementation for enrol_lti.
  *
  * @package    enrol_lti
- * @category   privacy
  * @copyright  2018 Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,10 +25,8 @@ namespace enrol_lti\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\transform;
-use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -42,8 +39,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class provider implements
     \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider {
+    \core_privacy\local\request\plugin\provider {
 
     /**
      * Return the fields which contain personal data.
@@ -86,26 +82,6 @@ class provider implements
         $contextlist->add_from_sql($sql, $params);
 
         return $contextlist;
-    }
-
-    /**
-     * Get the list of users who have data within a context.
-     *
-     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if (!($context instanceof \context_course || $context instanceof \context_module)) {
-            return;
-        }
-
-        $sql = "SELECT ltiusers.userid
-                  FROM {enrol_lti_users} ltiusers
-                  JOIN {enrol_lti_tools} ltitools ON ltiusers.toolid = ltitools.id
-                 WHERE ltitools.contextid = :contextid";
-        $params = ['contextid' => $context->id];
-        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -190,31 +166,6 @@ class provider implements
                 $params = array_merge($params, ['userid' => $userid]);
                 $DB->delete_records_select('enrol_lti_users', "toolid $sql AND userid = :userid", $params);
             }
-        }
-    }
-
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param   approved_userlist   $userlist   The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        global $DB;
-
-        $context = $userlist->get_context();
-
-        if (!($context instanceof \context_course || $context instanceof \context_module)) {
-            return;
-        }
-
-        $enrolltitools = $DB->get_fieldset_select('enrol_lti_tools', 'id', 'contextid = :contextid',
-                ['contextid' => $context->id]);
-        if (!empty($enrolltitools)) {
-            list($toolsql, $toolparams) = $DB->get_in_or_equal($enrolltitools, SQL_PARAMS_NAMED);
-            $userids = $userlist->get_userids();
-            list($usersql, $userparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
-            $params = $toolparams + $userparams;
-            $DB->delete_records_select('enrol_lti_users', "toolid $toolsql AND userid $usersql", $params);
         }
     }
 

@@ -1,6 +1,5 @@
 /**
  * Push badges to backpack.
- * @deprecated since 3.7
  */
 function addtobackpack(event, args) {
     var badgetable = Y.one('#issued-badge-table');
@@ -21,7 +20,6 @@ function addtobackpack(event, args) {
 
 /**
  * Check if website is externally accessible from the backpack.
- * @deprecated since 3.7
  */
 function check_site_access() {
     var add = Y.one('#check_connection');

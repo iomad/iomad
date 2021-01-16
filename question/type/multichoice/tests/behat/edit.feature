@@ -23,10 +23,10 @@ Feature: Test editing a Multiple choice question
       | Test questions   | multichoice | Single choice for editing   | one_of_four |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
+    And I navigate to "Question bank" node in "Course administration"
 
   Scenario: Edit a Multiple choice question with multiple response (checkboxes)
-    When I choose "Edit question" action for "Multiple choice for editing" in the question bank
+    When I click on "Edit" "link" in the "Multiple choice for editing" "table_row"
     And I set the following fields to these values:
       | Question name | |
     And I press "id_submitbutton"
@@ -37,7 +37,7 @@ Feature: Test editing a Multiple choice question
     Then I should see "Edited Multiple choice name"
 
   Scenario: Edit a Multiple choice question with single response (radio buttons)
-    When I choose "Edit question" action for "Single choice for editing" in the question bank
+    When I click on "Edit" "link" in the "Single choice for editing" "table_row"
     And I set the following fields to these values:
       | Question name | Edited Single choice name |
     And I press "id_submitbutton"

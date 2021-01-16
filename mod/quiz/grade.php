@@ -81,7 +81,6 @@ if ($userid) {
     if ($attempt) {
         $attemptobj = new quiz_attempt($attempt, $quiz, $cm, $course, false);
         if ($attemptobj->is_review_allowed()) {
-            $attemptobj->load_questions();
             redirect($attemptobj->review_url());
         }
     }

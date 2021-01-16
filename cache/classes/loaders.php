@@ -51,14 +51,6 @@ class cache implements cache_loader {
     protected static $now;
 
     /**
-     * A purge token used to distinguish between multiple cache purges in the same second.
-     * This is in the format <microtime>-<random string>.
-     *
-     * @var string
-     */
-    protected static $purgetoken;
-
-    /**
      * The definition used when loading this cache if there was one.
      * @var cache_definition
      */
@@ -223,9 +215,11 @@ class cache implements cache_loader {
         $this->storetype = get_class($store);
         $this->perfdebug = (!empty($CFG->perfdebug) and $CFG->perfdebug > 7);
         if ($loader instanceof cache_loader) {
-            $this->set_loader($loader);
+            $this->loader = $loader;
+            // Mark the loader as a sub (chained) loader.
+            $this->loader->set_is_sub_loader(true);
         } else if ($loader instanceof cache_data_source) {
-            $this->set_data_source($loader);
+            $this->datasource = $loader;
         }
         $this->definition->generate_definition_hash();
         $this->staticacceleration = $this->definition->use_static_acceleration();
@@ -233,27 +227,6 @@ class cache implements cache_loader {
             $this->staticaccelerationsize = $this->definition->get_static_acceleration_size();
         }
         $this->hasattl = ($this->definition->get_ttl() > 0);
-    }
-
-    /**
-     * Set the loader for this cache.
-     *
-     * @param   cache_loader $loader
-     */
-    protected function set_loader(cache_loader $loader): void {
-        $this->loader = $loader;
-
-        // Mark the loader as a sub (chained) loader.
-        $this->loader->set_is_sub_loader(true);
-    }
-
-    /**
-     * Set the data source for this cache.
-     *
-     * @param   cache_data_source $datasource
-     */
-    protected function set_data_source(cache_data_source $datasource): void {
-        $this->datasource = $datasource;
     }
 
     /**
@@ -313,58 +286,33 @@ class cache implements cache_loader {
             return;
         }
 
-        // Each cache stores the current 'lastinvalidation' value within the cache itself.
         $lastinvalidation = $this->get('lastinvalidation');
         if ($lastinvalidation === false) {
-            // There is currently no  value for the lastinvalidation token, therefore the token is not set, and there
-            // can be nothing to invalidate.
-            // Set the lastinvalidation value to the current purge token and return early.
-            $this->set('lastinvalidation', self::get_purge_token());
+            // This is a new cache or purged globally, there won't be anything to invalidate.
+            // Set the time of the last invalidation and move on.
+            $this->set('lastinvalidation', self::now());
             return;
-        } else if ($lastinvalidation == self::get_purge_token()) {
-            // The current purge request has already been fully handled by this cache.
+        } else if ($lastinvalidation == self::now()) {
+            // We've already invalidated during this request.
             return;
         }
 
-        /*
-         * Now that the whole cache check is complete, we check the meaning of any specific cache invalidation events.
-         * These are stored in the core/eventinvalidation cache as an multi-dimensinoal array in the form:
-         *  [
-         *      eventname => [
-         *          keyname => purgetoken,
-         *      ]
-         *  ]
-         *
-         * The 'keyname' value is used to delete a specific key in the cache.
-         * If the keyname is set to the special value 'purged', then the whole cache is purged instead.
-         *
-         * The 'purgetoken' is the token that this key was last purged.
-         * a) If the purgetoken matches the last invalidation, then the key/cache is not purged.
-         * b) If the purgetoken is newer than the last invalidation, then the key/cache is not purged.
-         * c) If the purge token is older than the last invalidation, or it has a different token component, then the
-         *    cache is purged.
-         *
-         * Option b should not happen under normal operation, but may happen in race condition whereby a long-running
-         * request's cache is cleared in another process during that request, and prior to that long-running request
-         * creating the cache. In such a condition, it would be incorrect to clear that cache.
-         */
+        // Get the event invalidation cache.
         $cache = self::make('core', 'eventinvalidation');
         $events = $cache->get_many($this->definition->get_invalidation_events());
         $todelete = array();
         $purgeall = false;
-
         // Iterate the returned data for the events.
         foreach ($events as $event => $keys) {
             if ($keys === false) {
                 // No data to be invalidated yet.
                 continue;
             }
-
             // Look at each key and check the timestamp.
-            foreach ($keys as $key => $purgetoken) {
+            foreach ($keys as $key => $timestamp) {
                 // If the timestamp of the event is more than or equal to the last invalidation (happened between the last
-                // invalidation and now), then we need to invaliate the key.
-                if (self::compare_purge_tokens($purgetoken, $lastinvalidation) > 0) {
+                // invalidation and now)then we need to invaliate the key.
+                if ($timestamp >= $lastinvalidation) {
                     if ($key === 'purged') {
                         $purgeall = true;
                         break;
@@ -382,7 +330,7 @@ class cache implements cache_loader {
         }
         // Set the time of the last invalidation.
         if ($purgeall || !empty($todelete)) {
-            $this->set('lastinvalidation', self::get_purge_token(true));
+            $this->set('lastinvalidation', self::now());
         }
     }
 
@@ -433,7 +381,7 @@ class cache implements cache_loader {
         $setaftervalidation = false;
         if ($result === false) {
             if ($this->perfdebug) {
-                cache_helper::record_cache_miss($this->store, $this->definition);
+                cache_helper::record_cache_miss($this->storetype, $this->definition);
             }
             if ($this->loader !== false) {
                 // We must pass the original (unparsed) key to the next loader in the chain.
@@ -445,7 +393,7 @@ class cache implements cache_loader {
             }
             $setaftervalidation = ($result !== false);
         } else if ($this->perfdebug) {
-            cache_helper::record_cache_hit($this->store, $this->definition);
+            cache_helper::record_cache_hit($this->storetype, $this->definition);
         }
         // 5. Validate strictness.
         if ($strictness === MUST_EXIST && $result === false) {
@@ -599,8 +547,8 @@ class cache implements cache_loader {
                     $hits++;
                 }
             }
-            cache_helper::record_cache_hit($this->store, $this->definition, $hits);
-            cache_helper::record_cache_miss($this->store, $this->definition, $misses);
+            cache_helper::record_cache_hit($this->storetype, $this->definition, $hits);
+            cache_helper::record_cache_miss($this->storetype, $this->definition, $misses);
         }
 
         // Return the result. Phew!
@@ -626,7 +574,7 @@ class cache implements cache_loader {
      */
     public function set($key, $data) {
         if ($this->perfdebug) {
-            cache_helper::record_cache_set($this->store, $this->definition);
+            cache_helper::record_cache_set($this->storetype, $this->definition);
         }
         if ($this->loader !== false) {
             // We have a loader available set it there as well.
@@ -781,7 +729,7 @@ class cache implements cache_loader {
         }
         $successfullyset = $this->store->set_many($data);
         if ($this->perfdebug && $successfullyset) {
-            cache_helper::record_cache_set($this->store, $this->definition, $successfullyset);
+            cache_helper::record_cache_set($this->storetype, $this->definition, $successfullyset);
         }
         return $successfullyset;
     }
@@ -1131,7 +1079,7 @@ class cache implements cache_loader {
         }
         if ($result !== false) {
             if ($this->perfdebug) {
-                cache_helper::record_cache_hit(cache_store::STATIC_ACCEL, $this->definition);
+                cache_helper::record_cache_hit('** static acceleration **', $this->definition);
             }
             if ($this->staticaccelerationsize > 1 && $this->staticaccelerationcount > 1) {
                 // Check to see if this is the last item on the static acceleration keys array.
@@ -1145,7 +1093,7 @@ class cache implements cache_loader {
             return $result;
         } else {
             if ($this->perfdebug) {
-                cache_helper::record_cache_miss(cache_store::STATIC_ACCEL, $this->definition);
+                cache_helper::record_cache_miss('** static acceleration **', $this->definition);
             }
             return false;
         }
@@ -1238,77 +1186,13 @@ class cache implements cache_loader {
      * This stamp needs to be used for all ttl and time based operations to ensure that we don't end up with
      * timing issues.
      *
-     * @param   bool    $float Whether to use floating precision accuracy.
-     * @return  int|float
+     * @return int
      */
-    public static function now($float = false) {
+    public static function now() {
         if (self::$now === null) {
-            self::$now = microtime(true);
+            self::$now = time();
         }
-
-        if ($float) {
-            return self::$now;
-        } else {
-            return (int) self::$now;
-        }
-    }
-
-    /**
-     * Get a 'purge' token used for cache invalidation handling.
-     *
-     * Note: This function is intended for use from within the Cache API only and not by plugins, or cache stores.
-     *
-     * @param   bool    $reset  Whether to reset the token and generate a new one.
-     * @return  string
-     */
-    public static function get_purge_token($reset = false) {
-        if (self::$purgetoken === null || $reset) {
-            self::$now = null;
-            self::$purgetoken = self::now(true) . '-' . uniqid('', true);
-        }
-
-        return self::$purgetoken;
-    }
-
-    /**
-     * Compare a pair of purge tokens.
-     *
-     * If the two tokens are identical, then the return value is 0.
-     * If the time component of token A is newer than token B, then a positive value is returned.
-     * If the time component of token B is newer than token A, then a negative value is returned.
-     *
-     * Note: This function is intended for use from within the Cache API only and not by plugins, or cache stores.
-     *
-     * @param   string  $tokena
-     * @param   string  $tokenb
-     * @return  int
-     */
-    public static function compare_purge_tokens($tokena, $tokenb) {
-        if ($tokena === $tokenb) {
-            // There is an exact match.
-            return 0;
-        }
-
-        // The token for when the cache was last invalidated.
-        list($atime) = explode('-', "{$tokena}-", 2);
-
-        // The token for this cache.
-        list($btime) = explode('-', "{$tokenb}-", 2);
-
-        if ($atime >= $btime) {
-            // Token A is newer.
-            return 1;
-        } else {
-            // Token A is older.
-            return -1;
-        }
-    }
-
-    /**
-     * Subclasses may support purging cache of all data belonging to the
-     * current user.
-     */
-    public function purge_current_user() {
+        return self::$now;
     }
 }
 
@@ -1738,7 +1622,6 @@ class cache_session extends cache {
     public function __construct(cache_definition $definition, cache_store $store, $loader = null) {
         // First up copy the loadeduserid to the current user id.
         $this->currentuserid = self::$loadeduserid;
-        $this->set_session_id();
         parent::__construct($definition, $store, $loader);
 
         // This will trigger check tracked user. If this gets removed a call to that will need to be added here in its place.
@@ -1798,6 +1681,8 @@ class cache_session extends cache {
                 // Purge the data we have for the old user.
                 // This way we don't bloat the session.
                 $this->purge();
+                // Update the session id just in case!
+                $this->set_session_id();
             }
             self::$loadeduserid = $new;
             $this->currentuserid = $new;
@@ -1805,6 +1690,8 @@ class cache_session extends cache {
             // The current user matches the loaded user but not the user last used by this cache.
             $this->purge_current_user();
             $this->currentuserid = $new;
+            // Update the session id just in case!
+            $this->set_session_id();
         }
     }
 
@@ -1849,7 +1736,7 @@ class cache_session extends cache {
         // 4. Load if from the loader/datasource if we don't already have it.
         if ($result === false) {
             if ($this->perfdebug) {
-                cache_helper::record_cache_miss($this->get_store(), $this->get_definition());
+                cache_helper::record_cache_miss($this->storetype, $this->get_definition());
             }
             if ($this->get_loader() !== false) {
                 // We must pass the original (unparsed) key to the next loader in the chain.
@@ -1864,7 +1751,7 @@ class cache_session extends cache {
                 $this->set($key, $result);
             }
         } else if ($this->perfdebug) {
-            cache_helper::record_cache_hit($this->get_store(), $this->get_definition());
+            cache_helper::record_cache_hit($this->storetype, $this->get_definition());
         }
         // 5. Validate strictness.
         if ($strictness === MUST_EXIST && $result === false) {
@@ -1908,7 +1795,7 @@ class cache_session extends cache {
             $loader->set($key, $data);
         }
         if ($this->perfdebug) {
-            cache_helper::record_cache_set($this->get_store(), $this->get_definition());
+            cache_helper::record_cache_set($this->storetype, $this->get_definition());
         }
         if (is_object($data) && $data instanceof cacheable_object) {
             $data = new cache_cached_object($data);
@@ -2038,8 +1925,8 @@ class cache_session extends cache {
                     $hits++;
                 }
             }
-            cache_helper::record_cache_hit($this->get_store(), $this->get_definition(), $hits);
-            cache_helper::record_cache_miss($this->get_store(), $this->get_definition(), $misses);
+            cache_helper::record_cache_hit($this->storetype, $this->get_definition(), $hits);
+            cache_helper::record_cache_miss($this->storetype, $this->get_definition(), $misses);
         }
         return $return;
 
@@ -2116,7 +2003,7 @@ class cache_session extends cache {
         }
         $successfullyset = $this->get_store()->set_many($data);
         if ($this->perfdebug && $successfullyset) {
-            cache_helper::record_cache_set($this->get_store(), $this->get_definition(), $successfullyset);
+            cache_helper::record_cache_set($this->storetype, $this->get_definition(), $successfullyset);
         }
         return $successfullyset;
     }

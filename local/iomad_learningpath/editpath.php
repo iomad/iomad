@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
@@ -46,10 +47,7 @@ $output = $PAGE->get_renderer('local_iomad_learningpath');
 $companyid = iomad::get_my_companyid($context);
 $companypaths = new local_iomad_learningpath\companypaths($companyid, $context);
 $paths = $companypaths->get_paths();
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add(get_string('learningpathedit', 'local_iomad_learningpath'), $url);
+$companypaths->breadcrumb(get_string('learningpathedit', 'local_iomad_learningpath'), $url);
 
 // Attempt to locate path
 $path = $companypaths->get_path($id);

@@ -27,6 +27,8 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
+require_once($CFG->libdir . '/coursecatlib.php');
+
 /**
  *  These are read by the administration component to provide default values
  */
@@ -70,15 +72,9 @@ define('CALENDAR_TF_24', '%H:%M');
 define('CALENDAR_TF_12', '%I:%M %p');
 
 /**
- * CALENDAR_EVENT_GLOBAL - Site calendar event types
- * @deprecated since 3.8
+ * CALENDAR_EVENT_GLOBAL - Global calendar event types
  */
 define('CALENDAR_EVENT_GLOBAL', 1);
-
-/**
- * CALENDAR_EVENT_SITE - Site calendar event types
- */
-define('CALENDAR_EVENT_SITE', 1);
 
 /**
  * CALENDAR_EVENT_COURSE - Course calendar event types
@@ -109,11 +105,6 @@ define('CALENDAR_IMPORT_FROM_FILE', 0);
  * CALENDAR_IMPORT_FROM_URL - import the calendar from a URL
  */
 define('CALENDAR_IMPORT_FROM_URL',  1);
-
-/**
- * CALENDAR_IMPORT_EVENT_UPDATED_SKIPPED - imported event was skipped
- */
-define('CALENDAR_IMPORT_EVENT_SKIPPED',  -1);
 
 /**
  * CALENDAR_IMPORT_EVENT_UPDATED - imported event was updated
@@ -172,7 +163,6 @@ define('CALENDAR_EVENT_TYPE_ACTION', 1);
  * @property int $userid The user the event is associated with (0 if none)
  * @property int $repeatid If this is a repeated event this will be set to the
  *                          id of the original
- * @property string $component If created by a plugin/component (other than module), the full frankenstyle name of a component
  * @property string $modulename If added by a module this will be the module name
  * @property int $instance If added by a module this will be the module instance
  * @property string $eventtype The event type
@@ -258,11 +248,11 @@ class calendar_event {
             $data->format = editors_get_preferred_format();
         }
 
-        if (empty($data->component)) {
-            $data->component = null;
-        }
-
         $this->properties = $data;
+
+        if (empty($data->context)) {
+            $this->properties->context = $this->calculate_context();
+        }
     }
 
     /**
@@ -342,7 +332,6 @@ class calendar_event {
             $context = \context_user::instance($this->properties->userid);
         } else if (isset($this->properties->userid) && $this->properties->userid > 0
             && $this->properties->userid != $USER->id &&
-            !empty($this->properties->modulename) &&
             isset($this->properties->instance) && $this->properties->instance > 0) {
             $cm = get_coursemodule_from_instance($this->properties->modulename, $this->properties->instance, 0,
                 false, MUST_EXIST);
@@ -352,24 +341,6 @@ class calendar_event {
         }
 
         return $context;
-    }
-
-    /**
-     * Returns the context for this event. The context is calculated
-     * the first time is is requested and then stored in a member
-     * variable to be returned each subsequent time.
-     *
-     * This is a magical getter function that will be called when
-     * ever the context property is accessed, e.g. $event->context.
-     *
-     * @return context
-     */
-    protected function get_context() {
-        if (!isset($this->properties->context)) {
-            $this->properties->context = $this->calculate_context();
-        }
-
-        return $this->properties->context;
     }
 
     /**
@@ -396,7 +367,7 @@ class calendar_event {
             // Check if we have already resolved the context for this event.
             if ($this->editorcontext === null) {
                 // Switch on the event type to decide upon the appropriate context to use for this event.
-                $this->editorcontext = $this->get_context();
+                $this->editorcontext = $this->properties->context;
                 if (!calendar_is_valid_eventtype($this->properties->eventtype)) {
                     return clean_text($this->properties->description, $this->properties->format);
                 }
@@ -443,20 +414,11 @@ class calendar_event {
      * Pass in a object containing the event properties and this function will
      * insert it into the database and deal with any associated files
      *
-     * Capability checking should be performed if the user is directly manipulating the event
-     * and no other capability has been tested. However if the event is not being manipulated
-     * directly by the user and another capability has been checked for them to do this then
-     * capabilites should not be checked.
-     *
-     * For example if a user is editing an event in the calendar the check should be true,
-     * but if you are updating an event in an activities settings are changed then the calendar
-     * capabilites should not be checked.
-     *
      * @see self::create()
      * @see self::update()
      *
      * @param \stdClass $data object of event
-     * @param bool $checkcapability If Moodle should check the user can manage the calendar events for this call or not.
+     * @param bool $checkcapability if moodle should check calendar managing capability or not
      * @return bool event updated
      */
     public function update($data, $checkcapability=true) {
@@ -471,7 +433,7 @@ class calendar_event {
 
         // Prepare event data.
         $eventargs = array(
-            'context' => $this->get_context(),
+            'context' => $this->properties->context,
             'objectid' => $this->properties->id,
             'other' => array(
                 'repeatid' => empty($this->properties->repeatid) ? 0 : $this->properties->repeatid,
@@ -523,7 +485,7 @@ class calendar_event {
                 // were set when calculate_context() was called from the constructor.
                 if ($usingeditor) {
                     $this->properties->context = $this->calculate_context();
-                    $this->editorcontext = $this->get_context();
+                    $this->editorcontext = $this->properties->context;
                 }
 
                 $editor = $this->properties->description;
@@ -550,7 +512,7 @@ class calendar_event {
 
             // Log the event entry.
             $eventargs['objectid'] = $this->properties->id;
-            $eventargs['context'] = $this->get_context();
+            $eventargs['context'] = $this->properties->context;
             $event = \core\event\calendar_event_created::create($eventargs);
             $event->trigger();
 
@@ -625,44 +587,49 @@ class calendar_event {
             $updaterepeated = (!empty($this->properties->repeatid) && !empty($this->properties->repeateditall));
 
             if ($updaterepeated) {
-
-                $sqlset = 'name = ?,
-                           description = ?,
-                           timeduration = ?,
-                           timemodified = ?,
-                           groupid = ?,
-                           courseid = ?';
-
-                // Note: Group and course id may not be set. If not, keep their current values.
-                $params = [
-                    $this->properties->name,
-                    $this->properties->description,
-                    $this->properties->timeduration,
-                    time(),
-                    isset($this->properties->groupid) ? $this->properties->groupid : $event->groupid,
-                    isset($this->properties->courseid) ? $this->properties->courseid : $event->courseid,
-                ];
-
-                // Note: Only update start date, if it was changed by the user.
+                // Update all.
                 if ($this->properties->timestart != $event->timestart) {
                     $timestartoffset = $this->properties->timestart - $event->timestart;
-                    $sqlset .= ', timestart = timestart + ?';
-                    $params[] = $timestartoffset;
+                    $sql = "UPDATE {event}
+                               SET name = ?,
+                                   description = ?,
+                                   timestart = timestart + ?,
+                                   timeduration = ?,
+                                   timemodified = ?,
+                                   groupid = ?,
+                                   courseid = ?
+                             WHERE repeatid = ?";
+                    // Note: Group and course id may not be set. If not, keep their current values.
+                    $params = [
+                        $this->properties->name,
+                        $this->properties->description,
+                        $timestartoffset,
+                        $this->properties->timeduration,
+                        time(),
+                        isset($this->properties->groupid) ? $this->properties->groupid : $event->groupid,
+                        isset($this->properties->courseid) ? $this->properties->courseid : $event->courseid,
+                        $event->repeatid
+                    ];
+                } else {
+                    $sql = "UPDATE {event}
+                               SET name = ?,
+                                   description = ?,
+                                   timeduration = ?,
+                                   timemodified = ?,
+                                   groupid = ?,
+                                   courseid = ?
+                            WHERE repeatid = ?";
+                    // Note: Group and course id may not be set. If not, keep their current values.
+                    $params = [
+                        $this->properties->name,
+                        $this->properties->description,
+                        $this->properties->timeduration,
+                        time(),
+                        isset($this->properties->groupid) ? $this->properties->groupid : $event->groupid,
+                        isset($this->properties->courseid) ? $this->properties->courseid : $event->courseid,
+                        $event->repeatid
+                    ];
                 }
-
-                // Note: Only update location, if it was changed by the user.
-                $updatelocation = (!empty($this->properties->location) && $this->properties->location !== $event->location);
-                if ($updatelocation) {
-                    $sqlset .= ', location = ?';
-                    $params[] = $this->properties->location;
-                }
-
-                // Update all.
-                $sql = "UPDATE {event}
-                           SET $sqlset
-                         WHERE repeatid = ?";
-
-                $params[] = $event->repeatid;
                 $DB->execute($sql, $params);
 
                 // Trigger an update event for each of the calendar event.
@@ -714,7 +681,7 @@ class calendar_event {
 
         // Trigger an event for the delete action.
         $eventargs = array(
-            'context' => $this->get_context(),
+            'context' => $this->properties->context,
             'objectid' => $this->properties->id,
             'other' => array(
                 'repeatid' => empty($this->properties->repeatid) ? 0 : $this->properties->repeatid,
@@ -748,7 +715,7 @@ class calendar_event {
 
         // If the editor context hasn't already been set then set it now.
         if ($this->editorcontext === null) {
-            $this->editorcontext = $this->get_context();
+            $this->editorcontext = $this->properties->context;
         }
 
         // If the context has been set delete all associated files.
@@ -807,10 +774,10 @@ class calendar_event {
 
                 if ($properties->eventtype === 'site') {
                     // Site context.
-                    $this->editorcontext = $this->get_context();
+                    $this->editorcontext = $this->properties->context;
                 } else if ($properties->eventtype === 'user') {
                     // User context.
-                    $this->editorcontext = $this->get_context();
+                    $this->editorcontext = $this->properties->context;
                 } else if ($properties->eventtype === 'group' || $properties->eventtype === 'course') {
                     // First check the course is valid.
                     $course = $DB->get_record('course', array('id' => $properties->courseid));
@@ -818,15 +785,15 @@ class calendar_event {
                         print_error('invalidcourse');
                     }
                     // Course context.
-                    $this->editorcontext = $this->get_context();
+                    $this->editorcontext = $this->properties->context;
                     // We have a course and are within the course context so we had
                     // better use the courses max bytes value.
                     $this->editoroptions['maxbytes'] = $course->maxbytes;
                 } else if ($properties->eventtype === 'category') {
                     // First check the course is valid.
-                    \core_course_category::get($properties->categoryid, MUST_EXIST, true);
+                    \coursecat::get($properties->categoryid, MUST_EXIST, true);
                     // Course context.
-                    $this->editorcontext = $this->get_context();
+                    $this->editorcontext = $this->properties->context;
                 } else {
                     // If we get here we have a custom event type as used by some
                     // modules. In this case the event will have been added by
@@ -899,7 +866,7 @@ class calendar_event {
 
         // Prepare event data.
         $eventargs = array(
-            'context' => $this->get_context(),
+            'context' => $this->properties->context,
             'objectid' => $this->properties->id,
             'other' => array(
                 'repeatid' => empty($this->properties->repeatid) ? 0 : $this->properties->repeatid,
@@ -935,19 +902,10 @@ class calendar_event {
     }
 
     /**
-     * Creates a new event and returns an event object.
-     *
-     * Capability checking should be performed if the user is directly creating the event
-     * and no other capability has been tested. However if the event is not being created
-     * directly by the user and another capability has been checked for them to do this then
-     * capabilites should not be checked.
-     *
-     * For example if a user is creating an event in the calendar the check should be true,
-     * but if you are creating an event in an activity when it is created then the calendar
-     * capabilites should not be checked.
+     * Creates a new event and returns an event object
      *
      * @param \stdClass|array $properties An object containing event properties
-     * @param bool $checkcapability If Moodle should check the user can manage the calendar events for this call or not.
+     * @param bool $checkcapability Check caps or not
      * @throws \coding_exception
      *
      * @return calendar_event|bool The event object or false if it failed
@@ -968,22 +926,6 @@ class calendar_event {
     }
 
     /**
-     * Format the event name using the external API.
-     *
-     * This function should we used when text formatting is required in external functions.
-     *
-     * @return string Formatted name.
-     */
-    public function format_external_name() {
-        if ($this->editorcontext === null) {
-            // Switch on the event type to decide upon the appropriate context to use for this event.
-            $this->editorcontext = $this->get_context();
-        }
-
-        return external_format_string($this->properties->name, $this->editorcontext->id);
-    }
-
-    /**
      * Format the text using the external API.
      *
      * This function should we used when text formatting is required in external functions.
@@ -994,7 +936,7 @@ class calendar_event {
 
         if ($this->editorcontext === null) {
             // Switch on the event type to decide upon the appropriate context to use for this event.
-            $this->editorcontext = $this->get_context();
+            $this->editorcontext = $this->properties->context;
 
             if (!calendar_is_valid_eventtype($this->properties->eventtype)) {
                 // We don't have a context here, do a normal format_text.
@@ -1111,14 +1053,14 @@ class calendar_information {
             }
 
             $courses = [$course->id => $course];
-            $category = (\core_course_category::get($course->category, MUST_EXIST, true))->get_db_record();
+            $category = (\coursecat::get($course->category, MUST_EXIST, true))->get_db_record();
         } else if (!empty($categoryid)) {
             $course = get_site();
-            $courses = calendar_get_default_courses(null, 'id, category, groupmode, groupmodeforce');
+            $courses = calendar_get_default_courses();
 
             // Filter available courses to those within this category or it's children.
             $ids = [$categoryid];
-            $category = \core_course_category::get($categoryid);
+            $category = \coursecat::get($categoryid);
             $ids = array_merge($ids, array_keys($category->get_children()));
             $courses = array_filter($courses, function($course) use ($ids) {
                 return array_search($course->category, $ids) !== false;
@@ -1128,7 +1070,7 @@ class calendar_information {
             $calendar->context = context_coursecat::instance($categoryid);
         } else {
             $course = get_site();
-            $courses = calendar_get_default_courses(null, 'id, category, groupmode, groupmodeforce');
+            $courses = calendar_get_default_courses();
             $category = null;
 
             $calendar->context = context_system::instance();
@@ -1202,7 +1144,7 @@ class calendar_information {
             // A specific course was requested.
             // Fetch the category that this course is in, along with all parents.
             // Do not include child categories of this category, as the user many not have enrolments in those siblings or children.
-            $category = \core_course_category::get($course->category, MUST_EXIST, true);
+            $category = \coursecat::get($course->category, MUST_EXIST, true);
             $this->categoryid = $category->id;
 
             $this->categories = $category->get_parents();
@@ -1210,7 +1152,7 @@ class calendar_information {
         } else if (null !== $category && $category->id > 0) {
             // A specific category was requested.
             // Fetch all parents of this category, along with all children too.
-            $category = \core_course_category::get($category->id);
+            $category = \coursecat::get($category->id);
             $this->categoryid = $category->id;
 
             // Build the category list.
@@ -1232,7 +1174,7 @@ class calendar_information {
             if ($this->categories === false) {
                 // Use the category id as the key in the following array. That way we do not have to remove duplicates.
                 $categories = [];
-                foreach (\core_course_category::get_all() as $category) {
+                foreach (\coursecat::get_all() as $category) {
                     if (isset($coursecategories[$category->id]) ||
                             has_capability('moodle/category:manage', $category->get_context(), $USER, false)) {
                         // If the user has access to a course in this category or can manage the category,
@@ -1296,12 +1238,6 @@ class calendar_information {
      * @param string|null $view preference view options (eg: day, month, upcoming)
      */
     public function add_sidecalendar_blocks(core_calendar_renderer $renderer, $showfilters=false, $view=null) {
-        global $PAGE;
-
-        if (!has_capability('moodle/block:view', $PAGE->context) ) {
-            return;
-        }
-
         if ($showfilters) {
             $filters = new block_contents();
             $filters->content = $renderer->event_filter();
@@ -1551,13 +1487,10 @@ function calendar_get_group_cached($groupid) {
 /**
  * Add calendar event metadata
  *
- * @deprecated since 3.9
- *
  * @param stdClass $event event info
  * @return stdClass $event metadata
  */
 function calendar_add_event_metadata($event) {
-    debugging('This function is no longer used', DEBUG_DEVELOPER);
     global $CFG, $OUTPUT;
 
     // Support multilang in event->name.
@@ -1588,8 +1521,8 @@ function calendar_add_event_metadata($event) {
         $event->cmid = $module->id;
     } else if ($event->courseid == SITEID) { // Site event.
         $event->icon = '<img src="' . $OUTPUT->image_url('i/siteevent') . '" alt="' .
-            get_string('siteevent', 'calendar') . '" class="icon" />';
-        $event->cssclass = 'calendar_event_site';
+            get_string('globalevent', 'calendar') . '" class="icon" />';
+        $event->cssclass = 'calendar_event_global';
     } else if ($event->courseid != 0 && $event->courseid != SITEID && $event->groupid == 0) { // Course event.
         $event->icon = '<img src="' . $OUTPUT->image_url('i/courseevent') . '" alt="' .
             get_string('courseevent', 'calendar') . '" class="icon" />';
@@ -1693,9 +1626,9 @@ function calendar_top_controls($type, $data) {
 
     switch ($type) {
         case 'frontpage':
-            $prevlink = calendar_get_link_previous(get_string('monthprev', 'calendar'), $urlbase, false, false, false,
+            $prevlink = calendar_get_link_previous(get_string('monthprev', 'access'), $urlbase, false, false, false,
                 true, $prevmonthtime);
-            $nextlink = calendar_get_link_next(get_string('monthnext', 'calendar'), $urlbase, false, false, false, true,
+            $nextlink = calendar_get_link_next(get_string('monthnext', 'access'), $urlbase, false, false, false, true,
                 $nextmonthtime);
             $calendarlink = calendar_get_link_href(new \moodle_url(CALENDAR_URL . 'view.php', array('view' => 'month')),
                 false, false, false, $time);
@@ -1717,9 +1650,9 @@ function calendar_top_controls($type, $data) {
 
             break;
         case 'course':
-            $prevlink = calendar_get_link_previous(get_string('monthprev', 'calendar'), $urlbase, false, false, false,
+            $prevlink = calendar_get_link_previous(get_string('monthprev', 'access'), $urlbase, false, false, false,
                 true, $prevmonthtime);
-            $nextlink = calendar_get_link_next(get_string('monthnext', 'calendar'), $urlbase, false, false, false,
+            $nextlink = calendar_get_link_next(get_string('monthnext', 'access'), $urlbase, false, false, false,
                 true, $nextmonthtime);
             $calendarlink = calendar_get_link_href(new \moodle_url(CALENDAR_URL . 'view.php', array('view' => 'month')),
                 false, false, false, $time);
@@ -1995,7 +1928,7 @@ function calendar_sub_month($month, $year) {
  * @param int $year the number of the year
  * @param array $eventsbyday event on specific day
  * @param array $durationbyday duration of the event in days
- * @param array $typesbyday event type (eg: site, course, user, or group)
+ * @param array $typesbyday event type (eg: global, course, user, or group)
  * @param array $courses list of courses
  * @return void
  */
@@ -2032,9 +1965,9 @@ function calendar_events_by_day($events, $month, $year, &$eventsbyday, &$duratio
 
             // Mark the day as having such an event.
             if ($event->courseid == SITEID && $event->groupid == 0) {
-                $typesbyday[$eventdaystart]['startsite'] = true;
-                // Set event class for site event.
-                $events[$event->id]->class = 'calendar_event_site';
+                $typesbyday[$eventdaystart]['startglobal'] = true;
+                // Set event class for global event.
+                $events[$event->id]->class = 'calendar_event_global';
             } else if ($event->courseid != 0 && $event->courseid != SITEID && $event->groupid == 0) {
                 $typesbyday[$eventdaystart]['startcourse'] = true;
                 // Set event class for course event.
@@ -2073,7 +2006,7 @@ function calendar_events_by_day($events, $month, $year, &$eventsbyday, &$duratio
         for ($i = $lowerbound + 1; $i <= $upperbound; ++$i) {
             $durationbyday[$i][] = $event->id;
             if ($event->courseid == SITEID && $event->groupid == 0) {
-                $typesbyday[$i]['durationsite'] = true;
+                $typesbyday[$i]['durationglobal'] = true;
             } else if ($event->courseid != 0 && $event->courseid != SITEID && $event->groupid == 0) {
                 $typesbyday[$i]['durationcourse'] = true;
             } else if ($event->groupid) {
@@ -2092,29 +2025,34 @@ function calendar_events_by_day($events, $month, $year, &$eventsbyday, &$duratio
  *
  * @param array $courseeventsfrom An array of courses to load calendar events for
  * @param bool $ignorefilters specify the use of filters, false is set as default
- * @param stdClass $user The user object. This defaults to the global $USER object.
  * @return array An array of courses, groups, and user to load calendar events for based upon filters
  */
-function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, stdClass $user = null) {
-    global $CFG, $USER;
+function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false) {
+    global $USER, $CFG;
 
-    if (is_null($user)) {
-        $user = $USER;
+    // For backwards compatability we have to check whether the courses array contains
+    // just id's in which case we need to load course objects.
+    $coursestoload = array();
+    foreach ($courseeventsfrom as $id => $something) {
+        if (!is_object($something)) {
+            $coursestoload[] = $id;
+            unset($courseeventsfrom[$id]);
+        }
     }
 
     $courses = array();
-    $userid = false;
+    $user = false;
     $group = false;
 
     // Get the capabilities that allow seeing group events from all groups.
     $allgroupscaps = array('moodle/site:accessallgroups', 'moodle/calendar:manageentries');
 
-    $isvaliduser = !empty($user->id);
+    $isloggedin = isloggedin();
 
-    if ($ignorefilters || calendar_show_event_type(CALENDAR_EVENT_COURSE, $user)) {
+    if ($ignorefilters || calendar_show_event_type(CALENDAR_EVENT_COURSE)) {
         $courses = array_keys($courseeventsfrom);
     }
-    if ($ignorefilters || calendar_show_event_type(CALENDAR_EVENT_SITE, $user)) {
+    if ($ignorefilters || calendar_show_event_type(CALENDAR_EVENT_GLOBAL)) {
         $courses[] = SITEID;
     }
     $courses = array_unique($courses);
@@ -2128,11 +2066,11 @@ function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, s
         $courses[] = SITEID;
     }
 
-    if ($ignorefilters || ($isvaliduser && calendar_show_event_type(CALENDAR_EVENT_USER, $user))) {
-        $userid = $user->id;
+    if ($ignorefilters || ($isloggedin && calendar_show_event_type(CALENDAR_EVENT_USER))) {
+        $user = $USER->id;
     }
 
-    if (!empty($courseeventsfrom) && (calendar_show_event_type(CALENDAR_EVENT_GROUP, $user) || $ignorefilters)) {
+    if (!empty($courseeventsfrom) && (calendar_show_event_type(CALENDAR_EVENT_GROUP) || $ignorefilters)) {
 
         if (count($courseeventsfrom) == 1) {
             $course = reset($courseeventsfrom);
@@ -2144,16 +2082,16 @@ function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, s
         if ($group === false) {
             if (!empty($CFG->calendar_adminseesall) && has_any_capability($allgroupscaps, \context_system::instance())) {
                 $group = true;
-            } else if ($isvaliduser) {
+            } else if ($isloggedin) {
                 $groupids = array();
                 foreach ($courseeventsfrom as $courseid => $course) {
                     // If the user is an editing teacher in there.
-                    if (!empty($user->groupmember[$course->id])) {
+                    if (!empty($USER->groupmember[$course->id])) {
                         // We've already cached the users groups for this course so we can just use that.
-                        $groupids = array_merge($groupids, $user->groupmember[$course->id]);
+                        $groupids = array_merge($groupids, $USER->groupmember[$course->id]);
                     } else if ($course->groupmode != NOGROUPS || !$course->groupmodeforce) {
                         // If this course has groups, show events from all of those related to the current user.
-                        $coursegroups = groups_get_user_groups($course->id, $user->id);
+                        $coursegroups = groups_get_user_groups($course->id, $USER->id);
                         $groupids = array_merge($groupids, $coursegroups['0']);
                     }
                 }
@@ -2167,7 +2105,7 @@ function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, s
         $courses = false;
     }
 
-    return array($courses, $group, $userid);
+    return array($courses, $group, $user);
 }
 
 /**
@@ -2230,7 +2168,7 @@ function calendar_view_event_allowed(calendar_event $event) {
         return isset($mycourses[$courseid]);
     } else if ($event->categoryid) {
         // If this is a category we need to be able to see the category.
-        $cat = \core_course_category::get($event->categoryid, IGNORE_MISSING);
+        $cat = \coursecat::get($event->categoryid, IGNORE_MISSING);
         if (!$cat) {
             return false;
         }
@@ -2240,8 +2178,8 @@ function calendar_view_event_allowed(calendar_event $event) {
         if (has_capability('moodle/calendar:manageentries', $event->context)) {
             return true;
         }
-
-        return can_access_course(get_course($event->courseid));
+        $mycourses = enrol_get_my_courses('id');
+        return isset($mycourses[$event->courseid]);
     } else if ($event->userid) {
         if ($event->userid != $USER->id) {
             // No-one can ever see another users events.
@@ -2307,11 +2245,6 @@ function calendar_edit_event_allowed($event, $manualedit = false) {
         return has_capability('moodle/course:manageactivities', $context);
     }
 
-    if ($manualedit && !empty($event->component)) {
-        // TODO possibly we can later add a callback similar to core_calendar_event_timestart_updated in the modules.
-        return false;
-    }
-
     // You cannot edit URL based calendar subscription events presently.
     if (!empty($event->subscriptionid)) {
         if (!empty($event->subscription->url)) {
@@ -2360,8 +2293,8 @@ function calendar_edit_event_allowed($event, $manualedit = false) {
  * @return bool Whether the user has permission to delete the event or not.
  */
 function calendar_delete_event_allowed($event) {
-    // Only allow delete if you have capabilities and it is not an module or component event.
-    return (calendar_edit_event_allowed($event) && empty($event->modulename) && empty($event->component));
+    // Only allow delete if you have capabilities and it is not an module event.
+    return (calendar_edit_event_allowed($event) && empty($event->modulename));
 }
 
 /**
@@ -2370,42 +2303,34 @@ function calendar_delete_event_allowed($event) {
  *
  * @param int $courseid (optional) If passed, an additional course can be returned for admins (the current course).
  * @param string $fields Comma separated list of course fields to return.
- * @param bool $canmanage If true, this will return the list of courses the user can create events in, rather
+ * @param bool $canmanage If true, this will return the list of courses the current user can create events in, rather
  *                        than the list of courses they see events from (an admin can always add events in a course
  *                        calendar, even if they are not enrolled in the course).
- * @param int $userid (optional) The user which this function returns the default courses for.
- *                        By default the current user.
  * @return array $courses Array of courses to display
  */
-function calendar_get_default_courses($courseid = null, $fields = '*', $canmanage = false, int $userid = null) {
-    global $CFG, $USER;
+function calendar_get_default_courses($courseid = null, $fields = '*', $canmanage=false) {
+    global $CFG, $DB;
 
-    if (!$userid) {
-        if (!isloggedin()) {
-            return array();
-        }
-        $userid = $USER->id;
+    if (!isloggedin()) {
+        return array();
     }
 
-    if ((!empty($CFG->calendar_adminseesall) || $canmanage) &&
-            has_capability('moodle/calendar:manageentries', context_system::instance(), $userid)) {
+    if (has_capability('moodle/calendar:manageentries', context_system::instance()) &&
+            (!empty($CFG->calendar_adminseesall) || $canmanage)) {
 
         // Add a c. prefix to every field as expected by get_courses function.
         $fieldlist = explode(',', $fields);
 
         $prefixedfields = array_map(function($value) {
-            return 'c.' . trim(strtolower($value));
+            return 'c.' . trim($value);
         }, $fieldlist);
-        if (!in_array('c.visible', $prefixedfields) && !in_array('c.*', $prefixedfields)) {
-            $prefixedfields[] = 'c.visible';
-        }
         $courses = get_courses('all', 'c.shortname', implode(',', $prefixedfields));
     } else {
-        $courses = enrol_get_users_courses($userid, true, $fields);
+        $courses = enrol_get_my_courses($fields);
     }
 
     if ($courseid && $courseid != SITEID) {
-        if (empty($courses[$courseid]) && has_capability('moodle/calendar:manageentries', context_system::instance(), $userid)) {
+        if (empty($courses[$courseid]) && has_capability('moodle/calendar:manageentries', context_system::instance())) {
             // Allow a site admin to see calendars from courses he is not enrolled in.
             // This will come from $COURSE.
             $courses[$courseid] = get_course($courseid);
@@ -2514,7 +2439,7 @@ function calendar_format_event_time($event, $now, $linkparams = null, $usecommon
  * @return bool True if the tyep should be displayed false otherwise
  */
 function calendar_show_event_type($type, $user = null) {
-    $default = CALENDAR_EVENT_SITE + CALENDAR_EVENT_COURSE + CALENDAR_EVENT_GROUP + CALENDAR_EVENT_USER;
+    $default = CALENDAR_EVENT_GLOBAL + CALENDAR_EVENT_COURSE + CALENDAR_EVENT_GROUP + CALENDAR_EVENT_USER;
 
     if (get_user_preferences('calendar_persistflt', 0, $user) === 0) {
         global $SESSION;
@@ -2540,7 +2465,7 @@ function calendar_show_event_type($type, $user = null) {
  */
 function calendar_set_event_type_display($type, $display = null, $user = null) {
     $persist = get_user_preferences('calendar_persistflt', 0, $user);
-    $default = CALENDAR_EVENT_SITE + CALENDAR_EVENT_COURSE + CALENDAR_EVENT_GROUP
+    $default = CALENDAR_EVENT_GLOBAL + CALENDAR_EVENT_COURSE + CALENDAR_EVENT_GROUP
             + CALENDAR_EVENT_USER + CALENDAR_EVENT_COURSECAT;
     if ($persist === 0) {
         global $SESSION;
@@ -2629,6 +2554,76 @@ function calendar_get_allowed_types(&$allowed, $course = null, $groups = null, $
             $allowed->categories = [$category->id => 1];
         }
     }
+}
+
+/**
+ * Get all of the allowed types for all of the courses and groups
+ * the logged in user belongs to.
+ *
+ * The returned array will optionally have 5 keys:
+ *      'user' : true if the logged in user can create user events
+ *      'site' : true if the logged in user can create site events
+ *      'category' : array of course categories that the user can create events for
+ *      'course' : array of courses that the user can create events for
+ *      'group': array of groups that the user can create events for
+ *      'groupcourses' : array of courses that the groups belong to (can
+ *                       be different from the list in 'course'.
+ *
+ * @return array The array of allowed types.
+ */
+function calendar_get_all_allowed_types() {
+    global $CFG, $USER, $DB;
+
+    require_once($CFG->libdir . '/enrollib.php');
+
+    $types = [];
+
+    $allowed = new stdClass();
+
+    calendar_get_allowed_types($allowed);
+
+    if ($allowed->user) {
+        $types['user'] = true;
+    }
+
+    if ($allowed->site) {
+        $types['site'] = true;
+    }
+
+    if (coursecat::has_manage_capability_on_any()) {
+        $types['category'] = coursecat::make_categories_list('moodle/category:manage');
+    }
+
+    // This function warms the context cache for the course so the calls
+    // to load the course context in calendar_get_allowed_types don't result
+    // in additional DB queries.
+    $courses = calendar_get_default_courses(null, 'id, groupmode, groupmodeforce', true);
+
+    // We want to pre-fetch all of the groups for each course in a single
+    // query to avoid calendar_get_allowed_types from hitting the DB for
+    // each separate course.
+    $groups = groups_get_all_groups_for_courses($courses);
+
+    foreach ($courses as $course) {
+        $coursegroups = isset($groups[$course->id]) ? $groups[$course->id] : null;
+        calendar_get_allowed_types($allowed, $course, $coursegroups);
+
+        if (!empty($allowed->courses)) {
+            $types['course'][$course->id] = $course;
+        }
+
+        if (!empty($allowed->groups)) {
+            $types['groupcourses'][$course->id] = $course;
+
+            if (!isset($types['group'])) {
+                $types['group'] = array_values($allowed->groups);
+            } else {
+                $types['group'] = array_merge($types['group'], array_values($allowed->groups));
+            }
+        }
+    }
+
+    return $types;
 }
 
 /**
@@ -2754,6 +2749,14 @@ function calendar_add_subscription($sub) {
     if (!empty($sub->groupcourseid)) {
         $sub->courseid = $sub->groupcourseid;
         unset($sub->groupcourseid);
+    }
+
+    // Pull the group id back out of the value. The form saves the value
+    // as "<courseid>-<groupid>" to allow the javascript to work correctly.
+    if (!empty($sub->groupid)) {
+        list($courseid, $groupid) = explode('-', $sub->groupid);
+        $sub->courseid = $courseid;
+        $sub->groupid = $groupid;
     }
 
     // Default course id if none is set.
@@ -2895,8 +2898,6 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
         \core_date::set_default_server_timezone();
     }
 
-    $eventrecord->location = empty($event->properties['LOCATION'][0]->value) ? '' :
-            trim(str_replace('\\', '', $event->properties['LOCATION'][0]->value));
     $eventrecord->uuid = $event->properties['UID'][0]->value;
     $eventrecord->timemodified = time();
 
@@ -2912,23 +2913,11 @@ function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $
 
     if ($updaterecord = $DB->get_record('event', array('uuid' => $eventrecord->uuid,
         'subscriptionid' => $eventrecord->subscriptionid))) {
-
-        // Compare iCal event data against the moodle event to see if something has changed.
-        $result = array_diff((array) $eventrecord, (array) $updaterecord);
-
-        // Unset timemodified field because it's always going to be different.
-        unset($result['timemodified']);
-
-        if (count($result)) {
-            $eventrecord->id = $updaterecord->id;
-            $return = CALENDAR_IMPORT_EVENT_UPDATED; // Update.
-        } else {
-            return CALENDAR_IMPORT_EVENT_SKIPPED;
-        }
+        $eventrecord->id = $updaterecord->id;
+        $return = CALENDAR_IMPORT_EVENT_UPDATED; // Update.
     } else {
         $return = CALENDAR_IMPORT_EVENT_INSERTED; // Insert.
     }
-
     if ($createdevent = \calendar_event::create($eventrecord, false)) {
         if (!empty($event->properties['RRULE'])) {
             // Repeating events.
@@ -3052,7 +3041,7 @@ function calendar_get_icalendar($url) {
  * Import events from an iCalendar object into a course calendar.
  *
  * @param iCalendar $ical The iCalendar object.
- * @param int $unused Deprecated
+ * @param int $courseid The course ID for the calendar.
  * @param int $subscriptionid The subscription ID.
  * @return string A log of the import progress, including errors.
  */
@@ -3062,11 +3051,16 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
     $return = '';
     $eventcount = 0;
     $updatecount = 0;
-    $skippedcount = 0;
 
     // Large calendars take a while...
     if (!CLI_SCRIPT) {
         \core_php_time_limit::raise(300);
+    }
+
+    // Mark all events in a subscription with a zero timestamp.
+    if (!empty($subscriptionid)) {
+        $sql = "UPDATE {event} SET timemodified = :time WHERE subscriptionid = :id";
+        $DB->execute($sql, array('time' => 0, 'id' => $subscriptionid));
     }
 
     // Grab the timezone from the iCalendar file to be used later.
@@ -3076,9 +3070,8 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
         $timezone = 'UTC';
     }
 
-    $icaluuids = [];
+    $return = '';
     foreach ($ical->components['VEVENT'] as $event) {
-        $icaluuids[] = $event->properties['UID'][0]->value;
         $res = calendar_add_icalendar_event($event, null, $subscriptionid, $timezone);
         switch ($res) {
             case CALENDAR_IMPORT_EVENT_UPDATED:
@@ -3086,9 +3079,6 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
                 break;
             case CALENDAR_IMPORT_EVENT_INSERTED:
                 $eventcount++;
-                break;
-            case CALENDAR_IMPORT_EVENT_SKIPPED:
-                $skippedcount++;
                 break;
             case 0:
                 $return .= '<p>' . get_string('erroraddingevent', 'calendar') . ': ';
@@ -3102,28 +3092,18 @@ function calendar_import_icalendar_events($ical, $unused = null, $subscriptionid
         }
     }
 
-    $existing = $DB->get_field('event_subscriptions', 'lastupdated', ['id' => $subscriptionid]);
-    if (!empty($existing)) {
-        $eventsuuids = $DB->get_records_menu('event', ['subscriptionid' => $subscriptionid], '', 'id, uuid');
+    $return .= "<p>" . get_string('eventsimported', 'calendar', $eventcount) . "</p> ";
+    $return .= "<p>" . get_string('eventsupdated', 'calendar', $updatecount) . "</p>";
 
-        $icaleventscount = count($icaluuids);
-        $tobedeleted = [];
-        if (count($eventsuuids) > $icaleventscount) {
-            foreach ($eventsuuids as $eventid => $eventuuid) {
-                if (!in_array($eventuuid, $icaluuids)) {
-                    $tobedeleted[] = $eventid;
-                }
-            }
-            if (!empty($tobedeleted)) {
-                $DB->delete_records_list('event', 'id', $tobedeleted);
-                $return .= "<p> " . get_string('eventsdeleted', 'calendar') . ": " . count($tobedeleted) . "</p> ";
-            }
+    // Delete remaining zero-marked events since they're not in remote calendar.
+    if (!empty($subscriptionid)) {
+        $deletecount = $DB->count_records('event', array('timemodified' => 0, 'subscriptionid' => $subscriptionid));
+        if (!empty($deletecount)) {
+            $DB->delete_records('event', array('timemodified' => 0, 'subscriptionid' => $subscriptionid));
+            $return .= "<p> " . get_string('eventsdeleted', 'calendar') . ": {$deletecount} </p>\n";
         }
     }
 
-    $return .= "<p>" . get_string('eventsimported', 'calendar', $eventcount) . "</p> ";
-    $return .= "<p>" . get_string('eventsskipped', 'calendar', $skippedcount) . "</p> ";
-    $return .= "<p>" . get_string('eventsupdated', 'calendar', $updatecount) . "</p>";
     return $return;
 }
 
@@ -3221,7 +3201,7 @@ function calendar_can_edit_subscription($subscriptionorid) {
     $category = null;
 
     if (!empty($categoryid)) {
-        $category = \core_course_category::get($categoryid);
+        $category = \coursecat::get($categoryid);
     }
     calendar_get_allowed_types($allowed, $courseid, null, $category);
     switch ($subscription->eventtype) {
@@ -3305,12 +3285,10 @@ function core_calendar_user_preferences() {
  *                              or events in progress/already started selected as well
  * @param boolean $ignorehidden whether to select only visible events or all events
  * @param array $categories array of category ids and/or objects.
- * @param int $limitnum Number of events to fetch or zero to fetch all.
- *
  * @return array $events of selected events or an empty array if there aren't any (or there was an error)
  */
 function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
-        $withduration = true, $ignorehidden = true, $categories = [], $limitnum = 0) {
+        $withduration = true, $ignorehidden = true, $categories = []) {
     // Normalise the users, groups and courses parameters so that they are compliant with \core_calendar\local\api::get_events().
     // Existing functions that were using the old calendar_get_events() were passing a mixture of array, int, boolean for these
     // parameters, but with the new API method, only null and arrays are accepted.
@@ -3334,11 +3312,6 @@ function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
         return $param;
     }, [$users, $groups, $courses, $categories]);
 
-    // If a single user is provided, we can use that for capability checks.
-    // Otherwise current logged in user is used - See MDL-58768.
-    if (is_array($userparam) && count($userparam) == 1) {
-        \core_calendar\local\event\container::set_requesting_user($userparam[0]);
-    }
     $mapper = \core_calendar\local\event\container::get_event_mapper();
     $events = \core_calendar\local\api::get_events(
         $tstart,
@@ -3347,7 +3320,7 @@ function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
         null,
         null,
         null,
-        $limitnum,
+        40,
         null,
         $userparam,
         $groupparam,
@@ -3369,12 +3342,9 @@ function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
  * @param   \calendar_information $calendar The calendar being represented
  * @param   string  $view The type of calendar to have displayed
  * @param   bool    $includenavigation Whether to include navigation
- * @param   bool    $skipevents Whether to load the events or not
- * @param   int     $lookahead Overwrites site and users's lookahead setting.
  * @return  array[array, string]
  */
-function calendar_get_view(\calendar_information $calendar, $view, $includenavigation = true, bool $skipevents = false,
-        ?int $lookahead = null) {
+function calendar_get_view(\calendar_information $calendar, $view, $includenavigation = true) {
     global $PAGE, $CFG;
 
     $renderer = $PAGE->get_renderer('core_calendar');
@@ -3384,7 +3354,7 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
     $calendardate = $type->timestamp_to_date_array($calendar->time);
 
     $date = new \DateTime('now', core_date::get_user_timezone_object(99));
-    $eventlimit = 0;
+    $eventlimit = 200;
 
     if ($view === 'day') {
         $tstart = $type->convert_to_timestamp($calendardate['year'], $calendardate['mon'], $calendardate['mday']);
@@ -3392,14 +3362,12 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
         $date->modify('+1 day');
     } else if ($view === 'upcoming' || $view === 'upcoming_mini') {
         // Number of days in the future that will be used to fetch events.
-        if (!$lookahead) {
-            if (isset($CFG->calendar_lookahead)) {
-                $defaultlookahead = intval($CFG->calendar_lookahead);
-            } else {
-                $defaultlookahead = CALENDAR_DEFAULT_UPCOMING_LOOKAHEAD;
-            }
-            $lookahead = get_user_preferences('calendar_lookahead', $defaultlookahead);
+        if (isset($CFG->calendar_lookahead)) {
+            $defaultlookahead = intval($CFG->calendar_lookahead);
+        } else {
+            $defaultlookahead = CALENDAR_DEFAULT_UPCOMING_LOOKAHEAD;
         }
+        $lookahead = get_user_preferences('calendar_lookahead', $defaultlookahead);
 
         // Maximum number of events to be displayed on upcoming view.
         $defaultmaxevents = CALENDAR_DEFAULT_UPCOMING_MAXEVENTS;
@@ -3449,40 +3417,36 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
         return $param;
     }, [$calendar->users, $calendar->groups, $calendar->courses, $calendar->categories]);
 
-    if ($skipevents) {
-        $events = [];
-    } else {
-        $events = \core_calendar\local\api::get_events(
-            $tstart,
-            $tend,
-            null,
-            null,
-            null,
-            null,
-            $eventlimit,
-            null,
-            $userparam,
-            $groupparam,
-            $courseparam,
-            $categoryparam,
-            true,
-            true,
-            function ($event) {
-                if ($proxy = $event->get_course_module()) {
-                    $cminfo = $proxy->get_proxied_instance();
-                    return $cminfo->uservisible;
-                }
-
-                if ($proxy = $event->get_category()) {
-                    $category = $proxy->get_proxied_instance();
-
-                    return $category->is_uservisible();
-                }
-
-                return true;
+    $events = \core_calendar\local\api::get_events(
+        $tstart,
+        $tend,
+        null,
+        null,
+        null,
+        null,
+        $eventlimit,
+        null,
+        $userparam,
+        $groupparam,
+        $courseparam,
+        $categoryparam,
+        true,
+        true,
+        function ($event) {
+            if ($proxy = $event->get_course_module()) {
+                $cminfo = $proxy->get_proxied_instance();
+                return $cminfo->uservisible;
             }
-        );
-    }
+
+            if ($proxy = $event->get_category()) {
+                $category = $proxy->get_proxied_instance();
+
+                return $category->is_uservisible();
+            }
+
+            return true;
+        }
+    );
 
     $related = [
         'events' => $events,
@@ -3494,14 +3458,10 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
     if ($view == "month" || $view == "mini" || $view == "minithree") {
         $month = new \core_calendar\external\month_exporter($calendar, $type, $related);
         $month->set_includenavigation($includenavigation);
-        $month->set_initialeventsloaded(!$skipevents);
-        $month->set_showcoursefilter($view == "month");
         $data = $month->export($renderer);
-        $data->viewingmonth = true;
     } else if ($view == "day") {
         $day = new \core_calendar\external\calendar_day_exporter($calendar, $related);
         $data = $day->export($renderer);
-        $data->viewingday = true;
         $template = 'core_calendar/calendar_day';
     } else if ($view == "upcoming" || $view == "upcoming_mini") {
         $upcoming = new \core_calendar\external\calendar_upcoming_exporter($calendar, $related);
@@ -3509,7 +3469,6 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
 
         if ($view == "upcoming") {
             $template = 'core_calendar/calendar_upcoming';
-            $data->viewingupcoming = true;
         } else if ($view == "upcoming_mini") {
             $template = 'core_calendar/calendar_upcoming_mini';
         }
@@ -3526,18 +3485,18 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
  */
 function calendar_output_fragment_event_form($args) {
     global $CFG, $OUTPUT, $USER;
-    require_once($CFG->libdir . '/grouplib.php');
+
     $html = '';
     $data = [];
     $eventid = isset($args['eventid']) ? clean_param($args['eventid'], PARAM_INT) : null;
     $starttime = isset($args['starttime']) ? clean_param($args['starttime'], PARAM_INT) : null;
-    $courseid = (isset($args['courseid']) && $args['courseid'] != SITEID) ? clean_param($args['courseid'], PARAM_INT) : null;
+    $courseid = isset($args['courseid']) ? clean_param($args['courseid'], PARAM_INT) : null;
     $categoryid = isset($args['categoryid']) ? clean_param($args['categoryid'], PARAM_INT) : null;
     $event = null;
     $hasformdata = isset($args['formdata']) && !empty($args['formdata']);
     $context = \context_user::instance($USER->id);
     $editoroptions = \core_calendar\local\event\forms\create::build_editor_options($context);
-    $formoptions = ['editoroptions' => $editoroptions, 'courseid' => $courseid];
+    $formoptions = ['editoroptions' => $editoroptions];
     $draftitemid = 0;
 
     if ($hasformdata) {
@@ -3550,19 +3509,8 @@ function calendar_output_fragment_event_form($args) {
     if ($starttime) {
         $formoptions['starttime'] = $starttime;
     }
-    // Let's check first which event types user can add.
-    $eventtypes = calendar_get_allowed_event_types($courseid);
-    $formoptions['eventtypes'] = $eventtypes;
 
     if (is_null($eventid)) {
-        if (!empty($courseid)) {
-            $groupcoursedata = groups_get_course_data($courseid);
-            $formoptions['groups'] = [];
-            foreach ($groupcoursedata->groups as $groupid => $groupdata) {
-                $formoptions['groups'][$groupid] = $groupdata->name;
-            }
-        }
-
         $mform = new \core_calendar\local\event\forms\create(
             null,
             $formoptions,
@@ -3573,40 +3521,26 @@ function calendar_output_fragment_event_form($args) {
             $data
         );
 
+        // Let's check first which event types user can add.
+        calendar_get_allowed_types($allowed, $courseid);
+
         // If the user is on course context and is allowed to add course events set the event type default to course.
-        if (!empty($courseid) && !empty($eventtypes['course'])) {
+        if ($courseid != SITEID && !empty($allowed->courses)) {
             $data['eventtype'] = 'course';
             $data['courseid'] = $courseid;
             $data['groupcourseid'] = $courseid;
-        } else if (!empty($categoryid) && !empty($eventtypes['category'])) {
+        } else if (!empty($categoryid) && !empty($allowed->category)) {
             $data['eventtype'] = 'category';
             $data['categoryid'] = $categoryid;
-        } else if (!empty($groupcoursedata) && !empty($eventtypes['group'])) {
-            $data['groupcourseid'] = $courseid;
-            $data['groups'] = $groupcoursedata->groups;
         }
         $mform->set_data($data);
     } else {
         $event = calendar_event::load($eventid);
-
-        if (!calendar_edit_event_allowed($event)) {
-            print_error('nopermissiontoupdatecalendar');
-        }
-
         $mapper = new \core_calendar\local\event\mappers\create_update_form_mapper();
         $eventdata = $mapper->from_legacy_event_to_data($event);
         $data = array_merge((array) $eventdata, $data);
         $event->count_repeats();
         $formoptions['event'] = $event;
-
-        if (!empty($event->courseid)) {
-            $groupcoursedata = groups_get_course_data($event->courseid);
-            $formoptions['groups'] = [];
-            foreach ($groupcoursedata->groups as $groupid => $groupdata) {
-                $formoptions['groups'][$groupid] = $groupdata->name;
-            }
-        }
-
         $data['description']['text'] = file_prepare_draft_area(
             $draftitemid,
             $event->context->id,
@@ -3709,16 +3643,12 @@ function calendar_get_filter_types() {
         'course',
         'group',
         'user',
-        'other'
     ];
 
     return array_map(function($type) {
         return [
             'eventtype' => $type,
             'name' => get_string("eventtype{$type}", "calendar"),
-            'icon' => true,
-            'key' => 'i/' . $type . 'event',
-            'component' => 'core'
         ];
     }, $types);
 }
@@ -3738,185 +3668,4 @@ function calendar_is_valid_eventtype($type) {
         'site',
     ];
     return in_array($type, $validtypes);
-}
-
-/**
- * Get event types the user can create event based on categories, courses and groups
- * the logged in user belongs to.
- *
- * @param int|null $courseid The course id.
- * @return array The array of allowed types.
- */
-function calendar_get_allowed_event_types(int $courseid = null) {
-    global $DB, $CFG, $USER;
-
-    $types = [
-        'user' => false,
-        'site' => false,
-        'course' => false,
-        'group' => false,
-        'category' => false
-    ];
-
-    if (!empty($courseid) && $courseid != SITEID) {
-        $context = \context_course::instance($courseid);
-        $types['user'] = has_capability('moodle/calendar:manageownentries', $context);
-        calendar_internal_update_course_and_group_permission($courseid, $context, $types);
-    }
-
-    if (has_capability('moodle/calendar:manageentries', \context_course::instance(SITEID))) {
-        $types['site'] = true;
-    }
-
-    if (has_capability('moodle/calendar:manageownentries', \context_system::instance())) {
-        $types['user'] = true;
-    }
-    if (core_course_category::has_manage_capability_on_any()) {
-        $types['category'] = true;
-    }
-
-    // We still don't know if the user can create group and course events, so iterate over the courses to find out
-    // if the user has capabilities in one of the courses.
-    if ($types['course'] == false || $types['group'] == false) {
-        if ($CFG->calendar_adminseesall && has_capability('moodle/calendar:manageentries', context_system::instance())) {
-            $sql = "SELECT c.id, " . context_helper::get_preload_record_columns_sql('ctx') . "
-                      FROM {course} c
-                      JOIN {context} ctx ON ctx.contextlevel = ? AND ctx.instanceid = c.id
-                     WHERE c.id IN (
-                            SELECT DISTINCT courseid FROM {groups}
-                        )";
-            $courseswithgroups = $DB->get_recordset_sql($sql, [CONTEXT_COURSE]);
-            foreach ($courseswithgroups as $course) {
-                context_helper::preload_from_record($course);
-                $context = context_course::instance($course->id);
-
-                if (has_capability('moodle/calendar:manageentries', $context)) {
-                    if (has_any_capability(['moodle/site:accessallgroups', 'moodle/calendar:managegroupentries'], $context)) {
-                        // The user can manage group entries or access any group.
-                        $types['group'] = true;
-                        $types['course'] = true;
-                        break;
-                    }
-                }
-            }
-            $courseswithgroups->close();
-
-            if (false === $types['course']) {
-                // Course is still not confirmed. There may have been no courses with a group in them.
-                $ctxfields = context_helper::get_preload_record_columns_sql('ctx');
-                $sql = "SELECT
-                            c.id, c.visible, {$ctxfields}
-                        FROM {course} c
-                        JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)";
-                $params = [
-                    'contextlevel' => CONTEXT_COURSE,
-                ];
-                $courses = $DB->get_recordset_sql($sql, $params);
-                foreach ($courses as $course) {
-                    context_helper::preload_from_record($course);
-                    $context = context_course::instance($course->id);
-                    if (has_capability('moodle/calendar:manageentries', $context)) {
-                        $types['course'] = true;
-                        break;
-                    }
-                }
-                $courses->close();
-            }
-
-        } else {
-            $courses = calendar_get_default_courses(null, 'id');
-            if (empty($courses)) {
-                return $types;
-            }
-
-            $courseids = array_map(function($c) {
-                return $c->id;
-            }, $courses);
-
-            // Check whether the user has access to create events within courses which have groups.
-            list($insql, $params) = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
-            $sql = "SELECT c.id, " . context_helper::get_preload_record_columns_sql('ctx') . "
-                      FROM {course} c
-                      JOIN {context} ctx ON ctx.contextlevel = :contextlevel AND ctx.instanceid = c.id
-                     WHERE c.id $insql
-                       AND c.id IN (SELECT DISTINCT courseid FROM {groups})";
-            $params['contextlevel'] = CONTEXT_COURSE;
-            $courseswithgroups = $DB->get_recordset_sql($sql, $params);
-            foreach ($courseswithgroups as $coursewithgroup) {
-                context_helper::preload_from_record($coursewithgroup);
-                $context = context_course::instance($coursewithgroup->id);
-
-                calendar_internal_update_course_and_group_permission($coursewithgroup->id, $context, $types);
-
-                // Okay, course and group event types are allowed, no need to keep the loop iteration.
-                if ($types['course'] == true && $types['group'] == true) {
-                    break;
-                }
-            }
-            $courseswithgroups->close();
-
-            if (false === $types['course']) {
-                list($insql, $params) = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
-                $contextsql = "SELECT c.id, " . context_helper::get_preload_record_columns_sql('ctx') . "
-                                FROM {course} c
-                                JOIN {context} ctx ON ctx.contextlevel = :contextlevel AND ctx.instanceid = c.id
-                                WHERE c.id $insql";
-                $params['contextlevel'] = CONTEXT_COURSE;
-                $contextrecords = $DB->get_recordset_sql($contextsql, $params);
-                foreach ($contextrecords as $course) {
-                    context_helper::preload_from_record($course);
-                    $coursecontext = context_course::instance($course->id);
-                    if (has_capability('moodle/calendar:manageentries', $coursecontext)
-                            && ($courseid == $course->id || empty($courseid))) {
-                        $types['course'] = true;
-                        break;
-                    }
-                }
-                $contextrecords->close();
-            }
-
-        }
-    }
-
-    return $types;
-}
-
-/**
- * Given a course id, and context, updates the permission types array to add the 'course' or 'group'
- * permission if it is relevant for that course.
- *
- * For efficiency, if they already have 'course' or 'group' then it skips checks.
- *
- * Do not call this function directly, it is only for use by calendar_get_allowed_event_types().
- *
- * @param int $courseid Course id
- * @param context $context Context for that course
- * @param array $types Current permissions
- */
-function calendar_internal_update_course_and_group_permission(int $courseid, context $context, array &$types) {
-    if (!$types['course']) {
-        // If they have manageentries permission on the course, then they can update this course.
-        if (has_capability('moodle/calendar:manageentries', $context)) {
-            $types['course'] = true;
-        }
-    }
-    // To update group events they must have EITHER manageentries OR managegroupentries.
-    if (!$types['group'] && (has_capability('moodle/calendar:manageentries', $context) ||
-            has_capability('moodle/calendar:managegroupentries', $context))) {
-        // And they also need for a group to exist on the course.
-        $groups = groups_get_all_groups($courseid);
-        if (!empty($groups)) {
-            // And either accessallgroups, or belong to one of the groups.
-            if (has_capability('moodle/site:accessallgroups', $context)) {
-                $types['group'] = true;
-            } else {
-                foreach ($groups as $group) {
-                    if (groups_is_member($group->id)) {
-                        $types['group'] = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
 }

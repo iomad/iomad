@@ -29,8 +29,6 @@ class EmailVars {
     protected $url = null;
     protected $sender = null;
     protected $approveuser = null;
-    protected $nugget = null;
-    protected $event = null;
 
     protected $blank = "[blank]";
 
@@ -40,7 +38,7 @@ class EmailVars {
      * Sets up and retrieves the API objects
      *
      **/
-    public function __construct($company, $user, $course, $invoice, $classroom, $license, $sender, $approveuser, $nugget, $event) {
+    public function __construct($company, $user, $course, $invoice, $classroom, $license, $sender, $approveuser) {
         $this->company =& $company;
         $this->user =& $user;
         $this->invoice =& $invoice;
@@ -48,8 +46,6 @@ class EmailVars {
         $this->license =& $license;
         $this->sender =& $sender;
         $this->approveuser =& $approveuser;
-        $this->nugget =& $nugget;
-        $this->event =& $event;
 
         if (!isset($this->company)) {
             if (isset($user->id)) {
@@ -113,12 +109,8 @@ class EmailVars {
                         'License_Length', 'License_Valid',
             // Sender information fields .
                         'Sender_FirstName', 'Sender_LastName', 'Sender_Email',
-            // Activity information fields .
-                        'Activity_Name', 'Activity_Duedate',
             // Miscellaneouss fields.
-                        'LinkURL', 'SiteURL', 'Event_Name',
-            // Microlearning fields.
-                        'Nugget_Name', 'Nugget_URL'
+                        'LinkURL', 'SiteURL'
         );
 
         // Add all methods of this class that are ok2call to the $result array as well.
@@ -149,15 +141,7 @@ class EmailVars {
                 $object = strtolower($matches[1]);
                 $property = strtolower($matches[2]);
 
-                if (isset($this->$object->$property)) {
-                    return $this->$object->$property;
-                } else if (method_exists($this->$object, '__get')) {
-                    return $this->$object->__get($property);
-                } else if (method_exists($this->$object, 'get')) {
-                    return $this->$object->get($property);
-                } else {
-                    return $this->blank;
-                }
+                return isset($this->$object->$property) ? $this->$object->$property : $this->blank;
             } else if (self::ok2call($name)) {
                 return $this->$name();
             }
@@ -183,7 +167,7 @@ class EmailVars {
             } else {
                 return new moodle_url($this->course->url);
             }
-        }
+        }            
     }
 
     /**
@@ -205,7 +189,7 @@ class EmailVars {
             } else {
                 return new moodle_url($CFG->wwwroot);
             }
-        }
+        }            
     }
 
     /**
@@ -223,10 +207,10 @@ class EmailVars {
             // Get the company theme.
             if (method_exists($this->company,'get_theme')) {
                 $theme = $this->company->get_theme();
-                return new moodle_url($this->url, array('theme' => $theme));
+                return new moodle_url($this->url, array('theme' => $theme)); 
             } else {
                 return new moodle_url($this->url);
             }
-        }
+        }            
     }
 }

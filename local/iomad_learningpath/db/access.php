@@ -42,27 +42,18 @@
 //
 // The variable name for the capability definitions array is $capabilities.
 
+
 $capabilities = array(
 
     'local/iomad_learningpath:view' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
     ),
 
     'local/iomad_learningpath:manage' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'companymanager' => CAP_ALLOW,
-            'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
     ),
 );

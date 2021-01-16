@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/assign/tests/generator.php');
+require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
 
 /**
  * Unit tests for assignfeedback_file
@@ -33,32 +33,42 @@ require_once($CFG->dirroot . '/mod/assign/tests/generator.php');
  * @copyright  2016 Adrian Greeve <adrian@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class assignfeedback_file_testcase extends advanced_testcase {
+class assignfeedback_file_testcase extends mod_assign_base_testcase {
 
-    // Use the generator helper.
-    use mod_assign_test_generator;
+    /**
+     * Create an assign object and submit an online text submission.
+     */
+    protected function create_assign_and_submit_text() {
+        $assign = $this->create_instance(array('assignsubmission_onlinetext_enabled' => 1,
+                                               'assignfeedback_comments_enabled' => 1));
+
+        $user = $this->students[0];
+        $this->setUser($user);
+
+        // Create an online text submission.
+        $submission = $assign->get_user_submission($user->id, true);
+
+        $data = new stdClass();
+        $data->onlinetext_editor = array(
+                'text' => '<p>This is some text.</p>',
+                'format' => 1,
+                'itemid' => file_get_unused_draft_itemid());
+        $plugin = $assign->get_submission_plugin_by_type('onlinetext');
+        $plugin->save($submission, $data);
+
+        return $assign;
+    }
 
     /**
      * Test the is_feedback_modified() method for the file feedback.
      */
     public function test_is_feedback_modified() {
-        $this->resetAfterTest();
-        $course = $this->getDataGenerator()->create_course();
-        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $assign = $this->create_assign_and_submit_text();
 
-        $assign = $this->create_instance($course, [
-                'assignsubmission_onlinetext_enabled' => 1,
-                'assignfeedback_comments_enabled' => 1,
-            ]);
-
-        // Create an online text submission.
-        $this->add_submission($student, $assign);
-
-        $this->setUser($teacher);
+        $this->setUser($this->teachers[0]);
 
         $fs = get_file_storage();
-        $context = context_user::instance($teacher->id);
+        $context = context_user::instance($this->teachers[0]->id);
         $draftitemid = file_get_unused_draft_itemid();
         file_prepare_draft_area($draftitemid, $context->id, 'assignfeedback_file', 'feedback_files', 1);
 
@@ -75,9 +85,9 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
-        $grade = $assign->get_user_grade($student->id, true);
+        $grade = $assign->get_user_grade($this->students[0]->id, true);
 
         // This is the first time that we are submitting feedback, so it is modified.
         $plugin = $assign->get_feedback_plugin_by_type('file');
@@ -94,7 +104,7 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
         $this->assertFalse($plugin->is_feedback_modified($grade, $data));
 
@@ -108,7 +118,7 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
         $this->assertTrue($plugin->is_feedback_modified($grade, $data));
         $plugin->save($grade, $data);
@@ -125,7 +135,7 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
         $this->assertTrue($plugin->is_feedback_modified($grade, $data));
         $plugin->save($grade, $data);
@@ -140,7 +150,7 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
         $this->assertTrue($plugin->is_feedback_modified($grade, $data));
         $plugin->save($grade, $data);
@@ -156,7 +166,7 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
         $this->assertTrue($plugin->is_feedback_modified($grade, $data));
         $plugin->save($grade, $data);
@@ -172,7 +182,7 @@ class assignfeedback_file_testcase extends advanced_testcase {
 
         // Create formdata.
         $data = new stdClass();
-        $data->{'files_' . $student->id . '_filemanager'} = $draftitemid;
+        $data->{'files_' . $this->students[0]->id . '_filemanager'} = $draftitemid;
 
         $this->assertFalse($plugin->is_feedback_modified($grade, $data));
     }

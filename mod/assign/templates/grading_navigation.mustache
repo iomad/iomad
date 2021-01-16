@@ -30,15 +30,15 @@
 
     This template includes ajax functionality, so it cannot be shown in the template library.
 }}
-<div class="container-fluid">
-<div data-region="grading-navigation" class="row">
+
+<div data-region="grading-navigation" class="row-fluid">
 
 {{!
     There are three chunks, which appear side-by-side at large screen sizes.
     A) Assignment info, which has 3 rows:
 }}
 
-<div data-region="assignment-info" class="col-md-4">
+<div data-region="assignment-info" class="span4">
 
 {{!
     Row 1) course name & link.
@@ -46,21 +46,13 @@
 <a href="{{config.wwwroot}}/course/view.php?id={{courseid}}" title="{{{coursename}}}">{{{coursename}}}</a><br/>
 
 {{!
-    Row 2) Assignment name & link, & edit settings.
+    Row 2) Assignment name & link.
 }}
 <a href="{{config.wwwroot}}/mod/assign/view.php?id={{cmid}}" title="{{name}}">{{name}}</a>
 
-{{#caneditsettings}}
-<a href="{{config.wwwroot}}/course/modedit.php?update={{cmid}}&return=1">{{#pix}}t/edit, core,{{#str}}editsettings{{/str}}{{/pix}}</a>
-{{/caneditsettings}}
-
-<br/>
-
 {{!
-    Row 3) Assignment grading & link, due date, with tool-tip thing.
+    Row 3) Edit settings, due date, with tool-tip thing.
 }}
-<a href="{{config.wwwroot}}/mod/assign/view.php?id={{cmid}}&action={{actiongrading}}" title="{{viewgrading}}">{{viewgrading}}</a>
-
 <div role="tooltip" id="tooltip-{{uniqid}}" class="accesshide">
 {{#duedate}}
 {{#str}}duedatecolon, mod_assign, {{duedatestr}}{{/str}}
@@ -75,28 +67,32 @@
 {{/duedate}}
 </div>
 
+<br/>
+{{#caneditsettings}}
+<a href="{{config.wwwroot}}/course/modedit.php?update={{cmid}}&return=1">{{#pix}}t/edit, core,{{#str}}editsettings{{/str}}{{/pix}}</a>
+{{/caneditsettings}}
+</span>
 </div>
 
 {{!
     B) Current user name and info.
 }}
-<div data-region="user-info" class="col-md-4" data-assignmentid="{{assignmentid}}" data-groupid="{{groupid}}">
+<div data-region="user-info" class="span4" data-assignmentid="{{assignmentid}}" data-groupid="{{groupid}}">
     {{> mod_assign/grading_navigation_user_info }}
 </div>
 
 {{!
     C) User selector widget.
 }}
-<div data-region="user-selector" class="col-md-4">
+<div data-region="user-selector" class="span4">
     <div class="alignment">
         {{> mod_assign/grading_navigation_user_selector }}
     </div>
 </div>
 </div>
-</div>
 {{#js}}
 require(['mod_assign/grading_navigation', 'core/tooltip'], function(GradingNavigation, ToolTip) {
-    new GradingNavigation('[data-region="user-selector"]');
-    new ToolTip('[data-region="assignment-tooltip"]');
+    var nav = new GradingNavigation('[data-region="user-selector"]');
+    var tooltip = new ToolTip('[data-region="assignment-tooltip"]');
 });
 {{/js}}

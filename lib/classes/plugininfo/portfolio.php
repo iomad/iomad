@@ -43,7 +43,6 @@ class portfolio extends base {
         foreach ($rs as $repository) {
             $enabled[$repository->plugin] = $repository->plugin;
         }
-        $rs->close();
 
         return $enabled;
     }

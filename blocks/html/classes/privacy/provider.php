@@ -26,9 +26,7 @@ namespace block_html\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
-use \core_privacy\local\request\userlist;
 use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\approved_userlist;
 use \core_privacy\local\request\writer;
 use \core_privacy\local\request\helper;
 use \core_privacy\local\request\deletion_criteria;
@@ -43,9 +41,6 @@ use \core_privacy\local\metadata\collection;
 class provider implements
         // The block_html block stores user provided data.
         \core_privacy\local\metadata\provider,
-
-        // This plugin is capable of determining which users have data within it.
-        \core_privacy\local\request\core_userlist_provider,
 
         // The block_html block provides data directly to core.
         \core_privacy\local\request\plugin\provider {
@@ -90,35 +85,6 @@ class provider implements
         $contextlist->add_from_sql($sql, $params);
 
         return $contextlist;
-    }
-
-    /**
-     * Get the list of users who have data within a context.
-     *
-     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-        // This block doesn't know who information is stored against unless it
-        // is at the user context.
-        $context = $userlist->get_context();
-
-        if (!$context instanceof \context_block) {
-            return;
-        }
-
-        $sql = "SELECT bpc.instanceid AS userid
-                  FROM {block_instances} bi
-                  JOIN {context} bpc ON bpc.id = bi.parentcontextid
-                 WHERE bi.blockname = 'html'
-                   AND bpc.contextlevel = :contextuser
-                   AND bi.id = :blockinstanceid";
-
-        $params = [
-            'contextuser' => CONTEXT_USER,
-            'blockinstanceid' => $context->instanceid
-        ];
-
-        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -194,19 +160,6 @@ class provider implements
 
         // The only way to delete data for the html block is to delete the block instance itself.
         if ($blockinstance = static::get_instance_from_context($context)) {
-            blocks_delete_instance($blockinstance);
-        }
-    }
-
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param   approved_userlist       $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
-        $context = $userlist->get_context();
-
-        if ($context instanceof \context_block && ($blockinstance = static::get_instance_from_context($context))) {
             blocks_delete_instance($blockinstance);
         }
     }

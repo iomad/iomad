@@ -39,7 +39,7 @@ require_once("$CFG->dirroot/mod/url/lib.php");
 function url_appears_valid_url($url) {
     if (preg_match('/^(\/|https?:|ftp:)/i', $url)) {
         // note: this is not exact validation, we look for severely malformed URLs only
-        return (bool) preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[^ @]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
+        return (bool)preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[a-z0-9_\.\-]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
     } else {
         return (bool)preg_match('/^[a-z]+:\/\/...*$/i', $url);
     }
@@ -88,23 +88,10 @@ function url_get_full_url($url, $cm, $course, $config=null) {
     // make sure there are no encoded entities, it is ok to do this twice
     $fullurl = html_entity_decode($url->externalurl, ENT_QUOTES, 'UTF-8');
 
-    $letters = '\pL';
-    $latin = 'a-zA-Z';
-    $digits = '0-9';
-    $symbols = '\x{20E3}\x{00AE}\x{00A9}\x{203C}\x{2047}\x{2048}\x{2049}\x{3030}\x{303D}\x{2139}\x{2122}\x{3297}\x{3299}' .
-               '\x{2300}-\x{23FF}\x{2600}-\x{27BF}\x{2B00}-\x{2BF0}';
-    $arabic = '\x{FE00}-\x{FEFF}';
-    $math = '\x{2190}-\x{21FF}\x{2900}-\x{297F}';
-    $othernumbers = '\x{2460}-\x{24FF}';
-    $geometric = '\x{25A0}-\x{25FF}';
-    $emojis = '\x{1F000}-\x{1F6FF}';
-
     if (preg_match('/^(\/|https?:|ftp:)/i', $fullurl) or preg_match('|^/|', $fullurl)) {
         // encode extra chars in URLs - this does not make it always valid, but it helps with some UTF-8 problems
-        // Thanks to 💩.la emojis count as valid, too.
-        $allowed = "[" . $letters . $latin . $digits . $symbols . $arabic . $math . $othernumbers . $geometric .
-            $emojis . "]" . preg_quote(';/?:@=&$_.+!*(),-#%', '/');
-        $fullurl = preg_replace_callback("/[^$allowed]/u", 'url_filter_callback', $fullurl);
+        $allowed = "a-zA-Z0-9".preg_quote(';/?:@=&$_.+!*(),-#%', '/');
+        $fullurl = preg_replace_callback("/[^$allowed]/", 'url_filter_callback', $fullurl);
     } else {
         // encode special chars only
         $fullurl = str_replace('"', '%22', $fullurl);
@@ -473,18 +460,18 @@ function url_get_variable_values($url, $cm, $course, $config) {
 
     $values = array (
         'courseid'        => $course->id,
-        'coursefullname'  => format_string($course->fullname, true, array('context' => $coursecontext)),
+        'coursefullname'  => format_string($course->fullname),
         'courseshortname' => format_string($course->shortname, true, array('context' => $coursecontext)),
         'courseidnumber'  => $course->idnumber,
         'coursesummary'   => $course->summary,
         'courseformat'    => $course->format,
         'lang'            => current_language(),
-        'sitename'        => format_string($site->fullname, true, array('context' => $coursecontext)),
+        'sitename'        => format_string($site->fullname),
         'serverurl'       => $CFG->wwwroot,
         'currenttime'     => time(),
         'urlinstance'     => $url->id,
         'urlcmid'         => $cm->id,
-        'urlname'         => format_string($url->name, true, array('context' => $coursecontext)),
+        'urlname'         => format_string($url->name),
         'urlidnumber'     => $cm->idnumber,
     );
 

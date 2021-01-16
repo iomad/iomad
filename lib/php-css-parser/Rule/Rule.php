@@ -2,11 +2,10 @@
 
 namespace Sabberworm\CSS\Rule;
 
-use Sabberworm\CSS\Comment\Commentable;
-use Sabberworm\CSS\Parsing\ParserState;
 use Sabberworm\CSS\Renderable;
 use Sabberworm\CSS\Value\RuleValueList;
 use Sabberworm\CSS\Value\Value;
+use Sabberworm\CSS\Comment\Commentable;
 
 /**
  * RuleSets contains Rule objects which always have a key and a value.
@@ -28,43 +27,6 @@ class Rule implements Renderable, Commentable {
 		$this->aIeHack = array();
 		$this->iLineNo = $iLineNo;
 		$this->aComments = array();
-	}
-
-	public static function parse(ParserState $oParserState) {
-		$aComments = $oParserState->consumeWhiteSpace();
-		$oRule = new Rule($oParserState->parseIdentifier(), $oParserState->currentLine());
-		$oRule->setComments($aComments);
-		$oRule->addComments($oParserState->consumeWhiteSpace());
-		$oParserState->consume(':');
-		$oValue = Value::parseValue($oParserState, self::listDelimiterForRule($oRule->getRule()));
-		$oRule->setValue($oValue);
-		if ($oParserState->getSettings()->bLenientParsing) {
-			while ($oParserState->comes('\\')) {
-				$oParserState->consume('\\');
-				$oRule->addIeHack($oParserState->consume());
-				$oParserState->consumeWhiteSpace();
-			}
-		}
-		$oParserState->consumeWhiteSpace();
-		if ($oParserState->comes('!')) {
-			$oParserState->consume('!');
-			$oParserState->consumeWhiteSpace();
-			$oParserState->consume('important');
-			$oRule->setIsImportant(true);
-		}
-		$oParserState->consumeWhiteSpace();
-		while ($oParserState->comes(';')) {
-			$oParserState->consume(';');
-		}
-
-		return $oRule;
-	}
-
-	private static function listDelimiterForRule($sRule) {
-		if (preg_match('/^font($|-)/', $sRule)) {
-			return array(',', '/', ' ');
-		}
-		return array(',', ' ', '/');
 	}
 
 	/**

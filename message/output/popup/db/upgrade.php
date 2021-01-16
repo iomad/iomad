@@ -30,46 +30,60 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion The version that we are upgrading from
  */
 function xmldb_message_popup_upgrade($oldversion) {
-    global $DB;
+    global $CFG, $DB;
 
-    // Automatically generated Moodle v3.5.0 release upgrade line.
+    // Moodle v3.1.0 release upgrade line.
     // Put any upgrade step following this.
 
-    // Automatically generated Moodle v3.6.0 release upgrade line.
-    // Put any upgrade step following this.
+    $dbman = $DB->get_manager();
 
-    // Automatically generated Moodle v3.7.0 release upgrade line.
-    // Put any upgrade step following this.
+    if ($oldversion < 2016052309) {
 
-    // Automatically generated Moodle v3.8.0 release upgrade line.
-    // Put any upgrade step following this.
+        // Define table message_popup to be created.
+        $table = new xmldb_table('message_popup');
 
-    if ($oldversion < 2020020600) {
-        // Clean up orphaned popup notification records.
-        $fromsql = "FROM {message_popup_notifications} mpn
-               LEFT JOIN {notifications} n
-                      ON mpn.notificationid = n.id
-                   WHERE n.id IS NULL";
-        $total = $DB->count_records_sql("SELECT COUNT(mpn.id) " . $fromsql);
-        if ($total > 0) {
-            $i = 0;
-            $pbar = new progress_bar('deletepopupnotification', 500, true);
-            do {
-                if ($popupnotifications = $DB->get_records_sql("SELECT mpn.id " . $fromsql, null, 0, 1000)) {
-                    list($insql, $inparams) = $DB->get_in_or_equal(array_keys($popupnotifications));
-                    $DB->delete_records_select('message_popup_notifications', "id $insql", $inparams);
-                    // Update progress.
-                    $i += count($inparams);
-                    $pbar->update($i, $total, "Cleaning up orphaned popup notification records - $i/$total.");
-                }
-            } while ($popupnotifications);
+        // Adding fields to table message_popup.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('messageid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('isread', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table message_popup.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Adding indexes to table message_popup.
+        $table->add_index('messageid-isread', XMLDB_INDEX_UNIQUE, array('messageid', 'isread'));
+
+        // Conditionally launch create table for message_popup.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
         }
 
-        // Popup message processor savepoint reached.
-        upgrade_plugin_savepoint(true, 2020020600, 'message', 'popup');
+        // Popup savepoint reached.
+        upgrade_plugin_savepoint(true, 2016052309, 'message', 'popup');
     }
 
-    // Automatically generated Moodle v3.9.0 release upgrade line.
+    // Automatically generated Moodle v3.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2016122100) {
+
+        // Define index isread (not unique) to be added to message_popup.
+        $table = new xmldb_table('message_popup');
+        $index = new xmldb_index('isread', XMLDB_INDEX_NOTUNIQUE, array('isread'));
+
+        // Conditionally launch add index isread.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Popup savepoint reached.
+        upgrade_plugin_savepoint(true, 2016122100, 'message', 'popup');
+    }
+
+    // Automatically generated Moodle v3.3.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
     return true;

@@ -34,7 +34,8 @@ $type    = required_param('type', PARAM_PLUGIN);
 $PAGE->set_url('/admin/updatesetting.php');
 $PAGE->set_context(context_system::instance());
 
-require_admin();
+require_login();
+require_capability('moodle/site:config', context_system::instance());
 require_sesskey();
 
 $plugintypeclass = "\\core\\plugininfo\\{$type}";

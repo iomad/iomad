@@ -338,8 +338,10 @@ class SimplePie_gzdecode
 			{
 				return false;
 			}
-
-			$this->position = $this->compressed_size - 8;
+			else
+			{
+				$this->position = $this->compressed_size - 8;
+			}
 
 			// Check CRC of data
 			$crc = current(unpack('V', substr($this->compressed_data, $this->position, 4)));
@@ -360,7 +362,9 @@ class SimplePie_gzdecode
 			// Wow, against all odds, we've actually got a valid gzip string
 			return true;
 		}
-
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 }

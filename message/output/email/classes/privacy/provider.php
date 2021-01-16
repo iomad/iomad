@@ -29,8 +29,6 @@ defined('MOODLE_INTERNAL') || die();
 use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
-use core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_userlist;
 
 /**
  * Privacy class for requesting user data.
@@ -39,10 +37,7 @@ use \core_privacy\local\request\approved_userlist;
  * @copyright  2018 Mihail Geshoski <mihail@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\core_userlist_provider,
-        \core_privacy\local\request\plugin\provider {
+class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\plugin\provider {
 
     /**
      * Returns meta data about this system.
@@ -51,15 +46,6 @@ class provider implements
      * @return  collection A listing of user data stored through this system.
      */
     public static function get_metadata(collection $collection) : collection {
-        $messageemailmessages = [
-            'useridto' => 'privacy:metadata:message_email_messages:useridto',
-            'conversationid' => 'privacy:metadata:message_email_messages:conversationid',
-            'messageid' => 'privacy:metadata:message_email_messages:messageid',
-        ];
-        // Note - this data gets deleted once the scheduled task runs.
-        $collection->add_database_table('message_email_messages',
-            $messageemailmessages, 'privacy:metadata:message_email_messages');
-
         $collection->link_external_location('smtp', [
                 'recipient' => 'privacy:metadata:recipient',
                 'userfrom' => 'privacy:metadata:userfrom',
@@ -87,14 +73,6 @@ class provider implements
     }
 
     /**
-     * Get the list of users who have data within a context.
-     *
-     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
-     */
-    public static function get_users_in_context(userlist $userlist) {
-    }
-
-    /**
      * Export all user data for the specified user, in the specified contexts.
      *
      * @param approved_contextlist $contextlist The approved contexts to export information for.
@@ -108,14 +86,6 @@ class provider implements
      * @param   context $context A user context.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
-    }
-
-    /**
-     * Delete multiple users within a single context.
-     *
-     * @param   approved_userlist       $userlist The approved context and user information to delete information for.
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
     }
 
     /**

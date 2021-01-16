@@ -4,31 +4,15 @@ namespace Box\Spout\Reader;
 
 /**
  * Interface SheetInterface
+ *
+ * @package Box\Spout\Reader
  */
 interface SheetInterface
 {
     /**
-     * @return IteratorInterface Iterator to iterate over the sheet's rows.
+     * Returns an iterator to iterate over the sheet's rows.
+     *
+     * @return \Iterator
      */
     public function getRowIterator();
-
-    /**
-     * @return int Index of the sheet
-     */
-    public function getIndex();
-
-    /**
-     * @return string Name of the sheet
-     */
-    public function getName();
-
-    /**
-     * @return bool Whether the sheet was defined as active
-     */
-    public function isActive();
-
-    /**
-     * @return bool Whether the sheet is visible
-     */
-    public function isVisible();
 }

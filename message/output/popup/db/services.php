@@ -41,6 +41,5 @@ $functions = array(
         'type' => 'read',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-        'readonlysession' => true,
     ),
 );

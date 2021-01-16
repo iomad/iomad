@@ -38,7 +38,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'64'));
+        $mform->addElement('text', 'name', get_string('trainingeventname', 'trainingevent'), array('size'=>'64'));
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
@@ -81,13 +81,6 @@ class mod_trainingevent_mod_form extends moodleform_mod {
                         get_string('both', 'trainingevent'),
                         get_string('enrolonly', 'trainingevent'));
         $mform->addElement('select', 'approvaltype', get_string('approvaltype', 'trainingevent'), $choices);
-
-        $mform->addElement('checkbox', 'haswaitinglist', get_string('haswaitinglist', 'mod_trainingevent'));
-        $mform->addHelpButton('haswaitinglist', 'haswaitinglist', 'mod_trainingevent');
-
-        $mform->addElement('text', 'coursecapacity', get_string('maxsize', 'mod_trainingevent'));
-        $mform->addHelpButton('coursecapacity', 'maxsize', 'mod_trainingevent');
-        $mform->setType('coursecapacity', PARAM_INT);
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();

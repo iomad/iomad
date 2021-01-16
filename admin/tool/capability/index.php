@@ -66,7 +66,6 @@ $capabilities = array();
 $rolestoshow = array();
 $roleids = array('0');
 $cleanedroleids = array();
-$onlydiff = false;
 if ($data = $form->get_data()) {
 
     $roleids = array();
@@ -91,10 +90,6 @@ if ($data = $form->get_data()) {
             }
         }
     }
-
-    if (isset($data->onlydiff)) {
-        $onlydiff = $data->onlydiff;
-    }
 }
 
 \tool_capability\event\report_viewed::create()->trigger();
@@ -108,7 +103,7 @@ $form->display();
 // If we have a capability, generate the report.
 if (count($capabilities) && count($rolestoshow)) {
     /* @var tool_capability_renderer $renderer */
-    echo $renderer->capability_comparison_table($capabilities, $context->id, $rolestoshow, $onlydiff);
+    echo $renderer->capability_comparison_table($capabilities, $context->id, $rolestoshow);
 }
 
 // Footer.
@@ -143,7 +138,7 @@ function print_report_tree($contextid, $contexts, $allroles) {
     // If there are any role overrides here, print them.
     if (!empty($contexts[$contextid]->rolecapabilities)) {
         $rowcounter = 0;
-        echo '<table class="generaltable table-striped"><tbody>';
+        echo '<table class="generaltable rolecaps"><tbody>';
         foreach ($allroles as $role) {
             if (isset($contexts[$contextid]->rolecapabilities[$role->id])) {
                 $permission = $contexts[$contextid]->rolecapabilities[$role->id];

@@ -34,7 +34,6 @@ use \core_privacy\local\metadata\types\database_table;
  *
  * @copyright   2018 Andrew Nicols <andrew@nicols.co.uk>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @coversDefaultClass \core_privacy\local\metadata\types\database_table
  */
 class core_privacy_metadata_types_database_table extends advanced_testcase {
 
@@ -45,7 +44,6 @@ class core_privacy_metadata_types_database_table extends advanced_testcase {
      * @param   string  $name Name
      * @param   array   $fields List of fields
      * @param   string  $summary Summary
-     * @covers ::__construct
      */
     public function test_invalid_configs($name, $fields, $summary) {
         $record = new database_table($name, $fields, $summary);
@@ -59,7 +57,6 @@ class core_privacy_metadata_types_database_table extends advanced_testcase {
      * @param   string  $name Name
      * @param   array   $fields List of fields
      * @param   string  $summary Summary
-     * @covers ::__construct
      */
     public function test_invalid_configs_debug_normal($name, $fields, $summary) {
         global $CFG;
@@ -77,7 +74,6 @@ class core_privacy_metadata_types_database_table extends advanced_testcase {
      * @param   string  $name Name
      * @param   array   $fields List of fields
      * @param   string  $summary Summary
-     * @covers ::__construct
      */
     public function test_valid_configs($name, $fields, $summary) {
         $record = new database_table($name, $fields, $summary);

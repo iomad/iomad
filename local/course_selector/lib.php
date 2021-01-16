@@ -75,8 +75,9 @@ abstract class course_selector_base {
                 'strings' => array(
                     array('previouslyselectedcourses', 'local_course_selector', '%%SEARCHTERM%%'),
                     array('nomatchingcourses', 'local_course_selector', '%%SEARCHTERM%%'),
-                    array('none')
+                    array('none', 'local_course_selector')
                 ));
+
 
     // Public API.
 
@@ -541,7 +542,7 @@ abstract class course_selector_base {
                 $groupedcourses = array(get_string('nomatchingcourses', 'local_course_selector',
                 $search) => array());
             } else {
-                $groupedcourses = array(get_string('none') => array());
+                $groupedcourses = array(get_string('none', 'local_course_selector') => array());
             }
         } else if ($this->autoselectunique && count($groupedcourses) == 1 &&
                 count(reset($groupedcourses)) == 1) {
@@ -608,7 +609,7 @@ abstract class course_selector_base {
      */
     public function output_course($course) {
         $bits = array(
-            format_string($course->fullname, true, 1)
+            $course->fullname
         );
         foreach ($this->extrafields as $field) {
             $bits[] = $course->$field;
@@ -620,7 +621,7 @@ abstract class course_selector_base {
      * @return string the caption for the search button.
      */
     protected function search_button_caption() {
-        return get_string('search');
+        return get_string('search', 'local_course_selector');
     }
 
     // Initialise one of the option checkboxes, either from

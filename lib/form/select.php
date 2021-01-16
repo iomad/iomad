@@ -166,9 +166,8 @@ class MoodleQuickForm_select extends HTML_QuickForm_select implements templatabl
     */
     function exportValue(&$submitValues, $assoc = false)
     {
-        $emptyvalue = $this->getMultiple() ? [] : null;
         if (empty($this->_options)) {
-            return $this->_prepareValue($emptyvalue, $assoc);
+            return $this->_prepareValue(null, $assoc);
         }
 
         $value = $this->_findValue($submitValues);
@@ -188,7 +187,7 @@ class MoodleQuickForm_select extends HTML_QuickForm_select implements templatabl
         }
 
         if (empty($cleaned)) {
-            return $this->_prepareValue($emptyvalue, $assoc);
+            return $this->_prepareValue(null, $assoc);
         }
         if ($this->getMultiple()) {
             return $this->_prepareValue($cleaned, $assoc);
@@ -224,7 +223,6 @@ class MoodleQuickForm_select extends HTML_QuickForm_select implements templatabl
             $options[] = $o;
         }
         $context['options'] = $options;
-        $context['nameraw'] = $this->getName();
 
         return $context;
     }

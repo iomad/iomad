@@ -34,7 +34,7 @@ Feature: Verify that all form fields values can be get and set
       | wiki | C1 | wiki1 | Test this one | Test this one | Test this one | collaborative | 0 |
     And I log in as "admin"
     And I am on "Course 1" course homepage
-    And I navigate to "Reset" in current page administration
+    And I navigate to "Reset" node in "Course administration"
     # Select (multi-select) - Checking "the select box should contain".
     And I expand all fieldsets
     And the "Unenrol users" select box should contain "No roles"
@@ -131,12 +131,12 @@ Feature: Verify that all form fields values can be get and set
     And the field "two" matches value ""
     # Check if field xpath set/match works.
     And I am on "Course 1" course homepage
-    And I navigate to "Edit settings" in current page administration
+    And I navigate to "Edit settings" node in "Course administration"
     And I set the field with xpath "//input[@id='id_idnumber']" to "Course id number"
     And the field with xpath "//input[@name='idnumber']" matches value "Course id number"
     And the field with xpath "//input[@name='idnumber']" does not match value ""
     And I press "Save and display"
-    And I navigate to "Edit settings" in current page administration
+    And I navigate to "Edit settings" node in "Course administration"
     And the field "Course ID number" matches value "Course id number"
 
   Scenario: with JS disabled all form fields getters and setters works as expected
@@ -147,13 +147,13 @@ Feature: Verify that all form fields values can be get and set
     And I navigate to "Users > Groups" in current page administration
     # Select (multi-select & AJAX) - Checking "I set the field" and "select box should contain".
     And I set the field "groups" to "Group 2"
-    And the "members" select box should contain "Student 2 (s2@example.com)"
-    And the "members" select box should contain "Student 3 (s3@example.com)"
-    And the "members" select box should not contain "Student 1 (s1@example.com)"
+    And the "members" select box should contain "Student 2"
+    And the "members" select box should contain "Student 3"
+    And the "members" select box should not contain "Student 1"
     And I set the field "groups" to "Group 1"
-    And the "members" select box should contain "Student 1 (s1@example.com)"
-    And the "members" select box should contain "Student 2 (s2@example.com)"
-    And the "members" select box should not contain "Student 3 (s3@example.com)"
+    And the "members" select box should contain "Student 1"
+    And the "members" select box should contain "Student 2"
+    And the "members" select box should not contain "Student 3"
     # Checkbox (AJAX) - Checking "I set the field" and "I set the following fields to these values".
     And I am on "Course 1" course homepage
     And I add a "Lesson" to section "1"

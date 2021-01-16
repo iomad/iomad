@@ -23,7 +23,7 @@ Feature: Chat reset
   Scenario: Use course reset to update chat start date
     And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Edit settings" in current page administration
+    And I navigate to "Edit settings" node in "Course administration"
     And I set the following fields to these values:
       | startdate[day]       | 1 |
       | startdate[month]     | January |
@@ -38,8 +38,7 @@ Feature: Chat reset
       | chattime[hour]      | 12 |
       | chattime[minute]    | 00 |
     And I press "Save and display"
-    And I am on "Course 1" course homepage
-    When I navigate to "Reset" in current page administration
+    When I navigate to "Reset" node in "Course administration"
     And I set the following fields to these values:
       | reset_start_date[enabled] | 1  |
       | reset_start_date[day]       | 1 |

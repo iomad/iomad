@@ -9,23 +9,22 @@ use Phpml\NeuralNetwork\Network\MultilayerPerceptron;
 
 class MLPClassifier extends MultilayerPerceptron implements Classifier
 {
+
     /**
-     * @param mixed $target
-     *
-     * @throws InvalidArgumentException
+     * @param  mixed $target
+     * @return int
      */
     public function getTargetClass($target): int
     {
-        if (!in_array($target, $this->classes, true)) {
-            throw new InvalidArgumentException(
-                sprintf('Target with value "%s" is not part of the accepted classes', $target)
-            );
+        if (!in_array($target, $this->classes)) {
+            throw InvalidArgumentException::invalidTarget($target);
         }
-
-        return array_search($target, $this->classes, true);
+        return array_search($target, $this->classes);
     }
 
     /**
+     * @param array $sample
+     *
      * @return mixed
      */
     protected function predictSample(array $sample)
@@ -40,17 +39,18 @@ class MLPClassifier extends MultilayerPerceptron implements Classifier
                 $max = $value;
             }
         }
-
-        return $predictedClass;
+        return $this->classes[$predictedClass];
     }
 
     /**
+     * @param array $sample
      * @param mixed $target
      */
-    protected function trainSample(array $sample, $target): void
+    protected function trainSample(array $sample, $target)
     {
+
         // Feed-forward.
-        $this->setInput($sample);
+        $this->setInput($sample)->getOutput();
 
         // Back-propagate.
         $this->backpropagation->backpropagate($this->getLayers(), $this->getTargetClass($target));

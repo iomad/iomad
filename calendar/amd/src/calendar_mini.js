@@ -20,7 +20,7 @@
  * components by listening for and responding to different events
  * triggered within the calendar UI.
  *
- * @module     core_calendar/calendar_mini
+ * @module     core_calendar/calendar
  * @package    core_calendar
  * @copyright  2017 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -99,19 +99,12 @@ function(
     };
 
     return {
-        init: function(root, loadOnInit) {
+        init: function(root) {
             root = $(root);
 
             CalendarViewManager.init(root);
             registerEventListeners(root);
             registerCalendarEventListeners(root);
-
-            if (loadOnInit) {
-                // The calendar hasn't yet loaded it's events so we
-                // should load them as soon as we've initialised.
-                CalendarViewManager.reloadCurrentMonth(root);
-            }
-
         }
     };
 });

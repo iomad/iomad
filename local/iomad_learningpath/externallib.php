@@ -42,7 +42,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -52,7 +52,7 @@ class local_iomad_learningpath_external extends external_api {
 
     /**
      * Activate / Deactivate learning path
-     * @param int $pathid
+     * @param int $pathid 
      * @param int $state
      * @throws invalid_parameter_exception
      */
@@ -82,7 +82,7 @@ class local_iomad_learningpath_external extends external_api {
         if (($params['state'] != 0) && ($params['state'] != 1)) {
             throw new invalid_parameter_exception("State can only be 0 or 1. Value was $state");
         }
-
+      
         // Set the new state.
         $path->active = $params['state'];
         $DB->update_record('iomad_learningpath', $path);
@@ -100,12 +100,11 @@ class local_iomad_learningpath_external extends external_api {
                 'pathid' => new external_value(PARAM_INT, 'ID of (target) learning path'),
                 'filter' => new external_value(PARAM_TEXT, 'Filter course list returned', VALUE_DEFAULT, ''),
                 'category' => new external_value(PARAM_INT, 'Show only courses in this category (and children)', VALUE_DEFAULT, 0),
-                'program' => new external_value(PARAM_INT, 'Show only courses assigned to this program license', VALUE_DEFAULT, 0),
             )
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -124,18 +123,18 @@ class local_iomad_learningpath_external extends external_api {
 
     /**
      * Get list of possible courses
-     * @param int $pathid
+     * @param int $pathid 
      * @param int $filter
      * @param int $category (id) (0 = show all)
      * @param array $excludeids
      * @throws invalid_parameter_exception
      */
-    public static function getprospectivecourses($pathid, $filter = '', $category = 0, $program = 0) {
+    public static function getprospectivecourses($pathid, $filter = '', $category = 0) {
         global $DB;
 
         // Validate params
         $params = self::validate_parameters(self::getprospectivecourses_parameters(),
-            ['pathid' => $pathid, 'filter' => $filter, 'category' => $category, 'program' => $program]);
+            ['pathid' => $pathid, 'filter' => $filter, 'category' => $category]);
 
         // Find learning path and company
         $path = $DB->get_record('iomad_learningpath', ['id' => $params['pathid']], '*', MUST_EXIST);
@@ -147,14 +146,9 @@ class local_iomad_learningpath_external extends external_api {
         self::validate_context($context);
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
 
-        // Set up the company path object.
-        $companypaths = new local_iomad_learningpath\companypaths($companyid, $context);
-
-        // Update the path licenseid.
-        $companypaths->assign_license_to_plan($pathid, $program);
-
         // Get full list of prospective courses
-        $courses = $companypaths->get_prospective_courses($params['pathid'], $params['filter'], $params['category'], $params['program']);
+        $companypaths = new local_iomad_learningpath\companypaths($companyid, $context);
+        $courses = $companypaths->get_prospective_courses($params['pathid'], $params['filter'], $params['category']);
 
         // Just the bits we need
         $pcs = [];
@@ -184,7 +178,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -241,7 +235,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -297,7 +291,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -317,7 +311,7 @@ class local_iomad_learningpath_external extends external_api {
 
     /**
      * Get list of courses in learning path
-     * @param int $pathid
+     * @param int $pathid 
      * @param int $groupid
      * @throws invalid_parameter_exception
      */
@@ -382,7 +376,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -409,7 +403,7 @@ class local_iomad_learningpath_external extends external_api {
     /**
      * Order courses in learning path
      * (Valid) new course ids will simply be added in that position
-     * Missing ones get deleted
+     * Missing ones get deleted 
      * @param int $pathid
      * @param array $courses of arrays {int courseid, int groupid}
      * @throws invalid_parameter_exception
@@ -482,7 +476,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -538,7 +532,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -596,7 +590,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -614,7 +608,7 @@ class local_iomad_learningpath_external extends external_api {
 
     /**
      * Get list of possible users
-     * @param int $companyid
+     * @param int $companyid 
      * @param int $pathid
      * @param int $filter
      * @throws invalid_parameter_exception
@@ -656,7 +650,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -712,7 +706,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */
@@ -730,7 +724,7 @@ class local_iomad_learningpath_external extends external_api {
 
     /**
      * Get list of path users
-     * @param int $companyid
+     * @param int $companyid 
      * @param int $pathid
      * @throws invalid_parameter_exception
      */
@@ -780,7 +774,7 @@ class local_iomad_learningpath_external extends external_api {
         );
     }
 
-    /**
+    /** 
      * Returns description of method result
      * @return external_description
      */

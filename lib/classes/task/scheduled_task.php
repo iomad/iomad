@@ -106,11 +106,9 @@ abstract class scheduled_task extends task_base {
      * Setter for $minute. Accepts a special 'R' value
      * which will be translated to a random minute.
      * @param string $minute
-     * @param bool $expandr - if true (default) an 'R' value in a time is expanded to an appropriate int.
-     *      If false, they are left as 'R'
      */
-    public function set_minute($minute, $expandr = true) {
-        if ($minute === 'R' && $expandr) {
+    public function set_minute($minute) {
+        if ($minute === 'R') {
             $minute = mt_rand(self::HOURMIN, self::HOURMAX);
         }
         $this->minute = $minute;
@@ -128,11 +126,9 @@ abstract class scheduled_task extends task_base {
      * Setter for $hour. Accepts a special 'R' value
      * which will be translated to a random hour.
      * @param string $hour
-     * @param bool $expandr - if true (default) an 'R' value in a time is expanded to an appropriate int.
-     *      If false, they are left as 'R'
      */
-    public function set_hour($hour, $expandr = true) {
-        if ($hour === 'R' && $expandr) {
+    public function set_hour($hour) {
+        if ($hour === 'R') {
             $hour = mt_rand(self::HOURMIN, self::HOURMAX);
         }
         $this->hour = $hour;
@@ -181,11 +177,9 @@ abstract class scheduled_task extends task_base {
     /**
      * Setter for $dayofweek.
      * @param string $dayofweek
-     * @param bool $expandr - if true (default) an 'R' value in a time is expanded to an appropriate int.
-     *      If false, they are left as 'R'
      */
-    public function set_day_of_week($dayofweek, $expandr = true) {
-        if ($dayofweek === 'R' && $expandr) {
+    public function set_day_of_week($dayofweek) {
+        if ($dayofweek === 'R') {
             $dayofweek = mt_rand(self::DAYOFWEEKMIN, self::DAYOFWEEKMAX);
         }
         $this->dayofweek = $dayofweek;

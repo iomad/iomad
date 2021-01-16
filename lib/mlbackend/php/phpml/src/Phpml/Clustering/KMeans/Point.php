@@ -6,7 +6,7 @@ namespace Phpml\Clustering\KMeans;
 
 use ArrayAccess;
 
-class Point implements ArrayAccess, \Countable
+class Point implements ArrayAccess
 {
     /**
      * @var int
@@ -16,32 +16,32 @@ class Point implements ArrayAccess, \Countable
     /**
      * @var array
      */
-    protected $coordinates = [];
+    protected $coordinates;
 
     /**
-     * @var mixed
+     * @param array $coordinates
      */
-    protected $label;
-
-    /**
-     * @param mixed $label
-     */
-    public function __construct(array $coordinates, $label = null)
+    public function __construct(array $coordinates)
     {
         $this->dimension = count($coordinates);
         $this->coordinates = $coordinates;
-        $this->label = $label;
     }
 
-    public function toArray(): array
+    /**
+     * @return array
+     */
+    public function toArray()
     {
         return $this->coordinates;
     }
 
     /**
-     * @return float|int
+     * @param Point $point
+     * @param bool  $precise
+     *
+     * @return int|mixed
      */
-    public function getDistanceWith(self $point, bool $precise = true)
+    public function getDistanceWith(self $point, $precise = true)
     {
         $distance = 0;
         for ($n = 0; $n < $this->dimension; ++$n) {
@@ -49,23 +49,22 @@ class Point implements ArrayAccess, \Countable
             $distance += $difference * $difference;
         }
 
-        return $precise ? $distance ** .5 : $distance;
+        return $precise ? sqrt((float) $distance) : $distance;
     }
 
     /**
-     * @param Point[] $points
+     * @param array $points
+     *
+     * @return mixed
      */
-    public function getClosest(array $points): ?self
+    public function getClosest(array $points)
     {
-        $minPoint = null;
-
         foreach ($points as $point) {
             $distance = $this->getDistanceWith($point, false);
 
             if (!isset($minDistance)) {
                 $minDistance = $distance;
                 $minPoint = $point;
-
                 continue;
             }
 
@@ -78,15 +77,20 @@ class Point implements ArrayAccess, \Countable
         return $minPoint;
     }
 
-    public function getCoordinates(): array
+    /**
+     * @return array
+     */
+    public function getCoordinates()
     {
         return $this->coordinates;
     }
 
     /**
      * @param mixed $offset
+     *
+     * @return bool
      */
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         return isset($this->coordinates[$offset]);
     }
@@ -105,7 +109,7 @@ class Point implements ArrayAccess, \Countable
      * @param mixed $offset
      * @param mixed $value
      */
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
         $this->coordinates[$offset] = $value;
     }
@@ -113,13 +117,8 @@ class Point implements ArrayAccess, \Countable
     /**
      * @param mixed $offset
      */
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
         unset($this->coordinates[$offset]);
-    }
-
-    public function count(): int
-    {
-        return count($this->coordinates);
     }
 }

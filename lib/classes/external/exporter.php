@@ -79,16 +79,14 @@ abstract class exporter {
             }
 
             $missingdataerr = 'Exporter class is missing required related data: (' . get_called_class() . ') ';
-            $scalartypes = ['string', 'int', 'bool', 'float'];
-            $scalarcheck = 'is_' . $classname;
 
-            if ($nullallowed && (!array_key_exists($key, $related) || $related[$key] === null)) {
-                $this->related[$key] = null;
+            if ($nullallowed && array_key_exists($key, $related) && $related[$key] === null) {
+                $this->related[$key] = $related[$key];
 
             } else if ($isarray) {
                 if (array_key_exists($key, $related) && is_array($related[$key])) {
                     foreach ($related[$key] as $index => $value) {
-                        if (!$value instanceof $classname && !$scalarcheck($value)) {
+                        if (!$value instanceof $classname) {
                             throw new coding_exception($missingdataerr . $key . ' => ' . $classname . '[]');
                         }
                     }
@@ -98,6 +96,8 @@ abstract class exporter {
                 }
 
             } else {
+                $scalartypes = ['string', 'int', 'bool', 'float'];
+                $scalarcheck = 'is_' . $classname;
                 if (array_key_exists($key, $related) &&
                         ((in_array($classname, $scalartypes) && $scalarcheck($related[$key])) ||
                         ($related[$key] instanceof $classname))) {
@@ -157,7 +157,7 @@ abstract class exporter {
                 $formatparams = $this->get_format_parameters($property);
                 $format = $record->$propertyformat;
 
-                list($text, $format) = external_format_text($data->$property, $format, $formatparams['context'],
+                list($text, $format) = external_format_text($data->$property, $format, $formatparams['context']->id,
                     $formatparams['component'], $formatparams['filearea'], $formatparams['itemid'], $formatparams['options']);
 
                 $data->$property = $text;
@@ -168,11 +168,11 @@ abstract class exporter {
 
                 if (!empty($definition['multiple'])) {
                     foreach ($data->$property as $key => $value) {
-                        $data->{$property}[$key] = external_format_string($value, $formatparams['context'],
+                        $data->{$property}[$key] = external_format_string($value, $formatparams['context']->id,
                             $formatparams['striplinks'], $formatparams['options']);
                     }
                 } else {
-                    $data->$property = external_format_string($data->$property, $formatparams['context'],
+                    $data->$property = external_format_string($data->$property, $formatparams['context']->id,
                             $formatparams['striplinks'], $formatparams['options']);
                 }
             }
@@ -261,32 +261,16 @@ abstract class exporter {
     final public static function read_properties_definition() {
         $properties = static::properties_definition();
         $customprops = static::define_other_properties();
-        $customprops = static::format_properties($customprops);
-        $properties += $customprops;
-        return $properties;
-    }
-
-    /**
-     * Recursively formats a given property definition with the default fields required.
-     *
-     * @param array $properties List of properties to format
-     * @return array Formatted array
-     */
-    final public static function format_properties($properties) {
-        foreach ($properties as $property => $definition) {
+        foreach ($customprops as $property => $definition) {
             // Ensures that null is set to its default.
             if (!isset($definition['null'])) {
-                $properties[$property]['null'] = NULL_NOT_ALLOWED;
+                $customprops[$property]['null'] = NULL_NOT_ALLOWED;
             }
             if (!isset($definition['description'])) {
-                $properties[$property]['description'] = $property;
-            }
-
-            // If an array is provided, it may be a nested array that is unformatted so rinse and repeat.
-            if (is_array($definition['type'])) {
-                $properties[$property]['type'] = static::format_properties($definition['type']);
+                $customprops[$property]['description'] = $property;
             }
         }
+        $properties += $customprops;
         return $properties;
     }
 

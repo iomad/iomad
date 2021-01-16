@@ -155,7 +155,7 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input implements templat
         $args->maxbytes = $this->_options['maxbytes'];
         $args->context = $PAGE->context;
         $args->buttonname = $elname.'choose';
-        $args->elementid = $id;
+        $args->elementname = $elname;
 
         $html = $this->_getTabs();
         $fp = new file_picker($args);

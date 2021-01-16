@@ -303,7 +303,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
     /**
      * Create a preview link
      *
-     * @param moodle_url $url contains a url to the given page
+     * @param $url contains a url to the given page
      */
     public function restart_preview_button($url) {
         return $this->single_button($url, get_string('startnewpreview', 'quiz'));
@@ -351,7 +351,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @return string HTML fragment.
      */
     protected function render_quiz_nav_question_button(quiz_nav_question_button $button) {
-        $classes = array('qnbutton', $button->stateclass, $button->navmethod, 'btn');
+        $classes = array('qnbutton', $button->stateclass, $button->navmethod, 'btn', 'btn-secondary');
         $extrainfo = array();
 
         if ($button->currentpage) {
@@ -560,8 +560,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
      */
     public function redo_question_button($slot, $disabled) {
         $attributes = array('type' => 'submit',  'name' => 'redoslot' . $slot,
-            'value' => get_string('redoquestion', 'quiz'),
-            'class' => 'mod_quiz-redo_question_button btn btn-secondary');
+                'value' => get_string('redoquestion', 'quiz'), 'class' => 'mod_quiz-redo_question_button');
         if ($disabled) {
             $attributes['disabled'] = 'disabled';
         }

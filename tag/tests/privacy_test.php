@@ -31,7 +31,6 @@ require_once($CFG->dirroot . '/tag/lib.php');
 use \core_privacy\tests\provider_testcase;
 use \core_privacy\local\request\writer;
 use \core_tag\privacy\provider;
-use \core_privacy\local\request\approved_userlist;
 
 /**
  * Unit tests for tag/classes/privacy/policy
@@ -119,35 +118,6 @@ class core_tag_privacy_testcase extends provider_testcase {
         // Use correct itemid.
         core_tag\privacy\provider::delete_item_tags($context2, 'core_course', 'course', $course2->id);
         $expectedtagcount -= 2;
-        $this->assertEquals($expectedtagcount, $DB->count_records('tag_instance'));
-    }
-
-    /**
-     * Test method delete_item_tags() with userid.
-     */
-    public function test_delete_item_tags_with_userid() {
-        global $DB;
-
-        $this->resetAfterTest(true);
-        // Create a course to tag.
-        $course = $this->getDataGenerator()->create_course();
-        $context = context_course::instance($course->id);
-
-        // Create a user to perform tagging.
-        $user = $this->getDataGenerator()->create_user();
-        $this->setUser($user);
-
-        // Tag courses.
-        core_tag_tag::set_item_tags('core_course', 'course', $course->id, $context, ['Tag 1', 'Tag 2'], $user->id);
-        $expectedtagcount = $DB->count_records('tag_instance');
-
-        // Delete tags for course. Use wrong userid.
-        core_tag\privacy\provider::delete_item_tags($context, 'core_course', 'course', null, 1);
-        $this->assertEquals($expectedtagcount, $DB->count_records('tag_instance'));
-
-        $expectedtagcount -= 2;
-        // Delete tags for course. Use correct userid.
-        core_tag\privacy\provider::delete_item_tags($context, 'core_course', 'course', null, $user->id);
         $this->assertEquals($expectedtagcount, $DB->count_records('tag_instance'));
     }
 
@@ -271,76 +241,5 @@ class core_tag_privacy_testcase extends provider_testcase {
         $files = $writer->get_files(['Tags', $tagids[1]]);
         $this->assertEquals('Computers', $data->rawname);
         $this->assertEquals(['computer.jpg'], array_keys($files));
-    }
-
-    /**
-     * Test that only users within a system context are fetched.
-     */
-    public function test_get_users_in_context() {
-        $component = 'core_tag';
-
-        $user1 = $this->set_up_tags()[0];
-        $systemcontext = context_system::instance();
-
-        $userlist1 = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist1);
-        $this->assertCount(1, $userlist1);
-        $expected = [$user1->id];
-        $actual = $userlist1->get_userids();
-        $this->assertEquals($expected, $actual);
-
-        // The list of users within the a context other than system context should be empty.
-        $usercontext1 = context_user::instance($user1->id);
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext1, $component);
-        provider::get_users_in_context($userlist2);
-        $this->assertCount(0, $userlist2);
-    }
-
-    /**
-     * Test that data for users in approved userlist is deleted.
-     */
-    public function test_delete_data_for_users() {
-        $component = 'core_tag';
-
-        list($user1, $user2) = $this->set_up_tags();
-        $usercontext1 = context_user::instance($user1->id);
-        $user3 = $this->getDataGenerator()->create_user();
-        $systemcontext = context_system::instance();
-
-        $this->setUser($user2);
-        useredit_update_interests($user2, ['basketball']);
-
-        $this->setUser($user3);
-        useredit_update_interests($user3, ['soccer']);
-
-        $userlist = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist);
-        $this->assertCount(3, $userlist);
-        $this->assertTrue(in_array($user1->id, $userlist->get_userids()));
-        $this->assertTrue(in_array($user2->id, $userlist->get_userids()));
-        $this->assertTrue(in_array($user3->id, $userlist->get_userids()));
-
-        // Data should not be deleted in contexts other than system context.
-        // Convert $userlist into an approved_contextlist.
-        $approvedlist = new approved_userlist($usercontext1, $component, $userlist->get_userids());
-        // Delete using delete_data_for_user.
-        provider::delete_data_for_users($approvedlist);
-        // Re-fetch users in systemcontext.
-        $userlist = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist);
-        // The user data in systemcontext should not be deleted.
-        $this->assertCount(3, $userlist);
-
-        // Add user1 and user2 into an approved_contextlist.
-        $approvedlist = new approved_userlist($systemcontext, $component, [$user1->id, $user2->id]);
-        // Delete using delete_data_for_user.
-        provider::delete_data_for_users($approvedlist);
-        // Re-fetch users in systemcontext.
-        $userlist = new \core_privacy\local\request\userlist($systemcontext, $component);
-        provider::get_users_in_context($userlist);
-        // The approved user data in systemcontext should be deleted.
-        // The user list should return user3.
-        $this->assertCount(1, $userlist);
-        $this->assertTrue(in_array($user3->id, $userlist->get_userids()));
     }
 }

@@ -166,7 +166,6 @@ class edit_item_form extends moodleform {
         }
         $mform->addElement('select', 'display', get_string('gradedisplaytype', 'grades'), $options);
         $mform->addHelpButton('display', 'gradedisplaytype', 'grades');
-        $mform->disabledIf('display', 'gradetype', 'eq', GRADE_TYPE_TEXT);
 
         $default_gradedecimals = grade_get_setting($COURSE->id, 'decimalpoints', $CFG->grade_decimalpoints);
         $options = array(-1=>get_string('defaultprev', 'grades', $default_gradedecimals), 0=>0, 1=>1, 2=>2, 3=>3, 4=>4, 5=>5);
@@ -177,13 +176,13 @@ class edit_item_form extends moodleform {
         if ($default_gradedisplaytype == GRADE_DISPLAY_TYPE_LETTER) {
             $mform->disabledIf('decimals', 'display', "eq", GRADE_DISPLAY_TYPE_DEFAULT);
         }
-        $mform->disabledIf('decimals', 'gradetype', 'eq', GRADE_TYPE_TEXT);
 
         /// hiding
         if ($item->cancontrolvisibility) {
-            $mform->addElement('advcheckbox', 'hidden', get_string('hidden', 'grades'), '', [], [0, 1]);
+            // advcheckbox is not compatible with disabledIf!
+            $mform->addElement('checkbox', 'hidden', get_string('hidden', 'grades'));
             $mform->addElement('date_time_selector', 'hiddenuntil', get_string('hiddenuntil', 'grades'), array('optional'=>true));
-            $mform->disabledIf('hidden', 'hiddenuntil[enabled]', 'checked');
+            $mform->disabledIf('hidden', 'hiddenuntil[off]', 'notchecked');
         } else {
             $mform->addElement('static', 'hidden', get_string('hidden', 'grades'),
                     get_string('componentcontrolsvisibility', 'grades'));

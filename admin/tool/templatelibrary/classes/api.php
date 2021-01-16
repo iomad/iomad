@@ -99,34 +99,13 @@ class api {
 
         foreach ($templatedirs as $templatecomponent => $dirs) {
             foreach ($dirs as $dir) {
-                if (!is_dir($dir) || !is_readable($dir)) {
-                    continue;
-                }
-                $dir = realpath($dir);
-
                 // List it.
-                $directory = new \RecursiveDirectoryIterator($dir);
-                $files = new \RecursiveIteratorIterator($directory);
+                $files = glob($dir . '/*.mustache');
 
                 foreach ($files as $file) {
-                    if (!$file->isFile()) {
-                        continue;
-                    }
-                    $filename = substr($file->getRealpath(), strlen($dir) + 1);
-                    if (strpos($templatecomponent, 'theme_') === 0) {
-                        if (strpos($filename, '/') !== false && strpos($filename, 'local/') !== 0) {
-                            // Skip any template in a sub-directory of a theme which is not in a local directory.
-                            // These are theme overrides of core templates.
-                            // Note: There is a rare edge case where a theme may override a template and then have additional
-                            // dependant templates and these will not be shown.
-                            continue;
-                        }
-                    }
-                    $templatename = str_replace('.mustache', '', $filename);
-                    $componenttemplatename = "{$templatecomponent}/{$templatename}";
-
-                    if ($search == '' || strpos($componenttemplatename, $search) !== false) {
-                        $results[$componenttemplatename] = 1;
+                    $templatename = basename($file, '.mustache');
+                    if ($search == '' || strpos($templatename, $search) !== false) {
+                        $results[$templatecomponent . '/' . $templatename] = 1;
                     }
                 }
             }
@@ -172,5 +151,6 @@ class api {
         $templatestr = file_get_contents($filename);
         return $templatestr;
     }
+
 
 }

@@ -15,26 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for representing a column in a {@link question_bank_view}.
  *
- * @package   core_question
- * @copyright 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    moodlecore
+ * @subpackage questionbank
+ * @copyright  1999 onwards Martin Dougiamas and others {@link http://moodle.com}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace core_question\bank;
-defined('MOODLE_INTERNAL') || die();
 
+namespace core_question\bank;
 
 /**
  * Base class for representing a column in a {@link question_bank_view}.
  *
- * @copyright 2009 Tim Hunt
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2009 Tim Hunt
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 abstract class column_base {
     /**
-     * @var view $qbank the question bank view we are helping to render.
+     * @var question_bank_view
      */
     protected $qbank;
 
@@ -43,7 +43,7 @@ abstract class column_base {
 
     /**
      * Constructor.
-     * @param view $qbank the question bank view we are helping to render.
+     * @param $qbank the question_bank_view we are helping to render.
      */
     public function __construct(view $qbank) {
         $this->qbank = $qbank;
@@ -84,7 +84,7 @@ abstract class column_base {
             $links = array();
             foreach ($sortable as $subsort => $details) {
                 $links[] = $this->make_sort_link($name . '-' . $subsort,
-                        $details['title'], isset($details['tip']) ? $details['tip'] : '', !empty($details['reverse']));
+                        $details['title'], '', !empty($details['reverse']));
             }
             echo '<div class="sorters">' . implode(' / ', $links) . '</div>';
         } else if ($sortable) {
@@ -103,6 +103,8 @@ abstract class column_base {
 
     /**
      * Title for this column. Not used if is_sortable returns an array.
+     * @param object $question the row from the $question table, augmented with extra information.
+     * @param string $rowclasses CSS class names that should be applied to this row of output.
      */
     protected abstract function get_title();
 
@@ -116,10 +118,10 @@ abstract class column_base {
 
     /**
      * Get a link that changes the sort order, and indicates the current sort state.
-     * @param string $sort the column to sort on.
-     * @param string $title the link text.
-     * @param string $tip the link tool-tip text. If empty, defaults to title.
-     * @param bool $defaultreverse whether the default sort order for this column is descending, rather than ascending.
+     * @param $name internal name used for this type of sorting.
+     * @param $currentsort the current sort order -1, 0, 1 for descending, none, ascending.
+     * @param $title the link text.
+     * @param $defaultreverse whether the default sort order for this column is descending, rather than ascending.
      * @return string HTML fragment.
      */
     protected function make_sort_link($sort, $title, $tip, $defaultreverse = false) {
@@ -147,7 +149,7 @@ abstract class column_base {
 
     /**
      * Get an icon representing the corrent sort state.
-     * @param bool $reverse sort is descending, not ascending.
+     * @param $reverse sort is descending, not ascending.
      * @return string HTML image tag.
      */
     protected function get_sort_icon($reverse) {
@@ -173,8 +175,8 @@ abstract class column_base {
     /**
      * Output the opening column tag.  If it is set as heading, it will use <th> tag instead of <td>
      *
-     * @param \stdClass $question
-     * @param string $rowclasses
+     * @param stdClass $question
+     * @param array $rowclasses
      */
     protected function display_start($question, $rowclasses) {
         $tag = 'td';
@@ -196,10 +198,9 @@ abstract class column_base {
     }
 
     /**
-     * Get the internal name for this column. Used as a CSS class name,
-     * and to store information about the current sort. Must match PARAM_ALPHA.
-     *
-     * @return string column name.
+     * @param object $question the row from the $question table, augmented with extra information.
+     * @return string internal name for this column. Used as a CSS class name,
+     *     and to store information about the current sort. Must match PARAM_ALPHA.
      */
     public abstract function get_name();
 
@@ -258,49 +259,13 @@ abstract class column_base {
     }
 
     /**
-     * If this column needs extra data (e.g. tags) then load that here.
-     *
-     * The extra data should be added to the question object in the array.
-     * Probably a good idea to check that another column has not already
-     * loaded the data you want.
-     *
-     * @param \stdClass[] $questions the questions that will be displayed.
-     */
-    public function load_additional_data(array $questions) {
-    }
-
-    /**
-     * Load the tags for each question.
-     *
-     * Helper that can be used from {@link load_additional_data()};
-     *
-     * @param array $questions
-     */
-    public function load_question_tags(array $questions) {
-        $firstquestion = reset($questions);
-        if (isset($firstquestion->tags)) {
-            // Looks like tags are already loaded, so don't do it again.
-            return;
-        }
-
-        // Load the tags.
-        $tagdata = \core_tag_tag::get_items_tags('core_question', 'question',
-                array_keys($questions));
-
-        // Add them to the question objects.
-        foreach ($tagdata as $questionid => $tags) {
-            $questions[$questionid]->tags = $tags;
-        }
-    }
-
-    /**
      * Can this column be sorted on? You can return either:
      *  + false for no (the default),
      *  + a field name, if sorting this column corresponds to sorting on that datbase field.
      *  + an array of subnames to sort on as follows
      *  return array(
      *      'firstname' => array('field' => 'uc.firstname', 'title' => get_string('firstname')),
-     *      'lastname' => array('field' => 'uc.lastname', 'title' => get_string('lastname')),
+     *      'lastname' => array('field' => 'uc.lastname', 'field' => get_string('lastname')),
      *  );
      * As well as field, and field, you can also add 'revers' => 1 if you want the default sort
      * order to be DESC.
@@ -313,6 +278,7 @@ abstract class column_base {
     /**
      * Helper method for building sort clauses.
      * @param bool $reverse whether the normal direction should be reversed.
+     * @param string $normaldir 'ASC' or 'DESC'
      * @return string 'ASC' or 'DESC'
      */
     protected function sortorder($reverse) {
@@ -324,8 +290,8 @@ abstract class column_base {
     }
 
     /**
-     * @param bool $reverse Whether to sort in the reverse of the default sort order.
-     * @param string $subsort if is_sortable returns an array of subnames, then this will be
+     * @param $reverse Whether to sort in the reverse of the default sort order.
+     * @param $subsort if is_sortable returns an array of subnames, then this will be
      *      one of those. Otherwise will be empty.
      * @return string some SQL to go in the order by clause.
      */
@@ -333,14 +299,14 @@ abstract class column_base {
         $sortable = $this->is_sortable();
         if (is_array($sortable)) {
             if (array_key_exists($subsort, $sortable)) {
-                return $sortable[$subsort]['field'] . $this->sortorder($reverse);
+                return $sortable[$subsort]['field'] . $this->sortorder($reverse, !empty($sortable[$subsort]['reverse']));
             } else {
-                throw new \coding_exception('Unexpected $subsort type: ' . $subsort);
+                throw new coding_exception('Unexpected $subsort type: ' . $subsort);
             }
         } else if ($sortable) {
             return $sortable . $this->sortorder($reverse);
         } else {
-            throw new \coding_exception('sort_expression called on a non-sortable column.');
+            throw new coding_exception('sort_expression called on a non-sortable column.');
         }
     }
 }

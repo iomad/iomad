@@ -42,13 +42,7 @@
       "url" : "#",
       "primary" : true,
       "tooltip" : "This is a tooltip",
-      "label" : "This is a the button text",
-      "attributes": [
-        {
-          "name": "data-attribute",
-          "value": "yeah"
-        }
-      ]
+      "label" : "This is a the button text"
     }
 }}
 <div class="{{classes}}">
@@ -56,11 +50,10 @@
         {{#params}}
             <input type="hidden" name="{{name}}" value="{{value}}">
         {{/params}}
-        <button type="submit" class="btn {{#primary}}btn-primary{{/primary}}{{^primary}}btn-secondary{{/primary}}"
+        <button type="submit" class="btn {{#primary}}btn-primary{{/primary}}{{^primary}}btn-default{{/primary}}"
             id="{{id}}"
             title={{#quote}}{{tooltip}}{{/quote}}
-            {{#disabled}}disabled{{/disabled}}
-            {{#attributes}} {{name}}={{#quote}}{{value}}{{/quote}} {{/attributes}}>{{label}}</button>
+            {{#disabled}}disabled{{/disabled}}>{{label}}</button>
     </form>
 </div>
 {{#hasactions}}

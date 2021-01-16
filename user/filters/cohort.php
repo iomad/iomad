@@ -92,7 +92,7 @@ class user_filter_cohort extends user_filter_type {
         $field    = $this->_name;
         $operator = $field.'_op';
 
-        if (property_exists($formdata, $operator)) {
+        if (array_key_exists($operator, $formdata)) {
             if ($formdata->$operator != 5 and $formdata->$field == '') {
                 // No data - no change except for empty filter.
                 return false;

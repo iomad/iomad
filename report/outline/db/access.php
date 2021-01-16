@@ -33,25 +33,10 @@ $capabilities = array(
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'companycourseeditor' => CAP_ALLOW,
-            'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
 
         'clonepermissionsfrom' => 'coursereport/outline:view',
-    ),
-
-    'report/outline:viewuserreport' => array(
-        'riskbitmask' => RISK_PERSONAL,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
-
-        'clonepermissionsfrom' => 'report/outline:view',
     )
 );
 

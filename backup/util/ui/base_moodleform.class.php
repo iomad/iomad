@@ -127,6 +127,12 @@ abstract class base_moodleform extends moodleform {
      */
     public function definition_after_data() {
         $buttonarray = array();
+        $buttonarray[] = $this->_form->createElement(
+            'submit',
+            'submitbutton',
+            get_string($this->uistage->get_ui()->get_name().'stage'.$this->uistage->get_stage().'action', 'backup'),
+            array('class' => 'proceedbutton')
+        );
         if (!$this->uistage->is_first_stage()) {
             $buttonarray[] = $this->_form->createElement('submit', 'previous', get_string('previousstage', 'backup'));
         } else if ($this->uistage instanceof backup_ui_stage) {
@@ -135,12 +141,6 @@ abstract class base_moodleform extends moodleform {
                 array('class' => 'oneclickbackup'));
         }
         $buttonarray[] = $this->_form->createElement('cancel', 'cancel', get_string('cancel'), array('class' => 'confirmcancel'));
-        $buttonarray[] = $this->_form->createElement(
-            'submit',
-            'submitbutton',
-            get_string($this->uistage->get_ui()->get_name().'stage'.$this->uistage->get_stage().'action', 'backup'),
-            array('class' => 'proceedbutton')
-        );
         $this->_form->addGroup($buttonarray, 'buttonar', '', array(' '), false);
         $this->_form->closeHeaderBefore('buttonar');
 
@@ -317,7 +317,7 @@ abstract class base_moodleform extends moodleform {
             $label = format_string($settingui->get_label($task), true, array('context' => $context));
             $labelicon = $settingui->get_icon();
             if (!empty($labelicon)) {
-                $label .= $OUTPUT->render($labelicon);
+                $label .= '&nbsp;'.$OUTPUT->render($labelicon);
             }
             $this->_form->addElement('static', 'static_'.$settingui->get_name(), $label, $settingui->get_static_value().$icon);
             $this->_form->addElement('html', html_writer::end_tag('div'));
@@ -383,15 +383,9 @@ abstract class base_moodleform extends moodleform {
         $this->require_definition_after_data();
 
         $config = new stdClass;
-        if ($this->uistage->get_ui() instanceof import_ui) {
-            $config->title = get_string('confirmcancelimport', 'backup');
-        } else if ($this->uistage->get_ui() instanceof restore_ui) {
-            $config->title = get_string('confirmcancelrestore', 'backup');
-        } else {
-            $config->title = get_string('confirmcancel', 'backup');
-        }
+        $config->title = get_string('confirmcancel', 'backup');
         $config->question = get_string('confirmcancelquestion', 'backup');
-        $config->yesLabel = $config->title;
+        $config->yesLabel = get_string('confirmcancelyes', 'backup');
         $config->noLabel = get_string('confirmcancelno', 'backup');
         $config->closeButtonTitle = get_string('close', 'editor');
         $PAGE->requires->yui_module(
@@ -402,8 +396,7 @@ abstract class base_moodleform extends moodleform {
 
         // Get list of module types on course.
         $modinfo = get_fast_modinfo($COURSE);
-        $modnames = array_map('strval', $modinfo->get_used_module_names(true));
-        core_collator::asort($modnames);
+        $modnames = $modinfo->get_used_module_names(true);
         $PAGE->requires->yui_module('moodle-backup-backupselectall', 'M.core_backup.backupselectall',
                 array($modnames));
         $PAGE->requires->strings_for_js(array('select', 'all', 'none'), 'moodle');

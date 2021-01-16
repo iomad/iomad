@@ -743,12 +743,7 @@ function mod_glossary_get_tagged_entries($tag, $exclusivemode = false, $fromctx 
             $coursename = format_string($item->fullname, true, array('context' => context_course::instance($item->courseid)));
             $coursename = html_writer::link($courseurl, $coursename);
             $icon = html_writer::link($pageurl, html_writer::empty_tag('img', array('src' => $cm->get_icon_url())));
-
-            $approved = "";
-            if (!$item->approved) {
-                $approved = '<br>'. html_writer::span(get_string('entrynotapproved', 'mod_glossary'), 'badge badge-warning');
-            }
-            $tagfeed->add($icon, $pagename, $cmname.'<br>'.$coursename.$approved);
+            $tagfeed->add($icon, $pagename, $cmname.'<br>'.$coursename);
         }
 
         $content = $OUTPUT->render_from_template('core_tag/tagfeed',

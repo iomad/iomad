@@ -46,7 +46,7 @@ if ($section = optional_param('section', '', PARAM_SAFEDIR) and confirm_sesskey(
 
     $temp = $adminroot->locate($section);
 
-    if ($temp instanceof admin_settingpage || $temp instanceof admin_externalpage || $temp instanceof admin_category) {
+    if ($temp instanceof admin_settingpage || $temp instanceof admin_externalpage) {
         $bookmarks[] = $section;
         $bookmarks = implode(',', $bookmarks);
         set_user_preference('admin_bookmarks', $bookmarks);
@@ -61,10 +61,6 @@ if ($section = optional_param('section', '', PARAM_SAFEDIR) and confirm_sesskey(
 
     } elseif ($temp instanceof admin_externalpage) {
         redirect($temp->url);
-
-    } else if ($temp instanceof admin_category) {
-        redirect($CFG->wwwroot . '/' . $CFG->admin . '/category.php?category=' . $section);
-
     }
 
 } else {

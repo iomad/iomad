@@ -4,9 +4,10 @@ require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/message/lib.php');
 require_once('user_message_form.php');
 
-$msg     = optional_param('msg', '', PARAM_RAW);
+$msg     = optional_param('msg', '', PARAM_CLEANHTML);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
+require_login();
 admin_externalpage_setup('userbulk');
 require_capability('moodle/site:manageallmessaging', context_system::instance());
 
@@ -45,7 +46,6 @@ if ($msgform->is_cancelled()) {
     $options->para     = false;
     $options->newlines = true;
     $options->smiley   = false;
-    $options->trusted = trusttext_trusted(\context_system::instance());
 
     $msg = format_text($formdata->messagebody['text'], $formdata->messagebody['format'], $options);
 

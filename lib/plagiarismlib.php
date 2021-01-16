@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -18,14 +19,16 @@
  * plagiarismlib.php - Contains core Plagiarism related functions.
  *
  * @since Moodle 2.0
- * @package    core
+ * @package    moodlecore
  * @subpackage plagiarism
  * @copyright  2010 Dan Marsden http://danmarsden.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+///// GENERIC PLAGIARISM FUNCTIONS ////////////////////////////////////////////////////
+
 if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');
+    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
 /**
@@ -41,7 +44,7 @@ function plagiarism_get_links($linkarray) {
     }
     $plagiarismplugins = plagiarism_load_available_plugins();
     $output = '';
-    foreach ($plagiarismplugins as $plugin => $dir) {
+    foreach($plagiarismplugins as $plugin => $dir) {
         require_once($dir.'/lib.php');
         $plagiarismclass = "plagiarism_plugin_$plugin";
         $plagiarismplugin = new $plagiarismclass;
@@ -66,7 +69,7 @@ function plagiarism_get_file_results($cmid, $userid, $file) {
         return $allresults;
     }
     $plagiarismplugins = plagiarism_load_available_plugins();
-    foreach ($plagiarismplugins as $plugin => $dir) {
+    foreach($plagiarismplugins as $plugin => $dir) {
         require_once($dir.'/lib.php');
         $plagiarismclass = "plagiarism_plugin_$plugin";
         $plagiarismplugin = new $plagiarismclass;
@@ -78,8 +81,6 @@ function plagiarism_get_file_results($cmid, $userid, $file) {
 /**
  * saves/updates plagiarism settings from a modules config page - called by course/modedit.php
  *
- * @deprecated Since Moodle 3.9. MDL-65835 Please use {plugin name}_coursemodule_edit_post_actions() instead.
- * @todo MDL-67526 This is to be moved from here to deprecatedlib.php in Moodle 4.3
  * @param object $data - form data
  */
 function plagiarism_save_form_elements($data) {
@@ -88,18 +89,10 @@ function plagiarism_save_form_elements($data) {
         return '';
     }
     $plagiarismplugins = plagiarism_load_available_plugins();
-    foreach ($plagiarismplugins as $plugin => $dir) {
+    foreach($plagiarismplugins as $plugin => $dir) {
         require_once($dir.'/lib.php');
         $plagiarismclass = "plagiarism_plugin_$plugin";
         $plagiarismplugin = new $plagiarismclass;
-
-        $reflectionmethod = new ReflectionMethod($plagiarismplugin, 'save_form_elements');
-        if ($reflectionmethod->getDeclaringClass()->getName() == get_class($plagiarismplugin)) {
-            $text = 'plagiarism_plugin::save_form_elements() is deprecated.';
-            $text .= ' Use plagiarism_' . $plugin . '_coursemodule_edit_post_actions() instead';
-            debugging($text, DEBUG_DEVELOPER);
-        }
-
         $plagiarismplugin->save_form_elements($data);
     }
 }
@@ -107,8 +100,6 @@ function plagiarism_save_form_elements($data) {
 /**
  * adds the list of plagiarism settings to a form - called inside modules that have enabled plagiarism
  *
- * @deprecated Since Moodle 3.9. MDL-65835 Please use {plugin name}_coursemodule_standard_elements() instead.
- * @todo MDL-67526 This is to be moved from here to deprecatedlib.php in Moodle 4.3
  * @param object $mform - Moodle form object
  * @param object $context - context object
  * @param string $modulename - Name of the module
@@ -119,18 +110,10 @@ function plagiarism_get_form_elements_module($mform, $context, $modulename = "")
         return '';
     }
     $plagiarismplugins = plagiarism_load_available_plugins();
-    foreach ($plagiarismplugins as $plugin => $dir) {
+    foreach($plagiarismplugins as $plugin => $dir) {
         require_once($dir.'/lib.php');
         $plagiarismclass = "plagiarism_plugin_$plugin";
         $plagiarismplugin = new $plagiarismclass;
-
-        $reflectionmethod = new ReflectionMethod($plagiarismplugin, 'get_form_elements_module');
-        if ($reflectionmethod->getDeclaringClass()->getName() == get_class($plagiarismplugin)) {
-            $text = 'plagiarism_plugin::get_form_elements_module() is deprecated.';
-            $text .= ' Use plagiarism_' . $plugin . '_coursemodule_standard_elements() instead';
-            debugging($text, DEBUG_DEVELOPER);
-        }
-
         $plagiarismplugin->get_form_elements_module($mform, $context, $modulename);
     }
 }
@@ -148,7 +131,7 @@ function plagiarism_update_status($course, $cm) {
     }
     $plagiarismplugins = plagiarism_load_available_plugins();
     $output = '';
-    foreach ($plagiarismplugins as $plugin => $dir) {
+    foreach($plagiarismplugins as $plugin => $dir) {
         require_once($dir.'/lib.php');
         $plagiarismclass = "plagiarism_plugin_$plugin";
         $plagiarismplugin = new $plagiarismclass;
@@ -158,10 +141,10 @@ function plagiarism_update_status($course, $cm) {
 }
 
 /**
- * Function that prints the student disclosure notifying that the files will be checked for plagiarism
- * @param integer $cmid - the cmid of this module
- * @return string
- */
+* Function that prints the student disclosure notifying that the files will be checked for plagiarism
+* @param integer $cmid - the cmid of this module
+* @return string
+*/
 function plagiarism_print_disclosure($cmid) {
     global $CFG;
     if (empty($CFG->enableplagiarism)) {
@@ -169,7 +152,7 @@ function plagiarism_print_disclosure($cmid) {
     }
     $plagiarismplugins = plagiarism_load_available_plugins();
     $output = '';
-    foreach ($plagiarismplugins as $plugin => $dir) {
+    foreach($plagiarismplugins as $plugin => $dir) {
         require_once($dir.'/lib.php');
         $plagiarismclass = "plagiarism_plugin_$plugin";
         $plagiarismplugin = new $plagiarismclass;
@@ -177,37 +160,41 @@ function plagiarism_print_disclosure($cmid) {
     }
     return $output;
 }
-
 /**
- * Helper function - also loads lib file of plagiarism plugin
+ * used by admin/cron.php to get similarity scores from submitted files.
  *
- * @todo MDL-67872 the deprecated code in this function to be removed in Moodle 4.3
+ */
+function plagiarism_cron() {
+    global $CFG;
+    if (empty($CFG->enableplagiarism)) {
+        return '';
+    }
+    $plagiarismplugins = plagiarism_load_available_plugins();
+    foreach($plagiarismplugins as $plugin => $dir) {
+        require_once($dir.'/lib.php');
+        $plagiarismclass = "plagiarism_plugin_$plugin";
+        $plagiarismplugin = new $plagiarismclass;
+        if (method_exists($plagiarismplugin, 'cron')) {
+            mtrace('Processing cron function for plagiarism_plugin_' . $plugin . '...', '');
+            cron_trace_time_and_memory();
+            $plagiarismplugin->cron();
+        }
+    }
+}
+/**
+ * helper function - also loads lib file of plagiarism plugin
  * @return array of available plugins
  */
 function plagiarism_load_available_plugins() {
     global $CFG;
-    static $showndeprecatedmessage = array(); // Only show message once per page load.
-
     if (empty($CFG->enableplagiarism)) {
         return array();
     }
     $plagiarismplugins = core_component::get_plugin_list('plagiarism');
     $availableplugins = array();
-    foreach ($plagiarismplugins as $plugin => $dir) {
-        // Check this plugin is enabled and a lib file exists.
-        if (get_config('plagiarism', $plugin."_use")) {
-            // Deprecated Since Moodle 3.9.
-            $pluginenabled = true;
-            if (empty($showndeprecatedmessage[$plugin])) {
-                $text = 'The setting plagiarism:'.$plugin.'_use is deprecated.';
-                $text .= ' Use plagiarism_' . $plugin . ':enabled instead';
-                debugging($text, DEBUG_DEVELOPER);
-                $showndeprecatedmessage[$plugin] = true;
-            }
-        } else {
-            $pluginenabled = get_config('plagiarism_'.$plugin, 'enabled');
-        }
-        if ($pluginenabled && file_exists($dir."/lib.php")) {
+    foreach($plagiarismplugins as $plugin => $dir) {
+        //check this plugin is enabled and a lib file exists.
+        if (get_config('plagiarism', $plugin."_use") && file_exists($dir."/lib.php")) {
             require_once($dir.'/lib.php');
             $plagiarismclass = "plagiarism_plugin_$plugin";
             if (class_exists($plagiarismclass)) {

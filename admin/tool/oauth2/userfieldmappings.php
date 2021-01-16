@@ -33,7 +33,9 @@ $strheading = get_string('pluginname', 'tool_oauth2');
 $PAGE->set_title($strheading);
 $PAGE->set_heading($strheading);
 
-require_admin();
+require_login();
+
+require_capability('moodle/site:config', context_system::instance());
 
 $renderer = $PAGE->get_renderer('tool_oauth2');
 

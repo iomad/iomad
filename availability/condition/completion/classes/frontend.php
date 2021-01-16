@@ -37,7 +37,7 @@ class frontend extends \core_availability\frontend {
     /**
      * @var array Cached init parameters
      */
-    protected $cacheparams = [];
+    protected $cacheparams = array();
 
     /**
      * @var string IDs of course, cm, and section for cache (if any)
@@ -45,8 +45,8 @@ class frontend extends \core_availability\frontend {
     protected $cachekey = '';
 
     protected function get_javascript_strings() {
-        return ['option_complete', 'option_fail', 'option_incomplete', 'option_pass',
-                        'label_cm', 'label_completion'];
+        return array('option_complete', 'option_fail', 'option_incomplete', 'option_pass',
+                'label_cm', 'label_completion');
     }
 
     protected function get_javascript_init_params($course, \cm_info $cm = null,
@@ -59,29 +59,20 @@ class frontend extends \core_availability\frontend {
             // Get list of activities on course which have completion values,
             // to fill the dropdown.
             $context = \context_course::instance($course->id);
-            $cms = [];
+            $cms = array();
             $modinfo = get_fast_modinfo($course);
-            $previouscm = false;
             foreach ($modinfo->cms as $id => $othercm) {
                 // Add each course-module if it has completion turned on and is not
                 // the one currently being edited.
                 if ($othercm->completion && (empty($cm) || $cm->id != $id) && !$othercm->deletioninprogress) {
-                    $cms[] = (object)['id' => $id,
-                        'name' => format_string($othercm->name, true, ['context' => $context]),
-                        'completiongradeitemnumber' => $othercm->completiongradeitemnumber];
-                }
-                if (count($cms) && (empty($cm) || $cm->id == $id)) {
-                    $previouscm = true;
+                    $cms[] = (object)array('id' => $id,
+                        'name' => format_string($othercm->name, true, array('context' => $context)),
+                        'completiongradeitemnumber' => $othercm->completiongradeitemnumber);
                 }
             }
-            if ($previouscm) {
-                $previous = (object)['id' => \availability_completion\condition::OPTION_PREVIOUS,
-                        'name' => get_string('option_previous', 'availability_completion'),
-                        'completiongradeitemnumber' => \availability_completion\condition::OPTION_PREVIOUS];
-                array_unshift($cms, $previous);
-            }
+
             $this->cachekey = $cachekey;
-            $this->cacheinitparams = [$cms];
+            $this->cacheinitparams = array($cms);
         }
         return $this->cacheinitparams;
     }

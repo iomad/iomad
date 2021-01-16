@@ -1,4 +1,6 @@
-cannotdeletediscussioninsinglediscussion,mod_forum
-inpagereplysubject,mod_forum
-overviewnumpostssince,mod_forum
-overviewnumunread,mod_forum
+postmailinfo,mod_forum
+emaildigestupdated,mod_forum
+emaildigestupdated_default,mod_forum
+emaildigest_0,mod_forum
+emaildigest_1,mod_forum
+emaildigest_2,mod_forum

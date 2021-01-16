@@ -6,9 +6,15 @@ namespace Phpml;
 
 interface Estimator
 {
-    public function train(array $samples, array $targets): void;
+    /**
+     * @param array $samples
+     * @param array $targets
+     */
+    public function train(array $samples, array $targets);
 
     /**
+     * @param array $samples
+     *
      * @return mixed
      */
     public function predict(array $samples);

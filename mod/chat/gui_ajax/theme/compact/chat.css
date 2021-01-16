@@ -95,8 +95,3 @@
     background: #e3e8f0;
     height: 100%;
 }
-
-#button-send + a > i.text-info {
-    /* stylelint-disable-next-line declaration-no-important */
-    color: black !important;
-}

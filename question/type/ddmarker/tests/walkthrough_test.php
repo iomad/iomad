@@ -46,7 +46,7 @@ class qtype_ddmarker_walkthrough_test extends qbehaviour_walkthrough_test_base {
      * @return question_contains_tag_with_attributes the expectation.
      */
     protected function get_contains_draggable_marker_home_expectation($choice, $infinite) {
-        $class = 'marker choice'.$choice;
+        $class = 'draghome choice'.$choice;
         if ($infinite) {
             $class .= ' infinite';
         }

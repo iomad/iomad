@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['configtitle'] = 'Flickr block title';
+$string['configtitle'] = 'Title';
 $string['date-posted-asc'] = 'Date posted ASC';
 $string['date-posted-desc'] = 'Date posted DESC';
 $string['date-taken-asc'] = 'Date taken ASC';

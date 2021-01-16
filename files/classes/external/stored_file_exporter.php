@@ -54,7 +54,6 @@ class stored_file_exporter extends \core\external\exporter {
         $data->filepath = $file->get_filepath();
         $data->filename = $file->get_filename();
         $data->isdir = $file->is_directory();
-        $data->isimage = $file->is_valid_image();
         $data->timemodified = $file->get_timemodified();
         $data->timecreated = $file->get_timecreated();
         $data->filesize = $file->get_filesize();
@@ -93,9 +92,6 @@ class stored_file_exporter extends \core\external\exporter {
                 'type' => PARAM_FILE
             ),
             'isdir' => array(
-                'type' => PARAM_BOOL
-            ),
-            'isimage' => array(
                 'type' => PARAM_BOOL
             ),
             'timemodified' => array(
@@ -147,7 +143,7 @@ class stored_file_exporter extends \core\external\exporter {
             $filenameshort .= substr($filename, -4);
         }
 
-        $icon = $this->file->is_directory() ? file_folder_icon(128) : file_file_icon($this->file, 128);
+        $icon = $this->file->is_directory() ? file_folder_icon() : file_file_icon($this->file);
 
         $url = moodle_url::make_pluginfile_url(
             $this->file->get_contextid(),

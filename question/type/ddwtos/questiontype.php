@@ -71,17 +71,32 @@ class qtype_ddwtos extends qtype_gapselect_base {
         $question->shuffleanswers = $format->trans_single(
                 $format->getpath($data, array('#', 'shuffleanswers', 0, '#'), 1));
 
-        // Import the choices.
-        $question->answer = array();
-        $question->draggroup = array();
-        $question->infinite = array();
+        if (!empty($data['#']['dragbox'])) {
+            // Modern XML format.
+            $dragboxes = $data['#']['dragbox'];
+            $question->answer = array();
+            $question->draggroup = array();
+            $question->infinite = array();
 
-        foreach ($data['#']['dragbox'] as $dragboxxml) {
-            $question->choices[] = array(
-                'answer' => $format->getpath($dragboxxml, array('#', 'text', 0, '#'), '', true),
-                'choicegroup' => $format->getpath($dragboxxml, array('#', 'group', 0, '#'), 1),
-                'infinite' => array_key_exists('infinite', $dragboxxml['#']),
-            );
+            foreach ($data['#']['dragbox'] as $dragboxxml) {
+                $question->choices[] = array(
+                    'answer' => $format->getpath($dragboxxml, array('#', 'text', 0, '#'), '', true),
+                    'choicegroup' => $format->getpath($dragboxxml, array('#', 'group', 0, '#'), 1),
+                    'infinite' => array_key_exists('infinite', $dragboxxml['#']),
+                );
+            }
+
+        } else {
+            // Legacy format containing PHP serialisation.
+            foreach ($data['#']['answer'] as $answerxml) {
+                $ans = $format->import_answer($answerxml);
+                $options = unserialize(stripslashes($ans->feedback['text']));
+                $question->choices[] = array(
+                    'answer' => $ans->answer,
+                    'choicegroup' => $options->draggroup,
+                    'infinite' => $options->infinite,
+                );
+            }
         }
 
         $format->import_combined_feedback($question, $data, true);

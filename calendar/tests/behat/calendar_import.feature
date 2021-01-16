@@ -31,7 +31,6 @@ Feature: Import and edit calendar events
     And I should see "Event on 2-15-2017"
     And I should see "Event on 2-25-2017"
     And I click on "Event on 2-15-2017" "link"
-    And I should see "Some place"
     And I click on "Edit" "button"
     And I set the following fields to these values:
       | Event title    | Event on 2-20-2017 |
@@ -47,30 +46,3 @@ Feature: Import and edit calendar events
     And I view the calendar for "2" "2017"
     And I should not see "Event on 2-25-2017"
     And I should not see "Event on 2-20-2017"
-
-  Scenario: Import events using different event types.
-    Given I log in as "admin"
-    And I view the calendar for "1" "2016"
-    And I press "Manage subscriptions"
-    And I set the following fields to these values:
-      | Calendar name  | Test Import |
-      | Import from    | Calendar file (.ics) |
-      | Type of event  | User |
-    And I upload "calendar/tests/fixtures/import.ics" file to "Calendar file (.ics)" filemanager
-    And I press "Add"
-    And I should see "User events"
-    And I set the following fields to these values:
-      | Calendar name  | Test Import |
-      | Import from    | Calendar file (.ics) |
-      | Type of event  | Category             |
-      | Category       | Miscellaneous   |
-    And I upload "calendar/tests/fixtures/import.ics" file to "Calendar file (.ics)" filemanager
-    And I press "Add"
-    And I should see "Category events"
-    And I set the following fields to these values:
-      | Calendar name  | Test Import |
-      | Import from    | Calendar file (.ics) |
-      | Type of event  | Site             |
-    And I upload "calendar/tests/fixtures/import.ics" file to "Calendar file (.ics)" filemanager
-    And I press "Add"
-    And I should see "Site events"

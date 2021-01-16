@@ -31,9 +31,6 @@ require_once($CFG->dirroot.'/report/participation/locallib.php');
 define('DEFAULT_PAGE_SIZE', 20);
 define('SHOW_ALL_PAGE_SIZE', 5000);
 
-// Release session lock.
-\core\session\manager::write_close();
-
 $id         = required_param('id', PARAM_INT); // course id.
 $roleid     = optional_param('roleid', 0, PARAM_INT); // which role to show
 $instanceid = optional_param('instanceid', 0, PARAM_INT); // instance we're looking at.
@@ -83,8 +80,7 @@ $PAGE->set_title(format_string($course->shortname, true, array('context' => $con
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
 
-// Logs will not have been recorded before the course timecreated time.
-$minlog = $course->timecreated;
+$uselegacyreader = false; // Use legacy reader with sql_internal_table_reader to aggregate records.
 $onlyuselegacyreader = false; // Use only legacy log table to aggregate records.
 
 $logtable = report_participation_get_log_table_name(); // Log table to use for fetaching records.
@@ -94,7 +90,41 @@ if (empty($logtable)) {
     $onlyuselegacyreader = true;
 }
 
+// If no legacy and no logtable then don't proceed.
+if (!$onlyuselegacyreader && empty($logtable)) {
+    echo $OUTPUT->box_start('generalbox', 'notice');
+    echo get_string('nologreaderenabled', 'report_participation');
+    echo $OUTPUT->box_end();
+    echo $OUTPUT->footer();
+    die();
+}
+
 $modinfo = get_fast_modinfo($course);
+
+$minloginternalreader = 0; // Time of first record in sql_internal_table_reader.
+
+if ($onlyuselegacyreader) {
+    // If no sql_inrenal_reader enabled then get min. time from log table.
+    $minlog = $DB->get_field_sql('SELECT min(time) FROM {log} WHERE course = ?', array($course->id));
+} else {
+    $uselegacyreader = true;
+    $minlog = $DB->get_field_sql('SELECT min(time) FROM {log} WHERE course = ?', array($course->id));
+
+    // If legacy reader is not logging then get data from new log table.
+    // Get minimum log time for this course from preferred log reader.
+    $minloginternalreader = $DB->get_field_sql('SELECT min(timecreated) FROM {' . $logtable . '}
+                                                 WHERE courseid = ?', array($course->id));
+    // If new log store has oldest data then don't use old log table.
+    if (empty($minlog) || ($minloginternalreader <= $minlog)) {
+        $uselegacyreader = false;
+        $minlog = $minloginternalreader;
+    }
+
+    // If timefrom is greater then first record in sql_internal_table_reader then get record from sql_internal_table_reader only.
+    if (!empty($timefrom) && ($minloginternalreader < $timefrom)) {
+        $uselegacyreader = false;
+    }
+}
 
 // Print first controls.
 report_participation_print_filter_form($course, $timefrom, $minlog, $action, $roleid, $instanceid);
@@ -124,7 +154,6 @@ $groupmode = groups_get_course_groupmode($course);
 $currentgroup = $SESSION->activegroup[$course->id][$groupmode][$course->defaultgroupingid];
 
 if (!empty($instanceid) && !empty($roleid)) {
-    $uselegacyreader = $DB->record_exists('log', ['course' => $course->id]);
 
     // Trigger a report viewed event.
     $event = \report_participation\event\report_viewed::create(array('context' => $context,
@@ -152,15 +181,7 @@ if (!empty($instanceid) && !empty($roleid)) {
         $table->define_headers(array(get_string('user'), $actionheader));
     } else {
         $table->define_columns(array('fullname', 'count', 'select'));
-        $mastercheckbox = new \core\output\checkbox_toggleall('participants-table', true, [
-            'id' => 'select-all-participants',
-            'name' => 'select-all-participants',
-            'label' => get_string('select'),
-            // Consistent labels to prevent select column from resizing.
-            'selectall' => get_string('select'),
-            'deselectall' => get_string('select'),
-        ]);
-        $table->define_headers(array(get_string('user'), $actionheader, $OUTPUT->render($mastercheckbox)));
+        $table->define_headers(array(get_string('user'), $actionheader, get_string('select')));
     }
     $table->define_baseurl($baseurl);
 
@@ -229,6 +250,11 @@ if (!empty($instanceid) && !empty($roleid)) {
     $users = array();
     // If using legacy log then get users from old table.
     if ($uselegacyreader || $onlyuselegacyreader) {
+        $limittime = '';
+        if ($uselegacyreader && !empty($minloginternalreader)) {
+            $limittime = ' AND time < :tilltime ';
+            $params['tilltime'] = $minloginternalreader;
+        }
         $sql = "SELECT ra.userid, $usernamefields, u.idnumber, l.actioncount AS count
                   FROM (SELECT DISTINCT userid FROM {role_assignments} WHERE contextid $relatedctxsql AND roleid = :roleid ) ra
                   JOIN {user} u ON u.id = ra.userid
@@ -237,7 +263,7 @@ if (!empty($instanceid) && !empty($roleid)) {
                     SELECT userid, COUNT(action) AS actioncount
                       FROM {log}
                      WHERE cmid = :instanceid
-                           AND time > :timefrom " . $actionsql .
+                           AND time > :timefrom " . $limittime . $actionsql .
                 " GROUP BY userid) l ON (l.userid = ra.userid)";
         if ($twhere) {
             $sql .= ' WHERE '.$twhere; // Initial bar.
@@ -325,16 +351,7 @@ if (!empty($instanceid) && !empty($roleid)) {
         $data[] = !empty($u->count) ? get_string('yes').' ('.$u->count.') ' : get_string('no');
 
         if (!empty($CFG->messaging)) {
-            $togglegroup = 'participants-table';
-            if (empty($u->count)) {
-                $togglegroup .= ' no';
-            }
-            $checkbox = new \core\output\checkbox_toggleall($togglegroup, false, [
-                'classes' => 'usercheckbox',
-                'name' => 'user' . $u->userid,
-                'value' => $u->count,
-            ]);
-            $data[] = $OUTPUT->render($checkbox);
+            $data[] = '<input type="checkbox" class="usercheckbox" name="user'.$u->userid.'" value="'.$u->count.'" />';
         }
         $table->add_data($data);
     }
@@ -354,29 +371,18 @@ if (!empty($instanceid) && !empty($roleid)) {
     }
 
     if (!empty($CFG->messaging)) {
+        $buttonclasses = 'btn btn-secondary';
         echo '<div class="selectbuttons btn-group">';
+        echo '<input type="button" id="checkallonpage" value="'.get_string('selectall').'" class="'. $buttonclasses .'"> '."\n";
+        echo '<input type="button" id="checknone" value="'.get_string('deselectall').'" class="'. $buttonclasses .'"> '."\n";
         if ($perpage >= $matchcount) {
-            $checknos = new \core\output\checkbox_toggleall('participants-table no', true, [
-                'id' => 'select-nos',
-                'name' => 'select-nos',
-                'label' => get_string('selectnos'),
-                'selectall' => get_string('selectnos'),
-                'deselectall' => get_string('deselectnos'),
-            ], true);
-            echo $OUTPUT->render($checknos);
+            echo '<input type="button" id="checkallnos" value="'.get_string('selectnos').'" class="'. $buttonclasses .'">'."\n";
         }
         echo '</div>';
         echo '<div class="p-y-1">';
-        echo html_writer::label(get_string('withselectedusers'), 'formactionid');
+        echo html_writer::label(get_string('withselectedusers'), 'formactionselect');
         $displaylist['#messageselect'] = get_string('messageselectadd');
-        $withselectedparams = array(
-            'id' => 'formactionid',
-            'data-action' => 'toggle',
-            'data-togglegroup' => 'participants-table',
-            'data-toggle' => 'action',
-            'disabled' => true
-        );
-        echo html_writer::select($displaylist, 'formaction', '', array('' => 'choosedots'), $withselectedparams);
+        echo html_writer::select($displaylist, 'formaction', '', array('' => 'choosedots'), array('id' => 'formactionid'));
         echo '</div>';
         echo '</div>'."\n";
         echo '</form>'."\n";
@@ -385,7 +391,7 @@ if (!empty($instanceid) && !empty($roleid)) {
         $options->courseid = $course->id;
         $options->noteStateNames = note_get_state_names();
         $options->stateHelpIcon = $OUTPUT->help_icon('publishstate', 'notes');
-        $PAGE->requires->js_call_amd('report_participation/participants', 'init', [$options]);
+        $PAGE->requires->js_call_amd('core_user/participants', 'init', [$options]);
     }
     echo '</div>'."\n";
 }

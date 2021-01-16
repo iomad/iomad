@@ -15,34 +15,16 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template gradereport_singleview/bulk_insert
-
     Bulk insert attribute.
-
-    Example context (json):
-    {
-        "applyname": "Apply-name",
-        "applylabel": "Perform bulk insert",
-        "label": "Bulk insert",
-        "menuname": "Menu-name",
-        "menulabel": "For",
-        "menuoptions": "JSON object",
-        "value": "all",
-        "selected": "",
-        "name": "All grades",
-        "valuename": "Value-name",
-        "valuelabel": "Insert value",
-        "valuefield": "PARSED HTML"
-    }
 }}
 <div class="enable">
-    <input type="checkbox" name="{{applyname}}" value="1" id="{{applyname}}" class="ml-0">
+    <input type="checkbox" name="{{applyname}}" value="1" id="{{applyname}}">
     <label for="{{applyname}}">{{applylabel}}</label>
 </div>
-<fieldset class="form-inline">
+<fieldset>
     <legend class="accesshide">{{label}}</legend>
     <label for="{{menuname}}">{{menulabel}}</label>
-    <select name="{{menuname}}" id="{{menuname}}" class="form-control custom-select">
+    <select name="{{menuname}}" id="{{menuname}}">
         {{#menuoptions}}
             <option value="{{value}}" {{#selected}}selected{{/selected}}>{{name}}</option>
         {{/menuoptions}}

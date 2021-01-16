@@ -2,8 +2,6 @@
 
 namespace Sabberworm\CSS\RuleSet;
 
-use Sabberworm\CSS\Parsing\ParserState;
-use Sabberworm\CSS\Parsing\OutputException;
 use Sabberworm\CSS\Property\Selector;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\Value\RuleValueList;
@@ -11,6 +9,7 @@ use Sabberworm\CSS\Value\Value;
 use Sabberworm\CSS\Value\Size;
 use Sabberworm\CSS\Value\Color;
 use Sabberworm\CSS\Value\URL;
+use Sabberworm\CSS\Parsing\OutputException;
 
 /**
  * Declaration blocks are the parts of a css file which denote the rules belonging to a selector.
@@ -24,16 +23,6 @@ class DeclarationBlock extends RuleSet {
 		parent::__construct($iLineNo);
 		$this->aSelectors = array();
 	}
-
-	public static function parse(ParserState $oParserState) {
-		$aComments = array();
-		$oResult = new DeclarationBlock($oParserState->currentLine());
-		$oResult->setSelector($oParserState->consumeUntil('{', false, true, $aComments));
-		$oResult->setComments($aComments);
-		RuleSet::parseRuleSet($oParserState, $oResult);
-		return $oResult;
-	}
-
 
 	public function setSelectors($mSelector) {
 		if (is_array($mSelector)) {
@@ -76,11 +65,6 @@ class DeclarationBlock extends RuleSet {
 		$this->setSelectors($mSelector);
 	}
 
-	/**
-	 * Get selectors.
-	 *
-	 * @return Selector[] Selectors.
-	 */
 	public function getSelectors() {
 		return $this->aSelectors;
 	}
@@ -615,13 +599,9 @@ class DeclarationBlock extends RuleSet {
 			// If all the selectors have been removed, this declaration block becomes invalid
 			throw new OutputException("Attempt to print declaration block with missing selector", $this->iLineNo);
 		}
-		$sResult = $oOutputFormat->sBeforeDeclarationBlock;
-		$sResult .= $oOutputFormat->implode($oOutputFormat->spaceBeforeSelectorSeparator() . ',' . $oOutputFormat->spaceAfterSelectorSeparator(), $this->aSelectors);
-		$sResult .= $oOutputFormat->sAfterDeclarationBlockSelectors;
-		$sResult .= $oOutputFormat->spaceBeforeOpeningBrace() . '{';
+		$sResult = $oOutputFormat->implode($oOutputFormat->spaceBeforeSelectorSeparator() . ',' . $oOutputFormat->spaceAfterSelectorSeparator(), $this->aSelectors) . $oOutputFormat->spaceBeforeOpeningBrace() . '{';
 		$sResult .= parent::render($oOutputFormat);
 		$sResult .= '}';
-		$sResult .= $oOutputFormat->sAfterDeclarationBlock;
 		return $sResult;
 	}
 

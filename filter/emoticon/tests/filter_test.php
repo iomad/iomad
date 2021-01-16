@@ -34,139 +34,29 @@ require_once($CFG->dirroot . '/filter/emoticon/filter.php'); // Include the code
 class filter_emoticon_testcase extends advanced_testcase {
 
     /**
-     * Tests the filter doesn't affect nolink classes.
-     *
-     * @dataProvider filter_emoticon_provider
+     * Verify configured target formats are observed. Just that.
      */
-    public function test_filter_emoticon($input, $format, $expected) {
-        $this->resetAfterTest();
+    public function test_filter_emoticon_formats() {
+
+        $this->resetAfterTest(true); // We are modifying the config.
 
         $filter = new testable_filter_emoticon();
-        $this->assertEquals($expected, $filter->filter($input, [
-                'originalformat' => $format,
-            ]));
-    }
 
-    /**
-     * The data provider for filter emoticon tests.
-     *
-     * @return  array
-     */
-    public function filter_emoticon_provider() {
-        $grr = '(grr)';
-        return [
-            'FORMAT_MOODLE is not filtered' => [
-                'input' => $grr,
-                'format' => FORMAT_MOODLE,
-                'expected' => $grr,
-            ],
-            'FORMAT_MARKDOWN is not filtered' => [
-                'input' => $grr,
-                'format' => FORMAT_MARKDOWN,
-                'expected' => $grr,
-            ],
-            'FORMAT_PLAIN is not filtered' => [
-                'input' => $grr,
-                'format' => FORMAT_PLAIN,
-                'expected' => $grr,
-            ],
-            'FORMAT_HTML is filtered' => [
-                'input' => $grr,
-                'format' => FORMAT_HTML,
-                'expected' => $this->get_converted_content_for_emoticon($grr),
-            ],
-            'Script tag should not be processed' => [
-                'input' => "<script language='javascript'>alert('{$grr}');</script>",
-                'format' => FORMAT_HTML,
-                'expected' => "<script language='javascript'>alert('{$grr}');</script>",
-            ],
-            'Basic nolink should not be processed' => [
-                'input' => '<span class="nolink">(n)</span>',
-                'format' => FORMAT_HTML,
-                'expected' => '<span class="nolink">(n)</span>',
-            ],
-            'Nested nolink should not be processed' => [
-                'input' => '<span class="nolink"><span>(n)</span>(n)</span>',
-                'format' => FORMAT_HTML,
-                'expected' => '<span class="nolink"><span>(n)</span>(n)</span>',
-            ],
-            'Nested nolink should not be processed but following emoticon' => [
-                'input' => '<span class="nolink"><span>(n)</span>(n)</span>(n)',
-                'format' => FORMAT_HTML,
-                'expected' => '<span class="nolink"><span>(n)</span>(n)</span>' . $this->get_converted_content_for_emoticon('(n)'),
-            ],
-            'Basic pre should not be processed' => [
-                'input' => '<pre>(n)</pre>',
-                'format' => FORMAT_HTML,
-                'expected' => '<pre>(n)</pre>',
-            ],
-            'Nested pre should not be processed' => [
-                'input' => '<pre><pre>(n)</pre>(n)</pre>',
-                'format' => FORMAT_HTML,
-                'expected' => '<pre><pre>(n)</pre>(n)</pre>',
-            ],
-            'Nested pre should not be processed but following emoticon' => [
-                'input' => '<pre><pre>(n)</pre>(n)</pre>(n)',
-                'format' => FORMAT_HTML,
-                'expected' => '<pre><pre>(n)</pre>(n)</pre>' . $this->get_converted_content_for_emoticon('(n)'),
-            ],
-        ];
-    }
-
-    /**
-     * Translate the text for a single emoticon into the rendered value.
-     *
-     * @param   string  $text The text to translate.
-     * @return  string
-     */
-    public function get_converted_content_for_emoticon($text) {
-        global $OUTPUT;
-        $manager = get_emoticon_manager();
-        $emoticons = $manager->get_emoticons();
-        foreach ($emoticons as $emoticon) {
-            if ($emoticon->text == $text) {
-                return $OUTPUT->render($manager->prepare_renderable_emoticon($emoticon));
-            }
-        }
-
-        return $text;
-    }
-
-    /**
-     * Tests the filter doesn't break anything if activated but invalid format passed.
-     *
-     */
-    public function test_filter_invalidformat() {
-        global $PAGE;
-        $this->resetAfterTest();
-
-        $filter = new testable_filter_emoticon();
-        $input = '(grr)';
+        // Verify texts not matching target formats aren't filtered.
         $expected = '(grr)';
+        $options = array('originalformat' => FORMAT_MOODLE); // Only FORMAT_HTML is filtered, see {@link testable_filter_emoticon}.
+        $this->assertEquals($expected, $filter->filter('(grr)', $options));
 
-        $this->assertEquals($expected, $filter->filter($input, [
-            'originalformat' => 'ILLEGALFORMAT',
-        ]));
-    }
+        $options = array('originalformat' => FORMAT_MARKDOWN); // Only FORMAT_HTML is filtered, see {@link testable_filter_emoticon}.
+        $this->assertEquals($expected, $filter->filter('(grr)', $options));
 
-    /**
-     * Tests the filter doesn't break anything if activated but no emoticons available.
-     *
-     */
-    public function test_filter_emptyemoticons() {
-        global $CFG;
-        $this->resetAfterTest();
-        // Empty the emoticons array.
-        $CFG->emoticons = null;
+        $options = array('originalformat' => FORMAT_PLAIN); // Only FORMAT_HTML is filtered, see {@link testable_filter_emoticon}.
+        $this->assertEquals($expected, $filter->filter('(grr)', $options));
 
-        $filter = new filter_emoticon(context_system::instance(), array('originalformat' => FORMAT_HTML));
-
-        $input = '(grr)';
-        $expected = '(grr)';
-
-        $this->assertEquals($expected, $filter->filter($input, [
-            'originalformat' => FORMAT_HTML,
-        ]));
+        // And texts matching target formats are filtered.
+        $expected = '<img class="icon emoticon" alt="angry" title="angry" src="https://www.example.com/moodle/theme/image.php/_s/boost/core/1/s/angry" />';
+        $options = array('originalformat' => FORMAT_HTML); // Only FORMAT_HTML is filtered, see {@link testable_filter_emoticon}.
+        $this->assertEquals($expected, $filter->filter('(grr)', $options));
     }
 }
 
@@ -175,9 +65,6 @@ class filter_emoticon_testcase extends advanced_testcase {
  */
 class testable_filter_emoticon extends filter_emoticon {
     public function __construct() {
-        // Reset static emoticon caches.
-        parent::$emoticontexts = array();
-        parent::$emoticonimgs = array();
         // Use this context for filtering.
         $this->context = context_system::instance();
         // Define FORMAT_HTML as only one filtering in DB.

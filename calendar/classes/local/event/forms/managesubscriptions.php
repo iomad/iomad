@@ -40,10 +40,9 @@ class managesubscriptions extends \moodleform {
      * Defines the form used to add calendar subscriptions.
      */
     public function definition() {
-        global $PAGE;
         $mform = $this->_form;
-        $eventtypes = calendar_get_allowed_event_types();
-        if (in_array(true, $eventtypes, true) === false) {
+        $eventtypes = calendar_get_all_allowed_types();
+        if (empty($eventtypes)) {
             print_error('nopermissiontoupdatecalendar');
         }
 
@@ -78,18 +77,15 @@ class managesubscriptions extends \moodleform {
         $mform->addElement('filepicker', 'importfile', get_string('importfromfile', 'calendar'), null, array('accepted_types' => '.ics'));
 
         // Disable appropriate elements depending on import from value.
-        $mform->hideIf('pollinterval', 'importfrom', 'eq', CALENDAR_IMPORT_FROM_FILE);
-        $mform->hideIf('url',  'importfrom', 'eq', CALENDAR_IMPORT_FROM_FILE);
-        $mform->hideIf('importfile', 'importfrom', 'eq', CALENDAR_IMPORT_FROM_URL);
+        $mform->disabledIf('pollinterval', 'importfrom', 'eq', CALENDAR_IMPORT_FROM_FILE);
+        $mform->disabledIf('url',  'importfrom', 'eq', CALENDAR_IMPORT_FROM_FILE);
+        $mform->disabledIf('importfile', 'importfrom', 'eq', CALENDAR_IMPORT_FROM_URL);
 
         // Add the select elements for the available event types.
         $this->add_event_type_elements($mform, $eventtypes);
 
-        // Eventtype: 0 = user, 1 = site, anything else = course ID.
+        // Eventtype: 0 = user, 1 = global, anything else = course ID.
         $mform->addElement('submit', 'add', get_string('add'));
-
-        // Add the javascript required to enhance this mform.
-        $PAGE->requires->js_call_amd('core_calendar/event_form', 'init', [$mform->getAttribute('id')]);
     }
 
     /**
@@ -104,10 +100,9 @@ class managesubscriptions extends \moodleform {
 
         $errors = parent::validation($data, $files);
 
+        $coursekey = isset($data['groupcourseid']) ? 'groupcourseid' : 'courseid';
+        $eventtypes = calendar_get_all_allowed_types();
         $eventtype = isset($data['eventtype']) ? $data['eventtype'] : null;
-        $coursekey = ($eventtype == 'group') ? 'groupcourseid' : 'courseid';
-        $courseid = (!empty($data[$coursekey])) ? $data[$coursekey] : null;
-        $eventtypes = calendar_get_allowed_event_types($courseid);
 
         if (empty($eventtype) || !isset($eventtypes[$eventtype])) {
             $errors['eventtype'] = get_string('invalideventtype', 'calendar');

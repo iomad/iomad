@@ -46,7 +46,7 @@ $string['dbprefix'] = 'テーブル接頭辞';
 $string['dirroot'] = 'Moodleディレクトリ';
 $string['environmenthead'] = 'あなたの環境を確認しています ...';
 $string['environmentsub2'] = 'それぞれのMoodleリリースにはPHPバージョンの最小必要条件および多くの必須PHP拡張モジュールがあります。完全な環境チェックはインストールおよびアップグレードごとに実行されます。新しいPHPバージョンのインストールまたはPHP拡張モジュールの有効化に関して分からない場合、あなたのサーバ管理者にご連絡ください。';
-$string['errorsinenvironment'] = '環境チェックに失敗しました!';
+$string['errorsinenvironment'] = '環境チェックが失敗しました!';
 $string['installation'] = 'インストレーション';
 $string['langdownloaderror'] = '残念ですが、言語「 {$a} 」をダウンロードできませんでした。インストール処理は英語で継続されます。';
 $string['memorylimithelp'] = '<p>現在、サーバのPHPメモリ制限が {$a} に設定されています。</p>
@@ -57,7 +57,7 @@ $string['memorylimithelp'] = '<p>現在、サーバのPHPメモリ制限が {$a}
 <ol>
 <li>あなたがリコンパイル可能な場合、PHPを<i>--enable-memory-limit</i>オプションでコンパイルしてください。これにより、Moodle自身がメモリ制限を設定することが可能になります。</li>
 <li>あなたがphp.iniファイルにアクセスできる場合、<b>memory_limit</b>設定を40Mのように変更することができます。php.iniファイルにアクセスできない場合、管理者に変更を依頼してください。</li>
-<li>いくつかのPHPサーバでは以下の行を含む.htaccessファイルをMoodleディレクトリに作成することができます:
+<li>いくつかのPHPサーバでは下記の行を含む.htaccessファイルをMoodleディレクトリに作成することができます:
 <blockquote><div>php_value memory_limit 40M</div></blockquote>
 <p>しかし、この設定が<b>すべての</b>PHPページの動作を妨げる場合もあります。ページ閲覧中にエラーが表示される場合、.htaccessファイルを削除してください。</p></li>
 </ol>';
@@ -73,9 +73,9 @@ $string['pathssubdataroot'] = '<p>ユーザによってアップロードされ�
 <p>ウェブからは直接アクセスできないようにしてください。</p>
 <p>現在ディレクトリが存在しない場合、インストレーションプロセスは作成を試みます。</p';
 $string['pathssubdirroot'] = '<p>Moodleコードを含むディレクトリに関するフルパスです。</p>';
-$string['pathssubwwwroot'] = '<p>Moodleにアクセスできるフルウェブアドレスです。例えばユーザがブラウザのアドレスバーに入力してMoodleにアクセスするためのアドレスです。</p>
+$string['pathssubwwwroot'] = '<p>Moodleにアクセスすることのできるフルウェブアドレスです。例えばユーザがブラウザのアドレスバーに入力してMoodleにアクセスするためのアドレスです。</p>
 
-<p>複数アドレスを使用したMoodleへのアクセスはできません。あなたのサイトに複数アドレスからアクセスできる場合、最も簡単なアドレスを選択して、すべてのアドレスにパーマネントリダイレクトを設定してください。</p>
+<p>複数アドレスを使用してMoodleにアクセスすることはできません。あなたのサイトに複数アドレスからアクセスできる場合、最も簡単なアドレスを選択して、すべてのアドレスにパーマネントリダイレクトを設定してください。</p>
 
 <p>あなたのサイトにインターネットおよび内部ネットワーク (イントラネットと呼ばれます) からアクセスできる場合、ここではパブリックアドレスを使用してください。</p>
 
@@ -91,7 +91,7 @@ $string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
 $string['welcomep20'] = 'インストールが正常に完了して、あなたのコンピュータで <strong>{$a->packname} {$a->packversion}</strong> パッケージが起動されたため、このページが表示されています。おめでとうございます!';
 $string['welcomep30'] = 'このリリース <strong>{$a->installername}</strong> には<strong>Moodle</strong>で環境を作成するアプリケーションが含まれています。すなわち:';
 $string['welcomep40'] = 'パッケージには <strong>Moodle {$a->moodlerelease} ({$a->moodleversion})</strong> も含まれています。';
-$string['welcomep50'] = 'このパッケージ内のすべてのアプリケーションの使用は個別のライセンスによって規定されています。全体の<strong>{$a->installername}</strong>パッケージは<a href="https://www.opensource.org/docs/definition_plain.html">オープンソース</a>であり、<a href="https://www.gnu.org/copyleft/gpl.html">GPL</a>ライセンスの下で配布されています。';
+$string['welcomep50'] = 'このパッケージ内のすべてのアプリケーションの使用は個別のライセンスによって規定されています。全体の<strong>{$a->installername}</strong>パッケージは<a href="http://www.opensource.org/docs/definition_plain.html">オープンソース</a>であり、<a href="http://www.gnu.org/copyleft/gpl.html">GPL</a>ライセンスの下で配布されています。';
 $string['welcomep60'] = '次からのページはあなたのコンピュータに<strong>Moodle</strong>を簡単に設定およびセットアップする手順にしたがって進みます。あなたはデフォルトの設定を使用することも、必要に応じて任意で設定を変更することもできます。';
 $string['welcomep70'] = '<strong>Moodle</strong>のセットアップを続けるには「次へ」ボタンをクリックしてください。';
 $string['wwwroot'] = 'ウェブアドレス';

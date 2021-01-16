@@ -12,6 +12,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+/* global STROKEWEIGHT, SELECTOR, SELECTEDBORDERCOLOUR, SELECTEDFILLCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -211,6 +212,7 @@ Y.extend(ANNOTATION, Y.Base, {
 
             drawingregion.append(deletelink);
             deletelink.setData('annotation', this);
+            deletelink.setStyle('zIndex', '200');
 
             deletelink.on('click', this.remove, this);
             deletelink.on('key', this.remove, 'space,enter', this);

@@ -31,7 +31,6 @@ require_once("$CFG->libdir/grade/grade_scale.php");
 use context;
 use context_system;
 use context_course;
-use context_module;
 use context_helper;
 use context_user;
 use coding_exception;
@@ -49,7 +48,6 @@ use core_competency\external\competency_exporter;
 use core_competency\external\competency_framework_exporter;
 use core_competency\external\course_competency_exporter;
 use core_competency\external\course_competency_settings_exporter;
-use core_competency\external\course_module_competency_exporter;
 use core_competency\external\evidence_exporter;
 use core_competency\external\performance_helper;
 use core_competency\external\plan_exporter;
@@ -1276,9 +1274,9 @@ class external extends external_api {
 
         foreach ($apiresult as $cmrecord) {
             $one = new \stdClass();
-            $exporter = new competency_exporter($cmrecord['competency'], ['context' => $context]);
+            $exporter = new competency_exporter($cmrecord['competency']);
             $one->competency = $exporter->export($output);
-            $exporter = new course_module_competency_exporter($cmrecord['coursemodulecompetency'], ['context' => $context]);
+            $exporter = new course_module_competency_exporter($cmrecord['coursemodulecompetency']);
             $one->coursemodulecompetency = $exporter->export($output);
 
             $result[] = (array) $one;
@@ -1316,49 +1314,6 @@ class external extends external_api {
             'id' => $courseid,
         );
         return new external_function_parameters($params);
-    }
-
-    /**
-     * Returns description of count_course_module_competencies() parameters.
-     *
-     * @return \external_function_parameters
-     */
-    public static function count_course_module_competencies_parameters() {
-        $cmid = new external_value(
-            PARAM_INT,
-            'The course module id',
-            VALUE_REQUIRED
-        );
-        $params = array(
-            'cmid' => $cmid
-        );
-        return new external_function_parameters($params);
-    }
-
-    /**
-     * List the course modules using this competency (visible to this user) in this course.
-     *
-     * @param int $cmid The course module id to check.
-     * @return array
-     */
-    public static function count_course_module_competencies($cmid) {
-        $params = self::validate_parameters(self::count_course_module_competencies_parameters(), array(
-            'cmid' => $cmid
-        ));
-
-        $context = context_module::instance($params['cmid']);
-        self::validate_context($context);
-
-        return api::count_course_module_competencies($params['cmid']);
-    }
-
-    /**
-     * Returns description of count_course_module_competencies() result value.
-     *
-     * @return \external_description
-     */
-    public static function count_course_module_competencies_returns() {
-        return new external_value(PARAM_INT, 'The number of competencies found.');
     }
 
     /**

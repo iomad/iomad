@@ -40,13 +40,11 @@ class core_cache_renderer extends plugin_renderer_base {
     /**
      * Displays store summaries.
      *
-     * @param array $storeinstancesummaries information about each store instance,
-     *      as returned by cache_administration_helper::get_store_instance_summaries().
-     * @param array $storepluginsummaries information about each store plugin as
-     *      returned by cache_administration_helper::get_store_plugin_summaries().
+     * @param array $stores
+     * @param array $plugins
      * @return string HTML
      */
-    public function store_instance_summariers(array $storeinstancesummaries, array $storepluginsummaries) {
+    public function store_instance_summariers(array $stores, array $plugins) {
         $table = new html_table();
         $table->head = array(
             get_string('storename', 'cache'),
@@ -72,24 +70,24 @@ class core_cache_renderer extends plugin_renderer_base {
 
         $defaultstoreactions = get_string('defaultstoreactions', 'cache');
 
-        foreach ($storeinstancesummaries as $name => $storesummary) {
-            $actions = cache_administration_helper::get_store_instance_actions($name, $storesummary);
+        foreach ($stores as $name => $store) {
+            $actions = cache_administration_helper::get_store_instance_actions($name, $store);
             $modes = array();
-            foreach ($storesummary['modes'] as $mode => $enabled) {
+            foreach ($store['modes'] as $mode => $enabled) {
                 if ($enabled) {
                     $modes[] = get_string('mode_'.$mode, 'cache');
                 }
             }
 
             $supports = array();
-            foreach ($storesummary['supports'] as $support => $enabled) {
+            foreach ($store['supports'] as $support => $enabled) {
                 if ($enabled) {
                     $supports[] = get_string('supports_'.$support, 'cache');
                 }
             }
 
             $info = '';
-            if (!empty($storesummary['default'])) {
+            if (!empty($store['default'])) {
                 $info = $this->output->pix_icon('i/info', $defaultstoreactions, '', array('class' => 'icon'));
             }
             $htmlactions = array();
@@ -97,38 +95,38 @@ class core_cache_renderer extends plugin_renderer_base {
                 $htmlactions[] = $this->output->action_link($action['url'], $action['text']);
             }
 
-            $isready = $storesummary['isready'] && $storesummary['requirementsmet'];
+            $isready = $store['isready'] && $store['requirementsmet'];
             $readycell = new html_table_cell;
             if ($isready) {
                 $readycell->text = $this->output->pix_icon('i/valid', '1');
             }
 
-            $storename = $storesummary['name'];
-            if (!empty($storesummary['default'])) {
-                $storename = get_string('store_'.$storesummary['name'], 'cache');
+            $storename = $store['name'];
+            if (!empty($store['default'])) {
+                $storename = get_string('store_'.$store['name'], 'cache');
             }
-            if (!$isready && (int)$storesummary['mappings'] > 0) {
+            if (!$isready && (int)$store['mappings'] > 0) {
                 $readycell->text = $this->output->help_icon('storerequiresattention', 'cache');
                 $readycell->attributes['class'] = 'store-requires-attention';
             }
 
-            $lock = $storesummary['lock']['name'];
-            if (!empty($storesummary['lock']['default'])) {
-                $lock = get_string($storesummary['lock']['name'], 'cache');
+            $lock = $store['lock']['name'];
+            if (!empty($store['lock']['default'])) {
+                $lock = get_string($store['lock']['name'], 'cache');
             }
 
             $row = new html_table_row(array(
                 $storename,
-                get_string('pluginname', 'cachestore_'.$storesummary['plugin']),
+                get_string('pluginname', 'cachestore_'.$store['plugin']),
                 $readycell,
-                $storesummary['mappings'],
+                $store['mappings'],
                 join(', ', $modes),
                 join(', ', $supports),
                 $lock,
                 $info.join(', ', $htmlactions)
             ));
             $row->attributes['class'] = 'store-'.$name;
-            if ($storesummary['default']) {
+            if ($store['default']) {
                 $row->attributes['class'] .= ' default-store';
             }
             $table->data[] = $row;
@@ -142,13 +140,12 @@ class core_cache_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Displays plugin summaries.
+     * Displays plugin summaries
      *
-     * @param array $storepluginsummaries information about each store plugin as
-     *      returned by cache_administration_helper::get_store_plugin_summaries().
+     * @param array $plugins
      * @return string HTML
      */
-    public function store_plugin_summaries(array $storepluginsummaries) {
+    public function store_plugin_summaries(array $plugins) {
         $table = new html_table();
         $table->head = array(
             get_string('plugin', 'cache'),
@@ -168,7 +165,7 @@ class core_cache_renderer extends plugin_renderer_base {
         );
         $table->data = array();
 
-        foreach ($storepluginsummaries as $name => $plugin) {
+        foreach ($plugins as $name => $plugin) {
             $actions = cache_administration_helper::get_store_plugin_actions($name, $plugin);
 
             $modes = array();
@@ -211,15 +208,12 @@ class core_cache_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Displays definition summaries.
+     * Displays definition summaries
      *
-     * @param array $definitionsummaries information about each definition, as returned by
-     *      cache_administration_helper::get_definition_summaries().
-     * @param context $context the system context.
-     *
-     * @return string HTML.
+     * @param array $definitions
+     * @return string HTML
      */
-    public function definition_summaries(array $definitionsummaries, context $context) {
+    public function definition_summaries(array $definitions, context $context) {
         $table = new html_table();
         $table->head = array(
             get_string('definition', 'cache'),
@@ -228,8 +222,7 @@ class core_cache_renderer extends plugin_renderer_base {
             get_string('area', 'cache'),
             get_string('mappings', 'cache'),
             get_string('sharing', 'cache'),
-            get_string('canuselocalstore', 'cache'),
-            get_string('actions', 'cache')
+            get_string('actions', 'cache'),
         );
         $table->colclasses = array(
             'definition',
@@ -238,15 +231,14 @@ class core_cache_renderer extends plugin_renderer_base {
             'area',
             'mappings',
             'sharing',
-            'canuselocalstore',
             'actions'
         );
         $table->data = array();
 
-        core_collator::asort_array_of_arrays_by_key($definitionsummaries, 'name');
+        core_collator::asort_array_of_arrays_by_key($definitions, 'name');
 
         $none = new lang_string('none', 'cache');
-        foreach ($definitionsummaries as $id => $definition) {
+        foreach ($definitions as $id => $definition) {
             $actions = cache_administration_helper::get_definition_actions($context, $definition);
             $htmlactions = array();
             foreach ($actions as $action) {
@@ -259,13 +251,6 @@ class core_cache_renderer extends plugin_renderer_base {
                 $mapping = '<em>'.$none.'</em>';
             }
 
-            $uselocalcachecol = get_string('no');
-            if ($definition['mode'] != cache_store::MODE_REQUEST) {
-                if (isset($definition['canuselocalstore']) && $definition['canuselocalstore']) {
-                    $uselocalcachecol = get_string('yes');
-                }
-            }
-
             $row = new html_table_row(array(
                 $definition['name'],
                 get_string('mode_'.$definition['mode'], 'cache'),
@@ -273,7 +258,6 @@ class core_cache_renderer extends plugin_renderer_base {
                 $definition['area'],
                 $mapping,
                 join(', ', $definition['selectedsharingoption']),
-                $uselocalcachecol,
                 join(', ', $htmlactions)
             ));
             $row->attributes['class'] = 'definition-'.$definition['component'].'-'.$definition['area'];

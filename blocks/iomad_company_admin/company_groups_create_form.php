@@ -233,7 +233,7 @@ $urlparams = array();
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
-$companylist = new moodle_url('/my', $urlparams);
+$companylist = new moodle_url('/local/iomad_dashboard/index.php', $urlparams);
 
 $linktext = get_string('managegroups', 'block_iomad_company_admin');
 
@@ -245,21 +245,20 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 
-// get output renderer
+// get output renderer                                                                                                                                                                                         
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
+$PAGE->set_heading(get_string('name', 'local_iomad_dashboard') . " - $linktext");
+
+// Build the nav bar.
+company_admin_fix_breadcrumb($PAGE, $linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element.
+// Parameter is name of proper select form element. 
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid'));
 
 $courseform = new company_ccu_courses_form($PAGE->url, $context, $companyid, $selectedcourse);
@@ -273,7 +272,7 @@ $courseform->set_data(array('selectedcourse' => $selectedcourse));
 if (!empty($selectedcourse)) {
     if ($mform->is_cancelled()) {
         redirect($companylist);
-
+    
     } else if ($data = $mform->get_data()) {
         if (isset($data->create)) {
             if (!empty($deleteids)) {
@@ -283,7 +282,7 @@ if (!empty($selectedcourse)) {
             }
             $editform = new group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
             echo $output->header();
-
+    
             $editform->display();
             echo $output->footer();
             die;
@@ -311,7 +310,7 @@ if (!empty($selectedcourse)) {
             $mform->display();
             echo $output->footer();
             die;
-
+    
         } else if (isset($data->edit)) {
             // Editing an existing group..
             if (!empty($groupid)) {
@@ -321,14 +320,14 @@ if (!empty($selectedcourse)) {
                                           'name' => $grouprecord->name,
                                           'description' => $grouprecord->description));
                 echo $output->header();
-
+    
                 // Check the department is valid.
                 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
                     print_error('invaliddepartment', 'block_iomad_company_admin');
-                }
-
+                }   
+    
                 $editform->display();
-
+    
                 echo $output->footer();
                 die;
             } else {
@@ -336,34 +335,34 @@ if (!empty($selectedcourse)) {
                 // Check the department is valid.
                 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
                     print_error('invaliddepartment', 'block_iomad_company_admin');
-                }
-
+                }   
+    
                 echo get_string('departmentnoselect', 'block_iomad_company_admin');
                 $mform->display();
                 echo $output->footer();
                 die;
             }
-
+    
         }
     } else if ($createdata = $editform->get_data()) {
-
+    
         // Create or update the department.
         company::create_company_course_group($companyid,
                                              $selectedcourse,
                                              $createdata);
-
+        
         $mform = new course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
         // Redisplay the form.
         echo $output->header();
-
+    
         // Check the department is valid.
         if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
             print_error('invaliddepartment', 'block_iomad_company_admin');
-        }
-
+        }   
+    
         $courseform->display();
         $mform->display();
-
+    
         echo $output->footer();
         die;
     }
@@ -373,7 +372,7 @@ echo $output->header();
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
-}
+}   
 
 $courseform->display();
 if (!empty($selectedcourse)) {

@@ -1,4 +1,4 @@
-<?php
+<?php   
  /* CAT:Surface chart*/
 
  /* pChart library inclusions */
@@ -21,8 +21,8 @@
 
  /* Add a border to the picture */
  $myPicture->drawRectangle(0,0,399,399,array("R"=>0,"G"=>0,"B"=>0));
-
- /* Write the picture title */
+ 
+ /* Write the picture title */ 
  $myPicture->setFontProperties(array("FontName"=>"../fonts/Silkscreen.ttf","FontSize"=>6));
  $myPicture->drawText(10,13,"pSurface() :: 2D surface charts",array("R"=>255,"G"=>255,"B"=>255));
 
@@ -54,6 +54,7 @@
 
  /* Draw the contour with a threshold of 50 */
  $mySurface->drawContour(50,array("R"=>0,"G"=>0,"B"=>0));
+
 
  /* Render the picture (choose the best way) */
  $myPicture->autoOutput("pictures/example.surface.png");

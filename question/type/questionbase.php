@@ -106,9 +106,6 @@ abstract class question_definition {
     /** @var boolean whethre this question has been deleted/hidden in the question bank. */
     public $hidden = 0;
 
-    /** @var string question idnumber. */
-    public $idnumber;
-
     /** @var integer timestamp when this question was created. */
     public $timecreated;
 
@@ -472,17 +469,6 @@ class question_information_item extends question_definition {
  */
 interface question_manually_gradable {
     /**
-     * Use by many of the behaviours to determine whether the student
-     * has provided enough of an answer for the question to be graded automatically,
-     * or whether it must be considered aborted.
-     *
-     * @param array $response responses, as returned by
-     *      {@link question_attempt_step::get_qt_data()}.
-     * @return bool whether this response can be graded.
-     */
-    public function is_gradable_response(array $response);
-
-    /**
      * Used by many of the behaviours, to work out whether the student's
      * response to the question is complete. That is, whether the question attempt
      * should move to the COMPLETE or INCOMPLETE state.
@@ -508,20 +494,10 @@ interface question_manually_gradable {
 
     /**
      * Produce a plain text summary of a response.
-     * @param array $response a response, as might be passed to {@link grade_response()}.
+     * @param $response a response, as might be passed to {@link grade_response()}.
      * @return string a plain text summary of that response, that could be used in reports.
      */
     public function summarise_response(array $response);
-
-    /**
-     * If possible, construct a response that could have lead to the given
-     * response summary. This is basically the opposite of {@link summarise_response()}
-     * but it is intended only to be used for testing.
-     *
-     * @param string $summary a string, which might have come from summarise_response
-     * @return array a response that could have lead to that.
-     */
-    public function un_summarise_response(string $summary);
 
     /**
      * Categorise the student's response according to the categories defined by
@@ -578,6 +554,17 @@ class question_classified_response {
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 interface question_automatically_gradable extends question_manually_gradable {
+    /**
+     * Use by many of the behaviours to determine whether the student
+     * has provided enough of an answer for the question to be graded automatically,
+     * or whether it must be considered aborted.
+     *
+     * @param array $response responses, as returned by
+     *      {@link question_attempt_step::get_qt_data()}.
+     * @return bool whether this response can be graded.
+     */
+    public function is_gradable_response(array $response);
+
     /**
      * In situations where is_gradable_response() returns false, this method
      * should generate a description of what the problem is.
@@ -650,15 +637,6 @@ abstract class question_with_responses extends question_definition
     public function classify_response(array $response) {
         return array();
     }
-
-    public function is_gradable_response(array $response) {
-        return $this->is_complete_response($response);
-    }
-
-    public function un_summarise_response(string $summary) {
-        throw new coding_exception('This question type (' . get_class($this) .
-                ' does not implement the un_summarise_response testing method.');
-    }
 }
 
 
@@ -672,6 +650,10 @@ abstract class question_graded_automatically extends question_with_responses
         implements question_automatically_gradable {
     /** @var Some question types have the option to show the number of sub-parts correct. */
     public $shownumcorrect = false;
+
+    public function is_gradable_response(array $response) {
+        return $this->is_complete_response($response);
+    }
 
     public function get_right_answer_summary() {
         $correctresponse = $this->get_correct_response();

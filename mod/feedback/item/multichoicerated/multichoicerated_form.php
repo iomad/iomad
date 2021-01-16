@@ -54,12 +54,12 @@ class feedback_multichoicerated_form extends feedback_item_form {
                             get_string('adjustment', 'feedback').'&nbsp;',
                             array(0 => get_string('vertical', 'feedback'),
                                   1 => get_string('horizontal', 'feedback')));
-        $mform->hideIf('horizontal', 'subtype', 'eq', 'd');
+        $mform->disabledIf('horizontal', 'subtype', 'eq', 'd');
 
         $mform->addElement('selectyesno',
                            'hidenoselect',
                            get_string('hide_no_select_option', 'feedback'));
-        $mform->hideIf('hidenoselect', 'subtype', 'eq', 'd');
+        $mform->disabledIf('hidenoselect', 'subtype', 'eq', 'd');
 
         $mform->addElement('selectyesno',
                            'ignoreempty',

@@ -220,11 +220,6 @@ class restore_lesson_activity_structure_step extends restore_activity_structure_
             $data->groupid = $this->get_mappingid('group', $data->groupid);
         }
 
-        // Skip if there is no user and no group data.
-        if (empty($data->userid) && empty($data->groupid)) {
-            return;
-        }
-
         $data->available = $this->apply_date_offset($data->available);
         $data->deadline = $this->apply_date_offset($data->deadline);
 
@@ -258,7 +253,6 @@ class restore_lesson_activity_structure_step extends restore_activity_structure_
         $this->add_related_files('mod_lesson', 'page_answers', 'lesson_answer');
         $this->add_related_files('mod_lesson', 'page_responses', 'lesson_answer');
         $this->add_related_files('mod_lesson', 'essay_responses', 'lesson_attempt');
-        $this->add_related_files('mod_lesson', 'essay_answers', 'lesson_attempt');
 
         // Remap all the restored prevpageid and nextpageid now that we have all the pages and their mappings
         $rs = $DB->get_recordset('lesson_pages', array('lessonid' => $this->task->get_activityid()),

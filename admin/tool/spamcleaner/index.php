@@ -41,6 +41,7 @@ $ignore = optional_param('ignore', '', PARAM_RAW);
 $reset = optional_param('reset', '', PARAM_RAW);
 $id = optional_param('id', '', PARAM_INT);
 
+require_login();
 admin_externalpage_setup('toolspamcleaner');
 
 // Delete one user
@@ -233,19 +234,15 @@ function search_spammers($keywords) {
     $keywordlist = implode(', ', $keywords);
     echo $OUTPUT->box(get_string('spamresult', 'tool_spamcleaner').s($keywordlist)).' ...';
 
-    $recordsets = [
-        $spamusers_desc,
-        $spamusers_blog,
-        $spamusers_blogsub,
-        $spamusers_comment,
-        $spamusers_message,
-        $spamusers_forumpost,
-        $spamusers_forumpostsub
-    ];
-    print_user_list($recordsets, $keywords);
-    foreach ($recordsets as $rs) {
-        $rs->close();
-    }
+    print_user_list(array($spamusers_desc,
+                          $spamusers_blog,
+                          $spamusers_blogsub,
+                          $spamusers_comment,
+                          $spamusers_message,
+                          $spamusers_forumpost,
+                          $spamusers_forumpostsub
+                         ),
+                         $keywords);
 }
 
 

@@ -44,21 +44,13 @@ class workshop_submission_form extends moodleform {
         $mform->addRule('title', null, 'required', null, 'client');
         $mform->addRule('title', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        if ($workshop->submissiontypetext != WORKSHOP_SUBMISSION_TYPE_DISABLED) {
-            $mform->addElement('editor', 'content_editor', get_string('submissioncontent', 'workshop'), null, $contentopts);
-            $mform->setType('content_editor', PARAM_RAW);
-            if ($workshop->submissiontypetext == WORKSHOP_SUBMISSION_TYPE_REQUIRED) {
-                $mform->addRule('content_editor', null, 'required', null, 'client');
-            }
-        }
+        $mform->addElement('editor', 'content_editor', get_string('submissioncontent', 'workshop'), null, $contentopts);
+        $mform->setType('content', PARAM_RAW);
 
-        if ($workshop->submissiontypefile != WORKSHOP_SUBMISSION_TYPE_DISABLED) {
+        if ($workshop->nattachments > 0) {
             $mform->addElement('static', 'filemanagerinfo', get_string('nattachments', 'workshop'), $workshop->nattachments);
             $mform->addElement('filemanager', 'attachment_filemanager', get_string('submissionattachment', 'workshop'),
                                 null, $attachmentopts);
-            if ($workshop->submissiontypefile == WORKSHOP_SUBMISSION_TYPE_REQUIRED) {
-                $mform->addRule('attachment_filemanager', null, 'required', null, 'client');
-            }
         }
 
         $mform->addElement('hidden', 'id', $current->id);

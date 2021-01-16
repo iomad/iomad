@@ -1,132 +1,191 @@
-// Bootstrap variables
-$white:    #fff !default;
-$gray-100: #f8f9fa !default;
-$gray-200: #e9ecef !default;
-$gray-300: #dee2e6 !default;
-$gray-400: #ced4da !default;
-$gray-500: #8f959e !default;
-$gray-600: #6c757d !default;
-$gray-700: #495057 !default;
-$gray-800: #343a40 !default;
-$gray-900: #212529 !default;
-$black:    #000 !default;
+/* stylelint-disable color-hex-length */
+/**
+ * Default preset file.
+ *
+ * Use this space to customise variables, create mixins and override SCSS.
+ */
 
-$blue:    #0f6fc5 !default;
-$indigo:  #6610f2 !default;
-$purple:  #613d7c !default;
-$pink:    #e83e8c !default;
-$red:     #ca3120 !default;
-$orange:  #f0ad4e !default;
-$yellow:  #ff7518 !default;
-$green:   #357a32 !default;
-$teal:    #20c997 !default;
-$cyan:    #008196 !default;
+// Colors
+$gray-dark:                 #373a3c !default;
+$gray:                      #55595c !default;
+$gray-light:                #818a91 !default;
+$gray-lighter:              #eceeef !default;
+$gray-lightest:             #f7f7f9 !default;
 
-$primary:       $blue !default;
-$success:       $green !default;
-$info:          $cyan !default;
-$warning:       $orange !default;
-$danger:        $red !default;
-$secondary:     $gray-400 !default;
+$brand-primary:             #1177d1 !default;
+$brand-info:                #ad53b2 !default;
+$brand-success:             #77b300 !default;
+$brand-warning:             #ff8800 !default;
+$brand-danger:              #ff4136 !default;
+$brand-inverse:             $gray-dark !default;
+$navbar-height:             50px !default;
 
-$info-outline:    #1f7e9a;
-$warning-outline: #a6670e;
-
-// Options
-$enable-rounded: false !default;
-$enable-responsive-font-sizes: true !default;
+// Spacing
+$spacer:   1rem !default;
+$spacer-x: $spacer !default;
+$spacer-y: $spacer !default;
+$border-width: 1px !default;
 
 // Body
-$body-color:    $gray-900 !default;
+$body-bg:    #f4f4f4 !default;
+$body-color: #262626 !default;
 
-// Fonts
-$font-size-base: 0.9375rem !default;
-$rfs-base-font-size: 0.9rem !default;
-$headings-font-weight:   300 !default;
+// Typography
+$font-family-sans-serif: "Open Sans", "Helvetica Neue", Arial, sans-serif !default;
+$font-size-root: 14px !default;
+
+// Tables
+$table-bg:                      transparent !default;
+$table-bg-accent:               #fafafa !default;
+$table-bg-hover:                lighten($brand-primary, 55%) !default;
+$table-bg-active:               $table-bg-hover !default;
+$table-border-color:            #f4f4f4 !default;
+
+// Dropdowns
+$dropdown-border-color:          #e2e2e2 !default;
+$dropdown-link-color:            $body-color;
 
 // Navbar
-$navbar-dark-hover-color:           rgba($white, 1) !default;
-$navbar-light-color:                rgba($black, 0.6) !default;
-$navbar-light-hover-color:          rgba($black, .9) !default;
+$navbar-light-color:                rgba(0, 0, 0, .535) !default;
+$navbar-light-hover-color:          $brand-primary !default;
+$navbar-light-active-color:         $brand-primary !default;
+
+// Cards
+$card-border-radius:       0 !default;
+$card-border-color:        rgba(238, 238, 238, 1) !default;
 
 // Breadcrumbs
-$breadcrumb-padding-y:              .25rem !default;
-$breadcrumb-padding-x:              0 !default;
-$breadcrumb-item-padding:           .5rem !default;
-$breadcrumb-margin-bottom:          0 !default;
-$breadcrumb-bg:                     transparent !default;
+$breadcrumb-bg:                 transparent !default;
+$breadcrumb-padding-x:          0 !default;
 $breadcrumb-divider: "/" !default;
 $breadcrumb-divider-rtl: "/" !default;
 
-// Floating elements positions
-$gototop-bottom-position: 50px !default;
-
-// Alerts
-$alert-border-width:                0 !default;
-
-$card-group-margin: .25rem;
-
-// Custom control size
-$custom-control-indicator-size: 1.25rem;
-
-$input-btn-focus-color: rgba($primary, .75) !default;
-
-$input-border-color: $gray-500 !default;
-
-$dropdown-link-hover-color: $white;
-$dropdown-link-hover-bg: $primary;
-
-// stylelint-disable
-$theme-colors: () !default;
-$theme-colors: map-merge((
-    primary: $primary,
-    secondary: $secondary,
-    success: $success,
-    info: $info,
-    warning: $warning,
-    danger: $danger,
-), $theme-colors);
-// stylelint-enable
-
-// Import FontAwesome.
-@import "fontawesome";
-
-// Import All of Bootstrap
-@import "bootstrap";
-
-// Import Core moodle CSS
+// Import everything.
 @import "moodle";
 
-// Preset CSS
+/**
+ * Navigation bar identity.
+ */
+.navbar-light {
+    background-color: #fff;
+    border-bottom: $border-width solid #e5e5e5;
 
-body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .navbar-brand {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        margin-right: $spacer * 2;
+        color: #fff;
+        background-color: $brand-primary;
+        @include hover-focus {
+            color: #fff;
+        }
+        &.has-logo {
+            color: $brand-primary;
+            background-color: transparent;
+            @include hover-focus {
+                color: $brand-primary;
+            }
+            padding-top: 0;
+        }
+    }
+
+    .navbar-nav {
+        .nav-item + .nav-item {
+            margin-left: $spacer * 2;
+        }
+        .nav-link {
+            font-size: $font-size-sm;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    }
 }
 
-.navbar {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .08);
+/**
+ * Styling the dropdown menus.
+ */
+.dropdown-menu {
+    font-size: 14px;
+    border-radius: 0;
+    .dropdown-item {
+        padding-top: 8px;
+        padding-bottom: 8px;
+        border-bottom: $border-width solid $dropdown-border-color;
+        &:last-child {
+            border-bottom: 0;
+        }
+    }
+    .dropdown-divider {
+        display: none;
+    }
 }
 
-// Rounded user pictures
+/**
+ * User picture.
+ */
 .userpicture {
     border-radius: 50%;
 }
 
-// Reset the default styling back to the bootstrap defaults for
-// the secondary outline button because gray-200 is much too light
-// for an outline button.
-.btn-outline-secondary {
-    @include button-outline-variant($gray-600);
-    border-color: $gray-600;
+/**
+ * For background in content areas.
+ */
+#page.container-fluid {
+    padding: 0 (2 * $spacer);
 }
 
-.btn-outline-info {
-    @include button-outline-variant($info-outline);
+#block-region-side-pre {
+    padding-left: 0;
 }
 
-.btn-outline-warning {
-    @include button-outline-variant($warning-outline);
+/**
+ * Dashboard styling.
+ */
+#page-my-index {
+    #region-main {
+        background-color: transparent;
+        border: 0;
+        padding: 0;
+    }
 }
 
-@include bg-variant(".bg-gray", $gray-200, true);
+/**
+ * Blocks.
+ */
+.block-region .card-block {
+    .card-title {
+        padding-bottom: ($spacer/2);
+        font-size: 1.143rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+}
+
+/**
+ * Navigation.
+ */
+.block_navigation,
+.block_settings {
+    .block_tree .tree_item {
+        margin: ($spacer/2) 0;
+    }
+}
+
+/**
+ * Form styles.
+ */
+
+.form-group {
+    margin-top: ($spacer/2);
+}
+
+.form-inline .form-group {
+    margin-top: 0;
+}
+
+

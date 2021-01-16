@@ -15,6 +15,17 @@
 
 .userprofile .profile_tree {
     column-count: 2;
+
+    section {
+        @extend .card;
+        @extend .card-block;
+        display: inline-block;
+        width: 100%;
+
+        h3 {
+            @extend .lead;
+        }
+    }
 }
 
 // This rule overrides the automatic no-overflow on the participants table. It kills the auto-complete.
@@ -205,6 +216,10 @@
     }
 }
 
+.groupinfobox {
+    @extend .card;
+}
+
 .groupinfobox .left {
     padding: 10px;
     width: 100px;
@@ -298,15 +313,4 @@
 
 .user-enroller-panel {
     width: 600px;
-}
-
-[data-filterverbfor],
-[data-filterregion="filter"]:last-child [data-filterregion="joinadverb"] {
-    display: none;
-}
-
-[data-filterverb="0"] [data-filterverbfor="0"],
-[data-filterverb="1"] [data-filterverbfor="1"],
-[data-filterverb="2"] [data-filterverbfor="2"] {
-    display: block;
 }

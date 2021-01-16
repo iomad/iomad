@@ -219,7 +219,7 @@ function behat_clean_init_config() {
         'wwwroot', 'dataroot', 'dirroot', 'admin', 'directorypermissions', 'filepermissions',
         'umaskpermissions', 'dbtype', 'dblibrary', 'dbhost', 'dbname', 'dbuser', 'dbpass', 'prefix',
         'dboptions', 'proxyhost', 'proxyport', 'proxytype', 'proxyuser', 'proxypassword',
-        'proxybypass', 'pathtogs', 'pathtophp', 'pathtodu', 'aspellpath', 'pathtodot', 'skiplangupgrade',
+        'proxybypass', 'theme', 'pathtogs', 'pathtodu', 'aspellpath', 'pathtodot', 'skiplangupgrade',
         'altcacheconfigpath', 'pathtounoconv', 'alternative_file_system_class', 'pathtopython'
     ));
 
@@ -461,40 +461,26 @@ function behat_get_run_process() {
             }
         }
     } else if (defined('BEHAT_TEST') || defined('BEHAT_UTIL')) {
-        $behatconfig = '';
-
         if ($match = preg_filter('#--run=(.+)#', '$1', $argv)) {
-            // Try to guess the run from the existence of the --run arg.
             $behatrunprocess = reset($match);
-
-        } else {
-            // Try to guess the run from the existence of the --config arg. Note there are 2 alternatives below.
-            if ($k = array_search('--config', $argv)) {
-                // Alternative 1: --config /path/to/config.yml => (next arg, pick it).
-                $behatconfig = str_replace("\\", "/", $argv[$k + 1]);
-
-            } else if ($config = preg_filter('#^(?:--config[ =]*)(.+)$#', '$1', $argv)) {
-                // Alternative 2: --config=/path/to/config.yml => (same arg, just get the path part).
-                $behatconfig = str_replace("\\", "/", reset($config));
-            }
-
+        } else if ($k = array_search('--config', $argv)) {
+            $behatconfig = str_replace("\\", "/", $argv[$k + 1]);
             // Try get it from config if present.
-            if ($behatconfig) {
-                if (!empty($CFG->behat_parallel_run)) {
-                    foreach ($CFG->behat_parallel_run as $run => $parallelconfig) {
-                        if (!empty($parallelconfig['behat_dataroot']) &&
-                                $parallelconfig['behat_dataroot'] . '/behat/behat.yml' == $behatconfig) {
-                            $behatrunprocess = $run + 1; // We start process from 1.
-                            break;
-                        }
+            if (!empty($CFG->behat_parallel_run)) {
+                foreach ($CFG->behat_parallel_run as $run => $parallelconfig) {
+                    if (!empty($parallelconfig['behat_dataroot']) &&
+                        $parallelconfig['behat_dataroot'] . '/behat/behat.yml' == $behatconfig) {
+
+                        $behatrunprocess = $run + 1; // We start process from 1.
+                        break;
                     }
                 }
-                // Check if default behat dataroot increment was done.
-                if (empty($behatrunprocess)) {
-                    $behatdataroot = str_replace("\\", "/", $CFG->behat_dataroot . '/' . BEHAT_PARALLEL_SITE_NAME);
-                    $behatrunprocess = preg_filter("#^{$behatdataroot}" . "(.+?)[/|\\\]behat[/|\\\]behat\.yml#", '$1',
-                        $behatconfig);
-                }
+            }
+            // Check if default behat datroot increment was done.
+            if (empty($behatrunprocess)) {
+                $behatdataroot = str_replace("\\", "/", $CFG->behat_dataroot . '/' . BEHAT_PARALLEL_SITE_NAME);
+                $behatrunprocess = preg_filter("#^{$behatdataroot}" . "(.+?)[/|\\\]behat[/|\\\]behat\.yml#", '$1',
+                    $behatconfig);
             }
         }
     }
@@ -517,14 +503,7 @@ function cli_execute_parallel($cmds, $cwd = null, $delay = 0) {
 
     // Create child process.
     foreach ($cmds as $name => $cmd) {
-        if (method_exists('\\Symfony\\Component\\Process\\Process', 'fromShellCommandline')) {
-            // Process 4.2 and up.
-            $process = Symfony\Component\Process\Process::fromShellCommandline($cmd);
-        } else {
-            // Process 4.1 and older.
-            $process = new Symfony\Component\Process\Process(null);
-            $process->setCommandLine($cmd);
-        }
+        $process = new Symfony\Component\Process\Process($cmd);
 
         $process->setWorkingDirectory($cwd);
         $process->setTimeout(null);

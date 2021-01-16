@@ -102,12 +102,12 @@ trait behat_named_selector {
     }
 
     /**
-     * Fetch the replacement name of a deprecated selector.
+     * Fetch the replacement name of a deprecated selector if any exists.
      *
      * @param string $selector
-     * @return bool
+     * @return string
      */
-    public static function get_deprecated_replacement(string $selector): ?string {
+    public static function get_deprecated_replacement(string $selector) {
         return static::$deprecatedselectors[$selector];
     }
 }

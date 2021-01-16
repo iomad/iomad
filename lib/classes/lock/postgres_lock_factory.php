@@ -33,8 +33,9 @@ defined('MOODLE_INTERNAL') || die();
  * Postgres locking implementation using advisory locks. Some important points. Postgres has
  * 2 different forms of lock functions, some accepting a single int, and some accepting 2 ints. This implementation
  * uses the 2 int version so that it uses a separate namespace from the session locking. The second note,
- * is because postgres uses integer keys for locks, we first need to map strings to a unique integer. This is done
- * using a prefix of a sha1 hash converted to an integer.
+ * is because postgres uses integer keys for locks, we first need to map strings to a unique integer. This is
+ * done by storing the strings in the lock_db table and using the auto-id returned. There is a static cache for
+ * id's in this function.
  *
  * @package   core
  * @category  lock
@@ -126,20 +127,44 @@ class postgres_lock_factory implements lock_factory {
     }
 
     /**
-     * This function generates the unique index for a specific lock key using
-     * a sha1 prefix converted to decimal.
+     * This function generates the unique index for a specific lock key.
+     * Once an index is assigned to a key, it never changes - so this is
+     * statically cached.
      *
      * @param string $key
      * @return int
      * @throws \moodle_exception
      */
     protected function get_index_from_key($key) {
+        if (isset(self::$lockidcache[$key])) {
+            return self::$lockidcache[$key];
+        }
 
-        // A prefix of 7 hex chars is chosen as fffffff is the largest hex code
-        // which when converted to decimal (268435455) fits inside a 4 byte int
-        // which is the second param to pg_try_advisory_lock().
-        $hash = substr(sha1($key), 0, 7);
-        $index = hexdec($hash);
+        $index = 0;
+        $record = $this->db->get_record('lock_db', array('resourcekey' => $key));
+        if ($record) {
+            $index = $record->id;
+        }
+
+        if (!$index) {
+            $record = new \stdClass();
+            $record->resourcekey = $key;
+            try {
+                $index = $this->db->insert_record('lock_db', $record);
+            } catch (\dml_exception $de) {
+                // Race condition - never mind - now the value is guaranteed to exist.
+                $record = $this->db->get_record('lock_db', array('resourcekey' => $key));
+                if ($record) {
+                    $index = $record->id;
+                }
+            }
+        }
+
+        if (!$index) {
+            throw new \moodle_exception('Could not generate unique index for key');
+        }
+
+        self::$lockidcache[$key] = $index;
         return $index;
     }
 
@@ -153,7 +178,7 @@ class postgres_lock_factory implements lock_factory {
     public function get_lock($resource, $timeout, $maxlifetime = 86400) {
         $giveuptime = time() + $timeout;
 
-        $token = $this->get_index_from_key($this->type . '_' . $resource);
+        $token = $this->get_index_from_key($resource);
 
         $params = array('locktype' => $this->dblockid,
                         'token' => $token);
@@ -163,7 +188,7 @@ class postgres_lock_factory implements lock_factory {
         do {
             $result = $this->db->get_record_sql('SELECT pg_try_advisory_lock(:locktype, :token) AS locked', $params);
             $locked = $result->locked === 't';
-            if (!$locked && $timeout > 0) {
+            if (!$locked) {
                 usleep(rand(10000, 250000)); // Sleep between 10 and 250 milliseconds.
             }
             // Try until the giveup time.

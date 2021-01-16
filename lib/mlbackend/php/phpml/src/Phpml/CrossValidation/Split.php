@@ -29,42 +29,63 @@ abstract class Split
      */
     protected $testLabels = [];
 
-    public function __construct(Dataset $dataset, float $testSize = 0.3, ?int $seed = null)
+    /**
+     * @param Dataset $dataset
+     * @param float   $testSize
+     * @param int     $seed
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct(Dataset $dataset, float $testSize = 0.3, int $seed = null)
     {
-        if ($testSize <= 0 || $testSize >= 1) {
-            throw new InvalidArgumentException('testsize must be between 0.0 and 1.0');
+        if (0 >= $testSize || 1 <= $testSize) {
+            throw InvalidArgumentException::percentNotInRange('testSize');
         }
-
         $this->seedGenerator($seed);
 
         $this->splitDataset($dataset, $testSize);
     }
 
-    public function getTrainSamples(): array
+    abstract protected function splitDataset(Dataset $dataset, float $testSize);
+
+    /**
+     * @return array
+     */
+    public function getTrainSamples()
     {
         return $this->trainSamples;
     }
 
-    public function getTestSamples(): array
+    /**
+     * @return array
+     */
+    public function getTestSamples()
     {
         return $this->testSamples;
     }
 
-    public function getTrainLabels(): array
+    /**
+     * @return array
+     */
+    public function getTrainLabels()
     {
         return $this->trainLabels;
     }
 
-    public function getTestLabels(): array
+    /**
+     * @return array
+     */
+    public function getTestLabels()
     {
         return $this->testLabels;
     }
 
-    abstract protected function splitDataset(Dataset $dataset, float $testSize): void;
-
-    protected function seedGenerator(?int $seed = null): void
+    /**
+     * @param int|null $seed
+     */
+    protected function seedGenerator(int $seed = null)
     {
-        if ($seed === null) {
+        if (null === $seed) {
             mt_srand();
         } else {
             mt_srand($seed);

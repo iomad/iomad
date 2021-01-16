@@ -49,8 +49,7 @@ class mod_quiz_generator_testcase extends advanced_testcase {
 
         $generator->create_instance(array('course'=>$SITE->id));
         $generator->create_instance(array('course'=>$SITE->id));
-        $createtime = time();
-        $quiz = $generator->create_instance(array('course' => $SITE->id, 'timecreated' => 0));
+        $quiz = $generator->create_instance(array('course'=>$SITE->id));
         $this->assertEquals(3, $DB->count_records('quiz'));
 
         $cm = get_coursemodule_from_instance('quiz', $quiz->id);
@@ -60,8 +59,5 @@ class mod_quiz_generator_testcase extends advanced_testcase {
 
         $context = context_module::instance($cm->id);
         $this->assertEquals($quiz->cmid, $context->instanceid);
-
-        $this->assertEqualsWithDelta($createtime,
-                $DB->get_field('quiz', 'timecreated', ['id' => $cm->instance]), 2);
     }
 }

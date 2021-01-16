@@ -36,7 +36,7 @@ $confirm = optional_param('confirm', false, PARAM_BOOL);
 $choose = false;
 // Validate course id.
 if (empty($courseid)) {
-    require_login(null, false);
+    require_login();
     $context = context_system::instance();
     // check system level capability.
     if (!has_capability('tool/monitor:subscribe', $context)) {
