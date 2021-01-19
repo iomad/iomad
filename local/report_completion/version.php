@@ -16,5 +16,5 @@
 
 $plugin->version  = 2016120600;
 $plugin->requires = 2019052000;
-$plugin->release  = '3.9.2 (Build: 20200914)'; // Human-friendly version name
+$plugin->release  = '3.9.4 (Build: 20210118)'; // Human-friendly version name
 $plugin->component  = 'local_report_completion';
