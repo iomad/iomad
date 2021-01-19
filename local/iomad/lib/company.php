@@ -3846,7 +3846,7 @@ class company {
                                     array('userid' => $userid,
                                           'courseid' => $courseid,
                                           'timeenrolled' => $enrolrec->timestart))
-            && $DB->get_record_sql("SELECT id FROM {local_iomad_track}
+            || $DB->get_record_sql("SELECT id FROM {local_iomad_track}
                                     WHERE userid=:userid
                                     AND courseid = :courseid
                                     AND timeenrolled = :timeenrolled
