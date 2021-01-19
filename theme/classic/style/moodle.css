@@ -10886,11 +10886,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .moodle-dialogue-base .moodle-dialogue-fullscreen .moodle-dialogue-content {
   overflow: auto; }
 
-.moodle-dialogue-base .moodle-dialogue-fullscreen .closebutton {
-  width: 28px;
-  height: 16px;
-  background-size: 100%; }
-
 .moodle-dialogue-base .moodle-dialogue-wrap {
   background-color: #fff;
   border: 1px solid #ccc; }
@@ -11855,6 +11850,10 @@ body.h5p-embed .h5pmessages {
 
 .text-break {
   overflow-wrap: break-word !important;
+  /* stylelint-disable-line declaration-no-important */ }
+
+.word-break {
+  word-break: break-word !important;
   /* stylelint-disable-line declaration-no-important */ }
 
 .z-index-0 {
@@ -15937,13 +15936,34 @@ body.path-question-type {
   margin: 0 0 0.5em; }
 
 .que .correctness.correct {
+  color: #fff;
   background-color: #357a32; }
+  a.que .correctness.correct:hover, a.que .correctness.correct:focus {
+    color: #fff;
+    background-color: #255623; }
+  a.que .correctness.correct:focus, a.que .correctness.correct.focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(53, 122, 50, 0.5); }
 
 .que .correctness.partiallycorrect {
+  color: #212529;
   background-color: #f0ad4e; }
+  a.que .correctness.partiallycorrect:hover, a.que .correctness.partiallycorrect:focus {
+    color: #212529;
+    background-color: #ec971f; }
+  a.que .correctness.partiallycorrect:focus, a.que .correctness.partiallycorrect.focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(240, 173, 78, 0.5); }
 
 .que .correctness.notanswered, .que .correctness.incorrect {
+  color: #fff;
   background-color: #ca3120; }
+  a.que .correctness.notanswered:hover, a.que .correctness.notanswered:focus, .que .correctness.incorrect:hover, .que .correctness.incorrect:focus {
+    color: #fff;
+    background-color: #9e2619; }
+  a.que .correctness.notanswered:focus, a.que .correctness.notanswered.focus, .que .correctness.incorrect:focus, .que .correctness.incorrect.focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(202, 49, 32, 0.5); }
 
 .que .qtext {
   margin-bottom: 1.5em; }
@@ -15988,6 +16008,10 @@ body.jsenabled .questionflag input[type=checkbox] {
 
 #page-question-preview #techinfo {
   margin: 1em 0; }
+
+#page-question-preview .collapsibleregion .collapsibleregioncaption,
+#page-question-preview .collapsibleregion .collapsibleregionextracontent {
+  display: inline-block; }
 
 #page-mod-quiz-edit ul.slots .activityinstance > a {
   display: flex;
@@ -17636,9 +17660,13 @@ div#dock {
   clear: left; }
 
 #page-mod-quiz-mod #id_reviewoptionshdr .form-check {
-  width: 90%;
+  width: auto;
   height: 22px;
   justify-content: flex-start; }
+
+#page-mod-quiz-mod #id_reviewoptionshdr .review_option_item {
+  width: 90%;
+  height: 22px; }
 
 .path-mod-quiz #mod_quiz_navblock .qnbutton {
   text-decoration: none;
