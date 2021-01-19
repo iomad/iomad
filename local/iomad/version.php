@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->release  = '3.8.5 (Build: 20200914)'; // Human-friendly version name
+$plugin->release  = '3.8.7 (Build: 20210118)'; // Human-friendly version name
 $plugin->component  = 'local_iomad';
 $plugin->requires = 2019052000;   // Requires this Moodle version.
 $plugin->version  = 2019030113;   // The (date) version of this plugin.
