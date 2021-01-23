@@ -85,7 +85,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
             $userhierarchylevel = $parentlevel->id;
         } else {
             $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
+            $userhierarchylevel = key($userlevel);
         }
         $departmentid = $userhierarchylevel;
 
@@ -96,16 +96,11 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                                            WHERE name = 'trainingevent')", array('eventid' => $event->id));
 
         // What is the users approval level, if any?
-        if ($manageruser = $DB->get_record('company_users', array('userid' => $USER->id))) {
-            if ($manageruser->managertype == 2) {
-                $myapprovallevel = "department";
-            } else if ($manageruser->managertype == 1) {
-                $myapprovallevel = "company";
-            } else {
-                $myapprovallevel = "none";
-            }
-        } else if (has_capability('block/iomad_company_admin:company_add', context_system::instance())) {
+        if (has_capability('block/iomad_company_admin:company_add', context_system::instance()) ||
+            $manageruser = $DB->get_records('company_users', array('userid' => $USER->id, 'managertype' => 1))) {
             $myapprovallevel = "company";
+        } else if ($manageruser = $DB->get_records('company_users', array('userid' => $USER->id, 'managertype' => 2))) {
+            $myapprovallevel = "department";
         } else {
             $myapprovallevel = "none";
         }
@@ -735,7 +730,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                     $userhierarchylevel = $parentlevel->id;
                 } else {
                     $userlevel = $company->get_userlevel($USER);
-                    $userhierarchylevel = $userlevel->id;
+                    $userhierarchylevel = key($userlevel);
                 }
                 $departmentid = $userhierarchylevel;
 
@@ -858,7 +853,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                 $userhierarchylevel = $parentlevel->id;
             } else {
                 $userlevel = $company->get_userlevel($USER);
-                $userhierarchylevel = $userlevel->id;
+                $userhierarchylevel = key($userlevel);
             }
             $departmentid = $userhierarchylevel;
 

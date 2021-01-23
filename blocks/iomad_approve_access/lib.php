@@ -46,14 +46,10 @@
         $approvaltype = 'both';
     } else {
         // What type of manager am I?
-        if ($manageruser = $DB->get_record('company_users', array('userid' => $USER->id, 'companyid' => $companyid))) {
-            if ($manageruser->managertype == 2) {
-                $approvaltype = 'manager';
-            } else if ($manageruser->managertype == 1) {
-                $approvaltype = 'company';
-            } else {
-                return false;
-            }
+        if ($managerusers = $DB->get_records('company_users', array('userid' => $USER->id, 'managertype' => 1, 'companyid' => $companyid))) {
+            $approvaltype = 'company';
+        } else if ($managerusers = $DB->get_records('company_users', array('userid' => $USER->id, 'managertype' => 2, 'companyid' => $companyid))) {
+            $approvaltype = 'manager';
         } else {
             return false;
         }

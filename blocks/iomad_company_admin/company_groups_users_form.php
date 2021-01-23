@@ -190,7 +190,7 @@ class course_group_users_form extends moodleform {
             $userhierarchylevel = $this->parentlevel->id;
         } else {
             $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
+            $userhierarchylevel = key($userlevel);
         }
 
         $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
@@ -244,7 +244,7 @@ class course_group_users_form extends moodleform {
    }
 
     public function definition_after_data() {
-        global $DB, $OUTPUT;
+        global $DB, $output;
 
         $mform =& $this->_form;
 
@@ -263,6 +263,8 @@ class course_group_users_form extends moodleform {
         $group = $DB->get_record('groups', array('id' => $this->groupid));
 
         $company = $this->company;
+        $mform->addElement('static', 'departmenttitle', get_string('department', 'block_iomad_company_admin'));
+        $output->display_tree_selector_form($this->company, $mform, $this->departmentid);
         $stringobj = new stdclass();
         $stringobj->group = $group->description;
         $stringobj->course = $course->fullname;
@@ -286,14 +288,14 @@ class course_group_users_form extends moodleform {
               </td>
               <td id="buttonscell">
                       <input name="add" id="add" type="submit" value="' .
-                       $OUTPUT->larrow().'&nbsp;'.get_string('add') .
+                       $output->larrow().'&nbsp;'.get_string('add') .
                        '" title="'.get_string('add') .'" /><br />');
 
         if (!$this->isdefault) {
 
             $mform->addElement('html', '
                       <input name="remove" id="remove" type="submit" value="' .
-                       get_string('remove') . '&nbsp;' . $OUTPUT->rarrow() .
+                       get_string('remove') . '&nbsp;' . $ouput->rarrow() .
                        '" title="'.get_string('remove') .'" /></br>');
         }
 
@@ -369,7 +371,7 @@ $createnew = optional_param('createnew', 0, PARAM_INT);
 $selectedcourse = optional_param('selectedcourse', 0, PARAM_INTEGER);
 $selectedgroup = optional_param('selectedgroup', 0, PARAM_INTEGER);
 $groupids = optional_param_array('groupids', 0, PARAM_INTEGER);
-$departmentid = optional_param_array('deparmentid', 0, PARAM_INTEGER);
+$departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 
 if (!empty($groupids)) {
     $groupid = $groupids[0];
@@ -413,7 +415,7 @@ $companyid = iomad::get_my_companyid($context);
 
 // Javascript for fancy select.
 // Parameter is name of proper select form element.
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid'));
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 'mform2', $departmentid));
 
 $courseform = new company_ccu_courses_form($PAGE->url, $context, $companyid, $selectedcourse);
 $mform = new course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
