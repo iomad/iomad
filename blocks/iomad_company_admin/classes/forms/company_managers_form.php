@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @package   block_iomad_company_admin
- * @copyright 2021 Derick Turner
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace block_iomad_company_admin\forms;
 
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
-require_once('lib.php');
+defined('MOODLE_INTERNAL') || die;
+
+use \iomad;
+use \company;
+use \moodle_url;
+use \moodleform;
+use \context_system;
+use \potential_department_user_selector;
+use \current_department_user_selector;
 
 class company_managers_form extends moodleform {
     protected $context = null;
@@ -52,8 +54,8 @@ class company_managers_form extends moodleform {
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
             $userhierarchylevel = $parentlevel->id;
         } else {
-            $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
+            $userlevels = $company->get_userlevel($USER);
+            $userhierarchylevel = key($userlevels);
         }
 
         $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
@@ -62,6 +64,7 @@ class company_managers_form extends moodleform {
         } else {
             $departmentid = $this->departmentid;
         }
+
         $options = array('context' => $this->context,
                          'companyid' => $this->selectedcompany,
                          'departmentid' => $departmentid,
@@ -205,138 +208,4 @@ class company_managers_form extends moodleform {
             }
         }
     }
-}
-
-
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$departmentid = optional_param('deptid', 0, PARAM_INTEGER);
-$roleid = optional_param('managertype', 0, PARAM_INTEGER);
-$showothermanagers = optional_param('showothermanagers', 0, PARAM_BOOL);
-
-// If we are not handling company manager role types we are not picking other company managers.
-if ($roleid != 1) {
-    $showothermanagers = false;
-}
-
-$context = context_system::instance();
-require_login();
-iomad::require_capability('block/iomad_company_admin:company_manager', $context);
-
-// Correct the navbar.
-// Set the name for the page.
-$linktext = get_string('assignmanagers', 'block_iomad_company_admin');
-// Set the url.
-$linkurl = new moodle_url('/blocks/iomad_company_admin/company_managers_form.php');
-
-$PAGE->set_context($context);
-$PAGE->set_url($linkurl);
-$PAGE->set_pagelayout('admin');
-$PAGE->set_title($linktext);
-
-// Set the page heading.
-$PAGE->set_heading(get_string('myhome') . " - $linktext");
-if (empty($CFG->defaulthomepage)) {
-    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
-}
-$PAGE->navbar->add($linktext, $linkurl);
-
-// Set the companyid
-$companyid = iomad::get_my_companyid($context);
-
-$PAGE->set_context($context);
-
-// get output renderer
-$output = $PAGE->get_renderer('block_iomad_company_admin');
-
-// Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
-
-$urlparams = array('deptid' => $departmentid,
-                   'managertype' => $roleid,
-                   'showothermanagers' => $showothermanagers);
-if ($returnurl) {
-    $urlparams['returnurl'] = $returnurl;
-}
-
-// Set up the departments stuffs.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
-$managertypes = $company->get_managertypes();
-if ($departmentid != $parentlevel->id) {
-    unset($managertypes[1]);
-    if ($roleid ==1) {
-        $urlparams['managertype'] = '';
-        $urlparams['deptid'] = $departmentid;
-        redirect(new moodle_url($linkurl, $urlparams));
-    }
-}
-$managerselect = new single_select(
-    new moodle_url($linkurl, $urlparams),
-    'managertype',
-    $managertypes,
-    $roleid,
-    array('' => 'choosedots'),
-    null,
-    ['label' => get_string('managertype', 'block_iomad_company_admin')]
-);
-//$managerselect->label = get_string('managertype', 'block_iomad_company_admin');
-//                        $output->help_icon('managertype', 'block_iomad_company_admin') . '&nbsp';
-
-$othersselect = new single_select(new moodle_url($linkurl, $urlparams), 'showothermanagers',
-                array(get_string('no'), get_string('yes')), $showothermanagers);
-$othersselect->label = get_string('showothermanagers', 'block_iomad_company_admin') .
-                       $output->help_icon('showothermanagers', 'block_iomad_company_admin') . '&nbsp';
-
-// Set up the allocation form.
-$managersform = new company_managers_form($PAGE->url, $context, $companyid, $departmentid, $roleid, $showothermanagers);
-
-// Change the department for the form.
-if ($departmentid != 0) {
-    $managersform->set_data(array('deptid' => $departmentid));
-}
-// Change the user type of the form.
-if ($roleid != 0) {
-    $managersform->set_data(array('managertype' => $roleid));
-}
-
-
-if ($managersform->is_cancelled()) {
-    if ($returnurl) {
-        redirect($returnurl);
-    } else {
-        redirect(new moodle_url('/my'));
-    }
-} else {
-    $managersform->process($departmentid, $roleid);
-
-    echo $output->header();
-
-    // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-        print_error('invaliddepartment', 'block_iomad_company_admin');
-    }
-
-    // Display the department tree.
-    echo html_writer::tag('h3', get_string('company_managers_for', 'block_iomad_company_admin', $company->get_name()));
-    echo $output->display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid);
-
-    echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-    echo html_writer::start_tag('div', array('class' => 'fitem'));
-    echo $output->render($managerselect);
-    echo html_writer::end_tag('div');
-    echo html_writer::end_tag('div');
-
-    if (iomad::has_capability('block/iomad_company_admin:company_add', context_system::instance()) &&
-        $roleid == 1) {
-        echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-        echo html_writer::start_tag('div', array('class' => 'fitem'));
-        echo $output->render($othersselect);
-        echo html_writer::end_tag('div');
-        echo html_writer::end_tag('div');
-    }
-
-    echo $managersform->display();
-
-    echo $output->footer();
 }
