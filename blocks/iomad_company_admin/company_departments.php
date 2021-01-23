@@ -43,8 +43,8 @@ class department_display_form extends company_moodleform {
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $syscontext)) {
             $userhierarchylevel = $parentlevel->id;
         } else {
-            $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
+            $userlevels = $company->get_userlevel($USER);
+            $userhierarchylevel = key($userlevels);
         }
 
         $this->departmentid = $userhierarchylevel;
@@ -54,12 +54,13 @@ class department_display_form extends company_moodleform {
         $this->parentlevel = $parentlevel->id;
         $this->notice = $notice;
         $this->syscontext = $syscontext;
+        $this->company = $company;
 
         parent::__construct($actionurl);
     }
 
     public function definition() {
-        global $CFG;
+        global $CFG, $output;
 
         $mform =& $this->_form;
         $company = new company($this->selectedcompany);
@@ -70,12 +71,8 @@ class department_display_form extends company_moodleform {
 
         if (!empty($this->departmentid)) {
             $departmentslist = company::get_all_subdepartments($this->departmentid);
-            $departmenttree = company::get_all_subdepartments_raw($this->departmentid);
-            $treehtml = $this->output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
         } else {
             $departmentslist = company::get_all_departments($company->id);
-            $departmenttree = company::get_all_departments_raw($company->id);
-            $treehtml = $this->output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
         }
 
         if (!empty($this->departmentid)) {
@@ -115,14 +112,7 @@ class department_display_form extends company_moodleform {
             $mform->addElement('html', $this->notice . '</div>');
         }
 
-        $mform->addElement('html', $treehtml);
-        //$mform->addElement('html', $subdepartmenthtml);
-
-        // This is getting hidden anyway, so no need for label
-        $mform->addElement('html', "<div style='display:none;'>");
-        $mform->addElement('select', 'deptid', ' ',
-                            $departmentslist, array('class' => 'iomad_department_select'));
-        $mform->addElement('html', "</div></br>");
+        $output->display_tree_selector_form($this->company, $mform);
 
         $buttonarray = array();
         $buttonarray[] = $mform->createElement('submit', 'create',
