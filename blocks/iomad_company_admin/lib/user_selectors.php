@@ -465,7 +465,7 @@ class current_company_course_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON (cu.userid = u.id AND cu.managertype = 0 $departmentsql)
+                 JOIN {company_users} cu ON (cu.userid = u.id AND cu.educator = 0 $departmentsql)
                  LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
                  JOIN {user_enrolments} ue ON (ue.userid = u.id)
                  JOIN {enrol} e ON (ue.enrolid = e.id AND ".$DB->sql_compare_text('e.enrol')."='manual' AND e.status = 0)
@@ -1634,7 +1634,7 @@ class current_company_group_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu  ON ( cu.userid = u.id AND managertype = 0 $departmentsql )
+                 JOIN {company_users} cu  ON ( cu.userid = u.id AND cu.educator = 0 $departmentsql )
                  LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
 
                  WHERE $wherecondition AND u.suspended = 0
@@ -1926,7 +1926,7 @@ class potential_company_thread_user_selector extends company_user_selector_base 
 
                  WHERE $wherecondition  AND u.suspended = 0 $departmentsql
                  AND cu.companyid = :companyid
-                 AND cu.managertype = 0
+                 AND cu.educator = 0
                  AND cu.userid not in ( ". $CFG->siteadmins .")
                  $userfilter
                  AND u.id NOT IN (
