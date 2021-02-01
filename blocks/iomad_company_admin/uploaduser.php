@@ -945,6 +945,10 @@ if ($mform->is_cancelled()) {
                     // Stash the default in case we need to remove them from it later.
                     $defaultdepartmentid = $department->id;
                 }
+
+                // Save the vew profile information.
+                profile_save_data($user);
+
                 $info = ': ' . $user->username .' (ID = ' . $user->id . ')';
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
