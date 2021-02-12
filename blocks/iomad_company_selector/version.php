@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_selector
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $plugin->version = 2016083100;
 $plugin->requires = 2010021900;   // Requires this Moodle version.
 $plugin->release  = '3.6.10 (Build: 20200511)'; // Human-friendly version name
