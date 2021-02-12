@@ -14,7 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+$plugin->release  = '3.7.8 (Build: 20200914)'; // Human-friendly version name
 $plugin->component  = 'local_iomad';
 $plugin->version  = 2019030113;   // The (date) version of this plugin.
-$plugin->release  = '3.7.8 (Build: 20200914)'; // Human-friendly version name
 $plugin->requires = 2019052000;   // Requires this Moodle version.
