@@ -16,12 +16,10 @@
 
 
 /**
- * Renderers to align Moodle's HTML with that expected by Bootstrap
- *
- * @package    theme_bootstrap
- * @copyright  2014 Bas Brands, www.basbrands.nl
- * @authors    Bas Brands, David Scotson
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   theme_iomadbootstrap
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $THEME->doctype = 'html5';
