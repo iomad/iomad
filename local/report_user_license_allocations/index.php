@@ -25,8 +25,6 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
-require_once(dirname(__FILE__).'/report_user_license_allocations_table.php');
-require_once( dirname(__FILE__).'/lib.php');
 
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);
@@ -276,7 +274,7 @@ $courseselectoutput = html_writer::tag('div', $output->render($courseselect), ar
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Set up the table.
-$table = new local_report_user_license_allocations_table('user_report_license_allocations');
+$table = new \local_report_user_license_allocations\tables\allocations_table('user_report_license_allocations');
 $table->is_downloading($download, 'user_report_license_allocations', 'user_report_license_allocations123');
 
 if (!$table->is_downloading()) {
