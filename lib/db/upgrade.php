@@ -2786,11 +2786,12 @@ function xmldb_main_upgrade($oldversion) {
     if ($oldversion < 2020101600.01) {
         // Delete orphaned course_modules_completion rows; these were not deleted properly
         // by remove_course_contents function.
-        $DB->delete_records_subquery('course_modules_completion', 'id', 'id',
-               "SELECT cmc.id
-                  FROM {course_modules_completion} cmc
-             LEFT JOIN {course_modules} cm ON cm.id = cmc.coursemoduleid
-                 WHERE cm.id IS NULL");
+        $DB->delete_records_select('course_modules_completion', "
+                NOT EXISTS (
+                        SELECT 1
+                          FROM {course_modules} cm
+                         WHERE cm.id = {course_modules_completion}.coursemoduleid
+                )");
         upgrade_main_savepoint(true, 2020101600.01);
     }
 
@@ -2993,6 +2994,33 @@ function xmldb_main_upgrade($oldversion) {
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2020102700.04);
+    }
+
+    // Automatically generated Moodle v3.10.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2020110900.01) {
+        // Get all lessons that are set with a completion criteria of 'requires grade' but with no grade type set.
+        $sql = "SELECT cm.id
+                  FROM {course_modules} cm
+                  JOIN {lesson} l ON l.id = cm.instance
+                  JOIN {modules} m ON m.id = cm.module
+                 WHERE m.name = :name AND cm.completiongradeitemnumber IS NOT NULL AND l.grade = :grade";
+
+        do {
+            if ($invalidconfigrations = $DB->get_records_sql($sql, ['name' => 'lesson', 'grade' => 0], 0, 1000)) {
+                list($insql, $inparams) = $DB->get_in_or_equal(array_keys($invalidconfigrations), SQL_PARAMS_NAMED);
+                $DB->set_field_select('course_modules', 'completiongradeitemnumber', null, "id $insql", $inparams);
+            }
+        } while ($invalidconfigrations);
+
+        upgrade_main_savepoint(true, 2020110900.01);
+    }
+
+    if ($oldversion < 2020110901.03) {
+        $DB->delete_records_select('event', "eventtype = 'category' AND categoryid = 0 AND userid <> 0");
+
+        upgrade_main_savepoint(true, 2020110901.03);
     }
 
     return true;

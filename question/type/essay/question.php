@@ -84,12 +84,23 @@ class qtype_essay_question extends question_with_responses {
     }
 
     public function summarise_response(array $response) {
+        $output = null;
+
         if (isset($response['answer'])) {
-            return question_utils::to_plain_text($response['answer'],
-                    $response['answerformat'], array('para' => false));
-        } else {
-            return null;
+            $output .= question_utils::to_plain_text($response['answer'],
+                $response['answerformat'], array('para' => false));
         }
+
+        if (isset($response['attachments'])  && $response['attachments']) {
+            $attachedfiles = [];
+            foreach ($response['attachments']->get_files() as $file) {
+                $attachedfiles[] = $file->get_filename() . ' (' . display_size($file->get_filesize()) . ')';
+            }
+            if ($attachedfiles) {
+                $output .= get_string('attachedfiles', 'qtype_essay', implode(', ', $attachedfiles));
+            }
+        }
+        return $output;
     }
 
     public function un_summarise_response(string $summary) {
@@ -184,5 +195,32 @@ class qtype_essay_question extends question_with_responses {
             return parent::check_file_access($qa, $options, $component,
                     $filearea, $args, $forcedownload);
         }
+    }
+
+    /**
+     * Return the question settings that define this question as structured data.
+     *
+     * @param question_attempt $qa the current attempt for which we are exporting the settings.
+     * @param question_display_options $options the question display options which say which aspects of the question
+     * should be visible.
+     * @return mixed structure representing the question settings. In web services, this will be JSON-encoded.
+     */
+    public function get_question_definition_for_external_rendering(question_attempt $qa, question_display_options $options) {
+        // This is a partial implementation, returning only the most relevant question settings for now,
+        // ideally, we should return as much as settings as possible (depending on the state and display options).
+
+        $settings = [
+            'responseformat' => $this->responseformat,
+            'responserequired' => $this->responserequired,
+            'responsefieldlines' => $this->responsefieldlines,
+            'attachments' => $this->attachments,
+            'attachmentsrequired' => $this->attachmentsrequired,
+            'maxbytes' => $this->maxbytes,
+            'filetypeslist' => $this->filetypeslist,
+            'responsetemplate' => $this->responsetemplate,
+            'responsetemplateformat' => $this->responsetemplateformat,
+        ];
+
+        return $settings;
     }
 }

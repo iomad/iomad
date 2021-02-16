@@ -6331,8 +6331,10 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
             // The absolute (real) path is also fetched to ensure that comparisons to allowed paths are compared equally.
             $attachpath = str_replace('\\', '/', realpath($attachment));
 
-            // Add allowed paths to an array (also check if it's not empty).
-            $allowedpaths = array_filter([
+            // Build an array of all filepaths from which attachments can be added (normalised slashes, absolute/real path).
+            $allowedpaths = array_map(function(string $path): string {
+                return str_replace('\\', '/', realpath($path));
+            }, [
                 $CFG->cachedir,
                 $CFG->dataroot,
                 $CFG->dirroot,
@@ -6340,12 +6342,12 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
                 $CFG->tempdir,
                 $CFG->localrequestdir,
             ]);
+
             // Set addpath to true.
             $addpath = true;
+
             // Check if attachment includes one of the allowed paths.
-            foreach ($allowedpaths as $allowedpath) {
-                // Make sure both variables are normalised before comparing.
-                $allowedpath = str_replace('\\', '/', realpath($allowedpath));
+            foreach (array_filter($allowedpaths) as $allowedpath) {
                 // Set addpath to false if the attachment includes one of the allowed paths.
                 if (strpos($attachpath, $allowedpath) === 0) {
                     $addpath = false;
@@ -7843,7 +7845,14 @@ function get_plugin_list_with_function($plugintype, $function, $file = 'lib.php'
             $filepath = $allplugins[$pluginname] . DIRECTORY_SEPARATOR . $file;
             if (file_exists($filepath)) {
                 include_once($filepath);
-                $pluginfunctions[$plugintype . '_' . $pluginname] = $functionname;
+
+                // Now that the file is loaded, we must verify the function still exists.
+                if (function_exists($functionname)) {
+                    $pluginfunctions[$plugintype . '_' . $pluginname] = $functionname;
+                } else {
+                    // Invalidate the cache for next run.
+                    \cache_helper::invalidate_by_definition('core', 'plugin_functions');
+                }
             }
         }
     }
@@ -7876,6 +7885,7 @@ function get_plugins_with_function($function, $file = 'lib.php', $include = true
     // Clearning the filename as cache_helper::hash_key only allows a-zA-Z0-9_.
     $key = $function . '_' . clean_param($file, PARAM_ALPHA);
     $pluginfunctions = $cache->get($key);
+    $dirty = false;
 
     // Use the plugin manager to check that plugins are currently installed.
     $pluginmanager = \core_plugin_manager::instance();
@@ -7890,14 +7900,14 @@ function get_plugins_with_function($function, $file = 'lib.php', $include = true
             foreach ($plugins as $plugin => $function) {
                 if (!isset($installedplugins[$plugin])) {
                     // Plugin code is still present on disk but it is not installed.
-                    unset($pluginfunctions[$plugintype][$plugin]);
-                    continue;
+                    $dirty = true;
+                    break 2;
                 }
 
                 // Cache might be out of sync with the codebase, skip the plugin if it is not available.
                 if (empty($allplugins[$plugin])) {
-                    unset($pluginfunctions[$plugintype][$plugin]);
-                    continue;
+                    $dirty = true;
+                    break 2;
                 }
 
                 $fileexists = file_exists($allplugins[$plugin] . DIRECTORY_SEPARATOR . $file);
@@ -7906,11 +7916,22 @@ function get_plugins_with_function($function, $file = 'lib.php', $include = true
                     include_once($allplugins[$plugin] . DIRECTORY_SEPARATOR . $file);
                 } else if (!$fileexists) {
                     // If the file is not available any more it should not be returned.
-                    unset($pluginfunctions[$plugintype][$plugin]);
+                    $dirty = true;
+                    break 2;
+                }
+
+                // Check if the function still exists in the file.
+                if ($include && !function_exists($function)) {
+                    $dirty = true;
+                    break 2;
                 }
             }
         }
-        return $pluginfunctions;
+
+        // If the cache is dirty, we should fall through and let it rebuild.
+        if (!$dirty) {
+            return $pluginfunctions;
+        }
     }
 
     $pluginfunctions = array();
@@ -8369,21 +8390,38 @@ function moodle_setlocale($locale='') {
  * Words are defined as things between whitespace.
  *
  * @category string
- * @param string $string The text to be searched for words.
+ * @param string $string The text to be searched for words. May be HTML.
  * @return int The count of words in the specified string
  */
 function count_words($string) {
+    // Before stripping tags, add a space after the close tag of anything that is not obviously inline.
+    // Also, br is a special case because it definitely delimits a word, but has no close tag.
+    $string = preg_replace('~
+            (                                   # Capture the tag we match.
+                </                              # Start of close tag.
+                (?!                             # Do not match any of these specific close tag names.
+                    a> | b> | del> | em> | i> |
+                    ins> | s> | small> |
+                    strong> | sub> | sup> | u>
+                )
+                \w+                             # But, apart from those execptions, match any tag name.
+                >                               # End of close tag.
+            |
+                <br> | <br\s*/>                 # Special cases that are not close tags.
+            )
+            ~x', '$1 ', $string); // Add a space after the close tag.
+    // Now remove HTML tags.
     $string = strip_tags($string);
     // Decode HTML entities.
     $string = html_entity_decode($string);
-    // Replace underscores (which are classed as word characters) with spaces.
-    $string = preg_replace('/_/u', ' ', $string);
-    // Remove any characters that shouldn't be treated as word boundaries.
-    $string = preg_replace('/[\'"’-]/u', '', $string);
-    // Remove dots and commas from within numbers only.
-    $string = preg_replace('/([0-9])[.,]([0-9])/u', '$1$2', $string);
 
-    return count(preg_split('/\w\b/u', $string)) - 1;
+    // Now, the word count is the number of blocks of characters separated
+    // by any sort of space. That seems to be the definition used by all other systems.
+    // To be precise about what is considered to separate words:
+    // * Anything that Unicode considers a 'Separator'
+    // * Anything that Unicode considers a 'Control character'
+    // * An em- or en- dash.
+    return count(preg_split('~[\p{Z}\p{Cc}—–]+~u', $string, -1, PREG_SPLIT_NO_EMPTY));
 }
 
 /**
@@ -8392,11 +8430,12 @@ function count_words($string) {
  * Letters are defined as chars not in tags and different from whitespace.
  *
  * @category string
- * @param string $string The text to be searched for letters.
+ * @param string $string The text to be searched for letters. May be HTML.
  * @return int The count of letters in the specified text.
  */
 function count_letters($string) {
     $string = strip_tags($string); // Tags are out now.
+    $string = html_entity_decode($string);
     $string = preg_replace('/[[:space:]]*/', '', $string); // Whitespace are out now.
 
     return core_text::strlen($string);

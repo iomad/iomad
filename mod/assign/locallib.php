@@ -2539,7 +2539,8 @@ class assign {
         // Only ever send a max of one days worth of updates.
         $yesterday = time() - (24 * 3600);
         $timenow   = time();
-        $lastruntime = $DB->get_field('task_scheduled', 'lastruntime', array('component' => 'mod_assign'));
+        $task = \core\task\manager::get_scheduled_task(mod_assign\task\cron_task::class);
+        $lastruntime = $task->get_last_run_time();
 
         // Collect all submissions that require mailing.
         // Submissions are included if all are true:
@@ -7739,7 +7740,9 @@ class assign {
             $gradingstatus = $this->get_grading_status($userid);
             if ($gradingstatus != ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
                 if ($grade->grade && $grade->grade != -1) {
-                    $assigngradestring = html_writer::span(grade_floatval($grade->grade), 'currentgrade');
+                    $assigngradestring = html_writer::span(
+                        make_grades_menu($settings->grade)[grade_floatval($grade->grade)], 'currentgrade'
+                    );
                     $label = get_string('currentassigngrade', 'assign');
                     $mform->addElement('static', 'currentassigngrade', $label, $assigngradestring);
                 }

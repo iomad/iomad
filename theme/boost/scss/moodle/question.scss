@@ -154,6 +154,14 @@
         font-weight: normal;
     }
 
+    & > tbody > tr.r1 {
+        background-color: $table-accent-bg;
+    }
+
+    & > tbody > tr.highlight {
+        border: $border-width solid $info;
+    }
+
     .checkbox {
         padding-left: 5px;
     }
@@ -354,14 +362,14 @@ body.path-question-type {
 
 .que .correctness {
     &.correct {
-        background-color: $success;
+        @include badge-variant($success);
     }
     &.partiallycorrect {
-        background-color: $warning;
+        @include badge-variant($warning);
     }
     &.notanswered,
     &.incorrect {
-        background-color: $danger;
+        @include badge-variant($danger);
     }
 }
 
@@ -423,6 +431,13 @@ body.jsenabled .questionflag input[type=checkbox] {
     margin: 1em 0;
 }
 
+#page-question-preview .collapsibleregion {
+    .collapsibleregioncaption,
+    .collapsibleregionextracontent {
+        display: inline-block;
+    }
+}
+
 // imported from quiz.css
 
 #page-mod-quiz-edit ul.slots .activityinstance {
@@ -463,14 +478,6 @@ body.jsenabled .questionflag input[type=checkbox] {
 
 #page-mod-quiz-edit div.questionbank .categoryquestionscontainer {
     background: transparent;
-}
-
-#page-mod-quiz-edit #categoryquestions > thead {
-    background: #fff;
-}
-
-#page-mod-quiz-edit #categoryquestions > tbody > tr:nth-of-type(even) {
-    background: #e4e4e4;
 }
 
 #page-mod-quiz-edit .questionbankwindow div.header {

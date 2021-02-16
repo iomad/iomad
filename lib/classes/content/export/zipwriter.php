@@ -255,7 +255,7 @@ class zipwriter {
         $templatedata->global = (object) [
             'righttoleft' => right_to_left(),
             'language' => str_replace('_', '-', current_language()),
-            'sitename' => $SITE->fullname,
+            'sitename' => format_string($SITE->fullname, true, ['context' => context_system::instance()]),
             'siteurl' => $CFG->wwwroot,
             'pathtotop' => $this->get_relative_context_path($context, $this->rootcontext, '/'),
             'contentexportfooter' => get_string('contentexport_footersummary', 'core', (object) [
@@ -424,11 +424,14 @@ class zipwriter {
      * @return  string
      */
     protected function get_context_folder_name(context $context): string {
+        // Replace spaces with underscores, or they will be removed completely when cleaning.
+        $contextname = str_replace(' ', '_', $context->get_context_name());
+
+        // Clean the context name of all but basic characters, as some systems don't support unicode within zip structure.
         $shortenedname = shorten_text(
-            clean_param($context->get_context_name(), PARAM_FILE),
+            clean_param($contextname, PARAM_SAFEDIR),
             self::MAX_CONTEXT_NAME_LENGTH,
-            true,
-            json_decode('"' . '\u2026' . '"')
+            true
         );
 
         return "{$shortenedname}_.{$context->id}";
