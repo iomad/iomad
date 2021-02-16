@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_report_user_logins
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__).'/../../config.php');
-require_once(dirname(__FILE__).'/report_user_logins_table.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
 
@@ -250,7 +256,7 @@ $customdata = null;
 $options = $params;
 
 // Set up the table.
-$table = new local_report_user_logins_table('user_report_logins');
+$table = new \local_report_user_logins\tables\logins_table('user_report_logins');
 $table->is_downloading($download, 'user_report_logins', 'user_report_logins123');
 
 if (!$table->is_downloading()) {

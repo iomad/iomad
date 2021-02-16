@@ -14,10 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once('../../config.php');
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once(dirname('__FILE__').'/lib.php');
-require_once(dirname('__FILE__').'/iomad_courses_table.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
@@ -364,7 +370,7 @@ $mform->display();
 echo html_writer::end_tag('div');
 echo html_writer::start_tag('div', array('class' => 'iomadclear'));
 
-$table = new iomad_courses_table('iomad_courses_table');
+$table = new \block_iomad_company_admin\tables\iomad_courses_table('iomad_courses_table');
 
 if ($companyid == 'all') {
     $companyid = 0;

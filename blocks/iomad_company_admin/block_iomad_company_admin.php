@@ -14,38 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once('lib.php');
 
 /**
  * Company / User Admin Block
  */
-class iomad_company_select_form extends moodleform {
-    protected $companies = array();
-
-    public function __construct($actionurl, $companies = array(), $selectedcompany = 0) {
-        global $USER, $DB;
-        if (empty($selectedcompany) || empty($companies[$selectedcompany])) {
-            $this->companies = array(0 => get_string('selectacompany', 'block_iomad_company_selector')) + $companies;
-        } else {
-            $this->companies = $companies;
-        }
-
-        parent::__construct($actionurl);
-    }
-
-    public function definition() {
-        $mform =& $this->_form;
-        $autooptions = array('onchange' => 'this.form.submit()');
-        $mform->addElement('autocomplete', 'company', get_string('selectacompany', 'block_iomad_company_selector'), $this->companies, $autooptions);
-        $mform->addElement('hidden', 'showsuspendedcompanies');
-        $mform->setType('showsuspendedcompanies', PARAM_BOOL);
-
-        // Disable the onchange popup.
-        $mform->disable_form_change_checker();
-
-    }
-}
-
 class block_iomad_company_admin extends block_base {
 
     public function init() {
@@ -127,7 +107,7 @@ class block_iomad_company_admin extends block_base {
 
         // Deal with Access approval notifications.
         require_once($CFG->dirroot . '/blocks/iomad_approve_access/lib.php');
-        if (approve_enrol_has_users() && empty($SESSION->approveaccesswarningshown)) {
+        if (iomad_approve_access::has_users() && empty($SESSION->approveaccesswarningshown)) {
            \core\notification::add(get_string('userstoapprove', 'block_iomad_approve_access'), 'info');
            $SESSION->approveaccesswarningshown = true;
         }
@@ -382,7 +362,7 @@ class block_iomad_company_admin extends block_base {
 
         // Get a list of companies.
         $companylist = company::get_companies_select($showsuspendedcompanies);
-        $select = new iomad_company_select_form(new moodle_url('/my/index.php'), $companylist, $selectedcompany);
+        $select = new \block_iomad_company_admin\forms\iomad_company_select_form(new moodle_url('/my/index.php'), $companylist, $selectedcompany);
         $select->set_data(array('company' => $selectedcompany, 'showsuspendedcompanies' => $showsuspendedcompanies));
         $selector->selectform = $select->render();
         if (!$showsuspendedcompanies) {

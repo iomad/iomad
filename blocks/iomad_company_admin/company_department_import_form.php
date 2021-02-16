@@ -15,16 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Script to let a user create a department for a particular company.
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Script to let a user import departments to a particular company.
+ */
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once('lib.php');
 
-
-class department_import_form extends moodleform {
+/*class department_import_form extends moodleform {
 
     function definition() {
         global $CFG;
@@ -44,7 +49,7 @@ class department_import_form extends moodleform {
     }
 }
 
-
+*/
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $departmentid = optional_param('departmentid', 0, PARAM_INT);
 $deptid = optional_param('deptid', 0, PARAM_INT);
@@ -79,7 +84,7 @@ $PAGE->navbar->add($linktext, $departmentlist);
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
 
-$importform = new department_import_form($PAGE->url);
+$importform = new \block_iomad_company_admin\forms\company_department_import_form($PAGE->url);
 $errors = "";
 
 if ($importform->is_cancelled()) {

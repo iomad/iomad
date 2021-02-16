@@ -14,9 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once('lib.php');
 require_once($CFG->dirroot.'/user/profile/definelib.php');
-require_once(dirname('__FILE__').'/company_license_table.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
@@ -135,7 +141,7 @@ $strlicenseremaining = get_string('licenseremaining', 'block_iomad_company_admin
 $strcompany = get_string('company', 'block_iomad_company_admin');
 
 // Set up the table
-$table = new company_license_table('company_licenses_table');
+$table = new block_iomad_company_admin\tables\company_license_table('company_licenses_table');
 
 $tableheaders = array ($strlicensename,
                        $strlicensereference,

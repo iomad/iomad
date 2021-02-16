@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $string['actions'] = 'Actions';
 $string['addnewchildcompany'] = 'Add a new child company';
 $string['addnewcompany'] = 'Add a new company';
@@ -310,6 +317,7 @@ $string['iomad_company_admin:assign_department_manager'] = 'Assign a department 
 $string['iomad_company_admin:assign_educator'] = 'Assign a course educator';
 $string['iomad_company_admin:allcompany_user_profiles'] = 'Manage all user profiles for all companies';
 $string['iomad_company_admin:allocate_licenses'] = 'Allocate licenses to users';
+$string['iomad_company_admin:block'] = 'Block iomad_company_admin';
 $string['iomad_company_admin:classrooms'] = 'Access teaching location menus';
 $string['iomad_company_admin:classrooms_add'] = 'Add teaching locations';
 $string['iomad_company_admin:classrooms_delete'] = 'Remove teaching locations';
@@ -703,6 +711,7 @@ $string['licensehelp'] = 'On this screen you are able to change the course alloc
 $string['headingcolor'] = 'Heading Colour';
 $string['maincolor'] = 'Main Colour';
 $string['linkcolor'] = 'Link Colour';
+$string['totalusers'] = '{$a} Users';
 
 // Role stuff
 $string['archetypeclientadministrator_role'] = 'Iomad client administrator';
