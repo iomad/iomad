@@ -17,7 +17,6 @@
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
-require_once($CFG->dirroot.'/blocks/iomad_company_admin/editusers_table.php');
 require_once('lib.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
@@ -584,7 +583,7 @@ if (!$showall) {
 
 
 // Deal with optional report fields.
-if (!empty($extrafields)) {
+if (!empty($extrafields) && $adminediting != 1) {
     foreach ($extrafields as $extrafield) {
         $headers[] = $extrafield->title;
         $columns[] = $extrafield->name;
@@ -605,20 +604,29 @@ if (!empty($extrafields)) {
     }
 }
 
-// Deal with final columns.
-$headers[] = get_string('lastaccess');
-$columns[] = "lastaccess";
+if ($adminediting != 1) {
+    // Deal with final columns.
+    $headers[] = get_string('lastaccess');
+    $columns[] = "lastaccess";
+}
 
 // Can we see the controls?
 if (iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
              || iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
-    $headers[] = '';
-    $columns[] = 'actions';
+    if ($adminediting != 1) {
+        $headers[] = '';
+        $columns[] = 'actions';
+    } else {
+        $headers[] = get_string('delete');
+        $columns[] = 'delete';
+        $headers[] = get_string('suspend');
+        $columns[] = 'suspend';
+    }
 
 }
 
 // Actually create and display the table.
-$table = new block_iomad_company_admin_editusers_table('block_iomad_company_admin_editusers_table');
+$table = new \block_iomad_company_admin\tables\editusers_table('block_iomad_company_admin_editusers_table');
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->set_count_sql($countsql, $sqlparams);
 $table->define_baseurl($baseurl);
