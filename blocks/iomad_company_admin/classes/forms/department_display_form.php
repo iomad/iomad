@@ -43,13 +43,13 @@ class department_display_form extends company_moodleform {
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
         $syscontext = context_system::instance();
 
-        $company = new company($this->selectedcompany);
-        $parentlevel = company::get_company_parentnode($company->id);
+        $this->company = new company($this->selectedcompany);
+        $parentlevel = company::get_company_parentnode($this->company->id);
         $this->companydepartment = $parentlevel->id;
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $syscontext)) {
             $userhierarchylevel = $parentlevel->id;
         } else {
-            $userlevels = $company->get_userlevel($USER);
+            $userlevels = $this->company->get_userlevel($USER);
             $userhierarchylevel = key($userlevels);
         }
 
@@ -68,16 +68,15 @@ class department_display_form extends company_moodleform {
         global $CFG, $output;
 
         $mform =& $this->_form;
-        $company = new company($this->selectedcompany);
-        if (!$parentnode = company::get_company_parentnode($company->id)) {
+        if (!$parentnode = company::get_company_parentnode($this->company->id)) {
             // Company has not been set up, possibly from before an upgrade.
-            company::initialise_departments($company->id);
+            company::initialise_departments($this->company->id);
         }
 
         if (!empty($this->departmentid)) {
             $departmentslist = company::get_all_subdepartments($this->departmentid);
         } else {
-            $departmentslist = company::get_all_departments($company->id);
+            $departmentslist = company::get_all_departments($this->company->id);
         }
 
         if (!empty($this->departmentid)) {
@@ -104,7 +103,7 @@ class department_display_form extends company_moodleform {
         // Then show the fields about where this block appears.
         $mform->addElement('header', 'header',
                             get_string('companydepartment', 'block_iomad_company_admin').
-                           $company->get_name());
+                           $this->company->get_name());
 
         if (count($departmentslist) == 1) {
             $mform->addElement('html', "<h3>" . get_string('nodepartments', 'block_iomad_company_admin') . "</h3></br>");
