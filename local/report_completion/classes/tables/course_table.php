@@ -21,18 +21,20 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_report_completion\tables;
+
+use \table_sql;
+use \moodle_url;
+use \company;
+use \iomad;
+use \html_writer;
+use \context_system;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-/**
- * Base class for the table used by local_report_user_license_allocations
- *
- * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class local_report_course_completion_course_table extends table_sql {
+class course_table extends table_sql {
 
     /**
      * Generate the display of the user's firstname

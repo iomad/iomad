@@ -17,24 +17,22 @@
 /**
  * Base class for the table used by a {@link quiz_attempts_report}.
  *
- * @package   local_report_user_logins
- * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
+ * @package   local_report_user_license_allocations
+ * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace local_report_users\tables;
+
+use \table_sql;
+use \moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-/**
- * Base class for the table used by local_report_users_login
- *
- * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class local_report_user_logins_table extends table_sql {
+class users_table extends table_sql {
 
     /**
      * Generate the display of the user's firstname
@@ -45,9 +43,9 @@ class local_report_user_logins_table extends table_sql {
         global $CFG;
 
         $userurl = '/local/report_users/userdisplay.php';
-        if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', context_system::instance())) {
+        if (!$this->is_downloading()) {
             return "<a href='".
-                    new moodle_url($userurl, array('userid' => $row->id)) .
+                    new moodle_url($userurl, array('userid' => $row->id)).
                     "'>$row->firstname</a>";
         } else {
             return $row->firstname;
@@ -63,7 +61,7 @@ class local_report_user_logins_table extends table_sql {
         global $CFG;
 
         $userurl = '/local/report_users/userdisplay.php';
-        if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', context_system::instance())) {
+        if (!$this->is_downloading()) {
             return "<a href='".
                     new moodle_url($userurl, array('userid' => $row->id)).
                     "'>$row->lastname</a>";
@@ -73,43 +71,82 @@ class local_report_user_logins_table extends table_sql {
     }
 
     /**
-     * Generate the display of the user's created timestamp
+     * Generate the display of the user's license allocated timestamp
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
-    public function col_created($user) {
+    public function col_created($row) {
         global $CFG;
 
-        return date($CFG->iomad_date_format, $user->created);
-    }
-
-    /**
-     * Generate the display of the user's created timestamp
-     * @param object $user the table row being output.
-     * @return string HTML content to go inside the td.
-     */
-    public function col_firstlogin($user) {
-        global $CFG;
-
-        if ($user->firstlogin == null) {
-            return(get_string('never'));
+        if (!empty($row->created)) {
+            return date($CFG->iomad_date_format, $row->created);
         } else {
-            return date($CFG->iomad_date_format, $user->firstlogin);
+            return;
         }
     }
 
     /**
-     * Generate the display of the user's created timestamp
+     * Generate the display of the user's license allocated timestamp
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
-    public function col_lastlogin($user) {
+    public function col_lastlogin($row) {
         global $CFG;
 
-        if ($user->lastlogin == null) {
-            return(get_string('never'));
+        if (!empty($row->lastlogin)) {
+            return date($CFG->iomad_date_format, $row->lastlogin);
         } else {
-            return date($CFG->iomad_date_format, $user->lastlogin);
+            return get_string('never');
+        }
+    }
+
+    /**
+     * Generate the display of the user's license allocated timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_timecompleted($row) {
+        global $CFG;
+
+        if (!empty($row->timecompleted)) {
+            return date($CFG->iomad_date_format, $row->timecompleted);
+        } else {
+            return;
+        }
+    }
+
+    /**
+     * Generate the display of the user's course expiration timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_timeexpires($row) {
+        global $CFG;
+
+        if (!empty($row->timeexpires)) {
+            if ($icourserec = $DB->get_record_sql("SELECT * FROM {iomad_courses} WHERE courseid =: courseid AND expireafter !=0", array('courseid' => $row->courseid))) {
+                $expiredate = $row->timecompleted + $icourserec->timeexpires * 24 * 60 * 60;
+                return date($CFG->iomad_date_format, $expiredate);
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+    }
+
+    /**
+     * Generate the display of the user's license allocated timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_finalscore($row) {
+        global $CFG;
+
+        if (!empty($row->finalscore)) {
+            return round($row->finalscore, $CFG->iomad_report_grade_places)."%";
+        } else {
+            return;
         }
     }
 }

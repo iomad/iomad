@@ -18,22 +18,23 @@
  * Base class for the table used by a {@link quiz_attempts_report}.
  *
  * @package   local_report_user_license_allocations
- * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
+ * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace block_iomad_company_admin\tables;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-/**
- * Base class for the table used by local_report_user_license_allocations
- *
- * @copyright 2019 E-Learn Design Ltd. (https://www.e-learndesign.co.uk)
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+use \table_sql;
+use \iomad;
+use \moodle_url;
+use \single_select;
+use \html_writer;
+
 class iomad_courses_table extends table_sql {
 
     /**
