@@ -285,7 +285,7 @@ class block_iomad_company_admin extends block_base {
             }
 
             // Get topic image icon
-            if (((empty($USER->theme) && (strpos($CFG->theme, 'iomad') !== false)) || (strpos($USER->theme, 'iomad') !== false))  && !empty($menu['icon'])) {
+            if (((empty($USER->theme) && $CFG->theme != 'ldiomad' && (strpos($CFG->theme, 'iomad') !== false)) || ($USER->theme != 'ldiomad' && strpos($USER->theme, 'iomad') !== false))  && !empty($menu['icon'])) {
                 $icon = $menu['icon'];
             } else if (!empty($menu['icondefault'])) {
                 $imgsrc = $OUTPUT->image_url($menu['icondefault'], 'block_iomad_company_admin');
