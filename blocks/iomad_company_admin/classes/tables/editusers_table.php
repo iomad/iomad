@@ -30,6 +30,7 @@ use \moodle_url;
 use \action_menu_link_secondary;
 use \action_menu;
 use \iomad;
+use \context_system;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -43,7 +44,7 @@ class editusers_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
+        $name = fullname($row, has_capability('moodle/site:viewfullnames', context_system::instance()));
         return $name;
     }
 
