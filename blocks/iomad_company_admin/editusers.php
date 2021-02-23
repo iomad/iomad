@@ -147,8 +147,6 @@ require_login(null, false); // Adds to $PAGE, creates $output.
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
-echo $output->header();
-
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
@@ -172,12 +170,6 @@ if ($departmentid == 0) {
 if (!(iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
     or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
     print_error('nopermissions', 'error', '', 'edit/delete users');
-}
-
-// If we are showing all users we can't use the departments.
-if (!$showall) {
-    // Show the department tree picker.
-    echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid);
 }
 
 // Set up the filter form.
@@ -295,6 +287,8 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($password)) {
         $fullname = fullname($user, true);
+
+        echo $output->header();
         echo $output->heading(get_string('resetpassword', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('password' => $password, 'confirm' => md5($password), 'sesskey' => sesskey());
         echo $output->confirm(get_string('resetpasswordcheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -325,6 +319,7 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($delete)) {
         $fullname = fullname($user, true);
+        echo $output->header();
         echo $output->heading(get_string('deleteuser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $output->confirm(get_string('deletecheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -366,6 +361,7 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($suspend)) {
         $fullname = fullname($user, true);
+        echo $output->header();
         echo $output->heading(get_string('suspenduser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('suspend' => $suspend, 'confirm' => md5($suspend), 'sesskey' => sesskey());
         echo $output->confirm(get_string('suspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -414,6 +410,7 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($unsuspend)) {
         $fullname = fullname($user, true);
+        echo $output->header();
         echo $output->heading(get_string('unsuspenduser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('unsuspend' => $unsuspend, 'confirm' => md5($unsuspend), 'sesskey' => sesskey());
         echo $output->confirm(get_string('unsuspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -465,6 +462,15 @@ if ($confirmuser and confirm_sesskey()) {
     }
     $mnethosts = $DB->get_records('mnet_host', null, 'id', 'id, wwwroot, name');
     redirect($returnurl);
+}
+
+// Display the page.
+echo $output->header();
+
+// If we are showing all users we can't use the departments.
+if (!$showall) {
+    // Show the department tree picker.
+    echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid);
 }
 
 // Display the user filter form.
