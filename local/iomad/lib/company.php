@@ -776,7 +776,7 @@ class company {
             $gone=true;
         } else {
             // Check if it belongs to a company now?
-            if (!$DB->get_records_sql("SELECT id FROM {company_courses}
+            if (!$DB->get_records_sql("SELECT id FROM {company_course}
                                        WHERE courseid = :courseid
                                        AND companyid != :companyid",
                                        array('courseid' => $courseid,
@@ -3878,7 +3878,7 @@ class company {
             ( $DB->get_record_sql("SELECT id FROM {local_iomad_track}
                                     WHERE userid=:userid
                                     AND courseid = :courseid
-                                    AND timeenrolled = :timeenrolled
+                                    AND timeenrolled <= :timeenrolled
                                     AND timecompleted IS NOT NULL",
                                     array('userid' => $userid,
                                           'courseid' => $courseid,
@@ -3886,7 +3886,7 @@ class company {
             && $DB->get_record_sql("SELECT id FROM {local_iomad_track}
                                     WHERE userid=:userid
                                     AND courseid = :courseid
-                                    AND timeenrolled = :timeenrolled
+                                    AND timeenrolled <= :timeenrolled
                                     AND timecompleted != :timecompleted",
                                     array('userid' => $userid,
                                           'courseid' => $courseid,

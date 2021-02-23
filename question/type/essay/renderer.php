@@ -106,7 +106,7 @@ class qtype_essay_renderer extends qtype_renderer {
      */
     public function files_input(question_attempt $qa, $numallowed,
             question_display_options $options) {
-        global $CFG;
+        global $CFG, $COURSE;
         require_once($CFG->dirroot . '/lib/form/filemanager.php');
 
         $pickeroptions = new stdClass();
@@ -122,7 +122,12 @@ class qtype_essay_renderer extends qtype_renderer {
         $pickeroptions->accepted_types = $qa->get_question()->filetypeslist;
 
         $fm = new form_filemanager($pickeroptions);
-        $fm->options->maxbytes = $qa->get_question()->maxbytes;;
+        $fm->options->maxbytes = get_user_max_upload_file_size(
+            $this->page->context,
+            $CFG->maxbytes,
+            $COURSE->maxbytes,
+            $qa->get_question()->maxbytes
+        );
         $filesrenderer = $this->page->get_renderer('core', 'files');
 
         $text = '';
@@ -259,7 +264,7 @@ class qtype_essay_format_editor_renderer extends plugin_renderer_base {
                 $this->class_name() . ' qtype_essay_response'));
 
         $output .= html_writer::tag('div', html_writer::tag('textarea', s($response),
-                array('id' => $id, 'name' => $inputname, 'rows' => $lines, 'cols' => 60)));
+                array('id' => $id, 'name' => $inputname, 'rows' => $lines, 'cols' => 60, 'class' => 'form-control')));
 
         $output .= html_writer::start_tag('div');
         if (count($formats) == 1) {
@@ -450,7 +455,7 @@ class qtype_essay_format_plain_renderer extends plugin_renderer_base {
      * @return string the HTML for the textarea.
      */
     protected function textarea($response, $lines, $attributes) {
-        $attributes['class'] = $this->class_name() . ' qtype_essay_response';
+        $attributes['class'] = $this->class_name() . ' qtype_essay_response form-control';
         $attributes['rows'] = $lines;
         $attributes['cols'] = 60;
         return html_writer::tag('textarea', s($response), $attributes);
