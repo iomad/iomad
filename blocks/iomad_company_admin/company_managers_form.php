@@ -58,6 +58,19 @@ $PAGE->navbar->add($linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
+$company = new company($companyid);
+
+// Set up the departments stuffs.
+$parentlevel = company::get_company_parentnode($company->id);
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
+    $userhierarchylevel = $parentlevel->id;
+} else {
+    $userlevel = $company->get_userlevel($USER);
+    $userhierarchylevel = key($userlevel);
+}
+if ($departmentid == 0) {
+    $departmentid = $userhierarchylevel;
+}
 
 $PAGE->set_context($context);
 
@@ -75,9 +88,7 @@ if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
 
-// Set up the departments stuffs.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+// Get the manager types.
 $managertypes = $company->get_managertypes();
 if (empty($departmentid)) {
     $departmentid = $parentlevel->id;
