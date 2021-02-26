@@ -18,7 +18,7 @@
  * Privacy Subsystem implementation for local_report_user_license_allocations.
  *
  * @package    local_report_user_license_allocations
- * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @copyright  2021 Derick Turner
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -104,16 +104,12 @@ class provider implements
             return;
         }
 
-        if (empty($contextlist->count())) {
-            return;
-        }
-
         $user = $contextlist->get_user();
 
         $context = \context_system::instance();
 
         if ($tracks = $DB->get_records('local_report_user_lic_allocs', array('userid' => $user->id))) {
-            foreach ($tracks as $ctrack) {
+            foreach ($tracks as $track) {
                 writer::with_context($context)->export_data($context, $track);
             }
         }

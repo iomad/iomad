@@ -18,7 +18,7 @@
  * Privacy Subsystem implementation for local_iomad_track.
  *
  * @package    local_iomad_track
- * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @copyright  2021 Derick Turner
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -120,16 +120,12 @@ class provider implements
             return;
         }
 
-        if (empty($contextlist->count())) {
-            return;
-        }
-
         $user = $contextlist->get_user();
 
         $context = \context_system::instance();
 
         if ($tracks = $DB->get_records('local_iomad_track', array('userid' => $user->id))) {
-            foreach ($tracks as $ctrack) {
+            foreach ($tracks as $track) {
                 writer::with_context($context)->export_data($context, $track);
                 if ($certinfo = $DB->get_record('local_iomad_track_certs', array('trackid' => $track->id))) {
                     // Export the track info
