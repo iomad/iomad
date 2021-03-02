@@ -15,15 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_iomad_signup
+ * @package   local_iomad_track
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->version  = 2021030200;   // The (date) version of this plugin.
-$plugin->requires = 2018120301;   // Requires this Moodle version. (2.8)
-$plugin->release  = '3.6.10 (Build: 20200511)'; // Human-friendly version name
-$plugin->component = 'local_iomad_track';
+// Basic navigation settings
+require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
+
+$url = new moodle_url( '/local/iomad_track/import.php' );
+$ADMIN->add( 'iomad', new admin_externalpage('importcompletionrecords',
+                               get_string('importcompletionrecords',
+                               'local_iomad_track'),
+                               $url,
+                               'local/report_attendance:view'));
