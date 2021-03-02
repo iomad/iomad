@@ -17,6 +17,13 @@
 // Bulk user registration script from a comma separated file.
 // Returns list of users with their user ids.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
@@ -636,8 +643,12 @@ if ($mform->is_cancelled()) {
                     } else if ($updatetype == 2 or $updatetype == 3) {
                         $allowed = array_merge($stdfields, $prffields);
                     }
-                    foreach ($allowed as $column) {
+                    if (!$updatepasswords) {
+                        $temppasswordhandler = $existinguser->password;
+                    } else {
                         $temppasswordhandler = '';
+                    }
+                    foreach ($allowed as $column) {
                         if ($column == 'username') {
                             continue;
                         }
@@ -729,7 +740,7 @@ if ($mform->is_cancelled()) {
                         $userserrors++;
                         $erroredusers[] = $line;
                         continue;
-                    } else {
+                    } else if ($updatepasswords) {
                         $forcechangepassword = true;
                     }
 
@@ -742,7 +753,6 @@ if ($mform->is_cancelled()) {
                     } else {
                         $existinguser->password = $temppasswordhandler;
                     }
-
                     $DB->update_record('user', $existinguser);
 
                     // Remove user preference.
@@ -947,6 +957,10 @@ if ($mform->is_cancelled()) {
                     // Stash the default in case we need to remove them from it later.
                     $defaultdepartmentid = $department->id;
                 }
+
+                // Save the vew profile information.
+                profile_save_data($user);
+
                 $info = ': ' . $user->username .' (ID = ' . $user->id . ')';
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
