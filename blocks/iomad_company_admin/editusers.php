@@ -24,7 +24,6 @@
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
-require_once($CFG->dirroot.'/blocks/iomad_company_admin/editusers_table.php');
 require_once('lib.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
@@ -40,7 +39,7 @@ $page         = optional_param('page', 0, PARAM_INT);
 $perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);        // How many per page.
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
-$departmentid = optional_param('departmentid', 0, PARAM_INTEGER);
+$departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $firstname       = optional_param('firstname', 0, PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
 $email  = optional_param('email', 0, PARAM_CLEAN);
@@ -85,7 +84,7 @@ if ($email) {
     $params['email'] = $email;
 }
 if ($departmentid) {
-    $params['departmentid'] = $departmentid;
+    $params['deptid'] = $departmentid;
 }
 $params['usertype'] = $usertype;
 
@@ -121,7 +120,7 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
 // Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('departmentid', 1, optional_param('departmentid', 0, PARAM_INT)));
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
 
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
@@ -151,8 +150,6 @@ require_login(null, false); // Adds to $PAGE, creates $output.
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
-echo $output->header();
-
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     print_error('invaliddepartment', 'block_iomad_company_admin');
@@ -167,7 +164,7 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', cont
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
-    $userhierarchylevel = $userlevel->id;
+    $userhierarchylevel = key($userlevel);
 }
 if ($departmentid == 0) {
     $departmentid = $userhierarchylevel;
@@ -176,21 +173,6 @@ if ($departmentid == 0) {
 if (!(iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
     or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
     print_error('nopermissions', 'error', '', 'edit/delete users');
-}
-
-// If we are showing all users we can't use the departments.
-if (!$showall) {
-// Get the appropriate list of departments.
-    $userdepartment = $company->get_userlevel($USER);
-    $departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
-    $treehtml = $output->department_tree($departmenttree, optional_param('departmentid', 0, PARAM_INT));
-    echo $treehtml;
-
-    $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
-    $select = new single_select($baseurl, 'departmentid', $subhierarchieslist, $departmentid);
-    $select->label = get_string('department', 'block_iomad_company_admin');
-    $select->formid = 'choosedepartment';
-    $departmentselect = html_writer::tag('div', $output->render($select), array('id' => 'iomad_department_selector', 'style' => 'display: none;'));
 }
 
 // Set up the filter form.
@@ -308,6 +290,8 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($password)) {
         $fullname = fullname($user, true);
+
+        echo $output->header();
         echo $output->heading(get_string('resetpassword', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('password' => $password, 'confirm' => md5($password), 'sesskey' => sesskey());
         echo $output->confirm(get_string('resetpasswordcheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -338,6 +322,7 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($delete)) {
         $fullname = fullname($user, true);
+        echo $output->header();
         echo $output->heading(get_string('deleteuser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $output->confirm(get_string('deletecheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -379,6 +364,7 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($suspend)) {
         $fullname = fullname($user, true);
+        echo $output->header();
         echo $output->heading(get_string('suspenduser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('suspend' => $suspend, 'confirm' => md5($suspend), 'sesskey' => sesskey());
         echo $output->confirm(get_string('suspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -427,6 +413,7 @@ if ($confirmuser and confirm_sesskey()) {
 
     if ($confirm != md5($unsuspend)) {
         $fullname = fullname($user, true);
+        echo $output->header();
         echo $output->heading(get_string('unsuspenduser', 'block_iomad_company_admin'). " " . $fullname);
         $optionsyes = array('unsuspend' => $unsuspend, 'confirm' => md5($unsuspend), 'sesskey' => sesskey());
         echo $output->confirm(get_string('unsuspendcheckfull', 'block_iomad_company_admin', "'$fullname'"),
@@ -478,6 +465,15 @@ if ($confirmuser and confirm_sesskey()) {
     }
     $mnethosts = $DB->get_records('mnet_host', null, 'id', 'id, wwwroot, name');
     redirect($returnurl);
+}
+
+// Display the page.
+echo $output->header();
+
+// If we are showing all users we can't use the departments.
+if (!$showall) {
+    // Show the department tree picker.
+    echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid);
 }
 
 // Display the user filter form.
@@ -595,7 +591,6 @@ $countsql = "SELECT COUNT(DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("
 
 // Carry on with the user listing.
 if (!$showall) {
-    echo $departmentselect;
     $headers = array(get_string('fullname'),
                      get_string('email'),
                      get_string('department'));
@@ -615,7 +610,7 @@ if (!$showall) {
 
 
 // Deal with optional report fields.
-if (!empty($extrafields)) {
+if (!empty($extrafields) && $adminediting != 1) {
     foreach ($extrafields as $extrafield) {
         $headers[] = $extrafield->title;
         $columns[] = $extrafield->name;
@@ -636,15 +631,24 @@ if (!empty($extrafields)) {
     }
 }
 
-// Deal with final columns.
-$headers[] = get_string('lastaccess');
-$columns[] = "lastaccess";
+if ($adminediting != 1) {
+    // Deal with final columns.
+    $headers[] = get_string('lastaccess');
+    $columns[] = "lastaccess";
+}
 
 // Can we see the controls?
 if (iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
              || iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext)) {
-    $headers[] = '';
-    $columns[] = 'actions';
+    if ($adminediting != 1) {
+        $headers[] = '';
+        $columns[] = 'actions';
+    } else {
+        $headers[] = get_string('delete');
+        $columns[] = 'delete';
+        $headers[] = get_string('suspend');
+        $columns[] = 'suspend';
+    }
 
 }
 
@@ -653,7 +657,7 @@ $usercount = $DB->count_records_sql($countsql, $sqlparams);
 echo $output->heading(get_string('totalusers', 'block_iomad_company_admin', $usercount));
 
 // Actually create and display the table.
-$table = new block_iomad_company_admin_editusers_table('block_iomad_company_admin_editusers_table');
+$table = new \block_iomad_company_admin\tables\editusers_table('block_iomad_company_admin_editusers_table');
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->set_count_sql($countsql, $sqlparams);
 $table->define_baseurl($baseurl);

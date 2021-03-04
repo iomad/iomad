@@ -40,24 +40,16 @@ class iomad_approve_access {
             return false;
         }
 
-        // If I'm a site admin I can approve any type.
+        // Check if we can have users of my type.
         if (is_siteadmin($USER->id)) {
             $approvaltype = 'both';
         } else {
-            // Work out what type of manager I am, if any?
-            if ($manageruser = $DB->get_record_select('company_users', 'userid = :userid AND companyid = :companyid AND managertype > 0', array('userid' => $USER->id, 'companyid' => $companyid))) {
-                if ($manageruser->managertype == 2) {
-
-                    // Department manager.
-                    $approvaltype = 'manager';
-                } else if ($manageruser->managertype == 1) {
-
-                    // Company manager.
-                    $approvaltype = 'company';
-                }
+            // What type of manager am I?
+            if ($DB->get_records('company_users', array('userid' => $USER->id, 'managertype' => 1, 'companyid' => $companyid))) {
+                $approvaltype = 'company';
+            } else if ($DB->get_records('company_users', array('userid' => $USER->id, 'managertype' => 2, 'companyid' => $companyid))) {
+                $approvaltype = 'manager';
             } else {
-
-                // Not a manager.
                 return false;
             }
         }

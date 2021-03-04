@@ -23,11 +23,20 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace block_iomad_company_admin\tables;
+
+use \table_sql;
+use \moodle_url;
+use \action_menu_link_secondary;
+use \action_menu;
+use \iomad;
+use \context_system;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
-class block_iomad_company_admin_editusers_table extends table_sql {
+class editusers_table extends table_sql {
 
     /**
      * Generate the display of the user's| fullname
@@ -36,9 +45,6 @@ class block_iomad_company_admin_editusers_table extends table_sql {
      */
     public function col_fullname($row) {
         $name = fullname($row, has_capability('moodle/site:viewfullnames', context_system::instance()));
-        if (!empty($row->suspended)) {
-            $name .= "&nbsp(S)";
-        }
         return $name;
     }
 
@@ -54,8 +60,10 @@ class block_iomad_company_admin_editusers_table extends table_sql {
                                              JOIN {company_users} cu
                                              ON (d.id = cu.departmentid)
                                              WHERE cu.userid = :userid
+                                             AND cu.companyid = :companyid
                                              ORDER BY d.name",
-                                             array('userid' => $row->id));
+                                             array('userid' => $row->id,
+                                                   'companyid' => $row->companyid));
         $returnstr = "";
         $count = count($departments);
         $current = 1;
@@ -133,7 +141,7 @@ class block_iomad_company_admin_editusers_table extends table_sql {
         if ((iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
              or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))
              or $row->id == $USER->id and !is_mnet_remote_user($row)) {
-            if ($row->id != $USER->id && $DB->get_record_select('company_users', 'companyid =:company AND managertype != 0 AND userid = :userid', array('company' => $row->companyid, 'userid' => $row->id))
+            if ($row->id != $USER->id && $DB->get_records_select('company_users', 'companyid =:company AND managertype IN (1,2) AND userid = :userid', array('company' => $row->companyid, 'userid' => $row->id))
                 && !iomad::has_capability('block/iomad_company_admin:editmanagers', $systemcontext)) {
                // This manager can't edit manager users.
             } else {
@@ -162,7 +170,7 @@ class block_iomad_company_admin_editusers_table extends table_sql {
         if ($row->id != $USER->id) {
             if ((iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext)
                  or iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
-                if ($DB->get_record_select('company_users', 'companyid =:company AND managertype != 0 AND userid = :userid', array('company' => $companyid, 'userid' => $row->id))
+                if ($DB->get_records_select('company_users', 'companyid =:company AND managertype != 0 AND userid = :userid', array('company' => $companyid, 'userid' => $row->id))
                 && !iomad::has_capability('block/iomad_company_admin:editmanagers', $systemcontext)) {
                     // Do nothing.
                 } else {
@@ -262,12 +270,18 @@ class block_iomad_company_admin_editusers_table extends table_sql {
     function print_nothing_to_display() {
         global $OUTPUT, $CFG;
 
+        // Render the dynamic table header.
+        echo $this->get_dynamic_table_html_start();
+
         // Render button to allow user to reset table preferences.
         echo $this->render_reset_button();
 
         $this->print_initials_bar();
 
         echo $OUTPUT->heading(get_string('nothingtodisplay'));
+
+        // Render the dynamic table footer.
+        echo $this->get_dynamic_table_html_end();
 
         // Add the button to add a user.
         echo $OUTPUT->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_user_create_form.php'),
