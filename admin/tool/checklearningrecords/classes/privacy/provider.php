@@ -19,7 +19,7 @@
  *
  * @package    tool
  * @subpackage checklearningrecords
- * @copyright  2020 E-Learn Design https://www.e-learndesign
+ * @copyright  2021 Derick Turner
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,12 +28,6 @@ namespace tool_checklearningrecords\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Privacy Subsystem for tool_checklearningrecords implementing null_provider.
- *
- * @copyright  2018 Zig Tan <zig@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class provider implements \core_privacy\local\metadata\null_provider {
 
     /**
