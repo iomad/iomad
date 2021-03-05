@@ -270,18 +270,12 @@ class editusers_table extends table_sql {
     function print_nothing_to_display() {
         global $OUTPUT, $CFG;
 
-        // Render the dynamic table header.
-        echo $this->get_dynamic_table_html_start();
-
         // Render button to allow user to reset table preferences.
         echo $this->render_reset_button();
 
         $this->print_initials_bar();
 
         echo $OUTPUT->heading(get_string('nothingtodisplay'));
-
-        // Render the dynamic table footer.
-        echo $this->get_dynamic_table_html_end();
 
         // Add the button to add a user.
         echo $OUTPUT->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_user_create_form.php'),
