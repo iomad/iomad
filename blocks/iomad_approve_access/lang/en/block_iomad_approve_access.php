@@ -17,6 +17,7 @@
 /**
  * @package    Block Iomad Approve Access
  * @copyright  2011 onwards E-Learn Design Limited
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -24,10 +25,10 @@ $string['iomad_approve_access:addinstance'] = 'Add an Iomad approve access block
 $string['iomad_approve_access:approve'] = 'Approve access to a user to an approval activity';
 $string['iomad_approve_access:myaddinstance'] = 'Add an Iomad approve access block to my moodle page';
 
-$string['approvecourse'] = "Approve Course";
-$string['approveusers'] = 'Approve Course to the User';
-$string['approveusers:addinstance'] = 'Add Approve Course Instance';
-$string['approveusers:myaddinstance'] = 'Add Approve Course HTML block to the page';
+$string['approvecourse'] = "Approve training event";
+$string['approveusers'] = 'Approve training events';
+$string['approveusers:addinstance'] = 'Add Approve training event instance';
+$string['approveusers:myaddinstance'] = 'Add Approve training event block to the page';
 $string['approveuserstitle'] = 'Manage access approvals';
 $string['deny'] = 'Decline';
 $string['enrolledcourse'] = "Enrolled Course";
@@ -39,7 +40,7 @@ $string['name'] = "Full Name";
 $string['noonetoapprove'] = 'No users to approve';
 $string['notapproved'] = "Not Approved";
 $string['pending'] = "Approve Pending";
-$string['pluginname'] = 'Iomad approve users enroll';
+$string['pluginname'] = 'Iomad approve training events';
 $string['privacy:metadata'] = 'The Iomad Approve Access block only shows data stored in other locations.';
 $string['privacy:metadata:block_iomad_approve_access:id'] = 'Id from {block_iomad_approve_access} table';
 $string['privacy:metadata:block_iomad_approve_access:userid'] = 'User id';

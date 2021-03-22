@@ -1,4 +1,9 @@
-
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 .iomad_company_admin_table {
    width: 95%;
@@ -178,8 +183,16 @@ border-radius: 10px;
     overflow-x: unset;
 }
 
+#page-blocks-iomad_company_admin-editusers .main, #page-blocks-iomad_company_admin-editusers #region-main, #page-blocks-iomad_company_admin-editusers #region-main > div {
+    height: 100%;
+}
+
+#page-blocks-iomad_company_admin-editusers .no-overflow {
+    min-height: 472px;
+}
+
 #page-blocks-iomad_company_admin-editusers .moodle-actionmenu[data-enhanced].show .menu.align-tl-bl {
-    left: 50px;
+    left: -150px;
     min-width: 150px;
 }
 

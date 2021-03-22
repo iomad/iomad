@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_report_attendance
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->libdir.'/excellib.class.php');
@@ -56,7 +63,7 @@ $companydepartment = $parentlevel->id;
 
 // Work out where the user sits in the company department tree.
 $userlevel = $company->get_userlevel($USER);
-$userhierarchylevel = $userlevel->id;
+$userhierarchylevel = key($userlevel);
 if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }

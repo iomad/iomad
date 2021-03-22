@@ -13,6 +13,11 @@
 
     You should have received a copy of the GNU General Public License
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+ * @package   block_mycourses
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 }}
 {{!
     @template block_mycourses/completed-view
@@ -54,11 +59,11 @@
                                         <strong>{{#str}} finalscore, block_mycourses,  {{ finalscore }}</strong> {{/str}}
                                     </div>
                                 </div>
-                                {{#certificate}}
+                                {{#certificates}}
                                     <div class = "certificatediv">
-                                        <a class="btn btn-secondary" href="{{ certificate }}">{{#str}} downloadcert, block_mycourses {{/str}}</a></p>
+                                        <b>{{#str}} downloadcert, block_mycourses {{/str}}: </b><a href="{{ certificateurl }}" title="{{ certificatename }}"><img src="{{ certificateimage }}" alt="{{ certificatename }}"></a></p>
                                     </div>
-                                {{/certificate}}
+                                {{/certificates}}
                             </div>
                         </div>
                     </div>

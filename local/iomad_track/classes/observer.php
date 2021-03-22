@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_iomad_signup
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_iomad_track;
 
 defined('MOODLE_INTERNAL') || die();
@@ -115,7 +122,7 @@ class observer {
     /**
      * Process (any) certificates in the course
      */
-    private static function record_certificates($courseid, $userid, $trackid) {
+    public static function record_certificates($courseid, $userid, $trackid, $showdebug = true) {
         global $DB;
 
         // Get course.
@@ -164,7 +171,9 @@ class observer {
             self::save_certificate($trackid, $filename);
 
             // Debugging
-            mtrace('local_iomad_track: certificate recorded for ' . $user->username . ' in course ' . $courseid . ' filename "' . $filename . '"');
+            if ($showdebug) {
+                mtrace('local_iomad_track: certificate recorded for ' . $user->username . ' in course ' . $courseid . ' filename "' . $filename . '"');
+            }
         }
     }
 
@@ -205,13 +214,13 @@ class observer {
         }
 
         // Is this a duplicate event?
-        if (!empty($enrolrec->timestart) &&
+        if (!empty($enrolrec->timecreated) &&
              $DB->get_record_sql("SELECT id FROM {local_iomad_track}
                                  WHERE userid = :userid
                                  AND courseid = :courseid
                                  AND timeenrolled = :timeenrolled
                                  AND timecompleted IS NOT NULL",
-                                 array('userid' => $userid, 'courseid' => $courseid, 'timeenrolled' => $enrolrec->timestart))) {
+                                 array('userid' => $userid, 'courseid' => $courseid, 'timeenrolled' => $enrolrec->timecreated))) {
 
             // It is so we don't record it.
             return true;
@@ -233,12 +242,12 @@ class observer {
         $broken = false;
         if (empty($comprec->timeenrolled)) {
             $broken = true;
-            $comprec->timeenrolled = $enrolrec->timestart;
+            $comprec->timeenrolled = $enrolrec->timecreated;
         }
 
         if (empty($comprec->timestarted)) {
             $broken = true;
-            $comprec->timestarted = $enrolrec->timestart;
+            $comprec->timestarted = $enrolrec->timecreated;
         }
 
         if ($broken) {
@@ -279,7 +288,7 @@ class observer {
             $completion = new \StdClass();
             $completion->courseid = $courseid;
             $completion->userid = $userid;
-            $completion->timeenrolled = $enrolrec->timestart;
+            $completion->timeenrolled = $enrolrec->timecreated;
             $completion->timestarted = $comprec->timestarted;
             $completion->timecompleted = $comprec->timecompleted;
             $completion->finalscore = $finalscore;
@@ -315,7 +324,7 @@ class observer {
                                                      AND e.status = 0",
                                                      array('userid' => $userid,
                                                            'courseid' => $courseid));
-                    $comprec->timeenrolled = $enrolrec->starttime;
+                    $comprec->timeenrolled = $enrolrec->timecreated;
                 }
                 $current->timeenrolled = $comprec->timeenrolled;
             }
@@ -333,7 +342,7 @@ class observer {
                                                          array('userid' => $userid,
                                                                'courseid' => $courseid));
                     }
-                    $comprec->timestarted = $enrolrec->starttime;
+                    $comprec->timestarted = $enrolrec->timecreated;
                 }
                 $current->timestarted = $comprec->timestarted;
             }
@@ -665,7 +674,12 @@ class observer {
         $finalgrade = $event->other['finalgrade'];
 
         // If this isn't a course, we don't care.
-        if (!$graderec = $DB->get_record('grade_items', array('id' => $itemid, 'itemtype' => 'course'))) {
+        if (!$DB->get_record('grade_items', array('id' => $itemid, 'itemtype' => 'course'))) {
+            return true;
+        }
+
+        // If this isn't a grade, we don't care.
+        if (!$graderec = $DB->get_record('grade_grades', array('itemid' => $itemid, 'userid' => $userid))) {
             return true;
         }
 

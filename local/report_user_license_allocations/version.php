@@ -1,4 +1,4 @@
-<?PHP
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,7 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$plugin->version  = 2019012100;
+/**
+ * @package   local_report_license_usage
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+$plugin->version  = 2021021500;
 $plugin->requires = 2018120300;
 $plugin->release  = '3.6.10 (Build: 20200511)'; // Human-friendly version name
 $plugin->component  = 'local_report_user_license_allocations';

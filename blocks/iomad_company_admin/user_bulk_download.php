@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 /*
 * script for downloading of user lists
 */
@@ -53,14 +60,14 @@ $company = new company($companyid);
 $return = $CFG->wwwroot.'/'.$CFG->admin.'/user/user_bulk.php';
 
 // Deal with the departments.
-$parentlevel = company::get_company_parentnode($companyid);
+$parentlevels = company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
 if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
-    $userhierarchylevel = $userlevel->id;
+    $userhierarchylevel = key($userlevel);
 }
 
 if ($format) {
@@ -111,7 +118,10 @@ if ($format) {
     $params = array('companyid'=>$companyid);
 
     // Get department users.
-    $departmentusers = company::get_recursive_department_users($userhierarchylevel);
+    $departmentusers = array();
+    foreach ($userlevels as $userlevelid => $userlevel) {
+        $departmentusers = company::get_recursive_department_users($userlevelid);
+    }
     if (count($departmentusers) > 0) {
         $departmentids = "";
         foreach ($departmentusers as $departmentuser) {

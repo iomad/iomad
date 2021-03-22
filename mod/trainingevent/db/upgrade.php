@@ -15,25 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file keeps track of upgrades to the navigation block
- *
- * Sometimes, changes between versions involve alterations to database structures
- * and other major things that may break installations.
- *
- * The upgrade function in this file will attempt to perform all the necessary
- * actions to upgrade your older installation to the current version.
- *
- * If there's something it cannot do itself, it will tell you what you need to do.
- *
- * The commands in here will all be database-neutral, using the methods of
- * database_manager class
- *
- * Please do not forget to use upgrade_set_timeout()
- * before any action that may take longer time to finish.
- *
- * @since 2.0
- * @package blocks
- * @copyright 2009 Sam Hemelryk
+ * @package   mod_trainingevent
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -127,6 +111,38 @@ function xmldb_trainingevent_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2020092100, 'trainingevent');
     }
 
+    if ($oldversion < 2020111800) {
+
+        // Define field coursecapacity to be added to trainingevent as it was missing for xmldb install.
+        $table = new xmldb_table('trainingevent');
+        $field = new xmldb_field('coursecapacity', XMLDB_TYPE_INTEGER, '10');
+
+        // Conditionally launch add field coursecapacity.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field waitlisted to be added to trainingevent_users as it was missing for xmldb install.
+        $table = new xmldb_table('trainingevent_users');
+        $field = new xmldb_field('waitlisted', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0, null);
+
+        // Conditionally launch add field waitlisted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field haswaitinglist to be added to trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $field = new xmldb_field('haswaitinglist', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'approvaltype');
+
+        // Conditionally launch add field haswaitinglist.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Trainingevent savepoint reached.
+        upgrade_mod_savepoint(true, 2020111800, 'trainingevent');
+    }
 
     return $result;
 }

@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    //  It must be included from a Moodle page.
 }
@@ -224,27 +231,8 @@ class admin_uploaduser_form2 extends company_moodleform {
         $company = new company($companyid);
         $systemcontext = context_system::instance();
         $parentlevel = company::get_company_parentnode($companyid);
-        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $systemcontext)) {
-            $userhierarchylevel = $parentlevel->id;
-        } else {
-            $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
-        }
-        $this->departmentid = $userhierarchylevel;
-        $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
-
-        $departmentslist = company::get_all_subdepartments($this->departmentid);
-        $departmenttree = company::get_all_subdepartments_raw($this->departmentid);
-        $treehtml = $output->department_tree($departmenttree, optional_param('userdepartment', 0, PARAM_INT));
-
-        //  Department drop down.
-        $mform->insertElementBefore($mform->addElement('html', $treehtml), 'uutypelabel');
-        $mform->insertElementBefore($mform->createElement('select', 'userdepartment',
-                                                          '',
-                                                           $subhierarchieslist,
-                                                           $userhierarchylevel),
-                                                           'uutypelabel');
-
+        $this->departmentid = $parentlevel->id;
+        $output->display_tree_selector_form($company, $mform, 0, 'uutypelabel');
         $this->courseselector = $this->add_course_selector();
 
         // Deal with licenses.

@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_iomad_signup
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 function xmldb_local_iomad_track_upgrade($oldversion) {
@@ -646,6 +653,19 @@ mtrace("enrol end " . time());
 
         // Iomad_track savepoint reached.
         upgrade_plugin_savepoint(true, 2020092800, 'local', 'iomad_track');
+    }
+
+    if ($oldversion < 2021030200) {
+
+        // Deal with all of the previous data.
+        require_once(dirname(__FILE__) . '/../classes/task/fixenrolleddatetask.php');
+
+        // Fire off the adhoc task to ensure the enrolled timestamps are correct.
+        $task = new local_iomad_track\task\fixenrolleddatetask();
+        \core\task\manager::queue_adhoc_task($task, true);
+
+        // Iomad_track savepoint reached.
+        upgrade_plugin_savepoint(true, 2021030200, 'local', 'iomad_track');
     }
 
    return $result;

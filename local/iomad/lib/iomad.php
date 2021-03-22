@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/company.php');
 require_once(dirname(__FILE__) . '/user.php');
@@ -408,7 +415,7 @@ class iomad {
                     $iomadcategories[ $id ] = $category;
                 } else {
                     // Is this company category in the path?
-                    if (true === strpos($categoryrec->path, "/".$user->company->category."/")) {
+                    if (!empty($user->company->category) && false !== strpos($categoryrec->path, "/".$user->company->category."/")) {
                         $iomadcategories[ $id ] = $category;
                     }
                 }
@@ -1700,6 +1707,12 @@ class iomad {
     public static function check_redirect($wwwroot, $rurl) {
         global $CFG, $DB;
 
+        // If we are installing then do nothing.
+        if (during_initial_install()) {
+            return true;
+        }
+
+        // Otherwise we redirect when the URL doesn't match the company URL.
         if ($rurl['host'] !=  $wwwroot['host']) {
             if ($companyrec = $DB->get_record('company', array('hostname' => $rurl['host']))) {
                 $redirecturl = new moodle_url($CFG->wwwroot . '/login/index.php',

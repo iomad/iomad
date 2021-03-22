@@ -15,12 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library of functions and constants for module trainingevent
- *
- * @package    mod
- * @subpackage trainingevent
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_trainingevent
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
@@ -93,6 +91,11 @@ function trainingevent_update_instance($trainingevent) {
     $trainingevent->name = get_trainingevent_name($trainingevent);
     $trainingevent->timemodified = time();
     $trainingevent->id = $trainingevent->instance;
+
+    // Deal with checkboxes.
+    if (empty($trainingevent->haswaitinglist)) {
+        $trainingevent->haswaitinglist = 0;
+    }
 
     grade_update('mod/trainingevent',
                  $trainingevent->course,

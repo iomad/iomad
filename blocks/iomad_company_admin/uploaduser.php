@@ -230,6 +230,7 @@ if (empty($iid)) {
 if (!$columns = $cir->get_columns()) {
     print_error('cannotreadtmpfile', 'error', $returnurl);
 }
+
 $mform = new admin_uploaduser_form2(null, $columns);
 // Get initial date from form1.
 $mform->set_data(array('iid' => $iid,
@@ -329,6 +330,8 @@ if ($mform->is_cancelled()) {
             $upt->flush();
             $linenum++;
             $errornum = 1;
+            $passeddepartment = false;
+            $defaultdepartment = 0;
 
             $upt->track('line', $linenum);
 
@@ -342,6 +345,12 @@ if ($mform->is_cancelled()) {
                 if ($value !== '') {
                     $key = $columns[$key];
                     $user->$key = $value;
+                    // Did we get oassed a deparment value?
+                    if (strpos($key, 'department') !== false) {
+                        if (!empty($value)) {
+                            $passeddepartment = true;
+                        }
+                    }
                     if (in_array($key, $upt->columns)) {
                         $upt->track($key, $value);
                     }
@@ -760,7 +769,7 @@ if ($mform->is_cancelled()) {
                     \core\event\user_updated::create_from_userid($existinguser->id)->trigger();
      
                     // Is the company department valid?
-                    if (!empty($existinguser->department)) {
+                    if (!$passeddepartment && !empty($existinguser->department)) {
                         if (!$department = $DB->get_record('department', array('company' => $company->id,
                                                                                'shortname' => $existinguser->department))) {
                             $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
@@ -881,6 +890,7 @@ if ($mform->is_cancelled()) {
                         $erroredusers[] = $line;
                         continue;
                     }
+
                     // Make sure the user can manage this department.
                     if (!company::can_manage_department($department->id)) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
@@ -893,7 +903,7 @@ if ($mform->is_cancelled()) {
                     }
                 } else {
                     if (!$department = $DB->get_record('department', array('company' => $company->id,
-                                                                           'id' => $formdata->userdepartment))) {
+                                                                           'id' => $formdata->deptid))) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
                         $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
@@ -914,7 +924,12 @@ if ($mform->is_cancelled()) {
                     }
                 }
                 $user->departmentid = $department->id;
-                $user->newpassword = $user->password;
+                if (!empty($user->password)) {
+                    $user->newpassword = $user->password;
+                } else {
+                    $user->newpassword = null;
+                }
+
                 unset($user->password);
                 $user->sendnewpasswordemails = $formdata->sendnewpasswordemails;
                 $user->due = $today;
@@ -925,7 +940,11 @@ if ($mform->is_cancelled()) {
                 }
                 $user->id = company_user::create($user);
 
-
+                // Are we being passed company departments?
+                if ($passeddepartment) {
+                    // Stash the default in case we need to remove them from it later.
+                    $defaultdepartmentid = $department->id;
+                }
                 $info = ': ' . $user->username .' (ID = ' . $user->id . ')';
                 $upt->track('status', $struseradded);
                 $upt->track('id', $user->id, 'normal', false);
@@ -959,6 +978,51 @@ if ($mform->is_cancelled()) {
                     }
                     company_user::enrol($user, $courseids, $companyid);
                 }
+                if (preg_match('/^department\d+$/', $column)) {
+                    $i = substr($column, 10);
+
+                    if (empty($user->{'department'.$i})) {
+                        continue;
+                    }
+                    $shortname = $user->{'department'.$i};
+                    if (!$department = $DB->get_record('department', array('company' => $company->id,
+                                                                           'shortname' => $shortname))) {
+                        $upt->track('department'.$i, get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
+                        $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
+                        $errornum++;
+                        $userserrors++;
+                        $erroredusers[] = $line;
+                        continue;
+                    }
+                    // Make sure the user can manage this department.
+                    if (!company::can_manage_department($department->id)) {
+                        $upt->track('department'.$i, get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
+                        $upt->track('status', $strusernotaddederror, 'error');
+                        $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
+                        $errornum++;
+                        $userserrors++;
+                        $erroredusers[] = $line;
+                        continue;
+                    }
+
+                    // Since we got a valid department, remove the user from any default one.  Typically top-level.
+                    if ($department->id != $defaultdepartmentid &&
+                        !empty($defaultdepartmentid)) {
+
+                        // Remove the user from the default department.
+                        $DB->delete_records('company_users', array('userid' => $user->id, 'companyid' => $company->id, 'departmentid' => $defaultdepartmentid));
+
+                        // Only want to do this once.
+                        $defaultdepartmentid = 0;
+                    } else {
+                        // Default is the first we were passed.  No longer required.
+                        $defaultdepartmentid = 0;
+                    }
+
+                    // Add the user to this department.
+                    $company->assign_user_to_company($user->id, $department->id);
+                }
             }
 
             // Enrol user into courses that were selected on the form.
@@ -966,7 +1030,7 @@ if ($mform->is_cancelled()) {
                 company_user::enrol($user, array_keys($formdata->selectedcourses) );
             }
 
-            // Assign and licenses.
+            // Assign any licenses.
             if (!empty($formdata->licenseid)) {
                 $timestamp = time();
                 $licenserecord = (array) $DB->get_record('companylicense', array('id' => $formdata->licenseid));
@@ -1469,6 +1533,7 @@ function validate_user_upload_columns(&$columns) {
         $field = $columns[$key];
         if (!in_array($field, $stdfields) && !in_array($field, $prffields) &&
             !preg_match('/^course\d+$/', $field) && !preg_match('/^group\d+$/', $field) &&
+            !preg_match('/^department\d+$/', $field) &&
             !preg_match('/^type\d+$/', $field) && !preg_match('/^role\d+$/', $field) &&
             !preg_match('/^enrolperiod\d+$/', $field)) {
             // If not a standard field and not an enrolment field, then we have an error!

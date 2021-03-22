@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 // Define the Iomad menu items that are defined by this plugin
 
 function block_iomad_company_admin_menu() {
@@ -295,6 +302,28 @@ function block_iomad_company_admin_menu() {
                 'icon' => 'fa-list',
                 'iconsmall' => 'fa-cog'
             ),
+            'iomadtemplatesettings' => array(
+                'category' => 'CompetencyAdmin',
+                'tab' => 5,
+                'name' => get_string('templatesettings', 'block_iomad_company_admin'),
+                'url' => 'iomad_templates_form.php',
+                'cap' => 'block/iomad_company_admin:managetemplates',
+                'icondefault' => 'competency',
+                'style' => 'competency',
+                'icon' => 'fa-cubes',
+                'iconsmall' => 'fa-cog'
+            ),
+            'companyframeworks' => array(
+                'category' => 'CompetencyAdmin',
+                'tab' => 5,
+                'name' => get_string('companyframeworks', 'block_iomad_company_admin'),
+                'url' => 'company_competency_frameworks_form.php',
+                'cap' => 'block/iomad_company_admin:company_framework',
+                'icondefault' => 'assigntocompany',
+                'style' => 'competency',
+                'icon' => 'fa-list',
+                'iconsmall' => 'fa-chevron-circle-right'
+            ),
             'companytemplates' => array(
                 'category' => 'CompetencyAdmin',
                 'tab' => 5,
@@ -305,28 +334,6 @@ function block_iomad_company_admin_menu() {
                 'style' => 'competency',
                 'icon' => 'fa-cubes',
                 'iconsmall' => 'fa-chevron-circle-right'
-            ),
-            'iomadtemplatesettings' => array(
-                'category' => 'CompetencyAdmin',
-                'tab' => 5,
-                'name' => get_string('templatesettings', 'block_iomad_company_admin'),
-                'url' => 'iomad_templates_form.php',
-                'cap' => 'block/iomad_company_admin:managetemplates',
-                'icondefault' => 'managecoursesettings',
-                'style' => 'competency',
-                'icon' => 'fa-cubes',
-                'iconsmall' => 'fa-cog'
-            ),
-            'edittemplates' => array(
-                'category' => 'CompetencyAdmin',
-                'tab' => 5,
-                'name' => get_string('templates', 'tool_lp'),
-                'url' => '/admin/tool/lp/learningplans.php?pagecontextid=1',
-                'cap' => 'block/iomad_company_admin:templateview',
-                'icondefault' => 'userenrolements',
-                'style' => 'competency',
-                'icon' => 'fa-cubes',
-                'iconsmall' => 'fa-eye'
             )
         );
 }

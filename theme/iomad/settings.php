@@ -16,7 +16,8 @@
 
 /**
  * @package   theme_iomad
- * @copyright 2013 Moodle, moodle.org
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

@@ -15,10 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package tool
+ * Version information
+ *
+ * @package    tool
  * @subpackage iomadmerge
- * @author Jordi Pujol-Ahulló <jordi.pujol@urv.cat>
- * @copyright 2013 Servei de Recursos Educatius (http://www.sre.urv.cat)
+ * @copyright  Derick Turner
+ * @author     Derick Turner
+ * @basedon    admin tool merge by:
+ * @author     Nicolas Dunand <Nicolas.Dunand@unil.ch>
+ * @author     Mike Holzer
+ * @author     Forrest Gaston
+ * @author     Juan Pablo Torres Herrera
+ * @author     Jordi Pujol-Ahulló, SREd, Universitat Rovira i Virgili
+ * @author     John Hoopes <hoopes@wisc.edu>, University of Wisconsin - Madison
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -80,8 +89,10 @@ class tool_iomadmerge_logger {
             // Get the user id's which the user can see.
             $companyid = iomad::get_my_companyid(context_system::instance());
             $company = new company($companyid);
-            $userlevel = $company->get_userlevel($USER);
-            $departmentusers = company::get_recursive_department_users($userlevel->id);
+            $departmentusers = array();
+            foreach ($userlevels as $userlevelid => $userlevel) {
+                $departmentusers = $departmentusers + company::get_recursive_department_users($userlevelid);
+            }
             if (!empty($departmentusers)) {
                 $departmentids = "";
                 foreach ($departmentusers as $departmentuser) {

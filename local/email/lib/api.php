@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_email
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../local_lib.php');
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
 require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
@@ -557,7 +564,7 @@ class EmailTemplate {
                 // Do we send to managers as well?
                 if (empty($template->disabledmanager)) {
                     // Get the users managers.
-                    if ($managers = company::get_my_managers($email->userid, 1)) {
+                    if ($managers = $company->get_my_managers($email->userid, 1)) {
                         foreach ($managers as $manager) {
                             if ($managerrec = $DB->get_record('user', array('deleted' => 0, 'suspended' => 0, 'id' => $manager->userid))) {
                                 if (!self::email_direct($managerrec->email,

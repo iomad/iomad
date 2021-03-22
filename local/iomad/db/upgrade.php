@@ -15,25 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file keeps track of upgrades to the navigation block
- *
- * Sometimes, changes between versions involve alterations to database structures
- * and other major things that may break installations.
- *
- * The upgrade function in this file will attempt to perform all the necessary
- * actions to upgrade your older installation to the current version.
- *
- * If there's something it cannot do itself, it will tell you what you need to do.
- *
- * The commands in here will all be database-neutral, using the methods of
- * database_manager class
- *
- * Please do not forget to use upgrade_set_timeout()
- * before any action that may take longer time to finish.
- *
- * @since 2.0
- * @package blocks
- * @copyright 2009 Sam Hemelryk
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -2187,6 +2171,35 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2019030112, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2021012500) {
+
+        // Define index departmentusers (unique) to be dropped form company_users.
+        $table = new xmldb_table('company_users');
+        $index = new xmldb_index('departmentusers', XMLDB_INDEX_UNIQUE, ['userid', 'departmentid']);
+
+        // Conditionally launch drop index departmentusers.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        $index = new xmldb_index('companyusers', XMLDB_INDEX_UNIQUE, ['companyid', 'userid']);
+
+        // Conditionally launch drop index departmentusers.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        $index = new xmldb_index('departmentusers', XMLDB_INDEX_UNIQUE, ['companyid', 'userid', 'departmentid']);
+
+        // Conditionally launch add index departmentusers.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2021012500, 'local', 'iomad');
     }
 
     return $result;

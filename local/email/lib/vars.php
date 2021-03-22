@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_email
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
 require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
 
@@ -57,12 +64,19 @@ class EmailVars {
             }
         }
 
+        // Get the company wwwroot.
+        if (method_exists($this->company,'get_theme')) {
+            $wwwroot = $this->company->get_wwwroot();
+        } else {
+            $wwwroot = $CFG->wwwroot;
+        }
+
         $this->course =& $course;
         if (!empty($course->id)) {
-            $this->course->url = new moodle_url('/course/view.php', array('id' => $this->course->id));
+            $this->course->url = new moodle_url($wwwroot .'/course/view.php', array('id' => $this->course->id));
         }
         if (!empty($user->id)) {
-            $this->url = new moodle_url('/user/profile.php', array('id' => $this->user->id));
+            $this->url = new moodle_url($wwwroot .'/user/profile.php', array('id' => $this->user->id));
         }
         $this->site = get_site();
     }
@@ -193,15 +207,23 @@ class EmailVars {
     function SiteURL() {
         global $CFG;
 
+        // Get the company wwwroot.
+        if (method_exists($this->company,'get_theme')) {
+            $wwwroot = $this->company->get_wwwroot();
+        } else {
+            $wwwroot = $CFG->wwwroot;
+        }
+
+        // Can we add the theme to the URL too?
         if (empty($CFG->allowthemechangeonurl)) {
-            return $CFG->wwwroot;
+            return $wwwroot;
         } else {
             // Get the company theme.
             if (method_exists($this->company,'get_theme')) {
                 $theme = $this->company->get_theme();
-                return new moodle_url($CFG->wwwroot, array('theme' => $theme));
+                return new moodle_url($wwwroot, array('theme' => $theme));
             } else {
-                return new moodle_url($CFG->wwwroot);
+                return new moodle_url($wwwroot);
             }
         }
     }

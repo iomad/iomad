@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 
@@ -46,7 +53,7 @@ class company_managers_form extends moodleform {
             $userhierarchylevel = $parentlevel->id;
         } else {
             $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
+            $userhierarchylevel = key($userlevel);
         }
 
         $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
@@ -233,6 +240,19 @@ $PAGE->navbar->add($linktext, $linkurl);
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($context);
+$company = new company($companyid);
+
+// Set up the departments stuffs.
+$parentlevel = company::get_company_parentnode($company->id);
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
+    $userhierarchylevel = $parentlevel->id;
+} else {
+    $userlevel = $company->get_userlevel($USER);
+    $userhierarchylevel = key($userlevel);
+}
+if ($departmentid == 0) {
+    $departmentid = $userhierarchylevel;
+}
 
 $PAGE->set_context($context);
 
@@ -250,29 +270,7 @@ if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
 
-// Set up the departments stuffs.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
-if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
-    $userhierarchylevel = $parentlevel->id;
-} else {
-    $userlevel = $company->get_userlevel($USER);
-    $userhierarchylevel = $userlevel->id;
-}
-
-$subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
-if (empty($departmentid)) {
-    $departmentid = $userhierarchylevel;
-}
-
-$userdepartment = $company->get_userlevel($USER);
-$departmenttree = company::get_all_subdepartments_raw($userdepartment->id);
-$treehtml = $output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
-
-$departmentselect = new single_select(new moodle_url($linkurl, $urlparams), 'deptid', $subhierarchieslist, $departmentid);
-$departmentselect->label = get_string('department', 'block_iomad_company_admin') .
-                           $output->help_icon('department', 'block_iomad_company_admin') . '&nbsp';
-
+// Get the manager types.
 $managertypes = $company->get_managertypes();
 if ($departmentid != $parentlevel->id) {
     unset($managertypes[1]);
@@ -328,15 +326,9 @@ if ($managersform->is_cancelled()) {
         print_error('invaliddepartment', 'block_iomad_company_admin');
     }
 
+    // Display the department tree.
     echo html_writer::tag('h3', get_string('company_managers_for', 'block_iomad_company_admin', $company->get_name()));
-    echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-    echo html_writer::start_tag('div', array('class' => 'fitem'));
-    echo $treehtml;
-    echo html_writer::start_tag('div', array('style' => 'display:none'));
-    echo $output->render($departmentselect);
-    echo html_writer::end_tag('div');
-    echo html_writer::end_tag('div');
-    echo html_writer::end_tag('div');
+    echo $output->display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid);
 
     echo html_writer::start_tag('div', array('class' => 'iomadclear'));
     echo html_writer::start_tag('div', array('class' => 'fitem'));

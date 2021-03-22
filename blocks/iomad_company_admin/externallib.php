@@ -17,9 +17,10 @@
 /**
  * Iomad External Web Services
  *
- * @package block_iomad_company_admin
- * @copyright 2017 E-LearnDesign Limited
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once($CFG->libdir . "/externallib.php");
@@ -58,6 +59,13 @@ class block_iomad_company_admin_external extends external_api {
                             'customcss' => new external_value(PARAM_TEXT, 'Company custom css'),
                             'validto' => new external_value(PARAM_INT, 'Contract termination date in unix timestamp', VALUE_DEFAULT, null),
                             'suspendafter' => new external_value(PARAM_INT, 'Number of seconds after termination date to suspend the company', VALUE_DEFAULT, 0),
+                            'companyterminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0', VALUE_DEFAULT, 0),
+                            'theme' => new external_value(PARAM_TEXT, 'Company theme', VALUE_DEFAULT, ''),
+                            'hostname' => new external_value(PARAM_TEXT, 'Company hostname', VALUE_DEFAULT, ''),
+                            'maxusers' => new external_value(PARAM_INT, 'Company maximum number of users', VALUE_DEFAULT, 0),
+                            'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
+                            'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
+                            'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
                         )
                     )
                 )
@@ -173,6 +181,13 @@ class block_iomad_company_admin_external extends external_api {
                      'customcss' => new external_value(PARAM_TEXT, 'Company custom css'),
                      'validto' => new external_value(PARAM_INT, 'Contract termination date in unix timestamp', VALUE_DEFAULT, null),
                      'suspendafter' => new external_value(PARAM_INT, 'Number of seconds after termination date to suspend the company', VALUE_DEFAULT, 0),
+                     'companyterminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0', VALUE_DEFAULT, 0),
+                     'theme' => new external_value(PARAM_TEXT, 'Company theme', VALUE_DEFAULT, ''),
+                     'hostname' => new external_value(PARAM_TEXT, 'Company hostname', VALUE_DEFAULT, ''),
+                     'maxusers' => new external_value(PARAM_INT, 'Company maximum number of users', VALUE_DEFAULT, 0),
+                     'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
+                     'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
+                     'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
                 )
             )
         );
@@ -348,6 +363,12 @@ class block_iomad_company_admin_external extends external_api {
                          'validto' => new external_value(PARAM_INT, 'Contract termination date in unix timestamp', VALUE_DEFAULT, null),
                          'suspendafter' => new external_value(PARAM_INT, 'Number of seconds after termination date to suspend the company', VALUE_DEFAULT, 0),
                          'companyterminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0', VALUE_DEFAULT, 0),
+                         'theme' => new external_value(PARAM_TEXT, 'Company theme', VALUE_DEFAULT, ''),
+                         'hostname' => new external_value(PARAM_TEXT, 'Company hostname', VALUE_DEFAULT, ''),
+                         'maxusers' => new external_value(PARAM_INT, 'Company maximum number of users', VALUE_DEFAULT, 0),
+                         'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
+                         'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
+                         'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
                          )
                      )
                  ),
@@ -390,6 +411,12 @@ class block_iomad_company_admin_external extends external_api {
                             'validto' => new external_value(PARAM_INT, 'Contract termination date in unix timestamp', VALUE_DEFAULT, null),
                             'suspendafter' => new external_value(PARAM_INT, 'Number of seconds after termination date to suspend the company', VALUE_DEFAULT, 0),
                             'companyterminated' => new external_value(PARAM_INT, 'Company contract is terminated when <> 0', VALUE_DEFAULT, 0),
+                            'theme' => new external_value(PARAM_TEXT, 'Company theme', VALUE_DEFAULT, ''),
+                            'hostname' => new external_value(PARAM_TEXT, 'Company hostname', VALUE_DEFAULT, ''),
+                            'maxusers' => new external_value(PARAM_INT, 'Company maximum number of users', VALUE_DEFAULT, 0),
+                            'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
+                            'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
+                            'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
                         )
                     )
                 )
@@ -652,7 +679,8 @@ class block_iomad_company_admin_external extends external_api {
                             'userid' => new external_value(PARAM_INT, 'User ID', VALUE_DEFAULT, 0),
                             'companyid' => new external_value(PARAM_INT, 'User company ID', VALUE_DEFAULT, 0),
                             'departmentid' => new external_value(PARAM_INT, 'User company department ID', VALUE_DEFAULT, 0),
-                            'managertype' => new external_value(PARAM_INT, 'User manager type 0 => User, 1 => company manager 2 => department manager', VALUE_DEFAULT, 0),
+                            'managertype' => new external_value(PARAM_INT, 'User manager type 0 => User, 1 => company manager 2 => department manager, 3 => report only', VALUE_DEFAULT, 0),
+                            'educator' => new external_value(PARAM_INT, 'User educator 0 => No, 1 => Yes', VALUE_DEFAULT, 0),
                         )
                     )
                 )
@@ -688,7 +716,16 @@ class block_iomad_company_admin_external extends external_api {
                 $succeeded = false;
                 continue;
             }
+
+            // Set up the company.
             $company = new company($userrecord['companyid']);
+
+            // Did we get passed a departmentid?
+            if (empty($userrecord['departmentid'])) {
+                // Get the top level department.
+                $toplevel = company::get_company_parentnode($company->id);
+                $userrecord['departmentid'] = $toplevel->id;
+            }
 
             // Check if the company has gone over the user quota.
             if (!$company->check_usercount(1)) {
@@ -696,12 +733,14 @@ class block_iomad_company_admin_external extends external_api {
                 $errormessage = get_string('maxuserswarning', 'block_iomad_company_admin', $maxusers);
             }
 
-            if (!$company->assign_user_to_company($userrecord['userid'],
-                                                  $userrecord['departmentid'],
-                                                  $userrecord['managertype'],
-                                                  true)) {
-                $succeeded = false;
-                $errormessage = "Unable to assign user";
+            if (!company::upsert_company_user($userrecord['userid'],
+                                              $company->id,
+                                               $userrecord['departmentid'],
+                                               $userrecord['managertype'],
+                                               null,
+                                               true)) {
+                 $succeeded = false;
+                 $errormessage = "Unable to assign user";
             } else {
 
                 // Create an event for this.
@@ -984,8 +1023,7 @@ class block_iomad_company_admin_external extends external_api {
                                                          (u.id = cu.userid)
                                                          WHERE cu.departmentid = :departmentid",
                                                          ['departmentid' => $departmentid]);
-                                                        
-        
+
              foreach ($departmentusers as $departmentuser){
                  $departmentinfo[]=  array('id' =>$departmentuser->id ,
                                      'firstname'=> $departmentuser->firstname,
@@ -1001,11 +1039,8 @@ class block_iomad_company_admin_external extends external_api {
         $result = array(
             'users' => array_values($departmentinfo),
         );
-       
-
 
      return $result; 
-    
     }
 
    /**
@@ -1499,6 +1534,8 @@ class block_iomad_company_admin_external extends external_api {
                              'program' => new external_value(PARAM_INT, 'Program pf courses 0 = no, 1 = yes'),
                              'reference' => new external_value(PARAM_TEXT, 'License reference'),
                              'instant' => new external_value(PARAM_INT, 'Instant access - 0 = no, 1 = yes'),
+                             'clearonexpire' => new external_value(PARAM_INT, 'Clear license assignments on expire - 0 = no, 1 = yes'),
+                             'cutoffdate' => new external_value(PARAM_INT, 'License cut off date (int = timestamp)'),
                              'courses' => new external_multiple_structure(
                                  new external_single_structure(
                                         array(
@@ -1591,6 +1628,8 @@ class block_iomad_company_admin_external extends external_api {
                      'program' => new external_value(PARAM_INT, 'Program pf courses 0 = no, 1 = yes'),
                      'reference' => new external_value(PARAM_TEXT, 'License reference'),
                      'instant' => new external_value(PARAM_INT, 'Instant access - 0 = no, 1 = yes'),
+                     'clearonexpire' => new external_value(PARAM_INT, 'Clear license assignments on expire - 0 = no, 1 = yes'),
+                     'cutoffdate' => new external_value(PARAM_INT, 'License cut off date (int = timestamp)'),
                      'courses' => new external_multiple_structure(
                          new external_single_structure(
                                 array(

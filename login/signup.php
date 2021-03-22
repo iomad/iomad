@@ -128,8 +128,26 @@ if ($mform_signup->is_cancelled()) {
     redirect($redirect);
 
 } else if ($user = $mform_signup->get_data()) {
-    if (!empty($SESSION->company) && $CFG->local_iomad_signup_useemail) {
+    // Do we use the email as username?
+    if ((!empty($CFG->local_iomad_signup_company) || !empty($SESSION->company)) && $CFG->local_iomad_signup_useemail) {
         $user->username = $user->email;
+    }
+
+    // If we don't have a company, do we have a default one set?
+    if (empty($SESSION->company) && !empty($CFG->local_iomad_signup_company)) {
+        if ($defaultcompany = $DB->get_record('company', array('id' => $CFG->local_iomad_signup_company))) {
+            $SESSION->company = $defaultcompany;
+        }
+    }
+
+    // Set up defaults for user from company defaults, if there are any.
+    if (!empty($SESSION->company)) {
+        if (empty($user->city) && !empty($company->city)) {
+            $user->city = $company->city;
+        }
+        if (empty($user->country) && !empty($company->country)) {
+            $user->country = $company->country;
+        }
     }
 
     // Add missing required fields.
@@ -138,7 +156,6 @@ if ($mform_signup->is_cancelled()) {
     $authplugin->user_signup($user, true); // prints notice and link to login/index.php
     exit; //never reached
 }
-
 
 $newaccount = get_string('newaccount');
 $login      = get_string('login');

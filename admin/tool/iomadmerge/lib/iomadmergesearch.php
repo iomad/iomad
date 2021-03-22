@@ -16,20 +16,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Utility file.
- *
- * The effort of all given authors below gives you this current version of the file.
+ * Version information
  *
  * @package    tool
  * @subpackage iomadmerge
+ * @copyright  Derick Turner
+ * @author     Derick Turner
+ * @basedon    admin tool merge by:
  * @author     Nicolas Dunand <Nicolas.Dunand@unil.ch>
  * @author     Mike Holzer
  * @author     Forrest Gaston
  * @author     Juan Pablo Torres Herrera
- * @author     Jordi Pujol-Ahulló <jordi.pujol@urv.cat>,  SREd, Universitat Rovira i Virgili
+ * @author     Jordi Pujol-Ahulló, SREd, Universitat Rovira i Virgili
  * @author     John Hoopes <hoopes@wisc.edu>, University of Wisconsin - Madison
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once dirname(dirname(dirname(dirname(__DIR__)))) . '/config.php';
@@ -62,8 +64,11 @@ class IomadMergeSearch{
             // Get the user id's which the user can see.
             $companyid = iomad::get_my_companyid(context_system::instance());
             $company = new company($companyid);
-            $userlevel = $company->get_userlevel($USER);
-            $departmentusers = company::get_recursive_department_users($userlevel->id);
+            $userlevels = $company->get_userlevel($USER);
+            $departmentusers = array();
+            foreach ($userlevels as $userlevelid => $userlevel) {
+                $departmentusers = $departmentusers + company::get_recursive_department_users($userlevelid);
+            }
             if (!empty($departmentusers)) {
                 $departmentids = "";
                 foreach ($departmentusers as $departmentuser) {

@@ -14,13 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_report_users
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
-require_once(dirname(__FILE__).'/lib.php');
-require_once(dirname(__FILE__).'/report_user_completion_table.php');
 
 // Params.
 $courseid = optional_param('courseid', 0, PARAM_INT);
@@ -335,7 +340,7 @@ if (!empty($action)) {
 }
 
 // Set up the table.
-$table = new local_report_user_completion_table('user_report_completion');
+$table = new \local_report_users\tables\completion_table('user_report_completion');
 $table->is_downloading($download, 'user_report_completion', 'user_report_completion123');
 
 if (!$table->is_downloading()) {
@@ -471,7 +476,6 @@ if (!$table->is_downloading()){
         echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
         echo html_writer::start_tag('div', array('class' => 'singlebutton'));
         echo "<input type = 'submit' id='purge_all_selected' name='purge_selected_entries' value = '" . get_string('purgeselectedentries', 'block_iomad_company_admin') . "' class='btn btn-secondary'>";
-        echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));

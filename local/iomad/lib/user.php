@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/company.php');
 require_once(dirname(__FILE__) . '/iomad.php');
@@ -91,15 +98,29 @@ class company_user {
         */
 
         $sendemail = $user->sendnewpasswordemails;
-        $passwordentered = !empty($user->newpassword);
-        $createpassword = !$passwordentered;
-        $forcepasswordchange = $user->preference_auth_forcepasswordchange;
-        // Store temp password unless password was entered and it's not going to be send by
-        // email nor is it going to be forced to change.
-        $storetemppassword = !( $passwordentered && !$sendemail && !$forcepasswordchange );
 
-        if ($passwordentered) {
-            $user->password = $user->newpassword;   // Don't hash it, user_create_user will do that.
+        // We only need the password if it's an internal plugin.
+        if (empty($user->auth)) {
+            $user->auth = 'manual';
+        }
+
+        $authplugin = get_auth_plugin($user->auth);
+        if ($authplugin->is_internal()) {
+            $passwordentered = !empty($user->newpassword);
+            $createpassword = !$passwordentered;
+            $forcepasswordchange = $user->preference_auth_forcepasswordchange;
+            // Store temp password unless password was entered and it's not going to be send by
+            // email nor is it going to be forced to change.
+            $storetemppassword = !( $passwordentered && !$sendemail && !$forcepasswordchange );
+
+            if ($passwordentered) {
+                $user->password = $user->newpassword;   // Don't hash it, user_create_user will do that.
+            }
+        } else {
+            $createpassword = false;
+            $forcepasswordchange = false;
+            $storetemppassword = false;
+            unset($user->password);
         }
 
         $user->confirmed = 1;
@@ -336,6 +357,12 @@ class company_user {
                 }
                 if ($shared || $grouped) {
                     if (!empty($companyid)) {
+                        // Did we get passed a group?
+                        if (empty($groupid)) {
+                            // If not get the default company group.
+                            $groupinfo = company::get_company_group($companyid, $courseid);
+                            $groupid = $groupinfo->id;
+                        }
                         company::add_user_to_shared_course($courseid, $user->id, $companyid, $groupid);
                     }
                 }

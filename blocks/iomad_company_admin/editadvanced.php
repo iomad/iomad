@@ -15,18 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Allows you to edit a users profile
- *
- * @copyright 1999 Martin Dougiamas  http://dougiamas.com
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @package user
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/gdlib.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot . '/webservice/lib.php');
-require_once('editadvanced_form.php');
 require_once($CFG->dirroot.'/user/editlib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
 require_once('lib.php');
@@ -149,7 +147,7 @@ if ($user->id !== -1) {
                                 'accepted_types' => 'web_image');
 }
 // Create form.
-$userform = new user_editadvanced_form(null, array('editoroptions' => $editoroptions,
+$userform = new \block_iomad_company_admin\forms\user_editadvanced_form(null, array('editoroptions' => $editoroptions,
                                                    'companyid' => $companyid,
                                                    'user' => $user,
                                                    'filemanageroptions' => $filemanageroptions));

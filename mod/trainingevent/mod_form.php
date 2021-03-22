@@ -15,12 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Add trainingevent form
- *
- * @package    mod
- * @subpackage trainingevent
- * @copyright  2006 Jamie Pratt
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_trainingevent
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
@@ -81,6 +79,13 @@ class mod_trainingevent_mod_form extends moodleform_mod {
                         get_string('both', 'trainingevent'),
                         get_string('enrolonly', 'trainingevent'));
         $mform->addElement('select', 'approvaltype', get_string('approvaltype', 'trainingevent'), $choices);
+
+        $mform->addElement('checkbox', 'haswaitinglist', get_string('haswaitinglist', 'mod_trainingevent'));
+        $mform->addHelpButton('haswaitinglist', 'haswaitinglist', 'mod_trainingevent');
+
+        $mform->addElement('text', 'coursecapacity', get_string('maxsize', 'mod_trainingevent'));
+        $mform->addHelpButton('coursecapacity', 'maxsize', 'mod_trainingevent');
+        $mform->setType('coursecapacity', PARAM_INT);
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();

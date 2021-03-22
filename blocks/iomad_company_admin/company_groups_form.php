@@ -121,7 +121,7 @@ class company_course_groups_form extends moodleform {
             $userhierarchylevel = $this->parentlevel->id;
         } else {
             $userlevel = $company->get_userlevel($USER);
-            $userhierarchylevel = $userlevel->id;
+            $userhierarchylevel = key($userlevel);
         }
 
         $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
@@ -327,7 +327,9 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
-$PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
+if (empty($CFG->defaulthomepage)) {
+    $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/my'));
+}
 $PAGE->navbar->add($linktext, $linkurl);
 
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
@@ -343,7 +345,7 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $sys
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
-    $userhierarchylevel = $userlevel->id;
+    $userhierarchylevel = key($userlevel);
 }
 
 $subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);

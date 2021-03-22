@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   block_iomad_company_admin
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(dirname(__FILE__) . '/../../../local/course_selector/lib.php');
 
 /**
@@ -750,14 +757,17 @@ class potential_user_course_selector extends course_selector_base {
         $params['companyid'] = $this->companyid;
         $params['siteid'] = $SITE->id;
         $company = new company($this->companyid);
-        $userdepartment = $company->get_userlevel($this->user);
+        $userdepartments = $company->get_userlevel($this->user);
 
         if (!$companycourses = $DB->get_records('company_course', array('companyid' => $this->companyid), null, 'courseid')) {
             $companysql = " AND 1=0";
         } else {
             $companysql = " AND c.id in (".implode(',', array_keys($companycourses)).") AND cc.companyid = :companyid";
         }
-        $deptids = company::get_recursive_department_courses($userdepartment->id);
+        $deptids = array();
+        foreach ($userdepartments as $userdepartmentid => $userdepartment) {
+            $deptids = $deptids + company::get_recursive_department_courses($userdepartmentid);
+        }
         $departmentcondition = "";
         if (!empty($deptids)) {
             foreach ($deptids as $deptid) {

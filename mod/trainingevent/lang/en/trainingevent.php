@@ -15,12 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'trainingevent', language 'en', branch 'MOODLE_20_STABLE'
- *
- * @package    mod
- * @subpackage trainingevent
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_trainingevent
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['trainingevent:addinstance'] = 'Add a training event activity';
@@ -91,3 +89,7 @@ $string['viewattendees'] = 'View the attendee list';
 $string['viewwaitlist'] = 'View the waitlist';
 $string['youareattending'] = '<p>You are booked as attending</p>';
 $string['youarewaiting'] = 'You are waiting for an available event';
+$string['haswaitinglist'] = 'Include waiting list';
+$string['haswaitinglist_help'] = 'If you endclude a waiting list with your event then users will be able to sign up to the waiting list for that even if the event is already full';
+$string['maxsize'] = 'Override training location size to';
+$string['maxsize_help'] = 'Setting a value here will override the default room size for the training room you have selected.';
