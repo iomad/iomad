@@ -85,7 +85,7 @@ $certificateseal = "";
 $certificatesignature = "";
 $certificateborder = "";
 $certificatewatermark = "";
-$showgrade = true;
+$showgrade = $iomadcertificate->printgrade;
 $uselogo = true;
 $usesignature = true;
 $useborder = true;
@@ -185,7 +185,9 @@ if (!empty($companyid)) {
         $usesignature = $companycertificateinfo->usesignature;
         $useborder = $companycertificateinfo->useborder;
         $usewatermark = $companycertificateinfo->usewatermark;
-        $showgrade = $companycertificateinfo->showgrade;
+	if ($showgrade) {
+            $showgrade = $companycertificateinfo->showgrade;
+        }
     }
 }
 // Add images and lines
