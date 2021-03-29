@@ -187,10 +187,10 @@ if ($ajaxtemplate) {
                         $newtemplate->disabled = 1;
                     }
                     if ($managertype == 'em') {
-                        $newtemplate->managerdisabled = 1;
+                        $newtemplate->disabledmanager = 1;
                     }
                     if ($managertype == 'es') {
-                        $newtemplate->supervisordisabled = 1;
+                        $newtemplate->disabledsupervisor = 1;
                     }
                     $DB->insert_record('email_template', $newtemplate);
                 } else {
@@ -263,10 +263,10 @@ if ($ajaxtemplate) {
                             $newtemplate->disabled = 1;
                         }
                         if ($managertype == 'em') {
-                            $newtemplate->managerdisabled = 1;
+                            $newtemplate->disabledmanager = 1;
                         }
                         if ($managertype == 'es') {
-                            $newtemplate->supervisordisabled = 1;
+                            $newtemplate->disabledsupervisor = 1;
                         }
                         $DB->insert_record('email_template', $newtemplate);
                     } else {
@@ -327,10 +327,10 @@ if ($ajaxtemplate) {
                         $newtemplate->disabled = 1;
                     }
                     if ($managertype == 'em') {
-                        $newtemplate->managerdisabled = 1;
+                        $newtemplate->disabledmanager = 1;
                     }
                     if ($managertype == 'es') {
-                        $newtemplate->supervisordisabled = 1;
+                        $newtemplate->disabledsupervisor = 1;
                     }
                     $DB->insert_record('email_templateset_templates', $newtemplate);
                 } else {
@@ -403,10 +403,10 @@ if ($ajaxtemplate) {
                             $newtemplate->disabled = 1;
                         }
                         if ($managertype == 'em') {
-                            $newtemplate->managerdisabled = 1;
+                            $newtemplate->disabledmanager = 1;
                         }
                         if ($managertype == 'es') {
-                            $newtemplate->supervisordisabled = 1;
+                            $newtemplate->disabledsupervisor = 1;
                         }
                         $DB->insert_record('email_templateset_templates', $newtemplate);
                     } else {
