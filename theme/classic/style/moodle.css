@@ -11379,10 +11379,13 @@ ul.badges {
   position: relative; }
 
 .badges li .expireimage {
+  background-image: url([[pix:i/expired]]);
+  background-repeat: no-repeat;
+  background-size: 100px 100px;
   width: 100px;
   height: 100px;
   left: 25px;
-  top: 0;
+  top: 15px;
   position: absolute;
   z-index: 10;
   opacity: 0.85; }
@@ -11398,6 +11401,9 @@ ul.badges {
   margin-top: 17px;
   margin-bottom: 20px; }
   #badge-image .expireimage {
+    background-image: url([[pix:i/expired]]);
+    background-repeat: no-repeat;
+    background-size: 100px 100px;
     width: 100px;
     height: 100px;
     left: 0;
@@ -14874,6 +14880,9 @@ a.ygtvspacer:hover {
   overflow: hidden; }
 
 .file-picker .yui3-datatable-header {
+  /*rtl:raw:
+    text-align: right;
+    */
   background: initial; }
 
 .fitem.disabled .filepicker-filelist,
@@ -14932,6 +14941,9 @@ a.ygtvspacer:hover {
 /* Override YUI default styling */
 /* stylelint-disable declaration-no-important */
 .filemanager .yui3-datatable-header {
+  /*rtl:raw:
+        text-align: right;
+        */
   background: #fff !important;
   border-bottom: 1px solid #ccc !important;
   border-left: 0 solid #fff !important;
@@ -15595,9 +15607,8 @@ a.ygtvspacer:hover {
 #page-message-index #region-main {
   height: 100%;
   margin-top: 0; }
-  #page-message-index #region-main .conversationcontainer {
-    max-height: calc(100vh - 50px);
-    overflow: auto; }
+  #page-message-index #region-main .conversationcontainer .section {
+    max-height: calc(100vh - 50px); }
   #page-message-index #region-main div[role="main"] {
     height: 100%; }
     #page-message-index #region-main div[role="main"] #maincontent {
@@ -15759,6 +15770,10 @@ a.ygtvspacer:hover {
   #categoryquestions th {
     text-align: left;
     font-weight: normal; }
+  #categoryquestions > tbody > tr.r1 {
+    background-color: rgba(0, 0, 0, 0.05); }
+  #categoryquestions > tbody > tr.highlight {
+    border: 1px solid #008196; }
   #categoryquestions .checkbox {
     padding-left: 5px; }
   #categoryquestions .checkbox input[type="checkbox"] {
@@ -16042,12 +16057,6 @@ body.jsenabled .questionflag input[type=checkbox] {
 
 #page-mod-quiz-edit div.questionbank .categoryquestionscontainer {
   background: transparent; }
-
-#page-mod-quiz-edit #categoryquestions > thead {
-  background: #fff; }
-
-#page-mod-quiz-edit #categoryquestions > tbody > tr:nth-of-type(even) {
-  background: #e4e4e4; }
 
 #page-mod-quiz-edit .questionbankwindow div.header {
   color: #444;
@@ -18123,6 +18132,8 @@ div#dock {
   .generaltable tbody tr:hover {
     color: #212529;
     background-color: rgba(0, 0, 0, 0.075); }
+    .generaltable tbody tr:hover.dimmed_text a:not(.menu-action) {
+      color: #212529; }
 
 table caption {
   font-size: 24px;
@@ -18580,6 +18591,12 @@ p.arrow_button {
   border: none; }
   .path-grade-report-user .user-grade.generaltable .levelodd {
     background-color: rgba(0, 0, 0, 0.05); }
+  .path-grade-report-user .user-grade .column-contributiontocoursetotal,
+  .path-grade-report-user .user-grade .column-range,
+  .path-grade-report-user .user-grade .column-percentage,
+  .path-grade-report-user .user-grade .column-weight {
+    /*rtl:ignore*/
+    direction: ltr; }
 
 /**
  * Single view.
@@ -18787,6 +18804,9 @@ body.behat-site .custom-control-input {
 body.behat-site .custom-control-label::before, body.behat-site .custom-control-label::after {
   content: none; }
 
+body.behat-site [data-region="message-drawer"] {
+  padding-right: 10px; }
+
 .phpinfo table,
 .phpinfo th,
 .phpinfo h2 {
@@ -18867,8 +18887,8 @@ body {
   border-radius: 2px;
   background-color: red;
   color: white;
-  font-size: 10px;
-  line-height: 10px;
+  font-size: 11px;
+  line-height: 11px;
   position: absolute;
   top: 5px;
   right: 0; }
@@ -18961,8 +18981,8 @@ body {
   border-radius: 2px;
   background-color: red;
   color: white;
-  font-size: 10px;
-  line-height: 10px;
+  font-size: 11px;
+  line-height: 11px;
   position: absolute;
   top: 5px;
   right: 0; }

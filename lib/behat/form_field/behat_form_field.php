@@ -173,17 +173,28 @@ class behat_form_field implements behat_session_interface {
      * @return behat_form_field
      */
     private function guess_type() {
+        return $this->get_field_instance_for_element($this->field);
+    }
+
+    /**
+     * Returns the appropriate form field object for a given node element.
+     *
+     * @param NodeElement $element The node element
+     * @return behat_form_field
+     */
+    protected function get_field_instance_for_element(NodeElement $element): behat_form_field {
         global $CFG;
 
         // We default to the text-based field if nothing was detected.
-        if (!$type = behat_field_manager::guess_field_type($this->field, $this->session)) {
+        if (!$type = behat_field_manager::guess_field_type($element, $this->session)) {
             $type = 'text';
         }
 
         $classname = 'behat_form_' . $type;
         $classpath = $CFG->dirroot . '/lib/behat/form_field/' . $classname . '.php';
         require_once($classpath);
-        return new $classname($this->session, $this->field);
+
+        return new $classname($this->session, $element);
     }
 
     /**
@@ -218,12 +229,15 @@ class behat_form_field implements behat_session_interface {
      * @return int
      */
     protected function get_internal_field_id() {
-
         if (!$this->running_javascript()) {
             throw new coding_exception('You can only get an internal ID using the selenium driver.');
         }
 
-        return $this->session->getDriver()->getWebDriverSession()->element('xpath', $this->field->getXPath())->getID();
+        return $this->getSession()
+            ->getDriver()
+            ->getWebDriver()
+            ->findElement(WebDriverBy::xpath($node->getXpath()))
+            ->getID();
     }
 
     /**
