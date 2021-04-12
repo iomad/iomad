@@ -698,6 +698,16 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $this->assertStringMatchesFormat($testassertion2->badge, json_encode($assertion2->get_badge_assertion()));
         $this->assertStringMatchesFormat($testassertion2->class, json_encode($assertion2->get_badge_class()));
         $this->assertStringMatchesFormat($testassertion2->issuer, json_encode($assertion2->get_issuer()));
+
+        // Test Openbadge specification version 2.1. It has the same format as OBv2.0.
+        // Get assertion version 2.1.
+        $award = reset($awards);
+        $assertion2 = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V2P1);
+
+        // Make sure JSON strings have the same structure.
+        $this->assertStringMatchesFormat($testassertion2->badge, json_encode($assertion2->get_badge_assertion()));
+        $this->assertStringMatchesFormat($testassertion2->class, json_encode($assertion2->get_badge_class()));
+        $this->assertStringMatchesFormat($testassertion2->issuer, json_encode($assertion2->get_issuer()));
     }
 
     /**
@@ -1145,6 +1155,7 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         $data['password'] = 'test';
         if ($isadmin || $updatetest) {
             $this->setAdminUser();
+            $lastmax = $DB->get_field_sql('SELECT MAX(sortorder) FROM {badge_external_backpack}');
             $backpack = badges_create_site_backpack((object) $data);
         }
 
@@ -1156,8 +1167,9 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
                 badges_update_site_backpack($backpack, (object)$data);
             }
             $record = $DB->get_record('badge_external_backpack', ['id' => $backpack]);
-            $this->assertEquals($record->backpackweburl, $data['backpackweburl']);
-            $this->assertEquals($record->backpackapiurl, $data['backpackapiurl']);
+            $this->assertEquals($data['backpackweburl'], $record->backpackweburl);
+            $this->assertEquals($data['backpackapiurl'], $record->backpackapiurl);
+            $this->assertEquals($lastmax + 1, $record->sortorder);
             $record = $DB->get_record('badge_backpack', ['userid' => 0]);
             $this->assertNotEmpty($record);
         } else {

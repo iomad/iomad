@@ -196,11 +196,11 @@ class mod_feedback_responses_table extends table_sql {
             $itemobj = feedback_get_item_class($items[$matches[1]]->typ);
             $printval = $itemobj->get_printval($items[$matches[1]], (object) ['value' => $row->$column]);
             if ($this->is_downloading()) {
-                $printval = html_entity_decode($printval, ENT_QUOTES);
+                $printval = s($printval);
             }
             return trim($printval);
         }
-        return $row->$column;
+        return parent::other_cols($column, $row);
     }
 
     /**
