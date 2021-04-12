@@ -31,4 +31,4 @@ $plugin->cron      = 0; // Period for cron to check this module (secs)
 $plugin->component = 'mod_iomadcertificate';
 
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release  = '3.8.7 (Build: 20210118)'; // Human-friendly version name
+$plugin->release  = '3.8.8+ (Build: 20210324)'; // Human-friendly version name
