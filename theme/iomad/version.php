@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '3.9.6+ (Build: 20210330)'; // Human-friendly version name
+$plugin->release  = '3.9.7 (Build: 20210510)'; // Human-friendly version name
 $plugin->version   = 2019111800;
 $plugin->requires  = 2019111200;
 $plugin->component = 'theme_iomad';
