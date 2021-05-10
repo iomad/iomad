@@ -5577,9 +5577,11 @@ abstract class context extends stdClass implements IteratorAggregate {
      *      type of context, e.g. User, Course, Forum, etc.
      * @param boolean $short whether to use the short name of the thing. Only applies
      *      to course contexts
+     * @param boolean $escape Whether the returned name of the thing is to be
+     *      HTML escaped or not.
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         // must be implemented in all context levels
         throw new coding_exception('can not get name of abstract context');
     }
@@ -6281,9 +6283,10 @@ class context_system extends context {
      *
      * @param boolean $withprefix does not apply to system context
      * @param boolean $short does not apply to system context
+     * @param boolean $escape does not apply to system context
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         return self::get_level_name();
     }
 
@@ -6540,9 +6543,10 @@ class context_user extends context {
      *
      * @param boolean $withprefix whether to prefix the name of the context with User
      * @param boolean $short does not apply to user context
+     * @param boolean $escape does not apply to user context
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB;
 
         $name = '';
@@ -6727,9 +6731,10 @@ class context_coursecat extends context {
      *
      * @param boolean $withprefix whether to prefix the name of the context with Category
      * @param boolean $short does not apply to course categories
+     * @param boolean $escape Whether the returned name of the context is to be HTML escaped or not.
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB;
 
         $name = '';
@@ -6737,7 +6742,11 @@ class context_coursecat extends context {
             if ($withprefix){
                 $name = get_string('category').': ';
             }
-            $name .= format_string($category->name, true, array('context' => $this));
+            if (!$escape) {
+                $name .= format_string($category->name, true, array('context' => $this, 'escape' => false));
+            } else {
+                $name .= format_string($category->name, true, array('context' => $this));
+            }
         }
         return $name;
     }
@@ -6959,9 +6968,10 @@ class context_course extends context {
      *
      * @param boolean $withprefix whether to prefix the name of the context with Course
      * @param boolean $short whether to use the short name of the thing.
+     * @param bool $escape Whether the returned category name is to be HTML escaped or not.
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB;
 
         $name = '';
@@ -6973,9 +6983,18 @@ class context_course extends context {
                     $name = get_string('course').': ';
                 }
                 if ($short){
-                    $name .= format_string($course->shortname, true, array('context' => $this));
+                    if (!$escape) {
+                        $name .= format_string($course->shortname, true, array('context' => $this, 'escape' => false));
+                    } else {
+                        $name .= format_string($course->shortname, true, array('context' => $this));
+                    }
                 } else {
-                    $name .= format_string(get_course_display_name_for_list($course));
+                    if (!$escape) {
+                        $name .= format_string(get_course_display_name_for_list($course), true, array('context' => $this,
+                            'escape' => false));
+                    } else {
+                        $name .= format_string(get_course_display_name_for_list($course), true, array('context' => $this));
+                    }
                }
             }
         }
@@ -7182,9 +7201,10 @@ class context_module extends context {
      * @param boolean $withprefix whether to prefix the name of the context with the
      *      module name, e.g. Forum, Glossary, etc.
      * @param boolean $short does not apply to module context
+     * @param boolean $escape Whether the returned name of the context is to be HTML escaped or not.
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB;
 
         $name = '';
@@ -7196,7 +7216,11 @@ class context_module extends context {
                     if ($withprefix){
                         $name = get_string('modulename', $cm->modname).': ';
                     }
-                    $name .= format_string($mod->name, true, array('context' => $this));
+                    if (!$escape) {
+                        $name .= format_string($mod->name, true, array('context' => $this, 'escape' => false));
+                    } else {
+                        $name .= format_string($mod->name, true, array('context' => $this));
+                    }
                 }
             }
         return $name;
@@ -7457,9 +7481,10 @@ class context_block extends context {
      *
      * @param boolean $withprefix whether to prefix the name of the context with Block
      * @param boolean $short does not apply to block context
+     * @param boolean $escape does not apply to block context
      * @return string the human readable context name.
      */
-    public function get_context_name($withprefix = true, $short = false) {
+    public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB, $CFG;
 
         $name = '';
