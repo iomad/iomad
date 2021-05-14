@@ -184,7 +184,7 @@ class company_managers_form extends moodleform {
             if (!empty($userstounassign)) {
                 foreach ($userstounassign as $removeuser) {
 
-                        // Check the userid is valid.
+                    // Check the userid is valid.
                     if (!company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
                         print_error('invaliduserdepartment', 'block_iomad_company_management');
                     }
@@ -196,8 +196,14 @@ class company_managers_form extends moodleform {
                     } else {
                         $educator = false;
                     }
-                    // Do the actual work.
-                    company::upsert_company_user($removeuser->id, $this->selectedcompany, $departmentid, 0, $educator);
+                    // Does the user have any other departments in the company?
+		    if ($DB->count_records('company_users', array('userid' => $removeuser->id, 'companyid' => $this->selectedcompany)) > 1) {
+                       // If so remove them from this one only.
+                       $DB->delete_records('company_users', array('userid' => $removeuser->id, 'companyid' => $this->selectedcompany, 'departmentid' => $departmentid));
+		    } else {
+                       // Otherwise move them to the top level department.
+                       company::upsert_company_user($removeuser->id, $this->selectedcompany, $this->companydepartment, 0, $educator);
+		    }
                 }
 
                 $this->potentialusers->invalidate_selected_users();
