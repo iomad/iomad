@@ -52,6 +52,14 @@ class iomad_commerce {
                          'country' => $user->country,
                          'manager' => $user->manager);
 
+        if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
+            $payload['extragroup'] = $user->extragroup->name;
+            $payload['extragroupaction'] = $user->extragroup->action;
+        } else {
+            $payload['extragroup'] = null;
+            $payload['extragroupaction'] = null;
+        }
+
         $response = self::docall($call, $payload, $companyid);
     }
 
@@ -78,6 +86,12 @@ class iomad_commerce {
                          'city' => $user->city,
                          'country' => $user->country,
                          'manager' => $user->manager);
+
+        if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
+            $payload['extragroup'] = $user->extragroup->name;
+            $payload['extragroupaction'] = $user->extragroup->action;
+        }
+
         $response = self::docall($call, $payload, $companyid);
     }
 
