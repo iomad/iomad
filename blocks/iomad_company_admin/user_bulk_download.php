@@ -144,6 +144,8 @@ if ($format) {
             {company_users}
         WHERE
             companyid = :companyid
+            AND userid IN
+             ( SELECT id FROM {user} WHERE deleted=0 AND suspended=0)
             " . $sqlsearch, $params);
 
     switch ($format) {
