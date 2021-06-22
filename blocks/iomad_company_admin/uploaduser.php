@@ -374,7 +374,7 @@ if ($mform->is_cancelled()) {
                     $user->username = $perfexistinguser->username;
                 } else {
                     // No existing user matches, generate a new username.
-                    $user->username = company_user::generate_username($user->email);
+                    $user->username = company_user::generate_username($user->email, $CFG->iomad_use_email_as_username);
                 }
                 $upt->track('username', $user->username);
             }
@@ -1195,7 +1195,7 @@ while ($fields = $cir->next()) {
             $rowcols['username'] = $perfexistinguser->username;
         } else {
             // No existing user matches, generate a new username.
-            $rowcols['username'] = company_user::generate_username($rowcols['email']);
+            $rowcols['username'] = company_user::generate_username($rowcols['email'], $CFG->iomad_use_email_as_username);
         }
     }
 
