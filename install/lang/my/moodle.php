@@ -29,16 +29,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['clianswerno'] = 't';
-$string['cliansweryes'] = 'y';
-$string['cliincorrectvalueerror'] = 'GALAT, nilai yang salah "{$a->value}" untuk opsi "{$a->option}"';
-$string['cliincorrectvalueretry'] = 'Nilai masukan salah, silakan coba lagi';
-$string['clitypevalue'] = 'tipe nilai';
-$string['clitypevaluedefault'] = 'tipe nilai, tekan ENTER untuk menggunakan nilai bawaan ({$a})';
-$string['cliunknowoption'] = 'Opsi tidak dikenali :
- {$a}
-Silakan gunakan opsi --help';
-$string['cliyesnoprompt'] = 'ketik y (Ya) atau t (Tidak)';
-$string['environmentrequireinstall'] = 'harus dipasang dan diaktifkan';
-$string['environmentrequireversion'] = 'versi {$a->needed} diperlukan dan Anda menjalankan {$a->current}';
-$string['upgradekeyset'] = 'Tingkatkan kunci (biarkan kosong untuk tidak mengaturnya)';
+$string['language'] = 'ဘာသာစကား';
+$string['moodlelogo'] = 'Moodle Logo';
+$string['next'] = 'နောက်သို့';
