@@ -1284,7 +1284,7 @@ function fix_utf8($value) {
         if ($buggyiconv) {
             if (function_exists('mb_convert_encoding')) {
                 $subst = mb_substitute_character();
-                mb_substitute_character('');
+                mb_substitute_character('none');
                 $result = mb_convert_encoding($value, 'utf-8', 'utf-8');
                 mb_substitute_character($subst);
 
@@ -6596,7 +6596,6 @@ function send_confirmation_email($user, $confirmationurl = null) {
     $supportuser = core_user::get_support_user();
 
     $data = new stdClass();
-    $data->firstname = fullname($user);
     $data->sitename  = format_string($site->fullname);
     $data->admin     = generate_email_signoff();
 

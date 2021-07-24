@@ -16,8 +16,7 @@
 /**
  * Question class for drag and drop marker question type, used to support the question and preview pages.
  *
- * @package    qtype_ddmarker
- * @subpackage question
+ * @module     qtype_ddmarker/question
  * @copyright  2018 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -303,6 +302,10 @@ define(['jquery', 'core/dragdrop', 'qtype_ddmarker/shapes', 'core/key_codes'], f
             items.each(function() {
                 var drag = $(this);
                 if (!drag.hasClass('beingdragged')) {
+                    if (drag.data('scaleRatio') !== bgRatio) {
+                        // The scale ratio for the draggable item was changed. We need to update that.
+                        drag.data('pagex', drag.offset().left).data('pagey', drag.offset().top);
+                    }
                     var dragXY = new Shapes.Point(drag.data('pagex'), drag.data('pagey'));
                     if (thiQ.coordsInBgImg(dragXY)) {
                         var bgImgXY = thiQ.convertToBgImgXY(dragXY);
@@ -564,6 +567,8 @@ define(['jquery', 'core/dragdrop', 'qtype_ddmarker/shapes', 'core/key_codes'], f
             drag.data('originX', dragXY.x).data('originY', dragXY.y);
             drag.css('left', dragXY.x * bgRatio).css('top', dragXY.y * bgRatio);
         }
+        // We need to save the original scale ratio for each draggable item.
+        drag.data('scaleRatio', bgRatio);
         dropArea.append(drag);
         this.handleElementScale(drag, 'left top');
     };

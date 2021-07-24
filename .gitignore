@@ -26,6 +26,7 @@
 /cscope.*
 /.patches/
 /.idea/
+.phpstorm.*
 /nbproject/
 CVS
 .DS_Store
@@ -47,3 +48,6 @@ atlassian-ide-plugin.xml
 /node_modules/
 /.vscode/
 moodle-plugin-ci.phar
+.eslintignore
+.stylelintignore
+/jsdoc

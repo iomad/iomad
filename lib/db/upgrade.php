@@ -3059,5 +3059,30 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2020110903.05);
     }
 
+    if ($oldversion < 2020110904.05) {
+
+        // Define index name (not unique) to be added to user_preferences.
+        $table = new xmldb_table('user_preferences');
+        $index = new xmldb_index('name', XMLDB_INDEX_NOTUNIQUE, ['name']);
+
+        // Conditionally launch add index name.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2020110904.05);
+    }
+
+    if ($oldversion < 2020110904.07) {
+        // Update the externalfield to be larger.
+        $table = new xmldb_table('oauth2_user_field_mapping');
+        $field = new xmldb_field('externalfield', XMLDB_TYPE_CHAR, '500', null, XMLDB_NOTNULL, false, null, 'issuerid');
+        $dbman->change_field_type($table, $field);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2020110904.07);
+    }
+
     return true;
 }

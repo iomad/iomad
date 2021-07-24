@@ -122,9 +122,10 @@ const registerStyleLintTasks = (grunt, files, fullRunDir) => {
     if (hasScss) {
         scssTasks.unshift('stylelint:scss');
     }
+    scssTasks.unshift('ignorefiles');
     grunt.registerTask('scss', scssTasks);
 
-    const cssTasks = [];
+    const cssTasks = ['ignorefiles'];
     if (hasCss) {
         cssTasks.push('stylelint:css');
     }
@@ -350,6 +351,13 @@ module.exports = function(grunt) {
                     rename: babelRename
                 }]
             }
+        },
+        jsdoc: {
+            dist: {
+                options: {
+                    configure: ".grunt/jsdoc/jsdoc.conf.js",
+                },
+            },
         },
         sass: {
             dist: {
@@ -835,6 +843,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-stylelint');
     grunt.loadNpmTasks('grunt-babel');
+    grunt.loadNpmTasks('grunt-jsdoc');
 
     // Rename the grunt-contrib-watch "watch" task because we're going to wrap it.
     grunt.renameTask('watch', 'watch-grunt');
@@ -845,7 +854,7 @@ module.exports = function(grunt) {
     grunt.registerTask('ignorefiles', 'Generate ignore files for linters', tasks.ignorefiles);
     grunt.registerTask('watch', 'Run tasks on file changes', tasks.watch);
     grunt.registerTask('yui', ['eslint:yui', 'shifter']);
-    grunt.registerTask('amd', ['eslint:amd', 'babel']);
+    grunt.registerTask('amd', ['ignorefiles', 'eslint:amd', 'babel']);
     grunt.registerTask('js', ['amd', 'yui']);
 
     // Register CSS tasks.

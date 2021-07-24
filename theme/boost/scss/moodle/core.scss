@@ -158,7 +158,7 @@ a:not([class]),
 .aabtn,
 .btn-link,
 .nav-link,
-.atto_link_button,
+.editor_atto_toolbar button,
 [role="button"],
 .list-group-item-action,
 input[type="checkbox"],
@@ -2742,4 +2742,26 @@ $picker-emojis-per-row: 7 !default;
 .core_payment_gateways_modal .custom-control-label::before,
 .core_payment_gateways_modal .custom-control-label::after {
     top: 45%;
+}
+
+$scrollbar-thumb: $primary;
+$scrollbar-track: lighten($primary, 40%);
+// simple scrollbars
+.visual-scroll-x {
+    scrollbar-width: thin;
+    scrollbar-color: $scrollbar-thumb $scrollbar-track;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    &::-webkit-scrollbar {
+        height: 8px; // for horizontal scrollbars
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: $scrollbar-thumb;
+        border-right: $border-width solid $white;
+    }
+    &::-webkit-scrollbar-track {
+        background-color: $scrollbar-track;
+        border-right: $border-width solid $white;
+    }
 }

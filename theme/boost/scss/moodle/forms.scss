@@ -338,6 +338,16 @@ fieldset.coursesearchbox label {
     font-size: large;
 }
 
+select.form-control {
+    &[size],
+    &[multiple] {
+        padding-right: 0;
+        option {
+            width: fit-content;
+        }
+    }
+}
+
 /* Non-bootstrap selects with a size show their contents outside of the element.
  * Remove when we update to stable bootstrap 4. (MDL-56511) */
 select[size],
@@ -361,7 +371,8 @@ textarea[data-auto-rows] {
         margin-right: 0;
         & > .col-md-3,
         & > .col-md-9 {
-            float: none;
+            flex: 0 0 100%;
+            max-width: 100%;
             width: inherit;
             padding-right: 0;
             padding-left: 0;
@@ -369,6 +380,19 @@ textarea[data-auto-rows] {
         &.femptylabel > .col-md-3 {
             display: none;
         }
+        .form-control {
+            width: 100%;
+        }
+    }
+}
+
+.mform .col-form-label .form-label-addon {
+    margin-left: 0.25rem;
+}
+
+@include media-breakpoint-up(sm) {
+    .mform:not(.full-width-labels) .col-form-label .form-label-addon {
+        margin-left: auto;
     }
 }
 
