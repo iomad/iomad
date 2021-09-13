@@ -24,7 +24,7 @@
 // This line protects the file from being accessed by a URL directly.
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '3.9.9+ (Build: 20210902)'; // Human-friendly version name
+$plugin->release  = '3.9.10 (Build: 20210913)'; // Human-friendly version name
 $plugin->version = 2019111800;
 $plugin->requires = 2019111200;
 $plugin->component = 'theme_iomadbootstrap';
