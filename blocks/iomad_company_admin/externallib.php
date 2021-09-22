@@ -1534,8 +1534,8 @@ class block_iomad_company_admin_external extends external_api {
                              'program' => new external_value(PARAM_INT, 'Program pf courses 0 = no, 1 = yes'),
                              'reference' => new external_value(PARAM_TEXT, 'License reference'),
                              'instant' => new external_value(PARAM_INT, 'Instant access - 0 = no, 1 = yes'),
-                             'clearonexpire' => new external_value(PARAM_INT, 'Clear license assignments on expire - 0 = no, 1 = yes'),
-                             'cutoffdate' => new external_value(PARAM_INT, 'License cut off date (int = timestamp)'),
+                             'clearonexpire' => new external_value(PARAM_INT, 'Clear license assignments on expire - 0 = no, 1 = yes', VALUE_OPTIONAL),
+                             'cutoffdate' => new external_value(PARAM_INT, 'License cut off date (int = timestamp), VALUE_OPTIONAL'),
                              'courses' => new external_multiple_structure(
                                  new external_single_structure(
                                         array(
