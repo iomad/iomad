@@ -144,7 +144,7 @@ class observer {
 
             // $cm contains checks for conditional activities et al
             $cm = get_coursemodule_from_instance(CERTIFICATE, $certificate->id, $courseid);
-            $modinfo = get_fast_modinfo($course);
+            $modinfo = get_fast_modinfo($course, $userid);
             $cm = $modinfo->get_cm($cm->id);
 
             // Uservisible determines if the user would have been able to access the certificate.
@@ -224,7 +224,7 @@ class observer {
                                                        'courseid' => $courseid,
                                                        'timelow' => $enrolrec->timestart - 10,
                                                        'timehigh' => $enrolrec->timestart + 10))) {
-                if ($trackrec->timecompleted !=null && (round($trackrec->timecompleted  / 10 ) * 10) != (round($completionrec->timecompleted /10) *10)) {
+                if ($trackrec->timecompleted !=null && (round($trackrec->timecompleted  / 10 ) * 10) != (round($comprec->timecompleted /10) *10)) {
                     return true;
                 }
             }
@@ -237,7 +237,11 @@ class observer {
                                                                    AND gi.courseid = :courseid)
                                          WHERE gg.userid = :userid", array('courseid' => $courseid,
                                                                            'userid' => $userid))) {
-            $finalscore = $graderec->finalgrade / $graderec->rawgrademax * 100;
+            if (!empty($graderec->rawgrademax) && $graderec->rawgrademax > 0) {
+                $finalscore = $graderec->finalgrade / $graderec->rawgrademax * 100;
+            } else {
+                $finalscore = 0;
+            }
         } else {
             $finalscore = 0;
         }
