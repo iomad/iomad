@@ -161,6 +161,11 @@ class EmailTemplate {
         $this->activity = array_key_exists('activity', $options) ? $options['activity'] : null;
         $this->attachment = array_key_exists('attachment', $options) ? $options['attachment'] : null;
 
+        // do we have a default delay on email sending?
+        if (!empty($CFG->iomad_emaildelay)) {
+            $this->due = $this->due + $CFG->iomad_emaildelay;
+        }
+
         if (!isset($user)) {
             $user =& $USER;
         }
