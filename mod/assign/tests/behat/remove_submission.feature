@@ -31,7 +31,7 @@ Feature: Remove a submission
       | student1 | G1 |
       | student2 | G1 |
 
-  @javascript
+  @javascript @skip_chrome_zerosize
   Scenario: Remove a submission should remove the data that was submitted
     Given the following "activity" exists:
       | activity                             | assign                |
@@ -51,12 +51,14 @@ Feature: Remove a submission
     When I follow "Remove submission"
     And I click on "Continue" "button"
     Then I should not see "I'm the student submission"
+    And "Student 1" row "Status" column of "generaltable" table should contain "No submission"
     And I log out
 
     And I am on the "Test assignment name" Activity page logged in as student1
     And I should not see "I'm the student submission"
+    And I should see "No attempt" in the "Submission status" "table_row"
 
-  @javascript
+  @javascript @skip_chrome_zerosize
   Scenario: Remove a group submission should remove the data from all group members
     Given the following "activity" exists:
       | activity                             | assign                |
@@ -77,12 +79,14 @@ Feature: Remove a submission
     When I follow "Remove submission"
     And I click on "Continue" "button"
     Then I should not see "I'm the student submission"
+    And "Student 1" row "Status" column of "generaltable" table should contain "No submission"
     And I log out
 
     And I am on the "Test assignment name" Activity page logged in as student2
     And I should not see "I'm the student submission"
+    And I should see "Nothing has been submitted for this assignment" in the "Submission status" "table_row"
 
-  @javascript
+  @javascript @skip_chrome_zerosize
   Scenario: A student can remove their own submission
     Given the following "activity" exists:
       | activity                             | assign                |
@@ -104,7 +108,9 @@ Feature: Remove a submission
     When I am on the "Test assignment name" Activity page logged in as teacher1
     And I navigate to "View all submissions" in current page administration
     Then I should not see "I'm the student submission"
+    And "Student 1" row "Status" column of "generaltable" table should contain "No submission"
     And I log out
 
     And I am on the "Test assignment name" Activity page logged in as student1
     And I should not see "I'm the student submission"
+    And I should see "No attempt" in the "Submission status" "table_row"
