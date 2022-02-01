@@ -737,7 +737,7 @@ class block_iomad_company_admin_external extends external_api {
                                               $company->id,
                                                $userrecord['departmentid'],
                                                $userrecord['managertype'],
-                                               null,
+                                               $userrecord['educator'],
                                                true)) {
                  $succeeded = false;
                  $errormessage = "Unable to assign user";
