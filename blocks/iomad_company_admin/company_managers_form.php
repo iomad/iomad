@@ -90,7 +90,9 @@ if ($returnurl) {
 
 // Get the manager types.
 $managertypes = $company->get_managertypes();
-if ($departmentid != $parentlevel->id) {
+if (empty($departmentid)) {
+    $departmentid = $parentlevel->id;
+} else if ($departmentid != $parentlevel->id) {
     unset($managertypes[1]);
     if ($roleid ==1) {
         $urlparams['managertype'] = '';
