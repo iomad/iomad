@@ -27,5 +27,5 @@
 $plugin->version   = 2016091800;
 $plugin->requires  = 2019052000;
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release  = '3.9.11+ (Build: 20211116)'; // Human-friendly version name
+$plugin->release  = '3.9.13 (Build: 20220314)'; // Human-friendly version name
 $plugin->component = 'block_iomad_progress';
