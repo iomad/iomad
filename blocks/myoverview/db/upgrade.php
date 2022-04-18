@@ -25,7 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/my/lib.php');
+require_once("{$CFG->dirroot}/my/lib.php");
+require_once("{$CFG->libdir}/db/upgradelib.php");
 
 /**
  * Upgrade code for the MyOverview block.
@@ -84,75 +85,39 @@ function xmldb_block_myoverview_upgrade($oldversion) {
     // Put any upgrade step following this.
 
     if ($oldversion < 2021052504) {
-        /**
-         * Small helper function for this version upgrade to delete instances of this block.
-         *
-         * @param stdClass $instance DB record of a block that we need to delete within Moodle.
-         */
-        function delete_block_instance(stdClass $instance) {
-            global $DB;
-            if ($instance) {
-                list($sql, $params) = $DB->get_in_or_equal($instance->id, SQL_PARAMS_NAMED);
-                $params['contextlevel'] = CONTEXT_BLOCK;
-                $DB->delete_records_select('context', "contextlevel=:contextlevel AND instanceid " . $sql, $params);
-                $DB->delete_records('block_positions', ['blockinstanceid' => $instance->id]);
-                $DB->delete_records('block_instances', ['id' => $instance->id]);
-                $DB->delete_records_list('user_preferences', 'name',
-                    ['block' . $instance->id . 'hidden', 'docked_block_instance_' . $instance->id]);
-            }
-        }
-
-        // Delete the default indexsys version of the block.
-        $mysubpagepattern = $DB->get_record(
-            'my_pages',
-            ['userid' => null, 'name' => MY_PAGE_DEFAULT, 'private' => MY_PAGE_PRIVATE],
-            'id',
-            IGNORE_MULTIPLE
-        )->id;
-        $instances = $DB->get_records('block_instances', ['blockname' => 'myoverview',
-            'pagetypepattern' => 'my-index', 'subpagepattern' => $mysubpagepattern]);
-        foreach ($instances as $instance) {
-            delete_block_instance($instance);
-        }
-
-        // Begin looking for any and all instances of course overview in customised /my pages.
-        $pageselect = 'name = :name and private = :private and userid IS NOT NULL';
-        $pageparams['name'] = MY_PAGE_DEFAULT;
-        $pageparams['private'] = MY_PAGE_PRIVATE;
-
-        $pages = $DB->get_recordset_select('my_pages', $pageselect, $pageparams);
-        foreach ($pages as $page) {
-            $blocksql = 'blockname = :blockname and pagetypepattern = :pagetypepattern and subpagepattern = :subpagepattern';
-            $blockparams['blockname'] = 'myoverview';
-            $blockparams['pagetypepattern'] = 'my-index';
-            $blockparams['subpagepattern'] = $page->id;
-            $instances = $DB->get_records_select('block_instances', $blocksql, $blockparams);
-            foreach ($instances as $instance) {
-                delete_block_instance($instance);
-            }
-        }
-        $pages->close();
+        upgrade_block_delete_instances('myoverview', '__default', 'my-index');
 
         // Add new instance to the /my/courses.php page.
-        $subpagepattern = $DB->get_record(
-            'my_pages',
-            ['userid' => null, 'name' => MY_PAGE_COURSES, 'private' => MY_PAGE_PUBLIC],
-            'id',
-            IGNORE_MULTIPLE
-        )->id;
+        $subpagepattern = $DB->get_record('my_pages', [
+            'userid' => null,
+            'name' => MY_PAGE_COURSES,
+            'private' => MY_PAGE_PUBLIC,
+        ], 'id', IGNORE_MULTIPLE)->id;
+
+        $blockname = 'myoverview';
+        $pagetypepattern = 'my-index';
+
+        $blockparams = [
+            'blockname' => $blockname,
+            'pagetypepattern' => $pagetypepattern,
+            'subpagepattern' => $subpagepattern,
+        ];
 
         // See if this block already somehow exists, it should not but who knows.
-        if (!$DB->get_record('block_instances', ['blockname' => 'myoverview',
-                'pagetypepattern' => 'my-index', 'subpagepattern' => $subpagepattern])) {
+        if (!$DB->record_exists('block_instances', $blockparams)) {
             $page = new moodle_page();
-            $systemcontext = context_system::instance();
-            $page->set_context($systemcontext);
+            $page->set_context(context_system::instance());
             // Add the block to the default /my/courses.
             $page->blocks->add_region('content');
-            $page->blocks->add_block('myoverview', 'content', 0, false, 'my-index', $subpagepattern);
+            $page->blocks->add_block($blockname, 'content', 0, false, $pagetypepattern, $subpagepattern);
         }
 
         upgrade_block_savepoint(true, 2021052504, 'myoverview', false);
+    }
+
+    if ($oldversion < 2022041901) {
+        upgrade_block_set_my_user_parent_context('myoverview', '__default', 'my-index');
+        upgrade_block_savepoint(true, 2022041901, 'myoverview', false);
     }
 
     return true;

@@ -240,6 +240,7 @@ $string['eventroleallowoverrideupdated'] = 'Allow role override';
 $string['eventroleallowswitchupdated'] = 'Allow role switch';
 $string['eventroleallowviewupdated'] = 'Allow role view';
 $string['eventroleassigned'] = 'Role assigned';
+$string['eventrolecapabilitiesupdated'] = 'Role capabilities updated';
 $string['eventroledeleted'] = 'Role deleted';
 $string['eventroleunassigned'] = 'Role unassigned';
 $string['eventroleupdated'] = 'Role updated';
@@ -373,6 +374,7 @@ $string['rating:viewany'] = 'View total ratings that anyone received';
 $string['rating:viewall'] = 'View all raw ratings given by individuals';
 $string['reportbuilder:edit'] = 'Edit your own custom reports';
 $string['reportbuilder:editall'] = 'Edit all custom reports';
+$string['reportbuilder:scheduleviewas'] = 'Schedule reports to be viewed as other users';
 $string['reportbuilder:view'] = 'View custom reports';
 $string['resetrole'] = 'Reset';
 $string['resettingrole'] = 'Resetting role \'{$a}\'';
@@ -516,8 +518,6 @@ $string['privacy:metadata:role_capabilities:tableexplanation'] = 'The capabiliti
 $string['privacy:metadata:role_capabilities:timemodified'] = 'The date when the capability was created or modified.';
 $string['privacy:metadata:role_cohortroles'] = 'Roles to cohort';
 $string['course:togglecompletion'] = 'Manually mark activities as complete';
-// Deprecated since Moodle 3.8.
-$string['eventrolecapabilitiesupdated'] = 'Role capabilities updated';
 
 // Iomad additions.
 $string['archetypeclientadministrator'] = 'Iomad client administrator';

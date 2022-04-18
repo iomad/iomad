@@ -1532,6 +1532,9 @@ class action_link implements renderable {
                                 pix_icon $icon=null) {
         $this->url = clone($url);
         $this->text = $text;
+        if (empty($attributes['id'])) {
+            $attributes['id'] = html_writer::random_id('action_link');
+        }
         $this->attributes = (array)$attributes;
         if ($action) {
             $this->add_action($action);
@@ -1591,9 +1594,6 @@ class action_link implements renderable {
         $data = new stdClass();
         $attributes = $this->attributes;
 
-        if (empty($attributes['id'])) {
-            $attributes['id'] = html_writer::random_id('action_link');
-        }
         $data->id = $attributes['id'];
         unset($attributes['id']);
 
@@ -4233,6 +4233,12 @@ class action_menu implements renderable, templatable {
     public $prioritise = false;
 
     /**
+     * Dropdown menu alignment class.
+     * @var string
+     */
+    public $dropdownalignment = '';
+
+    /**
      * Constructs the action menu with the given items.
      *
      * @param array $actions An array of actions (action_menu_link|pix_icon|string).
@@ -4250,7 +4256,6 @@ class action_menu implements renderable, templatable {
         $this->attributesprimary = array(
             'id' => 'action-menu-'.$this->instance.'-menubar',
             'class' => 'menubar',
-            'role' => 'menubar'
         );
         $this->attributessecondary = array(
             'id' => 'action-menu-'.$this->instance.'-menu',
@@ -4259,7 +4264,7 @@ class action_menu implements renderable, templatable {
             'aria-labelledby' => 'action-menu-toggle-'.$this->instance,
             'role' => 'menu'
         );
-        $this->set_alignment(self::TR, self::BR);
+        $this->dropdownalignment = 'dropdown-menu-right';
         foreach ($actions as $action) {
             $this->add($action);
         }
@@ -4335,6 +4340,7 @@ class action_menu implements renderable, templatable {
     public function add_primary_action($action) {
         if ($action instanceof action_link || $action instanceof pix_icon) {
             $action->attributes['role'] = 'menuitem';
+            $action->attributes['tabindex'] = '-1';
             if ($action instanceof action_menu_link) {
                 $action->actionmenu = $this;
             }
@@ -4350,6 +4356,7 @@ class action_menu implements renderable, templatable {
     public function add_secondary_action($action) {
         if ($action instanceof action_link || $action instanceof pix_icon) {
             $action->attributes['role'] = 'menuitem';
+            $action->attributes['tabindex'] = '-1';
             if ($action instanceof action_menu_link) {
                 $action->actionmenu = $this;
             }
@@ -4407,7 +4414,8 @@ class action_menu implements renderable, templatable {
             'title' => $title,
             'aria-label' => $label,
             'id' => 'action-menu-toggle-'.$this->instance,
-            'role' => 'menuitem'
+            'role' => 'menuitem',
+            'tabindex' => '-1',
         );
         $link = html_writer::link('#', $string . $this->menutrigger . $pixicon, $attributes);
         if ($this->prioritise) {
@@ -4437,10 +4445,13 @@ class action_menu implements renderable, templatable {
     /**
      * Sets the alignment of the dialogue in relation to button used to toggle it.
      *
+     * @deprecated since Moodle 4.0
+     *
      * @param int $dialogue One of action_menu::TL, action_menu::TR, action_menu::BL, action_menu::BR.
      * @param int $button One of action_menu::TL, action_menu::TR, action_menu::BL, action_menu::BR.
      */
     public function set_alignment($dialogue, $button) {
+        debugging('The method action_menu::set_alignment() is deprecated, use action_menu::set_menu_left()', DEBUG_DEVELOPER);
         if (isset($this->attributessecondary['data-align'])) {
             // We've already got one set, lets remove the old class so as to avoid troubles.
             $class = $this->attributessecondary['class'];
@@ -4471,6 +4482,14 @@ class action_menu implements renderable, templatable {
             default :
                 return 'tl';
         }
+    }
+
+    /**
+     * Aligns the left corner of the dropdown.
+     *
+     */
+    public function set_menu_left() {
+        $this->dropdownalignment = 'dropdown-menu-left';
     }
 
     /**
@@ -4634,6 +4653,7 @@ class action_menu implements renderable, templatable {
 
         $data->primary = $primary;
         $data->secondary = $secondary;
+        $data->dropdownalignment = $this->dropdownalignment;
 
         return $data;
     }
@@ -4660,6 +4680,7 @@ class action_menu_filler extends action_link implements renderable {
      * Constructs the object.
      */
     public function __construct() {
+        $this->attributes['id'] = html_writer::random_id('action_link');
     }
 }
 

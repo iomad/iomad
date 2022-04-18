@@ -282,9 +282,9 @@ EOF;
     /**
      * Get the current groupid if set.
      *
-     * @return null|int
+     * @return int
      */
-    public function get_group_id(): ?int {
+    public function get_group_id(): int {
         return empty($this->groupid) ? 0 : $this->groupid;
     }
 
@@ -294,7 +294,8 @@ EOF;
      * @return bool
      */
     public function uses_groups(): bool {
-        return $this->groupid !== null;
+        $groupmode = groups_get_activity_groupmode($this->get_cm());
+        return $groupmode != NOGROUPS;
     }
 
     /**
@@ -305,7 +306,7 @@ EOF;
     public function get_group_name(): ?string {
         $groupid = $this->get_group_id();
 
-        if ($groupid === null) {
+        if (!$this->uses_groups()) {
             return null;
         }
 
@@ -592,10 +593,10 @@ EOF;
      * @return bool
      */
     public function can_join(): bool {
-        global $USER;
         $groupid = $this->get_group_id();
         $context = $this->get_context();
-        $inrightgroup = !$groupid || $this->user_has_group_access($USER, $groupid);
+        $inrightgroup =
+            groups_group_visible($groupid, $this->get_course(), $this->get_cm());
         $hascapability = has_capability('moodle/category:manage', $context)
             || (has_capability('mod/bigbluebuttonbn:join', $context) && $inrightgroup);
         $canjoin = $this->get_type() != self::TYPE_RECORDING_ONLY && $hascapability; // Recording only cannot be joined ever.
@@ -731,9 +732,10 @@ EOF;
      */
     public function should_show_recording_button(): bool {
         global $CFG;
-
         if (!empty($CFG->bigbluebuttonbn_recording_hide_button_editable)) {
-            return (bool) $this->get_instance_var('recordhidebutton');
+            $recordhidebutton = (bool) $this->get_instance_var('recordhidebutton');
+            $recordallfromstart = (bool) $this->get_instance_var('recordallfromstart');
+            return !($recordhidebutton || $recordallfromstart);
         }
 
         return !$CFG->bigbluebuttonbn_recording_hide_button_default;
@@ -796,6 +798,9 @@ EOF;
      */
     public function get_welcome_message(): string {
         $welcomestring = $this->get_instance_var('welcome');
+        if (!config::get('welcome_editable') || empty($welcomestring)) {
+            $welcomestring = config::get('welcome_default');
+        }
         if (empty($welcomestring)) {
             $welcomestring = get_string('mod_form_field_welcome_default', 'bigbluebuttonbn');
         }

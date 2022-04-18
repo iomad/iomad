@@ -46,11 +46,20 @@ if ($PAGE->course) {
     require_login($PAGE->course->id);
 }
 $PAGE->set_url('/contentbank/index.php');
-$PAGE->set_context($context);
+if ($contextid == \context_system::instance()->id) {
+    $PAGE->set_context(context_course::instance($contextid));
+} else {
+    $PAGE->set_context($context);
+}
+
+if ($context->contextlevel == CONTEXT_COURSECAT) {
+    $PAGE->set_primary_active_tab('home');
+}
+
 $PAGE->set_title($title);
-$PAGE->set_heading($title);
 $PAGE->add_body_class('limitedwidth');
 $PAGE->set_pagetype('contentbank');
+$PAGE->set_secondary_active_tab('contentbank');
 
 // Get all contents managed by active plugins where the user has permission to render them.
 $contenttypes = [];
@@ -105,6 +114,7 @@ if (has_capability('moodle/contentbank:upload', $context)) {
 }
 
 echo $OUTPUT->header();
+echo $OUTPUT->heading($title, 2);
 echo $OUTPUT->box_start('generalbox');
 
 // If needed, display notifications.

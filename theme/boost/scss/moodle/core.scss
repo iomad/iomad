@@ -154,6 +154,14 @@ button.close,
     }
 }
 
+// Modal dialogs border should be rounded too.
+.modal-dialog[tabindex="0"] {
+    &.focus,
+    &:focus {
+        @include border-radius($modal-content-border-radius);
+    }
+}
+
 // We don't want to highlight the whole li when it's expanded. Only the first child is highlighted.
 [role="treeitem"][aria-expanded="true"] {
     outline: 0;
@@ -192,7 +200,6 @@ button.close,
 .inline-list li,
 .block .list,
 .block .list li,
-.section li.activity,
 .section li.movehere,
 .tabtree li {
     list-style: none;
@@ -312,19 +319,6 @@ a.autolink.glossary:hover {
     display: block;
 }
 
-.collapsible-actions .collapseexpand {
-    padding-left: 20px;
-    background: url([[pix:t/collapsed]]) 2px center no-repeat;
-}
-/*rtl:raw:
-.collapsible-actions .collapseexpand {
-    background: url([[pix:t/collapsed_rtl]]) right center no-repeat;
-}
-*/
-.collapsible-actions .collapse-all {
-    background-image: url([[pix:t/expanded]]);
-}
-
 .yui-overlay .yui-widget-bd {
     background-color: #ffee69;
     border: 1px solid #a6982b;
@@ -353,11 +347,6 @@ a.autolink.glossary:hover {
 .pagingbar .title,
 .pagingbar .thispage {
     font-weight: bold;
-}
-
-img.userpicture,
-.userinitials {
-    margin-right: 0.5rem;
 }
 
 img.resize {
@@ -655,8 +644,8 @@ table.mod_index {
 }
 
 .comment-message .picture {
-    width: 20px;
     float: left;
+    margin-right: 0.25rem;
 }
 
 .comment-message .text {
@@ -2051,17 +2040,9 @@ nav.navbar .logo img {
     overflow: hidden;
     padding: 0.25rem 0;
 
-    .page-header-image,
-    .page-header-headings {
-        float: left;
-        display: block;
-        position: relative;
-    }
+    display: flex;
 
     .page-header-image {
-        margin-right: 1em;
-        margin-bottom: 0.5em;
-        margin-top: 0.7em;
         & > a {
             display: inline-block;
         }
@@ -2354,9 +2335,6 @@ $footer-link-color: $bg-inverse-link-color !default;
         display: block;
         z-index: $zindex-dropdown;
     }
-    .jsenabled .drawers.show-drawer-right .btn-footer-popover {
-        display: none;
-    }
 }
 
 .bg-inverse a {
@@ -2510,6 +2488,15 @@ body.h5p-embed {
 
 #h5pcontenttypes td {
     vertical-align: middle;
+}
+
+#page.drawers {
+    form#h5peditor,
+    form#coolh5peditor,
+    .core_contentbank_viewcontent {
+        max-width: $h5p-content-maxwidth;
+        margin: 0 auto;
+    }
 }
 
 .text-decoration-none {
@@ -2696,6 +2683,10 @@ $picker-emojis-per-row: 7 !default;
     font-weight: $font-weight-bold;
 }
 
+.breadcrumb:empty {
+    padding: 0;
+}
+
 @include media-breakpoint-down(sm) {
     #page-navbar {
         width: 100%;
@@ -2703,13 +2694,20 @@ $picker-emojis-per-row: 7 !default;
 
     .breadcrumb:not(:empty) {
         width: 100%;
-        border: ($border-width * 2) solid $gray-200;
-        padding: $spacer / 4;
+        flex-wrap: nowrap;
         margin-bottom: $spacer / 2;
         .breadcrumb-item {
             padding-top: $spacer / 3;
             padding-bottom: $spacer / 3;
-            display: inline-block;
+            display: inline-flex;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        .breadcrumb-item a,
+        .breadcrumb-item span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 
@@ -2846,15 +2844,19 @@ $scrollbar-track: lighten($primary, 40%);
 body.dragging {
 
     .drop-zone {
-        border: 2px dashed $dropzone-border;
+        border: 1px dashed $dropzone-border;
     }
 
     .drop-up {
-        border-top: 2px solid $dropzone-border;
+        border-top: 1px solid $dropzone-border;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
     }
 
     .drop-down {
-        border-bottom: 2px solid $dropzone-border;
+        border-bottom: 1px solid $dropzone-border;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
     }
 
     .dragging {
@@ -2907,8 +2909,19 @@ body.dragging {
     .block_myoverview {
         border: 0;
         & > .card-body {
+            padding-top: 0 !important; /* stylelint-disable-line declaration-no-important */
             padding-left: 0 !important; /* stylelint-disable-line declaration-no-important */
             padding-right: 0 !important; /* stylelint-disable-line declaration-no-important */
         }
     }
+}
+
+.dropdown-toggle::after {
+    content: $fa-var-chevron-down;
+    margin-right: 0;
+    margin-left: 4px;
+    @include fa-icon();
+    font-size: 9px;
+    width: 9px;
+    border: 0;
 }

@@ -33,6 +33,7 @@ body.behat-site {
         position: static;
         z-index: 0;
         opacity: 1;
+        width: auto;
     }
     .custom-control-label {
         &::before,
@@ -49,6 +50,18 @@ body.behat-site {
     }
     &.jsenabled #page-footer .footer-content-popover {
         display: block;
+    }
+
+    &.path-grade-report-grader .gradeparent {
+        tr.heading,
+        tr.lastrow,
+        th.header {
+            position: relative;
+            left: auto;
+        }
+        tr.heading {
+            top: auto;
+        }
     }
 }
 

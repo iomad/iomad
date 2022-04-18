@@ -88,6 +88,7 @@ if ($id) {
 if (!$courseid) {
     require_once $CFG->libdir.'/adminlib.php';
     admin_externalpage_setup('scales');
+    $PAGE->set_primary_active_tab('siteadminnode');
 }
 
 // default return url
@@ -144,6 +145,7 @@ if ($mform->is_cancelled()) {
 }
 
 $heading = $id ? get_string('editscale', 'grades') : get_string('addscale', 'grades');
+$PAGE->navbar->add($heading);
 print_grade_page_head($COURSE->id, 'scale', null, $heading, false, false, false);
 
 $mform->display();

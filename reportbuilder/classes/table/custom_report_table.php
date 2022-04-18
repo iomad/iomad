@@ -24,7 +24,6 @@ use moodle_exception;
 use moodle_url;
 use stdClass;
 use core_reportbuilder\manager;
-use core_reportbuilder\local\models\column as column_model;
 use core_reportbuilder\local\models\report;
 use core_reportbuilder\local\report\column;
 use core_reportbuilder\output\column_aggregation_editable;
@@ -42,8 +41,8 @@ class custom_report_table extends base_report_table {
     /** @var string Unique ID prefix for the table */
     private const UNIQUEID_PREFIX = 'custom-report-table-';
 
-    /** @var bool Whether filters should be applied in report (we don't want them when editing) */
-    protected const REPORT_APPLY_FILTERS = false;
+    /** @var bool Whether report is being edited (we don't want user filters/sorting to be applied when editing) */
+    protected const REPORT_EDITING = true;
 
     /**
      * Table constructor. Note that the passed unique ID value must match the pattern "custom-report-table-(\d+)" so that
@@ -95,8 +94,7 @@ class custom_report_table extends base_report_table {
         $hasaggregatedcolumns = !empty($aggregatedcolumns);
         $showuniquerows = !$hasaggregatedcolumns && $this->persistent->get('uniquerows');
 
-        $columnheaders = [];
-        $columnsattributes = [];
+        $columnheaders = $columnsattributes = [];
         foreach ($columns as $column) {
             $columnheading = $column->get_persistent()->get_formatted_heading($this->report->get_context());
             $columnheaders[$column->get_column_alias()] = $columnheading !== '' ? $columnheading : $column->get_title();
@@ -128,7 +126,7 @@ class custom_report_table extends base_report_table {
                 $column->add_attributes(['data-cardviewhidden' => '']);
             }
 
-            // Generate row attributes to be included in each cell.
+            // Generate column attributes to be included in each cell.
             $columnsattributes[$column->get_column_alias()] = $column->get_attributes();
         }
 
@@ -144,7 +142,7 @@ class custom_report_table extends base_report_table {
         $this->pageable(true);
 
         // Initialise table SQL properties.
-        $this->set_filters_applied(static::REPORT_APPLY_FILTERS);
+        $this->set_report_editing(static::REPORT_EDITING);
 
         $fieldsql = implode(', ', $fields);
         $this->init_sql($fieldsql, "{{$maintable}} {$maintablealias}", $joins, $where, $params, $groupby);
@@ -166,20 +164,22 @@ class custom_report_table extends base_report_table {
      *
      * @return array
      */
-    public function get_sort_columns() {
+    public function get_sort_columns(): array {
         $sortcolumns = parent::get_sort_columns();
-        if (empty($sortcolumns)) {
+
+        if ($this->editing || empty($sortcolumns)) {
+            $sortcolumns = [];
             $columns = $this->get_active_columns();
 
-            $instances = column_model::get_records([
-                'reportid' => $this->report->get_report_persistent()->get('id'),
-                'sortenabled' => 1,
-            ], 'sortorder');
+            // We need to sort the columns by the configured sorting order.
+            usort($columns, static function(column $a, column $b): int {
+                return ($a->get_persistent()->get('sortorder') < $b->get_persistent()->get('sortorder')) ? -1 : 1;
+            });
 
-            foreach ($instances as $instance) {
-                $column = $columns[$instance->get('id')] ?? null;
-                if ($column !== null && $column->get_is_sortable()) {
-                    $sortcolumns[$column->get_column_alias()] = $instance->get('sortdirection');
+            foreach ($columns as $column) {
+                $persistent = $column->get_persistent();
+                if ($column->get_is_sortable() && $persistent->get('sortenabled')) {
+                    $sortcolumns[$column->get_column_alias()] = $persistent->get('sortdirection');
                 }
             }
         }
@@ -216,24 +216,10 @@ class custom_report_table extends base_report_table {
     /**
      * Get the columns of the custom report, returned instances being valid and available for the user
      *
-     * @return column[] Indexed by column ID
+     * @return column[]
      */
-    private function get_active_columns(): array {
-        $columns = [];
-
-        $instances = column_model::get_records(['reportid' => $this->report->get_report_persistent()->get('id')], 'columnorder');
-        foreach ($instances as $index => $instance) {
-            $column = $this->report->get_column($instance->get('uniqueidentifier'));
-            if ($column !== null && $column->get_is_available()) {
-                $column->set_persistent($instance);
-                // We should clone the report column to ensure if it's added twice to a report, each operates independently.
-                $columns[$instance->get('id')] = clone $column
-                    ->set_index($index)
-                    ->set_aggregation($instance->get('aggregation'));
-            }
-        }
-
-        return $columns;
+    protected function get_active_columns(): array {
+        return $this->report->get_active_columns();
     }
 
     /**

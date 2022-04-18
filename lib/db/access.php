@@ -2754,4 +2754,12 @@ $capabilities = array(
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [],
     ],
+
+    // Allow users to schedule reports as other users.
+    'moodle/reportbuilder:scheduleviewas' => [
+        'captype' => 'read',
+        'riskbitmap' => RISK_PERSONAL,
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [],
+    ],
 );

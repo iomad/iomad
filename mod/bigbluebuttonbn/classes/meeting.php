@@ -21,10 +21,10 @@ use cache_store;
 use context_course;
 use core_tag_tag;
 use Exception;
+use Firebase\JWT\Key;
 use mod_bigbluebuttonbn\local\config;
 use mod_bigbluebuttonbn\local\exceptions\bigbluebutton_exception;
 use mod_bigbluebuttonbn\local\exceptions\meeting_join_exception;
-use mod_bigbluebuttonbn\local\exceptions\server_not_available_exception;
 use mod_bigbluebuttonbn\local\helpers\roles;
 use mod_bigbluebuttonbn\local\proxy\bigbluebutton_proxy;
 use stdClass;
@@ -63,7 +63,6 @@ class meeting {
      * @param int $origin
      * @return string
      * @throws meeting_join_exception this is sent if we cannot join (meeting full, user needs to wait...)
-     * @throws server_not_available_exception
      */
     public static function join_meeting(instance $instance, $origin = logger::ORIGIN_BASE): string {
         // See if the session is in progress.
@@ -79,7 +78,6 @@ class meeting {
      * Get currently stored meeting info
      *
      * @return mixed|stdClass
-     * @throws \coding_exception
      */
     public function get_meeting_info() {
         if (!$this->meetinginfo) {
@@ -161,8 +159,6 @@ class meeting {
      * Creates a bigbluebutton meeting, send the message to BBB and returns the response in an array.
      *
      * @return array
-     * @throws bigbluebutton_exception
-     * @throws server_not_available_exception
      */
     public function create_meeting() {
         $data = $this->create_meeting_data();
@@ -195,7 +191,6 @@ class meeting {
      * Get meeting join URL
      *
      * @return string
-     * @throws \coding_exception
      */
     public function get_join_url() {
         return bigbluebutton_proxy::get_join_url(
@@ -265,19 +260,13 @@ class meeting {
 
         // If user is administrator, moderator or if is viewer and no waiting is required, join allowed.
         if ($meetinginfo->statusrunning) {
-            $meetinginfo->statusmessage = get_string('view_message_conference_in_progress', 'bigbluebuttonbn');
             $meetinginfo->startedat = floor(intval($info['startTime']) / 1000); // Milliseconds.
             $meetinginfo->moderatorcount = $info['moderatorCount'];
             $meetinginfo->moderatorplural = $info['moderatorCount'] > 1;
             $meetinginfo->participantcount = $participantcount - $meetinginfo->moderatorcount;
             $meetinginfo->participantplural = $meetinginfo->participantcount > 1;
-        } else {
-            if ($instance->user_must_wait_to_join() && !$instance->user_can_force_join()) {
-                $meetinginfo->statusmessage = get_string('view_message_conference_wait_for_moderator', 'bigbluebuttonbn');
-            } else {
-                $meetinginfo->statusmessage = get_string('view_message_conference_room_ready', 'bigbluebuttonbn');
-            }
         }
+        $meetinginfo->statusmessage = $this->get_status_message($meetinginfo, $instance);
 
         $presentation = $instance->get_presentation(); // This is for internal use.
         if (!empty($presentation)) {
@@ -294,14 +283,37 @@ class meeting {
     }
 
     /**
+     * Deduce status message from the current meeting info and the instance
+     *
+     * Returns the human-readable message depending on if the user must wait to join, the meeting has not
+     * yet started ...
+     * @param object $meetinginfo
+     * @param instance $instance
+     * @return string
+     */
+    protected function get_status_message(object $meetinginfo, instance $instance): string {
+        if ($meetinginfo->statusrunning) {
+            return get_string('view_message_conference_in_progress', 'bigbluebuttonbn');
+        }
+        if ($instance->user_must_wait_to_join() && !$instance->user_can_force_join()) {
+            return get_string('view_message_conference_wait_for_moderator', 'bigbluebuttonbn');
+        }
+        if ($instance->before_start_time()) {
+            return get_string('view_message_conference_not_started', 'bigbluebuttonbn');
+        }
+        if ($instance->has_ended()) {
+            return get_string('view_message_conference_has_ended', 'bigbluebuttonbn');
+        }
+        return get_string('view_message_conference_room_ready', 'bigbluebuttonbn');
+    }
+
+    /**
      * Gets a meeting info object cached or fetched from the live session.
      *
      * @param string $meetingid
      * @param bool $updatecache
      *
      * @return array
-     * @throws \coding_exception
-     * @throws bigbluebutton_exception
      */
     protected static function retrieve_cached_meeting_info($meetingid, $updatecache = false) {
         $cachettl = (int) config::get('waitformoderator_cache_ttl');
@@ -321,6 +333,18 @@ class meeting {
     }
 
     /**
+     * Conversion between form settings and lockSettings as set in BBB API.
+     */
+    const LOCK_SETTINGS_MEETING_DATA = [
+        'disablecam' => 'lockSettingsDisableCam',
+        'disablemic' => 'lockSettingsDisableMic',
+        'disableprivatechat' => 'lockSettingsDisablePrivateChat',
+        'disablepublicchat' => 'lockSettingsDisablePublicChat',
+        'disablenote' => 'lockSettingsDisableNote',
+        'lockonjoin' => 'lockSettingsLockOnJoin',
+        'hideuserlist' => 'lockSettingsHideUserList'
+    ];
+    /**
      * Helper to prepare data used for create meeting.
      *
      * @return array
@@ -336,10 +360,10 @@ class meeting {
         // Check if auto_start_record is enable.
         if ($data['record'] == 'true' && $this->instance->should_record_from_start()) {
             $data['autoStartRecording'] = 'true';
-            // Check if hide_record_button is enable.
-            if (!$this->instance->should_show_recording_button()) {
-                $data['allowStartStopRecording'] = 'false';
-            }
+        }
+        // Check if hide_record_button is enable.
+        if (!$this->instance->should_show_recording_button()) {
+            $data['allowStartStopRecording'] = 'false';
         }
         $data['welcome'] = trim($this->instance->get_welcome_message());
         $voicebridge = intval($this->instance->get_voice_bridge());
@@ -352,6 +376,13 @@ class meeting {
         }
         if ($this->instance->get_mute_on_start()) {
             $data['muteOnStart'] = 'true';
+        }
+        // Locks settings.
+        foreach (self::LOCK_SETTINGS_MEETING_DATA as $instancevarname => $lockname) {
+            $instancevar = $this->instance->get_instance_var($instancevarname);
+            if (!is_null($instancevar)) {
+                $data[$lockname] = $instancevar ? 'true' : 'false';
+            }
         }
         return $data;
     }
@@ -432,8 +463,7 @@ class meeting {
             // Verify the authenticity of the request.
             $token = \Firebase\JWT\JWT::decode(
                 $authorization[1],
-                config::get('shared_secret'),
-                ['HS512']
+                new Key(config::get('shared_secret'), 'HS512')
             );
 
             // Get JSON string from the body.
@@ -506,13 +536,14 @@ class meeting {
     public function join(int $origin): string {
         $this->do_get_meeting_info(true);
         if ($this->is_running()) {
-            if ($this->instance->has_user_limit_been_reached($this->get_participant_count())
-                && $this->instance->does_current_user_count_towards_user_limit()) {
+            if (
+                $this->instance->has_user_limit_been_reached($this->get_participant_count())
+                && $this->instance->does_current_user_count_towards_user_limit()
+            ) {
                 throw new meeting_join_exception('userlimitreached');
             }
-        }
-        // If user is not administrator nor moderator (user is student) and waiting is required.
-        if ($this->instance->user_must_wait_to_join()) {
+        } else if ($this->instance->user_must_wait_to_join()) {
+            // If user is not administrator nor moderator (user is student) and waiting is required.
             throw new meeting_join_exception('waitformoderator');
         }
 

@@ -269,7 +269,7 @@ function mnet_encrypt_message($message, $remote_certificate) {
     $symmetric_keys = array();
 
     //        passed by ref ->     &$encryptedstring &$symmetric_keys
-    $bool = openssl_seal($message, $encryptedstring, $symmetric_keys, array($publickey));
+    $bool = openssl_seal($message, $encryptedstring, $symmetric_keys, array($publickey), 'RC4');
     $message = $encryptedstring;
     $symmetrickey = array_pop($symmetric_keys);
 
@@ -422,7 +422,10 @@ function mnet_generate_keypair($dn = null, $days=28) {
 
     // We export our self-signed certificate to a string.
     openssl_x509_export($selfSignedCert, $keypair['certificate']);
-    openssl_x509_free($selfSignedCert);
+    // TODO: Remove this block once PHP 8.0 becomes required.
+    if (PHP_MAJOR_VERSION < 8) {
+        openssl_x509_free($selfSignedCert);
+    }
 
     // Export your public/private key pair as a PEM encoded string. You
     // can protect it with an optional passphrase if you wish.
@@ -431,7 +434,10 @@ function mnet_generate_keypair($dn = null, $days=28) {
     } else {
         $export = openssl_pkey_export($new_key, $keypair['keypair_PEM'] /* , $passphrase */);
     }
-    openssl_pkey_free($new_key);
+    // TODO: Remove this block once PHP 8.0 becomes required.
+    if (PHP_MAJOR_VERSION < 8) {
+        openssl_pkey_free($new_key);
+    }
     unset($new_key); // Free up the resource
 
     return $keypair;
@@ -917,4 +923,16 @@ function mnet_strip_user($user, $fields) {
         $user = (object)$user;
     }
     return $user;
+}
+
+/**
+ * Return the deprecation notice of the Mnet.
+ *
+ * @return \core\output\notification
+ */
+function mnet_get_deprecation_notice(): \core\output\notification {
+    $notice = new \core\output\notification(get_string('xmlrpcmnetenabled', 'admin'),
+        \core\output\notification::NOTIFY_WARNING);
+
+    return $notice;
 }

@@ -51,7 +51,9 @@ class permission {
      * @return bool
      */
     public static function can_view_reports_list(?int $userid = null): bool {
-        return has_any_capability([
+        global $CFG;
+
+        return !empty($CFG->enablecustomreports) && has_any_capability([
             'moodle/reportbuilder:editall',
             'moodle/reportbuilder:edit',
             'moodle/reportbuilder:view',
@@ -96,7 +98,6 @@ class permission {
      *
      * @param report $report
      * @param int|null $userid User ID to check, or the current user if omitted
-     * @return void
      * @throws report_access_exception
      */
     public static function require_can_edit_report(report $report, ?int $userid = null): void {
@@ -113,16 +114,25 @@ class permission {
      * @return bool
      */
     public static function can_edit_report(report $report, ?int $userid = null): bool {
-        global $USER;
+        global $CFG, $USER;
+
+        if (empty($CFG->enablecustomreports)) {
+            return false;
+        }
 
         // We can only edit custom reports.
         if ($report->get('type') !== base::TYPE_CUSTOM_REPORT) {
             return false;
         }
 
+        // To edit their own reports, users must have either of the 'edit' or 'editall' capabilities. For reports belonging
+        // to other users, they must have the specific 'editall' capability.
         $userid = $userid ?: (int) $USER->id;
         if ($report->get('usercreated') === $userid) {
-            return has_capability('moodle/reportbuilder:edit', context_system::instance(), $userid);
+            return has_any_capability([
+                'moodle/reportbuilder:edit',
+                'moodle/reportbuilder:editall',
+            ], context_system::instance(), $userid);
         } else {
             return has_capability('moodle/reportbuilder:editall', context_system::instance(), $userid);
         }
@@ -135,8 +145,12 @@ class permission {
      * @return bool
      */
     public static function can_create_report(?int $userid = null): bool {
-        $capabilities = ['moodle/reportbuilder:edit', 'moodle/reportbuilder:editall'];
-        return has_any_capability($capabilities, context_system::instance(), $userid);
+        global $CFG;
+
+        return !empty($CFG->enablecustomreports) && has_any_capability([
+            'moodle/reportbuilder:edit',
+            'moodle/reportbuilder:editall',
+        ], context_system::instance(), $userid);
     }
 
     /**

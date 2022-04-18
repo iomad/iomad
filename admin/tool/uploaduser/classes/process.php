@@ -26,6 +26,7 @@ namespace tool_uploaduser;
 
 defined('MOODLE_INTERNAL') || die();
 
+use context_system;
 use tool_uploaduser\local\field_value_validators;
 
 require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -550,7 +551,8 @@ class process {
 
         // Delete user.
         if (!empty($user->deleted)) {
-            if (!$this->get_allow_deletes() or $remoteuser) {
+            if (!$this->get_allow_deletes() or $remoteuser or
+                    !has_capability('moodle/user:delete', context_system::instance())) {
                 $this->usersskipped++;
                 $this->upt->track('status', get_string('usernotdeletedoff', 'error'), 'warning');
                 return;
@@ -690,7 +692,11 @@ class process {
             $dologout = false;
 
             if ($this->get_update_type() != UU_UPDATE_NOCHANGES and !$remoteuser) {
-                if (!empty($user->auth) and $user->auth !== $existinguser->auth) {
+
+                // Handle 'auth' column separately, the field can never be missing from a user.
+                if (!empty($user->auth) && ($user->auth !== $existinguser->auth) &&
+                        ($this->get_update_type() != UU_UPDATE_MISSING)) {
+
                     $this->upt->track('auth', s($existinguser->auth).'-->'.s($user->auth), 'info', false);
                     $existinguser->auth = $user->auth;
                     if (!isset($this->supportedauths[$user->auth])) {

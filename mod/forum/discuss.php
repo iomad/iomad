@@ -45,14 +45,14 @@ $discussionvault = $vaultfactory->get_discussion_vault();
 $discussion = $discussionvault->get_from_id($d);
 
 if (!$discussion) {
-    throw new \moodle_exception('Unable to find discussion with id ' . $discussionid);
+    throw new \moodle_exception('errordiscussionnotfound', 'mod_forum');
 }
 
 $forumvault = $vaultfactory->get_forum_vault();
 $forum = $forumvault->get_from_id($discussion->get_forum_id());
 
 if (!$forum) {
-    throw new \moodle_exception('Unable to find forum with id ' . $discussion->get_forum_id());
+    throw new \moodle_exception('errorforumnotfound', 'mod_forum');
 }
 
 $course = $forum->get_course_record();
@@ -312,6 +312,7 @@ if ($node && $post->get_id() != $discussion->get_first_post_id()) {
 $isnestedv2displaymode = $displaymode == FORUM_MODE_NESTED_V2;
 $PAGE->set_title("$course->shortname: " . format_string($discussion->get_name()));
 $PAGE->set_heading($course->fullname);
+$PAGE->set_secondary_active_tab('modulepage');
 $PAGE->activityheader->disable();
 if ($isnestedv2displaymode) {
     $PAGE->add_body_class('nested-v2-display-mode reset-style');

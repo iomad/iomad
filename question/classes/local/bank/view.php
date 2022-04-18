@@ -24,7 +24,12 @@
 
 namespace core_question\local\bank;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/question/editlib.php');
+use core_plugin_manager;
 use core_question\bank\search\condition;
+use qbank_columnsortorder\column_manager;
 use qbank_editquestion\editquestion_helper;
 use qbank_managecategories\helper;
 
@@ -70,7 +75,7 @@ class view {
     protected $editquestionurl;
 
     /**
-     * @var \question_edit_contexts
+     * @var \core_question\local\bank\question_edit_contexts
      */
     protected $contexts;
 
@@ -157,7 +162,7 @@ class view {
     /**
      * Constructor for view.
      *
-     * @param \question_edit_contexts $contexts
+     * @param \core_question\local\bank\question_edit_contexts $contexts
      * @param \moodle_url $pageurl
      * @param object $course course settings
      * @param object $cm (optional) activity settings.
@@ -242,10 +247,13 @@ class view {
                 'copy_action_column',
                 'tags_action_column',
                 'preview_action_column',
+                'history_action_column',
                 'delete_action_column',
                 'export_xml_action_column',
+                'question_status_column',
+                'version_number_column',
                 'creator_name_column',
-                'modifier_name_column'
+                'comment_count_column'
         ];
         if (question_get_display_preference('qbshowtext', 0, PARAM_BOOL, new \moodle_url(''))) {
             $corequestionbankcolumns[] = 'question_text_row';
@@ -297,9 +305,15 @@ class view {
             $questionbankclasscolumns[$key] = $newpluginclasscolumn;
         }
 
+        // Check if qbank_columnsortorder is enabled.
+        if (array_key_exists('columnsortorder', core_plugin_manager::instance()->get_enabled_plugins('qbank'))) {
+            $columnorder = new column_manager();
+            $questionbankclasscolumns = $columnorder->get_sorted_columns($questionbankclasscolumns);
+        }
+
         // Mitigate the error in case of any regression.
         foreach ($questionbankclasscolumns as $shortname => $questionbankclasscolumn) {
-            if (empty($questionbankclasscolumn)){
+            if (empty($questionbankclasscolumn)) {
                 unset($questionbankclasscolumns[$shortname]);
             }
         }
@@ -560,7 +574,7 @@ class view {
     protected function build_query(): void {
         // Get the required tables and fields.
         $joins = [];
-        $fields = ['q.hidden', 'q.category'];
+        $fields = ['qv.status', 'qc.id as categoryid', 'qv.version', 'qv.id as versionid', 'qbe.id as questionbankentryid'];
         if (!empty($this->requiredcolumns)) {
             foreach ($this->requiredcolumns as $column) {
                 $extrajoins = $column->get_extra_joins();
@@ -583,7 +597,12 @@ class view {
         }
 
         // Build the where clause.
-        $tests = ['q.parent = 0'];
+        $latestversion = 'qv.version = (SELECT MAX(v.version)
+                                          FROM {question_versions} v
+                                          JOIN {question_bank_entries} be
+                                            ON be.id = v.questionbankentryid
+                                         WHERE be.id = qbe.id)';
+        $tests = ['q.parent = 0', $latestversion];
         $this->sqlparams = [];
         foreach ($this->searchconditions as $searchcondition) {
             if ($searchcondition->where()) {
@@ -1084,7 +1103,7 @@ class view {
      */
     protected function print_table($questions): void {
         // Start of the table.
-        echo \html_writer::start_tag('table', ['id' => 'categoryquestions']);
+        echo \html_writer::start_tag('table', ['id' => 'categoryquestions', 'class' => 'table-responsive']);
 
         // Prints the table header.
         echo \html_writer::start_tag('thead');
@@ -1153,7 +1172,7 @@ class view {
      */
     protected function get_row_classes($question, $rowcount): array {
         $classes = [];
-        if ($question->hidden) {
+        if ($question->status === question_version_status::QUESTION_STATUS_HIDDEN) {
             $classes[] = 'dimmed_text';
         }
         if ($question->id == $this->lastchangedid) {
@@ -1219,4 +1238,11 @@ class view {
         $this->searchconditions[] = $searchcondition;
     }
 
+    /**
+     * Gets visible columns.
+     * @return array Visible columns.
+     */
+    public function get_visiblecolumns(): array {
+        return $this->visiblecolumns;
+    }
 }

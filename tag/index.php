@@ -72,6 +72,7 @@ if (empty($tag)) {
 if ($ctx && ($context = context::instance_by_id($ctx, IGNORE_MISSING)) && $context->contextlevel >= CONTEXT_COURSE) {
     list($context, $course, $cm) = get_context_info_array($context->id);
     require_login($course, false, $cm, false, true);
+    $PAGE->set_secondary_navigation(false);
 } else {
     $PAGE->set_context($systemcontext);
 }

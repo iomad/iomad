@@ -406,7 +406,7 @@ function install_print_footer($config, $reload=false) {
         $next = '<input type="submit" id="nextbutton" class="btn btn-primary ml-1 flex-grow-0 mr-auto" name="next" value="'.s(get_string('next')).' &raquo;" />';
     }
 
-    echo '</fieldset><div id="nav_buttons" class="mb-3 btn-group w-100 flex-row-reverse">'.$next.$first.'</div>';
+    echo '</fieldset><div id="nav_buttons" class="mb-3 w-100 flex-row-reverse">'.$first.$next.'</div>';
 
     $homelink  = '<div class="sitelink">'.
        '<a title="Moodle '. $CFG->target_release .'" href="http://docs.moodle.org/en/Administrator_documentation" onclick="this.target=\'_blank\'">'.
@@ -506,6 +506,11 @@ function install_cli_database(array $options, $interactive) {
         $DB->set_field('user', 'username', $options['adminuser'], array('username' => 'admin'));
     }
 
+    // Set the support email address if specified.
+    if (isset($options['supportemail'])) {
+        set_config('supportemail', $options['supportemail']);
+    }
+
     // indicate that this site is fully configured
     set_config('rolesactive', 1);
     upgrade_finished();
@@ -533,6 +538,6 @@ function install_cli_database(array $options, $interactive) {
 
     // Apply default preset, if it is defined in $CFG and has a valid value.
     if (!empty($CFG->setsitepresetduringinstall)) {
-        \tool_admin_presets\helper::change_default_preset($CFG->setsitepresetduringinstall);
+        \core_adminpresets\helper::change_default_preset($CFG->setsitepresetduringinstall);
     }
 }

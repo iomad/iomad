@@ -46,9 +46,9 @@ $strreset       = get_string('reset');
 $strresetcourse = get_string('resetcourse');
 $strremove      = get_string('remove');
 
-$PAGE->navbar->add($strresetcourse);
 $PAGE->set_title($course->fullname.': '.$strresetcourse);
 $PAGE->set_heading($course->fullname.': '.$strresetcourse);
+$PAGE->set_secondary_active_tab('coursereuse');
 
 $mform = new course_reset_form();
 

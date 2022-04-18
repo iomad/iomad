@@ -45,13 +45,13 @@ function(
     var courseview = false;
 
     var SELECTORS = {
-        EMPTY_MESSAGE: '[data-region="empty-message"]',
+        EMPTY_MESSAGE: '[data-region="no-events-empty-message"]',
         ROOT: '[data-region="event-list-container"]',
         EVENT_LIST_CONTENT: '[data-region="event-list-content"]',
         EVENT_LIST_WRAPPER: '[data-region="event-list-wrapper"]',
         EVENT_LIST_LOADING_PLACEHOLDER: '[data-region="event-list-loading-placeholder"]',
         TIMELINE_BLOCK: '[data-region="timeline"]',
-        TIMELINE_SEARCH: '[data-region="search-input"]',
+        TIMELINE_SEARCH: '[data-action="search"]',
         MORE_ACTIVITIES_BUTTON: '[data-action="more-events"]',
         MORE_ACTIVITIES_BUTTON_CONTAINER: '[data-region="more-events-button-container"]'
     };

@@ -338,13 +338,19 @@ class quiz_grading_report extends quiz_default_report {
      * @param bool $includeauto whether to show automatically-graded questions.
      */
     protected function display_index($includeauto) {
-        global $PAGE;
+        global $PAGE, $OUTPUT;
 
         $this->print_header_and_tabs($this->cm, $this->course, $this->quiz, 'grading');
 
         if ($groupmode = groups_get_activity_groupmode($this->cm)) {
             // Groups is being used.
             groups_print_activity_menu($this->cm, $this->list_questions_url());
+        }
+        // Get the current group for the user looking at the report.
+        $currentgroup = $this->get_current_group($this->cm, $this->course, $this->context);
+        if ($currentgroup == self::NO_GROUPS_ALLOWED) {
+            echo $OUTPUT->notification(get_string('notingroup'));
+            return;
         }
         $statecounts = $this->get_question_state_summary(array_keys($this->questions));
         if ($includeauto) {
@@ -626,7 +632,7 @@ class quiz_grading_report extends quiz_default_report {
     protected function get_usage_ids_where_question_in_state($summarystate, $slot,
             $questionid = null, $orderby = 'random', $page = 0, $pagesize = null) {
         $dm = new question_engine_data_mapper();
-
+        $extraselect = '';
         if ($pagesize && $orderby != 'random') {
             $limitfrom = $page * $pagesize;
         } else {
@@ -643,16 +649,17 @@ class quiz_grading_report extends quiz_default_report {
         foreach ($userfieldsapi->get_required_fields([\core_user\fields::PURPOSE_IDENTITY]) as $field) {
             $customfields[] = $field;
         }
-        if ($orderby == 'date') {
+        if ($orderby === 'date') {
             list($statetest, $params) = $dm->in_summary_state_test(
                     'manuallygraded', false, 'mangrstate');
-            $orderby = "(
+            $extraselect = "(
                     SELECT MAX(sortqas.timecreated)
                     FROM {question_attempt_steps} sortqas
                     WHERE sortqas.questionattemptid = qa.id
                         AND sortqas.state $statetest
-                    )";
-        } else if ($orderby == 'studentfirstname' || $orderby == 'studentlastname' || in_array($orderby, $customfields)) {
+                    ) as tcreated";
+            $orderby = "tcreated";
+        } else if ($orderby === 'studentfirstname' || $orderby === 'studentlastname' || in_array($orderby, $customfields)) {
             $qubaids->from .= " JOIN {user} u ON quiza.userid = u.id {$userfieldssql->joins}";
             // For name sorting, map orderby form value to
             // actual column names; 'idnumber' maps naturally.
@@ -666,7 +673,7 @@ class quiz_grading_report extends quiz_default_report {
         }
 
         return $dm->load_questions_usages_where_question_in_state($qubaids, $summarystate,
-                $slot, $questionid, $orderby, $params, $limitfrom, $pagesize);
+                $slot, $questionid, $orderby, $params, $limitfrom, $pagesize, $extraselect);
     }
 
     /**

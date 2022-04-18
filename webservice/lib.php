@@ -904,7 +904,7 @@ class webservice_access_exception extends moodle_exception {
 function webservice_protocol_is_enabled($protocol) {
     global $CFG;
 
-    if (empty($CFG->enablewebservices)) {
+    if (empty($CFG->enablewebservices) || empty($CFG->webserviceprotocols)) {
         return false;
     }
 
@@ -1137,7 +1137,8 @@ abstract class webservice_server implements webservice_server_interface {
         $this->userid = $user->id;
 
         if ($this->authmethod != WEBSERVICE_AUTHMETHOD_SESSION_TOKEN && !has_capability("webservice/$this->wsname:use", $this->restricted_context)) {
-            throw new webservice_access_exception('You are not allowed to use the {$a} protocol (missing capability: webservice/' . $this->wsname . ':use)');
+            throw new webservice_access_exception("You are not allowed to use the {$this->wsname} protocol " .
+                "(missing capability: webservice/{$this->wsname}:use)");
         }
 
         external_api::set_context_restriction($this->restricted_context);

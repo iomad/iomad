@@ -1,4 +1,4 @@
-@core @core_quiz @core_customfield @qbank_customfields @javascript @xxpriority
+@core @core_quiz @core_customfield @qbank_customfields @javascript
 Feature: The visibility of question custom fields control where they are displayed
   In order to display custom fields in a quiz
 
@@ -38,7 +38,7 @@ Feature: The visibility of question custom fields control where they are display
       | Feedback for the response 'True'.  | So you think it is true                 |
       | Feedback for the response 'False'. | So you think it is false                |
     And I am on the "Test quiz name" "quiz activity" page
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Question bank" in current page administration
 
   @javascript
   Scenario: Display custom question fields to teachers based on their visibility.

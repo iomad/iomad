@@ -47,7 +47,8 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $this->assertEquals(15, count($testclass->eval_cron_field('1-10,5-15', 0, 59)));
         $this->assertEquals(13, count($testclass->eval_cron_field('1-10,5-15/2', 0, 59)));
         $this->assertEquals(3, count($testclass->eval_cron_field('1,2,3,1,2,3', 0, 59)));
-        $this->assertEquals(1, count($testclass->eval_cron_field('-1,10,80', 0, 59)));
+        $this->assertEquals(0, count($testclass->eval_cron_field('-1,10,80', 0, 59)));
+        $this->assertEquals(0, count($testclass->eval_cron_field('-1', 0, 59)));
     }
 
     public function test_get_next_scheduled_time() {
@@ -108,7 +109,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
         // Next valid time should be next 10 minute boundary.
         $nexttime = $testclass->get_next_scheduled_time();
 
-        $minutes = ((intval(date('i') / 10))+1) * 10;
+        $minutes = ((intval(date('i') / 10)) + 1) * 10;
         $nexttenminutes = mktime(date('H'), $minutes, 0);
 
         $this->assertEquals($nexttenminutes, $nexttime, 'Next scheduled time is in 10 minutes.');
@@ -128,7 +129,7 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $this->assertEquals(7, date('N', $nexttime));
         $this->assertEquals(0, date('i', $nexttime));
 
-        // Test monthly job
+        // Test monthly job.
         $testclass = new \core\task\scheduled_test_task();
         $testclass->set_minute('32');
         $testclass->set_hour('0');
@@ -177,9 +178,9 @@ class core_scheduled_task_testcase extends advanced_testcase {
         $task = reset($tasks);
         $task->set_minute('1');
         $task->set_hour('2');
-        $task->set_month('3');
-        $task->set_day_of_week('4');
-        $task->set_day('5');
+        $task->set_day('3');
+        $task->set_month('4');
+        $task->set_day_of_week('5');
         $task->set_customised('1');
         \core\task\manager::configure_scheduled_task($task);
 
@@ -230,9 +231,9 @@ class core_scheduled_task_testcase extends advanced_testcase {
         // Edit a task to simulate a change in its definition (as if it was not customised).
         $task->set_minute('1');
         $task->set_hour('2');
-        $task->set_month('3');
-        $task->set_day_of_week('4');
-        $task->set_day('5');
+        $task->set_day('3');
+        $task->set_month('4');
+        $task->set_day_of_week('5');
         \core\task\manager::configure_scheduled_task($task);
 
         // Fetch the task out for comparison.
@@ -562,16 +563,16 @@ class core_scheduled_task_testcase extends advanced_testcase {
                         'min'   => '10',
                         'hour'  => '13',
                         'day'   => '1',
-                        'week'  => '2',
-                        'month' => '4',
+                        'month' => '2',
+                        'week'  => '4',
                         'disabled' => 0,
                     ),
                     '\core\task\scheduled_test2_task' => array(
                         'min'   => '*',
                         'hour'  => '*',
                         'day'   => '*',
-                        'week'  => '*',
                         'month' => '*',
+                        'week'  => '*',
                         'disabled' => 1,
                     ),
                 )
@@ -592,16 +593,16 @@ class core_scheduled_task_testcase extends advanced_testcase {
                         'min'   => '1',
                         'hour'  => '2',
                         'day'   => '3',
-                        'week'  => '4',
-                        'month' => '5',
+                        'month' => '4',
+                        'week'  => '5',
                         'disabled' => 0,
                     ),
                     '\core\task\scheduled_test2_task' => array(
                         'min'   => '1',
                         'hour'  => '2',
                         'day'   => '3',
-                        'week'  => '4',
-                        'month' => '5',
+                        'month' => '4',
+                        'week'  => '5',
                         'disabled' => 0,
                     ),
                 )

@@ -684,6 +684,7 @@ class assign {
         } else if ($action == 'fixrescalednullgrades') {
             $o .= $this->view_fix_rescaled_null_grades();
         } else {
+            $PAGE->add_body_class('limitedwidth');
             $o .= $this->view_submission_page();
         }
 
@@ -1909,6 +1910,33 @@ class assign {
     }
 
     /**
+     * Check if the intro attachments should be provided to the user.
+     *
+     * @param int $userid User id.
+     * @return bool
+     */
+    public function should_provide_intro_attachments(int $userid): bool {
+        $instance = $this->get_instance($userid);
+
+        // Check if user has permission to view attachments regardless of assignment settings.
+        if (has_capability('moodle/course:manageactivities', $this->get_context())) {
+            return true;
+        }
+
+        // If assignment does not show intro, we never provide intro attachments.
+        if (!$this->show_intro()) {
+            return false;
+        }
+
+        // If intro attachments should only be shown when submission is started, check if there is an open submission.
+        if (!empty($instance->submissionattachments) && !$this->submissions_open($userid, true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Return a grade in user-friendly form, whether it's a scale or not.
      *
      * @param mixed $grade int|null
@@ -2063,6 +2091,7 @@ class assign {
             $participants[$userid]->submitted = false;
             $participants[$userid]->requiregrading = false;
             $participants[$userid]->grantedextension = false;
+            $participants[$userid]->submissionstatus = '';
         }
 
         foreach ($records as $userid => $submissioninfo) {
@@ -2070,6 +2099,7 @@ class assign {
             $submitted = false;
             $requiregrading = false;
             $grantedextension = false;
+            $submissionstatus = !empty($submissioninfo->status) ? $submissioninfo->status : '';
 
             if (!empty($submissioninfo->stime) && $submissioninfo->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED) {
                 $submitted = true;
@@ -2088,6 +2118,7 @@ class assign {
             $participants[$userid]->submitted = $submitted;
             $participants[$userid]->requiregrading = $requiregrading;
             $participants[$userid]->grantedextension = $grantedextension;
+            $participants[$userid]->submissionstatus = $submissionstatus;
             if ($this->get_instance()->teamsubmission) {
                 $group = $this->get_submission_group($userid);
                 if ($group) {
@@ -4416,14 +4447,14 @@ class assign {
      * @return string
      */
     protected function view_remove_submission_confirm() {
-        global $USER, $DB;
+        global $USER;
 
         $userid = optional_param('userid', $USER->id, PARAM_INT);
 
         if (!$this->can_edit_submission($userid, $USER->id)) {
             print_error('nopermission');
         }
-        $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
+        $user = core_user::get_user($userid, '*', MUST_EXIST);
 
         $o = '';
         $header = new assign_header($this->get_instance(),
@@ -4443,10 +4474,17 @@ class assign {
         $cancelurl = new moodle_url('/mod/assign/view.php', $urlparams);
 
         if ($userid == $USER->id) {
-            $confirmstr = get_string('removesubmissionconfirm', 'assign');
+            if ($this->is_time_limit_enabled($userid)) {
+                $confirmstr = get_string('removesubmissionconfirmwithtimelimit', 'assign');
+            } else {
+                $confirmstr = get_string('removesubmissionconfirm', 'assign');
+            }
         } else {
-            $name = $this->fullname($user);
-            $confirmstr = get_string('removesubmissionconfirmforstudent', 'assign', $name);
+            if ($this->is_time_limit_enabled($userid)) {
+                $confirmstr = get_string('removesubmissionconfirmforstudentwithtimelimit', 'assign', $this->fullname($user));
+            } else {
+                $confirmstr = get_string('removesubmissionconfirmforstudent', 'assign', $this->fullname($user));
+            }
         }
         $o .= $this->get_renderer()->confirm($confirmstr,
                                              $confirmurl,
@@ -4518,7 +4556,7 @@ class assign {
      * @return string
      */
     protected function view_grading_table() {
-        global $USER, $CFG, $SESSION;
+        global $USER, $CFG, $SESSION, $PAGE;
 
         // Include grading options form.
         require_once($CFG->dirroot . '/mod/assign/gradingoptionsform.php');
@@ -4532,10 +4570,6 @@ class assign {
                 has_capability('moodle/grade:viewall', $this->get_course_context())) {
             $gradebookurl = '/grade/report/grader/index.php?id=' . $this->get_course()->id;
             $links[$gradebookurl] = get_string('viewgradebook', 'assign');
-        }
-        if ($this->is_any_submission_plugin_enabled() && $this->count_submissions()) {
-            $downloadurl = '/mod/assign/view.php?id=' . $cmid . '&action=downloadall';
-            $links[$downloadurl] = get_string('downloadall', 'assign');
         }
         if ($this->is_blind_marking() &&
                 has_capability('mod/assign:revealidentities', $this->get_context())) {
@@ -4560,6 +4594,7 @@ class assign {
 
         $gradingactions = new url_select($links);
         $gradingactions->set_label(get_string('choosegradingaction', 'assign'));
+        $gradingactions->class .= ' mb-1';
 
         $gradingmanager = get_grading_manager($this->get_context(), 'mod_assign', 'submissions');
 
@@ -4637,9 +4672,10 @@ class assign {
         $gradingoptionsdata->workflowfilter = $workflowfilter;
         $gradingoptionsform->set_data($gradingoptionsdata);
 
-        $buttons = new \mod_assign\output\grading_actionmenu($this->get_course_module()->id);
+        $buttons = new \mod_assign\output\grading_actionmenu($this->get_course_module()->id,
+             $this->is_any_submission_plugin_enabled(), $this->count_submissions());
         $actionformtext = $this->get_renderer()->render($buttons);
-        $actionformtext .= $this->get_renderer()->render($gradingactions);
+        $PAGE->activityheader->set_attrs(['hidecompletion' => true]);
 
         $currenturl = new moodle_url('/mod/assign/view.php', ['id' => $this->get_course_module()->id, 'action' => 'grading']);
 
@@ -4648,11 +4684,15 @@ class assign {
                                     false,
                                     $this->get_course_module()->id,
                                     get_string('grading', 'assign'),
-                                    $actionformtext,
+                                    '',
                                     '',
                                     $currenturl);
         $o .= $this->get_renderer()->render($header);
 
+        $o .= $actionformtext;
+
+        $o .= $this->get_renderer()->heading(get_string('gradeitem:submissions', 'mod_assign'), 2);
+        $o .= $this->get_renderer()->render($gradingactions);
 
         $o .= groups_print_activity_menu($this->get_course_module(), $currenturl, true);
 
@@ -4921,6 +4961,7 @@ class assign {
             $bc->content = $navbc;
             $PAGE->blocks->add_fake_block($bc, reset($regions));
         }
+
         $o .= $this->get_renderer()->render(
             new assign_header($this->get_instance(),
                               $this->get_context(),
@@ -5832,7 +5873,8 @@ class assign {
                 $course->relativedatesmode,
                 $course->startdate,
                 $this->can_grade(),
-                $isvisible
+                $isvisible,
+                $this->get_course_module()
             );
         } else {
             // The active group has already been updated in groups_print_activity_menu().
@@ -5853,7 +5895,8 @@ class assign {
                 $course->relativedatesmode,
                 $course->startdate,
                 $this->can_grade(),
-                $isvisible
+                $isvisible,
+                $this->get_course_module()
             );
         }
 
@@ -5919,10 +5962,6 @@ class assign {
             $actionbuttons = new \mod_assign\output\actionmenu($this->get_course_module()->id);
             $o .= $this->get_renderer()->submission_actionmenu($actionbuttons);
 
-            // Group selector will only be displayed if necessary.
-            $currenturl = new moodle_url('/mod/assign/view.php', array('id' => $this->get_course_module()->id));
-            $o .= groups_print_activity_menu($this->get_course_module(), $currenturl->out(), true);
-
             $summary = $this->get_assign_grading_summary_renderable();
             $o .= $this->get_renderer()->render($summary);
         }
@@ -5971,7 +6010,8 @@ class assign {
             $showsubmit,
             $showedit,
             $submission,
-            $teamsubmission
+            $teamsubmission,
+            $instance->timelimit
         );
 
         return $this->get_renderer()->render($actionbuttons);
@@ -8204,6 +8244,8 @@ class assign {
             $requiresubmissionstatement = false;
         }
 
+        $mform->addElement('header', 'submission header', get_string('addsubmission', 'mod_assign'));
+
         // Only show submission statement if we are editing our own submission.
         if ($requiresubmissionstatement && !$draftsenabled && $userid == $USER->id) {
             $mform->addElement('checkbox', 'submissionstatement', '', $submissionstatement);
@@ -9679,6 +9721,41 @@ class assign {
 
         return $submissionstatement;
     }
+
+    /**
+     * Check if time limit for assignment enabled and set up.
+     *
+     * @param int|null $userid User ID. If null, use global user.
+     * @return bool
+     */
+    public function is_time_limit_enabled(?int $userid = null): bool {
+        $instance = $this->get_instance($userid);
+        return get_config('assign', 'enabletimelimit') && !empty($instance->timelimit);
+    }
+
+    /**
+     * Check if an assignment submission is already started and not yet submitted.
+     *
+     * @param int|null $userid User ID. If null, use global user.
+     * @param int $groupid Group ID. If 0, use user id to determine group.
+     * @param int $attemptnumber Attempt number. If -1, check latest submission.
+     * @return bool
+     */
+    public function is_attempt_in_progress(?int $userid = null, int $groupid = 0, int $attemptnumber = -1): bool {
+        if ($this->get_instance($userid)->teamsubmission) {
+            $submission = $this->get_group_submission($userid, $groupid, false, $attemptnumber);
+        } else {
+            $submission = $this->get_user_submission($userid, false, $attemptnumber);
+        }
+
+        // If time limit is enabled, we only assume it is in progress if there is a start time for submission.
+        $timedattemptstarted = true;
+        if ($this->is_time_limit_enabled($userid)) {
+            $timedattemptstarted = !empty($submission) && !empty($submission->timestarted);
+        }
+
+        return !empty($submission) && $submission->status !== ASSIGN_SUBMISSION_STATUS_SUBMITTED && $timedattemptstarted;
+    }
 }
 
 /**
@@ -10024,7 +10101,7 @@ function move_group_override($id, $move, $assignid) {
     global $DB;
 
     // Get the override object.
-    if (!$override = $DB->get_record('assign_overrides', ['id' => $id], 'id, sortorder, groupid')) {
+    if (!$override = $DB->get_record('assign_overrides', ['id' => $id, 'assignid' => $assignid], 'id, sortorder, groupid')) {
         return false;
     }
     // Count the number of group overrides.
@@ -10053,8 +10130,8 @@ function move_group_override($id, $move, $assignid) {
 
         // Delete cache for the 2 records we updated above.
         $cache = cache::make('mod_assign', 'overrides');
-        $cache->delete("{$override->assignid}_g_{$override->groupid}");
-        $cache->delete("{$swapoverride->assignid}_g_{$swapoverride->groupid}");
+        $cache->delete("{$assignid}_g_{$override->groupid}");
+        $cache->delete("{$assignid}_g_{$swapoverride->groupid}");
     }
 
     reorder_group_overrides($assignid);

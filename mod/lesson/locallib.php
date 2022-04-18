@@ -570,6 +570,8 @@ function lesson_menu_block_contents($cmid, $lesson) {
 /**
  * Adds header buttons to the page for the lesson
  *
+ * @deprecated since Moodle 4.0 in favour of tertiary navigation.
+ * @todo MDL-73545 This will be deleted in Moodle 4.4
  * @param object $cm
  * @param object $context
  * @param bool $extraeditbuttons
@@ -577,6 +579,9 @@ function lesson_menu_block_contents($cmid, $lesson) {
  */
 function lesson_add_header_buttons($cm, $context, $extraeditbuttons=false, $lessonpageid=null) {
     global $CFG, $PAGE, $OUTPUT;
+
+    debugging('lesson_add_header_buttons() is deprecated in favour of tertiary navigation.', DEBUG_DEVELOPER);
+
     if (has_capability('mod/lesson:edit', $context) && $extraeditbuttons) {
         if ($lessonpageid === null) {
             print_error('invalidpageid', 'lesson');
@@ -3157,7 +3162,7 @@ class lesson extends lesson_base {
                         $this->add_message(get_string("numberofcorrectanswers", "lesson", $gradeinfo->earned), 'notify');
                         if ($this->properties->grade != GRADE_TYPE_NONE) {
                             $a = new stdClass;
-                            $a->grade = number_format($gradeinfo->grade * $this->properties->grade / 100, 1);
+                            $a->grade = format_float($gradeinfo->grade * $this->properties->grade / 100, 1);
                             $a->total = $this->properties->grade;
                             $this->add_message(get_string('yourcurrentgradeisoutof', 'lesson', $a), 'notify');
                         }
@@ -3499,6 +3504,7 @@ class lesson extends lesson_base {
             'displayscorewithessays' => false,
             'displayscorewithoutessays' => false,
             'yourcurrentgradeisoutof' => false,
+            'yourcurrentgradeis' => false,
             'eolstudentoutoftimenoanswers' => false,
             'welldone' => false,
             'progressbar' => false,
@@ -3589,12 +3595,6 @@ class lesson extends lesson_base {
                     } else {
                         $data->displayscorewithoutessays = $a;
                     }
-                    if ($this->properties->grade != GRADE_TYPE_NONE) {
-                        $a = new stdClass;
-                        $a->grade = number_format($gradeinfo->grade * $this->properties->grade / 100, 1);
-                        $a->total = $this->properties->grade;
-                        $data->yourcurrentgradeisoutof = $a;
-                    }
 
                     $grade = new stdClass();
                     $grade->lessonid = $this->properties->id;
@@ -3612,6 +3612,25 @@ class lesson extends lesson_base {
                     } else {
                         $newgradeid = $DB->insert_record("lesson_grades", $grade);
                     }
+
+                    // Update central gradebook.
+                    lesson_update_grades($this, $USER->id);
+
+                    // Print grade (grade type Point).
+                    if ($this->properties->grade > 0) {
+                        $a = new stdClass;
+                        $a->grade = format_float($gradeinfo->grade * $this->properties->grade / 100, 1);
+                        $a->total = $this->properties->grade;
+                        $data->yourcurrentgradeisoutof = $a;
+                    }
+
+                    // Print grade (grade type Scale).
+                    if ($this->properties->grade < 0) {
+                        // Grade type is Scale.
+                        $grades = grade_get_grades($course->id, 'mod', 'lesson', $cm->instance, $USER->id);
+                        $grade = reset($grades->items[0]->grades);
+                        $data->yourcurrentgradeis = $grade->str_grade;
+                    }
                 } else {
                     if ($this->properties->timelimit) {
                         if ($outoftime == 'normal') {
@@ -3622,14 +3641,15 @@ class lesson extends lesson_base {
                             $grade->completed = time();
                             $newgradeid = $DB->insert_record("lesson_grades", $grade);
                             $data->eolstudentoutoftimenoanswers = true;
+
+                            // Update central gradebook.
+                            lesson_update_grades($this, $USER->id);
                         }
                     } else {
                         $data->welldone = true;
                     }
                 }
 
-                // Update central gradebook.
-                lesson_update_grades($this, $USER->id);
                 $data->progresscompleted = $progresscompleted;
             }
         } else {
@@ -4224,15 +4244,20 @@ abstract class lesson_page extends lesson_base {
                 }
                 // "number of attempts remaining" message if $this->lesson->maxattempts > 1
                 // displaying of message(s) is at the end of page for more ergonomic display
-                if (!$result->correctanswer && ($result->newpageid == 0)) {
+                // If we are showing the number of remaining attempts, we need to show it regardless of what the next
+                // jump to page is.
+                if (!$result->correctanswer) {
                     // Retrieve the number of attempts left counter for displaying at bottom of feedback page.
-                    if (!empty($this->lesson->maxattempts) && $nattempts >= $this->lesson->maxattempts) {
+                    if ($result->newpageid == 0 && !empty($this->lesson->maxattempts) && $nattempts >= $this->lesson->maxattempts) {
                         if ($this->lesson->maxattempts > 1) { // don't bother with message if only one attempt
                             $result->maxattemptsreached = true;
                         }
                         $result->newpageid = LESSON_NEXTPAGE;
                     } else if ($this->lesson->maxattempts > 1) { // don't bother with message if only one attempt
                         $result->attemptsremaining = $this->lesson->maxattempts - $nattempts;
+                        if ($result->attemptsremaining == 0) {
+                            $result->maxattemptsreached = true;
+                        }
                     }
                 }
             }

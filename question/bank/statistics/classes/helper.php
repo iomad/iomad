@@ -38,12 +38,12 @@ require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
 class helper {
 
     /**
-     * @var float Threshold to determine 'need for revision'
+     * @var float Threshold to determine 'Needs checking?'
      */
     private const NEED_FOR_REVISION_LOWER_THRESHOLD = 30;
 
     /**
-     * @var float Threshold to determine 'need for revision'
+     * @var float Threshold to determine 'Needs checking?'
      */
     private const NEED_FOR_REVISION_UPPER_THRESHOLD = 50;
 
@@ -198,13 +198,16 @@ class helper {
     }
 
     /**
-     * Format discrimination index (need for revision).
+     * Format discrimination index (Needs checking?).
      *
      * @param float|null $value stats value
      * @return array
      */
     public static function format_discrimination_index(?float $value): array {
-        if (is_null($value) || $value < self::NEED_FOR_REVISION_LOWER_THRESHOLD) {
+        if (is_null($value)) {
+            $content = get_string('emptyvalue', 'qbank_statistics');
+            $classes = '';
+        } else if ($value < self::NEED_FOR_REVISION_LOWER_THRESHOLD) {
             $content = get_string('verylikely', 'qbank_statistics');
             $classes = 'alert-danger';
         } else if ($value < self::NEED_FOR_REVISION_UPPER_THRESHOLD) {

@@ -3079,7 +3079,7 @@ function glossary_get_extra_capabilities() {
 
 /**
  * @param string $feature FEATURE_xx constant for requested feature
- * @return mixed True if module supports feature, null if doesn't know
+ * @return mixed True if module supports feature, false if not, null if doesn't know or string for the module purpose.
  */
 function glossary_supports($feature) {
     switch($feature) {
@@ -3094,6 +3094,7 @@ function glossary_supports($feature) {
         case FEATURE_BACKUP_MOODLE2:          return true;
         case FEATURE_SHOW_DESCRIPTION:        return true;
         case FEATURE_COMMENT:                 return true;
+        case FEATURE_MOD_PURPOSE:             return MOD_PURPOSE_COLLABORATION;
 
         default: return null;
     }
@@ -3136,45 +3137,50 @@ function glossary_extend_navigation($navigation, $course, $module, $cm) {
  * @param navigation_node $glossarynode The node to add module settings to
  */
 function glossary_extend_settings_navigation(settings_navigation $settings, navigation_node $glossarynode) {
-    global $PAGE, $DB, $CFG, $USER;
+    global $DB, $CFG, $USER;
 
     $mode = optional_param('mode', '', PARAM_ALPHA);
     $hook = optional_param('hook', 'ALL', PARAM_CLEAN);
 
-    if (has_capability('mod/glossary:import', $PAGE->cm->context)) {
+    if (has_capability('mod/glossary:import', $settings->get_page()->cm->context)) {
         $node = $glossarynode->add(get_string('importentries', 'glossary'),
-            new moodle_url('/mod/glossary/import.php', ['id' => $PAGE->cm->id]));
+            new moodle_url('/mod/glossary/import.php', ['id' => $settings->get_page()->cm->id]));
         $node->set_show_in_secondary_navigation(false);
     }
 
-    if (has_capability('mod/glossary:export', $PAGE->cm->context)) {
+    if (has_capability('mod/glossary:export', $settings->get_page()->cm->context)) {
         $node = $glossarynode->add(get_string('exportentries', 'glossary'),
-            new moodle_url('/mod/glossary/export.php', ['id' => $PAGE->cm->id, 'mode' => $mode, 'hook' => $hook]));
+            new moodle_url('/mod/glossary/export.php', ['id' => $settings->get_page()->cm->id, 'mode' => $mode,
+            'hook' => $hook]));
         $node->set_show_in_secondary_navigation(false);
     }
 
-    $glossary = $DB->get_record('glossary', array("id" => $PAGE->cm->instance));
-    $hiddenentries = $DB->count_records('glossary_entries', ['glossaryid' => $PAGE->cm->instance, 'approved' => 0]);
+    $glossary = $DB->get_record('glossary', array("id" => $settings->get_page()->cm->instance));
+    $hiddenentries = $DB->count_records('glossary_entries', ['glossaryid' => $settings->get_page()->cm->instance,
+        'approved' => 0]);
 
     // Safe guard check - Ideally, there shouldn't be any hidden entries if the glossary has 'defaultapproval'.
-    if (has_capability('mod/glossary:approve', $PAGE->cm->context) && (!$glossary->defaultapproval || $hiddenentries)) {
+    if (has_capability('mod/glossary:approve', $settings->get_page()->cm->context) &&
+            (!$glossary->defaultapproval || $hiddenentries)) {
         $glossarynode->add(get_string('pendingapproval', 'glossary'),
-            new moodle_url('/mod/glossary/view.php', ['id' => $PAGE->cm->id, 'mode' => 'approval']),
+            new moodle_url('/mod/glossary/view.php', ['id' => $settings->get_page()->cm->id, 'mode' => 'approval']),
             navigation_node::TYPE_CUSTOM, null, 'pendingapproval');
     }
 
-    if (has_capability('mod/glossary:write', $PAGE->cm->context)) {
+    if (has_capability('mod/glossary:write', $settings->get_page()->cm->context)) {
         $node = $glossarynode->add(get_string('addentry', 'glossary'),
-            new moodle_url('/mod/glossary/edit.php', ['cmid' => $PAGE->cm->id]));
+            new moodle_url('/mod/glossary/edit.php', ['cmid' => $settings->get_page()->cm->id]));
         $node->set_show_in_secondary_navigation(false);
     }
 
-    if (!empty($CFG->enablerssfeeds) && !empty($CFG->glossary_enablerssfeeds) && $glossary->rsstype && $glossary->rssarticles && has_capability('mod/glossary:view', $PAGE->cm->context)) {
+    if (!empty($CFG->enablerssfeeds) && !empty($CFG->glossary_enablerssfeeds) && $glossary->rsstype &&
+            $glossary->rssarticles && has_capability('mod/glossary:view', $settings->get_page()->cm->context)) {
         require_once("$CFG->libdir/rsslib.php");
 
         $string = get_string('rsstype', 'glossary');
 
-        $url = new moodle_url(rss_get_url($PAGE->cm->context->id, $USER->id, 'mod_glossary', $glossary->id));
+        $url = new moodle_url(rss_get_url($settings->get_page()->cm->context->id, $USER->id, 'mod_glossary',
+            $glossary->id));
         $node = $glossarynode->add($string, $url, settings_navigation::TYPE_SETTING, null, null, new pix_icon('i/rss', ''));
         $node->set_show_in_secondary_navigation(false);
     }

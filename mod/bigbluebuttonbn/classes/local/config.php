@@ -30,10 +30,10 @@ use mod_bigbluebuttonbn\recording;
 class config {
 
     /** @var string Default bigbluebutton server url */
-    public const DEFAULT_SERVER_URL = 'http://test-install.blindsidenetworks.com/bigbluebutton/';
+    public const DEFAULT_SERVER_URL = 'https://test-moodle.blindsidenetworks.com/bigbluebutton/';
 
     /** @var string Default bigbluebutton server shared secret */
-    public const DEFAULT_SHARED_SECRET = '8cd8ef52e8e101574e400365b55e11a6';
+    public const DEFAULT_SHARED_SECRET = '0b21fcaf34673a8c3ec8ed877d76ae34';
 
     /**
      * Returns moodle version.
@@ -64,27 +64,22 @@ class config {
             'waitformoderator_cache_ttl' => '60',
             'userlimit_default' => '0',
             'userlimit_editable' => false,
-            'preuploadpresentation_enabled' => false,
-            'sendnotifications_enabled' => false,
+            'preuploadpresentation_editable' => false,
             'recordingready_enabled' => false,
             'recordingstatus_enabled' => false,
             'meetingevents_enabled' => false,
             'participant_moderator_default' => '0',
             'scheduled_pre_opening' => '10',
             'recordings_enabled' => true,
-            'recordings_html_default' => false,
-            'recordings_html_editable' => false,
             'recordings_deleted_default' => false,
             'recordings_deleted_editable' => false,
             'recordings_imported_default' => false,
             'recordings_imported_editable' => false,
             'recordings_preview_default' => true,
             'recordings_preview_editable' => false,
-            'recordings_validate_url' => true,
             'recording_default' => true,
             'recording_editable' => true,
             'recording_refresh_period' => recording::RECORDING_REFRESH_DEFAULT_PERIOD,
-            'recording_icons_enabled' => true,
             'recording_all_from_start_default' => false,
             'recording_all_from_start_editable' => false,
             'recording_hide_button_default' => false,
@@ -110,12 +105,8 @@ class config {
             'disablenote_editable' => true,
             'hideuserlist_default' => false,
             'hideuserlist_editable' => true,
-            'lockedlayout_default' => false,
-            'lockedlayout_editable' => true,
-            'lockonjoin_default' => false,
-            'lockonjoin_editable' => true,
-            'lockonjoinconfigurable_default' => false,
-            'lockonjoinconfigurable_editable' => true,
+            'lockonjoin_default' => true,
+            'lockonjoin_editable' => false,
             'welcome_default' => '',
         ];
     }
@@ -126,7 +117,7 @@ class config {
      * @param string $setting
      * @return string
      */
-    protected static function defaultvalue($setting) {
+    public static function defaultvalue($setting) {
         $defaultvalues = self::defaultvalues();
         if (!array_key_exists($setting, $defaultvalues)) {
             return null;
@@ -184,23 +175,18 @@ class config {
                'waitformoderator_editable' => self::get('waitformoderator_editable'),
                'userlimit_default' => self::get('userlimit_default'),
                'userlimit_editable' => self::get('userlimit_editable'),
-               'preuploadpresentation_enabled' => self::get('preuploadpresentation_enabled'),
-               'sendnotifications_enabled' => self::get('sendnotifications_enabled'),
+               'preuploadpresentation_editable' => self::get('preuploadpresentation_editable'),
                'recordings_enabled' => self::get('recordings_enabled'),
                'meetingevents_enabled' => self::get('meetingevents_enabled'),
-               'recordings_html_default' => self::get('recordings_html_default'),
-               'recordings_html_editable' => self::get('recordings_html_editable'),
                'recordings_deleted_default' => self::get('recordings_deleted_default'),
                'recordings_deleted_editable' => self::get('recordings_deleted_editable'),
                'recordings_imported_default' => self::get('recordings_imported_default'),
                'recordings_imported_editable' => self::get('recordings_imported_editable'),
                'recordings_preview_default' => self::get('recordings_preview_default'),
                'recordings_preview_editable' => self::get('recordings_preview_editable'),
-               'recordings_validate_url' => self::get('recordings_validate_url'),
                'recording_default' => self::get('recording_default'),
                'recording_editable' => self::get('recording_editable'),
                'recording_refresh_period' => self::get('recording_refresh_period'),
-               'recording_icons_enabled' => self::get('recording_icons_enabled'),
                'recording_all_from_start_default' => self::get('recording_all_from_start_default'),
                'recording_all_from_start_editable' => self::get('recording_all_from_start_editable'),
                'recording_hide_button_default' => self::get('recording_hide_button_default'),
@@ -225,13 +211,10 @@ class config {
                'disablenote_default' => self::get('disablenote_default'),
                'hideuserlist_editable' => self::get('hideuserlist_editable'),
                'hideuserlist_default' => self::get('hideuserlist_default'),
-               'lockedlayout_editable' => self::get('lockedlayout_editable'),
-               'lockedlayout_default' => self::get('lockedlayout_default'),
                'lockonjoin_editable' => self::get('lockonjoin_editable'),
                'lockonjoin_default' => self::get('lockonjoin_default'),
-               'lockonjoinconfigurable_editable' => self::get('lockonjoinconfigurable_editable'),
-               'lockonjoinconfigurable_default' => self::get('lockonjoinconfigurable_default'),
                'welcome_default' => self::get('welcome_default'),
+               'welcome_editable' => self::get('welcome_editable'),
         ];
     }
 

@@ -34,9 +34,8 @@
 }
 
 #page.drawers {
-    margin-top: calc(#{$navbar-height} + 2rem);
-    padding-left: 15px;
-    padding-right: 15px;
+    margin-top: $navbar-height;
+    @include thin-scrolls($gray-100);
     .main-inner {
         max-width: 100%;
         width: 100%;
@@ -44,13 +43,13 @@
         @include border-radius();
         background-color: $white;
         padding: 1.5rem 0.5rem;
-        margin-top: 3rem;
+        margin-top: 0.5rem;
         margin-bottom: 3rem;
         flex: 1 0 auto;
     }
-    div[role="main"] {
-        padding-left: 15px;
-        padding-right: 15px;
+    .activity-header {
+        margin-left: 15px;
+        margin-right: 15px;
     }
 }
 
@@ -92,9 +91,13 @@
             border-radius: 200px;
             padding: 16px;
             background-color: $gray-300;
+            box-shadow: $box-shadow-sm;
             .icon {
                 width: auto;
                 height: auto;
+            }
+            &:focus {
+                box-shadow: $input-btn-focus-box-shadow;
             }
             transition: padding 200ms;
         }
@@ -144,7 +147,7 @@
 
         .drawer-right-toggle,
         .drawer-left-toggle {
-            top: calc(99vh - (#{$navbar-height} * 2));
+            top: calc(99vh - (#{$navbar-height} * 2.5));
         }
     }
     #page.drawers.scroll-down {
@@ -161,13 +164,25 @@
     }
 }
 
+@include media-breakpoint-up(sm) {
+    #page.drawers .main-inner {
+        margin-top: 1.5rem;
+    }
+}
+
 @include media-breakpoint-up(md) {
 
     // Add some padding for the drawer toggle buttons
     #page.drawers {
-        margin-top: $navbar-height;
         padding-left: 3rem;
         padding-right: 3rem;
+        .main-inner {
+            padding: 1.5rem 0.5rem;
+        }
+        div[role="main"] {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
     }
 }
 
@@ -183,7 +198,6 @@
         overflow-y: auto;
         @include transition(0.2s);
         height: calc(100vh - #{$navbar-height});
-        margin-top: $navbar-height;
         left: 0;
         right: 0;
         &.show-drawer-left {

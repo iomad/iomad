@@ -2678,6 +2678,8 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
 function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownload=false, array $options=array()) {
     global $CFG, $COURSE;
 
+    static $recursion = 0;
+
     if (empty($options['filename'])) {
         $filename = null;
     } else {
@@ -2721,6 +2723,13 @@ function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownloa
 
     // handle external resource
     if ($stored_file && $stored_file->is_external_file() && !isset($options['sendcachedexternalfile'])) {
+
+        // Have we been here before?
+        $recursion++;
+        if ($recursion > 10) {
+            throw new coding_exception('Recursive file serving detected');
+        }
+
         $stored_file->send_file($lifetime, $filter, $forcedownload, $options);
         die;
     }
@@ -3712,7 +3721,8 @@ class curl {
         $this->reset_request_state_vars();
 
         if ((defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
-            if ($mockresponse = array_pop(self::$mockresponses)) {
+            $mockresponse = array_pop(self::$mockresponses);
+            if ($mockresponse !== null) {
                 $this->info = [ 'http_code' => 200 ];
                 return $mockresponse;
             }
@@ -3826,6 +3836,16 @@ class curl {
                     $this->reset_request_state_vars();
                     curl_close($curl);
                     return $urlisblocked;
+                }
+
+                // If the response body is written to a seekable stream resource, reset the stream pointer to avoid
+                // appending multiple response bodies to the same resource.
+                if (!empty($this->options['CURLOPT_FILE'])) {
+                    $streammetadata = stream_get_meta_data($this->options['CURLOPT_FILE']);
+                    if ($streammetadata['seekable']) {
+                        ftruncate($this->options['CURLOPT_FILE'], 0);
+                        rewind($this->options['CURLOPT_FILE']);
+                    }
                 }
 
                 curl_setopt($curl, CURLOPT_URL, $redirecturl);

@@ -27,7 +27,8 @@ Feature: Test duplicating a quiz containing a drag and drop markers question
     When I backup "Course 1" course using this options:
       | Confirmation | Filename | test_backup.mbz |
     And I restore "test_backup.mbz" backup into a new course using this options:
-      | Schema | Course name | Course 2 |
+      | Schema | Course name       | Course 2 |
+      | Schema | Course short name | C2       |
     And I navigate to "Question bank" in current page administration
     And I choose "Edit question" action for "Drag markers" in the question bank
     Then the following fields match these values:
@@ -56,7 +57,7 @@ Feature: Test duplicating a quiz containing a drag and drop markers question
       | For any partially correct response  | Parts, but only parts, of your response are correct. |
       | id_shownumcorrect                   | 1                                                    |
       | For any incorrect response          | That is not right at all.                            |
-      | Penalty for each incorrect try      | 0.3333333                                            |
+      | Penalty for each incorrect try      | 33.33333%                                            |
       | Hint 1                              | You are trying to place four markers on the map.     |
       | id_hintshownumcorrect_0             | 1                                                    |
       | id_hintclearwrong_0                 | 0                                                    |

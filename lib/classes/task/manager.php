@@ -986,7 +986,7 @@ class manager {
         $params = ['now1' => time(), 'now2' => time()];
 
         $sql = "SELECT subquery.*
-                  FROM (SELECT concat('s', ts.id) as uniqueid,
+                  FROM (SELECT " . $DB->sql_concat("'s'", 'ts.id') . " as uniqueid,
                                ts.id,
                                'scheduled' as type,
                                ts.classname,
@@ -997,7 +997,7 @@ class manager {
                           FROM {task_scheduled} ts
                          WHERE ts.timestarted IS NOT NULL
                          UNION ALL
-                        SELECT concat('a', ta.id) as uniqueid,
+                        SELECT " . $DB->sql_concat("'a'", 'ta.id') . " as uniqueid,
                                ta.id,
                                'adhoc' as type,
                                ta.classname,
@@ -1116,7 +1116,7 @@ class manager {
 
         if (!self::is_runnable()) {
             $redirecturl = new \moodle_url('/admin/settings.php', ['section' => 'systempaths']);
-            throw new \moodle_exception('cannotfindthepathtothecli', 'core_task', $redirecturl->out());
+            throw new \moodle_exception('cannotfindthepathtothecli', 'tool_task', $redirecturl->out());
         } else {
             // Shell-escaped path to the PHP binary.
             $phpbinary = escapeshellarg(self::find_php_cli_path());
@@ -1174,8 +1174,9 @@ class manager {
                     $overriddenrecord->minute,
                     $overriddenrecord->hour,
                     $overriddenrecord->day,
-                    $overriddenrecord->dayofweek,
-                    $overriddenrecord->month) = explode(' ', $taskconfig['schedule']);
+                    $overriddenrecord->month,
+                    $overriddenrecord->dayofweek
+                ) = explode(' ', $taskconfig['schedule']);
             }
         }
 

@@ -21,6 +21,7 @@ namespace core_reportbuilder\table;
 use context;
 use moodle_url;
 use renderable;
+use table_default_export_format_parent;
 use table_sql;
 use html_writer;
 use core_table\dynamic;
@@ -29,6 +30,7 @@ use core_reportbuilder\local\filters\base;
 use core_reportbuilder\local\models\report;
 use core_reportbuilder\local\report\base as base_report;
 use core_reportbuilder\local\report\filter;
+use core_reportbuilder\output\dataformat_export_format;
 use core\output\notification;
 
 defined('MOODLE_INTERNAL') || die;
@@ -53,8 +55,8 @@ abstract class base_report_table extends table_sql implements dynamic, renderabl
     /** @var string $groupbysql */
     protected $groupbysql = '';
 
-    /** @var bool $applyfilters */
-    protected $applyfilters = true;
+    /** @var bool $editing */
+    protected $editing = false;
 
     /**
      * Initialises table SQL properties
@@ -86,7 +88,7 @@ abstract class base_report_table extends table_sql implements dynamic, renderabl
         }
 
         // For each filter, we also need to apply their values (will differ according to user viewing the report).
-        if ($this->applyfilters) {
+        if (!$this->editing) {
             $filtervalues = $this->report->get_filter_values();
             foreach ($this->report->get_active_filters() as $filter) {
                 [$filtersql, $filterparams] = $this->get_filter_sql($filter, $filtervalues);
@@ -125,13 +127,13 @@ abstract class base_report_table extends table_sql implements dynamic, renderabl
     }
 
     /**
-     * Whether active filters should be applied to the report, defaults to true except in the case where we are editing a report
-     * and we do not want filters to be applied to it
+     * Whether the current report table is being edited, in which case certain actions are not applied to it, e.g. user filtering
+     * and sorting. Default class value is false
      *
-     * @param bool $applyfilters
+     * @param bool $editing
      */
-    public function set_filters_applied(bool $applyfilters): void {
-        $this->applyfilters = $applyfilters;
+    public function set_report_editing(bool $editing): void {
+        $this->editing = $editing;
     }
 
     /**
@@ -171,6 +173,51 @@ abstract class base_report_table extends table_sql implements dynamic, renderabl
         } else {
             $this->rawdata = $DB->get_recordset_sql($sql, $this->sql->params);
         }
+    }
+
+    /**
+     * Override parent method of the same, to ensure that any columns with custom sort fields are accounted for
+     *
+     * @return string
+     */
+    public function get_sql_sort() {
+        $columnsbyalias = $this->report->get_active_columns_by_alias();
+        $columnsortby = [];
+
+        // Iterate over all sorted report columns, replace with columns own fields if applicable.
+        foreach ($this->get_sort_columns() as $alias => $order) {
+            $column = $columnsbyalias[$alias] ?? null;
+
+            // If the column is not being aggregated and defines custom sort fields, then use them.
+            if ($column && !$column->get_aggregation() &&
+                    ($sortfields = $column->get_sort_fields())) {
+
+                foreach ($sortfields as $sortfield) {
+                    $columnsortby[$sortfield] = $order;
+                }
+            } else {
+                $columnsortby[$alias] = $order;
+            }
+        }
+
+        return static::construct_order_by($columnsortby);
+    }
+
+    /**
+     * Set the export class to use when downloading reports (TODO: consider applying to all tables, MDL-72058)
+     *
+     * @param table_default_export_format_parent|null $exportclass
+     * @return table_default_export_format_parent|null
+     */
+    public function export_class_instance($exportclass = null) {
+        if (is_null($this->exportclass) && $this->is_downloading()) {
+            $this->exportclass = new dataformat_export_format($this, $this->download);
+            if (!$this->exportclass->document_started()) {
+                $this->exportclass->start_document($this->filename, $this->sheettitle);
+            }
+        }
+
+        return $this->exportclass;
     }
 
     /**
@@ -215,7 +262,7 @@ abstract class base_report_table extends table_sql implements dynamic, renderabl
 
         $this->wrap_html_start();
 
-        echo html_writer::start_tag('div', ['class' => 'no-overflow']);
+        echo html_writer::start_tag('div');
         echo html_writer::start_tag('table', $this->attributes);
     }
 }

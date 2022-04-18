@@ -48,6 +48,12 @@ if (!($settingspage->check_access())) {
     print_error('accessdenied', 'admin');
 }
 
+$hassiteconfig = has_capability('moodle/site:config', $PAGE->context);
+if ($hassiteconfig) {
+    $PAGE->add_header_action($OUTPUT->render_from_template('core_admin/header_search_input', [
+        'action' => new moodle_url('/admin/search.php'),
+    ]));
+}
 
 $statusmsg = '';
 $errormsg  = '';
@@ -140,13 +146,7 @@ if ($errormsg !== '') {
     echo $OUTPUT->notification($statusmsg, 'notifysuccess');
 }
 
-$path = array_reverse($settingspage->visiblepath);
-if (is_array($path)) {
-    $visiblename = join(' / ', $path);
-} else {
-    $visiblename = $path;
-}
-echo $OUTPUT->heading(get_string('admincategory', 'admin', $visiblename), 2);
+echo $OUTPUT->heading(get_string('admincategory', 'admin', $settingspage->visiblename), 2);
 
 echo html_writer::start_tag('form', array('action' => '', 'method' => 'post', 'id' => 'adminsettings'));
 echo html_writer::start_tag('div');

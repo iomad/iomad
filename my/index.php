@@ -52,6 +52,18 @@ if ($hassiteconfig && moodle_needs_upgrading()) {
 
 $strmymoodle = get_string('myhome');
 
+if (empty($CFG->enabledashboard)) {
+    // Dashboard is disabled, so the /my page shouldn't be displayed.
+    $defaultpage = get_default_home_page();
+    if ($defaultpage == HOMEPAGE_MYCOURSES) {
+        // If default page is set to "My courses", redirect to it.
+        redirect(new moodle_url('/my/courses.php'));
+    } else {
+        // Otherwise, raise an exception to inform the dashboard is disabled.
+        throw new moodle_exception('error:dashboardisdisabled', 'my');
+    }
+}
+
 if (isguestuser()) {  // Force them to see system default, no editing allowed
     // If guests are not allowed my moodle, send them to front page.
     if (empty($CFG->allowguestmymoodle)) {
@@ -63,14 +75,12 @@ if (isguestuser()) {  // Force them to see system default, no editing allowed
     $context = context_system::instance();
     $PAGE->set_blocks_editing_capability('moodle/my:configsyspages');  // unlikely :)
     $strguest = get_string('guest');
-    $header = "$SITE->shortname: $strmymoodle ($strguest)";
-    $pagetitle = $header;
+    $pagetitle = "$strmymoodle ($strguest)";
 
 } else {        // We are trying to view or edit our own My Moodle page
     $userid = $USER->id;  // Owner of the page
     $context = context_user::instance($USER->id);
     $PAGE->set_blocks_editing_capability('moodle/my:manageblocks');
-    $header = "$SITE->shortname: $strmymoodle";
     $pagetitle = $strmymoodle;
 }
 
@@ -89,12 +99,7 @@ $PAGE->set_pagetype('my-index');
 $PAGE->blocks->add_region('content');
 $PAGE->set_subpage($currentpage->id);
 $PAGE->set_title($pagetitle);
-$PAGE->set_heading($header);
-$PAGE->has_secondary_navigation_setter(false);
-
-if ($block = my_page_add_block_center()) {
-    $PAGE->blocks->add_fake_block($block, 'content');
-}
+$PAGE->set_heading($pagetitle);
 
 if (!isguestuser()) {   // Skip default home page for guests
     if (get_home_page() != HOMEPAGE_MY) {
@@ -176,6 +181,8 @@ echo $OUTPUT->header();
 if (core_userfeedback::should_display_reminder()) {
     core_userfeedback::print_reminder_block();
 }
+
+echo $OUTPUT->addblockbutton('content');
 
 echo $OUTPUT->custom_block_region('content');
 

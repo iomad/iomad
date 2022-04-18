@@ -251,6 +251,9 @@ if ($hassiteconfig) {
                 array('0' => new lang_string('none'), '1' => new lang_string('allfiles'), '2' => new lang_string('htmlfilesonly')));
         $items[] = new admin_setting_configcheckbox('filtermatchoneperpage', new lang_string('filtermatchoneperpage', 'admin'), new lang_string('configfiltermatchoneperpage', 'admin'), 0);
         $items[] = new admin_setting_configcheckbox('filtermatchonepertext', new lang_string('filtermatchonepertext', 'admin'), new lang_string('configfiltermatchonepertext', 'admin'), 0);
+        $items[] = new admin_setting_configcheckbox('filternavigationwithsystemcontext',
+                new lang_string('filternavigationwithsystemcontext', 'admin'),
+                new lang_string('configfilternavigationwithsystemcontext', 'admin'), 0);
         foreach ($items as $item) {
             $item->set_updatedcallback('reset_text_filters_cache');
             $temp->add($item);
@@ -324,6 +327,13 @@ if ($hassiteconfig) {
     $temp = new admin_settingpage('managedataformats', new lang_string('managedataformats'));
     $temp->add(new admin_setting_managedataformats());
     $ADMIN->add('dataformatsettings', $temp);
+
+    $plugins = core_plugin_manager::instance()->get_plugins_of_type('dataformat');
+    core_collator::asort_objects_by_property($plugins, 'displayname');
+    foreach ($plugins as $plugin) {
+        /** @var \core\plugininfo\dataformat $plugin */
+        $plugin->load_settings($ADMIN, 'dataformatsettings', $hassiteconfig);
+    }
 
     //== Portfolio settings ==
     require_once($CFG->libdir. '/portfoliolib.php');
@@ -431,6 +441,7 @@ if ($hassiteconfig || has_capability('moodle/question:config', $systemcontext)) 
     $temp->add(new \core_question\admin\manage_qbank_plugins_page());
     $ADMIN->add('qbanksettings', $temp);
     $plugins = core_plugin_manager::instance()->get_plugins_of_type('qbank');
+
     foreach ($plugins as $plugin) {
         /** @var \core\plugininfo\qbank $plugin */
         $plugin->load_settings($ADMIN, 'qbanksettings', $hassiteconfig);

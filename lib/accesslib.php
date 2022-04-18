@@ -6288,6 +6288,21 @@ class context_helper extends context {
     }
 
     /**
+     * Gets the current context to be used for navigation tree filtering.
+     *
+     * @param context|null $context The current context to be checked against.
+     * @return context|null the context that navigation tree filtering should use.
+     */
+    public static function get_navigation_filter_context(?context $context): ?context {
+        global $CFG;
+        if (!empty($CFG->filternavigationwithsystemcontext)) {
+            return context_system::instance();
+        } else {
+            return $context;
+        }
+    }
+
+    /**
      * not used
      */
     public function get_url() {
@@ -7644,16 +7659,23 @@ class context_block extends context {
     protected static function create_level_instances() {
         global $DB;
 
-        $sql = "SELECT ".CONTEXT_BLOCK.", bi.id
-                  FROM {block_instances} bi
-                 WHERE NOT EXISTS (SELECT 'x'
-                                     FROM {context} cx
-                                    WHERE bi.id = cx.instanceid AND cx.contextlevel=".CONTEXT_BLOCK.")";
-        $contextdata = $DB->get_recordset_sql($sql);
-        foreach ($contextdata as $context) {
-            context::insert_context_record(CONTEXT_BLOCK, $context->id, null);
-        }
-        $contextdata->close();
+        $sql = <<<EOF
+            INSERT INTO {context} (
+                contextlevel,
+                instanceid
+            ) SELECT
+                :contextlevel,
+                bi.id as instanceid
+               FROM {block_instances} bi
+               WHERE NOT EXISTS (
+                   SELECT 'x' FROM {context} cx WHERE bi.id = cx.instanceid AND cx.contextlevel = :existingcontextlevel
+               )
+        EOF;
+
+        $DB->execute($sql, [
+            'contextlevel' => CONTEXT_BLOCK,
+            'existingcontextlevel' => CONTEXT_BLOCK,
+        ]);
     }
 
     /**

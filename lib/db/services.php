@@ -648,6 +648,15 @@ $functions = array(
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+    'core_course_get_enrolled_courses_with_action_events_by_timeline_classification' => array(
+        'classname' => '\core_course\external\get_enrolled_courses_with_action_events_by_timeline_classification',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'List of enrolled courses with action events in a given timeframe, for the given timeline classification.',
+        'type' => 'read',
+        'ajax' => true,
+        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
     'core_course_get_recent_courses' => array(
         'classname' => 'core_course_external',
         'methodname' => 'get_recent_courses',
@@ -2878,6 +2887,24 @@ $functions = array(
     'core_reportbuilder_audiences_delete' => [
         'classname'   => 'core_reportbuilder\external\audiences\delete',
         'description' => 'Delete audience from report',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
+    'core_reportbuilder_schedules_delete' => [
+        'classname'   => 'core_reportbuilder\external\schedules\delete',
+        'description' => 'Delete schedule from report',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
+    'core_reportbuilder_schedules_send' => [
+        'classname'   => 'core_reportbuilder\external\schedules\send',
+        'description' => 'Send report schedule',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
+    'core_reportbuilder_schedules_toggle' => [
+        'classname'   => 'core_reportbuilder\external\schedules\toggle',
+        'description' => 'Toggle state of report schedule',
         'type'        => 'write',
         'ajax'        => true,
     ],

@@ -26,9 +26,11 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+
 use core\navigation\views\primary;
 use core\navigation\views\secondary;
 use core\navigation\output\primary as primaryoutput;
+use core\output\activity_header;
 
 /**
  * $PAGE is a central store of information about the current page we are
@@ -53,6 +55,8 @@ use core\navigation\output\primary as primaryoutput;
  * @property-read stdClass $activityrecord The row from the activities own database table (for example
  *      the forum or quiz table) that this page belongs to. Will be null
  *      if this page is not within a module.
+ * @property-read activity_header $activityheader The activity header for the page, representing standard components
+ *      displayed within the header
  * @property-read array $alternativeversions Mime type => object with ->url and ->title.
  * @property-read block_manager $blocks The blocks manager object for this page.
  * @property-read array $blockmanipulations
@@ -394,6 +398,11 @@ class moodle_page {
     protected $_hassecondarynavigation = true;
 
     /**
+     * @var bool Should the secondary menu be rendered as a tablist as opposed to a menubar.
+     */
+    protected $_hastablistsecondarynavigation = false;
+
+    /**
      * @var string the key of the secondary node to be activated.
      */
     protected $_activekeysecondary = null;
@@ -404,9 +413,19 @@ class moodle_page {
     protected $_activenodeprimary = null;
 
     /**
-     * @var \core\output\activity_header The default activity header for standardised.
+     * @var activity_header The activity header for the page.
      */
     protected $_activityheader;
+
+    /**
+     * @var bool The value of displaying the navigation overflow.
+     */
+    protected $_navigationoverflow = true;
+
+    /**
+     * @var bool Whether to override/remove all editing capabilities for blocks on the page.
+     */
+    protected $_forcelockallblocks = false;
 
     /**
      * Force the settings menu to be displayed on this page. This will only force the
@@ -830,12 +849,12 @@ class moodle_page {
 
     /**
      * Returns the activity header object
-     * @return secondary
+     * @return activity_header
      */
-    protected function magic_get_activityheader() {
+    protected function magic_get_activityheader(): activity_header {
         global $USER;
         if ($this->_activityheader === null) {
-            $class = 'core\output\activity_header';
+            $class = activity_header::class;
             // Try and load a custom class first.
             if (class_exists("mod_{$this->activityname}\\output\\activity_header")) {
                 $class = "mod_{$this->activityname}\\output\\activity_header";
@@ -1038,10 +1057,12 @@ class moodle_page {
 
     /**
      * Does the user have permission to edit blocks on this page.
+     * Can be forced to false by calling the force_lock_all_blocks() method.
+     *
      * @return bool
      */
     public function user_can_edit_blocks() {
-        return has_capability($this->_blockseditingcap, $this->_context);
+        return $this->_forcelockallblocks ? false : has_capability($this->_blockseditingcap, $this->_context);
     }
 
     /**
@@ -1580,6 +1601,17 @@ class moodle_page {
         if (!is_null($this->_theme)) {
             $this->_theme = theme_config::load($this->_theme->name);
         }
+    }
+
+    /**
+     * Remove access to editing/moving on all blocks on a page.
+     * This overrides any capabilities and is intended only for pages where no user (including admins) should be able to
+     * modify blocks on the page (eg My Courses).
+     *
+     * @return void
+     */
+    public function force_lock_all_blocks(): void {
+        $this->_forcelockallblocks = true;
     }
 
     /**
@@ -2143,7 +2175,9 @@ class moodle_page {
         $reportnode = null;
         $navigationnodeerror =
                 'Could not find the navigation node requested. Please check that the node you are looking for exists.';
-        if ($userid != $USER->id) {
+        if ($userid != $USER->id  || $this->context->contextlevel == CONTEXT_COURSE) {
+            // Within a course context we need to properly indicate how we have come to the page,
+            // regardless of whether it's currently logged in user or not.
             // Check that we have a valid node.
             if (empty($newusernode)) {
                 // Throw an error if we ever reach here.
@@ -2208,10 +2242,13 @@ class moodle_page {
     /**
      * Set the flag to indicate if the secondary navigation should be rendered.
      *
-     * @param bool $value If the secondary navigation should be rendered.
+     * @param bool $hassecondarynavigation If the secondary navigation should be rendered.
+     * @param bool $istablist When true, the navigation bar should be rendered and behave with a tablist ARIA role.
+     *                        If false, it's rendered with a menubar ARIA role. Defaults to false.
      */
-    public function has_secondary_navigation_setter(bool $value) : void {
-        $this->_hassecondarynavigation = $value;
+    public function set_secondary_navigation(bool $hassecondarynavigation, bool $istablist = false): void {
+        $this->_hassecondarynavigation = $hassecondarynavigation;
+        $this->_hastablistsecondarynavigation = $istablist;
     }
 
     /**
@@ -2219,8 +2256,17 @@ class moodle_page {
      *
      * @return bool
      */
-    public function has_secondary_navigation() : bool {
+    public function has_secondary_navigation(): bool {
         return $this->_hassecondarynavigation;
+    }
+
+    /**
+     * Check if the secondary navigation should be rendered with a tablist as opposed to a menubar.
+     *
+     * @return bool
+     */
+    public function has_tablist_secondary_navigation(): bool {
+        return $this->_hastablistsecondarynavigation;
     }
 
     /**
@@ -2257,5 +2303,24 @@ class moodle_page {
      */
     public function get_primary_activate_tab(): ?string {
         return $this->_activenodeprimary;
+    }
+
+    /**
+     * Sets the navigation overflow state. This allows developers to turn off the overflow menu if they perhaps are using
+     * some other navigation to show settings.
+     *
+     * @param bool  $state  The state of whether to show the navigation overflow.
+     */
+    public function set_navigation_overflow_state(bool $state): void {
+        $this->_navigationoverflow = $state;
+    }
+
+    /**
+     * Gets the navigation overflow state.
+     *
+     * @return bool The navigation overflow state.
+     */
+    public function get_navigation_overflow_state(): bool {
+        return $this->_navigationoverflow;
     }
 }

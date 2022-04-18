@@ -61,7 +61,6 @@ class qtype_multianswer_edit_form extends question_edit_form {
 
 
     public function __construct($submiturl, $question, $category, $contexts, $formeditable = true) {
-        global $SESSION, $CFG, $DB;
         $this->regenerate = true;
         $this->reload = optional_param('reload', false, PARAM_BOOL);
 
@@ -70,14 +69,10 @@ class qtype_multianswer_edit_form extends question_edit_form {
         if (isset($question->id) && $question->id != 0) {
             // TODO MDL-43779 should not have quiz-specific code here.
             $this->savedquestiondisplay = fullclone($question);
-            $this->nbofquiz = $DB->count_records('quiz_slots', array('questionid' => $question->id));
+            $questiondata = question_bank::load_question($question->id);
+            $this->nbofquiz = \qbank_usage\helper::get_question_entry_usage_count($questiondata);
             $this->usedinquiz = $this->nbofquiz > 0;
-            $this->nbofattempts = $DB->count_records_sql("
-                    SELECT count(1)
-                      FROM {quiz_slots} slot
-                      JOIN {quiz_attempts} quiza ON quiza.quiz = slot.quizid
-                     WHERE slot.questionid = ?
-                       AND quiza.preview = 0", array($question->id));
+            $this->nbofattempts = \qbank_usage\helper::get_question_attempts_count_in_quiz((int)$question->id);
         }
 
         parent::__construct($submiturl, $question, $category, $contexts, $formeditable);
@@ -155,7 +150,8 @@ class qtype_multianswer_edit_form extends question_edit_form {
                 $storemess = '';
                 if (isset($this->savedquestiondisplay->options->questions[$sub]->qtype) &&
                         $this->savedquestiondisplay->options->questions[$sub]->qtype !=
-                                $this->questiondisplay->options->questions[$sub]->qtype) {
+                                $this->questiondisplay->options->questions[$sub]->qtype &&
+                        $this->savedquestiondisplay->options->questions[$sub]->qtype != 'subquestion_replacement') {
                     $this->qtypechange = true;
                     $storemess = ' ' . html_writer::tag('span', get_string(
                             'storedqtype', 'qtype_multianswer', question_bank::get_qtype_name(
@@ -281,6 +277,8 @@ class qtype_multianswer_edit_form extends question_edit_form {
                             case 'numerical':
                                 $parsableanswerdef .= 'NUMERICAL:';
                                 break;
+                            case 'subquestion_replacement':
+                                continue 2;
                             default:
                                 print_error('unknownquestiontype', 'question', '',
                                         $wrapped->qtype);

@@ -324,6 +324,7 @@ class page_requirements_manager {
 
             $this->M_cfg = array(
                 'wwwroot'               => $CFG->wwwroot,
+                'homeurl'               => $page->navigation->action,
                 'sesskey'               => sesskey(),
                 'sessiontimeout'        => $CFG->sessiontimeout,
                 'sessiontimeoutwarning' => $CFG->sessiontimeoutwarning,
@@ -1040,11 +1041,12 @@ class page_requirements_manager {
     public function js_call_amd($fullmodule, $func = null, $params = array()) {
         global $CFG;
 
-        list($component, $module) = explode('/', $fullmodule, 2);
+        $modulepath = explode('/', $fullmodule);
 
-        $component = clean_param($component, PARAM_COMPONENT);
-        $module = clean_param($module, PARAM_ALPHANUMEXT);
-        $modname = "{$component}/{$module}";
+        $modname = clean_param(array_shift($modulepath), PARAM_COMPONENT);
+        foreach ($modulepath as $module) {
+            $modname .= '/' . clean_param($module, PARAM_ALPHANUMEXT);
+        }
 
         $functioncode = [];
         if ($func !== null) {
@@ -1667,7 +1669,7 @@ EOF;
         $this->js_call_amd('core/log', 'setConfig', array($logconfig));
         // Add any global JS that needs to run on all pages.
         $this->js_call_amd('core/page_global', 'init');
-        $this->js_call_amd('core/confirm');
+        $this->js_call_amd('core/utility');
 
         // Call amd init functions.
         $output .= $this->get_amd_footercode();

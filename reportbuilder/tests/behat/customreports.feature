@@ -69,13 +69,30 @@ Feature: Manage custom reports
       | Name              | Report source |
       | My renamed report | Users         |
 
+  Scenario: Rename custom report using filters
+    Given the "multilang" filter is "on"
+    And the "multilang" filter applies to "content and headings"
+    And the following "core_reportbuilder > Reports" exist:
+      | name      | source                                   |
+      | My report | core_user\reportbuilder\datasource\users |
+    And I log in as "admin"
+    When I navigate to "Reports > Report builder > Custom reports" in site administration
+    And I set the field "Edit report name" in the "My report" "table_row" to "<span class=\"multilang\" lang=\"en\">English</span><span class=\"multilang\" lang=\"es\">Spanish</span>"
+    And I reload the page
+    Then I should see "English" in the "reportbuilder-table" "table"
+    And I should not see "Spanish" in the "reportbuilder-table" "table"
+    # Confirm report name is correctly shown in action.
+    And I press "Delete report" action in the "English" report row
+    And I should see "Are you sure you want to delete the report 'English' and all associated data?" in the "Delete report" "dialogue"
+    And I click on "Cancel" "button" in the "Delete report" "dialogue"
+
   Scenario: Edit custom report from the custom reports page
     Given the following "core_reportbuilder > Reports" exist:
       | name      | source                                   |
       | My report | core_user\reportbuilder\datasource\users |
     And I log in as "admin"
     When I navigate to "Reports > Report builder > Custom reports" in site administration
-    And I click on "Edit report details" "link" in the "My report" "table_row"
+    When I press "Edit report details" action in the "My report" report row
     And I set the following fields in the "Edit report details" "dialogue" to these values:
       | Name | My renamed report |
     And I click on "Save" "button" in the "Edit report details" "dialogue"
@@ -108,7 +125,7 @@ Feature: Manage custom reports
       | My report | core_user\reportbuilder\datasource\users |
     And I log in as "admin"
     When I navigate to "Reports > Report builder > Custom reports" in site administration
-    And I click on "Delete report" "link" in the "My report" "table_row"
+    And I press "Delete report" action in the "My report" report row
     And I click on "Delete" "button" in the "Delete report" "dialogue"
     Then I should see "Report deleted"
     And I should see "Nothing to display"
@@ -130,17 +147,33 @@ Feature: Manage custom reports
     Then I should see "Preview" in the "[data-region='core_reportbuilder/report-header']" "css_element"
     And I should not see "Edit" in the "[data-region='core_reportbuilder/report-header']" "css_element"
 
-  Scenario Outline: Access report clicking on the report name or view icon
+  Scenario: Access report clicking on the report name
     Given the following "core_reportbuilder > Reports" exist:
       | name      | source                                   |
       | My report | core_user\reportbuilder\datasource\users |
     When I log in as "admin"
     And I navigate to "Reports > Report builder > Custom reports" in site administration
-    And I click on "<link>" "link" in the "My report" "table_row"
-    Then <previewvisible> "Preview" in the "[data-region='core_reportbuilder/report']" "css_element"
-    And <editvisible> "Edit" in the "[data-region='core_reportbuilder/report']" "css_element"
-    And "button[title='Filters']" "css_element" <filtersvisible> in the "[data-region='core_reportbuilder/report']" "css_element"
-    Examples:
-      | link       | previewvisible    | editvisible       | filtersvisible    |
-      | My report  | I should see      | I should not see  | should not exist  |
-      | View       | I should not see  | I should not see  | should exist      |
+    And I click on "My report" "link" in the "My report" "table_row"
+    Then I should see "Preview" in the "[data-region='core_reportbuilder/report']" "css_element"
+    And I should not see "Edit" in the "[data-region='core_reportbuilder/report']" "css_element"
+    And "button[title='Filters']" "css_element" should not exist in the "[data-region='core_reportbuilder/report']" "css_element"
+
+  Scenario: Access report clicking on the view icon
+    Given the following "core_reportbuilder > Reports" exist:
+      | name      | source                                   |
+      | My report | core_user\reportbuilder\datasource\users |
+    When I log in as "admin"
+    And I navigate to "Reports > Report builder > Custom reports" in site administration
+    And I press "View" action in the "My report" report row
+    Then I should not see "Preview" in the "[data-region='core_reportbuilder/report']" "css_element"
+    And I should not see "Edit" in the "[data-region='core_reportbuilder/report']" "css_element"
+    And "button[title='Filters']" "css_element" should exist in the "[data-region='core_reportbuilder/report']" "css_element"
+
+  Scenario: Special characters in report name are shown correctly
+    Given the following "core_reportbuilder > Reports" exist:
+      | name                    | source                                   |
+      | My fish & chips report  | core_user\reportbuilder\datasource\users |
+    When I log in as "admin"
+    And I navigate to "Reports > Report builder > Custom reports" in site administration
+    And I press "Edit report content" action in the "My fish & chips report" report row
+    Then I should see "My fish & chips report" in the "#region-main .navbar" "css_element"

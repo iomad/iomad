@@ -55,6 +55,7 @@ use mod_lti\helper;
 use moodle\mod\lti as lti;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
+use Firebase\JWT\Key;
 use mod_lti\local\ltiopenid\jwks_helper;
 use mod_lti\local\ltiopenid\registration_helper;
 
@@ -1360,14 +1361,16 @@ function lti_verify_with_keyset($jwtparam, $keyseturl, $clientid) {
             throw new moodle_exception('errornocachedkeysetfound', 'mod_lti');
         }
         $keysetarr = json_decode($keyset, true);
+        // JWK::parseKeySet uses RS256 algorithm by default.
         $keys = JWK::parseKeySet($keysetarr);
-        $jwt = JWT::decode($jwtparam, $keys, ['RS256']);
+        $jwt = JWT::decode($jwtparam, $keys);
     } catch (Exception $e) {
         // Something went wrong, so attempt to update cached keyset and then try again.
         $keyset = file_get_contents($keyseturl);
         $keysetarr = json_decode($keyset, true);
+        // JWK::parseKeySet uses RS256 algorithm by default.
         $keys = JWK::parseKeySet($keysetarr);
-        $jwt = JWT::decode($jwtparam, $keys, ['RS256']);
+        $jwt = JWT::decode($jwtparam, $keys);
         // If sucessful, updates the cached keyset.
         $cache->set($clientid, $keyset);
     }
@@ -1414,7 +1417,7 @@ function lti_verify_jwt_signature($typeid, $consumerkey, $jwtparam) {
             throw new moodle_exception('No public key configured');
         }
         // Attemps to verify jwt with RSA key.
-        JWT::decode($jwtparam, $publickey, ['RS256']);
+        JWT::decode($jwtparam, new Key($publickey, 'RS256'));
     } else if ($typeconfig['keytype'] === LTI_JWK_KEYSET) {
         $keyseturl = $typeconfig['publickeyset'] ?? '';
         if (empty($keyseturl)) {
@@ -2834,14 +2837,23 @@ function lti_update_type($type, $config) {
         }
         require_once($CFG->libdir.'/modinfolib.php');
         if ($clearcache) {
-            $sql = "SELECT DISTINCT course
-                      FROM {lti}
-                     WHERE typeid = ?";
+            $sql = "SELECT cm.id, cm.course
+                      FROM {course_modules} cm
+                      JOIN {modules} m ON cm.module = m.id
+                      JOIN {lti} l ON l.course = cm.course
+                     WHERE m.name = :name AND l.typeid = :typeid";
 
-            $courses = $DB->get_fieldset_sql($sql, array($type->id));
+            $rs = $DB->get_recordset_sql($sql, ['name' => 'lti', 'typeid' => $type->id]);
 
-            foreach ($courses as $courseid) {
-                rebuild_course_cache($courseid, true);
+            $courseids = [];
+            foreach ($rs as $record) {
+                $courseids[] = $record->course;
+                \course_modinfo::purge_course_module_cache($record->course, $record->id);
+            }
+            $rs->close();
+            $courseids = array_unique($courseids);
+            foreach ($courseids as $courseid) {
+                rebuild_course_cache($courseid, false, true);
             }
         }
     }
@@ -4001,7 +4013,7 @@ function get_tool_type_icon_url(stdClass $type) {
     }
 
     if (empty($iconurl)) {
-        $iconurl = $OUTPUT->image_url('icon', 'lti')->out();
+        $iconurl = $OUTPUT->image_url('monologo', 'lti')->out();
     }
 
     return $iconurl;
@@ -4088,7 +4100,7 @@ function get_tool_proxy_urls(stdClass $proxy) {
     global $OUTPUT;
 
     $urls = array(
-        'icon' => $OUTPUT->image_url('icon', 'lti')->out(),
+        'icon' => $OUTPUT->image_url('monologo', 'lti')->out(),
         'edit' => get_tool_proxy_edit_url($proxy),
     );
 
@@ -4460,13 +4472,20 @@ function lti_load_cartridge($url, $map, $propertiesmap = array()) {
     $curl = new curl();
     $response = $curl->get($url);
 
+    // Got a completely empty response (real or error), cannot process this with
+    // DOMDocument::loadXML() because it errors with ValueError. So let's throw
+    // the moodle_exception before waiting to examine the errors later.
+    if (trim($response) === '') {
+        throw new moodle_exception('errorreadingfile', '', '', $url);
+    }
+
     // TODO MDL-46023 Replace this code with a call to the new library.
     $origerrors = libxml_use_internal_errors(true);
     $origentity = lti_libxml_disable_entity_loader(true);
     libxml_clear_errors();
 
     $document = new DOMDocument();
-    @$document->loadXML($response, LIBXML_DTDLOAD | LIBXML_DTDATTR);
+    @$document->loadXML($response, LIBXML_NONET);
 
     $cartridge = new DomXpath($document);
 

@@ -388,14 +388,8 @@ class core_course_external extends external_api {
             // We didn't this before to be able to retrieve stealth activities.
             foreach ($coursecontents as $sectionnumber => $sectioncontents) {
                 $section = $sections[$sectionnumber];
-                // Show the section if the user is permitted to access it OR
-                // if it's not available but there is some available info text which explains the reason & should display OR
-                // the course is configured to show hidden sections name.
-                $showsection = $section->uservisible ||
-                    ($section->visible && !$section->available && !empty($section->availableinfo)) ||
-                    (!$section->visible && empty($courseformat->get_course()->hiddensections));
 
-                if (!$showsection) {
+                if (!$courseformat->is_section_visible($section)) {
                     unset($coursecontents[$sectionnumber]);
                     continue;
                 }
@@ -3760,7 +3754,7 @@ class core_course_external extends external_api {
                     VALUE_DEFAULT, null),
                 'customfieldvalue' => new external_value(PARAM_RAW, 'Used when classification = customfield',
                     VALUE_DEFAULT, null),
-                'searchvalue' => new external_value(PARAM_TEXT, 'The value a user wishes to search against',
+                'searchvalue' => new external_value(PARAM_RAW, 'The value a user wishes to search against',
                     VALUE_DEFAULT, null),
             )
         );
@@ -3818,7 +3812,7 @@ class core_course_external extends external_api {
         $offset = $params['offset'];
         $sort = $params['sort'];
         $customfieldvalue = $params['customfieldvalue'];
-        $searchvalue = $params['searchvalue'];
+        $searchvalue = clean_param($params['searchvalue'], PARAM_TEXT);
 
         switch($classification) {
             case COURSE_TIMELINE_ALLINCLUDINGHIDDEN:
