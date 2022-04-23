@@ -15,19 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Label module version info
+ * Definition of Trainingevent scheduled tasks.
  *
- * @package    mod
- * @subpackage Training Event
- * @copyright  2014 E-Learn Design Ltd. {@link https://www.e-learndesign.co.uk}
- * @author     Derick Turner
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_trainingevent
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->component  = 'mod_trainingevent';
-$plugin->version  = 2022032400;  // The current module version (Date: YYYYMMDDXX).
-$plugin->requires = 2019052000;  // Requires this Moodle version.
-$plugin->release  = '3.10.10 (Build: 20220314)'; // Human-friendly version name
-$plugin->cron     = 0;           // Period for cron to check this module (secs).
+$tasks = [
+    [
+        'classname' => 'mod_trainingevent\task\send_reminder_emails',
+        'blocking' => 0,
+        'minute' => '15',
+        'hour' => '0',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ]
+];
