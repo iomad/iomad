@@ -15,13 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_email
+ * Definition of Trainingevent scheduled tasks.
+ *
+ * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version  = 2022042300;   // The (date) version of this plugin.
-$plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->release  = '3.9.13 (Build: 20220314)'; // Human-friendly version name
-$plugin->component  = 'local_email';
+defined('MOODLE_INTERNAL') || die();
+
+$tasks = [
+    [
+        'classname' => 'mod_trainingevent\task\send_reminder_emails',
+        'blocking' => 0,
+        'minute' => '15',
+        'hour' => '0',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ]
+];
