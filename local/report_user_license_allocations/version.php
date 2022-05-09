@@ -23,5 +23,5 @@
 
 $plugin->version  = 2021021500;
 $plugin->requires = 2019052000;
-$plugin->release  = '3.9.13 (Build: 20220314)'; // Human-friendly version name
+$plugin->release  = '3.9.14 (Build: 20220509)'; // Human-friendly version name
 $plugin->component  = 'local_report_user_license_allocations';
