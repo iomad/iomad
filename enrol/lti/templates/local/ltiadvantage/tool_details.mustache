@@ -62,7 +62,7 @@
     <table class="admintable generaltable">
         <thead></thead>
         <tbody>
-        <tr>
+        <tr class="d-flex">
             <th class="col-3" id="lti_tool_endpoint_name_{{id}}">
                 <label for="lti_tool_endpoint_url_{{id}}">{{name}}</label>
             </th>
@@ -70,9 +70,7 @@
                 <div class="input-group col-md-6 ml-0 pl-0">
                     <input class="form-control" type="text" value="{{url}}" aria-label="{{url}}" id="lti_tool_endpoint_url_{{id}}" readonly>
                     <div class="input-group-append">
-                        <a class="btn btn-secondary"
-                           href="#"
-                           role="button"
+                        <button class="btn btn-secondary"
                            aria-label="{{#str}} copytoclipboard, enrol_lti {{/str}}"
                            data-action="copytoclipboard"
                            data-clipboard-success-message="{{#str}}copiedtoclipboard, enrol_lti, {{name}}{{/str}}"
@@ -80,7 +78,7 @@
                            id="{{id}}"
                            title="{{#str}}copytoclipboard, enrol_lti{{/str}}">
                             <span class="pix">{{#pix}} t/clipboard, core {{/pix}}</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </td>
@@ -95,14 +93,14 @@
 <div id="lti_tool_endpoints">
     <table class="admintable generaltable">
         <thead>
-        <tr>
+        <tr class="d-flex">
             <th>{{#str}}name, core{{/str}}</th>
             <th>{{#str}}url, core{{/str}}</th>
         </tr>
         </thead>
         <tbody>
         {{#manual_registration_urls}}
-            <tr>
+            <tr class="d-flex">
                 <th class="col-3" id="lti_tool_endpoint_name_{{id}}">
                     <label for="lti_tool_endpoint_url_{{id}}">{{name}}</label>
                 </th>
@@ -110,9 +108,7 @@
                     <div class="input-group col-md-6 ml-0 pl-0">
                         <input class="form-control" type="text" value="{{url}}" aria-label="{{url}}" id="lti_tool_endpoint_url_{{id}}" readonly>
                         <div class="input-group-append">
-                            <a class="btn btn-secondary"
-                               href="#"
-                               role="button"
+                            <button class="btn btn-secondary"
                                aria-label="{{#str}} copytoclipboard, enrol_lti {{/str}}"
                                data-action="copytoclipboard"
                                data-clipboard-success-message="{{#str}}copiedtoclipboard, enrol_lti, {{name}}{{/str}}"
@@ -120,7 +116,7 @@
                                id="{{id}}"
                                title="{{#str}}copytoclipboard, enrol_lti{{/str}}">
                                 <span class="pix">{{#pix}} t/clipboard, core {{/pix}}</span>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </td>
