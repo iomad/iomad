@@ -21,7 +21,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version  = 2016040601;   // The (date) version of this plugin.
+$plugin->version  = 2022052700;   // The (date) version of this plugin.
 $plugin->requires = 2019052000;   // Requires this Moodle version.
 $plugin->release  = '3.10.11 (Build: 20220509)'; // Human-friendly version name
 $plugin->component  = 'local_email_reports';
