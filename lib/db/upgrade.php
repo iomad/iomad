@@ -3235,8 +3235,13 @@ privatefiles,moodle|/user/files.php';
             set_config('customusermenuitems', $newcustomusermenuitems);
         } else {
             // If the site is not using the old defaults, only add necessary entries.
-            $lines = explode("\n", $currentcustomusermenuitems);
-            $lines = array_map('trim', $lines);
+            $lines = preg_split('/\n/', $currentcustomusermenuitems, -1, PREG_SPLIT_NO_EMPTY);
+            $lines = array_map(static function(string $line): string {
+                // Previous format was "<langstring>|<url>[|<pixicon>]" - pix icon is no longer supported.
+                $lineparts = explode('|', trim($line), 3);
+                // Return first two parts of line.
+                return implode('|', array_slice($lineparts, 0, 2));
+            }, $lines);
 
             // Remove the Preference entry from the menu to prevent duplication
             // since it will be added again in user_get_user_navigation_info().
@@ -4492,6 +4497,43 @@ privatefiles,moodle|/user/files.php';
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2022041900.03);
+    }
+
+    if ($oldversion < 2022041901.05) {
+
+        // Changing precision of field hidden on table grade_categories to (10).
+        $table = new xmldb_table('grade_categories');
+        $field = new xmldb_field('hidden', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timemodified');
+
+        // Launch change of precision for field hidden.
+        $dbman->change_field_precision($table, $field);
+
+        // Changing precision of field hidden on table grade_categories_history to (10).
+        $table = new xmldb_table('grade_categories_history');
+        $field = new xmldb_field('hidden', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'aggregatesubcats');
+
+        // Launch change of precision for field hidden.
+        $dbman->change_field_precision($table, $field);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2022041901.05);
+    }
+
+    if ($oldversion < 2022041901.07) {
+        // Iterate over custom user menu items configuration, removing pix icon references.
+        $customusermenuitems = str_replace(["\r\n", "\r"], "\n", $CFG->customusermenuitems);
+
+        $lines = preg_split('/\n/', $customusermenuitems, -1, PREG_SPLIT_NO_EMPTY);
+        $lines = array_map(static function(string $line): string {
+            // Previous format was "<langstring>|<url>[|<pixicon>]" - pix icon is no longer supported.
+            $lineparts = explode('|', trim($line), 3);
+            // Return first two parts of line.
+            return implode('|', array_slice($lineparts, 0, 2));
+        }, $lines);
+
+        set_config('customusermenuitems', implode("\n", $lines));
+
+        upgrade_main_savepoint(true, 2022041901.07);
     }
 
     return true;

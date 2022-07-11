@@ -1004,8 +1004,18 @@ function clean_param($param, $type) {
             return preg_replace('/[^a-zA-Z0-9_-]/i', '', $param);
 
         case PARAM_SAFEPATH:
-            // Remove everything not a-zA-Z0-9/_- .
-            return preg_replace('/[^a-zA-Z0-9\/_-]/i', '', $param);
+            // Replace MS \ separators.
+            $param = str_replace('\\', '/', $param);
+            // Remove any number of ../ to prevent path traversal.
+            $param = preg_replace('/\.\.+\//', '', $param);
+            // Remove everything not a-zA-Z0-9/:_- .
+            $param = preg_replace('/[^a-zA-Z0-9\/:_-]/i', '', $param);
+            // Remove leading slash.
+            $param = ltrim($param, '/');
+            if ($param === '.') {
+                $param = '';
+            }
+            return $param;
 
         case PARAM_FILE:
             // Strip all suspicious characters from filename.
@@ -2353,6 +2363,18 @@ function date_format_string($date, $format, $tz = 99) {
     }
 
     date_default_timezone_set(core_date::get_user_timezone($tz));
+
+    if (strftime('%p', 0) === strftime('%p', HOURSECS * 18)) {
+        $datearray = getdate($date);
+        $format = str_replace([
+            '%P',
+            '%p',
+        ], [
+            $datearray['hours'] < 12 ? get_string('am', 'langconfig') : get_string('pm', 'langconfig'),
+            $datearray['hours'] < 12 ? get_string('amcaps', 'langconfig') : get_string('pmcaps', 'langconfig'),
+        ], $format);
+    }
+
     $datestring = strftime($format, $date);
     core_date::set_default_server_timezone();
 
@@ -5884,7 +5906,7 @@ function email_should_be_diverted($email) {
         return true;
     }
 
-    $patterns = array_map('trim', preg_split("/[\s,]+/", $CFG->divertallemailsexcept));
+    $patterns = array_map('trim', preg_split("/[\s,]+/", $CFG->divertallemailsexcept, -1, PREG_SPLIT_NO_EMPTY));
     foreach ($patterns as $pattern) {
         if (preg_match("/$pattern/", $email)) {
             return false;
