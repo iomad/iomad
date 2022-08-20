@@ -23,5 +23,5 @@
 
 $plugin->component  = 'block_iomad_approve_access';
 $plugin->version = 2022042300;  // YYYYMMDDHH (year, month, day, 24-hr time).
-$plugin->release  = '3.9.14 (Build: 20220509)'; // Human-friendly version name
+$plugin->release  = '3.9.16 (Build: 20220822)'; // Human-friendly version name
 $plugin->requires = 2019052000; // YYYYMMDDHH (This is the release version for Moodle 2.0).

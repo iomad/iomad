@@ -23,5 +23,5 @@
 
 $plugin->version = 2017020100;
 $plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->release  = '3.9.14 (Build: 20220509)'; // Human-friendly version name
+$plugin->release  = '3.9.16 (Build: 20220822)'; // Human-friendly version name
 $plugin->component  = 'block_iomad_welcome';
