@@ -81,9 +81,14 @@ abstract class base {
      *
      * @param string[] $sqlfields
      * @param string $delimeter
+     * @param string $coalescechar
      * @return string
      */
-    final protected static function get_column_fields_concat(array $sqlfields, string $delimeter = ','): string {
+    final protected static function get_column_fields_concat(
+        array $sqlfields,
+        string $delimeter = ',',
+        string $coalescechar = ' '
+    ): string {
         global $DB;
 
         $concatfields = [];
@@ -91,6 +96,9 @@ abstract class base {
 
             // We need to ensure all values are char (this ought to be done in the DML drivers, see MDL-72184).
             switch ($DB->get_dbfamily()) {
+                case 'mssql' :
+                    $sqlfield = $DB->sql_concat("''", $sqlfield);
+                    break;
                 case 'postgres' :
                     $sqlfield = "CAST({$sqlfield} AS VARCHAR)";
                     break;
@@ -99,8 +107,8 @@ abstract class base {
                     break;
             }
 
-            // Coalesce all the SQL fields, to remove all nulls.
-            $concatfields[] = "COALESCE({$sqlfield}, ' ')";
+            // Coalesce all the SQL fields. Ensure cross-DB compatibility, and that we always get string data back.
+            $concatfields[] = "COALESCE({$sqlfield}, '{$coalescechar}')";
             $concatfields[] = "'{$delimeter}'";
         }
 
