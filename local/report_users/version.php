@@ -23,5 +23,5 @@
 
 $plugin->version  = 2020102700;
 $plugin->requires = 2019052000;
-$plugin->release  = '3.9.16 (Build: 20220822)'; // Human-friendly version name
+$plugin->release  = '3.9.17 (Build: 20220912)'; // Human-friendly version name
 $plugin->component  = 'local_report_users';
