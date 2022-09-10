@@ -522,22 +522,26 @@ function get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recordsperp
         $params = $params + (array)$extraparams;
     }
 
-    if ($sort) {
-        $sort = " ORDER BY $sort $dir";
-    }
-
     // If a context is specified, get extra user fields that the current user
     // is supposed to see, otherwise just get the name fields.
     $userfields = \core_user\fields::for_name();
     if ($extracontext) {
         $userfields->with_identity($extracontext, true);
     }
-    $userfields->excluding('id', 'username', 'email', 'city', 'country', 'lastaccess', 'confirmed', 'mnethostid');
-    ['selects' => $selects, 'joins' => $joins, 'params' => $joinparams] =
+
+    $userfields->excluding('id');
+    $userfields->including('username', 'email', 'city', 'country', 'lastaccess', 'confirmed', 'mnethostid', 'suspended');
+    ['selects' => $selects, 'joins' => $joins, 'params' => $joinparams, 'mappings' => $mappings] =
             (array)$userfields->get_sql('u', true);
 
+    if ($sort) {
+        $orderbymap = $mappings;
+        $orderbymap['default'] = 'lastaccess';
+        $sort = get_safe_orderby($orderbymap, $sort, $dir);
+    }
+
     // warning: will return UNCONFIRMED USERS
-    return $DB->get_records_sql("SELECT u.id, username, email, city, country, lastaccess, confirmed, mnethostid, suspended $selects
+    return $DB->get_records_sql("SELECT u.id $selects
                                    FROM {user} u
                                         $joins
                                   WHERE $select
