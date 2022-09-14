@@ -292,7 +292,7 @@ $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 
 // Set up the initial SQL for the form.
-$selectsql = "DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", "d.id")) . " AS dindex,u.id,u.firstname,u.lastname,cu.companyid,u.email,url.created,url.firstlogin,url.lastlogin,url.logincount";
+$selectsql = "DISTINCT " . $DB->sql_concat("u.id", $DB->sql_concat("'-'", "d.id")) . " AS dindex,u.id,u.firstname,u.lastname,cu.companyid,u.email,url.created,url.firstlogin as urlfirstlogin,url.lastlogin as urllastlogin,url.logincount";
 $fromsql = "{user} u JOIN {local_report_user_logins} url ON (u.id = url.userid) JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id)";
 $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $departmentsql $companysql";
 $countsql = "SELECT COUNT( DISTINCT u.id ) FROM $fromsql WHERE $wheresql";
@@ -338,8 +338,8 @@ $headers[] = get_string('lastaccess');
 $headers[] = get_string('numlogins', 'block_iomad_company_admin');
 
 $columns[] = 'created';
-$columns[] = 'firstlogin';
-$columns[] = 'lastlogin';
+$columns[] = 'urlfirstlogin';
+$columns[] = 'urllastlogin';
 $columns[] = 'logincount';
 
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
