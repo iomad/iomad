@@ -43,6 +43,8 @@ class block_iomad_company_admin_external extends external_api {
                             'shortname' => new external_value(PARAM_TEXT, 'Compay short name'),
                             'code' => new external_value(PARAM_TEXT, 'Company code', VALUE_DEFAULT, ''),
                             'city' => new external_value(PARAM_TEXT, 'Company location city'),
+                            'region' => new external_value(PARAM_TEXT, 'Company location region', VALUE_OPTIONAL),
+                            'postcode' => new external_value(PARAM_TEXT, 'Company location postcode', VALUE_OPTIONAL),
                             'country' => new external_value(PARAM_TEXT, 'Company location country'),
                             'maildisplay' => new external_value(PARAM_INT, 'User default email display', VALUE_DEFAULT, 2),
                             'mailformat' => new external_value(PARAM_INT, 'User default email format', VALUE_DEFAULT, 1),
@@ -66,6 +68,9 @@ class block_iomad_company_admin_external extends external_api {
                             'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
                             'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
                             'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
+                            'custom1' => new external_value(PARAM_TEXT, 'Company custom 1', VALUE_OPTIONAL),
+                            'custom2' => new external_value(PARAM_TEXT, 'Company custom 2', VALUE_OPTIONAL),
+                            'custom3' => new external_value(PARAM_TEXT, 'Company custom 3', VALUE_OPTIONAL),
                         )
                     )
                 )
@@ -166,6 +171,8 @@ echo "<pre>";print_r($params);die;
                      'name' => new external_value(PARAM_TEXT, 'Company long name'),
                      'shortname' => new external_value(PARAM_TEXT, 'Compay short name'),
                      'city' => new external_value(PARAM_TEXT, 'Company location city'),
+                     'region' => new external_value(PARAM_TEXT, 'Company location region'),
+                     'postcode' => new external_value(PARAM_TEXT, 'Company location postcode'),
                      'country' => new external_value(PARAM_TEXT, 'Company location country'),
                      'maildisplay' => new external_value(PARAM_INT, 'User default email display'),
                      'mailformat' => new external_value(PARAM_INT, 'User default email format'),
@@ -189,6 +196,9 @@ echo "<pre>";print_r($params);die;
                      'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
                      'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
                      'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
+                     'custom1' => new external_value(PARAM_TEXT, 'Company custom 1'),
+                     'custom2' => new external_value(PARAM_TEXT, 'Company custom 2'),
+                     'custom3' => new external_value(PARAM_TEXT, 'Company custom 3'),
                 )
             )
         );
@@ -347,6 +357,7 @@ echo "<pre>";print_r($params);die;
                          'shortname' => new external_value(PARAM_TEXT, 'Compay short name'),
                          'code' => new external_value(PARAM_TEXT, 'Compay code'),
                          'city' => new external_value(PARAM_TEXT, 'Company location city'),
+                         'region' => new external_value(PARAM_TEXT, 'Company location region'),
                          'country' => new external_value(PARAM_TEXT, 'Company location country'),
                          'maildisplay' => new external_value(PARAM_INT, 'User default email display'),
                          'mailformat' => new external_value(PARAM_INT, 'User default email format'),
@@ -370,6 +381,9 @@ echo "<pre>";print_r($params);die;
                          'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
                          'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
                          'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
+                         'custom1' => new external_value(PARAM_TEXT, 'Company custom 1'),
+                         'custom2' => new external_value(PARAM_TEXT, 'Company custom 2'),
+                         'custom3' => new external_value(PARAM_TEXT, 'Company custom 3'),
                          )
                      )
                  ),
@@ -395,6 +409,7 @@ echo "<pre>";print_r($params);die;
                             'shortname' => new external_value(PARAM_TEXT, 'Compay short name', VALUE_OPTIONAL),
                             'code' => new external_value(PARAM_TEXT, 'Compay code', VALUE_OPTIONAL),
                             'city' => new external_value(PARAM_TEXT, 'Company location city', VALUE_OPTIONAL),
+                            'region' => new external_value(PARAM_TEXT, 'Company location region', VALUE_OPTIONAL),
                             'country' => new external_value(PARAM_TEXT, 'Company location country', VALUE_OPTIONAL),
                             'maildisplay' => new external_value(PARAM_INT, 'User default email display', VALUE_OPTIONAL),
                             'mailformat' => new external_value(PARAM_INT, 'User default email format', VALUE_OPTIONAL),
@@ -418,6 +433,9 @@ echo "<pre>";print_r($params);die;
                             'maincolor' => new external_value(PARAM_TEXT, 'Company main color', VALUE_DEFAULT, ''),
                             'headingcolor' => new external_value(PARAM_TEXT, 'Company heading color', VALUE_DEFAULT, ''),
                             'linkcolor' => new external_value(PARAM_TEXT, 'Company ink color', VALUE_DEFAULT, ''),
+                            'custom1' => new external_value(PARAM_TEXT, 'Company custom 1', VALUE_OPTIONAL),
+                            'custom2' => new external_value(PARAM_TEXT, 'Company custom 2', VALUE_OPTIONAL),
+                            'custom3' => new external_value(PARAM_TEXT, 'Company custom 3', VALUE_OPTIONAL),
                         )
                     )
                 )
