@@ -125,7 +125,13 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
         }
 
         $new = false;
-        $licensedata = array();
+        // Does this license have a parent?
+        if (!empty($data->parentid)) {
+            // Get that license data.
+            $licensedata = (array) $DB->get_record('companylicense', ['id' => $data->parentid], '*', MUST_EXIST);
+        } else {
+            $licensedata = [];
+        }
         $licensedata['name'] = trim($data->name);
         $licensedata['reference'] = trim($data->reference);
         if (empty($data->program)) {
@@ -136,31 +142,34 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
             $licensedata['allocation'] = $data->allocation * count($data->licensecourses);
         }
         $licensedata['humanallocation'] = $data->allocation;
-        $licensedata['instant'] = $data->instant;
-        $licensedata['expirydate'] = $data->expirydate;
-        $licensedata['startdate'] = $data->startdate;
-        if (empty($data->languages)) {
-            $data->languages = array();
-        }
+
+        // Only change the things we need to change.
         if (empty($data->parentid)) {
+            $licensedata['instant'] = $data->instant;
+            $licensedata['expirydate'] = $data->expirydate;
+            $licensedata['startdate'] = $data->startdate;
+            if (empty($data->languages)) {
+                $data->languages = array();
+            }
+    
+            if (empty($data->cutoffdate)) {
+                $licensedata['cutoffdate'] = 0;
+            } else {
+                $licensedata['cutoffdate'] = $data->cutoffdate;
+            }
+    
+            if (empty($data->clearonexpire)) {
+                $licensedata['clearonexpire'] = 0;
+            } else {
+                $licensedata['clearonexpire'] = $data->clearonexpire;
+            }
+
+            $licensedata['validlength'] = $data->validlength;
+            $licensedata['type'] = $data->type;
             $licensedata['companyid'] = $data->companyid;
         } else {
             $licensedata['companyid'] = $data->designatedcompany;
             $licensedata['parentid'] = $data->parentid;
-        }
-        $licensedata['validlength'] = $data->validlength;
-        $licensedata['type'] = $data->type;
-
-        if (empty($data->cutoffdate)) {
-            $licensedata['cutoffdate'] = 0;
-        } else {
-            $licensedata['cutoffdate'] = $data->cutoffdate;
-        }
-
-        if (empty($data->clearonexpire)) {
-            $licensedata['clearonexpire'] = 0;
-        } else {
-            $licensedata['clearonexpire'] = $data->clearonexpire;
         }
 
         if ( !empty($licenseid) && $currlicensedata = $DB->get_record('companylicense', array('id' => $licenseid))) {
