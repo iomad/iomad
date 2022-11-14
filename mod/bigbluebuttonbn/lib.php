@@ -337,7 +337,14 @@ function bigbluebuttonbn_get_coursemodule_info($coursemodule) {
     global $DB;
 
     $dbparams = ['id' => $coursemodule->instance];
-    $fields = 'id, name, intro, introformat, completionattendance';
+    $customcompletionfields = custom_completion::get_defined_custom_rules();
+    $fieldsarray = array_merge([
+        'id',
+        'name',
+        'intro',
+        'introformat',
+    ], $customcompletionfields);
+    $fields = join(',', $fieldsarray);
     $bigbluebuttonbn = $DB->get_record('bigbluebuttonbn', $dbparams, $fields);
     if (!$bigbluebuttonbn) {
         return null;
@@ -350,7 +357,10 @@ function bigbluebuttonbn_get_coursemodule_info($coursemodule) {
     }
     // Populate the custom completion rules as key => value pairs, but only if the completion mode is 'automatic'.
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
-        $info->customdata['customcompletionrules']['completionattendance'] = $bigbluebuttonbn->completionattendance;
+        foreach ($customcompletionfields as $completiontype) {
+            $info->customdata['customcompletionrules'][$completiontype] =
+                $bigbluebuttonbn->$completiontype ?? 0;
+        }
     }
 
     return $info;
@@ -675,7 +685,7 @@ function bigbluebuttonbn_print_recent_activity(object $course, bool $viewfullnam
         if ($logs) {
             echo $OUTPUT->heading(get_string('new_bigblubuttonbn_activities', 'bigbluebuttonbn') . ':', 6);
             foreach ($logs as $log) {
-                $activityurl = new moodle_url('/mod/bigbluebuttonbn/index.php', ['id' => $instance->get_instance_id()]);
+                $activityurl = new moodle_url('/mod/bigbluebuttonbn/index.php', ['id' => $course->id]);
                 print_recent_activity_note($log->timecreated,
                     $log,
                     logger::get_printable_event_name($log) . ' - ' . $instance->get_meeting_name(),

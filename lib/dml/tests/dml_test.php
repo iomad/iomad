@@ -519,6 +519,31 @@ EOD;
         $CFG->debugsqltrace = 0;
     }
 
+    /**
+     * Test the database debugging as SQL comment in anon class
+     *
+     * @covers ::add_sql_debugging
+     */
+    public function test_sql_debugging_anon_class() {
+        global $CFG;
+        $CFG->debugsqltrace = 100;
+
+        // A anon class.
+        $another = new class {
+            /**
+             * Just a test log function
+             */
+            public function get_site() {
+                global $DB;
+
+                return $DB->get_record('course', ['category' => 0]);
+            }
+        };
+        $site = $another->get_site();
+        $CFG->debugsqltrace = 0;
+        $this->assertEquals(get_site(), $site);
+    }
+
     public function test_strtok() {
         // Strtok was previously used by bound emulation, make sure it is not used any more.
         $DB = $this->tdb;

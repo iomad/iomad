@@ -41,6 +41,9 @@ class secondary extends view {
     /** @var navigation_node The course overflow node. */
     protected $courseoverflownode = null;
 
+    /** @var string The key of the node to set as selected in the course overflow menu, if explicitly set by a page. */
+    protected $overflowselected = null;
+
     /**
      * Defines the default structure for the secondary nav in a course context.
      *
@@ -299,17 +302,15 @@ class secondary extends view {
      * @return navigation_node The node intact with an action to use.
      */
     protected function get_first_action_for_node(navigation_node $node): ?navigation_node {
-        // If the node does not have children OR has an action no further processing needed.
+        // If the node does not have children and has no action then no further processing is needed.
         $newnode = null;
-        if ($node->has_children()) {
-            if (!$node->has_action()) {
-                // We want to find the first child with an action.
-                // We want to check all children on this level before going further down.
-                // Note that new node gets changed here.
-                $newnode = $this->get_node_with_first_action($node, $node);
-            } else {
-                $newnode = $node;
-            }
+        if ($node->has_children() && !$node->has_action()) {
+            // We want to find the first child with an action.
+            // We want to check all children on this level before going further down.
+            // Note that new node gets changed here.
+            $newnode = $this->get_node_with_first_action($node, $node);
+        } else if ($node->has_action()) {
+            $newnode = $node;
         }
         return $newnode;
     }
@@ -426,9 +427,12 @@ class secondary extends view {
         $overflownode = $this->get_course_overflow_nodes($rootnode);
         if (!is_null($overflownode)) {
             $actionnode = $this->get_first_action_for_node($overflownode);
-            // All additional nodes will be available under the 'Course reuse' page.
-            $text = get_string('coursereuse');
-            $rootnode->add($text, $actionnode->action, navigation_node::TYPE_COURSE, null, 'coursereuse', new \pix_icon('t/edit', $text));
+            if ($actionnode) {
+                // All additional nodes will be available under the 'Course reuse' page.
+                $text = get_string('coursereuse');
+                $rootnode->add($text, $actionnode->action, navigation_node::TYPE_COURSE, null, 'coursereuse',
+                    new \pix_icon('t/edit', $text));
+            }
         }
 
         // Add the respective first node, provided there are other nodes included.
@@ -522,6 +526,55 @@ class secondary extends view {
     }
 
     /**
+     * Recursively search a node and its children for a node matching the key string $key.
+     *
+     * @param navigation_node $node the navigation node to check.
+     * @param string $key the key of the node to match.
+     * @return navigation_node|null node if found, otherwise null.
+     */
+    protected function node_matches_key_string(navigation_node $node, string $key): ?navigation_node {
+        if ($node->has_action()) {
+            // Check this node first.
+            if ($node->key == $key) {
+                return $node;
+            }
+        }
+        if ($node->has_children()) {
+            foreach ($node->children as $child) {
+                $result = $this->node_matches_key_string($child, $key);
+                if ($result) {
+                    return $result;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Force a specific node in the 'coursereuse' course overflow to be selected, based on the provided node key.
+     *
+     * Normally, the selected node is determined by matching the page URL to the node URL. E.g. The page 'backup/restorefile.php'
+     * will match the "Restore" node which has a registered URL of 'backup/restorefile.php' because the URLs match.
+     *
+     * This method allows a page to choose a specific node to match, which is useful in cases where the page knows its URL won't
+     * match the node it needs to reside under. I.e. this permits several pages to 'share' the same overflow node. When the page
+     * knows the PAGE->url won't match the node URL, the page can simply say "I want to match the 'XXX' node".
+     *
+     * E.g.
+     * - The $PAGE->url is 'backup/restore.php' (this page is used during restores but isn't the main landing page for a restore)
+     * - The 'Restore' node in the overflow has a key of 'restore' and will only match 'backup/restorefile.php' by default (the
+     * main restore landing page).
+     * - The backup/restore.php page calls:
+     * $PAGE->secondarynav->set_overflow_selected_node(new moodle_url('restore');
+     * and when the page is loaded, the 'Restore' node be presented as the selected node.
+     *
+     * @param string $nodekey The string key of the overflow node to match.
+     */
+    public function set_overflow_selected_node(string $nodekey): void {
+        $this->overflowselected = $nodekey;
+    }
+
+    /**
      * Returns a url_select object with overflow navigation nodes.
      * This looks to see if the current page is within the course administration, or some other page that requires an overflow
      * select object.
@@ -577,7 +630,13 @@ class secondary extends view {
                     return null;
                 }
             }
-            $menuselect = new url_select($menuarray, $this->page->url, null);
+            // If the page has explicitly set the overflow node it would like selected, find and use that node.
+            if ($this->overflowselected) {
+                $selectedoverflownode = $this->node_matches_key_string($courseoverflownode, $this->overflowselected);
+                $selectedoverflownodeurl = $selectedoverflownode ? $selectedoverflownode->action->out(false) : null;
+            }
+
+            $menuselect = new url_select($menuarray, $selectedoverflownodeurl ?? $this->page->url, null);
             $menuselect->set_label(get_string('browsecourseadminindex', 'course'), ['class' => 'sr-only']);
             return $menuselect;
         } else {
@@ -1030,7 +1089,10 @@ class secondary extends view {
         //  IOMAD - Only remove it if it exists in the navigation node.
         if ($coursesecondarynode->find('coursename', self::TYPE_COURSE)) {
             // Remove the unnecessary 'Course' child node generated in load_course_navigation().
-            $coursesecondarynode->find('coursehome', self::TYPE_COURSE)->remove();
+            $coursehomenode = $coursesecondarynode->find('coursehome', self::TYPE_COURSE);
+            if (!empty($coursehomenode)) {
+                $coursehomenode->remove();
+            }
         }
 
         // Add the 'Course' node to the secondary navigation only if this node has children nodes.

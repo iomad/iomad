@@ -889,9 +889,6 @@ abstract class moodle_database {
         // convert table names
         $sql = $this->fix_table_names($sql);
 
-        // Optionally add debug trace to sql as a comment.
-        $sql = $this->add_sql_debugging($sql);
-
         // cast booleans to 1/0 int and detect forbidden objects
         foreach ($params as $key => $value) {
             $this->detect_objects($value);
@@ -902,6 +899,9 @@ abstract class moodle_database {
         $named_count = preg_match_all('/(?<!:):[a-z][a-z0-9_]*/', $sql, $named_matches); // :: used in pgsql casts
         $dollar_count = preg_match_all('/\$[1-9][0-9]*/', $sql, $dollar_matches);
         $q_count     = substr_count($sql, '?');
+
+        // Optionally add debug trace to sql as a comment.
+        $sql = $this->add_sql_debugging($sql);
 
         $count = 0;
 
@@ -2480,6 +2480,30 @@ abstract class moodle_database {
      * @return string or empty if not supported
      */
     public function sql_regex($positivematch = true, $casesensitive = false) {
+        return '';
+    }
+
+    /**
+     * Returns the word-beginning boundary marker if this database driver supports regex syntax when searching.
+     * @return string The word-beginning boundary marker. Otherwise, an empty string.
+     */
+    public function sql_regex_get_word_beginning_boundary_marker() {
+        if ($this->sql_regex_supported()) {
+            return '[[:<:]]';
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns the word-end boundary marker if this database driver supports regex syntax when searching.
+     * @return string The word-end boundary marker. Otherwise, an empty string.
+     */
+    public function sql_regex_get_word_end_boundary_marker() {
+        if ($this->sql_regex_supported()) {
+            return '[[:>:]]';
+        }
+
         return '';
     }
 

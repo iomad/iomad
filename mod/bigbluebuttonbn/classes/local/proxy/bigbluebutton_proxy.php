@@ -47,6 +47,7 @@ class bigbluebutton_proxy extends proxy_base {
      * @param string $username
      * @param string $pw
      * @param string $logouturl
+     * @param string $role
      * @param string|null $configtoken
      * @param string|null $userid
      * @param string|null $createtime
@@ -58,6 +59,7 @@ class bigbluebutton_proxy extends proxy_base {
         string $username,
         string $pw,
         string $logouturl,
+        string $role,
         string $configtoken = null,
         string $userid = null,
         string $createtime = null
@@ -67,6 +69,7 @@ class bigbluebutton_proxy extends proxy_base {
             'fullName' => $username,
             'password' => $pw,
             'logoutURL' => $logouturl,
+            'role' => $role
         ];
 
         if (!is_null($configtoken)) {
@@ -239,10 +242,12 @@ class bigbluebutton_proxy extends proxy_base {
 
         $bbbcompletion = new custom_completion($cm, $userid);
         if ($bbbcompletion->get_overall_completion_state()) {
-            mtrace("Completion succeeded for user $userid");
+            mtrace("Completion for userid $userid and bigbluebuttonid {$bigbluebuttonbn->id} updated.");
             $completion->update_state($cm, COMPLETION_COMPLETE, $userid, true);
         } else {
-            mtrace("Completion did not succeed for user $userid");
+            // Still update state to current value (prevent unwanted caching).
+            $completion->update_state($cm, COMPLETION_UNKNOWN, $userid);
+            mtrace("Activity not completed for userid $userid and bigbluebuttonid {$bigbluebuttonbn->id}.");
         }
     }
 
@@ -263,7 +268,7 @@ class bigbluebutton_proxy extends proxy_base {
                 'id' => instance::TYPE_ROOM_ONLY,
                 'name' => get_string('instance_type_room_only', 'bigbluebuttonbn'),
                 'features' => ['showroom', 'welcomemessage', 'voicebridge', 'waitformoderator', 'userlimit',
-                    'recording', 'sendnotifications', 'preuploadpresentation', 'permissions', 'schedule', 'groups',
+                    'recording', 'sendnotifications', 'lock', 'preuploadpresentation', 'permissions', 'schedule', 'groups',
                     'modstandardelshdr', 'availabilityconditionsheader', 'tagshdr', 'competenciessection',
                     'completionattendance', 'completionengagement', 'availabilityconditionsheader']
             ],
@@ -389,7 +394,7 @@ class bigbluebutton_proxy extends proxy_base {
      */
     public static function get_server_not_available_url(instance $instance): string {
         if ($instance->is_admin()) {
-            return new moodle_url('/admin/settings.php', ['section' => 'mod_bigbluebuttonbn_general']);
+            return new moodle_url('/admin/settings.php', ['section' => 'modsettingbigbluebuttonbn']);
         } else if ($instance->is_moderator()) {
             return new moodle_url('/course/view.php', ['id' => $instance->get_course_id()]);
         } else {
