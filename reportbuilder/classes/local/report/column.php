@@ -94,6 +94,9 @@ final class column {
     /** @var bool $issortable Used to indicate if a column is sortable */
     private $issortable = false;
 
+    /** @var array $sortfields Fields to sort the column by */
+    private $sortfields = [];
+
     /** @var array $attributes */
     private $attributes = [];
 
@@ -475,7 +478,9 @@ final class column {
      * The callback should implement the following signature (where $value is the first column field, $row is all column
      * fields, and $additionalarguments are those passed on from this method):
      *
-     * The type of the $value parameter passed to the callback is determined by calling {@see set_type}
+     * The type of the $value parameter passed to the callback is determined by calling {@see set_type}, this type is preserved
+     * if the column is part of a report source and is being aggregated.
+     * For entities that can to be left joined to a report, the first argument to their column callbacks must be nullable.
      *
      * function($value, stdClass $row[, $additionalarguments]): string
      *
@@ -567,10 +572,13 @@ final class column {
      * Sets the column as sortable
      *
      * @param bool $issortable
+     * @param array $sortfields Define the fields that should be used when the column is sorted, typically a subset of the fields
+     *      selected for the column, via {@see add_field}. If omitted then the first selected field is used
      * @return self
      */
-    public function set_is_sortable(bool $issortable): self {
+    public function set_is_sortable(bool $issortable, array $sortfields = []): self {
         $this->issortable = $issortable;
+        $this->sortfields = $sortfields;
         return $this;
     }
 
@@ -587,6 +595,33 @@ final class column {
         }
 
         return $this->issortable;
+    }
+
+    /**
+     * Return fields to use for sorting of the column, where available the field aliases will be returned
+     *
+     * @return array
+     */
+    public function get_sort_fields(): array {
+        $fieldsalias = $this->get_fields_sql_alias();
+
+        return array_map(static function(string $sortfield) use ($fieldsalias): string {
+
+            // Check whether sortfield refers to a defined field alias.
+            if (array_key_exists($sortfield, $fieldsalias)) {
+                return $fieldsalias[$sortfield]['alias'];
+            }
+
+            // Check whether sortfield refers to field SQL.
+            foreach ($fieldsalias as $field) {
+                if (strcasecmp($sortfield, $field['sql']) === 0) {
+                    $sortfield = $field['alias'];
+                    break;
+                }
+            }
+
+            return $sortfield;
+        }, $this->sortfields);
     }
 
     /**
@@ -610,13 +645,17 @@ final class column {
      * Return the default column value, that being the value of it's first field
      *
      * @param array $values
+     * @param int $columntype
      * @return mixed
      */
-    private function get_default_value(array $values) {
+    public static function get_default_value(array $values, int $columntype) {
         $value = reset($values);
+        if ($value === null) {
+            return $value;
+        }
 
         // Ensure default value is cast to it's strict type.
-        switch ($this->get_type()) {
+        switch ($columntype) {
             case self::TYPE_INTEGER:
             case self::TYPE_TIMESTAMP:
                 $value = (int) $value;
@@ -640,11 +679,11 @@ final class column {
      */
     public function format_value(array $row) {
         $values = $this->get_values($row);
-        $value = $this->get_default_value($values);
+        $value = self::get_default_value($values, $this->type);
 
         // If column is being aggregated then defer formatting to them, otherwise loop through all column callbacks.
         if (!empty($this->aggregation)) {
-            $value = $this->aggregation::format_value($value, $values, $this->callbacks);
+            $value = $this->aggregation::format_value($value, $values, $this->callbacks, $this->type);
         } else {
             foreach ($this->callbacks as $callback) {
                 [$callable, $arguments] = $callback;

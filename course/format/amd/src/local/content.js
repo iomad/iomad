@@ -31,6 +31,8 @@ import CmItem from 'core_courseformat/local/content/section/cmitem';
 import courseActions from 'core_course/actions';
 import DispatchActions from 'core_courseformat/local/content/actions';
 import * as CourseEvents from 'core_course/events';
+// The jQuery module is only used for interacting with Boostrap 4. It can we removed when MDL-71979 is integrated.
+import jQuery from 'jquery';
 
 export default class Component extends BaseComponent {
 
@@ -49,6 +51,7 @@ export default class Component extends BaseComponent {
             SECTION_CMLIST: `[data-for='cmlist']`,
             COURSE_SECTIONLIST: `[data-for='course_sectionlist']`,
             CM: `[data-for='cmitem']`,
+            PAGE: `#page`,
             TOGGLER: `[data-action="togglecoursecontentsection"]`,
             COLLAPSE: `[data-toggle="collapse"]`,
             TOGGLEALL: `[data-toggle="toggleall"]`,
@@ -104,7 +107,19 @@ export default class Component extends BaseComponent {
         // Collapse/Expand all sections button.
         const toogleAll = this.getElement(this.selectors.TOGGLEALL);
         if (toogleAll) {
+
+            // Ensure collapse menu button adds aria-controls attribute referring to each collapsible element.
+            const collapseElements = this.getElements(this.selectors.COLLAPSE);
+            const collapseElementIds = [...collapseElements].map(element => element.id);
+            toogleAll.setAttribute('aria-controls', collapseElementIds.join(' '));
+
             this.addEventListener(toogleAll, 'click', this._allSectionToggler);
+            this.addEventListener(toogleAll, 'keydown', e => {
+                // Collapse/expand all sections when Space key is pressed on the toggle button.
+                if (e.key === ' ') {
+                    this._allSectionToggler(e);
+                }
+            });
             this._refreshAllSectionsToggler(state);
         }
 
@@ -123,6 +138,13 @@ export default class Component extends BaseComponent {
             this.element,
             CourseEvents.manualCompletionToggled,
             this._completionHandler
+        );
+
+        // Capture page scroll to update page item.
+        this.addEventListener(
+            document.querySelector(this.selectors.PAGE),
+            "scroll",
+            this._scrollHandler
         );
     }
 
@@ -148,11 +170,9 @@ export default class Component extends BaseComponent {
                 // Update the state.
                 const sectionId = section.getAttribute('data-id');
                 this.reactive.dispatch(
-                    'sectionPreferences',
+                    'sectionContentCollapsed',
                     [sectionId],
-                    {
-                        contentexpanded: isCollapsed,
-                    },
+                    !isCollapsed
                 );
             }
         }
@@ -174,11 +194,9 @@ export default class Component extends BaseComponent {
 
         const course = this.reactive.get('course');
         this.reactive.dispatch(
-            'sectionPreferences',
+            'sectionContentCollapsed',
             course.sectionlist ?? [],
-            {
-                contentexpanded: isAllCollapsed,
-            }
+            !isAllCollapsed
         );
     }
 
@@ -199,10 +217,11 @@ export default class Component extends BaseComponent {
         return [
             // State changes that require to reload some course modules.
             {watch: `cm.visible:updated`, handler: this._reloadCm},
+            {watch: `cm.stealth:updated`, handler: this._reloadCm},
             // Update section number and title.
             {watch: `section.number:updated`, handler: this._refreshSectionNumber},
             // Collapse and expand sections.
-            {watch: `section.contentexpanded:updated`, handler: this._refreshSectionCollapsed},
+            {watch: `section.contentcollapsed:updated`, handler: this._refreshSectionCollapsed},
             // Sections and cm sorting.
             {watch: `transaction:start`, handler: this._startProcessing},
             {watch: `course.sectionlist:updated`, handler: this._refreshCourseSectionlist},
@@ -216,7 +235,10 @@ export default class Component extends BaseComponent {
     }
 
     /**
-     * Update section collapsed.
+     * Update section collapsed state via bootstrap 4 if necessary.
+     *
+     * Formats that do not use bootstrap 4 must override this method in order to keep the section
+     * toggling working.
      *
      * @param {object} args
      * @param {Object} args.state The state data
@@ -231,8 +253,21 @@ export default class Component extends BaseComponent {
         const toggler = target.querySelector(this.selectors.COLLAPSE);
         const isCollapsed = toggler?.classList.contains(this.classes.COLLAPSED) ?? false;
 
-        if (element.contentexpanded === isCollapsed) {
-            toggler.click();
+        if (element.contentcollapsed !== isCollapsed) {
+            let collapsibleId = toggler.dataset.target ?? toggler.getAttribute("href");
+            if (!collapsibleId) {
+                return;
+            }
+            collapsibleId = collapsibleId.replace('#', '');
+            const collapsible = document.getElementById(collapsibleId);
+            if (!collapsible) {
+                return;
+            }
+
+            // Course index is based on Bootstrap 4 collapsibles. To collapse them we need jQuery to
+            // interact with collapsibles methods. Hopefully, this will change in Bootstrap 5 because
+            // it does not require jQuery anymore (when MDL-71979 is integrated).
+            jQuery(collapsible).collapse(element.contentcollapsed ? 'hide' : 'show');
         }
 
         this._refreshAllSectionsToggler(state);
@@ -253,15 +288,17 @@ export default class Component extends BaseComponent {
         let allexpanded = true;
         state.section.forEach(
             section => {
-                allcollapsed = allcollapsed && !section.contentexpanded;
-                allexpanded = allexpanded && section.contentexpanded;
+                allcollapsed = allcollapsed && section.contentcollapsed;
+                allexpanded = allexpanded && !section.contentcollapsed;
             }
         );
         if (allcollapsed) {
             target.classList.add(this.classes.COLLAPSED);
+            target.setAttribute('aria-expanded', false);
         }
         if (allexpanded) {
             target.classList.remove(this.classes.COLLAPSED);
+            target.setAttribute('aria-expanded', true);
         }
     }
 
@@ -289,6 +326,33 @@ export default class Component extends BaseComponent {
             return;
         }
         this.reactive.dispatch('cmCompletion', [detail.cmid], detail.completed);
+    }
+
+    /**
+     * Check the current page scroll and update the active element if necessary.
+     */
+    _scrollHandler() {
+        const pageOffset = document.querySelector(this.selectors.PAGE).scrollTop;
+        const items = this.reactive.getExporter().allItemsArray(this.reactive.state);
+        // Check what is the active element now.
+        let pageItem = null;
+        items.every(item => {
+            const index = (item.type === 'section') ? this.sections : this.cms;
+            if (index[item.id] === undefined) {
+                return true;
+            }
+
+            const element = index[item.id].element;
+            // Activities without url can only be page items in edit mode.
+            if (item.type === 'cm' && !item.url && !this.reactive.isEditing) {
+                return pageOffset >= element.offsetTop;
+            }
+            pageItem = item;
+            return pageOffset >= element.offsetTop;
+        });
+        if (pageItem) {
+            this.reactive.dispatch('setPageItem', pageItem.type, pageItem.id);
+        }
     }
 
     /**

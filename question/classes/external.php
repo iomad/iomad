@@ -166,14 +166,14 @@ class core_question_external extends external_api {
                 FROM {question} q
                 JOIN {question_categories} qc ON qc.id = q.category
                 WHERE q.id = ?', [$questionid])) {
-            print_error('questiondoesnotexist', 'question');
+            throw new \moodle_exception('questiondoesnotexist', 'question');
         }
 
         require_once($CFG->libdir . '/questionlib.php');
 
         $cantag = question_has_capability_on($question, 'tag');
         $questioncontext = \context::instance_by_id($question->contextid);
-        $contexts = new \question_edit_contexts($editingcontext);
+        $contexts = new \core_question\local\bank\question_edit_contexts($editingcontext);
 
         $formoptions = [
             'editingcontext' => $editingcontext,
@@ -300,7 +300,7 @@ class core_question_external extends external_api {
 
         $categorycontextid = $DB->get_field('question_categories', 'contextid', ['id' => $categoryid], MUST_EXIST);
         $categorycontext = \context::instance_by_id($categorycontextid);
-        $editcontexts = new \question_edit_contexts($categorycontext);
+        $editcontexts = new \core_question\local\bank\question_edit_contexts($categorycontext);
         // The user must be able to view all questions in the category that they are requesting.
         $editcontexts->require_cap('moodle/question:viewall');
 

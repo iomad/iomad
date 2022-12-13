@@ -26,7 +26,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/lib.php');
+require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
 require_once($CFG->libdir . '/filelib.php');
+require_once($CFG->dirroot . '/mod/quiz/accessmanager.php');
 
 /**
  * Takes an array of objects and constructs a multidimensional array keyed by
@@ -89,32 +91,34 @@ function quiz_has_questions($quizid) {
 /**
  * Get the slots of real questions (not descriptions) in this quiz, in order.
  * @param object $quiz the quiz.
- * @return array of slot => $question object with fields
- *      ->slot, ->id, ->maxmark, ->number, ->length.
+ * @return array of slot => objects with fields
+ *      ->slot, ->id, ->qtype, ->length, ->number, ->maxmark, ->category (for random questions).
  */
 function quiz_report_get_significant_questions($quiz) {
     global $DB;
+    $quizobj = \quiz::create($quiz->id);
+    $structure = \mod_quiz\structure::create_for_quiz($quizobj);
+    $slots = $structure->get_slots();
 
-    $qsbyslot = $DB->get_records_sql("
-            SELECT slot.slot,
-                   q.id,
-                   q.qtype,
-                   q.length,
-                   slot.maxmark
-
-              FROM {question} q
-              JOIN {quiz_slots} slot ON slot.questionid = q.id
-
-             WHERE slot.quizid = ?
-               AND q.length > 0
-
-          ORDER BY slot.slot", array($quiz->id));
-
+    $qsbyslot = [];
     $number = 1;
-    foreach ($qsbyslot as $question) {
-        $question->number = $number;
-        $number += $question->length;
-        $question->type = $question->qtype;
+    foreach ($slots as $slot) {
+        // Ignore 'questions' of zero length.
+        if ($slot->length == 0) {
+            continue;
+        }
+
+        $slotreport = new \stdClass();
+        $slotreport->slot = $slot->slot;
+        $slotreport->id = $slot->questionid;
+        $slotreport->qtype = $slot->qtype;
+        $slotreport->length = $slot->length;
+        $slotreport->number = $number;
+        $number += $slot->length;
+        $slotreport->maxmark = $slot->maxmark;
+        $slotreport->category = $slot->category;
+
+        $qsbyslot[$slotreport->slot] = $slotreport;
     }
 
     return $qsbyslot;

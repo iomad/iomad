@@ -22,12 +22,12 @@ use advanced_testcase;
 use coding_exception;
 use context_system;
 use lang_string;
-use ReflectionClass;
 use core_reportbuilder\course_entity_report;
 use core_reportbuilder\manager;
 use core_reportbuilder\testable_system_report_table;
 use core_reportbuilder\local\filters\boolean_select;
 use core_reportbuilder\local\filters\date;
+use core_reportbuilder\local\filters\tags;
 use core_reportbuilder\local\filters\text;
 use core_reportbuilder\local\filters\select;
 use core_reportbuilder\local\helpers\user_filter_manager;
@@ -77,6 +77,7 @@ class course_test extends advanced_testcase {
             'calendartype' => 'Gregorian',
             'theme' => 'afterburner',
             'lang' => 'en',
+            'tags' => ['dancing'],
         ]);
 
         $coursecategory2 = $this->getDataGenerator()->create_category();
@@ -172,6 +173,8 @@ class course_test extends advanced_testcase {
      * Test filtering report by course fields
      */
     public function test_filters(): void {
+        global $DB;
+
         $this->resetAfterTest();
 
         [$coursecategory1] = $this->generate_courses();
@@ -337,13 +340,9 @@ class course_test extends advanced_testcase {
     /**
      * Test entity table alias
      */
-    public function test_table_alias(): void {
+    public function test_get_table_alias(): void {
         $courseentity = new course();
-
         $this->assertEquals('c', $courseentity->get_table_alias('course'));
-
-        $courseentity->set_table_alias('course', 'newalias');
-        $this->assertEquals('newalias', $courseentity->get_table_alias('course'));
     }
 
     /**
@@ -359,6 +358,16 @@ class course_test extends advanced_testcase {
     }
 
     /**
+     * Test setting table alias
+     */
+    public function test_set_table_alias(): void {
+        $courseentity = new course();
+
+        $courseentity->set_table_alias('course', 'newalias');
+        $this->assertEquals('newalias', $courseentity->get_table_alias('course'));
+    }
+
+    /**
      * Test invalid entity set table alias
      */
     public function test_set_table_alias_invalid(): void {
@@ -367,6 +376,34 @@ class course_test extends advanced_testcase {
         $this->expectException(coding_exception::class);
         $this->expectExceptionMessage('Coding error detected, it must be fixed by a programmer: Invalid table name (nonexistent)');
         $courseentity->set_table_alias('nonexistent', 'newalias');
+    }
+
+    /**
+     * Test setting multiple table aliases
+     */
+    public function test_set_table_aliases(): void {
+        $courseentity = new course();
+
+        $courseentity->set_table_aliases([
+            'course' => 'newalias',
+            'context' => 'newalias2',
+        ]);
+        $this->assertEquals('newalias', $courseentity->get_table_alias('course'));
+        $this->assertEquals('newalias2', $courseentity->get_table_alias('context'));
+    }
+
+    /**
+     * Test setting multiple table aliases, containing an invalid table
+     */
+    public function test_set_table_aliases_invalid(): void {
+        $courseentity = new course();
+
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage('Coding error detected, it must be fixed by a programmer: Invalid table name (nonexistent)');
+        $courseentity->set_table_aliases([
+            'course' => 'newalias',
+            'nonexistent' => 'newalias2',
+        ]);
     }
 
     /**
@@ -415,13 +452,11 @@ class course_test extends advanced_testcase {
         $tablejoin = "JOIN {course} c2 ON c2.id = c1.id";
         $courseentity->add_join($tablejoin);
 
-        $method = (new ReflectionClass(course::class))->getMethod('get_joins');
-        $method->setAccessible(true);
-        $this->assertEquals([$tablejoin], $method->invoke($courseentity));
+        $this->assertEquals([$tablejoin], $courseentity->get_joins());
     }
 
     /**
-     * Test adding multiple join
+     * Test adding multiple joins
      */
     public function test_add_joins(): void {
         $courseentity = (new course())
@@ -433,9 +468,25 @@ class course_test extends advanced_testcase {
         ];
         $courseentity->add_joins($tablejoins);
 
-        $method = (new ReflectionClass(course::class))->getMethod('get_joins');
-        $method->setAccessible(true);
-        $this->assertEquals($tablejoins, $method->invoke($courseentity));
+        $this->assertEquals($tablejoins, $courseentity->get_joins());
+    }
+
+    /**
+     * Test adding duplicate joins
+     */
+    public function test_add_duplicate_joins(): void {
+        $courseentity = (new course())
+            ->set_table_alias('course', 'c1');
+
+        $tablejoins = [
+            "JOIN {course} c2 ON c2.id = c1.id",
+            "JOIN {course} c3 ON c3.id = c1.id",
+        ];
+        $courseentity
+            ->add_joins($tablejoins)
+            ->add_joins($tablejoins);
+
+        $this->assertEquals($tablejoins, $courseentity->get_joins());
     }
 
     /**

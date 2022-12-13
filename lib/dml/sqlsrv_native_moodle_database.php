@@ -306,12 +306,12 @@ class sqlsrv_native_moodle_database extends moodle_database {
     /**
      * Called before each db query.
      * @param string $sql
-     * @param array $params array of parameters
+     * @param array|null $params An array of parameters.
      * @param int $type type of query
      * @param mixed $extrainfo driver specific extra information
      * @return void
      */
-    protected function query_start($sql, array $params = null, $type, $extrainfo = null) {
+    protected function query_start($sql, ?array $params, $type, $extrainfo = null) {
         parent::query_start($sql, $params, $type, $extrainfo);
     }
 
@@ -978,10 +978,11 @@ class sqlsrv_native_moodle_database extends moodle_database {
         $results = array();
 
         foreach ($rs as $row) {
-            $id = reset($row);
+            $rowarray = (array)$row;
+            $id = reset($rowarray);
 
             if (isset($results[$id])) {
-                $colname = key($row);
+                $colname = key($rowarray);
                 debugging("Did you remember to make the first column something unique in your call to get_records? Duplicate value '$id' found in column '$colname'.", DEBUG_DEVELOPER);
             }
             $results[$id] = (object)$row;
@@ -1006,7 +1007,8 @@ class sqlsrv_native_moodle_database extends moodle_database {
         $results = array ();
 
         foreach ($rs as $row) {
-            $results[] = reset($row);
+            $rowarray = (array)$row;
+            $results[] = reset($rowarray);
         }
         $rs->close();
 

@@ -107,7 +107,7 @@ class lesson_override_form extends moodleform {
                 if (empty($groups)) {
                     // Generate an error.
                     $link = new moodle_url('/mod/lesson/overrides.php', array('cmid' => $cm->id));
-                    print_error('groupsnone', 'lesson', $link);
+                    throw new \moodle_exception('groupsnone', 'lesson', $link);
                 }
 
                 $groupchoices = array();
@@ -166,7 +166,7 @@ class lesson_override_form extends moodleform {
                 if (empty($users)) {
                     // Generate an error.
                     $link = new moodle_url('/mod/lesson/overrides.php', array('cmid' => $cm->id));
-                    print_error('usersnone', 'lesson', $link);
+                    throw new \moodle_exception('usersnone', 'lesson', $link);
                 }
 
                 $userchoices = array();
@@ -223,7 +223,7 @@ class lesson_override_form extends moodleform {
         $mform->setDefault('review', $this->lesson->review);
 
         // Number of attempts.
-        $numbers = array();
+        $numbers = ['0' => get_string('unlimited')];
         for ($i = 10; $i > 0; $i--) {
             $numbers[$i] = $i;
         }

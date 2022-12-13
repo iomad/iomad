@@ -98,12 +98,11 @@ class assign_override_form extends moodleform {
         $assigninstance = $this->assign->get_instance($userid);
         $inrelativedatesmode = !empty($this->assign->get_course()->relativedatesmode);
 
-        $mform->addElement('header', 'override', get_string('override', 'assign'));
-
         $assigngroupmode = groups_get_activity_groupmode($cm);
         $accessallgroups = ($assigngroupmode == NOGROUPS) || has_capability('moodle/site:accessallgroups', $this->context);
 
         if ($this->groupmode) {
+            $mform->addElement('header', 'override', get_string('groupoverrides', 'assign'));
             // Group override.
             if ($this->groupid) {
                 // There is already a groupid, so freeze the selector.
@@ -123,7 +122,7 @@ class assign_override_form extends moodleform {
                 if (empty($groups)) {
                     // Generate an error.
                     $link = new moodle_url('/mod/assign/overrides.php', array('cmid' => $cm->id));
-                    print_error('groupsnone', 'assign', $link);
+                    throw new \moodle_exception('groupsnone', 'assign', $link);
                 }
 
                 $groupchoices = array();
@@ -141,6 +140,7 @@ class assign_override_form extends moodleform {
                 $mform->addRule('groupid', get_string('required'), 'required', null, 'client');
             }
         } else {
+            $mform->addElement('header', 'override', get_string('useroverrides', 'assign'));
             // User override.
             if ($this->userid) {
                 // There is already a userid, so freeze the selector.
@@ -182,7 +182,7 @@ class assign_override_form extends moodleform {
                 if (empty($users)) {
                     // Generate an error.
                     $link = new moodle_url('/mod/assign/overrides.php', array('cmid' => $cm->id));
-                    print_error('usersnone', 'assign', $link);
+                    throw new \moodle_exception('usersnone', 'assign', $link);
                 }
 
                 $userchoices = array();

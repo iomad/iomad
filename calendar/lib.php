@@ -478,7 +478,7 @@ class calendar_event {
         if (empty($this->properties->id) || $this->properties->id < 1) {
             if ($checkcapability) {
                 if (!calendar_add_event_allowed($this->properties)) {
-                    print_error('nopermissiontoupdatecalendar');
+                    throw new \moodle_exception('nopermissiontoupdatecalendar');
                 }
             }
 
@@ -594,7 +594,7 @@ class calendar_event {
 
             if ($checkcapability) {
                 if (!calendar_edit_event_allowed($this->properties)) {
-                    print_error('nopermissiontoupdatecalendar');
+                    throw new \moodle_exception('nopermissiontoupdatecalendar');
                 }
             }
 
@@ -810,7 +810,7 @@ class calendar_event {
                     // First check the course is valid.
                     $course = $DB->get_record('course', array('id' => $properties->courseid));
                     if (!$course) {
-                        print_error('invalidcourse');
+                        throw new \moodle_exception('invalidcourse');
                     }
                     // Course context.
                     $this->editorcontext = $this->get_context();
@@ -2158,11 +2158,7 @@ function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, s
             } else if ($isvaliduser) {
                 $groupids = array();
                 foreach ($courseeventsfrom as $courseid => $course) {
-                    // If the user is an editing teacher in there.
-                    if (!empty($user->groupmember[$course->id])) {
-                        // We've already cached the users groups for this course so we can just use that.
-                        $groupids = array_merge($groupids, $user->groupmember[$course->id]);
-                    } else if ($course->groupmode != NOGROUPS || !$course->groupmodeforce) {
+                    if ($course->groupmode != NOGROUPS || !$course->groupmodeforce) {
                         // If this course has groups, show events from all of those related to the current user.
                         $coursegroups = groups_get_user_groups($course->id, $user->id);
                         $groupids = array_merge($groupids, $coursegroups['0']);
@@ -2182,6 +2178,24 @@ function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, s
 }
 
 /**
+ * Can current user manage a non user event in system context.
+ *
+ * @param calendar_event|stdClass $event event object
+ * @return boolean
+ */
+function calendar_can_manage_non_user_event_in_system($event) {
+    $sitecontext = \context_system::instance();
+    $isuserevent = $event->eventtype == 'user';
+    $canmanageentries = has_capability('moodle/calendar:manageentries', $sitecontext);
+    // If user has manageentries at site level and it's not user event, return true.
+    if ($canmanageentries && !$isuserevent) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Return the capability for viewing a calendar event.
  *
  * @param calendar_event $event event object
@@ -2195,10 +2209,7 @@ function calendar_view_event_allowed(calendar_event $event) {
         return true;
     }
 
-    // If a user can manage events at the site level they can see any event.
-    $sitecontext = \context_system::instance();
-    // If user has manageentries at site level, return true.
-    if (has_capability('moodle/calendar:manageentries', $sitecontext)) {
+    if (calendar_can_manage_non_user_event_in_system($event)) {
         return true;
     }
 
@@ -2254,11 +2265,7 @@ function calendar_view_event_allowed(calendar_event $event) {
 
         return can_access_course(get_course($event->courseid));
     } else if ($event->userid) {
-        if ($event->userid != $USER->id) {
-            // No-one can ever see another users events.
-            return false;
-        }
-        return true;
+        return calendar_can_manage_user_event($event);
     } else {
         throw new moodle_exception('unknown event type');
     }
@@ -2331,10 +2338,7 @@ function calendar_edit_event_allowed($event, $manualedit = false) {
         }
     }
 
-    $sitecontext = \context_system::instance();
-
-    // If user has manageentries at site level, return true.
-    if (has_capability('moodle/calendar:manageentries', $sitecontext)) {
+    if (calendar_can_manage_non_user_event_in_system($event)) {
         return true;
     }
 
@@ -2358,7 +2362,38 @@ function calendar_edit_event_allowed($event, $manualedit = false) {
         // If course is not set, but userid id set, it's a user event.
         return (has_capability('moodle/calendar:manageownentries', $event->context));
     } else if (!empty($event->userid)) {
-        return (has_capability('moodle/calendar:manageentries', $event->context));
+        return calendar_can_manage_user_event($event);
+    }
+
+    return false;
+}
+
+/**
+ * Can current user edit/delete/add an user event?
+ *
+ * @param calendar_event|stdClass $event event object
+ * @return bool
+ */
+function calendar_can_manage_user_event($event): bool {
+    global $USER;
+
+    if (!($event instanceof \calendar_event)) {
+        $event = new \calendar_event(clone($event));
+    }
+
+    $canmanage = has_capability('moodle/calendar:manageentries', $event->context);
+    $canmanageown = has_capability('moodle/calendar:manageownentries', $event->context);
+    $ismyevent = $event->userid == $USER->id;
+    $isadminevent = is_siteadmin($event->userid);
+
+    if ($canmanageown && $ismyevent) {
+        return true;
+    }
+
+    // In site context, user must have login and calendar:manageentries permissions
+    // ... to manage other user's events except admin users.
+    if ($canmanage && !$isadminevent) {
+        return true;
     }
 
     return false;
@@ -2410,7 +2445,7 @@ function calendar_get_default_courses($courseid = null, $fields = '*', $canmanag
 
         $courses = get_courses('all', 'c.shortname', implode(',', $prefixedfields));
     } else {
-        $courses = enrol_get_users_courses($userid, true, $fields);
+        $courses = enrol_get_users_courses($userid, true, $fields, 'c.shortname');
     }
 
     if ($courseid && $courseid != SITEID) {
@@ -2513,6 +2548,25 @@ function calendar_format_event_time($event, $now, $linkparams = null, $usecommon
     }
 
     return $eventtime;
+}
+
+/**
+ * Format event location property
+ *
+ * @param calendar_event $event
+ * @return string
+ */
+function calendar_format_event_location(calendar_event $event): string {
+    $location = format_text($event->location, FORMAT_PLAIN, ['context' => $event->context]);
+
+    // If it looks like a link, convert it to one.
+    if (preg_match('/^https?:\/\//i', $location) && clean_param($location, PARAM_URL)) {
+        $location = \html_writer::link($location, $location, [
+            'title' => get_string('eventnamelocation', 'core_calendar', ['name' => $event->name, 'location' => $location]),
+        ]);
+    }
+
+    return $location;
 }
 
 /**
@@ -2670,10 +2724,7 @@ function calendar_add_event_allowed($event) {
         return false;
     }
 
-    $sitecontext = \context_system::instance();
-
-    // If user has manageentries at site level, always return true.
-    if (has_capability('moodle/calendar:manageentries', $sitecontext)) {
+    if (calendar_can_manage_non_user_event_in_system($event)) {
         return true;
     }
 
@@ -2692,10 +2743,7 @@ function calendar_add_event_allowed($event) {
                     (has_capability('moodle/calendar:managegroupentries', $event->context)
                         && groups_is_member($event->groupid)));
         case 'user':
-            if ($event->userid == $USER->id) {
-                return (has_capability('moodle/calendar:manageownentries', $event->context));
-            }
-        // There is intentionally no 'break'.
+            return calendar_can_manage_user_event($event);
         case 'site':
             return has_capability('moodle/calendar:manageentries', $event->context);
         default:
@@ -2827,7 +2875,7 @@ function calendar_add_subscription($sub) {
             return $sub->id;
         }
     } else {
-        print_error('errorbadsubscription', 'importcalendar');
+        throw new \moodle_exception('errorbadsubscription', 'importcalendar');
     }
 }
 
@@ -3043,11 +3091,21 @@ function calendar_import_events_from_ical(iCalendar $ical, int $subscriptionid =
         \core_php_time_limit::raise(300);
     }
 
+    // Start with a safe default timezone.
+    $timezone = 'UTC';
+
     // Grab the timezone from the iCalendar file to be used later.
     if (isset($ical->properties['X-WR-TIMEZONE'][0]->value)) {
         $timezone = $ical->properties['X-WR-TIMEZONE'][0]->value;
-    } else {
-        $timezone = 'UTC';
+
+    } else if (isset($ical->properties['PRODID'][0]->value)) {
+        // If the timezone was not found, check to se if this is MS exchange / Office 365 which uses Windows timezones.
+        if (strncmp($ical->properties['PRODID'][0]->value, 'Microsoft', 9) == 0) {
+            if (isset($ical->components['VTIMEZONE'][0]->properties['TZID'][0]->value)) {
+                $tzname = $ical->components['VTIMEZONE'][0]->properties['TZID'][0]->value;
+                $timezone = IntlTimeZone::getIDForWindowsID($tzname);
+            }
+        }
     }
 
     $icaluuids = [];
@@ -3571,7 +3629,7 @@ function calendar_output_fragment_event_form($args) {
         $event = calendar_event::load($eventid);
 
         if (!calendar_edit_event_allowed($event)) {
-            print_error('nopermissiontoupdatecalendar');
+            throw new \moodle_exception('nopermissiontoupdatecalendar');
         }
 
         $mapper = new \core_calendar\local\event\mappers\create_update_form_mapper();

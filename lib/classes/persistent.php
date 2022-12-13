@@ -274,12 +274,13 @@ abstract class persistent {
     final public static function properties_definition() {
         global $CFG;
 
-        static $def = null;
-        if ($def !== null) {
-            return $def;
+        static $cachedef = [];
+        if (isset($cachedef[static::class])) {
+            return $cachedef[static::class];
         }
 
-        $def = static::define_properties();
+        $cachedef[static::class] = static::define_properties();
+        $def = &$cachedef[static::class];
         $def['id'] = array(
             'default' => 0,
             'type' => PARAM_INT,
@@ -853,12 +854,14 @@ abstract class persistent {
      * Load a single record.
      *
      * @param array $filters Filters to apply.
+     * @param int $strictness Similar to the internal DB get_record call, indicate whether a missing record should be
+     *      ignored/return false ({@see IGNORE_MISSING}) or should cause an exception to be thrown ({@see MUST_EXIST})
      * @return false|static
      */
-    public static function get_record($filters = array()) {
+    public static function get_record(array $filters = [], int $strictness = IGNORE_MISSING) {
         global $DB;
 
-        $record = $DB->get_record(static::TABLE, $filters);
+        $record = $DB->get_record(static::TABLE, $filters, '*', $strictness);
         return $record ? new static(0, $record) : false;
     }
 

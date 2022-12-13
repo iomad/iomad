@@ -29,7 +29,7 @@ require_once("locallib.php");
 $id = required_param('id', PARAM_INT);
 $PAGE->set_url('/mod/quiz/index.php', array('id'=>$id));
 if (!$course = $DB->get_record('course', array('id' => $id))) {
-    print_error('invalidcourseid');
+    throw new \moodle_exception('invalidcourseid');
 }
 $coursecontext = context_course::instance($id);
 require_login($course);
@@ -47,10 +47,7 @@ $PAGE->navbar->add($strquizzes);
 $PAGE->set_title($strquizzes);
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
-
-if (!$PAGE->has_secondary_navigation()) {
-    echo $OUTPUT->heading($strquizzes, 2);
-}
+echo $OUTPUT->heading($strquizzes, 2);
 
 // Get all the appropriate data.
 if (!$quizzes = get_all_instances_in_course("quiz", $course)) {

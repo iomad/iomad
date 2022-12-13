@@ -114,7 +114,7 @@ require_once($CFG->libdir.'/messagelib.php');
 // Add classes, traits, and interfaces which should be autoloaded.
 // The autoloader is configured late in setup.php, after ABORT_AFTER_CONFIG.
 // This is also required where the setup system is not included at all.
-require_once($CFG->dirroot.'/admin/classes/local/settings/linkable_settings_page.php');
+require_once($CFG->dirroot.'/'.$CFG->admin.'/classes/local/settings/linkable_settings_page.php');
 
 define('INSECURE_DATAROOT_WARNING', 1);
 define('INSECURE_DATAROOT_ERROR', 2);
@@ -4010,7 +4010,9 @@ class admin_setting_configduration extends admin_setting {
             return '';
         }
 
-        $seconds = (int)($data['v']*$data['u']);
+        $unit = (int)$data['u'];
+        $value = (int)$data['v'];
+        $seconds = $value * $unit;
 
         // Validate the new setting.
         $error = $this->validate_setting($seconds);
@@ -4837,6 +4839,29 @@ class admin_setting_sitesettext extends admin_setting_configtext {
     }
 }
 
+
+/**
+ * This type of field should be used for mandatory config settings.
+ *
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class admin_setting_requiredtext extends admin_setting_configtext {
+
+    /**
+     * Validate data before storage.
+     *
+     * @param string $data The string to be validated.
+     * @return bool|string true for success or error string if invalid.
+     */
+    public function validate($data) {
+        $cleaned = clean_param($data, PARAM_TEXT);
+        if ($cleaned === '') {
+            return get_string('required');
+        }
+
+        return parent::validate($data);
+    }
+}
 
 /**
  * Special text editor for site description.
@@ -7575,98 +7600,6 @@ class admin_setting_manageantiviruses extends admin_setting {
 }
 
 /**
- * Special class for license administration.
- *
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @deprecated since Moodle 3.9 MDL-45184. Please use \tool_licensemanager\manager instead.
- * @todo MDL-45184 This class will be deleted in Moodle 4.1.
- */
-class admin_setting_managelicenses extends admin_setting {
-    /**
-     * @deprecated since Moodle 3.9 MDL-45184. Please use \tool_licensemanager\manager instead.
-     * @todo MDL-45184 This class will be deleted in Moodle 4.1
-     */
-    public function __construct() {
-        global $ADMIN;
-
-        debugging('admin_setting_managelicenses class is deprecated. Please use \tool_licensemanager\manager instead.',
-            DEBUG_DEVELOPER);
-
-        // Replace admin setting load with new external page load for tool_licensemanager, if not loaded already.
-        if (!is_null($ADMIN->locate('licensemanager'))) {
-            $temp = new admin_externalpage('licensemanager',
-                get_string('licensemanager', 'tool_licensemanager'),
-                \tool_licensemanager\helper::get_licensemanager_url());
-
-            $ADMIN->add('license', $temp);
-        }
-    }
-
-    /**
-     * Always returns true, does nothing
-     *
-     * @deprecated since Moodle 3.9 MDL-45184.
-     * @todo MDL-45184 This method will be deleted in Moodle 4.1
-     *
-     * @return true
-     */
-    public function get_setting() {
-        debugging('admin_setting_managelicenses class is deprecated. Please use \tool_licensemanager\manager instead.',
-            DEBUG_DEVELOPER);
-
-        return true;
-    }
-
-    /**
-     * Always returns true, does nothing
-     *
-     * @deprecated since Moodle 3.9 MDL-45184.
-     * @todo MDL-45184 This method will be deleted in Moodle 4.1
-     *
-     * @return true
-     */
-    public function get_defaultsetting() {
-        debugging('admin_setting_managelicenses class is deprecated. Please use \tool_licensemanager\manager instead.',
-            DEBUG_DEVELOPER);
-
-        return true;
-    }
-
-    /**
-     * Always returns '', does not write anything
-     *
-     * @deprecated since Moodle 3.9 MDL-45184.
-     * @todo MDL-45184 This method will be deleted in Moodle 4.1
-     *
-     * @return string Always returns ''
-     */
-    public function write_setting($data) {
-        debugging('admin_setting_managelicenses class is deprecated. Please use \tool_licensemanager\manager instead.',
-            DEBUG_DEVELOPER);
-
-        // do not write any setting
-        return '';
-    }
-
-    /**
-     * Builds the XHTML to display the control
-     *
-     * @deprecated since Moodle 3.9 MDL-45184. Please use \tool_licensemanager\manager instead.
-     * @todo MDL-45184 This method will be deleted in Moodle 4.1
-     *
-     * @param string $data Unused
-     * @param string $query
-     * @return string
-     */
-    public function output_html($data, $query='') {
-        debugging('admin_setting_managelicenses class is deprecated. Please use \tool_licensemanager\manager instead.',
-            DEBUG_DEVELOPER);
-
-        redirect(\tool_licensemanager\helper::get_licensemanager_url());
-    }
-}
-
-/**
  * Course formats manager. Allows to enable/disable formats and jump to settings
  */
 class admin_setting_manageformats extends admin_setting {
@@ -8755,6 +8688,7 @@ class admin_setting_managecontentbankcontenttypes extends admin_setting {
  *      page (e.g. admin/roles/allow.php, instead of admin/roles/manage.php, you can pass the alternate URL here.
  * @param array $options Additional options that can be specified for page setup.
  *      pagelayout - This option can be used to set a specific pagelyaout, admin is default.
+ *      nosearch - Do not display search bar
  */
 function admin_externalpage_setup($section, $extrabutton = '', array $extraurlparams = null, $actualurl = '', array $options = array()) {
     global $CFG, $PAGE, $USER, $SITE, $OUTPUT;
@@ -8776,21 +8710,22 @@ function admin_externalpage_setup($section, $extrabutton = '', array $extraurlpa
     $adminroot = admin_get_root(false, false); // settings not required for external pages
     $extpage = $adminroot->locate($section, true);
 
+    $hassiteconfig = has_capability('moodle/site:config', context_system::instance());
     if (empty($extpage) or !($extpage instanceof admin_externalpage)) {
         // The requested section isn't in the admin tree
         // It could be because the user has inadequate capapbilities or because the section doesn't exist
-        if (!has_capability('moodle/site:config', context_system::instance())) {
+        if (!$hassiteconfig) {
             // The requested section could depend on a different capability
             // but most likely the user has inadequate capabilities
-            print_error('accessdenied', 'admin');
+            throw new \moodle_exception('accessdenied', 'admin');
         } else {
-            print_error('sectionerror', 'admin', "$CFG->wwwroot/$CFG->admin/");
+            throw new \moodle_exception('sectionerror', 'admin', "$CFG->wwwroot/$CFG->admin/");
         }
     }
 
     // this eliminates our need to authenticate on the actual pages
     if (!$extpage->check_access()) {
-        print_error('accessdenied', 'admin');
+        throw new \moodle_exception('accessdenied', 'admin');
         die;
     }
 
@@ -8849,6 +8784,13 @@ function admin_externalpage_setup($section, $extrabutton = '', array $extraurlpa
 
     $PAGE->set_title("$SITE->shortname: " . implode(": ", $visiblepathtosection));
     $PAGE->set_heading($SITE->fullname);
+
+    if ($hassiteconfig && empty($options['nosearch'])) {
+        $PAGE->add_header_action($OUTPUT->render_from_template('core_admin/header_search_input', [
+            'action' => new moodle_url('/admin/search.php'),
+            'query' => $PAGE->url->get_param('query'),
+        ]));
+    }
 
     // prevent caching in nav block
     $PAGE->navigation->clear_cache();
@@ -9808,33 +9750,8 @@ class admin_setting_enablemobileservice extends admin_setting_configcheckbox {
 
              // Allow rest:use capability for authenticated user.
              $this->set_protocol_cap(true);
-
          } else {
-             //disable web service system if no other services are enabled
-             $otherenabledservices = $DB->get_records_select('external_services',
-                     'enabled = :enabled AND (shortname != :shortname OR shortname IS NULL)', array('enabled' => 1,
-                         'shortname' => MOODLE_OFFICIAL_MOBILE_SERVICE));
-             if (empty($otherenabledservices)) {
-                 set_config('enablewebservices', false);
-
-                 // Also disable REST server.
-                 $activeprotocols = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
-
-                 $protocolkey = array_search('rest', $activeprotocols);
-                 if ($protocolkey !== false) {
-                    unset($activeprotocols[$protocolkey]);
-                    $updateprotocol = true;
-                 }
-
-                 if ($updateprotocol) {
-                    set_config('webserviceprotocols', implode(',', $activeprotocols));
-                 }
-
-                 // Disallow rest:use capability for authenticated user.
-                 $this->set_protocol_cap(false);
-             }
-
-             //disable the mobile service
+             // Disable the mobile service.
              $mobileservice = $webservicemanager->get_external_service_by_shortname(MOODLE_OFFICIAL_MOBILE_SERVICE);
              $mobileservice->enabled = 0;
              $webservicemanager->update_external_service($mobileservice);
@@ -10175,7 +10092,7 @@ class admin_setting_webservicesoverview extends admin_setting {
 
         /// 8. Create token for the specific user
         $row = array();
-        $url = new moodle_url("/admin/webservice/tokens.php?sesskey=" . sesskey() . "&action=create");
+        $url = new moodle_url('/admin/webservice/tokens.php', ['action' => 'create']);
         $row[0] = "8. " . html_writer::tag('a', get_string('createtokenforuser', 'webservice'),
                         array('href' => $url));
         $row[1] = "";
@@ -10384,16 +10301,21 @@ class admin_setting_managewebserviceprotocols extends admin_setting {
         $strversion = get_string('version');
 
         $protocols_available = core_component::get_plugin_list('webservice');
-        $active_protocols = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
+        $activeprotocols = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
         ksort($protocols_available);
 
-        foreach ($active_protocols as $key=>$protocol) {
+        foreach ($activeprotocols as $key => $protocol) {
             if (empty($protocols_available[$protocol])) {
-                unset($active_protocols[$key]);
+                unset($activeprotocols[$key]);
             }
         }
 
         $return = $OUTPUT->heading(get_string('actwebserviceshhdr', 'webservice'), 3, 'main');
+        if (in_array('xmlrpc', $activeprotocols)) {
+            $notify = new \core\output\notification(get_string('xmlrpcwebserviceenabled', 'admin'),
+                \core\output\notification::NOTIFY_WARNING);
+            $return .= $OUTPUT->render($notify);
+        }
         $return .= $OUTPUT->box_start('generalbox webservicesui');
 
         $table = new html_table();
@@ -10415,7 +10337,7 @@ class admin_setting_managewebserviceprotocols extends admin_setting {
             $version = isset($plugin->version) ? $plugin->version : '';
 
             // hide/show link
-            if (in_array($protocol, $active_protocols)) {
+            if (in_array($protocol, $activeprotocols)) {
                 $hideshow = "<a href=\"$url&amp;action=disable&amp;webservice=$protocol\">";
                 $hideshow .= $OUTPUT->pix_icon('t/hide', $strdisable) . '</a>';
                 $displayname = "<span>$name</span>";
@@ -10748,7 +10670,7 @@ class admin_setting_configstoredfile extends admin_setting {
     }
 
     public function output_html($data, $query = '') {
-        global $PAGE, $CFG;
+        global $CFG;
 
         $options = $this->get_options();
         $id = $this->get_id();
@@ -10764,24 +10686,17 @@ class admin_setting_configstoredfile extends admin_setting {
         $fmoptions->mainfile       = $options['mainfile'];
         $fmoptions->maxbytes       = $options['maxbytes'];
         $fmoptions->maxfiles       = $options['maxfiles'];
-        $fmoptions->client_id      = uniqid();
-        $fmoptions->itemid         = $draftitemid;
         $fmoptions->subdirs        = $options['subdirs'];
-        $fmoptions->target         = $id;
         $fmoptions->accepted_types = $options['accepted_types'];
         $fmoptions->return_types   = $options['return_types'];
         $fmoptions->context        = $options['context'];
         $fmoptions->areamaxbytes   = $options['areamaxbytes'];
 
-        $fm = new form_filemanager($fmoptions);
-        $output = $PAGE->get_renderer('core', 'files');
-        $html = $output->render($fm);
-
-        $html .= '<input value="'.$draftitemid.'" name="'.$elname.'" type="hidden" />';
-        $html .= '<input value="" id="'.$id.'" type="hidden" />';
+        $fm = new MoodleQuickForm_filemanager($elname, $this->visiblename, ['id' => $id], $fmoptions);
+        $fm->setValue($draftitemid);
 
         return format_admin_setting($this, $this->visiblename,
-            '<div class="form-filemanager" data-fieldtype="filemanager">'.$html.'</div>',
+            '<div class="form-filemanager" data-fieldtype="filemanager">' . $fm->toHtml() . '</div>',
             $this->description, true, '', '', $query);
     }
 }

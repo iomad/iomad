@@ -16,6 +16,7 @@
 
 namespace core\navigation\views;
 
+use booktool_print\output\renderer;
 use navigation_node;
 use ReflectionMethod;
 use moodle_url;
@@ -87,11 +88,12 @@ class secondary_test extends \advanced_testcase {
      * @param string $expectedfirstnode The expected first node
      * @param string $header The expected string
      * @param string $activenode The expected active node
+     * @param string $courseformat The used course format (only applicable in the course and module context).
      * @return void
      * @dataProvider test_setting_initialise_provider
      */
     public function test_setting_initialise(string $context, string $expectedfirstnode,
-            string $header, string $activenode): void {
+            string $header, string $activenode, string $courseformat = 'topics'): void {
         global $PAGE, $SITE;
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -99,12 +101,16 @@ class secondary_test extends \advanced_testcase {
         $pageurl = '/';
         switch ($context) {
             case 'course':
-                $pagecourse = $this->getDataGenerator()->create_course();
+                $pagecourse = $this->getDataGenerator()->create_course(['format' => $courseformat]);
                 $contextrecord = \context_course::instance($pagecourse->id, MUST_EXIST);
-                $pageurl = new \moodle_url('/course/view.php', ['id' => $pagecourse->id]);
+                if ($courseformat === 'singleactivity') {
+                    $pageurl = new \moodle_url('/course/edit.php', ['id' => $pagecourse->id]);
+                } else {
+                    $pageurl = new \moodle_url('/course/view.php', ['id' => $pagecourse->id]);
+                }
                 break;
             case 'module':
-                $pagecourse = $this->getDataGenerator()->create_course();
+                $pagecourse = $this->getDataGenerator()->create_course(['format' => $courseformat]);
                 $assign = $this->getDataGenerator()->create_module('assign', ['course' => $pagecourse->id]);
                 $cm = get_coursemodule_from_id('assign', $assign->cmid);
                 $contextrecord = \context_module::instance($cm->id);
@@ -137,8 +143,12 @@ class secondary_test extends \advanced_testcase {
     public function test_setting_initialise_provider(): array {
         return [
             'Testing in a course context' => ['course', 'coursehome', 'courseheader', 'Course'],
+            'Testing in a course context using a single activity course format' =>
+                ['course', 'course', 'courseheader', 'Course', 'singleactivity'],
             'Testing in a module context' => ['module', 'modulepage', 'activityheader', 'Assignment'],
-            'Testing in a site admin' => ['system', 'siteadminnode', 'homeheader', 'Site administration'],
+            'Testing in a module context using a single activity course format' =>
+                ['module', 'course', 'activityheader', 'Activity', 'singleactivity'],
+            'Testing in a site admin' => ['system', 'siteadminnode', 'homeheader', 'General'],
         ];
     }
 
@@ -514,9 +524,7 @@ class secondary_test extends \advanced_testcase {
         $secondary = new secondary($PAGE);
         $secondary->add_node($this->generate_node_tree_construct($structure, 'primarynode'));
         $selectednode = $secondary->find($selected, null);
-        $method = new ReflectionMethod('core\navigation\views\secondary', 'get_menu_array');
-        $method->setAccessible(true);
-        $response = $method->invoke($secondary, $selectednode);
+        $response = \core\navigation\views\secondary::create_menu_element([$selectednode]);
 
         $this->assertSame($expected, $response);
     }
@@ -544,7 +552,7 @@ class secondary_test extends \advanced_testcase {
             "Fetch information from a node with children" => [
                 'child2',
                 [
-                    'https://www.example.com/moodle/test.php' => 'child2',
+                    'https://www.example.com/moodle/test.php' => 'child2.3',
                     'https://www.example.com/moodle/view/course.php?child=2' => 'child2.1',
                     'https://www.example.com/moodle/view/admin.php?child=2' => 'child2.2'
                 ],
@@ -557,21 +565,17 @@ class secondary_test extends \advanced_testcase {
                 'parentnode1',
                 [
                     [
+                        'parentnode1' => [
+                            'https://www.example.com/moodle/my' => 'child1'
+                        ],
                         'child2' => [
                             'https://www.example.com/moodle/test.php' => 'child2',
                             'https://www.example.com/moodle/view/course.php?child=2' => 'child2.1',
                             'https://www.example.com/moodle/view/admin.php?child=2' => 'child2.2',
-                        ]
-                    ],
-                    [
+                        ],
                         'child3' => [
                             'https://www.example.com/moodle/view/course.php?child=3' => 'child3.1',
                             'https://www.example.com/moodle/view/admin.php?child=3' => 'child3.2'
-                        ]
-                    ],
-                    [
-                        'parentnode1' => [
-                            'https://www.example.com/moodle/my' => 'child1'
                         ]
                     ]
                 ],
@@ -658,73 +662,141 @@ class secondary_test extends \advanced_testcase {
     }
 
     /**
-     * Test for get_additional_child_nodes
+     * Test the add_external_nodes_to_secondary function.
      *
-     * @param string $selectedkey
-     * @param array $expected
-     * @dataProvider test_get_additional_child_nodes_provider
+     * @param array $structure The structure of the navigation node tree to setup with.
+     * @param array $expectednodes The expected nodes added to the secondary navigation
+     * @param bool $separatenode Whether or not to create a separate node to add nodes to.
+     * @dataProvider add_external_nodes_to_secondary_provider
      */
-    public function test_get_additional_child_nodes(string $selectedkey, array $expected) {
+    public function test_add_external_nodes_to_secondary(array $structure, array $expectednodes, bool $separatenode = false) {
         global $PAGE;
-        $structure = [
-            'parentnode1' => [
-                'child1' => '/my',
-                'child2' => [
-                    'action' => '/test.php',
-                    'children' => [
-                        'child2.1' => '/view/course.php?child=2',
-                        'child2.2' => '/view/admin.php?child=2',
-                    ]
-                ],
-                'child3' => [
-                    'child3.1' => '/view/course.php?child=3',
-                    'child3.2' => '/view/admin.php?child=3',
-                ]
-            ],
-            'parentnode2' => "/view/module.php"
-        ];
 
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $context = \context_course::instance($course->id);
+        $PAGE->set_context($context);
+        $PAGE->set_url('/');
+
+        $node = $this->generate_node_tree_construct($structure, 'parentnode');
         $secondary = new secondary($PAGE);
-        $nodes = $this->generate_node_tree_construct($structure, 'primarynode');
-        $selectednode = $nodes->find($selectedkey, null);
-        $method = new ReflectionMethod('core\navigation\views\secondary', 'get_additional_child_nodes');
-        $method->setAccessible(true);
-        $response = $method->invoke($secondary, $selectednode);
+        $secondary->add_node($node);
+        $firstnode = $node->get('parentnode1');
+        $customparent = null;
+        if ($separatenode) {
+            $customparent = navigation_node::create('Custom parent');
+        }
 
-        $this->assertSame($expected, $response);
+        $method = new ReflectionMethod('core\navigation\views\secondary', 'add_external_nodes_to_secondary');
+        $method->setAccessible(true);
+        $method->invoke($secondary, $firstnode, $firstnode, $customparent);
+
+        $actualnodes = $separatenode ? $customparent->get_children_key_list() : $secondary->get_children_key_list();
+        $this->assertEquals($expectednodes, $actualnodes);
     }
 
     /**
-     * Provider for test_get_additional_child_nodes
+     * Provider for the add_external_nodes_to_secondary function.
      *
-     * @return array[]
+     * @return array
      */
-    public function test_get_additional_child_nodes_provider(): array {
+    public function add_external_nodes_to_secondary_provider() {
         return [
-            "Get nodes with deep nested children" => [
-                "parentnode1",
+            "Container node with internal action and external children" => [
                 [
-                    'https://www.example.com/moodle/my' => 'child1',
-                    'https://www.example.com/moodle/test.php' => 'child2',
-                    'https://www.example.com/moodle/view/course.php?child=2' => 'child2.1',
-                    'https://www.example.com/moodle/view/admin.php?child=2' => 'child2.2',
-                    'https://www.example.com/moodle/view/course.php?child=3' => 'child3.1',
-                    'https://www.example.com/moodle/view/admin.php?child=3' => 'child3.2',
-                ]
+                    'parentnode1' => [
+                        'action' => '/test.php',
+                        'children' => [
+                            'child2.1' => 'https://example.org',
+                            'child2.2' => 'https://example.net',
+                        ]
+                    ]
+                ],
+                ['parentnode', 'parentnode1']
             ],
-            "Get children from parent without action " => [
-                "child3",
+            "Container node with external action and external children" => [
                 [
-                    'https://www.example.com/moodle/view/course.php?child=3' => 'child3.1',
-                    'https://www.example.com/moodle/view/admin.php?child=3' => 'child3.2'
-                ]
+                    'parentnode1' => [
+                        'action' => 'https://example.com',
+                        'children' => [
+                            'child2.1' => 'https://example.org',
+                            'child2.2' => 'https://example.net',
+                        ]
+                    ]
+                ],
+                ['parentnode', 'parentnode1', 'child2.1', 'child2.2']
             ],
-            "Get children from parent with action " => [
-                "child2",
+            "Container node with external action and internal children" => [
                 [
-                    'https://www.example.com/moodle/view/course.php?child=2' => 'child2.1',
-                    'https://www.example.com/moodle/view/admin.php?child=2' => 'child2.2'
-                ]
+                    'parentnode1' => [
+                        'action' => 'https://example.org',
+                        'children' => [
+                            'child2.1' => '/view/course.php',
+                            'child2.2' => '/view/admin.php',
+                        ]
+                    ]
+                ],
+                ['parentnode', 'parentnode1', 'child2.1', 'child2.2']
+            ],
+            "Container node with internal actions and internal children" => [
+                [
+                    'parentnode1' => [
+                        'action' => '/test.php',
+                        'children' => [
+                            'child2.1' => '/course.php',
+                            'child2.2' => '/admin.php',
+                        ]
+                    ]
+                ],
+                ['parentnode', 'parentnode1']
+            ],
+            "Container node with internal action and external children adding to custom node" => [
+                [
+                    'parentnode1' => [
+                        'action' => '/test.php',
+                        'children' => [
+                            'child2.1' => 'https://example.org',
+                            'child2.2' => 'https://example.net',
+                        ]
+                    ]
+                ],
+                ['parentnode1'], true
+            ],
+            "Container node with external action and external children adding to custom node" => [
+                [
+                    'parentnode1' => [
+                        'action' => 'https://example.com',
+                        'children' => [
+                            'child2.1' => 'https://example.org',
+                            'child2.2' => 'https://example.net',
+                        ]
+                    ]
+                ],
+                ['parentnode1', 'child2.1', 'child2.2'], true
+            ],
+            "Container node with external action and internal children adding to custom node" => [
+                [
+                    'parentnode1' => [
+                        'action' => 'https://example.org',
+                        'children' => [
+                            'child2.1' => '/view/course.php',
+                            'child2.2' => '/view/admin.php',
+                        ]
+                    ]
+                ],
+                ['parentnode1', 'child2.1', 'child2.2'], true
+            ],
+            "Container node with internal actions and internal children adding to custom node" => [
+                [
+                    'parentnode1' => [
+                        'action' => '/test.php',
+                        'children' => [
+                            'child2.1' => '/course.php',
+                            'child2.2' => '/admin.php',
+                        ]
+                    ]
+                ],
+                ['parentnode1'], true
             ],
         ];
     }

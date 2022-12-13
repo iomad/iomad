@@ -1108,7 +1108,12 @@ function page_get_doc_link_path(moodle_page $page) {
  */
 function validate_email($address) {
     global $CFG;
-    require_once($CFG->libdir.'/phpmailer/moodle_phpmailer.php');
+
+    if ($address === null || $address === false || $address === '') {
+        return false;
+    }
+
+    require_once("{$CFG->libdir}/phpmailer/moodle_phpmailer.php");
 
     return moodle_phpmailer::validateAddress($address) && !preg_match('/[<>]/', $address);
 }
@@ -1429,6 +1434,11 @@ function reset_text_filters_cache($phpunitreset = false) {
  */
 function format_string($string, $striplinks = true, $options = null) {
     global $CFG, $PAGE;
+
+    if ($string === '' || is_null($string)) {
+        // No need to do any filters and cleaning.
+        return '';
+    }
 
     // We'll use a in-memory cache here to speed up repeated strings.
     static $strcache = false;
@@ -2207,6 +2217,24 @@ function highlightfast($needle, $haystack) {
 }
 
 /**
+ * Converts a language code to hyphen-separated format in accordance to the
+ * {@link https://datatracker.ietf.org/doc/html/rfc5646#section-2.1 BCP47 syntax}.
+ *
+ * For additional information, check out
+ * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang MDN web docs - lang}.
+ *
+ * @param string $langcode The language code to convert.
+ * @return string
+ */
+function get_html_lang_attribute_value(string $langcode): string {
+    if (empty(trim($langcode))) {
+        // If the language code passed is an empty string, return 'unknown'.
+        return 'unknown';
+    }
+    return str_replace('_', '-', $langcode);
+}
+
+/**
  * Return a string containing 'lang', xml:lang and optionally 'dir' HTML attributes.
  *
  * Internationalisation, for print_header and backup/restorelib.
@@ -2215,6 +2243,16 @@ function highlightfast($needle, $haystack) {
  * @return string Attributes
  */
 function get_html_lang($dir = false) {
+    global $CFG;
+
+    $currentlang = current_language();
+    if ($currentlang !== $CFG->lang && !get_string_manager()->translation_exists($currentlang)) {
+        // Use the default site language when the current language is not available.
+        $currentlang = $CFG->lang;
+        // Fix the current language.
+        fix_current_language($currentlang);
+    }
+
     $direction = '';
     if ($dir) {
         if (right_to_left()) {
@@ -2223,8 +2261,9 @@ function get_html_lang($dir = false) {
             $direction = ' dir="ltr"';
         }
     }
+
     // Accessibility: added the 'lang' attribute to $direction, used in theme <html> tag.
-    $language = str_replace('_', '-', current_language());
+    $language = get_html_lang_attribute_value($currentlang);
     @header('Content-Language: '.$language);
     return ($direction.' lang="'.$language.'" xml:lang="'.$language.'"');
 }
@@ -2711,7 +2750,7 @@ function navmenulist($course, $sections, $modinfo, $strsection, $strjumpto, $wid
         $class = 'activity '.$mod->modname;
         $class .= ($cmid == $mod->id) ? ' selected' : '';
         $menu[] = '<li class="'.$class.'">'.
-                  $OUTPUT->image_icon('icon', '', $mod->modname).
+                  $OUTPUT->image_icon('monologo', '', $mod->modname).
                   '<a href="'.$CFG->wwwroot.'/mod/'.$url.'">'.$mod->name.'</a></li>';
     }
 
@@ -3410,7 +3449,7 @@ class html_progress_trace extends progress_trace {
      * @return void Output is echo'd
      */
     public function output($message, $depth = 0) {
-        echo '<p>', str_repeat('&#160;&#160;', $depth), htmlspecialchars($message), "</p>\n";
+        echo '<p>', str_repeat('&#160;&#160;', $depth), htmlspecialchars($message, ENT_COMPAT), "</p>\n";
         flush();
     }
 }
@@ -3451,7 +3490,7 @@ class html_list_progress_trace extends progress_trace {
         if ($samedepth) {
             echo "</li>\n<li>";
         }
-        echo htmlspecialchars($message);
+        echo htmlspecialchars($message, ENT_COMPAT);
         flush();
     }
 

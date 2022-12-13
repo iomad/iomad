@@ -95,7 +95,7 @@ class primary_test extends \advanced_testcase {
         if (isloggedin() && !isguestuser()) {
             // Look for a language menu item within the user menu items.
             $usermenulang = array_filter($data['user']['items'], function($usermenuitem) {
-                return $usermenuitem->title === get_string('language');
+                return $usermenuitem->itemtype !== 'divider' && $usermenuitem->title === get_string('language');
             });
             if ($withlang) { // If multiple languages are installed.
                 // Assert that the language menu exists within the user menu.
@@ -159,7 +159,20 @@ class primary_test extends \advanced_testcase {
         $method = new ReflectionMethod('core\navigation\output\primary', 'get_custom_menu');
         $method->setAccessible(true);
         $renderer = $PAGE->get_renderer('core');
-        $this->assertEquals($expected, $method->invoke($output, $renderer));
+
+        // We can't assert the value of each menuitem "moremenuid" property (because it's random).
+        $custommenufilter = static function(array $custommenu) use (&$custommenufilter): void {
+            foreach ($custommenu as $menuitem) {
+                unset($menuitem->moremenuid);
+                // Recursively move through child items.
+                $custommenufilter($menuitem->children);
+            }
+        };
+
+        $actual = $method->invoke($output, $renderer);
+        $custommenufilter($actual);
+
+        $this->assertEquals($expected, $actual);
     }
 
     /**

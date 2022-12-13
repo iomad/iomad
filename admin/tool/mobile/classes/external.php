@@ -174,6 +174,9 @@ class external extends external_api {
                     (only if age verification is enabled).', VALUE_OPTIONAL),
                 'supportemail' => new external_value(PARAM_EMAIL, 'Site support contact email
                     (only if age verification is enabled).', VALUE_OPTIONAL),
+                'supportpage' => new external_value(PARAM_URL, 'Site support page link.', VALUE_OPTIONAL),
+                'supportavailability' => new external_value(PARAM_INT, 'Determines who has access to contact site support.',
+                    VALUE_OPTIONAL),
                 'autolang' => new external_value(PARAM_INT, 'Whether to detect default language
                     from browser setting.', VALUE_OPTIONAL),
                 'lang' => new external_value(PARAM_LANG, 'Default language for the site.', VALUE_OPTIONAL),
@@ -311,9 +314,12 @@ class external extends external_api {
         // Between each request 6 minutes are required.
         $last = get_user_preferences('tool_mobile_autologin_request_last', 0, $USER);
         // Check if we must reset the count.
+        $mintimereq = get_config('tool_mobile', 'autologinmintimebetweenreq');
+        $mintimereq = empty($mintimereq) ? 6 * MINSECS : $mintimereq;
         $timenow = time();
-        if ($timenow - $last < 6 * MINSECS) {
-            throw new moodle_exception('autologinkeygenerationlockout', 'tool_mobile');
+        if ($timenow - $last < $mintimereq) {
+            $minutes = $mintimereq / MINSECS;
+            throw new moodle_exception('autologinkeygenerationlockout', 'tool_mobile', $minutes);
         }
         set_user_preference('tool_mobile_autologin_request_last', $timenow, $USER);
 

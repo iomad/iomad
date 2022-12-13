@@ -388,14 +388,8 @@ class core_course_external extends external_api {
             // We didn't this before to be able to retrieve stealth activities.
             foreach ($coursecontents as $sectionnumber => $sectioncontents) {
                 $section = $sections[$sectionnumber];
-                // Show the section if the user is permitted to access it OR
-                // if it's not available but there is some available info text which explains the reason & should display OR
-                // the course is configured to show hidden sections name.
-                $showsection = $section->uservisible ||
-                    ($section->visible && !$section->available && !empty($section->availableinfo)) ||
-                    (!$section->visible && empty($courseformat->get_course()->hiddensections));
 
-                if (!$showsection) {
+                if (!$courseformat->is_section_visible($section)) {
                     unset($coursecontents[$sectionnumber]);
                     continue;
                 }
@@ -484,6 +478,9 @@ class core_course_external extends external_api {
                                             array(
                                                 'label' => new external_value(PARAM_TEXT, 'date label'),
                                                 'timestamp' => new external_value(PARAM_INT, 'date timestamp'),
+                                                'relativeto' => new external_value(PARAM_INT, 'relative date timestamp',
+                                                    VALUE_OPTIONAL),
+                                                'dataid' => new external_value(PARAM_NOTAGS, 'cm data id', VALUE_OPTIONAL),
                                             )
                                         ),
                                         VALUE_DEFAULT,
@@ -3760,7 +3757,7 @@ class core_course_external extends external_api {
                     VALUE_DEFAULT, null),
                 'customfieldvalue' => new external_value(PARAM_RAW, 'Used when classification = customfield',
                     VALUE_DEFAULT, null),
-                'searchvalue' => new external_value(PARAM_TEXT, 'The value a user wishes to search against',
+                'searchvalue' => new external_value(PARAM_RAW, 'The value a user wishes to search against',
                     VALUE_DEFAULT, null),
             )
         );
@@ -3818,7 +3815,7 @@ class core_course_external extends external_api {
         $offset = $params['offset'];
         $sort = $params['sort'];
         $customfieldvalue = $params['customfieldvalue'];
-        $searchvalue = $params['searchvalue'];
+        $searchvalue = clean_param($params['searchvalue'], PARAM_TEXT);
 
         switch($classification) {
             case COURSE_TIMELINE_ALLINCLUDINGHIDDEN:
@@ -4154,6 +4151,8 @@ class core_course_external extends external_api {
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'id of the course module', VALUE_REQUIRED),
             'groupid' => new external_value(PARAM_INT, 'id of the group', VALUE_DEFAULT, 0),
+            'onlyactive' => new external_value(PARAM_BOOL, 'whether to return only active users or all.',
+                VALUE_DEFAULT, false),
         ]);
     }
 
@@ -4162,26 +4161,25 @@ class core_course_external extends external_api {
      *
      * @param int $cmid Course Module id from which the users will be obtained
      * @param int $groupid Group id from which the users will be obtained
+     * @param bool $onlyactive Whether to return only the active enrolled users or all enrolled users in the course.
      * @return array List of users
      * @throws invalid_parameter_exception
      */
-    public static function get_enrolled_users_by_cmid(int $cmid, int $groupid = 0) {
+    public static function get_enrolled_users_by_cmid(int $cmid, int $groupid = 0, bool $onlyactive = false) {
     global $PAGE;
         $warnings = [];
 
-        [
-            'cmid' => $cmid,
-            'groupid' => $groupid,
-        ] = self::validate_parameters(self::get_enrolled_users_by_cmid_parameters(), [
+        self::validate_parameters(self::get_enrolled_users_by_cmid_parameters(), [
                 'cmid' => $cmid,
                 'groupid' => $groupid,
+                'onlyactive' => $onlyactive,
         ]);
 
         list($course, $cm) = get_course_and_cm_from_cmid($cmid);
         $coursecontext = context_course::instance($course->id);
         self::validate_context($coursecontext);
 
-        $enrolledusers = get_enrolled_users($coursecontext, '', $groupid);
+        $enrolledusers = get_enrolled_users($coursecontext, '', $groupid, 'u.*', null, 0, 0, $onlyactive);
 
         $users = array_map(function ($user) use ($PAGE) {
             $user->fullname = fullname($user);

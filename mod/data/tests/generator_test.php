@@ -14,17 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * PHPUnit data generator tests.
- *
- * @package    mod_data
- * @category   phpunit
- * @copyright  2012 Petr Skoda {@link http://skodak.org}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace mod_data;
 
-defined('MOODLE_INTERNAL') || die();
-
+use stdClass;
 
 /**
  * PHPUnit data generator testcase.
@@ -33,8 +25,9 @@ defined('MOODLE_INTERNAL') || die();
  * @category   phpunit
  * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass \mod_data_generator
  */
-class mod_data_generator_testcase extends advanced_testcase {
+class generator_test extends \advanced_testcase {
     public function test_generator() {
         global $DB;
 
@@ -59,7 +52,7 @@ class mod_data_generator_testcase extends advanced_testcase {
         $this->assertEquals('data', $cm->modname);
         $this->assertEquals($course->id, $cm->course);
 
-        $context = context_module::instance($cm->id);
+        $context = \context_module::instance($cm->id);
         $this->assertEquals($data->cmid, $context->instanceid);
 
         // test gradebook integration using low level DB access - DO NOT USE IN PLUGIN CODE!
@@ -95,7 +88,7 @@ class mod_data_generator_testcase extends advanced_testcase {
         $this->assertEquals('data', $cm->modname);
         $this->assertEquals($course->id, $cm->course);
 
-        $context = context_module::instance($cm->id);
+        $context = \context_module::instance($cm->id);
         $this->assertEquals($data->cmid, $context->instanceid);
 
         $fieldtypes = array('checkbox', 'date', 'menu', 'multimenu', 'number', 'radiobutton', 'text', 'textarea', 'url');
@@ -107,7 +100,7 @@ class mod_data_generator_testcase extends advanced_testcase {
 
             // Creating variables dynamically.
             $fieldname = 'field-' . $count;
-            $record = new StdClass();
+            $record = new \stdClass();
             $record->name = $fieldname;
             $record->type = $fieldtype;
 
@@ -156,7 +149,7 @@ class mod_data_generator_testcase extends advanced_testcase {
         $this->assertEquals('data', $cm->modname);
         $this->assertEquals($course->id, $cm->course);
 
-        $context = context_module::instance($cm->id);
+        $context = \context_module::instance($cm->id);
         $this->assertEquals($data->cmid, $context->instanceid);
 
         $fieldtypes = array('checkbox', 'date', 'menu', 'multimenu', 'number', 'radiobutton', 'text', 'textarea', 'url',
@@ -169,7 +162,7 @@ class mod_data_generator_testcase extends advanced_testcase {
 
             // Creating variables dynamically.
             $fieldname = 'field-' . $count;
-            $record = new StdClass();
+            $record = new \stdClass();
             $record->name = $fieldname;
             $record->type = $fieldtype;
             $record->required = 1;
@@ -237,6 +230,114 @@ class mod_data_generator_testcase extends advanced_testcase {
         $this->assertEquals($contents[++$contentstartid]->content, 'http://example.url');
         $this->assertEquals($contents[$contentstartid]->content1, 'sampleurl');
         $this->assertEquals(array('Cats', 'mice'),
-            array_values(core_tag_tag::get_item_tags_array('mod_data', 'data_records', $datarecordid)));
+            array_values(\core_tag_tag::get_item_tags_array('mod_data', 'data_records', $datarecordid)));
+    }
+
+    /**
+     * Test for create_preset().
+     *
+     * @dataProvider create_preset_provider
+     * @covers ::create_preset
+     * @param stdClass|null $record data for the preset that will be created (like name or description)
+     */
+    public function test_create_preset(?stdClass $record) {
+        global $USER;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $activity = $this->getDataGenerator()->create_module(manager::MODULE, ['course' => $course]);
+        $cm = get_coursemodule_from_id(manager::MODULE, $activity->cmid, 0, false, MUST_EXIST);
+        if (!is_null($record) && property_exists($record, 'user')) {
+            $user = $this->getDataGenerator()->create_and_enrol($course, 'teacher', (object)['username' => $record->user]);
+            $record->userid = $user->id;
+            unset($record->user);
+        }
+
+        // Check initially there are no saved presets.
+        $manager = manager::create_from_coursemodule($cm);
+        $savedpresets = $manager->get_available_saved_presets();
+        $this->assertEmpty($savedpresets);
+
+        // Create one preset with the configuration in $record.
+        $plugingenerator = $this->getDataGenerator()->get_plugin_generator('mod_data');
+        $preset = $plugingenerator->create_preset($activity, $record);
+        // Check the preset has been saved.
+        $savedpresets = $manager->get_available_saved_presets();
+        $this->assertCount(1, $savedpresets);
+        // Check the preset name has the expected value.
+        if (is_null($record) || !property_exists($record, 'name')) {
+            $this->assertStringStartsWith('New preset', $preset->name);
+        } else {
+            $this->assertEquals($record->name, $preset->name);
+        }
+        // Check the preset description has the expected value.
+        if (is_null($record) || !property_exists($record, 'description')) {
+            $this->assertEmpty($preset->description);
+        } else {
+            $this->assertEquals($record->description, $preset->description);
+        }
+        // Check the preset author has the expected value.
+        if (is_null($record) || !property_exists($record, 'userid')) {
+            $this->assertEquals($USER->id, $preset->get_userid());
+        } else {
+            $this->assertEquals($record->userid, $preset->get_userid());
+        }
+        // Check the file has been updated properly.
+        $this->assertNotNull($preset->storedfile);
+    }
+
+    /**
+     * Data provider for test_create_preset().
+     *
+     * @return array
+     */
+    public function create_preset_provider(): array {
+        return [
+            'Create using the default configuration' => [
+                'record' => null,
+            ],
+            'Create with a given name but no description' => [
+                'record' => (object) [
+                    'name' => 'World recipes preset',
+                ],
+            ],
+            'Create with a given description but no name' => [
+                'record' => (object) [
+                    'description' => 'This is a preset to collect the most popular world recipes.',
+                ],
+            ],
+            'Create with a given name and description' => [
+                'record' => (object) [
+                    'name' => 'World recipes preset',
+                    'description' => 'This is a preset to collect the most popular world recipes.',
+                ],
+            ],
+            'Create with a given user but no description or name' => [
+                'record' => (object) [
+                    'user' => 'teacher1',
+                ],
+            ],
+            'Create with a given name and user but no description' => [
+                'record' => (object) [
+                    'name' => 'World recipes preset',
+                    'user' => 'teacher1',
+                ],
+            ],
+            'Create with a given description and user but no name' => [
+                'record' => (object) [
+                    'description' => 'This is a preset to collect the most popular world recipes.',
+                    'user' => 'teacher1',
+                ],
+            ],
+            'Create with a given name, description and user' => [
+                'record' => (object) [
+                    'name' => 'World recipes preset',
+                    'description' => 'This is a preset to collect the most popular world recipes.',
+                    'user' => 'teacher1',
+                ],
+            ],
+        ];
     }
 }

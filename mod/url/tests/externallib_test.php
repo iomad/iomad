@@ -14,15 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * External mod_url functions unit tests
- *
- * @package    mod_url
- * @category   external
- * @copyright  2015 Juan Leyva <juan@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @since      Moodle 3.0
- */
+namespace mod_url;
+
+use externallib_advanced_testcase;
+use mod_url_external;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,7 +34,7 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      Moodle 3.0
  */
-class mod_url_external_testcase extends externallib_advanced_testcase {
+class externallib_test extends externallib_advanced_testcase {
 
     /**
      * Test view_url
@@ -52,14 +47,14 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         // Setup test data.
         $course = $this->getDataGenerator()->create_course();
         $url = $this->getDataGenerator()->create_module('url', array('course' => $course->id));
-        $context = context_module::instance($url->cmid);
+        $context = \context_module::instance($url->cmid);
         $cm = get_coursemodule_from_instance('url', $url->id);
 
         // Test invalid instance id.
         try {
             mod_url_external::view_url(0);
             $this->fail('Exception expected due to invalid mod_url instance id.');
-        } catch (moodle_exception $e) {
+        } catch (\moodle_exception $e) {
             $this->assertEquals('invalidrecord', $e->errorcode);
         }
 
@@ -69,7 +64,7 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         try {
             mod_url_external::view_url($url->id);
             $this->fail('Exception expected due to not enrolled user.');
-        } catch (moodle_exception $e) {
+        } catch (\moodle_exception $e) {
             $this->assertEquals('requireloginerror', $e->errorcode);
         }
 
@@ -81,7 +76,7 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         $sink = $this->redirectEvents();
 
         $result = mod_url_external::view_url($url->id);
-        $result = external_api::clean_returnvalue(mod_url_external::view_url_returns(), $result);
+        $result = \external_api::clean_returnvalue(mod_url_external::view_url_returns(), $result);
 
         $events = $sink->get_events();
         $this->assertCount(1, $events);
@@ -100,12 +95,12 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         assign_capability('mod/url:view', CAP_PROHIBIT, $studentrole->id, $context->id);
         // Empty all the caches that may be affected by this change.
         accesslib_clear_all_caches_for_unit_testing();
-        course_modinfo::clear_instance_cache();
+        \course_modinfo::clear_instance_cache();
 
         try {
             mod_url_external::view_url($url->id);
             $this->fail('Exception expected due to missing capability.');
-        } catch (moodle_exception $e) {
+        } catch (\moodle_exception $e) {
             $this->assertEquals('requireloginerror', $e->errorcode);
         }
 
@@ -127,12 +122,12 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         $this->getDataGenerator()->enrol_user($student->id, $course1->id, $studentrole->id);
 
         // First url.
-        $record = new stdClass();
+        $record = new \stdClass();
         $record->course = $course1->id;
         $url1 = self::getDataGenerator()->create_module('url', $record);
 
         // Second url.
-        $record = new stdClass();
+        $record = new \stdClass();
         $record->course = $course2->id;
         $url2 = self::getDataGenerator()->create_module('url', $record);
 
@@ -152,9 +147,9 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         $returndescription = mod_url_external::get_urls_by_courses_returns();
 
         // Create what we expect to be returned when querying the two courses.
-        $expectedfields = array('id', 'coursemodule', 'course', 'name', 'intro', 'introformat', 'introfiles', 'externalurl',
-                                'display', 'displayoptions', 'parameters', 'timemodified', 'section', 'visible', 'groupmode',
-                                'groupingid');
+        $expectedfields = array('id', 'coursemodule', 'course', 'name', 'intro', 'introformat', 'introfiles', 'lang',
+                'externalurl', 'display', 'displayoptions', 'parameters', 'timemodified', 'section', 'visible', 'groupmode',
+                'groupingid');
 
         // Add expected coursemodule and data.
         $url1->coursemodule = $url1->cmid;
@@ -164,6 +159,7 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         $url1->groupmode = 0;
         $url1->groupingid = 0;
         $url1->introfiles = [];
+        $url1->lang = '';
 
         $url2->coursemodule = $url2->cmid;
         $url2->introformat = 1;
@@ -172,6 +168,7 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         $url2->groupmode = 0;
         $url2->groupingid = 0;
         $url2->introfiles = [];
+        $url2->lang = '';
 
         foreach ($expectedfields as $field) {
             $expected1[$field] = $url1->{$field};
@@ -182,21 +179,21 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
 
         // Call the external function passing course ids.
         $result = mod_url_external::get_urls_by_courses(array($course2->id, $course1->id));
-        $result = external_api::clean_returnvalue($returndescription, $result);
+        $result = \external_api::clean_returnvalue($returndescription, $result);
 
         $this->assertEquals($expectedurls, $result['urls']);
         $this->assertCount(0, $result['warnings']);
 
         // Call the external function without passing course id.
         $result = mod_url_external::get_urls_by_courses();
-        $result = external_api::clean_returnvalue($returndescription, $result);
+        $result = \external_api::clean_returnvalue($returndescription, $result);
         $this->assertEquals($expectedurls, $result['urls']);
         $this->assertCount(0, $result['warnings']);
 
         // Add a file to the intro.
         $filename = "file.txt";
         $filerecordinline = array(
-            'contextid' => context_module::instance($url2->cmid)->id,
+            'contextid' => \context_module::instance($url2->cmid)->id,
             'component' => 'mod_url',
             'filearea'  => 'intro',
             'itemid'    => 0,
@@ -208,7 +205,7 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
         $fs->create_file_from_string($filerecordinline, 'image contents (not really)');
 
         $result = mod_url_external::get_urls_by_courses(array($course2->id, $course1->id));
-        $result = external_api::clean_returnvalue($returndescription, $result);
+        $result = \external_api::clean_returnvalue($returndescription, $result);
 
         $this->assertCount(1, $result['urls'][0]['introfiles']);
         $this->assertEquals($filename, $result['urls'][0]['introfiles'][0]['filename']);
@@ -219,7 +216,7 @@ class mod_url_external_testcase extends externallib_advanced_testcase {
 
         // Call the external function without passing course id.
         $result = mod_url_external::get_urls_by_courses();
-        $result = external_api::clean_returnvalue($returndescription, $result);
+        $result = \external_api::clean_returnvalue($returndescription, $result);
         $this->assertEquals($expectedurls, $result['urls']);
 
         // Call for the second course we unenrolled the user from, expected warning.

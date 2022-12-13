@@ -22,7 +22,10 @@
  * @copyright  2008 Tim Hunt
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace mod_quiz;
 
+use quiz_attempt;
+use mod_quiz_display_options;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -36,10 +39,10 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * @copyright  2008 Tim Hunt
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_quiz_locallib_testcase extends advanced_testcase {
+class locallib_test extends \advanced_testcase {
 
     public function test_quiz_rescale_grade() {
-        $quiz = new stdClass();
+        $quiz = new \stdClass();
         $quiz->decimalpoints = 2;
         $quiz->questiondecimalpoints = 3;
         $quiz->grade = 10;
@@ -82,7 +85,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
     public function test_quiz_attempt_state($attemptstate,
             $relativetimefinish, $relativetimeclose, $expectedstate) {
 
-        $attempt = new stdClass();
+        $attempt = new \stdClass();
         $attempt->state = $attemptstate;
         if ($relativetimefinish === null) {
             $attempt->timefinish = 0;
@@ -90,7 +93,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
             $attempt->timefinish = time() + $relativetimefinish;
         }
 
-        $quiz = new stdClass();
+        $quiz = new \stdClass();
         if ($relativetimeclose === null) {
             $quiz->timeclose = 0;
         } else {
@@ -101,7 +104,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
     }
 
     public function test_quiz_question_tostring() {
-        $question = new stdClass();
+        $question = new \stdClass();
         $question->qtype = 'multichoice';
         $question->name = 'The question name';
         $question->questiontext = '<p>What sort of <b>inequality</b> is x &lt; y<img alt="?" src="..."></p>';
@@ -127,7 +130,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course(array('enablecompletion' => 1));
         $quiz = $this->getDataGenerator()->create_module('quiz', array('course' => $course->id),
                                                             array('completion' => 2, 'completionview' => 1));
-        $context = context_module::instance($quiz->cmid);
+        $context = \context_module::instance($quiz->cmid);
         $cm = get_coursemodule_from_instance('quiz', $quiz->id);
 
         // Trigger and capture the event.
@@ -148,7 +151,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         $this->assertEventContextNotUsed($event);
         $this->assertNotEmpty($event->get_name());
         // Check completion status.
-        $completion = new completion_info($course);
+        $completion = new \completion_info($course);
         $completiondata = $completion->get_data($cm);
         $this->assertEquals(1, $completiondata->completionstate);
     }
@@ -354,16 +357,16 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         // Let's test quiz 1 closes in three hours for user student 1 since member of group 1.
         // Quiz 2 closes in two hours.
         $this->setUser($student1id);
-        $params = new stdClass();
+        $params = new \stdClass();
 
         $comparearray = array();
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz1->id;
         $object->usertimeclose = $basetimestamp + 10800; // The overriden timeclose for quiz 1.
 
         $comparearray[$quiz1->id] = $object;
 
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz2->id;
         $object->usertimeclose = $basetimestamp + 7200; // The unchanged timeclose for quiz 2.
 
@@ -373,16 +376,16 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
 
         // Let's test quiz 1 closes in two hours (the original value) for user student 3 since member of no group.
         $this->setUser($student3id);
-        $params = new stdClass();
+        $params = new \stdClass();
 
         $comparearray = array();
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz1->id;
         $object->usertimeclose = $basetimestamp + 7200; // The original timeclose for quiz 1.
 
         $comparearray[$quiz1->id] = $object;
 
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz2->id;
         $object->usertimeclose = $basetimestamp + 7200; // The original timeclose for quiz 2.
 
@@ -403,13 +406,13 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         $this->setUser($student2id);
 
         $comparearray = array();
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz1->id;
         $object->usertimeclose = $basetimestamp + 14400; // The overriden timeclose for quiz 1.
 
         $comparearray[$quiz1->id] = $object;
 
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz2->id;
         $object->usertimeclose = $basetimestamp + 7200; // The unchanged timeclose for quiz 2.
 
@@ -422,13 +425,13 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         $this->setUser($teacherid);
 
         $comparearray = array();
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz1->id;
         $object->usertimeclose = $basetimestamp + 7200; // The unchanged timeclose for quiz 1.
 
         $comparearray[$quiz1->id] = $object;
 
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->id = $quiz2->id;
         $object->usertimeclose = $basetimestamp + 7200; // The unchanged timeclose for quiz 2.
 
@@ -505,339 +508,6 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         }
 
         return array($quiz, $tagobjects);
-    }
-
-    public function test_quiz_retrieve_slot_tags() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        list($quiz, $tags) = $this->setup_quiz_and_tags(1, 1, [['foo', 'bar']], ['baz']);
-
-        // Get the random question's slotid. It is at the second slot.
-        $slotid = $DB->get_field('quiz_slots', 'id', array('quizid' => $quiz->id, 'slot' => 2));
-        $slottags = quiz_retrieve_slot_tags($slotid);
-
-        $this->assertEqualsCanonicalizing(
-                [
-                    ['tagid' => $tags['foo']->id, 'tagname' => $tags['foo']->name],
-                    ['tagid' => $tags['bar']->id, 'tagname' => $tags['bar']->name]
-                ],
-                array_map(function($slottag) {
-                    return ['tagid' => $slottag->tagid, 'tagname' => $slottag->tagname];
-                }, $slottags));
-    }
-
-    public function test_quiz_retrieve_slot_tags_with_removed_tag() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        list($quiz, $tags) = $this->setup_quiz_and_tags(1, 1, [['foo', 'bar']], ['baz']);
-
-        // Get the random question's slotid. It is at the second slot.
-        $slotid = $DB->get_field('quiz_slots', 'id', array('quizid' => $quiz->id, 'slot' => 2));
-        $slottags = quiz_retrieve_slot_tags($slotid);
-
-        // Now remove the foo tag and check again.
-        core_tag_tag::delete_tags([$tags['foo']->id]);
-        $slottags = quiz_retrieve_slot_tags($slotid);
-
-        $this->assertEqualsCanonicalizing(
-                [
-                    ['tagid' => null, 'tagname' => $tags['foo']->name],
-                    ['tagid' => $tags['bar']->id, 'tagname' => $tags['bar']->name]
-                ],
-                array_map(function($slottag) {
-                    return ['tagid' => $slottag->tagid, 'tagname' => $slottag->tagname];
-                }, $slottags));
-    }
-
-    public function test_quiz_retrieve_slot_tags_for_standard_question() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        list($quiz, $tags) = $this->setup_quiz_and_tags(1, 1, [['foo', 'bar']]);
-
-        // Get the standard question's slotid. It is at the first slot.
-        $slotid = $DB->get_field('quiz_slots', 'id', array('quizid' => $quiz->id, 'slot' => 1));
-
-        // There should be no slot tags for a non-random question.
-        $this->assertCount(0, quiz_retrieve_slot_tags($slotid));
-    }
-
-    public function test_quiz_retrieve_slot_tag_ids() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        list($quiz, $tags) = $this->setup_quiz_and_tags(1, 1, [['foo', 'bar']], ['baz']);
-
-        // Get the random question's slotid. It is at the second slot.
-        $slotid = $DB->get_field('quiz_slots', 'id', array('quizid' => $quiz->id, 'slot' => 2));
-        $tagids = quiz_retrieve_slot_tag_ids($slotid);
-
-        $this->assertEqualsCanonicalizing([$tags['foo']->id, $tags['bar']->id], $tagids);
-    }
-
-    public function test_quiz_retrieve_slot_tag_ids_for_standard_question() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        list($quiz, $tags) = $this->setup_quiz_and_tags(1, 1, [['foo', 'bar']], ['baz']);
-
-        // Get the standard question's slotid. It is at the first slot.
-        $slotid = $DB->get_field('quiz_slots', 'id', array('quizid' => $quiz->id, 'slot' => 1));
-        $tagids = quiz_retrieve_slot_tag_ids($slotid);
-
-        $this->assertEqualsCanonicalizing([], $tagids);
-    }
-
-    /**
-     * Data provider for the get_random_question_summaries test.
-     */
-    public function get_quiz_retrieve_tags_for_slot_ids_test_cases() {
-        return [
-            'no questions' => [
-                'questioncount' => 0,
-                'randomquestioncount' => 0,
-                'randomquestiontags' => [],
-                'unusedtags' => [],
-                'removeslottagids' => [],
-                'expected' => []
-            ],
-            'only regular questions' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 0,
-                'randomquestiontags' => [],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => [],
-                    2 => []
-                ]
-            ],
-            'only random questions 1' => [
-                'questioncount' => 0,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo'],
-                    1 => []
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => ['foo'],
-                    2 => []
-                ]
-            ],
-            'only random questions 2' => [
-                'questioncount' => 0,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo', 'bop'],
-                    1 => ['bar']
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => ['foo', 'bop'],
-                    2 => ['bar']
-                ]
-            ],
-            'only random questions 3' => [
-                'questioncount' => 0,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo', 'bop'],
-                    1 => ['bar', 'foo']
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => ['foo', 'bop'],
-                    2 => ['bar', 'foo']
-                ]
-            ],
-            'combination of questions 1' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo'],
-                    1 => []
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => [],
-                    2 => [],
-                    3 => ['foo'],
-                    4 => []
-                ]
-            ],
-            'combination of questions 2' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo', 'bop'],
-                    1 => ['bar']
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => [],
-                    2 => [],
-                    3 => ['foo', 'bop'],
-                    4 => ['bar']
-                ]
-            ],
-            'combination of questions 3' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo', 'bop'],
-                    1 => ['bar', 'foo']
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [],
-                'expected' => [
-                    1 => [],
-                    2 => [],
-                    3 => ['foo', 'bop'],
-                    4 => ['bar', 'foo']
-                ]
-            ],
-            'load from name 1' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo'],
-                    1 => []
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [3],
-                'expected' => [
-                    1 => [],
-                    2 => [],
-                    3 => ['foo'],
-                    4 => []
-                ]
-            ],
-            'load from name 2' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo', 'bop'],
-                    1 => ['bar']
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [3],
-                'expected' => [
-                    1 => [],
-                    2 => [],
-                    3 => ['foo', 'bop'],
-                    4 => ['bar']
-                ]
-            ],
-            'load from name 3' => [
-                'questioncount' => 2,
-                'randomquestioncount' => 2,
-                'randomquestiontags' => [
-                    0 => ['foo', 'bop'],
-                    1 => ['bar', 'foo']
-                ],
-                'unusedtags' => ['unused1', 'unused2'],
-                'removeslottagids' => [3],
-                'expected' => [
-                    1 => [],
-                    2 => [],
-                    3 => ['foo', 'bop'],
-                    4 => ['bar', 'foo']
-                ]
-            ]
-        ];
-    }
-
-    /**
-     * Test the quiz_retrieve_tags_for_slot_ids function with various parameter
-     * combinations.
-     *
-     * @dataProvider get_quiz_retrieve_tags_for_slot_ids_test_cases()
-     * @param int $questioncount The number of regular questions to create
-     * @param int $randomquestioncount The number of random questions to create
-     * @param array $randomquestiontags The tags for the random questions
-     * @param string[] $unusedtags Additional tags to create to populate the DB with data
-     * @param int[] $removeslottagids Slot numbers to remove tag ids for
-     * @param array $expected The expected output of tag names indexed by slot number
-     */
-    public function test_quiz_retrieve_tags_for_slot_ids_combinations(
-        $questioncount,
-        $randomquestioncount,
-        $randomquestiontags,
-        $unusedtags,
-        $removeslottagids,
-        $expected
-    ) {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setAdminUser();
-
-        list($quiz, $tags) = $this->setup_quiz_and_tags(
-            $questioncount,
-            $randomquestioncount,
-            $randomquestiontags,
-            $unusedtags
-        );
-
-        $slots = $DB->get_records('quiz_slots', ['quizid' => $quiz->id]);
-        $slotids = [];
-        $slotsbynumber = [];
-        foreach ($slots as $slot) {
-            $slotids[] = $slot->id;
-            $slotsbynumber[$slot->slot] = $slot;
-        }
-
-        if (!empty($removeslottagids)) {
-            // The slots to remove are the slot numbers not the slot id so we need
-            // to get the ids for the DB call.
-            $idstonull = array_map(function($slot) use ($slotsbynumber) {
-                return $slotsbynumber[$slot]->id;
-            }, $removeslottagids);
-            list($sql, $params) = $DB->get_in_or_equal($idstonull);
-            // Null out the tagid column to force the code to look up the tag by name.
-            $DB->set_field_select('quiz_slot_tags', 'tagid', null, "slotid {$sql}", $params);
-        }
-
-        $slottagsbyslotids = quiz_retrieve_tags_for_slot_ids($slotids);
-        // Convert the result into an associative array of slotid => [... tag names..]
-        // to make it easier to compare.
-        $actual = array_map(function($slottags) {
-            $names = array_map(function($slottag) {
-                return $slottag->tagname;
-            }, $slottags);
-            // Make sure the names are sorted for comparison.
-            sort($names);
-            return $names;
-        }, $slottagsbyslotids);
-
-        $formattedexptected = [];
-        // The expected values are indexed by slot number rather than id so let
-        // convert it to use the id so that we can compare the results.
-        foreach ($expected as $slot => $tagnames) {
-            sort($tagnames);
-            $slotid = $slotsbynumber[$slot]->id;
-            $formattedexptected[$slotid] = $tagnames;
-        }
-
-        $this->assertEquals($formattedexptected, $actual);
     }
 
     public function test_quiz_override_summary() {
@@ -962,11 +632,11 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         // Allow recipent to receive email confirm submission.
         $studentrole = $DB->get_record('role', array('shortname' => 'student'));
         assign_capability('mod/quiz:emailconfirmsubmission', CAP_ALLOW, $studentrole->id,
-            context_course::instance($course->id), true);
+            \context_course::instance($course->id), true);
         $this->getDataGenerator()->enrol_user($recipient->id, $course->id, $studentrole->id, 'manual');
 
         $timenow = time();
-        $data = new stdClass();
+        $data = new \stdClass();
         // Course info.
         $data->courseid        = $course->id;
         $data->coursename      = $course->fullname;

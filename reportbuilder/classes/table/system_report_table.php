@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace core_reportbuilder\table;
 
+use action_menu;
+use action_menu_filler;
 use core_table\local\filter\filterset;
 use html_writer;
 use moodle_exception;
@@ -94,7 +96,7 @@ class system_report_table extends base_report_table {
                 array_flip($this->report->get_exclude_columns_for_download()));
         }
 
-        $columnheaders = [];
+        $columnheaders = $columnsattributes = [];
         $columnindex = 1;
         foreach ($columns as $identifier => $column) {
             $column->set_index($columnindex++);
@@ -115,6 +117,9 @@ class system_report_table extends base_report_table {
             if (!$column->get_is_sortable()) {
                 $this->no_sorting($column->get_column_alias());
             }
+
+            // Generate column attributes to be included in each cell.
+            $columnsattributes[$column->get_column_alias()] = $column->get_attributes();
         }
 
         // If the report has any actions then append appropriate column, note that actions are excluded during download.
@@ -127,6 +132,9 @@ class system_report_table extends base_report_table {
 
         $this->define_columns(array_keys($columnheaders));
         $this->define_headers(array_values($columnheaders));
+
+        // Add column attributes to the table.
+        $this->set_columnsattributes($columnsattributes);
 
         // Initial table sort column.
         if ($sortcolumn = $this->report->get_initial_sort_column()) {
@@ -189,18 +197,10 @@ class system_report_table extends base_report_table {
     public function format_row($row) {
         $this->report->row_callback((object) $row);
 
-        /** @var column[] $columnsbyalias */
-        $columnsbyalias = [];
-
-        // Create a lookup for convenience, indexed by column alias.
-        $columns = $this->report->get_columns();
-        foreach ($columns as $column) {
-            $columnsbyalias[$column->get_column_alias()] = $column;
-        }
-
         // Walk over the row, and for any key that matches one of our column aliases, call that columns format method.
+        $columnsbyalias = $this->report->get_active_columns_by_alias();
         $row = (array) $row;
-        array_walk($row, static function(&$value, $key) use ($row, $columnsbyalias): void {
+        array_walk($row, static function(&$value, $key) use ($columnsbyalias, $row): void {
             if (array_key_exists($key, $columnsbyalias)) {
                 $value = $columnsbyalias[$key]->format_value($row);
             }
@@ -220,11 +220,42 @@ class system_report_table extends base_report_table {
      * @return string
      */
     private function format_row_actions(stdClass $row): string {
-        $actions = array_map(static function(action $action) use ($row): string {
-            return (string) $action->get_action_link($row);
-        }, $this->report->get_actions());
+        global $OUTPUT;
 
-        return implode('', $actions);
+        $menu = new action_menu();
+        $menu->set_menu_trigger($OUTPUT->pix_icon('a/setting', get_string('actions', 'core_reportbuilder')));
+
+        $actions = array_filter($this->report->get_actions(), function($action) use ($row) {
+            // Only return dividers and action items who can be displayed for current users.
+            return $action instanceof action_menu_filler || $action->get_action_link($row);
+        });
+
+        $totalactions = count($actions);
+        $actionvalues = array_values($actions);
+        foreach ($actionvalues as $position => $action) {
+            if ($action instanceof action_menu_filler) {
+                $ispreviousdivider = array_key_exists($position - 1, $actionvalues) &&
+                    ($actionvalues[$position - 1] instanceof action_menu_filler);
+                $isnextdivider = array_key_exists($position + 1, $actionvalues) &&
+                    ($actionvalues[$position + 1] instanceof action_menu_filler);
+                $isfirstdivider = ($position === 0);
+                $islastdivider = ($position === $totalactions - 1);
+
+                // Avoid add divider at last/first position and having multiple fillers in a row.
+                if ($ispreviousdivider || $isnextdivider || $isfirstdivider || $islastdivider) {
+                    continue;
+                }
+                $actionlink = $action;
+            } else {
+                // Ensure the action link can be displayed for the current row.
+                $actionlink = $action->get_action_link($row);
+            }
+
+            if ($actionlink) {
+                $menu->add($actionlink);
+            }
+        }
+        return $OUTPUT->render($menu);
     }
 
     /**

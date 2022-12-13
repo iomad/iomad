@@ -28,6 +28,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_quiz\question\bank\custom_view;
+use core_question\statistics\questions\all_calculated_for_qubaid_condition;
+
 require_once($CFG->dirroot . '/calendar/lib.php');
 
 
@@ -154,7 +157,7 @@ function quiz_update_instance($quiz, $mform) {
     quiz_delete_previews($quiz);
 
     // Repaginate, if asked to.
-    if (!empty($quiz->repaginatenow)) {
+    if (!empty($quiz->repaginatenow) && !quiz_has_attempts($quiz->id)) {
         quiz_repaginate_questions($quiz->id, $quiz->questionsperpage);
     }
 
@@ -176,23 +179,11 @@ function quiz_delete_instance($id) {
 
     quiz_delete_all_attempts($quiz);
     quiz_delete_all_overrides($quiz);
-
-    // Look for random questions that may no longer be used when this quiz is gone.
-    $sql = "SELECT q.id
-              FROM {quiz_slots} slot
-              JOIN {question} q ON q.id = slot.questionid
-             WHERE slot.quizid = ? AND q.qtype = ?";
-    $questionids = $DB->get_fieldset_sql($sql, array($quiz->id, 'random'));
+    quiz_delete_references($quiz->id);
 
     // We need to do the following deletes before we try and delete randoms, otherwise they would still be 'in use'.
-    $quizslots = $DB->get_fieldset_select('quiz_slots', 'id', 'quizid = ?', array($quiz->id));
-    $DB->delete_records_list('quiz_slot_tags', 'slotid', $quizslots);
     $DB->delete_records('quiz_slots', array('quizid' => $quiz->id));
     $DB->delete_records('quiz_sections', array('quizid' => $quiz->id));
-
-    foreach ($questionids as $questionid) {
-        question_delete_question($questionid);
-    }
 
     $DB->delete_records('quiz_feedback', array('quizid' => $quiz->id));
 
@@ -582,7 +573,7 @@ function quiz_user_complete($course, $user, $mod, $quiz) {
  * @param int $userid the userid.
  * @param string $status 'all', 'finished' or 'unfinished' to control
  * @param bool $includepreviews
- * @return an array of all the user's attempts at this quiz. Returns an empty
+ * @return array of all the user's attempts at this quiz. Returns an empty
  *      array if there are none.
  */
 function quiz_get_user_attempts($quizids, $userid, $status = 'finished', $includepreviews = false) {
@@ -1008,7 +999,7 @@ function quiz_print_recent_mod_activity($activity, $courseid, $detail, $modnames
     if ($detail) {
         $modname = $modnames[$activity->type];
         echo '<div class="title">';
-        echo $OUTPUT->image_icon('icon', $modname, $activity->type);
+        echo $OUTPUT->image_icon('monologo', $modname, $activity->type);
         echo '<a href="' . $CFG->wwwroot . '/mod/quiz/view.php?id=' .
                 $activity->cmid . '">' . $activity->name . '</a>';
         echo '</div>';
@@ -1445,11 +1436,19 @@ function quiz_get_post_actions() {
  * @return bool whether any of these questions are used by any instance of this module.
  */
 function quiz_questions_in_use($questionids) {
-    global $DB, $CFG;
-    require_once($CFG->libdir . '/questionlib.php');
+    global $DB;
     list($test, $params) = $DB->get_in_or_equal($questionids);
-    return $DB->record_exists_select('quiz_slots',
-            'questionid ' . $test, $params) || question_engine::questions_in_use(
+    $params['component'] = 'mod_quiz';
+    $params['questionarea'] = 'slot';
+    $sql = "SELECT qs.id
+              FROM {quiz_slots} qs
+              JOIN {question_references} qr ON qr.itemid = qs.id
+              JOIN {question_bank_entries} qbe ON qbe.id = qr.questionbankentryid
+              JOIN {question_versions} qv ON qv.questionbankentryid = qbe.id
+             WHERE qv.questionid $test
+               AND qr.component = ?
+               AND qr.questionarea = ?";
+    return $DB->record_exists_sql($sql, $params) || question_engine::questions_in_use(
             $questionids, new qubaid_join('{quiz_attempts} quiza',
             'quiza.uniqueid', 'quiza.preview = 0'));
 }
@@ -1672,7 +1671,7 @@ function quiz_attempt_summary_link_to_reports($quiz, $cm, $context, $returnzero 
 
 /**
  * @param string $feature FEATURE_xx constant for requested feature
- * @return bool True if quiz supports feature
+ * @return mixed True if module supports feature, false if not, null if doesn't know or string for the module purpose.
  */
 function quiz_supports($feature) {
     switch($feature) {
@@ -1688,6 +1687,7 @@ function quiz_supports($feature) {
         case FEATURE_CONTROLS_GRADE_VISIBILITY: return true;
         case FEATURE_USES_QUESTIONS:            return true;
         case FEATURE_PLAGIARISM:                return true;
+        case FEATURE_MOD_PURPOSE:               return MOD_PURPOSE_ASSESSMENT;
 
         default: return null;
     }
@@ -1712,8 +1712,8 @@ function quiz_get_extra_capabilities() {
  * @param navigation_node $quiznode
  * @return void
  */
-function quiz_extend_settings_navigation($settings, $quiznode) {
-    global $PAGE, $CFG;
+function quiz_extend_settings_navigation(settings_navigation $settings, navigation_node $quiznode) {
+    global $CFG;
 
     // Require {@link questionlib.php}
     // Included here as we only ever want to include this file if we really need to.
@@ -1730,25 +1730,23 @@ function quiz_extend_settings_navigation($settings, $quiznode) {
         $beforekey = $keys[$i + 1];
     }
 
-    if (has_any_capability(['mod/quiz:manageoverrides', 'mod/quiz:viewoverrides'], $PAGE->cm->context)) {
-        $url = new moodle_url('/mod/quiz/overrides.php', array('cmid' => $PAGE->cm->id));
+    if (has_any_capability(['mod/quiz:manageoverrides', 'mod/quiz:viewoverrides'], $settings->get_page()->cm->context)) {
+        $url = new moodle_url('/mod/quiz/overrides.php', ['cmid' => $settings->get_page()->cm->id, 'mode' => 'user']);
         $node = navigation_node::create(get_string('overrides', 'quiz'),
                     $url, navigation_node::TYPE_SETTING, null, 'mod_quiz_useroverrides');
+        $settingsoverride = $quiznode->add_node($node, $beforekey);
+    }
+
+    if (has_capability('mod/quiz:manage', $settings->get_page()->cm->context)) {
+        $node = navigation_node::create(get_string('questions', 'quiz'),
+            new moodle_url('/mod/quiz/edit.php', array('cmid' => $settings->get_page()->cm->id)),
+            navigation_node::TYPE_SETTING, null, 'mod_quiz_edit', new pix_icon('t/edit', ''));
         $quiznode->add_node($node, $beforekey);
     }
 
-    if (has_capability('mod/quiz:manage', $PAGE->cm->context)) {
-        $node = navigation_node::create(get_string('editquiz', 'quiz'),
-                new moodle_url('/mod/quiz/edit.php', array('cmid'=>$PAGE->cm->id)),
-                navigation_node::TYPE_SETTING, null, 'mod_quiz_edit',
-                new pix_icon('t/edit', ''));
-        $editquiznode = $quiznode->add_node($node, $beforekey);
-        $editquiznode->set_show_in_secondary_navigation(false);
-    }
-
-    if (has_capability('mod/quiz:preview', $PAGE->cm->context)) {
+    if (has_capability('mod/quiz:preview', $settings->get_page()->cm->context)) {
         $url = new moodle_url('/mod/quiz/startattempt.php',
-                array('cmid'=>$PAGE->cm->id, 'sesskey'=>sesskey()));
+                array('cmid' => $settings->get_page()->cm->id, 'sesskey' => sesskey()));
         $node = navigation_node::create(get_string('preview', 'quiz'), $url,
                 navigation_node::TYPE_SETTING, null, 'mod_quiz_preview',
                 new pix_icon('i/preview', ''));
@@ -1756,21 +1754,20 @@ function quiz_extend_settings_navigation($settings, $quiznode) {
         $previewnode->set_show_in_secondary_navigation(false);
     }
 
-    question_extend_settings_navigation($quiznode, $PAGE->cm->context)->trim_if_empty();
+    question_extend_settings_navigation($quiznode, $settings->get_page()->cm->context)->trim_if_empty();
 
-    if (has_any_capability(array('mod/quiz:viewreports', 'mod/quiz:grade'), $PAGE->cm->context)) {
+    if (has_any_capability(array('mod/quiz:viewreports', 'mod/quiz:grade'), $settings->get_page()->cm->context)) {
         require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
-        $reportlist = quiz_report_list($PAGE->cm->context);
+        $reportlist = quiz_report_list($settings->get_page()->cm->context);
 
         $url = new moodle_url('/mod/quiz/report.php',
-                array('id' => $PAGE->cm->id, 'mode' => reset($reportlist)));
+                array('id' => $settings->get_page()->cm->id, 'mode' => reset($reportlist)));
         $reportnode = $quiznode->add_node(navigation_node::create(get_string('results', 'quiz'), $url,
                 navigation_node::TYPE_SETTING,
-                null, null, new pix_icon('i/report', '')));
+                null, 'quiz_report', new pix_icon('i/report', '')));
 
         foreach ($reportlist as $report) {
-            $url = new moodle_url('/mod/quiz/report.php',
-                    array('id' => $PAGE->cm->id, 'mode' => $report));
+            $url = new moodle_url('/mod/quiz/report.php', ['id' => $settings->get_page()->cm->id, 'mode' => $report]);
             $reportnode->add_node(navigation_node::create(get_string($report, 'quiz_'.$report), $url,
                     navigation_node::TYPE_SETTING,
                     null, 'quiz_report_' . $report, new pix_icon('i/item', '')));
@@ -2388,14 +2385,14 @@ function mod_quiz_output_fragment_quiz_question_bank($args) {
     // Build the required resources. The $params are all cleaned as
     // part of this process.
     list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
-            question_build_edit_resources('editq', '/mod/quiz/edit.php', $params);
+            question_build_edit_resources('editq', '/mod/quiz/edit.php', $params, custom_view::DEFAULT_PAGE_SIZE);
 
     // Get the course object and related bits.
     $course = $DB->get_record('course', array('id' => $quiz->course), '*', MUST_EXIST);
     require_capability('mod/quiz:manage', $contexts->lowest());
 
     // Create quiz question bank view.
-    $questionbank = new mod_quiz\question\bank\custom_view($contexts, $thispageurl, $course, $cm, $quiz);
+    $questionbank = new custom_view($contexts, $thispageurl, $course, $cm, $quiz);
     $questionbank->set_quiz_has_attempts(quiz_has_attempts($quiz->id));
 
     // Output.
@@ -2420,7 +2417,7 @@ function mod_quiz_output_fragment_add_random_question_form($args) {
     global $CFG;
     require_once($CFG->dirroot . '/mod/quiz/addrandomform.php');
 
-    $contexts = new \question_edit_contexts($args['context']);
+    $contexts = new \core_question\local\bank\question_edit_contexts($args['context']);
     $formoptions = [
         'contexts' => $contexts,
         'cat' => $args['cat']
@@ -2467,4 +2464,41 @@ function mod_quiz_core_calendar_get_event_action_string(string $eventtype): stri
     }
 
     return get_string($identifier, 'quiz', $modulename);
+}
+
+/**
+ * Delete question reference data.
+ *
+ * @param int $quizid The id of quiz.
+ */
+function quiz_delete_references($quizid): void {
+    global $DB;
+    $slots = $DB->get_records('quiz_slots', ['quizid' => $quizid]);
+    foreach ($slots as $slot) {
+        $params = [
+            'itemid' => $slot->id,
+            'component' => 'mod_quiz',
+            'questionarea' => 'slot'
+        ];
+        // Delete any set references.
+        $DB->delete_records('question_set_references', $params);
+        // Delete any references.
+        $DB->delete_records('question_references', $params);
+    }
+}
+
+/**
+ * Implement the calculate_question_stats callback.
+ *
+ * This enables quiz statistics to be shown in statistics columns in the database.
+ *
+ * @param context $context return the statistics related to this context (which will be a quiz context).
+ * @return all_calculated_for_qubaid_condition|null The statistics for this quiz, if any, else null.
+ */
+function mod_quiz_calculate_question_stats(context $context): ?all_calculated_for_qubaid_condition {
+    global $CFG;
+    require_once($CFG->dirroot . '/mod/quiz/report/statistics/report.php');
+    $cm = get_coursemodule_from_id('quiz', $context->instanceid);
+    $report = new quiz_statistics_report();
+    return $report->calculate_questions_stats_for_question_bank($cm->instance);
 }

@@ -1,5 +1,24 @@
 This files describes API changes in the quiz code.
 
+=== 4.1 ===
+
+* quiz_has_question_use is now deprecated. Use mod_quiz\structure::has_use_capability istead.
+
+
+=== 4.0.3, 4.1 ===
+
+* If a quiz is sequential the external functions mod_quiz_external::get_attempt_data, mod_quiz_external::get_attempt_summary will not return any data
+related to out of sequence question except while reviewing the quiz (MDL-75210).
+
+=== 4.0.2, 4.1 ===
+
+* No external code should be calling quiz_overview_report::regrade_attempt because it is an
+  internal method of the quiz_overview plugin. But if you are incorrectly using it, be aware
+  that the API changed slightly. It now returns an array listing any questions which could
+  not be regraded.
+* New method called get_number_of_unanswered_questions() has been added to mod/quiz/attemptlib.php
+  to get the total number of unanswered questions in the current attempt.
+
 === 4.0 ===
 
 * The following API methods have a new parameter, $studentisonline, to define whether the student is currently interacting:
@@ -8,16 +27,23 @@ This files describes API changes in the quiz code.
   - quiz_send_notification_messages() in mod/quiz/locallib.php
 * The completionpass criteria has been moved to core as 'completionpassgrade'. Refer to completion/upgrade.txt for
   further information.
-* New argument quizhasquestions has been added to public methods: view_information, view_page_notenrolled and view_page_guest
-  in mod/quiz/renderer.php.
-* The function no_questions_message() in class mod_quiz_renderer is deprecated. Please use generate_no_questions_message()
-  in the same class.
+* New argument quizhasquestions has been added to public methods: view_information in mod/quiz/renderer.php.
+* The function no_questions_message() in class mod_quiz_renderer is deprecated. There is no replacement.
+* Related to the Moodle 4.0 question bank changes, the quiz_slots database table.
+  The fields removed are now manage by new core_question tables:
+  - question_references -> Records where a specific question is used.
+  - question_set_references -> Records where groups of questions are used (e.g. random questions).
+* The quiz_slots_tags database table has been removed entirely, as has the get_slot_tags_for_slot_id() method
+  from mod/quiz/classes/structure.php and the the locallib.php functions quiz_retrieve_slot_tags and
+  quiz_retrieve_slot_tag_ids. This information is now stored in question_set_references
+  and can be accessed in the results of qbank_helper::get_question_structure.
 
 
 === 3.11 ===
 
 * External function mod_quiz_external::get_user_best_grade now returns and additional optional field:
   - gradetopass: The grade to pass the quiz (if set)
+
 
 === 3.10.1 ===
 

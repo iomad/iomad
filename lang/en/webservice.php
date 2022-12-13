@@ -27,6 +27,7 @@ $string['actwebserviceshhdr'] = 'Active web service protocols';
 $string['addaservice'] = 'Add service';
 $string['addcapabilitytousers'] = 'Check users capability';
 $string['addcapabilitytousersdescription'] = 'Users should have two capabilities - webservice:createtoken and a capability matching the protocols used, for example webservice/rest:use, webservice/soap:use. To achieve this, create a web services role with the appropriate capabilities allowed and assign it to the web services user as a system role.';
+$string['addexternalservice'] = 'Add external service';
 $string['addfunction'] = 'Add function';
 $string['addfunctionhelp'] = 'Select the function to add to the service.';
 $string['addfunctions'] = 'Add functions';
@@ -56,13 +57,16 @@ $string['default'] = 'Default to "{$a}"';
 $string['deleteaservice'] = 'Delete service';
 $string['deleteservice'] = 'Delete the service: {$a->name} (id: {$a->id})';
 $string['deleteserviceconfirm'] = 'Deleting a service will also delete the tokens related to this service. Do you really want to delete external service "{$a}"?';
+$string['deletetoken'] = 'Delete token';
 $string['deletetokenconfirm'] = 'Do you really want to delete this web service token for <strong>{$a->user}</strong> on the service <strong>{$a->service}</strong>?';
+$string['deprecated'] = 'Deprecated';
 $string['disabledwarning'] = 'All web service protocols are disabled.  The "Enable web services" setting can be found in Advanced features.';
 $string['doc'] = 'Documentation';
 $string['docaccessrefused'] = 'You are not allowed to see the documentation for this token';
 $string['downloadfiles'] = 'Can download files';
 $string['downloadfiles_help'] = 'If enabled, any user can download files with their security keys. Of course they are restricted to the files they are allowed to download in the site.';
 $string['editaservice'] = 'Edit service';
+$string['editexternalservice'] = 'Edit external service';
 $string['editservice'] = 'Edit the service: {$a->name} (id: {$a->id})';
 $string['enabled'] = 'Enabled';
 $string['enabledocumentation'] = 'Enable developer documentation';
@@ -164,6 +168,7 @@ $string['required'] = 'Required';
 $string['requiredcapability'] = 'Required capability';
 $string['requiredcapability_help'] = 'If set, only users with the required capability can access the service.';
 $string['requiredcaps'] = 'Required capabilities';
+$string['resettokencomplete'] = 'The selected token was reset';
 $string['resettokenconfirm'] = 'Do you really want to reset this web service key for <strong>{$a->user}</strong> on the service <strong>{$a->service}</strong>?';
 $string['resettokenconfirmsimple'] = 'Do you really want to reset this key? Any saved links containing the old key will not work anymore.';
 $string['response'] = 'Response';
@@ -241,9 +246,6 @@ $string['wsdocumentationintro'] = 'To create a client we advise you to read the 
 $string['wsdocumentationlogin'] = 'or enter your web service username and password:';
 $string['wspassword'] = 'Web service password';
 $string['wsusername'] = 'Web service username';
-
-// Deprecated since Moodle 3.9.
-$string['documentation'] = 'web service documentation';
 
 // Deprecated since Moodle 3.11.
 $string['usernameoridnousererror'] = 'No users were found with this username/user id.';

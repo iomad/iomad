@@ -24,15 +24,16 @@
 
 namespace core_courseformat\output\local\content\section;
 
-use core_courseformat\base as course_format;
-use section_info;
-use renderable;
-use templatable;
+use action_menu;
+use action_menu_link_secondary;
 use context_course;
+use core\output\named_templatable;
+use core_courseformat\base as course_format;
+use core_courseformat\output\local\courseformat_named_templatable;
 use moodle_url;
 use pix_icon;
-use action_menu_link_secondary;
-use action_menu;
+use renderable;
+use section_info;
 use stdClass;
 
 /**
@@ -42,7 +43,9 @@ use stdClass;
  * @copyright 2020 Ferran Recio <ferran@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class controlmenu implements renderable, templatable {
+class controlmenu implements named_templatable, renderable {
+
+    use courseformat_named_templatable;
 
     /** @var course_format the course format class */
     protected $format;
@@ -156,8 +159,9 @@ class controlmenu implements renderable, templatable {
             $url = clone($baseurl);
             if (!$isstealth) {
                 if (has_capability('moodle/course:sectionvisibility', $coursecontext, $user)) {
+                    $strhidefromothers = get_string('hidefromothers', 'format_' . $course->format);
+                    $strshowfromothers = get_string('showfromothers', 'format_' . $course->format);
                     if ($section->visible) { // Show the hide/show eye.
-                        $strhidefromothers = get_string('hidefromothers', 'format_'.$course->format);
                         $url->param('hide', $section->section);
                         $controls['visiblity'] = [
                             'url' => $url,
@@ -167,11 +171,13 @@ class controlmenu implements renderable, templatable {
                             'attr' => [
                                 'class' => 'icon editing_showhide',
                                 'data-sectionreturn' => $sectionreturn,
-                                'data-action' => 'hide',
+                                'data-action' => ($usecomponents) ? 'sectionHide' : 'hide',
+                                'data-id' => $section->id,
+                                'data-swapname' => $strshowfromothers,
+                                'data-swapicon' => 'i/show',
                             ],
                         ];
                     } else {
-                        $strshowfromothers = get_string('showfromothers', 'format_'.$course->format);
                         $url->param('show',  $section->section);
                         $controls['visiblity'] = [
                             'url' => $url,
@@ -181,7 +187,10 @@ class controlmenu implements renderable, templatable {
                             'attr' => [
                                 'class' => 'icon editing_showhide',
                                 'data-sectionreturn' => $sectionreturn,
-                                'data-action' => 'show',
+                                'data-action' => ($usecomponents) ? 'sectionShow' : 'show',
+                                'data-id' => $section->id,
+                                'data-swapname' => $strhidefromothers,
+                                'data-swapicon' => 'i/hide',
                             ],
                         ];
                     }

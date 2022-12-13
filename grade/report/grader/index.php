@@ -32,7 +32,7 @@ $courseid      = required_param('id', PARAM_INT);        // course id
 $page          = optional_param('page', 0, PARAM_INT);   // active page
 $edit          = optional_param('edit', -1, PARAM_BOOL); // sticky editting mode
 
-$sortitemid    = optional_param('sortitemid', 0, PARAM_ALPHANUM); // sort by which grade item
+$sortitemid    = optional_param('sortitemid', 0, PARAM_ALPHANUMEXT);
 $action        = optional_param('action', 0, PARAM_ALPHAEXT);
 $move          = optional_param('move', 0, PARAM_INT);
 $type          = optional_param('type', 0, PARAM_ALPHA);
@@ -44,12 +44,12 @@ $graderreportsifirst  = optional_param('sifirst', null, PARAM_NOTAGS);
 $graderreportsilast   = optional_param('silast', null, PARAM_NOTAGS);
 
 $PAGE->set_url(new moodle_url('/grade/report/grader/index.php', array('id'=>$courseid)));
-$PAGE->requires->yui_module('moodle-gradereport_grader-gradereporttable', 'Y.M.gradereport_grader.init', null, null, true);
 $PAGE->set_pagelayout('report');
+$PAGE->requires->js_call_amd('gradereport_grader/stickycolspan', 'init');
 
 // basic access checks
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
-    print_error('invalidcourseid');
+    throw new \moodle_exception('invalidcourseid');
 }
 require_login($course);
 $context = context_course::instance($course->id);
@@ -81,29 +81,18 @@ if (!isset($USER->grade_last_report)) {
 }
 $USER->grade_last_report[$course->id] = 'grader';
 
-// Build editing on/off buttons
+// Build editing on/off buttons.
 $buttons = '';
-if (has_capability('moodle/grade:edit', $context)) {
 
-    if (($edit != - 1) and $PAGE->user_allowed_editing()) {
+$PAGE->set_other_editing_capability('moodle/grade:edit');
+if ($PAGE->user_allowed_editing() && !$PAGE->theme->haseditswitch) {
+    if ($edit != - 1) {
         $USER->editing = $edit;
     }
 
-    // page params for the turn editting on
+    // Page params for the turn editing on button.
     $options = $gpr->get_options();
-    $options['sesskey'] = sesskey();
-
-    if (isset($USER->editing) && $USER->editing) {
-        $options['edit'] = 0;
-        $string = get_string('turneditingoff');
-    } else {
-        $options['edit'] = 1;
-        $string = get_string('turneditingon');
-    }
-
-    if (!$PAGE->theme->haseditswitch) {
-        $buttons = new single_button(new moodle_url('index.php', $options), $string, 'get');
-    }
+    $buttons = $OUTPUT->edit_button(new moodle_url($PAGE->url, $options), 'get');
 }
 
 $gradeserror = array();

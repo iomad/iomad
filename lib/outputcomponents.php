@@ -167,9 +167,8 @@ class user_picture implements renderable {
     public $link = true;
 
     /**
-     * @var int Size in pixels. Special values are (true/1 = 100px) and
-     * (false/0 = 35px)
-     * for backward compatibility.
+     * @var int Size in pixels. Special values are (true/1 = 100px) and (false/0 = 35px) for backward compatibility.
+     * Recommended values (supporting user initials too): 16, 35, 64 and 100.
      */
     public $size = 35;
 
@@ -1532,6 +1531,9 @@ class action_link implements renderable {
                                 pix_icon $icon=null) {
         $this->url = clone($url);
         $this->text = $text;
+        if (empty($attributes['id'])) {
+            $attributes['id'] = html_writer::random_id('action_link');
+        }
         $this->attributes = (array)$attributes;
         if ($action) {
             $this->add_action($action);
@@ -1591,9 +1593,6 @@ class action_link implements renderable {
         $data = new stdClass();
         $attributes = $this->attributes;
 
-        if (empty($attributes['id'])) {
-            $attributes['id'] = html_writer::random_id('action_link');
-        }
         $data->id = $attributes['id'];
         unset($attributes['id']);
 
@@ -3487,6 +3486,9 @@ class custom_menu_item implements renderable, templatable {
      */
     protected $lastsort = 0;
 
+    /** @var array Array of other HTML attributes for the custom menu item. */
+    protected $attributes = [];
+
     /**
      * Constructs the new custom menu item
      *
@@ -3496,13 +3498,16 @@ class custom_menu_item implements renderable, templatable {
      * @param int $sort A sort or to use if we need to sort differently [Optional]
      * @param custom_menu_item $parent A reference to the parent custom_menu_item this child
      *        belongs to, only if the child has a parent. [Optional]
+     * @param array $attributes Array of other HTML attributes for the custom menu item.
      */
-    public function __construct($text, moodle_url $url=null, $title=null, $sort = null, custom_menu_item $parent = null) {
+    public function __construct($text, moodle_url $url = null, $title = null, $sort = null, custom_menu_item $parent = null,
+                                array $attributes = []) {
         $this->text = $text;
         $this->url = $url;
         $this->title = $title;
         $this->sort = (int)$sort;
         $this->parent = $parent;
+        $this->attributes = $attributes;
     }
 
     /**
@@ -3512,14 +3517,15 @@ class custom_menu_item implements renderable, templatable {
      * @param moodle_url $url
      * @param string $title
      * @param int $sort
+     * @param array $attributes Array of other HTML attributes for the custom menu item.
      * @return custom_menu_item
      */
-    public function add($text, moodle_url $url = null, $title = null, $sort = null) {
+    public function add($text, moodle_url $url = null, $title = null, $sort = null, $attributes = []) {
         $key = count($this->children);
         if (empty($sort)) {
             $sort = $this->lastsort + 1;
         }
-        $this->children[$key] = new custom_menu_item($text, $url, $title, $sort, $this);
+        $this->children[$key] = new custom_menu_item($text, $url, $title, $sort, $this, $attributes);
         $this->lastsort = (int)$sort;
         return $this->children[$key];
     }
@@ -3650,10 +3656,18 @@ class custom_menu_item implements renderable, templatable {
         $syscontext = context_system::instance();
 
         $context = new stdClass();
+        $context->moremenuid = uniqid();
         $context->text = external_format_string($this->text, $syscontext->id);
         $context->url = $this->url ? $this->url->out() : null;
-        $context->title = external_format_string($this->title, $syscontext->id);
+        // No need for the title if it's the same with text.
+        if ($this->text !== $this->title) {
+            // Show the title attribute only if it's different from the text.
+            $context->title = external_format_string($this->title, $syscontext->id);
+        }
         $context->sort = $this->sort;
+        if (!empty($this->attributes)) {
+            $context->attributes = $this->attributes;
+        }
         $context->children = array();
         if (preg_match("/^#+$/", $this->text)) {
             $context->divider = true;
@@ -4233,6 +4247,12 @@ class action_menu implements renderable, templatable {
     public $prioritise = false;
 
     /**
+     * Dropdown menu alignment class.
+     * @var string
+     */
+    public $dropdownalignment = '';
+
+    /**
      * Constructs the action menu with the given items.
      *
      * @param array $actions An array of actions (action_menu_link|pix_icon|string).
@@ -4250,7 +4270,6 @@ class action_menu implements renderable, templatable {
         $this->attributesprimary = array(
             'id' => 'action-menu-'.$this->instance.'-menubar',
             'class' => 'menubar',
-            'role' => 'menubar'
         );
         $this->attributessecondary = array(
             'id' => 'action-menu-'.$this->instance.'-menu',
@@ -4259,7 +4278,7 @@ class action_menu implements renderable, templatable {
             'aria-labelledby' => 'action-menu-toggle-'.$this->instance,
             'role' => 'menu'
         );
-        $this->set_alignment(self::TR, self::BR);
+        $this->dropdownalignment = 'dropdown-menu-right';
         foreach ($actions as $action) {
             $this->add($action);
         }
@@ -4335,6 +4354,7 @@ class action_menu implements renderable, templatable {
     public function add_primary_action($action) {
         if ($action instanceof action_link || $action instanceof pix_icon) {
             $action->attributes['role'] = 'menuitem';
+            $action->attributes['tabindex'] = '-1';
             if ($action instanceof action_menu_link) {
                 $action->actionmenu = $this;
             }
@@ -4350,6 +4370,7 @@ class action_menu implements renderable, templatable {
     public function add_secondary_action($action) {
         if ($action instanceof action_link || $action instanceof pix_icon) {
             $action->attributes['role'] = 'menuitem';
+            $action->attributes['tabindex'] = '-1';
             if ($action instanceof action_menu_link) {
                 $action->actionmenu = $this;
             }
@@ -4407,7 +4428,8 @@ class action_menu implements renderable, templatable {
             'title' => $title,
             'aria-label' => $label,
             'id' => 'action-menu-toggle-'.$this->instance,
-            'role' => 'menuitem'
+            'role' => 'menuitem',
+            'tabindex' => '-1',
         );
         $link = html_writer::link('#', $string . $this->menutrigger . $pixicon, $attributes);
         if ($this->prioritise) {
@@ -4437,10 +4459,13 @@ class action_menu implements renderable, templatable {
     /**
      * Sets the alignment of the dialogue in relation to button used to toggle it.
      *
+     * @deprecated since Moodle 4.0
+     *
      * @param int $dialogue One of action_menu::TL, action_menu::TR, action_menu::BL, action_menu::BR.
      * @param int $button One of action_menu::TL, action_menu::TR, action_menu::BL, action_menu::BR.
      */
     public function set_alignment($dialogue, $button) {
+        debugging('The method action_menu::set_alignment() is deprecated, use action_menu::set_menu_left()', DEBUG_DEVELOPER);
         if (isset($this->attributessecondary['data-align'])) {
             // We've already got one set, lets remove the old class so as to avoid troubles.
             $class = $this->attributessecondary['class'];
@@ -4471,6 +4496,14 @@ class action_menu implements renderable, templatable {
             default :
                 return 'tl';
         }
+    }
+
+    /**
+     * Aligns the left corner of the dropdown.
+     *
+     */
+    public function set_menu_left() {
+        $this->dropdownalignment = 'dropdown-menu-left';
     }
 
     /**
@@ -4537,6 +4570,19 @@ class action_menu implements renderable, templatable {
     }
 
     /**
+     * Add classes to the action menu for an easier styling.
+     *
+     * @param string $class The class to add to attributes.
+     */
+    public function set_additional_classes(string $class = '') {
+        if (!empty($this->attributes['class'])) {
+            $this->attributes['class'] .= " ".$class;
+        } else {
+            $this->attributes['class'] = $class;
+        }
+    }
+
+    /**
      * Export for template.
      *
      * @param renderer_base $output The renderer.
@@ -4544,6 +4590,12 @@ class action_menu implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         $data = new stdClass();
+        // Assign a role of menubar to this action menu when:
+        // - it contains 2 or more primary actions; or
+        // - if it contains a primary action and secondary actions.
+        if (count($this->primaryactions) > 1 || (!empty($this->primaryactions) && !empty($this->secondaryactions))) {
+            $this->attributes['role'] = 'menubar';
+        }
         $attributes = $this->attributes;
         $attributesprimary = $this->attributesprimary;
         $attributessecondary = $this->attributessecondary;
@@ -4582,6 +4634,12 @@ class action_menu implements renderable, templatable {
             $primary->title = get_string('actionsmenu');
             $iconattributes = ['class' => 'iconsmall actionmenu', 'title' => $primary->title];
             $actionicon = new pix_icon('t/edit_menu', '', 'moodle', $iconattributes);
+        }
+
+        // If the menu trigger is within the menubar, assign a role of menuitem. Otherwise, assign as a button.
+        $primary->triggerrole = 'button';
+        if (isset($attributes['role']) && $attributes['role'] === 'menubar') {
+            $primary->triggerrole = 'menuitem';
         }
 
         if ($actionicon instanceof pix_icon) {
@@ -4634,6 +4692,7 @@ class action_menu implements renderable, templatable {
 
         $data->primary = $primary;
         $data->secondary = $secondary;
+        $data->dropdownalignment = $this->dropdownalignment;
 
         return $data;
     }
@@ -4660,6 +4719,7 @@ class action_menu_filler extends action_link implements renderable {
      * Constructs the object.
      */
     public function __construct() {
+        $this->attributes['id'] = html_writer::random_id('action_link');
     }
 }
 
@@ -4695,12 +4755,12 @@ class action_menu_link extends action_link implements renderable {
      * Constructs the object.
      *
      * @param moodle_url $url The URL for the action.
-     * @param pix_icon $icon The icon to represent the action.
+     * @param pix_icon|null $icon The icon to represent the action.
      * @param string $text The text to represent the action.
      * @param bool $primary Whether this is a primary action or not.
      * @param array $attributes Any attribtues associated with the action.
      */
-    public function __construct(moodle_url $url, pix_icon $icon = null, $text, $primary = true, array $attributes = array()) {
+    public function __construct(moodle_url $url, ?pix_icon $icon, $text, $primary = true, array $attributes = array()) {
         parent::__construct($url, $text, null, $attributes, $icon);
         $this->primary = (bool)$primary;
         $this->add_class('menu-action');
@@ -4766,11 +4826,11 @@ class action_menu_link_primary extends action_menu_link {
      * Constructs the object.
      *
      * @param moodle_url $url
-     * @param pix_icon $icon
+     * @param pix_icon|null $icon
      * @param string $text
      * @param array $attributes
      */
-    public function __construct(moodle_url $url, pix_icon $icon = null, $text, array $attributes = array()) {
+    public function __construct(moodle_url $url, ?pix_icon $icon, $text, array $attributes = array()) {
         parent::__construct($url, $icon, $text, true, $attributes);
     }
 }
@@ -4788,11 +4848,11 @@ class action_menu_link_secondary extends action_menu_link {
      * Constructs the object.
      *
      * @param moodle_url $url
-     * @param pix_icon $icon
+     * @param pix_icon|null $icon
      * @param string $text
      * @param array $attributes
      */
-    public function __construct(moodle_url $url, pix_icon $icon = null, $text, array $attributes = array()) {
+    public function __construct(moodle_url $url, ?pix_icon $icon, $text, array $attributes = array()) {
         parent::__construct($url, $icon, $text, false, $attributes);
     }
 }

@@ -1201,7 +1201,7 @@ function assign_legacy_capabilities($capability, $legacyperms) {
         }
 
         if (!array_key_exists($type, $archetypes)) {
-            print_error('invalidlegacy', '', '', $type);
+            throw new \moodle_exception('invalidlegacy', '', '', $type);
         }
 
         if ($roles = get_archetype_roles($type)) {
@@ -2420,7 +2420,8 @@ function capabilities_cleanup($component, $newcapdef = null) {
                 if ($roles = get_roles_with_capability($cachedcap->name)) {
                     foreach ($roles as $role) {
                         if (!unassign_capability($cachedcap->name, $role->id)) {
-                            print_error('cannotunassigncap', 'error', '', (object)array('cap'=>$cachedcap->name, 'role'=>$role->name));
+                            throw new \moodle_exception('cannotunassigncap', 'error', '',
+                                (object)array('cap' => $cachedcap->name, 'role' => $role->name));
                         }
                     }
                 }
@@ -2559,11 +2560,76 @@ function is_inside_frontpage(context $context) {
 function get_capability_info($capabilityname) {
     $caps = get_all_capabilities();
 
+    // Check for deprecated capability.
+    if ($deprecatedinfo = get_deprecated_capability_info($capabilityname)) {
+        if (!empty($deprecatedinfo['replacement'])) {
+            // Let's try again with this capability if it exists.
+            if (isset($caps[$deprecatedinfo['replacement']])) {
+                $capabilityname = $deprecatedinfo['replacement'];
+            } else {
+                debugging("Capability '{$capabilityname}' was supposed to be replaced with ".
+                    "'{$deprecatedinfo['replacement']}', which does not exist !");
+            }
+        }
+        $fullmessage = $deprecatedinfo['fullmessage'];
+        debugging($fullmessage, DEBUG_DEVELOPER);
+    }
     if (!isset($caps[$capabilityname])) {
         return null;
     }
 
     return (object) $caps[$capabilityname];
+}
+
+/**
+ * Returns deprecation info for this particular capabilty (cached)
+ *
+ * Do not use this function except in the get_capability_info
+ *
+ * @param string $capabilityname
+ * @return stdClass|null with deprecation message and potential replacement if not null
+ */
+function get_deprecated_capability_info($capabilityname) {
+    // Here if we do like get_all_capabilities, we run into performance issues as the full array is unserialised each time.
+    // We could have used an adhoc task but this also had performance issue. Last solution was to create a cache using
+    // the official caches.php file. The performance issue shows in test_permission_evaluation.
+    $cache = cache::make('core', 'deprecatedcapabilities');
+    // Cache has not be initialised.
+    if (!$cache->get('deprecated_capabilities_initialised')) {
+        // Look for deprecated capabilities in each components.
+        $allcaps = get_all_capabilities();
+        $components = [];
+        $alldeprecatedcaps = [];
+        foreach ($allcaps as $cap) {
+            if (!in_array($cap['component'], $components)) {
+                $components[] = $cap['component'];
+                $defpath = core_component::get_component_directory($cap['component']).'/db/access.php';
+                if (file_exists($defpath)) {
+                    $deprecatedcapabilities = [];
+                    require($defpath);
+                    if (!empty($deprecatedcapabilities)) {
+                        foreach ($deprecatedcapabilities as $cname => $cdef) {
+                            $cache->set($cname, $cdef);
+                        }
+                    }
+                }
+            }
+        }
+        $cache->set('deprecated_capabilities_initialised', true);
+    }
+    if (!$cache->has($capabilityname)) {
+        return null;
+    }
+    $deprecatedinfo = $cache->get($capabilityname);
+    $deprecatedinfo['fullmessage'] = "The capability '{$capabilityname}' is deprecated.";
+    if (!empty($deprecatedinfo['message'])) {
+        $deprecatedinfo['fullmessage'] .= $deprecatedinfo['message'];
+    }
+    if (!empty($deprecatedinfo['replacement'])) {
+        $deprecatedinfo['fullmessage'] .=
+            "It will be replaced by '{$deprecatedinfo['replacement']}'.";
+    }
+    return $deprecatedinfo;
 }
 
 /**
@@ -4176,6 +4242,11 @@ function get_user_capability_contexts(string $capability, bool $getcategories, $
         $userid = $USER->id;
     }
 
+    if (!$capinfo = get_capability_info($capability)) {
+        debugging('Capability "'.$capability.'" was not found! This has to be fixed in code.');
+        return [false, false];
+    }
+
     if ($doanything && is_siteadmin($userid)) {
         // If the user is a site admin and $doanything is enabled then there is no need to restrict
         // the list of courses.
@@ -4184,7 +4255,7 @@ function get_user_capability_contexts(string $capability, bool $getcategories, $
     } else {
         // Gets SQL to limit contexts ('x' table) to those where the user has this capability.
         list ($contextlimitsql, $contextlimitparams) = \core\access\get_user_capability_course_helper::get_sql(
-            $userid, $capability);
+            $userid, $capinfo->name);
         if (!$contextlimitsql) {
             // If the does not have this capability in any context, return false without querying.
             return [false, false];
@@ -5272,7 +5343,7 @@ abstract class context extends stdClass implements IteratorAggregate {
      * Now we can convert context object to array using convert_to_array(),
      * and feed it properly to json_encode().
      */
-    public function getIterator() {
+    public function getIterator(): Traversable {
         $ret = array(
             'id'           => $this->id,
             'contextlevel' => $this->contextlevel,
@@ -6285,6 +6356,21 @@ class context_helper extends context {
     public static function get_level_name($contextlevel) {
         $classname = context_helper::get_class_for_level($contextlevel);
         return $classname::get_level_name();
+    }
+
+    /**
+     * Gets the current context to be used for navigation tree filtering.
+     *
+     * @param context|null $context The current context to be checked against.
+     * @return context|null the context that navigation tree filtering should use.
+     */
+    public static function get_navigation_filter_context(?context $context): ?context {
+        global $CFG;
+        if (!empty($CFG->filternavigationwithsystemcontext)) {
+            return context_system::instance();
+        } else {
+            return $context;
+        }
     }
 
     /**
@@ -7644,16 +7730,23 @@ class context_block extends context {
     protected static function create_level_instances() {
         global $DB;
 
-        $sql = "SELECT ".CONTEXT_BLOCK.", bi.id
-                  FROM {block_instances} bi
-                 WHERE NOT EXISTS (SELECT 'x'
-                                     FROM {context} cx
-                                    WHERE bi.id = cx.instanceid AND cx.contextlevel=".CONTEXT_BLOCK.")";
-        $contextdata = $DB->get_recordset_sql($sql);
-        foreach ($contextdata as $context) {
-            context::insert_context_record(CONTEXT_BLOCK, $context->id, null);
-        }
-        $contextdata->close();
+        $sql = <<<EOF
+            INSERT INTO {context} (
+                contextlevel,
+                instanceid
+            ) SELECT
+                :contextlevel,
+                bi.id as instanceid
+               FROM {block_instances} bi
+               WHERE NOT EXISTS (
+                   SELECT 'x' FROM {context} cx WHERE bi.id = cx.instanceid AND cx.contextlevel = :existingcontextlevel
+               )
+        EOF;
+
+        $DB->execute($sql, [
+            'contextlevel' => CONTEXT_BLOCK,
+            'existingcontextlevel' => CONTEXT_BLOCK,
+        ]);
     }
 
     /**

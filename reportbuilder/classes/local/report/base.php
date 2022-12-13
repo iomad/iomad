@@ -84,6 +84,9 @@ abstract class base {
     /** @var string $downloadfilename Name of the downloaded file */
     private $downloadfilename = '';
 
+    /** @var int Default paging size */
+    private $defaultperpage = self::DEFAULT_PAGESIZE;
+
     /**
      * Base report constructor
      *
@@ -270,6 +273,15 @@ abstract class base {
     }
 
     /**
+     * Returns the list of all the entities added to the report
+     *
+     * @return entity_base[]
+     */
+    final protected function get_entities(): array {
+        return $this->entities;
+    }
+
+    /**
      * Define a new entity for the report
      *
      * @param string $name
@@ -372,6 +384,30 @@ abstract class base {
         return array_filter($this->columns, static function(column $column): bool {
             return $column->get_is_available();
         });
+    }
+
+    /**
+     * Return all active report columns (by default, all available columns)
+     *
+     * @return column[]
+     */
+    public function get_active_columns(): array {
+        return $this->get_columns();
+    }
+
+    /**
+     * Return all active report columns, keyed by their alias (only active columns in a report would have a valid alias/index)
+     *
+     * @return column[]
+     */
+    final public function get_active_columns_by_alias(): array {
+        $columns = [];
+
+        foreach ($this->get_active_columns() as $column) {
+            $columns[$column->get_column_alias()] = $column;
+        }
+
+        return $columns;
     }
 
     /**
@@ -689,5 +725,23 @@ abstract class base {
      */
     public function get_context(): context {
         return $this->report->get_context();
+    }
+
+    /**
+     * Set the default 'per page' size
+     *
+     * @param int $defaultperpage
+     */
+    public function set_default_per_page(int $defaultperpage): void {
+        $this->defaultperpage = $defaultperpage;
+    }
+
+    /**
+     * Default 'per page' size
+     *
+     * @return int
+     */
+    public function get_default_per_page(): int {
+        return $this->defaultperpage;
     }
 }

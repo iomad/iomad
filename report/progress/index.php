@@ -33,7 +33,7 @@ require_once($CFG->libdir . '/completionlib.php');
 $id = required_param('course',PARAM_INT);
 $course = $DB->get_record('course',array('id'=>$id));
 if (!$course) {
-    print_error('invalidcourseid');
+    throw new \moodle_exception('invalidcourseid');
 }
 $context = context_course::instance($course->id);
 
@@ -200,9 +200,7 @@ if ($csv && $grandtotal && count($activities)>0) { // Only show CSV if there are
     $PAGE->requires->js_call_amd('report_progress/completion_override', 'init', [fullname($USER)]);
 
     // Handle groups (if enabled).
-    $groupurl = fullclone($url);
-    $groupurl->remove_params(['page', 'group']);
-    groups_print_course_menu($course, $groupurl);
+    echo $output->render_groups_select($url, $course);
 
     // Display include activity filter.
     echo $output->render_include_activity_select($url, $activitytypes, $activityinclude);
@@ -318,7 +316,7 @@ foreach($activities as $activity) {
             '/view.php?id='.$activity->id.'" title="' . s($displayname) . '">'.
             '<div class="rotated-text-container"><span class="rotated-text">'.$shortenedname.'</span></div>'.
             '<div class="modicon">'.
-            $OUTPUT->image_icon('icon', get_string('modulename', $activity->modname), $activity->modname) .
+            $OUTPUT->image_icon('monologo', get_string('modulename', $activity->modname), $activity->modname) .
             '</div>'.
             '</a>';
         if ($activity->completionexpected) {
