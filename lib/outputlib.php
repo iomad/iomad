@@ -928,6 +928,11 @@ class theme_config {
     public function editor_css_url($encoded=true) {
         global $CFG;
         $rev = theme_get_revision();
+        $type = 'editor';
+        if (right_to_left()) {
+            $type .= '-rtl';
+        }
+
         if ($rev > -1) {
             $themesubrevision = theme_get_sub_revision_for_theme($this->name);
 
@@ -939,13 +944,19 @@ class theme_config {
 
             $url = new moodle_url("/theme/styles.php");
             if (!empty($CFG->slasharguments)) {
-                $url->set_slashargument('/'.$this->name.'/'.$rev.'/editor', 'noparam', true);
+                $url->set_slashargument("/{$this->name}/{$rev}/{$type}", 'noparam', true);
             } else {
-                $url->params(array('theme'=>$this->name,'rev'=>$rev, 'type'=>'editor'));
+                $url->params([
+                    'theme' => $this->name,
+                    'rev' => $rev,
+                    'type' => $type,
+                ]);
             }
         } else {
-            $params = array('theme'=>$this->name, 'type'=>'editor');
-            $url = new moodle_url('/theme/styles_debug.php', $params);
+            $url = new moodle_url('/theme/styles_debug.php', [
+                'theme' => $this->name,
+                'type' => $type,
+            ]);
         }
         return $url;
     }
@@ -966,7 +977,7 @@ class theme_config {
                 $files['plugin_'.$plugin] = $sheetfile;
             }
 
-            $subplugintypes = core_component::get_subplugins("editor_{$plugin}");
+            $subplugintypes = core_component::get_subplugins("editor_{$plugin}") ?? [];
             // Fetch sheets for any editor subplugins.
             foreach ($subplugintypes as $plugintype => $subplugins) {
                 foreach ($subplugins as $subplugin) {

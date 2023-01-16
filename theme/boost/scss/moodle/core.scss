@@ -1124,6 +1124,10 @@ tr.flagged-tag a {
     padding-top: 20px;
 }
 
+.activity.label.modtype_label .mod-indent {
+    float: none;
+}
+
 @include media-breakpoint-up(sm) {
     $mod-indent-size: 30px;
     /* Creates a series of .mod-indent-# rule declarations based on indent size and number of indent levels. */
@@ -2127,6 +2131,9 @@ dd:after {
                 width: 330px;
                 vertical-align: text-bottom;
                 margin-bottom: 0;
+                &[role="combobox"] {
+                    width: auto;
+                }
             }
         }
 
@@ -2553,6 +2560,7 @@ input[disabled] {
 
 .custom-select {
     width: auto;
+    max-width: 100%;
 }
 
 .fade.in {
@@ -2968,5 +2976,26 @@ body.dragging {
                 @include border-right-radius($pagination-border-radius-sm);
             }
         }
+    }
+}
+
+blockquote {
+    margin: 0 0.5rem 1rem;
+    padding-left: 1rem;
+    color: $gray-700;
+    border-left: 5px solid $gray-400;
+}
+
+/** Prevent long strings exceeding page width */
+.page-header-headings,
+.coursename,
+.categoryname,
+.breadcrumb-item,
+.dropdown-item {
+
+    &:not(.text-truncate) {
+        word-break: normal;
+        overflow-wrap: anywhere;
+        white-space: normal;
     }
 }
