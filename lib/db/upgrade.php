@@ -4048,10 +4048,16 @@ privatefiles,moodle|/user/files.php';
         $runinsert = function (int $lastslot, array $tagstrings) use ($DB) {
             $conditiondata = $DB->get_field('question_set_references', 'filtercondition',
                 ['itemid' => $lastslot, 'component' => 'mod_quiz', 'questionarea' => 'slot']);
-            $condition = json_decode($conditiondata);
-            $condition->tags = $tagstrings;
-            $DB->set_field('question_set_references', 'filtercondition', json_encode($condition),
-                ['itemid' => $lastslot, 'component' => 'mod_quiz', 'questionarea' => 'slot']);
+
+            // It is possible to have leftover tags in the database, without a corresponding
+            // slot, because of an old bugs (e.g. MDL-76193). Therefore, if the slot is not found,
+            // we can safely discard these tags.
+            if (!empty($conditiondata)) {
+                $condition = json_decode($conditiondata);
+                $condition->tags = $tagstrings;
+                $DB->set_field('question_set_references', 'filtercondition', json_encode($condition),
+                        ['itemid' => $lastslot, 'component' => 'mod_quiz', 'questionarea' => 'slot']);
+            }
         };
 
         foreach ($slottags as $tag) {
@@ -4556,6 +4562,17 @@ privatefiles,moodle|/user/files.php';
         }
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2022041904.14);
+    }
+
+    if ($oldversion < 2022041905.07) {
+
+        // Remove any orphaned role assignment records (pointing to non-existing roles).
+        $DB->delete_records_select('role_assignments', 'NOT EXISTS (
+            SELECT r.id FROM {role} r WHERE r.id = {role_assignments}.roleid
+        )');
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2022041905.07);
     }
 
     return true;
