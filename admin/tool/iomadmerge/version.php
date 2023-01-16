@@ -37,4 +37,4 @@ $plugin->version   = 2017060801;
 $plugin->requires  = 2013111800;
 $plugin->component = 'tool_iomadmerge';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release  = '3.9.18 (Build: 20221114)'; // Human-friendly version name
+$plugin->release  = '3.9.19 (Build: 20230116)'; // Human-friendly version name

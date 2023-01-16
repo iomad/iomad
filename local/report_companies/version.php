@@ -23,7 +23,7 @@
 
 $plugin->version  = 2019010900;
 $plugin->requires = 2019052000;
-$plugin->release  = '3.9.18 (Build: 20221114)'; // Human-friendly version name
+$plugin->release  = '3.9.19 (Build: 20230116)'; // Human-friendly version name
 $plugin->component  = 'local_report_companies';
 $plugin->dependencies = [
     'block_iomad_company_admin' => ANY_VERSION,
