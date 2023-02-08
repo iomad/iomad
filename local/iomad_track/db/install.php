@@ -156,7 +156,7 @@ function xmldb_local_iomad_track_record_certificates($courseid, $userid, $tracki
             $cm = $modinfo->get_cm($cm->id);
 
             // Can the user see this certificate?
-            if (!$cm->uservisible) {
+            if (count($certificates) > 1 && !$cm->uservisible) {
                 continue;
             }
 
