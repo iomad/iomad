@@ -214,6 +214,9 @@ if (!empty($update)) {
                 }
             }
 
+            // fire a cache purge event.
+            cache_helper::purge_by_event('changesincompanycourses');
+
         } else if ('validfor' == $update) {
             // Work out the time in seconds....
             if ($validfor < 0) {
