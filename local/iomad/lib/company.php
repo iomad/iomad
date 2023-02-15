@@ -655,6 +655,7 @@ class company {
             }
         }
 
+        cache_helper::purge_by_event('changesincompanycourses');
         return true;
     }
 
@@ -711,6 +712,7 @@ class company {
             return false;
         } else {
             $transaction->allow_commit();
+            cache_helper::purge_by_event('changesincompanycourses');
             return true;
         }
     }
@@ -833,6 +835,7 @@ class company {
             return false;
         } else {
             $transaction->allow_commit();
+            cache_helper::purge_by_event('changesincompanycourses');
             return true;
         }
     }
