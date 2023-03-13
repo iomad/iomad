@@ -767,6 +767,7 @@ class restore_decode_interlinks extends restore_execution_step {
 
     protected function define_execution() {
         // Get the decoder (from the plan)
+        /** @var restore_decode_processor $decoder */
         $decoder = $this->task->get_decoder();
         restore_decode_processor::register_link_decoders($decoder); // Add decoder contents and rules
         // And launch it, everything will be processed
@@ -1952,6 +1953,10 @@ class restore_course_structure_step extends restore_structure_step {
         // Course record ready, update it
         $DB->update_record('course', $data);
 
+        // Apply any course format options that may be saved against the course
+        // entity in earlier-version backups.
+        course_get_format($data)->update_course_format_options($data);
+
         // Role name aliases
         restore_dbops::set_course_role_names($this->get_restoreid(), $this->get_courseid());
     }
@@ -1989,8 +1994,14 @@ class restore_course_structure_step extends restore_structure_step {
     public function process_course_format_option(array $data) : void {
         global $DB;
 
+        if ($data['sectionid']) {
+            // Ignore section-level format options saved course-level in earlier-version backups.
+            return;
+        }
+
         $courseid = $this->get_courseid();
-        $record = $DB->get_record('course_format_options', [ 'courseid' => $courseid, 'name' => $data['name'] ], 'id');
+        $record = $DB->get_record('course_format_options', [ 'courseid' => $courseid, 'name' => $data['name'],
+                'format' => $data['format'], 'sectionid' => 0 ], 'id');
         if ($record !== false) {
             $DB->update_record('course_format_options', (object) [ 'id' => $record->id, 'value' => $data['value'] ]);
         } else {
@@ -5490,17 +5501,22 @@ class restore_process_file_aliases_queue extends restore_execution_step {
     protected function define_execution() {
         global $DB;
 
-        $this->log('processing file aliases queue', backup::LOG_DEBUG);
-
         $fs = get_file_storage();
 
         // Load the queue.
+        $aliascount = $DB->count_records('backup_ids_temp',
+            ['backupid' => $this->get_restoreid(), 'itemname' => 'file_aliases_queue']);
         $rs = $DB->get_recordset('backup_ids_temp',
-            array('backupid' => $this->get_restoreid(), 'itemname' => 'file_aliases_queue'),
+            ['backupid' => $this->get_restoreid(), 'itemname' => 'file_aliases_queue'],
             '', 'info');
+
+        $this->log('processing file aliases queue. ' . $aliascount . ' entries.', backup::LOG_DEBUG);
+        $progress = $this->task->get_progress();
+        $progress->start_progress('Processing file aliases queue', $aliascount);
 
         // Iterate over aliases in the queue.
         foreach ($rs as $record) {
+            $progress->increment_progress();
             $info = backup_controller_dbops::decode_backup_temp_info($record->info);
 
             // Try to pick a repository instance that should serve the alias.
@@ -5625,6 +5641,7 @@ class restore_process_file_aliases_queue extends restore_execution_step {
                 }
             }
         }
+        $progress->end_progress();
         $rs->close();
     }
 

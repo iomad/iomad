@@ -136,6 +136,8 @@ class settings {
      * @throws \coding_exception
      */
     protected function add_general_settings(): admin_settingpage {
+        global $CFG;
+
         $settingsgeneral = new admin_settingpage(
             $this->section,
             get_string('config_general', 'bigbluebuttonbn'),
@@ -146,7 +148,17 @@ class settings {
             // Configuration for BigBlueButton.
             $item = new admin_setting_heading('bigbluebuttonbn_config_general',
                 '',
-                get_string('config_general_description', 'bigbluebuttonbn'));
+                get_string('config_general_description', 'bigbluebuttonbn')
+            );
+
+            if (empty($CFG->bigbluebuttonbn_default_dpa_accepted)) {
+                $settingsgeneral->add(new admin_setting_configcheckbox(
+                    'bigbluebuttonbn_default_dpa_accepted',
+                    get_string('acceptdpa', 'mod_bigbluebuttonbn'),
+                    get_string('enablingbigbluebuttondpainfo', 'mod_bigbluebuttonbn', config::DEFAULT_DPA_URL),
+                    0
+                ));
+            }
 
             $settingsgeneral->add($item);
             $item = new admin_setting_configtext(
@@ -486,13 +498,13 @@ class settings {
                 $showrecordingsettings
             );
             $item = new admin_setting_configcheckbox(
-                'bigbluebuttonbn_recordings_sortorder',
-                get_string('config_recordings_sortorder', 'bigbluebuttonbn'),
-                get_string('config_recordings_sortorder_description', 'bigbluebuttonbn'),
+                'bigbluebuttonbn_recordings_asc_sort',
+                get_string('config_recordings_asc_sort', 'bigbluebuttonbn'),
+                get_string('config_recordings_asc_sort_description', 'bigbluebuttonbn'),
                 0
             );
             $this->add_conditional_element(
-                'recordings_sortorder',
+                'recordings_asc_sort',
                 $item,
                 $showrecordingsettings
             );

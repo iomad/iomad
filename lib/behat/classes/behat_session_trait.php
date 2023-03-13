@@ -440,13 +440,12 @@ trait behat_session_trait {
         if ($containerselectortype === 'NodeElement' && is_a($containerelement, NodeElement::class)) {
             // Support a NodeElement being passed in for use in step chaining.
             $containernode = $containerelement;
-            $locatorexceptionmsg = $element;
         } else {
             // Gets the container, it will always be text based.
             $containernode = $this->get_text_selector_node($containerselectortype, $containerelement);
-            $locatorexceptionmsg = $element . '" in the "' . $containerelement. '" "' . $containerselectortype. '"';
         }
 
+        $locatorexceptionmsg = $element . '" in the "' . $this->get_selector_description($containerselectortype, $containerelement);
         $exception = new ElementNotFoundException($this->getSession(), $selectortype, null, $locatorexceptionmsg);
 
         return $this->find($selectortype, $element, $exception, $containernode);
@@ -1695,5 +1694,31 @@ EOF;
         $matches = array_filter($tags, $callback);
 
         return !empty($matches);
+    }
+
+    /**
+     * Get the user id from an identifier.
+     *
+     * The user username and email fields are checked.
+     *
+     * @param string $identifier The user's username or email.
+     * @return int|null The user id or null if not found.
+     */
+    protected function get_user_id_by_identifier(string $identifier): ?int {
+        global $DB;
+
+        $sql = <<<EOF
+    SELECT id
+      FROM {user}
+     WHERE username = :username
+        OR email = :email
+EOF;
+
+        $result = $DB->get_field_sql($sql, [
+            'username' => $identifier,
+            'email' => $identifier,
+        ]);
+
+        return $result ?: null;
     }
 }
