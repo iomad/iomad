@@ -99,6 +99,6 @@ div.iomadlink, div.iomadlinkreports {
     background-color: green;
 }
 
-#page-blocks-iomad_company_admin-company_groups_create_form #region-main {
+#page-blocks-iomad_company_admin-company_groups_create_form #region-main, #page-blocks-iomad_company_admin-company_course_users_form #region-main-box {
     height: 100%;
 }
