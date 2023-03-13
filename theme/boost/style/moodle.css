@@ -12258,6 +12258,28 @@ body.dragging .dragging {
   width: 9px;
   border: 0; }
 
+.dropleft .dropdown-toggle::before {
+  border: 0;
+  content: "";
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 9px;
+  margin-left: 0;
+  margin-right: 4px;
+  width: 9px; }
+
+.dropright .dropdown-toggle::after {
+  border: 0;
+  content: ""; }
+
+.dropup .dropdown-toggle::after {
+  border: 0;
+  content: ""; }
+
 .initialbargroups ul {
   -webkit-margin-start: 0;
   /* stylelint-disable-line */
@@ -12297,12 +12319,11 @@ blockquote {
   color: #495057;
   border-left: 5px solid #ced4da; }
 
-/** Prevent long strings exceeding page width */
+/* Prevent long strings exceeding page width */
 .page-header-headings:not(.text-truncate),
 .coursename:not(.text-truncate),
 .categoryname:not(.text-truncate),
-.breadcrumb-item:not(.text-truncate),
-.dropdown-item:not(.text-truncate) {
+.breadcrumb-item:not(.text-truncate) {
   word-break: normal;
   overflow-wrap: anywhere;
   white-space: normal; }
@@ -14847,6 +14868,13 @@ span.editinstructions {
     .description .course-description-item:last-child .description-inner {
       padding-bottom: 0;
       border-bottom: 0; }
+
+.course-content .description-inner ul {
+  list-style: disc; }
+  .course-content .description-inner ul ul {
+    list-style: circle; }
+    .course-content .description-inner ul ul ul {
+      list-style: square; }
 
 .activity-item {
   position: relative;

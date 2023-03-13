@@ -376,6 +376,19 @@ class data_field_base {     // Base class for Database Field Types (see field/*/
     }
 
     /**
+     * Validates params of fieldinput data. Overwrite to validate fieldtype specific data.
+     *
+     * You are expected to return an array like ['paramname' => 'Error message for paramname param'] if there is an error,
+     * return an empty array if everything is fine.
+     *
+     * @param stdClass $fieldinput The field input data to check
+     * @return array $errors if empty validation was fine, otherwise contains one or more error messages
+     */
+    public function validate(stdClass $fieldinput): array {
+        return [];
+    }
+
+    /**
      * Display the content of the field in browse mode
      *
      * @global object
@@ -1152,22 +1165,12 @@ function data_delete_instance($id) {    // takes the dataid
     $cm = get_coursemodule_from_instance('data', $data->id);
     $context = context_module::instance($cm->id);
 
-/// Delete all the associated information
-
-    // files
-    $fs = get_file_storage();
-    $fs->delete_area_files($context->id, 'mod_data');
-
-    // get all the records in this data
-    $sql = "SELECT r.id
-              FROM {data_records} r
-             WHERE r.dataid = ?";
-
-    $DB->delete_records_select('data_content', "recordid IN ($sql)", array($id));
-
-    // delete all the records and fields
-    $DB->delete_records('data_records', array('dataid'=>$id));
-    $DB->delete_records('data_fields', array('dataid'=>$id));
+    // Delete all information related to fields.
+    $fields = $DB->get_records('data_fields', ['dataid' => $id]);
+    foreach ($fields as $field) {
+        $todelete = data_get_field($field, $data, $cm);
+        $todelete->delete_field();
+    }
 
     // Remove old calendar events.
     $events = $DB->get_records('event', array('modulename' => 'data', 'instance' => $id));
@@ -2709,10 +2712,9 @@ abstract class data_preset_importer {
                 /* Data not used anymore so wipe! */
                 echo "Deleting field $currentfield->name<br />";
 
-                $id = $currentfield->id;
-                // Why delete existing data records and related comments/ratings??
-                $DB->delete_records('data_content', ['fieldid' => $id]);
-                $DB->delete_records('data_fields', ['id' => $id]);
+                // Delete all information related to fields.
+                $todelete = data_get_field_from_id($currentfield->id, $this->module);
+                $todelete->delete_field();
             }
         }
 
