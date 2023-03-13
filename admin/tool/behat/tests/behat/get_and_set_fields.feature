@@ -30,10 +30,9 @@ Feature: Verify that all form fields values can be get and set
       | student2 | G2 |
       | student3 | G2 |
     And the following "activities" exist:
-      | activity | course | idnumber | name | intro | firstpagetitle | wikimode | visible |
-      | wiki | C1 | wiki1 | Test this one | Test this one | Test this one | collaborative | 0 |
-    And I log in as "admin"
-    And I am on "Course 1" course homepage
+      | activity | course | idnumber | name          | firstpagetitle | wikimode      | visible |
+      | wiki     | C1     | wiki1    | Test this one | Test this one  | collaborative | 0       |
+    And I am on the "Course 1" course page logged in as admin
     And I navigate to "Reset" in current page administration
     # Select (multi-select) - Checking "the select box should contain".
     And I expand all fieldsets
@@ -61,16 +60,14 @@ Feature: Verify that all form fields values can be get and set
     # Checkbox - Checking "I set the field" and "The field matches value" ticked.
     And I set the field "Force format" to "1"
     And I press "Save and return to course"
-    And I am on the "Test this one" "wiki activity" page
-    And I navigate to "Edit settings" in current page administration
+    And I am on the "Test this one" "wiki activity editing" page
     And I expand all fieldsets
     And the field "Force format" matches value "1"
     And the field "Force format" does not match value ""
     # Checkbox - Checking "I set the field" and "The field matches value" unticked.
     And I set the field "Force format" to ""
     And I press "Save and return to course"
-    And I am on the "Test this one" "wiki activity" page
-    And I navigate to "Edit settings" in current page administration
+    And I am on the "Test this one" "wiki activity editing" page
     And I expand all fieldsets
     And the field "Force format" matches value ""
     And the field "Force format" does not match value "1"
@@ -78,8 +75,7 @@ Feature: Verify that all form fields values can be get and set
     And I set the following fields to these values:
       | Force format | 1 |
     And I press "Save and return to course"
-    And I am on the "Test this one" "wiki activity" page
-    And I navigate to "Edit settings" in current page administration
+    And I am on the "Test this one" "wiki activity editing" page
     And I expand all fieldsets
     And the following fields match these values:
       | Force format | 1 |
@@ -89,8 +85,7 @@ Feature: Verify that all form fields values can be get and set
     And I set the following fields to these values:
       | Force format | |
     And I press "Save and return to course"
-    And I am on the "Test this one" "wiki activity" page
-    And I navigate to "Edit settings" in current page administration
+    And I am on the "Test this one" "wiki activity editing" page
     And I expand all fieldsets
     And the following fields match these values:
       | Force format | |
@@ -136,12 +131,13 @@ Feature: Verify that all form fields values can be get and set
     And I navigate to "Edit settings" in current page administration
     And the field "Course ID number" matches value "Course id number"
 
-  Scenario: with JS disabled all form fields getters and setters works as expected
-
   @javascript
   Scenario: with JS enabled all form fields getters and setters works as expected
-    Then I am on "Course 1" course homepage
-    And I navigate to "Users > Groups" in current page administration
+    Given the following "activities" exist:
+      | activity | course | name        |
+      | lesson   | C1     | Test lesson |
+    When I am on "Course 1" course homepage
+    Then I navigate to "Users > Groups" in current page administration
     # Select (multi-select & AJAX) - Checking "I set the field" and "select box should contain".
     And I set the field "groups" to "Group 2"
     And the "members" select box should contain "Student 2 (s2@example.com)"
@@ -152,11 +148,8 @@ Feature: Verify that all form fields values can be get and set
     And the "members" select box should contain "Student 2 (s2@example.com)"
     And the "members" select box should not contain "Student 3 (s3@example.com)"
     # Checkbox (AJAX) - Checking "I set the field" and "I set the following fields to these values".
-    And I am on "Course 1" course homepage
-    And I add a "Lesson" to section "1"
+    And I am on the "Test lesson" "lesson activity editing" page
     And I set the following fields to these values:
-      | Name | Test lesson |
-      | Description | Test lesson description |
       | available[enabled] | 1 |
     And I set the field "deadline[enabled]" to "1"
     # Checkbox (AJAX) - Checking "the field matches value" before saving.
