@@ -157,7 +157,7 @@ class company_managers_form extends moodleform {
                                                                                      'roletype' => 1,
                                                                                      'companyid' => $this->selectedcompany))) {
                             // We are not assigning an external company manager AND the userid is not valid for this company
-                            throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
+                            print_error('invaliduserdepartment', 'block_iomad_company_management');
                         }
                     }
 
@@ -192,7 +192,7 @@ class company_managers_form extends moodleform {
 
                         // Check the userid is valid.
                     if (!company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
-                        throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
+                        print_error('invaliduserdepartment', 'block_iomad_company_management');
                     }
 
                     // Get the current company_users record.

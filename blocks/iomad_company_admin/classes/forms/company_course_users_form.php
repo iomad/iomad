@@ -254,7 +254,7 @@ class company_course_users_form extends moodleform {
 
                     // Check the userid is valid.
                     if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
-                        throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
+                        print_error('invaliduserdepartment', 'block_iomad_company_management');
                     }
 
                     if ($allow) {
@@ -310,7 +310,7 @@ class company_course_users_form extends moodleform {
                     }
                     // Check the userid is valid.
                     if (!company::check_valid_user($this->selectedcompany, $removeuser->userid, $this->departmentid)) {
-                        throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
+                        print_error('invaliduserdepartment', 'block_iomad_company_management');
                     }
 
                     // Unenrol the user on the courses.

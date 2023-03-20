@@ -316,7 +316,7 @@ $templateselectoutput = html_writer::tag('div', $output->render($select), array(
 
 if (!(iomad::has_capability('block/iomad_company_admin:editusers', $systemcontext) or
       iomad::has_capability('block/iomad_company_admin:editallusers', $systemcontext))) {
-    throw new moodle_exception('nopermissions', 'error', '', 'report on users');
+    print_error('nopermissions', 'error', '', 'report on users');
 }
 
 $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);

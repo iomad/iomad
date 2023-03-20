@@ -40,10 +40,10 @@ if (debugging('', DEBUG_DEVELOPER) && optional_param('debug', false, PARAM_BOOL)
 
 // Check access.
 if (!isloggedin()) {
-    throw new moodle_exception('mustbeloggedin');
+    print_error('mustbeloggedin');
 }
 if (!confirm_sesskey()) {
-    throw new moodle_exception('invalidsesskey');
+    print_error('invalidsesskey');
 }
 
 // Get the search parameter.
@@ -52,7 +52,7 @@ $search = required_param('search', PARAM_RAW);
 // Get and validate the selectorid parameter.
 $selectorhash = required_param('selectorid', PARAM_ALPHANUM);
 if (!isset($USER->frameworkselectors[$selectorhash])) {
-    throw new moodle_exception('unknownframeworkselector');
+    print_error('unknownframeworkselector');
 }
 
 // Get the options.

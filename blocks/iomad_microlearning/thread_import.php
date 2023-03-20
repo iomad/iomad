@@ -70,7 +70,7 @@ $companyid = iomad::get_my_companyid($context);
 if ($importid) {
     // Check the thread is valid.
     if (!$threadinfo = $DB->get_record('microlearning_thread', array('id' => $importid))) {
-        throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
+        print_error('invalidthread', 'block_iomad_microlearning');
     }
 
     // Have we confirmed it?

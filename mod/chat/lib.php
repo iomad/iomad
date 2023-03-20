@@ -1140,7 +1140,7 @@ function chat_format_userlist($users, $course) {
  * @param string $level
  * @param string $msg
  */
-function chat_throw new moodle_exception($level, $msg) {
+function chat_print_error($level, $msg) {
     header('Content-Length: ' . ob_get_length() );
     $error = new stdClass();
     $error->level = $level;

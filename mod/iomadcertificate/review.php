@@ -32,15 +32,15 @@ $id = required_param('id', PARAM_INT);    // Course Module ID
 $action = optional_param('action', '', PARAM_ALPHA);
 
 if (!$cm = get_coursemodule_from_id('iomadcertificate', $id)) {
-    throw new moodle_exception('Course Module ID was incorrect');
+    print_error('Course Module ID was incorrect');
 }
 
 if (!$course = $DB->get_record('course', array('id'=> $cm->course))) {
-    throw new moodle_exception('course is misconfigured');
+    print_error('course is misconfigured');
 }
 
 if (!$iomadcertificate = $DB->get_record('iomadcertificate', array('id'=> $cm->instance))) {
-    throw new moodle_exception('course module is incorrect');
+    print_error('course module is incorrect');
 }
 
 // Requires a course login

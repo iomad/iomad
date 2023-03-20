@@ -78,13 +78,13 @@ class companypaths {
 
         if ($path = $DB->get_record('iomad_learningpath', array('id' => $id))) {
             if ($path->company != $this->companyid) {
-                throw new moodle_exception('companymismatch', 'local_iomad_learningpath');
+                print_error('companymismatch', 'local_iomad_learningpath');
             }
 
             return $path;
         } else {
             if (!$create) {
-                throw new moodle_exception('nopath', 'local_iomad_learningpath');
+                print_error('nopath', 'local_iomad_learningpath');
             }
             $path = new \stdClass;
             $path->company = $this->companyid;

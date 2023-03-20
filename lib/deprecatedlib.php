@@ -3659,8 +3659,8 @@ function get_array_of_activities(int $courseid, bool $usecache = false): array {
  * @param string $debuginfo optional debugging information
  * @return void, always throws exception!
  */
-function throw new moodle_exception($errorcode, $module = 'error', $link = '', $a = null, $debuginfo = null) {
-    debugging("The function throw new moodle_exception() is deprecated. " .
+function print_error($errorcode, $module = 'error', $link = '', $a = null, $debuginfo = null) {
+    debugging("The function print_error() is deprecated. " .
             "Please throw a new moodle_exception instance instead.", DEBUG_DEVELOPER);
     throw new \moodle_exception($errorcode, $module, $link, $a, $debuginfo);
 }

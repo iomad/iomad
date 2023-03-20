@@ -38,20 +38,20 @@ if (!empty($userid)  && has_capability('mod/iomadcertificate:viewother', context
     $certuser = $DB->get_record('user', array('id' => $userid));
     // Check the companies match for both users.
     if (!company::check_can_manage($userid)) {
-        throw new moodle_exception('Invalid user');
+        print_error('Invalid user');
     }
 } else {
     $certuser = $USER;
 }
 
 if (!$cm = get_coursemodule_from_id('iomadcertificate', $id)) {
-    throw new moodle_exception('Course Module ID was incorrect');
+    print_error('Course Module ID was incorrect');
 }
 if (!$course = $DB->get_record('course', array('id'=> $cm->course))) {
-    throw new moodle_exception('course is misconfigured');
+    print_error('course is misconfigured');
 }
 if (!$iomadcertificate = $DB->get_record('iomadcertificate', array('id'=> $cm->instance))) {
-    throw new moodle_exception('course module is incorrect');
+    print_error('course module is incorrect');
 }
 
 // IOMAD - If has ability to view completion reports should be able to see the certificates

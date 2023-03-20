@@ -115,7 +115,7 @@ if (!empty($fileimport)) {
                                                 'validate_uploadcompletion_columns');
 
             if (!$columns = $cir->get_columns()) {
-               throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+               print_error('cannotreadtmpfile', 'error', $returnurl);
             }
 
             unset($content);

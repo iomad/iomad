@@ -214,7 +214,7 @@ class iomad_approve_access {
             if (!$DB->insert_record('trainingevent_users', $trainingeventrecord)) {
 
                 // Throw an error if that doesn't work.
-                throw new moodle_exception(get_string('updatefailed', 'block_iomad_approve_access'));
+                print_error(get_string('updatefailed', 'block_iomad_approve_access'));
             }
         }
         $DB->set_field('trainingevent_users', 'waitlisted', $waitlisted, ['id' => $currentrecord->id]);

@@ -176,7 +176,7 @@ if (empty($iid)) {
                                             $formdata->delimiter_name,
                                             'validate_user_upload_columns');
         if (!$columns = $cir->get_columns()) {
-           throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+           print_error('cannotreadtmpfile', 'error', $returnurl);
         }
 
         unset($content);
@@ -208,14 +208,14 @@ if (empty($iid)) {
         // Check if the company has gone over the user quota.
         if (!$company->check_usercount($newusercount)) {
             $maxusers = $company->get('maxusers');
-            throw new moodle_exception('maxuserswarningplural', 'block_iomad_company_admin', $returnurl, $maxusers);
+            print_error('maxuserswarningplural', 'block_iomad_company_admin', $returnurl, $maxusers);
         }
 
         if ($readcount === false) {
             // TODO: need more detailed error info.
-            throw new moodle_exception('csvloaderror', '', $returnurl);
+            print_error('csvloaderror', '', $returnurl);
         } else if ($readcount == 0) {
-            throw new moodle_exception('csvemptyfile', 'error', $returnurl);
+            print_error('csvemptyfile', 'error', $returnurl);
         }
         // Continue to form2.
 
@@ -232,7 +232,7 @@ if (empty($iid)) {
 }
 
 if (!$columns = $cir->get_columns()) {
-    throw new moodle_exception('cannotreadtmpfile', 'error', $returnurl);
+    print_error('cannotreadtmpfile', 'error', $returnurl);
 }
 
 $mform = new admin_uploaduser_form2(null, $columns);

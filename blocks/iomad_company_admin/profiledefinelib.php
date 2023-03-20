@@ -269,11 +269,11 @@ function profile_delete_category($id) {
 
     // Retrieve the category.
     if (!$category = $DB->get_record('user_info_category', array('id' => $id))) {
-        throw new moodle_exception('invalidcategoryid');
+        print_error('invalidcategoryid');
     }
 
     if (!$categories = $DB->get_records('user_info_category', null, 'sortorder ASC')) {
-        throw new moodle_exception('nocate', 'debug');
+        print_error('nocate', 'debug');
     }
 
     unset($categories[$category->id]);
@@ -317,7 +317,7 @@ function profile_delete_field($id) {
 
     // Remove any user data associated with this field.
     if (!$DB->delete_records('user_info_data', array('fieldid' => $id))) {
-        throw new moodle_exception('cannotdeletecustomfield');
+        print_error('cannotdeletecustomfield');
     }
 
     // Try to remove the record from the database.

@@ -43,7 +43,7 @@ $profilefieldid = optional_param('profilefieldid', 0, PARAM_INT);
 // Get and validate the selectorid parameter.
 $selectorhash = required_param('selectorid', PARAM_ALPHANUM);
 if (!isset($USER->userselectors[$selectorhash])) {
-    throw new moodle_exception('unknownuserselector');
+    print_error('unknownuserselector');
 }
 
 // Get the options.

@@ -31,7 +31,7 @@ $returnurl = optional_param('returnurl', null, PARAM_LOCALURL);
 require_login();
 $userid = $userid ?: $USER->id;
 if (isguestuser() || isguestuser($userid)) {
-    throw new moodle_exception('noguest');
+    print_error('noguest');
 }
 $context = context_user::instance($userid);
 if ($userid != $USER->id) {

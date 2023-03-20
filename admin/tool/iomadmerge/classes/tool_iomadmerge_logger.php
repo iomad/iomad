@@ -67,7 +67,7 @@ class tool_iomadmerge_logger {
             if (CLI_SCRIPT) {
                 cli_error($msg);
             } else {
-                throw new moodle_exception($msg, null, new moodle_url('/admin/tool/iomadmerge/index.php'));
+                print_error($msg, null, new moodle_url('/admin/tool/iomadmerge/index.php'));
             }
         }
     }
