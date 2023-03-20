@@ -111,7 +111,7 @@ $company = new company($mycompanyid);
 // Delete any valid courses.
 if (!empty($deleteid)) {
     if (!$course = $DB->get_record('course', array('id' => $deleteid))) {
-        print_error('invalidcourse');
+        throw new moodle_exception('invalidcourse');
     }
     if (confirm_sesskey() && $confirm == md5($deleteid)) {
         $destroy = optional_param('destroy', 0, PARAM_INT);

@@ -43,24 +43,24 @@ $action = optional_param('action', null, PARAM_ALPHA);
 $booking = optional_param('booking', null, PARAM_ALPHA);
 
 if (! $cm = get_coursemodule_from_id('trainingevent', $id)) {
-    print_error('invalidcoursemodule');
+    throw new moodle_exception('invalidcoursemodule');
 }
 
 if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
-    print_error('coursemisconf');
+    throw new moodle_exception('coursemisconf');
 }
 
 require_course_login($course, false, $cm);
 
 // Get the database entry.
 if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
-    print_error('noinstance');
+    throw new moodle_exception('noinstance');
 } else {
     if (!$location = $DB->get_record('classroom', array('id' => $event->classroomid))) {
         if (!empty($dodownload)) {
             die;
         }
-        print_error('location not defined');
+        throw new moodle_exception('location not defined');
     } else {
 
         // Page stuff.
@@ -217,7 +217,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                         $res = $DB->insert_record('trainingevent_users', array('trainingeventid' => $event->id, 'userid' => $USER->id));
                     }
                     if (empty($res)) {
-                        print_error('error creating attendance record');
+                        throw new moodle_exception('error creating attendance record');
                     } else {
                         $course = $DB->get_record('course', array('id' => $event->course));
                         $location->time = date($CFG->iomad_date_format . ' \a\t H:i', $event->startdatetime);
@@ -297,7 +297,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                 if ($attendingrecord = $DB->get_record('trainingevent_users', array('trainingeventid' => $event->id,
                                                                                     'userid' => $USER->id))) {
                     if (!$DB->delete_records('trainingevent_users', array('id' => $attendingrecord->id))) {
-                        print_error('error removing attendance record');
+                        throw new moodle_exception('error removing attendance record');
                     } else {
                         $course = $DB->get_record('course', array('id' => $event->course));
                         $location->time = date($CFG->iomad_date_format . ' \a\t H:i', $event->startdatetime);
@@ -372,7 +372,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                                                                                 'tm_ok' => 0,
                                                                                 'manager_ok' => 0,
                                                                                 'companyid' => $company->id))) {
-                        print_error('error creating attendance record');
+                        throw new moodle_exception('error creating attendance record');
                     } else {
                         // theoretically should be a transaction with requesting approval but it's pretty easy to fix this glitch if it happens
                         $DB->delete_records('trainingevent_users', array('trainingeventid' => $event->id, 'userid' => $USER->id, 'waitlisted' => 1));
@@ -470,7 +470,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
         if (!empty($chosen) && $chosen != $event->id) {
             // We are moving a user to another event  check there is space.
             if (!$chosenevent = $DB->get_record('trainingevent', array('id' => $chosen))) {
-                print_error('chosen event is invalid');
+                throw new moodle_exception('chosen event is invalid');
             } else {
                 // Get the CMID.
                 $chosencmidinfo = $DB->get_record_sql("SELECT * FROM {course_modules}
@@ -638,7 +638,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                                                                                         'tm_ok' => 0,
                                                                                         'manager_ok' => 1,
                                                                                         'companyid' => $company->id))) {
-                                print_error('error creating attendance record');
+                                throw new moodle_exception('error creating attendance record');
                             } else {
                                 $course = $DB->get_record('course', array('id' => $event->course));
                                 $location->time = date($CFG->iomad_date_format . ' \a\t H:i', $chosenevent->startdatetime);
@@ -935,7 +935,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
                                                                                     'tm_ok' => 0,
                                                                                     'manager_ok' => 1,
                                                                                     'companyid' => $company->id))) {
-                            print_error('error creating attendance record');
+                            throw new moodle_exception('error creating attendance record');
                         } else {
                             $course = $DB->get_record('course', array('id' => $event->course));
                             $location->time = date($CFG->iomad_date_format . ' \a\t H:i', $event->startdatetime);
@@ -1039,7 +1039,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
 
             // Check the userid is valid.
             if (!company::check_valid_user($company->id, $USER->id, $departmentid)) {
-                print_error('invaliduserdepartment', 'block_iomad_company_management');
+                throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
             }
 
             echo "<h2>".get_string('sendingemails', 'trainingevent')."</h2>";
@@ -1142,7 +1142,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
 
             // Check the userid is valid.
             if (!company::check_valid_user($company->id, $USER->id, $departmentid)) {
-                print_error('invaliduserdepartment', 'block_iomad_company_management');
+                throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
             }
 
             echo $eventtable;

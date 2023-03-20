@@ -61,7 +61,7 @@ class mobile {
 
         $instance = instance::get_from_cmid($args->cmid);
         if (!$instance) {
-            return self::mobile_print_error(get_string('view_error_url_missing_parameters', 'bigbluebuttonbn'));
+            return self::mobile_throw new moodle_exception(get_string('view_error_url_missing_parameters', 'bigbluebuttonbn'));
         }
 
         $cm = $instance->get_cm();
@@ -102,7 +102,7 @@ class mobile {
         // Check if the BBB server is working.
         $serverversion = bigbluebutton_proxy::get_server_version();
         if ($serverversion === null) {
-            return self::mobile_print_error(bigbluebutton_proxy::get_server_not_available_message($instance));
+            return self::mobile_throw new moodle_exception(bigbluebutton_proxy::get_server_not_available_message($instance));
         }
 
         // Mark viewed by user (if required).
@@ -111,7 +111,7 @@ class mobile {
 
         // Validate if the user is in a role allowed to join.
         if (!$instance->can_join()) {
-            return self::mobile_print_error(get_string('view_nojoin', 'bigbluebuttonbn'));
+            return self::mobile_throw new moodle_exception(get_string('view_nojoin', 'bigbluebuttonbn'));
         }
 
         // Note: This logic should match bbb_view.php.
@@ -132,7 +132,7 @@ class mobile {
         } catch (meeting_join_exception $e) {
             return self::mobile_print_notification($instance, $e->getMessage());
         } catch (server_not_available_exception $e) {
-            return self::mobile_print_error(bigbluebutton_proxy::get_server_not_available_message($instance));
+            return self::mobile_throw new moodle_exception(bigbluebutton_proxy::get_server_not_available_message($instance));
         }
 
         // Check groups access and show message.
@@ -176,7 +176,7 @@ class mobile {
      * @param string $error Error to display.
      * @return array HTML, javascript and otherdata
      */
-    protected static function mobile_print_error($error): array {
+    protected static function mobile_throw new moodle_exception($error): array {
         global $OUTPUT;
 
         return [

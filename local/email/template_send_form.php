@@ -139,7 +139,7 @@ if (!empty($SESSION->currenteditingcompany)) {
 } else if (!empty($USER->company)) {
     $companyid = company_user::companyid();
 } else if (!iomad::has_capability('local/email:edit', context_system::instance())) {
-    print_error('There has been a configuration error, please contact the site administrator');
+    throw new moodle_exception('There has been a configuration error, please contact the site administrator');
 } else {
     redirect(new moodle_url('/local/iomad_dashboard/index.php'),
                             'Please select a company from the dropdown first');
