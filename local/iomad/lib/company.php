@@ -276,7 +276,6 @@ class company {
                                                  AND parentid NOT IN (
                                                    SELECT companyid FROM {company_users}
                                                    WHERE userid = :userid2 )
-                                                 )
                                                  $suspendedsql
                                                  ORDER BY name",
                                                  ['userid' => $USER->id,
