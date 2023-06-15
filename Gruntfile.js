@@ -229,8 +229,8 @@ module.exports = function(grunt) {
      * @return {String} The rewritten destination path.
      */
     var babelRename = function(destPath, srcPath) {
-        destPath = srcPath.replace('src', 'build');
-        destPath = destPath.replace('.js', '.min.js');
+        destPath = srcPath.replace(`amd/src`, `amd/build`);
+        destPath = destPath.replace(/\.js$/, '.min.js');
         return destPath;
     };
 
