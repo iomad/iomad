@@ -14898,11 +14898,6 @@ h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
   display: block;
 }
 
-ul {
-  padding-left: 1rem;
-  -webkit-margin-start: 0.2rem; /* stylelint-disable-line */
-}
-
 /* YUI 2 Tree View */
 /*rtl:raw:
 .ygtvtn,
@@ -18285,6 +18280,10 @@ span.editinstructions .alert-link {
 .coursebox .customfieldname,
 .coursebox .customfieldseparator {
   font-weight: 700;
+}
+
+.coursebox .content .coursefile {
+  max-width: 100px;
 }
 
 .coursebox .content .courseimage img {

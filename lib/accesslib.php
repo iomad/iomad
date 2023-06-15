@@ -2681,7 +2681,7 @@ function get_capability_string($capabilityname) {
     }
 
     $dir = core_component::get_component_directory($component);
-    if (!file_exists($dir)) {
+    if (!isset($dir) || !file_exists($dir)) {
         // plugin broken or does not exist, do not bother with printing of debug message
         return $capabilityname.' ???';
     }
@@ -2705,7 +2705,7 @@ function get_component_string($component, $contextlevel) {
 
     list($type, $name) = core_component::normalize_component($component);
     $dir = core_component::get_plugin_directory($type, $name);
-    if (!file_exists($dir)) {
+    if (!isset($dir) || !file_exists($dir)) {
         // plugin not installed, bad luck, there is no way to find the name
         return $component . ' ???';
     }
@@ -4269,21 +4269,21 @@ function get_user_capability_contexts(string $capability, bool $getcategories, $
         $fieldlist = \core\access\get_user_capability_course_helper::map_fieldnames($categoryfieldsexceptid);
         if ($categoryorderby) {
             $fields = explode(',', $categoryorderby);
-            $orderby = '';
+            $categoryorderby = '';
             foreach ($fields as $field) {
-                if ($orderby) {
-                    $orderby .= ',';
+                if ($categoryorderby) {
+                    $categoryorderby .= ',';
                 }
-                $orderby .= 'c.'.$field;
+                $categoryorderby .= 'c.'.$field;
             }
-            $orderby = 'ORDER BY '.$orderby;
+            $categoryorderby = 'ORDER BY '.$categoryorderby;
         }
         $rs = $DB->get_recordset_sql("
             SELECT c.id $fieldlist
               FROM {course_categories} c
                JOIN {context} x ON c.id = x.instanceid AND x.contextlevel = ?
             $contextlimitsql
-            $orderby", array_merge([CONTEXT_COURSECAT], $contextlimitparams));
+            $categoryorderby", array_merge([CONTEXT_COURSECAT], $contextlimitparams));
         $basedlimit = $limit;
         foreach ($rs as $category) {
             $categories[] = $category;
@@ -4292,6 +4292,7 @@ function get_user_capability_contexts(string $capability, bool $getcategories, $
                 break;
             }
         }
+        $rs->close();
     }
 
     $courses = [];
