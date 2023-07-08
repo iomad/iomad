@@ -44,7 +44,7 @@ class company_license_form extends \company_moodleform {
                                 $context,
                                 $companyid,
                                 $departmentid = 0,
-                                $licenseid,
+                                $licenseid = 0,
                                 $parentid = 0,
                                 $courses=array()) {
         global $DB, $USER;
