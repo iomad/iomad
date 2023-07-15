@@ -61,6 +61,24 @@ abstract class tablelike extends screen implements be_readonly {
     protected $definition = [];
 
     /**
+     * Total items
+     * @var int $total
+     */
+    protected $total;
+
+    /**
+     * Table tab index
+     * @var int $index
+     */
+    protected $index;
+
+    /**
+     *  The grade item or user.
+     * @var mixed $item
+     */
+    protected $item;
+
+    /**
      * Format a row of the table
      *
      * @var mixed $item
@@ -213,7 +231,7 @@ abstract class tablelike extends screen implements be_readonly {
             ['method' => 'POST']
         );
 
-        return html_writer::div($html, 'reporttable');
+        return html_writer::div($html, 'reporttable position-relative');
     }
 
     /**

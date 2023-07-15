@@ -119,6 +119,14 @@ $definitions = array(
         'staticaccelerationsize' => 2, // The original cache used 1, we've increased that to two.
     ),
 
+    // Whether a course currently has hidden groups.
+    'coursehiddengroups' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true, // The course id the groupings exist for.
+        'simpledata' => true, // Booleans.
+        'staticacceleration' => true, // Likely there will be a couple of calls to this.
+    ),
+
     // Used to cache calendar subscriptions.
     'calendar_subscriptions' => array(
         'mode' => cache_store::MODE_APPLICATION,
@@ -139,23 +147,13 @@ $definitions = array(
         'ttl' => 900,
     ),
 
-    // Cache the capabilities list DB table. See get_all_capabilities in accesslib.
+    // Cache the capabilities list DB table. See get_all_capabilities and get_deprecated_capability_info in accesslib.
     'capabilities' => array(
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => true,
         'staticacceleration' => true,
-        'staticaccelerationsize' => 1,
-        'ttl' => 3600, // Just in case.
-    ),
-
-    // Cache the deprecated capabilities list. See get_deprecated_capability_info in accesslib.
-    'deprecatedcapabilities' => array(
-        'mode' => cache_store::MODE_APPLICATION,
-        'simplekeys' => false, // We need to hash the key.
-        'simpledata' => true,
-        'staticacceleration' => true,
-        'staticaccelerationsize' => 1,
+        'staticaccelerationsize' => 2, // Should be main capabilities and deprecated capabilities.
         'ttl' => 3600, // Just in case.
     ),
 

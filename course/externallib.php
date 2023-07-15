@@ -142,16 +142,6 @@ class core_course_external extends external_api {
         //retrieve the course
         $course = $DB->get_record('course', array('id' => $params['courseid']), '*', MUST_EXIST);
 
-        if ($course->id != SITEID) {
-            // Check course format exist.
-            if (!file_exists($CFG->dirroot . '/course/format/' . $course->format . '/lib.php')) {
-                throw new moodle_exception('cannotgetcoursecontents', 'webservice', '', null,
-                                            get_string('courseformatnotfound', 'error', $course->format));
-            } else {
-                require_once($CFG->dirroot . '/course/format/' . $course->format . '/lib.php');
-            }
-        }
-
         // now security checks
         $context = context_course::instance($course->id, IGNORE_MISSING);
         try {
@@ -621,6 +611,7 @@ class core_course_external extends external_api {
                 // For backward-compartibility
                 $courseinfo['numsections'] = $courseformatoptions['numsections'];
             }
+            $courseinfo['pdfexportfont'] = $course->pdfexportfont;
 
             $handler = core_course\customfield\course_handler::create();
             if ($customfields = $handler->export_instance_data($course->id)) {
@@ -1955,8 +1946,8 @@ class core_course_external extends external_api {
      * Sort categories array by path
      * private function: only used by get_categories
      *
-     * @param array $category1
-     * @param array $category2
+     * @param stdClass $category1
+     * @param stdClass $category2
      * @return int result of strcmp
      * @since Moodle 2.3
      */
@@ -2433,6 +2424,7 @@ class core_course_external extends external_api {
      * @since  Moodle 3.2
      */
     protected static function get_course_public_information(core_course_list_element $course, $coursecontext) {
+        global $OUTPUT;
 
         static $categoriescache = array();
 
@@ -2520,6 +2512,12 @@ class core_course_external extends external_api {
                 ];
             }
         }
+
+        $courseimage = \core_course\external\course_summary_exporter::get_course_image($course);
+        if (!$courseimage) {
+            $courseimage = $OUTPUT->get_generated_url_for_course($coursecontext);
+        }
+        $coursereturns['courseimage'] = $courseimage;
 
         return $coursereturns;
     }
@@ -2629,7 +2627,7 @@ class core_course_external extends external_api {
      * Returns a course structure definition
      *
      * @param  boolean $onlypublicdata set to true, to retrieve only fields viewable by anyone when the course is visible
-     * @return array the course structure
+     * @return external_single_structure the course structure
      * @since  Moodle 3.2
      */
     protected static function get_course_structure($onlypublicdata = true) {
@@ -2638,6 +2636,7 @@ class core_course_external extends external_api {
             'fullname' => new external_value(PARAM_RAW, 'course full name'),
             'displayname' => new external_value(PARAM_RAW, 'course display name'),
             'shortname' => new external_value(PARAM_RAW, 'course short name'),
+            'courseimage' => new external_value(PARAM_URL, 'Course image', VALUE_OPTIONAL),
             'categoryid' => new external_value(PARAM_INT, 'category id'),
             'categoryname' => new external_value(PARAM_RAW, 'category name'),
             'sortorder' => new external_value(PARAM_INT, 'Sort order in the category', VALUE_OPTIONAL),

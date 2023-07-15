@@ -583,6 +583,7 @@ $string['doyouagree'] = 'Have you read these conditions and understood them?';
 $string['droptoupload'] = 'Drop files here to upload';
 $string['duplicate'] = 'Duplicate';
 $string['duplicatedmodule'] = '{$a} (copy)';
+$string['duplicatedsection'] = '{$a} (copy)';
 $string['edhelpaspellpath'] = 'To use spell-checking within the editor, you MUST have <strong>aspell 0.50</strong> or later installed on your server, and you must specify the correct path to access the aspell binary.  On Unix/Linux systems, this path is usually <strong>/usr/bin/aspell</strong>, but it might be something else.';
 $string['edhelpbgcolor'] = 'Define the edit area\'s background color.<br />Valid values are, for example: #FFFFFF or white';
 $string['edhelpcleanword'] = 'This setting enables or disables Word-specific format filtering.';
@@ -755,16 +756,14 @@ $string['emailresetconfirmation'] = 'Hi {$a->firstname},
 
 A password reset was requested for your account \'{$a->username}\' at {$a->sitename}.
 
-To confirm this request, and set a new password for your account, please
-go to the following web address:
-
+To confirm this request, and set a new password for your account, please go to the following web address:
 {$a->link}
-(This link is valid for {$a->resetminutes} minutes from the time this reset was first requested)
+
+(This link is valid for {$a->resetminutes} minutes from the time this reset was first requested.)
 
 If this password reset was not requested by you, no action is needed.
 
-If you need help, please contact the site administrator,
-{$a->admin}';
+If you need help, please contact the site administrator, {$a->admin}';
 $string['emailresetconfirmationsubject'] = '{$a}: Password reset request';
 $string['emailresetconfirmsent'] = 'An email has been sent to your address at <b>{$a}</b>.
 <br />It contains easy instructions to confirm and complete this password change.
@@ -1022,8 +1021,8 @@ $string['hiddenwithbrackets'] = '(hidden)';
 $string['hide'] = 'Hide';
 $string['hideadvancedsettings'] = 'Hide advanced settings';
 $string['hidechartdata'] = 'Hide chart data';
-$string['hidefromstudents'] = 'Hide from students';
-$string['hideoncoursepage'] = 'Make available but not shown on course page';
+$string['hidefromstudents'] = 'Hide on course page';
+$string['hideoncoursepage'] = 'Make available but don\'t show on course page';
 $string['hidesection'] = 'Hide section {$a}';
 $string['hidesettings'] = 'Hide settings';
 $string['hideshowblocks'] = 'Hide or show blocks';
@@ -1162,6 +1161,8 @@ $string['interestslist'] = 'List of interests';
 $string['interestslist_help'] = 'Enter your interests, one by one, which will then be displayed on your profile page as tags.';
 $string['invalidemail'] = 'Invalid email address';
 $string['invalidlogin'] = 'Invalid login, please try again';
+$string['invalidtaskid'] = 'Invalid task ID';
+$string['invalidtaskclassname'] = 'Invalid task class {$a}';
 $string['invalidusername'] = 'The username can only contain alphanumeric lowercase characters (letters and numbers), underscore (_), hyphen (-), period (.) or at symbol (@).';
 $string['invalidusernameupload'] = 'Invalid username';
 $string['ip_address'] = 'IP address';
@@ -1215,7 +1216,7 @@ $string['loginalready'] = 'You are already logged in';
 $string['loginas'] = 'Log in as';
 $string['loginaspasswordexplain'] = '<p>You must enter the special "loginas password" to use this feature.<br />If you do not know it, ask your server administrator.</p>';
 $string['login_failure_logs'] = 'Login failure logs';
-$string['loginguest'] = 'Log in as a guest';
+$string['loginguest'] = 'Access as a guest';
 $string['loginsite'] = 'Log in to the site';
 $string['loginsteps'] = 'For full access to this site, you first need to create an account.';
 $string['loginstepsnone'] = '<p>Hi!</p>
@@ -1340,19 +1341,15 @@ $string['moddoesnotsupporttype'] = 'Module {$a->modname} does not support upload
 $string['modhide'] = 'Hide';
 $string['modshow'] = 'Show';
 $string['modvisible'] = 'Availability';
-$string['modvisible_help'] = 'If the availability is set to \'Show on course page\', the activity or resource is available to students (subject to any access restrictions which may be set).
-
-If the availability is set to \'Hide from students\', the activity or resource is only available to users with permission to view hidden activities (by default, users with the role of teacher or non-editing teacher).';
+$string['modvisible_help'] = '* Show on course page: Available to students (subject to any access restrictions which may be set).
+* Hide on course page: Not available to students.';
 $string['modvisiblewithstealth'] = 'Availability';
-$string['modvisiblewithstealth_help'] = 'If the availability is set to \'Show on course page\', the activity or resource is available to students (subject to any access restrictions which may be set).
-
-If the availability is set to \'Hide from students\', the activity or resource is only available to users with permission to view hidden activities (by default, users with the role of teacher or non-editing teacher).
-
-If the course contains many activities or resources, the course page may be simplified by setting the availability to \'Make available but not shown on course page\'. In this case, a link to the activity or resource must be provided from elsewhere, such as from a page resource. The activity would still be listed in the gradebook and other reports.';
+$string['modvisiblewithstealth_help'] = '* Show on course page: Available to students (subject to any access restrictions which may be set).
+* Hide on course page: Not available to students.
+* Make available but don\'t show on course page: Available to students if you provide a link. Activities will still appear in the gradebook and other reports.';
 $string['modvisiblehiddensection'] = 'Availability';
-$string['modvisiblehiddensection_help'] = 'If the availability is set to \'Hide from students\', the activity or resource is only available to users with permission to view hidden activities (by default, users with the role of teacher or non-editing teacher).
-
-If the course contains many activities or resources, the course page may be simplified by setting the availability to \'Make available but not shown on course page\'. In this case, a link to the activity or resource must be provided from elsewhere, such as from a page resource. The activity would still be listed in the gradebook and other reports.';
+$string['modvisiblehiddensection_help'] = '* Hide on course page: Not available to students.
+* Make available but don\'t show on course page: Available to students if you provide a link. Activities will still appear in the gradebook and other reports.';
 $string['moodlelogo'] = 'Moodle logo';
 $string['month'] = 'Month';
 $string['months'] = 'Months';
@@ -1366,6 +1363,27 @@ $string['moodledocslink'] = 'Help and documentation';
 $string['moodleversion'] = 'Moodle version';
 $string['moodlerelease'] = 'Moodle release';
 $string['moodleservicesandsupport'] = 'Services and support';
+$string['moodlenet:cannotconnecttoserver'] = 'Cannot connect to MoodleNet server';
+$string['moodlenet:configoauthservice'] = 'Select a MoodleNet OAuth 2 service to enable sharing to that MoodleNet site. If the service doesn\'t exist yet, you will need to <a href="{$a}">create</a> it.';
+$string['moodlenet:eventresourceexported'] = 'Resource exported';
+$string['moodlenet:gotomoodlenet'] = 'Go to MoodleNet drafts';
+$string['moodlenet:issuerisnotauthorized'] = 'MoodleNet issuer is not authorized';
+$string['moodlenet:issuerisnotenabled'] = 'MoodleNet issuer is not enabled';
+$string['moodlenet:issuerisnotset'] = 'MoodleNet issuer is not set at site administration';
+$string['moodlenet:outboundsettings'] = 'MoodleNet outbound settings';
+$string['moodlenet:sharenotice'] = 'You are sharing this to MoodleNet as a {$a}';
+$string['moodlenet:sharefailtitle'] = 'Something went wrong';
+$string['moodlenet:sharefailtext'] = 'There was an error sharing your content to MoodleNet.<br>Please try again later.';
+$string['moodlenet:sharefailtextwithsitesupport'] = 'There was an error sharing your content to MoodleNet.<br>Please try again later or <a href="{$a}">contact site support</a>.';
+$string['moodlenet:sharefilesizelimitexceeded'] = 'The size of the resource being shared ({$a->filesize} bytes) exceeds the limit of {$a->filesizelimit} bytes.';
+$string['moodlenet:sharesuccesstitle'] = 'Saved to MoodleNet drafts';
+$string['moodlenet:sharesuccesstext'] = "Almost done! Visit your drafts in MoodleNet to finish sharing your content.";
+$string['moodlenet:sharetomoodlenet'] = 'Share to MoodleNet';
+$string['moodlenet:sharetyperesource'] = 'resource';
+$string['moodlenet:sharingstatus'] = 'Sharing to MoodleNet';
+$string['moodlenet:sharinglargefile'] = "Large files can take some time.";
+$string['moodlenet:sharingto'] = 'Sharing to: ';
+$string['moodlenet:packagingandsending'] = 'Packaging your file and sending to MoodleNet...';
 $string['more'] = 'more';
 $string['morehelp'] = 'More help';
 $string['morehelpaboutmodule'] = 'More help about the {$a} activity';
@@ -1375,7 +1393,7 @@ $string['moreprofileinfoneeded'] = 'Please tell us more about yourself';
 $string['morenavigationlinks'] = 'More...';
 $string['mostrecently'] = 'most recently';
 $string['move'] = 'Move';
-$string['movecoursemodule'] = 'Move resource';
+$string['movecoursemodule'] = 'Move activity';
 $string['movecoursesection'] = 'Move section';
 $string['movecontent'] = 'Move {$a}';
 $string['movecontentafter'] = 'After "{$a}"';
@@ -1666,6 +1684,7 @@ $string['pluginarea'] = 'Area';
 $string['plugindeletefiles'] = 'All data associated with the plugin \'{$a->name}\' has been deleted from the database. To prevent the plugin re-installing itself, you should now delete this directory from your server: {$a->directory}';
 $string['plugincheck'] = 'Plugins check';
 $string['pluginitemid'] = 'Item ID';
+$string['pluginmissingfromdisk'] = '{$a->name} (Missing from disk)';
 $string['pluginsetup'] = 'Setting up plugin tables';
 $string['policyaccept'] = 'I understand and agree';
 $string['policyagree'] = 'You must agree to this policy to continue using this site.  Do you agree?';
@@ -1970,6 +1989,7 @@ $string['setmode'] = 'Set mode';
 $string['setpassword'] = 'Set password';
 $string['setpasswordinstructions'] = 'Please enter your new password below, then save changes.';
 $string['settings'] = 'Settings';
+$string['share'] = 'Share';
 $string['shortname'] = 'Short name'; /* @deprecated MDL-34652 - Use shortnamecourse or shortnameuser or some own context specific string. */
 $string['shortnamecollisionwarning'] = '[*] = This shortname is already in use by a course and will need to be changed upon approval';
 $string['shortnamecourse'] = 'Course short name';
@@ -2356,6 +2376,7 @@ $string['withdisablednote'] = '{$a} (disabled)';
 $string['withoutuserdata'] = 'without user data';
 $string['withselectedusers'] = 'With selected users...';
 $string['withuserdata'] = 'with user data';
+$string['wontrunfuturescheduledtask'] = "Won't run task that hasn't failed and is scheduled to run in the future";
 $string['wordforstudent'] = 'Your word for Student';
 $string['wordforstudenteg'] = 'eg Student, Participant etc';
 $string['wordforstudents'] = 'Your word for Students';

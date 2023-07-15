@@ -27,10 +27,12 @@
 namespace mod_quiz\external;
 
 use core_external\external_api;
+use core_question\local\bank\question_version_status;
 use externallib_advanced_testcase;
 use mod_quiz\question\display_options;
 use mod_quiz\quiz_attempt;
 use mod_quiz\quiz_settings;
+use mod_quiz\structure;
 use mod_quiz_external;
 use moodle_exception;
 
@@ -83,6 +85,30 @@ class testable_mod_quiz_external extends mod_quiz_external {
  * @since      Moodle 3.1
  */
 class external_test extends externallib_advanced_testcase {
+
+    /** @var \stdClass course record. */
+    protected $course;
+
+    /** @var \stdClass activity record. */
+    protected $quiz;
+
+    /** @var \context_module context instance. */
+    protected $context;
+
+    /** @var \stdClass */
+    protected $cm;
+
+    /** @var \stdClass user record. */
+    protected $student;
+
+    /** @var \stdClass user record. */
+    protected $teacher;
+
+    /** @var \stdClass user role record. */
+    protected $studentrole;
+
+    /** @var \stdClass  user role record. */
+    protected $teacherrole;
 
     /**
      * Set up for every test
@@ -1026,11 +1052,16 @@ class external_test extends externallib_advanced_testcase {
 
         $timenow = time();
         // Create a new quiz with one attempt started.
-        list($quiz, $context, $quizobj, $attempt, $attemptobj) = $this->create_quiz_with_questions(true);
+        [$quiz, , $quizobj, $attempt] = $this->create_quiz_with_questions(true);
+        /** @var structure $structure */
+        $structure = $quizobj->get_structure();
+        $structure->update_slot_display_number($structure->get_slot_id_for_slot(1), '1.a');
 
         // Set correctness mask so questions state can be fetched only after finishing the attempt.
         $DB->set_field('quiz', 'reviewcorrectness', display_options::IMMEDIATELY_AFTER, ['id' => $quiz->id]);
 
+        // Having changed some settings, recreate the objects.
+        $attemptobj = quiz_attempt::create($attempt->id);
         $quizobj = $attemptobj->get_quizobj();
         $quizobj->preload_questions();
         $quizobj->load_questions();
@@ -1047,7 +1078,8 @@ class external_test extends externallib_advanced_testcase {
         $this->assertCount(0, $result['messages']);
         $this->assertCount(1, $result['questions']);
         $this->assertEquals(1, $result['questions'][0]['slot']);
-        $this->assertEquals(1, $result['questions'][0]['number']);
+        $this->assertArrayNotHasKey('number', $result['questions'][0]);
+        $this->assertEquals('1.a', $result['questions'][0]['questionnumber']);
         $this->assertEquals('numerical', $result['questions'][0]['type']);
         $this->assertArrayNotHasKey('state', $result['questions'][0]);  // We don't receive the state yet.
         $this->assertEquals(get_string('notyetanswered', 'question'), $result['questions'][0]['status']);
@@ -1068,6 +1100,7 @@ class external_test extends externallib_advanced_testcase {
         $this->assertCount(0, $result['messages']);
         $this->assertCount(1, $result['questions']);
         $this->assertEquals(2, $result['questions'][0]['slot']);
+        $this->assertEquals(2, $result['questions'][0]['questionnumber']);
         $this->assertEquals(2, $result['questions'][0]['number']);
         $this->assertEquals('numerical', $result['questions'][0]['type']);
         $this->assertArrayNotHasKey('state', $result['questions'][0]);  // We don't receive the state yet.
@@ -1948,6 +1981,10 @@ class external_test extends externallib_advanced_testcase {
         quiz_add_quiz_question($question->id, $quiz);
 
         $question = $questiongenerator->create_question('essay', null, ['category' => $cat->id]);
+        quiz_add_quiz_question($question->id, $quiz);
+
+        $question = $questiongenerator->create_question('multichoice', null,
+                ['category' => $cat->id, 'status' => question_version_status::QUESTION_STATUS_DRAFT]);
         quiz_add_quiz_question($question->id, $quiz);
 
         $this->setUser($this->student);

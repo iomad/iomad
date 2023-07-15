@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template core_courseformat/content/bulkedittoggler
+    @template core_courseformat/local/content/bulkedittoggler
 
     Displays the bulk actions button in the page header.
 
@@ -25,7 +25,7 @@
 }}
 <button
     id="bulk-enable-{{uniqid}}"
-    class="bulkEnable btn"
+    class="bulkEnable btn text-primary text-nowrap"
     data-for="enableBulk"
 >
     {{#str}} bulkedit, core_courseformat {{/str}} {{#pix}} i/edit, core {{/pix}}

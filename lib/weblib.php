@@ -113,7 +113,6 @@ function s($var) {
  * @see s()
  *
  * @param string $var the string potentially containing HTML characters
- * @return string
  */
 function p($var) {
     echo s($var);
@@ -535,6 +534,27 @@ class moodle_url {
         } else {
             return implode('&', $arr);
         }
+    }
+
+    /**
+     * Get the url params as an array of key => value pairs.
+     *
+     * This helps in handling cases where url params contain arrays.
+     *
+     * @return array params array for templates.
+     */
+    public function export_params_for_template(): array {
+        $data = [];
+        foreach ($this->params as $key => $val) {
+            if (is_array($val)) {
+                foreach ($val as $index => $value) {
+                    $data[] = ['name' => $key.'['.$index.']', 'value' => $value];
+                }
+            } else {
+                $data[] = ['name' => $key, 'value' => $val];
+            }
+        }
+        return $data;
     }
 
     /**
@@ -1237,7 +1257,7 @@ function format_text_menu() {
  * @param string $text The text to be formatted. This is raw text originally from user input.
  * @param int $format Identifier of the text format to be used
  *            [FORMAT_MOODLE, FORMAT_HTML, FORMAT_PLAIN, FORMAT_MARKDOWN]
- * @param object/array $options text formatting options
+ * @param stdClass|array $options text formatting options
  * @param int $courseiddonotuse deprecated course id, use context option instead
  * @return string
  */
@@ -1323,9 +1343,15 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
 
     switch ($format) {
         case FORMAT_HTML:
+            $filteroptions['stage'] = 'pre_format';
+            $text = $filtermanager->filter_text($text, $context, $filteroptions);
+            // Text is already in HTML format, so just continue to the next filtering stage.
+            $filteroptions['stage'] = 'pre_clean';
+            $text = $filtermanager->filter_text($text, $context, $filteroptions);
             if (!$options['noclean']) {
                 $text = clean_text($text, FORMAT_HTML, $options);
             }
+            $filteroptions['stage'] = 'post_clean';
             $text = $filtermanager->filter_text($text, $context, $filteroptions);
             break;
 
@@ -1345,17 +1371,27 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
             break;
 
         case FORMAT_MARKDOWN:
+            $filteroptions['stage'] = 'pre_format';
+            $text = $filtermanager->filter_text($text, $context, $filteroptions);
             $text = markdown_to_html($text);
+            $filteroptions['stage'] = 'pre_clean';
+            $text = $filtermanager->filter_text($text, $context, $filteroptions);
             // The markdown parser does not strip dangerous html so we need to clean it, even if noclean is set to true.
             $text = clean_text($text, FORMAT_HTML, $options);
+            $filteroptions['stage'] = 'post_clean';
             $text = $filtermanager->filter_text($text, $context, $filteroptions);
             break;
 
         default:  // FORMAT_MOODLE or anything else.
+            $filteroptions['stage'] = 'pre_format';
+            $text = $filtermanager->filter_text($text, $context, $filteroptions);
             $text = text_to_html($text, null, $options['para'], $options['newlines']);
+            $filteroptions['stage'] = 'pre_clean';
+            $text = $filtermanager->filter_text($text, $context, $filteroptions);
             if (!$options['noclean']) {
                 $text = clean_text($text, FORMAT_HTML, $options);
             }
+            $filteroptions['stage'] = 'post_clean';
             $text = $filtermanager->filter_text($text, $context, $filteroptions);
             break;
     }
@@ -1394,9 +1430,9 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
         }
 
         // This regex is nasty and I don't like it. The correct way to solve this is by loading the HTML like so:
-        // $domdoc->loadHTML($text, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); however it seems like the libxml
-        // version that travis uses doesn't work properly and ends up leaving <html><body>, so I'm forced to use
-        // this regex to remove those tags.
+        // $domdoc->loadHTML($text, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); however it seems like some libxml
+        // versions don't work properly and end up leaving <html><body>, so I'm forced to use
+        // this regex to remove those tags as a preventive measure.
         $text = trim(preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $domdoc->saveHTML($domdoc->documentElement)));
     }
 
@@ -1852,7 +1888,7 @@ function purify_html($text, $options = array()) {
         $config = HTMLPurifier_Config::createDefault();
 
         $config->set('HTML.DefinitionID', 'moodlehtml');
-        $config->set('HTML.DefinitionRev', 6);
+        $config->set('HTML.DefinitionRev', 7);
         $config->set('Cache.SerializerPath', $cachedir);
         $config->set('Cache.SerializerPermissions', $CFG->directorypermissions);
         $config->set('Core.NormalizeNewlines', false);
@@ -1894,7 +1930,7 @@ function purify_html($text, $options = array()) {
 
             // Media elements.
             // https://html.spec.whatwg.org/#the-video-element
-            $def->addElement('video', 'Block', 'Optional: #PCDATA | Flow | source | track', 'Common', [
+            $def->addElement('video', 'Inline', 'Optional: #PCDATA | Flow | source | track', 'Common', [
                 'src' => 'URI',
                 'crossorigin' => 'Enum#anonymous,use-credentials',
                 'poster' => 'URI',
@@ -1908,7 +1944,7 @@ function purify_html($text, $options = array()) {
                 'height' => 'Length',
             ]);
             // https://html.spec.whatwg.org/#the-audio-element
-            $def->addElement('audio', 'Block', 'Optional: #PCDATA | Flow | source | track', 'Common', [
+            $def->addElement('audio', 'Inline', 'Optional: #PCDATA | Flow | source | track', 'Common', [
                 'src' => 'URI',
                 'crossorigin' => 'Enum#anonymous,use-credentials',
                 'preload' => 'Enum#auto,metadata,none',
@@ -2266,7 +2302,7 @@ function get_html_lang($dir = false) {
     global $CFG;
 
     $currentlang = current_language();
-    if ($currentlang !== $CFG->lang && !get_string_manager()->translation_exists($currentlang)) {
+    if (isset($CFG->lang) && $currentlang !== $CFG->lang && !get_string_manager()->translation_exists($currentlang)) {
         // Use the default site language when the current language is not available.
         $currentlang = $CFG->lang;
         // Fix the current language.
@@ -2693,7 +2729,7 @@ function print_recent_activity_note($time, $user, $text, $link, $return=false, $
  * outputs a simple list structure in XHTML.
  * The data is taken from the serialised array stored in the course record.
  *
- * @param course $course A {@link $COURSE} object.
+ * @param stdClass $course A course object.
  * @param array $sections
  * @param course_modinfo $modinfo
  * @param string $strsection
@@ -3564,7 +3600,7 @@ class error_log_progress_trace extends progress_trace {
  * @package core
  */
 class progress_trace_buffer extends progress_trace {
-    /** @var progres_trace */
+    /** @var progress_trace */
     protected $trace;
     /** @var bool do we pass output out */
     protected $passthrough;
@@ -3734,7 +3770,7 @@ function print_password_policy() {
  *                which format to output the doclink in.
  * @param string|object|array $a An object, string or number that can be used
  *      within translation strings
- * @return Object An object containing:
+ * @return stdClass An object containing:
  * - heading: Any heading that there may be for this help string.
  * - text: The wiki-formatted help string.
  * - doclink: An object containing a link, the linktext, and any additional

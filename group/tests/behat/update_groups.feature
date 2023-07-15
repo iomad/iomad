@@ -64,11 +64,9 @@ Feature: Automatic updating of groups and groupings
 
   @javascript @skip_chrome_zerosize
   Scenario: Update groups and groupings with ID numbers without the 'moodle/course:changeidnumber' capability
-    Given I log out
-    And I log in as "admin"
-    And I set the following system permissions of "Teacher" role:
-      | moodle/course:changeidnumber | Prevent |
-    And I log out
+    Given the following "role capability" exists:
+      | role                         | editingteacher |
+      | moodle/course:changeidnumber | prevent        |
     And I log in as "teacher1"
     And I am on the "Course 1" "groups" page
     And I set the field "groups" to "Group (with ID)"
@@ -142,3 +140,20 @@ Feature: Automatic updating of groups and groupings
       | Enrolment key | Abcdef-1 |
     And I press "Save changes"
     And I should not see "This enrolment key is already used for another group."
+
+  @javascript
+  Scenario: Visibility and Participation settings are locked once a group has members
+    Given I set the field "groups" to "Group (with ID)"
+    And I press "Edit group settings"
+    And "visibility" "select" should exist
+    And the field "Group membership visibility" matches value "Visible to everyone"
+    And the "participation" "checkbox" should be enabled
+    And the field "Show group in dropdown menu for activities in group mode" matches value "1"
+    When the following "group members" exist:
+      | user     | group |
+      | teacher1 | An ID |
+    And I reload the page
+    Then "visibility" "select" should not exist
+    And "Visible to everyone" "text" should exist
+    And the "participation" "checkbox" should be disabled
+    And the field "Show group in dropdown menu for activities in group mode" matches value "1"

@@ -1318,8 +1318,9 @@ function fix_utf8($value) {
             // Shortcut.
             return $value;
         }
-        // No null bytes expected in our data, so let's remove it.
-        $value = str_replace("\0", '', $value);
+
+        // Remove null bytes or invalid Unicode sequences from value.
+        $value = str_replace(["\0", "\xef\xbf\xbe", "\xef\xbf\xbf"], '', $value);
 
         // Note: this duplicates min_fix_utf8() intentionally.
         static $buggyiconv = null;
@@ -2746,7 +2747,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
 
     // If the user is not even logged in yet then make sure they are.
     if (!isloggedin()) {
-        if ($autologinguest and !empty($CFG->guestloginbutton) and !empty($CFG->autologinguests)) {
+        if ($autologinguest && !empty($CFG->autologinguests)) {
             if (!$guest = get_complete_user_data('id', $CFG->siteguest)) {
                 // Misconfigured site guest, just redirect to login page.
                 redirect(get_login_url());
@@ -5694,6 +5695,10 @@ function reset_course_userdata($data) {
             // Update calendar events for all modules.
             course_module_bulk_update_calendar_events($modname, $data->courseid);
         }
+        // Purge the course cache after resetting course start date. MDL-76936
+        if ($data->timeshift) {
+            course_modinfo::purge_course_cache($data->courseid);
+        }
     }
 
     // Mention unsupported mods.
@@ -7366,7 +7371,7 @@ function get_string_manager($forcereload=false) {
  *      usually expressed as the filename in the language pack without the
  *      .php on the end but can also be written as mod/forum or grade/export/xls.
  *      If none is specified then moodle.php is used.
- * @param string|object|array $a An object, string or number that can be used
+ * @param string|object|array|int $a An object, string or number that can be used
  *      within translation strings
  * @param bool $lazyload If set to true a string object is returned instead of
  *      the string itself. The string then isn't calculated until it is first used.
@@ -7616,7 +7621,7 @@ class emoticon_manager {
      *
      * @see self::encode_stored_config()
      * @param string $encoded
-     * @return string|null
+     * @return array|null
      */
     public function decode_stored_config($encoded) {
         $decoded = json_decode($encoded);
@@ -8244,10 +8249,23 @@ function check_php_version($version='5.2.4') {
  * Checks version numbers of main code and all plugins to see
  * if there are any mismatches.
  *
+ * @param bool $checkupgradeflag check the outagelessupgrade flag to see if an upgrade is running.
  * @return bool
  */
-function moodle_needs_upgrading() {
-    global $CFG;
+function moodle_needs_upgrading($checkupgradeflag = true) {
+    global $CFG, $DB;
+
+    // Say no if there is already an upgrade running.
+    if ($checkupgradeflag) {
+        $lock = $DB->get_field('config', 'value', ['name' => 'outagelessupgrade']);
+        $currentprocessrunningupgrade = (defined('CLI_UPGRADE_RUNNING') && CLI_UPGRADE_RUNNING);
+        // If we ARE locked, but this PHP process is NOT the process running the upgrade,
+        // We should always return false.
+        // This means the upgrade is running from CLI somewhere, or about to.
+        if (!empty($lock) && !$currentprocessrunningupgrade) {
+            return false;
+        }
+    }
 
     if (empty($CFG->version)) {
         return true;
@@ -8404,7 +8422,7 @@ function count_words($string) {
                 </                              # Start of close tag.
                 (?!                             # Do not match any of these specific close tag names.
                     a> | b> | del> | em> | i> |
-                    ins> | s> | small> |
+                    ins> | s> | small> | span> |
                     strong> | sub> | sup> | u>
                 )
                 \w+                             # But, apart from those execptions, match any tag name.
@@ -9063,11 +9081,12 @@ function make_unique_id_code($extra = '') {
  *
  * @param string $addr    The address you are checking
  * @param string $subnetstr    The string of subnet addresses
+ * @param bool $checkallzeros    The state to whether check for 0.0.0.0
  * @return bool
  */
-function address_in_subnet($addr, $subnetstr) {
+function address_in_subnet($addr, $subnetstr, $checkallzeros = false) {
 
-    if ($addr == '0.0.0.0') {
+    if ($addr == '0.0.0.0' && !$checkallzeros) {
         return false;
     }
     $subnets = explode(',', $subnetstr);
@@ -10083,7 +10102,7 @@ function remove_dir($dir, $contentonly=false) {
  * Detect if an object or a class contains a given property
  * will take an actual object or the name of a class
  *
- * @param mix $obj Name of class or real object to test
+ * @param mixed $obj Name of class or real object to test
  * @param string $property name of property to find
  * @return bool true if property exists
  */
@@ -10735,7 +10754,7 @@ class lang_string {
      *
      * @param string $identifier The strings identifier
      * @param string $component The strings component
-     * @param stdClass|array $a Any arguments the string requires
+     * @param stdClass|array|mixed $a Any arguments the string requires
      * @param string $lang The language to use when processing the string.
      * @throws coding_exception
      */

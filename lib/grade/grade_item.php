@@ -263,6 +263,22 @@ class grade_item extends grade_object {
     public $markasoverriddenwhengraded = true;
 
     /**
+     * @var int course module ID
+     */
+    public $cmid;
+
+    /**
+     * @var string average information.
+     */
+    public $avg;
+
+    /**
+     * Category name.
+     * @var string
+     */
+    public $category;
+
+    /**
      * Constructor. Optionally (and by default) attempts to fetch corresponding row from the database
      *
      * @param array $params An array with required parameters for this grade object.
@@ -781,9 +797,10 @@ class grade_item extends grade_object {
      * because the regrading must be done in correct order!!
      *
      * @param int $userid Supply a user ID to limit the regrading to a single user
+     * @param \core\progress\base|null $progress Optional progress object, will be updated per user
      * @return bool true if ok, error string otherwise
      */
-    public function regrade_final_grades($userid=null) {
+    public function regrade_final_grades($userid=null, ?\core\progress\base $progress = null) {
         global $CFG, $DB;
 
         // locked grade items already have correct final grades
@@ -808,7 +825,7 @@ class grade_item extends grade_object {
             // aggregate category grade item
             $category = $this->load_item_category();
             $category->grade_item =& $this;
-            if ($category->generate_grades($userid)) {
+            if ($category->generate_grades($userid, $progress)) {
                 return true;
             } else {
                 return "Could not aggregate final grades for category:".$this->id; // TODO: improve and localize
@@ -836,6 +853,12 @@ class grade_item extends grade_object {
         if ($rs) {
             foreach ($rs as $grade_record) {
                 $grade = new grade_grade($grade_record, false);
+
+                // Incrementing the progress by nothing causes it to send an update (once per second)
+                // to the web browser so as to prevent the connection timing out.
+                if ($progress) {
+                    $progress->increment_progress(0);
+                }
 
                 if (!empty($grade_record->locked) or !empty($grade_record->overridden)) {
                     // this grade is locked - final grade must be ok

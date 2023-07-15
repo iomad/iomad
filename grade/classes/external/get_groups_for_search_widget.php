@@ -32,6 +32,7 @@ use core_external\external_warnings;
  * @copyright  2022 Mathew May <mathew.solutions>
  * @category   external
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @deprecated
  */
 class get_groups_for_search_widget extends external_api {
 
@@ -39,6 +40,7 @@ class get_groups_for_search_widget extends external_api {
      * Returns description of method parameters.
      *
      * @return external_function_parameters
+     * @deprecated since 4.2
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters (
@@ -59,6 +61,7 @@ class get_groups_for_search_widget extends external_api {
      * @throws invalid_parameter_exception
      * @throws moodle_exception
      * @throws restricted_context_exception
+     * @deprecated since 4.2
      */
     protected static function execute(int $courseid, string $actionbaseurl): array {
         global $DB, $USER, $COURSE;
@@ -111,7 +114,7 @@ class get_groups_for_search_widget extends external_api {
                     'id' => $group->id,
                     'name' => format_string($group->name, true, ['context' => $context]),
                     'url' => $url->out(false),
-                    'active' => false // @TODO MDL-76246
+                    'active' => false
                 ];
             }, $groupsmenu);
         }
@@ -126,6 +129,7 @@ class get_groups_for_search_widget extends external_api {
      * Returns description of what the group search for the widget should return.
      *
      * @return external_single_structure
+     * @deprecated since 4.2
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
@@ -147,5 +151,13 @@ class get_groups_for_search_widget extends external_api {
             'active' => new external_value(PARAM_BOOL, 'Are we currently on this item?', VALUE_REQUIRED)
         ];
         return new external_single_structure($groupfields);
+    }
+
+    /**
+     * Mark the function as deprecated.
+     * @return bool
+     */
+    public static function execute_is_deprecated() {
+        return true;
     }
 }

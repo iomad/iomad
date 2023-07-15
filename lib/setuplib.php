@@ -796,8 +796,8 @@ function initialise_local_config_cache() {
     if (!empty($CFG->siteidentifier) && !file_exists($bootstrapcachefile)) {
         $contents = "<?php
 // ********** This file is generated DO NOT EDIT **********
-\$CFG->siteidentifier = '" . addslashes($CFG->siteidentifier) . "';
-\$CFG->bootstraphash = '" . hash_local_config_cache() . "';
+\$CFG->siteidentifier = " . var_export($CFG->siteidentifier, true) . ";
+\$CFG->bootstraphash = " . var_export(hash_local_config_cache(), true) . ";
 // Only if the file is not stale and has not been defined.
 if (\$CFG->bootstraphash === hash_local_config_cache() && !defined('SYSCONTEXTID')) {
     define('SYSCONTEXTID', ".SYSCONTEXTID.");
@@ -2201,4 +2201,27 @@ function proxy_log_callback($code) {
         $error = "Unsafe internet IO detected: {$function['function']} with arguments " . join(', ', $function['args']) . "\n";
         error_log($error . format_backtrace($trace, true)); // phpcs:ignore
     }
+}
+
+/**
+ * A helper function for deprecated files to use to ensure that, when they are included for unit tests,
+ * they are run in an isolated process.
+ *
+ * @throws \coding_exception The exception thrown when the process is not isolated.
+ */
+function require_phpunit_isolation(): void {
+    if (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST) {
+        // Not a test.
+        return;
+    }
+
+    if (defined('PHPUNIT_ISOLATED_TEST')) {
+        // Already isolated.
+        return;
+    }
+
+    throw new \coding_exception(
+        'When including this file for a unit test, the test must be run in an isolated process. ' .
+            'See the PHPUnit @runInSeparateProcess and @runTestsInSeparateProcesses annotations.'
+    );
 }

@@ -17,22 +17,16 @@ Feature: Add forum activities and discussions
       | user | course | role |
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name | Test forum name |
-      | Forum type | Standard forum for general use |
-      | Description | Test forum description |
-    And I add a new discussion to "Test forum name" forum with:
-      | Subject | Forum post 1 |
-      | Message | This is the body |
-    And I log out
+    And the following "activity" exists:
+      | activity    | forum                  |
+      | course      | C1                     |
+      | name        | Test forum name        |
+      | type        | general                |
+    And the following forum discussions exist in course "Course 1":
+      | user     | forum              | name                 | message          | attachments |
+      | teacher1 | Test forum name    | Forum post 1         | this is the body |             |
+      | student1 | Test forum name    | Post with attachment | this is the body | empty.txt   |
     And I log in as "student1"
-    And I am on "Course 1" course homepage
-    When I add a new discussion to "Test forum name" forum with:
-      | Subject | Post with attachment |
-      | Message | This is the body |
-      | Attachment | lib/tests/fixtures/empty.txt |
     And I reply "Forum post 1" post from "Test forum name" forum with:
       | Subject | Reply with attachment |
       | Message | This is the body |
@@ -57,5 +51,5 @@ Feature: Add forum activities and discussions
       | Forum type | single     |
       | Group mode | 1          |
     When I press "Save and display"
-    Then I should see "Separate groups cannot be used with single discussion topic"
-    And I should see "Single discussion topic cannot be used with separate groups"
+    Then I should see "Separate groups can't be used with a single simple discussion."
+    And I should see "A single simple discussion can't be used with separate groups."
