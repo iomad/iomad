@@ -161,7 +161,7 @@ class IomadMergeSearch{
                 break;
         }
 
-        $ordering = ' $departmentsql ORDER BY lastname, firstname';
+        $ordering = " $departmentsql ORDER BY lastname, firstname";
 
         $results = $DB->get_records_sql($sql . $ordering, $params);
         return $results;
