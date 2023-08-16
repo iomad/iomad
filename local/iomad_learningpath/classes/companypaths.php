@@ -686,7 +686,7 @@ class companypaths {
         $excludeids = $this->get_users($pathid, true);
         if (!empty($excludeids)) {
             // Add SQL to remove them from the list.
-            $excludesql = " AND u.id NOT IN (" . implode(',', array_keys($excludeids)) . ")";
+            $excludesql = " AND u.id NOT IN (" . implode(',', $excludeids) . ")";
 
         } else {
             $excludesql = "";
