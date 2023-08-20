@@ -443,8 +443,8 @@ class iomad {
             if (!$mycompanycategories = $companycategoriescache->get($company->id)) {
                 $mycompanycategories = $DB->get_records_sql("SELECT DISTINCT cc.id
                                                              FROM {course_categories} cc
-                                                             WHERE " . $DB->sql_like('cc.path', ':companycategorysearch'),
-                                                             ['companycategorysearch' => '/' . $company->category . '%']);
+                                                             WHERE " . $DB->sql_like($DB->sql_concat('cc.path', '/'), ':companycategorysearch'),
+                                                             ['companycategorysearch' => '/' . $company->category . '/%']);
                 $companycategoriescache->set($company->id, $mycompanycategories);
             }
         } else {
