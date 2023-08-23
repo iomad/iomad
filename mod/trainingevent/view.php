@@ -1109,7 +1109,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
         }
         $eventtable .= "</tr></table>";
         $eventtable .= "<table>";
-        $eventtable .= "<tr><th>" . get_string('location', 'trainingevent') . "</th><td>" . $location->name . "</td></tr>";
+        $eventtable .= "<tr><th>" . get_string('location', 'trainingevent') . "</th><td>" . format_text($location->name) . "</td></tr>";
         if (empty($location->isvirtual)) {
             $eventtable .= "<tr><th>" . get_string('address') . "</th><td>" . $location->address . "</td></tr>";
             $eventtable .= "<tr><th>" . get_string('city') . "</th><td>" . $location->city . "</td></tr>";
