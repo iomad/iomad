@@ -68,7 +68,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
         $mform->setType('password', core_user::get_property_type('password'));
         $mform->addRule('password', get_string('missingpassword'), 'required', null, 'client');
 
-        if (empty($this->company) || !$CFG->local_iomad_signup_useemail) {
+        if (!$CFG->local_iomad_signup_useemail) {
             $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
             $mform->setType('email', core_user::get_property_type('email'));
             $mform->addRule('email', get_string('missingemail'), 'required', null, 'client');
