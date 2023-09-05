@@ -161,8 +161,4 @@ if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $context))
     echo "<a class=\"btn btn-success\" href=\"classroom_edit_form.php\">" . get_string('classrooms_add', $block) . "</a>&nbsp";
 }
 
-// exit button
-$link = new moodle_url('/my');
-echo '<a class="btn btn-primary" href="' . $link . '">' . get_string('todashboard', 'block_iomad_company_admin') . '</a>';
-
 echo $OUTPUT->footer();
