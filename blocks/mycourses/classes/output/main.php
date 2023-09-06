@@ -73,11 +73,12 @@ class main implements renderable, templatable {
         $dir = optional_param('dir', 'ASC', PARAM_CLEAN);
 
         // Get the completion info.
-        $mycompletion = mycourses_get_my_completion(0, $sort, $dir);
+        $mycompletion = mycourses_get_my_completion($cutoffdate, $sort, $dir);
+        $myarchive = mycourses_get_my_archive($cutoffdate, $sort, $dir);
 
         $availableview = new available_view($mycompletion, $cutoffdate);
         $inprogressview = new inprogress_view($mycompletion, $cutoffdate);
-        $completedview = new completed_view($mycompletion, $cutoffdate);
+        $completedview = new completed_view($myarchive, $cutoffdate);
 
         // Now, set the tab we are going to be viewing.
         $viewingavailable = false;
