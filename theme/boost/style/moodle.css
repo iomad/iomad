@@ -22861,9 +22861,19 @@ a.text-dark:hover, a.text-dark:focus {
 .dir-rtl .custom-select {
   background-position: 0.75rem center;
 }
-
 .dir-rtl .custom-switch .custom-control-input:checked ~ .custom-control-label::after {
   transform: translateX(-0.9375rem);
+}
+.dir-rtl .tooltip.bs-tooltip-left .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=left] .arrow, .dir-rtl .tooltip.bs-tooltip-right .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=right] .arrow {
+  transform: rotate(180deg);
+}
+.dir-rtl .tooltip.bs-tooltip-left .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=left] .arrow {
+  left: auto;
+  right: 0;
+}
+.dir-rtl .tooltip.bs-tooltip-right .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=right] .arrow {
+  left: 0;
+  right: auto;
 }
 
 /**
@@ -28576,6 +28586,9 @@ span.editinstructions .alert-link {
 #course-category-listings .listitem[data-selected="1"] {
   border-left: calc(1px + 5px) solid #0f6cbf;
   padding-left: calc(1.25rem - 5px);
+}
+#course-category-listings .listitem:hover {
+  z-index: 2;
 }
 #course-category-listings .item-actions {
   margin-right: 1em;

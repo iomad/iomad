@@ -14,31 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+declare(strict_types=1);
+
+namespace qtype_calculated;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/question/type/numerical/question.php');
+
 /**
- * Set Mode.
+ * Class to represent a calculated question answer.
  *
- * @package    core
- * @copyright  2021 Andrew Lyons
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_calculated
+ * @copyright 2023 Shamim Rezaie <shamim@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class qtype_calculated_answer extends \qtype_numerical_answer {
+    /** @var int The length of the correct answer. */
+    public $correctanswerlength;
 
-require_once('config.php');
-
-$setmode = optional_param('setmode', false, PARAM_BOOL);
-$contextid = required_param('context', PARAM_INT);
-$pageurl = required_param('pageurl', PARAM_LOCALURL);
-
-// Behat requires JS to get the session. To allow goutte
-// to enable edit mode sesskey validation is skipped for behat scripts.
-if (!defined('BEHAT_SITE_RUNNING')) {
-    require_sesskey();
+    /** @var int The format of the correct answer. */
+    public $correctanswerformat;
 }
-
-require_login();
-
-$context = \context_helper::instance_by_id($contextid);
-$PAGE->set_context($context);
-
-$USER->editing = $setmode;
-
-redirect($pageurl);
