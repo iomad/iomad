@@ -30,6 +30,7 @@ use auth_iomadoidc\jwt;
 use auth_iomadoidc\iomadoidcclient;
 use core_user;
 use stdClass;
+use context_system;
 use iomad;
 
 defined('MOODLE_INTERNAL') || die();
