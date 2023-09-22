@@ -506,12 +506,25 @@ class base {
             throw new \moodle_exception('errorauthnocredsandendpoints', 'auth_iomadoidc');
         }
 
-        $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
-        $clientsecret = (isset($this->config->clientsecret)) ? $this->config->clientsecret : null;
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
+
+        $opname = "clientid" . $postfix;
+        $clientid = (isset($this->config->$opname)) ? $this->config->$opname : null;
+        $opname = "clientsecret" . $postfix;
+        $clientsecret = (isset($this->config->$opname)) ? $this->config->$opname : null;
         $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
         $redirecturi .= '/auth/iomadoidc/';
-        $tokenresource = (isset($this->config->iomadoidcresource)) ? $this->config->iomadoidcresource : null;
-        $scope = (isset($this->config->iomadoidcscope)) ? $this->config->iomadoidcscope : null;
+        $opname = "iomadoidcresource" . $postfix;
+        $tokenresource = (isset($this->config->$opname)) ? $this->config->$opname : null;
+        $opname = "iomadoidcscope" . $postfix;
+        $scope = (isset($this->config->$opname)) ? $this->config->$opname : null;
 
         $client = new iomadoidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
