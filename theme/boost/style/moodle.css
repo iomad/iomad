@@ -14809,7 +14809,7 @@ a.disabled {
   text-decoration: none;
   cursor: default;
   font-style: italic;
-  color: #808080;
+  color: #6a737b;
 }
 
 body.lockscroll {
@@ -15896,6 +15896,7 @@ blockquote {
 .activityiconcontainer .activityicon,
 .activityiconcontainer .icon {
   margin: 0;
+  font-size: 24px;
   height: 24px;
   width: 24px;
 }

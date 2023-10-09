@@ -15,25 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Legacy Cron Quiz Reports Task
+ * Settings for the Statisics report
  *
- * @package    quiz_statistics
- * @copyright  2017 Michael Hughes, University of Strathclyde
- * @author Michael Hughes <michaelhughes@strath.ac.uk>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
+ * @package   quiz_statistics
+ * @copyright 2023 onwards Catalyst IT EU {@link https://catalyst-eu.net}
+ * @author    Mark Johnson <mark.johnson@catalyst-eu.net>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$tasks = [
-    [
-        'classname' => 'quiz_statistics\task\recalculate',
-        'blocking' => 0,
-        'minute' => 'R',
-        'hour' => '*/4',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*'
-    ]
-];
+if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_configtext(
+        'quiz_statistics/getstatslocktimeout',
+        get_string('getstatslocktimeout', 'quiz_statistics'),
+        get_string('getstatslocktimeoutdesc', 'quiz_statistics'),
+        MINSECS * 15
+    ));
+}
