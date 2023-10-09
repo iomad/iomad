@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.5 (Build: 20230814)'; // Human-friendly version name
+$plugin->release  = '4.1.6 (Build: 20231009)'; // Human-friendly version name
 $plugin->version  = 2021112200;   // The (date) version of this plugin.
 $plugin->requires = 2010021900;   // Requires this Moodle version.
 $plugin->component = 'block_iomad_microlearning';
