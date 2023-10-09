@@ -2184,7 +2184,7 @@ function get_user_preferences($name = null, $default = null, $user = null) {
  * @param int $minute The minute part to create timestamp of
  * @param int $second The second part to create timestamp of
  * @param int|float|string $timezone Timezone modifier, used to calculate GMT time offset.
- *             if 99 then default user's timezone is used {@link http://docs.moodle.org/dev/Time_API#Timezone}
+ *             if 99 then default user's timezone is used {@link https://moodledev.io/docs/apis/subsystems/time#timezone}
  * @param bool $applydst Toggle Daylight Saving Time, default true, will be
  *             applied only if timezone is 99 or string.
  * @return int GMT timestamp
@@ -2310,7 +2310,7 @@ function format_time($totalsecs, $str = null) {
  *        get_string('strftime...', 'langconfig');
  * @param int|float|string $timezone by default, uses the user's time zone. if numeric and
  *        not 99 then daylight saving will not be added.
- *        {@link http://docs.moodle.org/dev/Time_API#Timezone}
+ *        {@link https://moodledev.io/docs/apis/subsystems/time#timezone}
  * @param bool $fixday If true (default) then the leading zero from %d is removed.
  *        If false then the leading zero is maintained.
  * @param bool $fixhour If true (default) then the leading zero from %I is removed.
@@ -2332,7 +2332,7 @@ function userdate($date, $format = '', $timezone = 99, $fixday = true, $fixhour 
  *        get_string('strftime...', 'langconfig');
  * @param int|float|string $timezone by default, uses the user's time zone. if numeric and
  *        not 99 then daylight saving will not be added.
- *        {@link http://docs.moodle.org/dev/Time_API#Timezone}
+ *        {@link https://moodledev.io/docs/apis/subsystems/time#timezone}
  * @param bool $fixday If true (default) then the leading zero from %d is removed.
  *        If false then the leading zero is maintained.
  * @param bool $fixhour If true (default) then the leading zero from %I is removed.
@@ -2495,7 +2495,7 @@ function usertimezone($timezone=99) {
  * @category time
  * @param float|int|string $tz timezone to calculate GMT time offset before
  *        calculating user timezone, 99 is default user timezone
- *        {@link http://docs.moodle.org/dev/Time_API#Timezone}
+ *        {@link https://moodledev.io/docs/apis/subsystems/time#timezone}
  * @return float|string
  */
 function get_user_timezone($tz = 99) {
@@ -10254,8 +10254,14 @@ function setup_lang_from_browser() {
         // Clean it properly for include.
         $lang = strtolower(clean_param($lang, PARAM_SAFEDIR));
         if (get_string_manager()->translation_exists($lang, false)) {
-            // Lang exists, set it in session.
-            $SESSION->lang = $lang;
+            // If the translation for this language exists then try to set it
+            // for the rest of the session, if this is a read only session then
+            // we can only set it temporarily in $CFG.
+            if (defined('READ_ONLY_SESSION') && !empty($CFG->enable_read_only_sessions)) {
+                $CFG->lang = $lang;
+            } else {
+                $SESSION->lang = $lang;
+            }
             // We have finished. Go out.
             break;
         }
@@ -10616,52 +10622,33 @@ function get_course_display_name_for_list($course) {
  * Safe analogue of unserialize() that can only parse arrays
  *
  * Arrays may contain only integers or strings as both keys and values. Nested arrays are allowed.
- * Note: If any string (key or value) has semicolon (;) as part of the string parsing will fail.
- * This is a simple method to substitute unnecessary unserialize() in code and not intended to cover all possible cases.
  *
  * @param string $expression
  * @return array|bool either parsed array or false if parsing was impossible.
  */
 function unserialize_array($expression) {
-    $subs = [];
-    // Find nested arrays, parse them and store in $subs , substitute with special string.
-    while (preg_match('/([\^;\}])(a:\d+:\{[^\{\}]*\})/', $expression, $matches) && strlen($matches[2]) < strlen($expression)) {
-        $key = '--SUB' . count($subs) . '--';
-        $subs[$key] = unserialize_array($matches[2]);
-        if ($subs[$key] === false) {
-            return false;
-        }
-        $expression = str_replace($matches[2], $key . ';', $expression);
-    }
 
     // Check the expression is an array.
-    if (!preg_match('/^a:(\d+):\{([^\}]*)\}$/', $expression, $matches1)) {
+    if (!preg_match('/^a:(\d+):/', $expression)) {
         return false;
     }
-    // Get the size and elements of an array (key;value;key;value;....).
-    $parts = explode(';', $matches1[2]);
-    $size = intval($matches1[1]);
-    if (count($parts) < $size * 2 + 1) {
-        return false;
-    }
-    // Analyze each part and make sure it is an integer or string or a substitute.
-    $value = [];
-    for ($i = 0; $i < $size * 2; $i++) {
-        if (preg_match('/^i:(\d+)$/', $parts[$i], $matches2)) {
-            $parts[$i] = (int)$matches2[1];
-        } else if (preg_match('/^s:(\d+):"(.*)"$/', $parts[$i], $matches3) && strlen($matches3[2]) == (int)$matches3[1]) {
-            $parts[$i] = $matches3[2];
-        } else if (preg_match('/^--SUB\d+--$/', $parts[$i])) {
-            $parts[$i] = $subs[$parts[$i]];
-        } else {
-            return false;
+
+    $values = (array) unserialize_object($expression);
+
+    // Callback that returns true if the given value is an unserialized object, executes recursively.
+    $invalidvaluecallback = static function($value) use (&$invalidvaluecallback): bool {
+        if (is_array($value)) {
+            return (bool) array_filter($value, $invalidvaluecallback);
         }
+        return ($value instanceof stdClass) || ($value instanceof __PHP_Incomplete_Class);
+    };
+
+    // Iterate over the result to ensure there are no stray objects.
+    if (array_filter($values, $invalidvaluecallback)) {
+        return false;
     }
-    // Combine keys and values.
-    for ($i = 0; $i < $size * 2; $i += 2) {
-        $value[$parts[$i]] = $parts[$i+1];
-    }
-    return $value;
+
+    return $values;
 }
 
 /**

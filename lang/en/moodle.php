@@ -416,7 +416,9 @@ $string['courserestore'] = 'Course restore';
 $string['coursereuse'] = 'Course reuse';
 $string['courses'] = 'Courses';
 $string['coursesectionsummaries'] = 'Course section summaries';
-$string['coursesectiontitle'] = 'Course: {$a->course}, {$a->sectionname}: {$a->sectiontitle}';
+$string['coursesectiontitle'] = '{$a->sectionname}: {$a->sectiontitle} | {$a->course}';
+$string['coursesectiontitlebulkediting'] = 'Bulk edit {$a->sectionname}: {$a->sectiontitle} | {$a->course}';
+$string['coursesectiontitleediting'] = 'Edit {$a->sectionname}: {$a->sectiontitle} | {$a->course}';
 $string['coursesettings'] = 'Course default settings';
 $string['coursesmovedout'] = 'Courses moved out from {$a}';
 $string['coursespending'] = 'Courses pending approval';
@@ -430,6 +432,8 @@ $string['coursestart'] = 'Course start';
 $string['coursesummary'] = 'Course summary';
 $string['coursesummary_help'] = 'A short description of your course. The content you add here is searchable.';
 $string['coursetitle'] = 'Course: {$a->course}';
+$string['coursetitlebulkediting'] = 'Bulk edit course: {$a->course}';
+$string['coursetitleediting'] = 'Edit course: {$a->course}';
 $string['courseupdates'] = 'Course updates';
 $string['coursevisibility'] = 'Course visibility';
 $string['coursevisibility_help'] = '* Show: The course appears in the list of courses and students can access it.
@@ -965,7 +969,7 @@ This program is free software; you can redistribute it and/or modify it under th
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-See the Moodle License information page for full details: https://docs.moodle.org/dev/License';
+See the Moodle License information page for full details: https://moodledev.io/general/license';
 $string['gpllicense'] = 'GPL license';
 $string['gpl3'] = 'Copyright (C) 1999 onwards Martin Dougiamas (https://moodle.com)
 
@@ -973,7 +977,7 @@ This program is free software: you can redistribute it and/or modify it under th
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-See the Moodle License information page for full details: https://docs.moodle.org/dev/License';
+See the Moodle License information page for full details: https://moodledev.io/general/license';
 $string['grades'] = 'Grades';
 $string['gradenoun'] = 'Grade';
 $string['gradeverb'] = 'Grade';
@@ -1369,7 +1373,7 @@ $string['moodlenet:cannotconnecttoserver'] = 'Cannot connect to MoodleNet server
 $string['moodlenet:configoauthservice'] = 'Select a MoodleNet OAuth 2 service to enable sharing to that MoodleNet site. If the service doesn\'t exist yet, you will need to <a href="{$a}">create</a> it.';
 $string['moodlenet:eventresourceexported'] = 'Resource exported';
 $string['moodlenet:gotomoodlenet'] = 'Go to MoodleNet drafts';
-$string['moodlenet:issuerisnotauthorized'] = 'MoodleNet issuer is not authorized';
+$string['moodlenet:issuerisnotauthorized'] = 'MoodleNet issuer is not authorised';
 $string['moodlenet:issuerisnotenabled'] = 'MoodleNet issuer is not enabled';
 $string['moodlenet:issuerisnotset'] = 'MoodleNet issuer is not set at site administration';
 $string['moodlenet:outboundsettings'] = 'MoodleNet outbound settings';
