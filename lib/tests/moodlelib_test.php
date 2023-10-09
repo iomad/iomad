@@ -4544,24 +4544,26 @@ EOF;
     public function test_unserialize_array() {
         $a = [1, 2, 3];
         $this->assertEquals($a, unserialize_array(serialize($a)));
-        $this->assertEquals($a, unserialize_array(serialize($a)));
         $a = ['a' => 1, 2 => 2, 'b' => 'cde'];
-        $this->assertEquals($a, unserialize_array(serialize($a)));
         $this->assertEquals($a, unserialize_array(serialize($a)));
         $a = ['a' => 1, 2 => 2, 'b' => 'c"d"e'];
         $this->assertEquals($a, unserialize_array(serialize($a)));
         $a = ['a' => 1, 2 => ['c' => 'd', 'e' => 'f'], 'b' => 'cde'];
         $this->assertEquals($a, unserialize_array(serialize($a)));
-
-        // Can not unserialize if any string contains semicolons.
+        $a = ['a' => 1, 2 => ['c' => 'd', 'e' => ['f' => 'g']], 'b' => 'cde'];
+        $this->assertEquals($a, unserialize_array(serialize($a)));
         $a = ['a' => 1, 2 => 2, 'b' => 'c"d";e'];
-        $this->assertEquals(false, unserialize_array(serialize($a)));
+        $this->assertEquals($a, unserialize_array(serialize($a)));
 
         // Can not unserialize if there are any objects.
         $a = (object)['a' => 1, 2 => 2, 'b' => 'cde'];
-        $this->assertEquals(false, unserialize_array(serialize($a)));
+        $this->assertFalse(unserialize_array(serialize($a)));
         $a = ['a' => 1, 2 => 2, 'b' => (object)['a' => 'cde']];
-        $this->assertEquals(false, unserialize_array(serialize($a)));
+        $this->assertFalse(unserialize_array(serialize($a)));
+        $a = ['a' => 1, 2 => 2, 'b' => ['c' => (object)['a' => 'cde']]];
+        $this->assertFalse(unserialize_array(serialize($a)));
+        $a = ['a' => 1, 2 => 2, 'b' => ['c' => new lang_string('no')]];
+        $this->assertFalse(unserialize_array(serialize($a)));
 
         // Array used in the grader report.
         $a = array('aggregatesonly' => [51, 34], 'gradesonly' => [21, 45, 78]);
@@ -5361,5 +5363,70 @@ EOF;
         $CFG->enabledashboard = 0;
         $default = get_default_home_page();
         $this->assertEquals(HOMEPAGE_MYCOURSES, $default);
+    }
+
+    /**
+     * Provider for is_proxybypass
+     *
+     * @return array of test cases.
+     */
+    public function is_proxybypass_provider(): array {
+
+        return [
+            'Proxybypass contains the same IP as the beginning of the URL' => [
+                'http://192.168.5.5-fake-app-7f000101.nip.io',
+                '192.168.5.5, 127.0.0.1',
+                false
+            ],
+            'Proxybypass contains the last part of the URL' => [
+                'http://192.168.5.5-fake-app-7f000101.nip.io',
+                'app-7f000101.nip.io',
+                false
+            ],
+            'Proxybypass contains the last part of the URL 2' => [
+                'http://store.mydomain.com',
+                'mydomain.com',
+                false
+            ],
+            'Proxybypass contains part of the url' => [
+                'http://myweb.com',
+                'store.myweb.com',
+                false
+            ],
+            'Different IPs used in proxybypass' => [
+                'http://192.168.5.5',
+                '192.168.5.3',
+                false
+            ],
+            'Proxybypass and URL matchs' => [
+                'http://store.mydomain.com',
+                'store.mydomain.com',
+                true
+            ],
+            'IP used in proxybypass' => [
+                'http://192.168.5.5',
+                '192.168.5.5',
+                true
+            ],
+        ];
+    }
+
+    /**
+     * Check if $url matches anything in proxybypass list
+     *
+     * Test function {@see is_proxybypass()}.
+     * @dataProvider is_proxybypass_provider
+     * @param string $url url to check
+     * @param string $proxybypass
+     * @param bool $expected Expected value.
+     */
+    public function test_is_proxybypass(string $url, string $proxybypass, bool $expected): void {
+        $this->resetAfterTest();
+
+        global $CFG;
+        $CFG->proxyhost = '192.168.5.5'; // Test with a fake proxy.
+        $CFG->proxybypass = $proxybypass;
+
+        $this->assertEquals($expected, is_proxybypass($url));
     }
 }
