@@ -585,32 +585,54 @@ function auth_iomadoidc_config_name_in_form(string $stringid) {
  * @return bool
  */
 function auth_iomadoidc_is_setup_complete() {
+    global $CFG;
     $pluginconfig = get_config('auth_iomadoidc');
-    if (empty($pluginconfig->clientid) || empty($pluginconfig->idptype) || empty($pluginconfig->clientauthmethod) ||
-        (in_array($pluginconfig->idptype, [AUTH_IOMADoIDC_IDP_TYPE_AZURE_AD, AUTH_IOMADoIDC_IDP_TYPE_MICROSOFT]) &&
-            empty($pluginconfig->tenantnameorguid))) {
+
+    // IOMAD
+    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+    $companyid = iomad::get_my_companyid(context_system::instance(), false);
+    if (!empty($companyid)) {
+        $postfix = "_$companyid";
+    } else {
+        $postfix = "";
+    }
+
+    $clientid = "clientid" . $postfix;
+    $idptype = "idptype" . $postfix;
+    $clientauthmethod = "clientauthmethod" . $postfix;
+    $tenantnameorguid = "tenantnameorguid" . $postfix;
+    $clientsecret = "clientsecret" . $postfix;
+    $clientcert = "clientcert" . $postfix;
+    $clientprivatekey = "clientprivatekey" . $postfix;
+    $authendpoint = "authendpoint" . $postfix;
+    $tokenendpoint = "tokenendpoint" . $postfix;
+
+    if (empty($pluginconfig->$clientid) || empty($pluginconfig->$idptype) || empty($pluginconfig->$clientauthmethod) ||
+        (in_array($pluginconfig->$idptype, [AUTH_IOMADoIDC_IDP_TYPE_AZURE_AD, AUTH_IOMADoIDC_IDP_TYPE_MICROSOFT]) &&
+            empty($pluginconfig->$tenantnameorguid))) {
         return false;
     }
 
-    switch ($pluginconfig->clientauthmethod) {
+    switch ($pluginconfig->$clientauthmethod) {
         case AUTH_IOMADoIDC_AUTH_METHOD_SECRET:
-            if (empty($pluginconfig->clientsecret)) {
+            if (empty($pluginconfig->$clientsecret)) {
                 return false;
             }
             break;
         case AUTH_IOMADoIDC_AUTH_METHOD_CERTIFICATE:
-            if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
+            if (empty($pluginconfig->$clientcert) || empty($pluginconfig->$clientprivatekey)) {
                 return false;
             }
             break;
     }
 
-    if (empty($pluginconfig->authendpoint) || empty($pluginconfig->tokenendpoint)) {
+    if (empty($pluginconfig->$authendpoint) || empty($pluginconfig->$tokenendpoint)) {
         return false;
     }
 
     return true;
 }
+
 
 /**
  * Return the name of the configured IdP type.
