@@ -529,7 +529,9 @@ class base {
         $client = new iomadoidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
 
-        $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
+        $authendpoint = "authendpoint" . $postfix;
+        $tokenendpoint = "tokenendpoint" . $postfix;
+        $client->setendpoints(['auth' => $this->config->$authendpoint, 'token' => $this->config->$tokenendpoint]);
 
         return $client;
     }
