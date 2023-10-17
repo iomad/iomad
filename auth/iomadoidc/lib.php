@@ -332,6 +332,7 @@ function auth_iomadoidc_get_email_remote_fields() {
  * @return array
  */
 function auth_iomadoidc_get_field_mappings() {
+    global $CFG;
 
     // IOMAD
     require_once($CFG->dirroot . '/local/iomad/lib/company.php');

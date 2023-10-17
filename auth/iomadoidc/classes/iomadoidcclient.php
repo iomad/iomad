@@ -357,7 +357,7 @@ class iomadoidcclient {
      * @return array Received parameters.
      */
     public function tokenrequest($code) {
-        $CFG;
+        global $CFG;
 
         // IOMAD
         require_once($CFG->dirroot . '/local/iomad/lib/company.php');
