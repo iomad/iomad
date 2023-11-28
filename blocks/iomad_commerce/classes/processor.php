@@ -64,7 +64,7 @@ class processor {
         global $DB;
         if ($item = $DB->get_record('invoiceitem', array('id' => $invoiceitemid, 'processed' => 0), '*')) {
             $processorname = $item->invoiceableitemtype;
-            $function = $processorname . "_" . $eventname;
+            $function = $processorname . "_onordercomplete";
             self::$function($item, $invoice);
         }
     }
