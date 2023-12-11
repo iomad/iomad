@@ -227,6 +227,7 @@ function resource_get_coursemodule_info($coursemodule) {
     if (count($files) >= 1) {
         $mainfile = reset($files);
         $resource->mainfile = $mainfile->get_filename();
+        $info->icon = file_file_icon($mainfile, 24);
     }
 
     $display = resource_get_final_display_type($resource);
@@ -269,12 +270,13 @@ function resource_get_coursemodule_info($coursemodule) {
 function resource_cm_info_view(cm_info $cm) {
     global $CFG;
     require_once($CFG->dirroot . '/mod/resource/locallib.php');
-
-    $resource = (object) ['displayoptions' => $cm->customdata['displayoptions']];
-    $details = resource_get_optional_details($resource, $cm);
-    if ($details) {
-        $cm->set_after_link(' ' . html_writer::tag('span', $details,
-                array('class' => 'resourcelinkdetails')));
+    $customdata = $cm->customdata;
+    if (is_array($customdata) && isset($customdata['displayoptions'])) {
+        $resource = (object) ['displayoptions' => $customdata['displayoptions']];
+        $details = resource_get_optional_details($resource, $cm);
+        if ($details) {
+            $cm->set_after_link(' ' . html_writer::tag('span', $details, ['class' => 'resourcelinkdetails']));
+        }
     }
 }
 
