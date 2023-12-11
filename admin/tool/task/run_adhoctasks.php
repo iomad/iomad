@@ -60,7 +60,7 @@ if ($taskid) {
     if (!$classname) {
         throw new \moodle_exception('noclassname', 'tool_task');
     }
-    $heading = "Run $classname " . ($failedonly ? "failed" : "all")." tasks";
+    $heading = "Run " . s($classname) . " " . ($failedonly ? "failed" : "all")." tasks";
     $now = time();
     $tasks = array_filter(
         core\task\manager::get_adhoc_tasks($classname, $failedonly, true),
@@ -111,6 +111,7 @@ require_sesskey();
 \core\session\manager::write_close();
 
 // Prepare to handle output via mtrace.
+require('lib.php');
 $CFG->mtrace_wrapper = 'tool_task_mtrace_wrapper';
 
 // Run the specified tasks.
