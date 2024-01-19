@@ -34,7 +34,7 @@
                 <div id="paged-content-page" data-page="1">
                     <div class="card-deck dashboard-card-deck {{$classes}}{{/classes}}" data-region="card-deck" role="list">
                         {{#inprogressview.courses}}
-                            {{> block_mycourses/completedcoursecard }}
+                            {{> block_mycourses/coursecard }}
                         {{/inprogressview.courses}}
                         {{^inprogressview.courses}}
                             </br>

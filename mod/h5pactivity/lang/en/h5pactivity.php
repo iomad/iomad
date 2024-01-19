@@ -34,6 +34,7 @@ $string['answer_pass'] = 'Correct answer';
 $string['answer_unchecked'] = 'Answer unchecked';
 $string['answer_unknown'] = 'Unknown answer';
 $string['answer_text'] = 'Answer text';
+$string['answer_noanswer'] = 'None';
 $string['areapackage'] = 'Package file';
 $string['attempt'] = 'Attempt';
 $string['attempt_average'] = 'Attempts average scored';
