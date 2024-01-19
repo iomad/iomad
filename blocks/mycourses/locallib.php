@@ -193,7 +193,7 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
 
     // Deal with completed course scores and links for certificates.
     foreach ($myarchive as $id => $archive) {
-	   $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
+       $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
        $certstring = '';
 
         // Deal with the iomadcertificate info.
@@ -206,7 +206,11 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
                     $coursecontext = context_course::instance($archive->courseid);
                     $certstring = moodle_url::make_file_url('/pluginfile.php', '/'.$coursecontext->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
                 }
+            } else {
+                $certstring = '';
             }
+        } else {
+            $certstring = '';
         }
 
         $myarchive[$id]->certificate = $certstring;
