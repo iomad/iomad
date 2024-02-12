@@ -25,6 +25,7 @@ require_once($CFG->dirroot.'/local/iomad/lib/company.php');
 require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
+require_once($CFG->dirroot . '/mod/trainingevent/lib.php');
 
 class iomad_approve_access {
     /**
