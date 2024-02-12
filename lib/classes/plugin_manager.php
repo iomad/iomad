@@ -1550,7 +1550,7 @@ class core_plugin_manager {
 
         $provider = \core\update\checker::instance();
 
-        if (!$provider->enabled() or during_initial_install()) {
+        if (!$provider->enabled() || $component === '' || during_initial_install()) {
             return null;
         }
 
@@ -1728,6 +1728,7 @@ class core_plugin_manager {
             'editor' => array('tinymce'),
             'enrol' => array('authorize'),
             'filter' => array('censor'),
+            'h5plib' => array('v124'),
             'media' => array('swf'),
             'portfolio' => array('picasa', 'boxnet'),
             'qformat' => array('webct'),
@@ -1898,7 +1899,7 @@ class core_plugin_manager {
             ),
 
             'h5plib' => array(
-                'v124'
+                'v126',
             ),
 
             'local' => array(

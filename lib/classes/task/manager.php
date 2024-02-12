@@ -229,6 +229,9 @@ class manager {
             $record->nextruntime = time() - 1;
         }
 
+        // Set the time the task was created.
+        $record->timecreated = time();
+
         // Check if the same task is already scheduled.
         if ($checkforexisting && self::task_is_scheduled($task)) {
             return false;
@@ -307,7 +310,6 @@ class manager {
         $record->faildelay = $task->get_fail_delay();
         $record->customdata = $task->get_custom_data_as_string();
         $record->userid = $task->get_userid();
-        $record->timecreated = time();
         $record->timestarted = $task->get_timestarted();
         $record->hostname = $task->get_hostname();
         $record->pid = $task->get_pid();
@@ -1088,6 +1090,17 @@ class manager {
 
         $delay = $task->get_fail_delay();
 
+        if ($delay > 0) {
+            // If the task has a fail delay, it's already run at least once.
+            // We need to check if the task should be retried or not.
+            $taskcustomdata = $task->get_custom_data();
+            if ($taskcustomdata && isset($taskcustomdata->noretry) && $taskcustomdata->noretry) {
+                // The task has been marked as not retrying, so we can mark it as completed and delete it.
+                self::adhoc_task_complete($task);
+                return;
+            }
+        }
+
         // Reschedule task with exponential fall off for failing tasks.
         if (empty($delay)) {
             $delay = 60;
@@ -1536,7 +1549,7 @@ class manager {
             2 => ['pipe', 'w'], // STDERR.
         ];
         flush();
-        $process = proc_open($command, $descriptorspec, $pipes, realpath('./'), []);
+        $process = proc_open($command, $descriptorspec, $pipes, realpath('./'));
         if (is_resource($process)) {
             while ($s = fgets($pipes[1])) {
                 mtrace($s, '');
