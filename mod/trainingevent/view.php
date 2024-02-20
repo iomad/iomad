@@ -1013,6 +1013,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
         }
         if ($action == 'grade' && !empty($userid)) {
             // Grade the user.
+            $gradegrade = (object) [];
             $gradegrade->userid = $userid;
             $gradegrade->rawgrade = $usergrade;
             $gradegrade->finalgrade = $usergrade;
