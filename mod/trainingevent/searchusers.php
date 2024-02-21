@@ -82,7 +82,7 @@ $url = new moodle_url('/course/view.php', array('id' => $event->course));
 $context = context_course::instance($event->course);
 require_login($event->course); // Adds to $PAGE, creates $output.
 $PAGE->set_url($url);
-$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('mod');
 $PAGE->set_title($event->name);
 $PAGE->set_heading($SITE->fullname);
 $baseurl  = new moodle_url('searchusers.php', array('eventid' => $eventid));
