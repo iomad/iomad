@@ -305,7 +305,7 @@ class user_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $DB, $USER, $params;
+        global $DB, $USER, $params, $companycontext;
 
         // Do nothing if downloading.
         if ($this->is_downloading()) {
