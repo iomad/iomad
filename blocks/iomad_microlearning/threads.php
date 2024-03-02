@@ -66,7 +66,7 @@ $companyid = iomad::get_my_companyid($context);
 if ($deleteid) {
     // Check the thread is valid.
     if (!$threadinfo = $DB->get_record('microlearning_thread', array('id' => $deleteid))) {
-        print_error('invalidthread', 'block_iomad_microlearning');
+        throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
     // Have we confirmed it?
@@ -96,7 +96,7 @@ if ($deleteid) {
 if ($cloneid) {
     // Check the thread is valid.
     if (!$threadinfo = $DB->get_record('microlearning_thread', array('id' => $cloneid))) {
-        print_error('invalidthread', 'block_iomad_microlearning');
+        throw new moodle_exception('invalidthread', 'block_iomad_microlearning');
     }
 
     // Have we confirmed it?

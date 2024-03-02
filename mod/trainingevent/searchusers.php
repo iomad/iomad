@@ -71,11 +71,11 @@ $params['deptid'] = $departmentid;
 $params['eventid'] = $eventid;
 
 if (!$event = $DB->get_record('trainingevent', array('id' => $eventid))) {
-    print_error('invalid event ID');
+    throw new moodle_exception('invalid event ID');
 }
 
 if (!$cm = get_coursemodule_from_instance('trainingevent', $event->id, $event->course)) {
-    print_error('invalid coursemodule ID');
+    throw new moodle_exception('invalid coursemodule ID');
 }
 // Page stuff.
 $url = new moodle_url('/course/view.php', array('id' => $event->course));
@@ -114,7 +114,7 @@ $companydepartment = $parentlevel->id;
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($company->id, $departmentid)) {
-    print_error('invaliddepartment', 'block_iomad_company_admin');
+    throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
 if (has_capability('block/iomad_company_admin:edit_all_departments', context_system::instance())) {
