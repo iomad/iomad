@@ -1002,7 +1002,7 @@ class company {
             if ($ws) {
                 return false;
             } else {
-                print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
+                throw new moodle_exception(get_string('cantassignusersdb', 'block_iomad_company_admin'));
             }
         }
 
@@ -1462,7 +1462,7 @@ class company {
             }
         }
         if(!$success) {
-            print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
+            throw new moodle_exception(get_string('cantassignusersdb', 'block_iomad_company_admin'));
         }
 
         // Create an event for this.
@@ -1502,7 +1502,7 @@ class company {
             if ($ws) {
                 return false;
             } else {
-                print_error(get_string('cantassignusersdb', 'block_iomad_company_admin'));
+                throw new moodle_exception(get_string('cantassignusersdb', 'block_iomad_company_admin'));
             }
         }
 
@@ -2394,7 +2394,7 @@ class company {
                 if ($ws) {
                     return false;
                 } else {
-                    print_error(get_string('cantupdatedepartmentusersdb', 'block_iomad_company_admin'));
+                    throw new moodle_exception(get_string('cantupdatedepartmentusersdb', 'block_iomad_company_admin'));
                 }
             }
         }
@@ -2431,12 +2431,12 @@ class company {
         if (isset($newdepartment['id'])) {
             // We are editing a current department.
             if (!$DB->update_record('department', $newdepartment)) {
-                print_error(get_string('cantupdatedepartmentdb', 'block_iomad_company_admin'));
+                throw new moodle_exception(get_string('cantupdatedepartmentdb', 'block_iomad_company_admin'));
             }
         } else {
             // Adding a new department.
             if (!$DB->insert_record('department', $newdepartment)) {
-                print_error(get_string('cantinsertdepartmentdb', 'block_iomad_company_admin'));
+                throw new moodle_exception(get_string('cantinsertdepartmentdb', 'block_iomad_company_admin'));
             }
         }
 
@@ -2453,7 +2453,7 @@ class company {
     public static function delete_department($departmentid) {
         global $DB;
         if (!$DB->delete_records('department', array('id' => $departmentid))) {
-            print_error(get_string('cantdeletedepartmentdb', 'blocks_iomad_company_admin'));
+            throw new moodle_exception(get_string('cantdeletedepartmentdb', 'blocks_iomad_company_admin'));
         }
         return true;
     }
@@ -2595,7 +2595,7 @@ class company {
                     //  Update it.
                     $currentcourse->departmentid = $departmentid;
                     if (!$DB->update_record('company_course', $currentcourse)) {
-                        print_error(get_string('cantupdatedepartmentcoursesdb',
+                        throw new moodle_exception(get_string('cantupdatedepartmentcoursesdb',
                                                'block_iomad_company_admin'));
                     }
                     break;
@@ -2608,7 +2608,7 @@ class company {
                 $courserecord['courseid'] = $courseid;
                 $courserecord['companyid'] = $companyid;
                 if (!$DB->insert_record('company_course', $courserecord)) {
-                    print_error(get_string('cantinsertdepartmentcoursesdb',
+                    throw new moodle_exception(get_string('cantinsertdepartmentcoursesdb',
                                            'block_iomad_company_admin'));
                 }
             }
@@ -2619,7 +2619,7 @@ class company {
             $courserecord['courseid'] = $courseid;
             $courserecord['companyid'] = $companyid;
             if (!$DB->insert_record('company_course', $courserecord)) {
-                print_error(get_string('cantinsertdepartmentcoursesdb',
+                throw new moodle_exception(get_string('cantinsertdepartmentcoursesdb',
                                        'block_iomad_company_admin'));
             }
         }
@@ -2993,7 +2993,7 @@ class company {
 
         // Write the data to the DB.
         if (!$DB->insert_record('company_course_groups', $grouppivot)) {
-            print_error(get_string('cantcreatecompanycoursegroup', 'block_iomad_company_admin'));
+            throw new moodle_exception(get_string('cantcreatecompanycoursegroup', 'block_iomad_company_admin'));
         }
         return $groupid;
     }

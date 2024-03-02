@@ -76,7 +76,7 @@ $company = new company($companyid);
 // Check if the company has gone over the user quota.
 if (!$company->check_usercount(1)) {
     $maxusers = $company->get('maxusers');
-    print_error('maxuserswarning', 'block_iomad_company_admin', $dashboardurl, $maxusers);
+    throw new moodle_exception('maxuserswarning', 'block_iomad_company_admin', $dashboardurl, $maxusers);
 }
 
 $mform = new \block_iomad_company_admin\forms\user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
@@ -185,12 +185,12 @@ echo $output->header();
 
 // Check the department is valid.
 if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
-    print_error('invaliddepartment', 'block_iomad_company_admin');
+    throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
 // Check the userid is valid.
 if (!empty($userid) && !company::check_valid_user($companyid, $userid, $departmentid)) {
-    print_error('invaliduserdepartment', 'block_iomad_company_management');
+    throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 
 // Display a message if user is created..
