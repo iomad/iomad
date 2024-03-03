@@ -69,9 +69,7 @@ if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
         $context = context_course::instance($event->course);
         require_login($event->course); // Adds to $PAGE, creates $OUTPUT.
         $PAGE->set_url($url);
-        $PAGE->set_pagelayout('mod');
         $PAGE->set_title($event->name);
-        $PAGE->set_heading($SITE->fullname);
         $PAGE->set_context(context_module::instance($id));
 
         // Get the associated department id.
