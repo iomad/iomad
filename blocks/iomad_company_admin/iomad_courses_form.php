@@ -217,8 +217,8 @@ echo $OUTPUT->header();
 $companyids = company::get_companies_select(false);
 if ($caneditall) {
     $companyids = [
-            'none' => get_string('nocompany', 'block_iomad_company_admin'),
-            'all' => get_string('allcourses', 'block_iomad_company_admin')
+            '-1' => get_string('nocompany', 'block_iomad_company_admin'),
+            '-2' => get_string('allcourses', 'block_iomad_company_admin')
     ] + $companyids;
 }
 
@@ -236,7 +236,7 @@ echo html_writer::start_tag('div', array('class' => 'iomadclear'));
 
 $table = new \block_iomad_company_admin\tables\iomad_courses_table('iomad_courses_table');
 
-if ($companyid == 'all') {
+if ($companyid == '-2') {
     $companyid = 0;
 }
 
@@ -245,7 +245,7 @@ $searchsql = "";
 $autoselect = "";
 $autofrom = "";
 if (!empty($companyid)) {
-    if ($companyid == "none") {
+    if ($companyid == "-1") {
         $companysql = " c.id NOT IN (SELECT courseid FROM {company_course}) ";
     } else {
         $companysql = " (c.id IN (
@@ -308,7 +308,7 @@ $tablecolumns = ['company',
                  'warncompletion',
                  'notifyperiod',
                  'hasgrade'];
-if (!empty($companyid) && $companyid != "none") {
+if (!empty($companyid) && $companyid != "-1") {
     $tableheaders[] = get_string('autocourses', 'block_iomad_company_admin');
     $tablecolumns[] = 'autoenrol';
 }
