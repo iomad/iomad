@@ -113,7 +113,7 @@ function local_iomad_track_download_certs($companyid = 0, $courses = [], $users 
     if (empty($companyid)) {
         $companyid = iomad::get_my_companyid(context_system::instance());
     }
-    $companycontext = \core\context\company::instance($companyid);
+    $companycontext = context_system::instance();
 
     $company = new company($companyid);
 
