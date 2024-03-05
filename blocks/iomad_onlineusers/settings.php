@@ -15,19 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_onlineusers
- * @copyright 2021 Derick Turner
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Online users block settings.
+ *
+ * @package    block_iomad_onlineusers
+ * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    $settings->add(new admin_setting_configtext('block_iomad_onlineusers_timetosee',
-                                                get_string('timetosee', 'block_iomad_onlineusers'),
-                                                get_string('configtimetosee', 'block_iomad_onlineusers'),
-                                                5,
-                                                PARAM_INT));
+    $settings->add(new admin_setting_configtext('block_iomad_onlineusers_timetosee', get_string('timetosee', 'block_iomad_onlineusers'),
+                   get_string('configtimetosee', 'block_iomad_onlineusers'), 5, PARAM_INT));
+
+    $settings->add(new admin_setting_configcheckbox('block_iomad_onlineusers_onlinestatushiding',
+            get_string('onlinestatushiding', 'block_iomad_onlineusers'),
+            get_string('onlinestatushiding_desc', 'block_iomad_onlineusers'), 1));
 }
 
