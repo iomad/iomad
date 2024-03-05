@@ -1016,7 +1016,7 @@ class company {
     }
 
 
-    public static function upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator=false, $ws=false) {
+    public static function upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator=false, $ws=false, $move = false) {
         global $DB, $CFG;
 
         $assign = [
