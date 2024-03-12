@@ -1403,3 +1403,23 @@ class iomad_course_search_form extends moodleform {
         $mform->setType('coursesearch', PARAM_CLEAN);
     }
 }
+
+/**
+ * course search form used on the Iomad pages.
+ *
+ */
+class iomad_company_search_form extends moodleform {
+    protected $params = array();
+
+    public function definition() {
+        global $CFG, $DB, $USER, $SESSION;
+
+        $mform =& $this->_form;
+
+        $sarcharray = array();
+        $searcharray[] = $mform->createElement('text', 'search');
+        $searcharray[] = $mform->createElement('submit', 'searchbutton', get_string('search'));
+        $mform->addGroup($searcharray, 'searcharray', '', ' ', false);
+        $mform->setType('search', PARAM_ALPHANUM);
+    }
+}
