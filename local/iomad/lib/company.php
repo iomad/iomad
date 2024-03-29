@@ -4508,6 +4508,27 @@ class company {
         // Update the license usage.
         self::update_license_usage($licenseid);
 
+        // Check if we need to warn about usage.
+        $licenserec = $DB->get_record('companylicense', ['id' => $licenseid]);
+        if ($licenserec->used/$licenserec->allocation * 100 > 90) {
+            // Get the company managers.
+            if ($companymanagers = $DB->get_records_sql("SELECT u.*
+                                                         FROM {user} u
+                                                         JOIN {company_users} cu ON (u.id = cu.userid)
+                                                         WHERE u.deleted = 0
+                                                         AND u.suspended = 0
+                                                         AND cu.companyid = :companyid
+                                                         AND cu.managertype =1",
+                                                        ['companyid' => $company->id])) {
+                foreach ($companymanagers as $companymanager) {
+                    EmailTemplate::send('licensepoolwarning', array('course' => $course,
+                                                                    'company' => $company,
+                                                                    'user' => $companymanager,
+                                                                    'license' => $license));
+                }
+            }
+        }
+
         // Is this an immediate license?
         if (!empty($licenserecord->instant)) {
             if (self::license_ok_to_use($licenseid, $courseid, $userid)) {
