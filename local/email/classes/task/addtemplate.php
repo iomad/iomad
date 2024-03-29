@@ -91,6 +91,9 @@ class addtemplate extends adhoc_task {
         // Reload the custom lang table.
         tool_customlang_utils::checkout($CFG->lang);
 
+        // Make sure everything is brought into place.
+        purge_caches(['lang']);
+
         // Mark that we are done.
         unset_config('local_email_templates_migrating', '');
     }
