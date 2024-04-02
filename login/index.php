@@ -270,10 +270,9 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
                 if ($mycompany = company::by_userid($user->id, true)) {
                     if ($currenteditingcompany != $mycompany->id) {
                         $mycompanyrec = $DB->get_record('company', array('id' => $mycompany->id));
+                        $companyurl = $CFG->wwwrootdefault;
                         if ($mycompanyrec->hostname != $currentcompany->hostname) {
-                            if (empty($mycompanyrec->hostname)) {
-                                $companyurl = $CFG->wwwrootdefault;
-                            } else {
+                            if (!empty($mycompanyrec->hostname)) {
                                 $companyurl = $_SERVER['REQUEST_SCHEME'] . "://" . $mycompanyrec->hostname;
                             }
                         }
