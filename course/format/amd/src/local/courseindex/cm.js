@@ -180,12 +180,8 @@ export default class Component extends DndCmItem {
         const exporter = this.reactive.getExporter();
         const data = exporter.cmCompletion(state, element);
 
-        try {
-            const {html, js} = await Templates.renderForPromise(completionTemplate, data);
-            Templates.replaceNode(completionElement, html, js);
-        } catch (error) {
-            throw error;
-        }
+        const {html, js} = await Templates.renderForPromise(completionTemplate, data);
+        Templates.replaceNode(completionElement, html, js);
     }
 
     /**
@@ -199,6 +195,8 @@ export default class Component extends DndCmItem {
         // the new url should be an anchor link.
         const element = document.getElementById(cm.anchor);
         if (element) {
+            // Make sure the section is expanded.
+            this.reactive.dispatch('sectionContentCollapsed', [cm.sectionid], false);
             // Marc the element as page item once the event is handled.
             setTimeout(() => {
                 this.reactive.dispatch('setPageItem', 'cm', cm.id);

@@ -3923,6 +3923,8 @@
       </CUSTOM_CHECK>
       <CUSTOM_CHECK file="lib/upgradelib.php" function="check_xmlrpc_usage" level="optional">
       </CUSTOM_CHECK>
+      <CUSTOM_CHECK file="lib/upgradelib.php" function="check_oracle_usage" level="optional">
+      </CUSTOM_CHECK>
     </CUSTOM_CHECKS>
   </MOODLE>
   <MOODLE version="4.2" requires="3.11.8">
@@ -3939,6 +3941,7 @@
       <VENDOR name="oracle" version="19" />
     </DATABASE>
     <PHP version="8.0.0" level="required">
+      <RESTRICT function="restrict_php_version_83" message="unsupportedphpversion83" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
@@ -4112,6 +4115,8 @@
       </CUSTOM_CHECK>
       <CUSTOM_CHECK file="lib/upgradelib.php" function="check_mod_assignment" level="required">
       </CUSTOM_CHECK>
+      <CUSTOM_CHECK file="lib/upgradelib.php" function="check_oracle_usage" level="optional">
+      </CUSTOM_CHECK>
     </CUSTOM_CHECKS>
   </MOODLE>
   <MOODLE version="4.3" requires="3.11.8">
@@ -4128,6 +4133,7 @@
       <VENDOR name="oracle" version="19" />
     </DATABASE>
     <PHP version="8.0.0" level="required">
+      <RESTRICT function="restrict_php_version_83" message="unsupportedphpversion83" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
@@ -4302,6 +4308,8 @@
       <CUSTOM_CHECK file="lib/upgradelib.php" function="check_mod_assignment" level="required">
       </CUSTOM_CHECK>
       <CUSTOM_CHECK file="lib/upgradelib.php" function="check_db_prefix_length" level="required">
+      </CUSTOM_CHECK>
+      <CUSTOM_CHECK file="lib/upgradelib.php" function="check_oracle_usage" level="optional">
       </CUSTOM_CHECK>
     </CUSTOM_CHECKS>
   </MOODLE>
@@ -4493,6 +4501,8 @@
       <CUSTOM_CHECK file="lib/upgradelib.php" function="check_mod_assignment" level="required">
       </CUSTOM_CHECK>
       <CUSTOM_CHECK file="lib/upgradelib.php" function="check_db_prefix_length" level="required">
+      </CUSTOM_CHECK>
+      <CUSTOM_CHECK file="lib/upgradelib.php" function="check_oracle_usage" level="optional">
       </CUSTOM_CHECK>
     </CUSTOM_CHECKS>
   </MOODLE>

@@ -147,9 +147,13 @@ class custom_fields {
                         "AND {$customdatatablealias}.instanceid = {$this->tablefieldalias}")
                     ->add_field($datafieldsql, $datafield)
                     ->add_fields($selectfields)
+                    ->add_field($this->tablefieldalias, 'tablefieldalias')
                     ->set_type($columntype)
                     ->set_is_sortable($columntype !== column::TYPE_LONGTEXT)
                     ->add_callback(static function($value, stdClass $row, field_controller $field): string {
+                        if ($row->tablefieldalias === null) {
+                            return '';
+                        }
                         return (string) data_controller::create(0, $row, $field)->export_value();
                     }, $field)
                     // Important. If the handler implements can_view() function, it will be called with parameter $instanceid=0.
@@ -174,6 +178,10 @@ class custom_fields {
 
         if ($field->get('type') === 'date') {
             return column::TYPE_TIMESTAMP;
+        }
+
+        if ($field->get('type') === 'select') {
+            return column::TYPE_TEXT;
         }
 
         if ($datafield === 'intvalue') {

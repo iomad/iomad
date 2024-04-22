@@ -2080,13 +2080,18 @@ class core_renderer extends renderer_base {
             $attributes['class'] = 'action-icon';
         }
 
-        $icon = $this->render($pixicon);
-
         if ($linktext) {
             $text = $pixicon->attributes['alt'];
+            // Set the icon as a decorative image if we're displaying the action text.
+            // Otherwise, the action name will be read twice by assistive technologies.
+            $pixicon->attributes['alt'] = '';
+            $pixicon->attributes['title'] = '';
+            $pixicon->attributes['aria-hidden'] = 'true';
         } else {
             $text = '';
         }
+
+        $icon = $this->render($pixicon);
 
         return $this->action_link($url, $text.$icon, $action, $attributes);
     }
@@ -2325,7 +2330,7 @@ class core_renderer extends renderer_base {
     public function doc_link($path, $text = '', $forcepopup = false, array $attributes = []) {
         global $CFG;
 
-        $icon = $this->pix_icon('book', '', 'moodle', array('class' => 'iconhelp icon-pre', 'role' => 'presentation'));
+        $icon = $this->pix_icon('book', '', 'moodle', array('class' => 'iconhelp icon-pre'));
 
         $attributes['href'] = new moodle_url(get_docs_url($path));
         $newwindowicon = '';
@@ -2728,10 +2733,16 @@ class core_renderer extends renderer_base {
         // Get the image html output first, auto generated based on initials if one isn't already set.
         if ($user->picture == 0 && empty($CFG->enablegravatar) && !defined('BEHAT_SITE_RUNNING')) {
             $initials = \core_user::get_initials($user);
+            $fullname = fullname($userpicture->user, $canviewfullnames);
             // Don't modify in corner cases where neither the firstname nor the lastname appears.
             $output = html_writer::tag(
                 'span', $initials,
-                ['class' => 'userinitials size-' . $size]
+                [
+                    'class' => 'userinitials size-' . $size,
+                    'title' => $fullname,
+                    'aria-label' => $fullname,
+                    'role' => 'img',
+                ]
             );
         } else {
             $output = html_writer::empty_tag('img', $attributes);
@@ -4196,9 +4207,10 @@ EOD;
             'data-droptarget' => '1'
         );
         if ($this->page->blocks->region_has_content($displayregion, $this)) {
-            $content = $this->blocks_for_region($displayregion, $fakeblocksonly);
+            $content = html_writer::tag('h2', get_string('blocks'), ['class' => 'sr-only']) .
+                $this->blocks_for_region($displayregion, $fakeblocksonly);
         } else {
-            $content = '';
+            $content = html_writer::tag('h2', get_string('blocks'), ['class' => 'sr-only']);
         }
         return html_writer::tag($tag, $content, $attributes);
     }
@@ -4602,15 +4614,14 @@ EOD;
                     if ($button['buttontype'] === 'message') {
                         \core_message\helper::messageuser_requirejs();
                     }
-                    $image = $this->pix_icon($button['formattedimage'], $button['title'], 'moodle', array(
+                    $image = $this->pix_icon($button['formattedimage'], '', 'moodle', array(
                         'class' => 'iconsmall',
-                        'role' => 'presentation'
                     ));
                     $image .= html_writer::span($button['title'], 'header-button-title');
                 } else {
                     $image = html_writer::empty_tag('img', array(
                         'src' => $button['formattedimage'],
-                        'role' => 'presentation'
+                        'alt' => $button['title'],
                     ));
                 }
                 $html .= html_writer::link($button['url'], html_writer::tag('span', $image), $button['linkattributes']);
