@@ -195,7 +195,7 @@ class iomadoidcclient {
             'redirect_uri' => $this->redirecturi
         ];
 
-        if (get_config('auth_iomadoidc', 'idptype' . $postfix) != AUTH_IOMADoIDC_IDP_TYPE_MICROSOFT) {
+        if (get_config('auth_iomadoidc', 'idptype' . $postfix) != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT) {
             $params['resource'] = $this->tokenresource;
         }
 
