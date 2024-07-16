@@ -33,15 +33,6 @@ iomad::require_capability('local/iomad_learningpath:manage', $context);
 // Parameters
 $id = required_param('id', PARAM_INT);
 
-// Page boilerplate stuff.
-$url = new moodle_url('/local/iomad_learningpath/courselist.php', ['id' => $id]);
-$PAGE->set_context($context);
-$PAGE->set_url($url);
-$PAGE->set_pagelayout('base');
-$PAGE->set_title(get_string('managetitle', 'local_iomad_learningpath'));
-$PAGE->set_heading(get_string('managecourses', 'local_iomad_learningpath'));
-$output = $PAGE->get_renderer('local_iomad_learningpath');
-
 // IOMAD stuff
 $companyid = iomad::get_my_companyid($context);
 $companypaths = new local_iomad_learningpath\companypaths($companyid, $context);
@@ -51,6 +42,15 @@ $categories = $companypaths->get_categories($id);
 $companypaths->check_group($id);
 $groups = $companypaths->get_display_courselist($id);
 $programlicenses = $companypaths->get_programlicenses($id);
+
+// Page boilerplate stuff.
+$url = new moodle_url('/local/iomad_learningpath/courselist.php', ['id' => $id]);
+$PAGE->set_context($context);
+$PAGE->set_url($url);
+$PAGE->set_pagelayout('base');
+$PAGE->set_title(get_string('managetitle', 'local_iomad_learningpath'));
+$PAGE->set_heading(get_string('managecourses', 'local_iomad_learningpath', $path->name));
+$output = $PAGE->get_renderer('local_iomad_learningpath');
 
 // Javascript initialise
 $PAGE->requires->js_call_amd('local_iomad_learningpath/courselist', 'init', [$companyid, $id]);
