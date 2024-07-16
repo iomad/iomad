@@ -13,11 +13,13 @@
 }
 
 .manage_list {
-    border: 1px solid #a8a8a8;
+    border: 2px solid #a8a8a8;
     padding: 5px 0;
     min-height: 75px;
     border-radius: 4px;
     margin-bottom: 10px;
+    align-content: center;
+    align-items: center;
 }
 
 .pathbox img {
@@ -42,6 +44,7 @@
 
 .linkcursor {
     cursor: pointer;
+    padding: 0.5rem;
 }
 
 .text-center {
@@ -54,4 +57,21 @@
 
 .nogroupcourses, #noprospective {
     padding: 0.5rem 1rem !important;
+}
+
+.form-group {
+    padding: 0.2rem;
+}
+
+.col-md-1 {
+    font-size: 1.5rem !important;
+}
+
+.col-md-2 {
+    font-size: 1.5rem !important;
+}
+
+.singlebutton {
+    display: flex !important;
+    justify-content: center;
 }
