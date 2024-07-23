@@ -41,6 +41,7 @@ class user_editadvanced_form extends moodleform {
         global $USER, $CFG, $COURSE;
 
         $mform = $this->_form;
+        $mform->disable_form_change_checker();
         $editoroptions = null;
         $filemanageroptions = null;
 

@@ -81,6 +81,7 @@ class user_edit_form extends \moodleform {
         $systemcontext = \context_system::instance();
 
         $mform =& $this->_form;
+        $mform->disable_form_change_checker();
 
         $mform->addElement('hidden', 'companyid', $this->selectedcompany);
         $mform->setType('companyid', PARAM_INT);
