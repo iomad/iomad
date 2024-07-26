@@ -4301,6 +4301,8 @@ class company {
                 // Department doesn't exist yet. Create it!
                 $shortname = str_replace(' ', '-', $user->department);
                 $shortname = preg_replace('/[^A-Za-z0-9\-]/', '', $shortname);
+                // Shortname cap is 32 chars.
+                $shortname = substr($shortname,0,32);
                 $topdepartment = self::get_company_parentnode($company->id);
                 self::create_department(0, $company->id, $user->department, $shortname, $topdepartment->id);
                 // Get the new department.
