@@ -55,6 +55,7 @@ Feature: We can use Single view
     And the following config values are set as admin:
       | fullnamedisplay | firstnamephonetic,lastnamephonetic |
       | alternativefullnameformat | middlename, alternatename, firstname, lastname |
+    And I change window size to "large"
     And I am on the "Course 1" "grades > Grader report > View" page logged in as "teacher1"
 
   Scenario: I can update grades, add feedback and exclude grades.
@@ -93,7 +94,7 @@ Feature: We can use Single view
     And I press "Save"
     Then I should see "Grades were set for 1 items"
     And the following should exist in the "generaltable" table:
-        | First name (Alternate name) Last name | Grade |
+        | User full name                | Grade     |
         | Ann, Jill, Grainne, Beauchamp | Very good |
     And I am on the "Course 1" "grades > Single view > View" page logged in as "teacher2"
     And I click on "Users" "link" in the ".page-toggler" "css_element"
