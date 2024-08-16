@@ -624,7 +624,7 @@ function auth_iomadoidc_is_setup_complete() {
             }
             break;
         case AUTH_IOMADOIDC_AUTH_METHOD_CERTIFICATE:
-            if (empty($pluginconfig->$clientcert) || empty($pluginconfig->clientprivatekey)) {
+            if (empty($pluginconfig->$clientcert) || empty($pluginconfig->$clientprivatekey)) {
                 return false;
             }
             break;
