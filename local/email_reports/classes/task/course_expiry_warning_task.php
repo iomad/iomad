@@ -65,7 +65,7 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
         // Deal with courses which have expiry warnings
         $companies = [];
         foreach ($expirycourses as $expirycourse) {
-            $targettime = $runtime - ($expirycourse->validlength * 86400) - ($expirycourse->warnexpire * 86400);
+            $targettime = $runtime - ($expirycourse->validlength * 86400) + ($expirycourse->warnexpire * 86400);
 
             // Get the companies from the list of users in the temp table.
             $companysql = "SELECT DISTINCT lit.companyid
@@ -203,7 +203,7 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
         // Deal with users.
         foreach ($expirycourses as $expirycourse) {
             mtrace("Dealing with course id $expirycourse->courseid");
-            $targettime = $runtime - ($expirycourse->validlength * 86400) - ($expirycourse->warnexpire * 86400);
+            $targettime = $runtime - ($expirycourse->validlength * 86400) + ($expirycourse->warnexpire * 86400);
             $expiredsql = "SELECT lit.*, c.name AS companyname, u.firstname,u.lastname,u.username,u.email,u.lang
                            FROM {local_iomad_track} lit
                            JOIN {company} c ON (lit.companyid = c.id)
