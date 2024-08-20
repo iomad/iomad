@@ -61,8 +61,6 @@ require_admin();
 
 $iomadoidcconfig = get_config('auth_iomadoidc');
 
-$form = new application(null, ['iomadoidcconfig' => $iomadoidcconfig]);
-
 $formdata = [];
 foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
     'authendpoint', 'tokenendpoint', 'iomadoidcresource', 'iomadoidcscope'] as $field) {
@@ -71,6 +69,13 @@ foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientpriv
         $formdata[$field] = $iomadoidcconfig->$opname;
     }
 }
+
+// Fix missing Certificate auth method if set in database, needs to be done before form is created
+if (isset($formdata['idptype'])) {
+    $iomadoidcconfig->idptype = $formdata['idptype'];
+}
+
+$form = new application(null, ['iomadoidcconfig' => $iomadoidcconfig]);
 
 $form->set_data($formdata);
 
