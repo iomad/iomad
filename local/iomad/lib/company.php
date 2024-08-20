@@ -3885,6 +3885,7 @@ class company {
                     }
                 } else {
                     company_user::enrol($user, array($course->id), $this->id);
+                    EmailTemplate::send('user_added_to_course', array('course' => $course, 'user' => $user, 'company' => $this));
                 }
             }
         }
