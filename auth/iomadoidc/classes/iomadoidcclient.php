@@ -195,7 +195,7 @@ class iomadoidcclient {
             'redirect_uri' => $this->redirecturi
         ];
 
-        if (get_config('auth_iomadoidc', 'idptype' . $postfix) != AUTH_IOMADoIDC_IDP_TYPE_MICROSOFT) {
+        if (get_config('auth_iomadoidc', 'idptype' . $postfix) != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT) {
             $params['resource'] = $this->tokenresource;
         }
 
@@ -435,6 +435,10 @@ class iomadoidcclient {
             $postfix = "";
         }
 
+        $cfg_tokenendpoint = 'tokenendpoint' . $postfix;
+        $cfg_clientid = 'clientid' . $postfix;
+        $cfg_clientprivatekey = 'clientprivatekey' . $postfix;
+        
         $jwt = new jwt();
         $authiomadoidcconfig = get_config('auth_iomadoidc');
         $opname = "clientcert" . $postfix;
@@ -443,15 +447,15 @@ class iomadoidcclient {
         $x5t = base64_encode(hex2bin($sh1hash));
         $jwt->set_header(['alg' => 'RS256', 'typ' => 'JWT', 'x5t' => $x5t]);
         $jwt->set_claims([
-            'aud' => $authiomadoidcconfig->tokenendpoint,
+            'aud' => $authiomadoidcconfig->$cfg_tokenendpoint,
             'exp' => strtotime('+10min'),
-            'iss' => $authiomadoidcconfig->clientid,
+            'iss' => $authiomadoidcconfig->$cfg_clientid,
             'jti' => bin2hex(openssl_random_pseudo_bytes(16)),
             'nbf' => time(),
-            'sub' => $authiomadoidcconfig->clientid,
+            'sub' => $authiomadoidcconfig->$cfg_clientid,
             'iat' => time(),
         ]);
 
-        return $jwt->assert_token($authiomadoidcconfig->clientprivatekey);
+        return $jwt->assert_token($authiomadoidcconfig->$cfg_clientprivatekey);
     }
 }
