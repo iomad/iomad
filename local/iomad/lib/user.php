@@ -418,6 +418,23 @@ class company_user {
                 // Is the user currently enrolled?
                 if (!empty($manualcache[$courseid]->id) && !$userenrolment = $DB->get_record('user_enrolments', array('userid' => $user->id, 'enrolid' => $manualcache[$courseid]->id))) {
                     $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today, $timeend, ENROL_USER_ACTIVE);
+
+                    // Fire a duplicate enrol event so we can add it to the tracking tables.
+                    // This is required because when running in cron, we don't have a SESSION to find the companyid within the \core\event\user_enrolment_created event
+                    // (companyid is set from SESSION in the 'base' event class)
+                    $userenrolment = $DB->get_record('user_enrolments', array('userid' => $user->id, 'enrolid' => $manualcache[$courseid]->id));
+
+                    $event = \core\event\user_enrolment_created::create(
+                             ['objectid' => $userenrolment->id,
+                              'courseid' => $courseid,
+                              'context' => \context_course::instance($courseid),
+                              'relateduserid' => $user->id,
+                              'companyid' => $companyid,
+                              'other' => ['enrol' => 'manual']
+                             ]
+                            );
+                    $event->trigger();
+
                 } else if ($completedrecords = $DB->get_records_select('local_iomad_track',
                                                                                 "userid = :userid
                                                                                  AND courseid = :courseid
