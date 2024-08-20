@@ -516,17 +516,33 @@ class base {
             throw new moodle_exception('errorauthnocredsandendpoints', 'auth_iomadoidc');
         }
 
-        $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
-        $clientsecret = (isset($this->config->clientsecret)) ? $this->config->clientsecret : null;
+        // IOMAD
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
+
+        $cfg_clientid = "clientid" . $postfix;
+        $cfg_clientsecret = "clientsecret" . $postfix;
+        $cfg_iomadoidcresource = "iomadoidcresource" . $postfix;
+        $cfg_iomadoidcscope = "iomadoidcscope" . $postfix;
+        $cfg_authendpoint = "authendpoint" . $postfix;
+        $cfg_tokenendpoint = "tokenendpoint" . $postfix;
+
+        $clientid = (isset($this->config->$cfg_clientid)) ? $this->config->$cfg_clientid : null;
+        $clientsecret = (isset($this->config->$cfg_clientsecret)) ? $this->config->$cfg_clientsecret : null;
         $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
         $redirecturi .= '/auth/iomadoidc/';
-        $tokenresource = (isset($this->config->iomadoidcresource)) ? $this->config->iomadoidcresource : null;
-        $scope = (isset($this->config->iomadoidcscope)) ? $this->config->iomadoidcscope : null;
+        $tokenresource = (isset($this->config->$cfg_iomadoidcresource)) ? $this->config->$cfg_iomadoidcresource : null;
+        $scope = (isset($this->config->$cfg_iomadoidcscope)) ? $this->config->$cfg_iomadoidcscope : null;
 
         $client = new iomadoidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
 
-        $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
+        $client->setendpoints(['auth' => $this->config->$cfg_authendpoint, 'token' => $this->config->$cfg_tokenendpoint]);
 
         return $client;
     }
@@ -703,14 +719,17 @@ class base {
             }
         }
 
+        $cfg_iomadoidcresource = 'iomadoidcresource' . $postfix;
+        $cfg_iomadoidcscope = 'iomadoidcscope' . $postfix;
+        
         $tokenrec = new stdClass;
         $tokenrec->iomadoidcuniqid = $iomadoidcuniqid;
         $tokenrec->username = $username;
         $tokenrec->userid = $userid;
         $tokenrec->iomadoidcusername = $iomadoidcusername;
         $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : 'openid profile email';
-        $tokenrec->tokenresource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : $this->config->iomadoidcresource;
-        $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : $this->config->iomadoidcscope;
+        $tokenrec->tokenresource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : $this->config->$cfg_iomadoidcresource;
+        $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : $this->config->$cfg_iomadoidcscope;
         $tokenrec->authcode = $authparams['code'];
         $tokenrec->token = $tokenparams['access_token'];
         if (!empty($tokenparams['expires_on'])) {
