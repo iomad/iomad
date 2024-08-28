@@ -420,4 +420,17 @@ class block_iomad_company_admin extends block_base {
 
         return true;
     }
+
+    // Where can we see this block.
+    public function applicable_formats() {
+        return array('all' => false,
+                     'site' => false,
+                     'site-index' => false,
+                     'course-view' => false,
+                     'course-view-social' => false,
+                     'mod' => false,
+                     'my' => true,
+                     'mod-quiz' => false);
+    }
+
 }
