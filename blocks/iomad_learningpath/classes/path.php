@@ -43,7 +43,7 @@ class path {
      * @return [array, int/null]
      */
     public function get_courselist($pathid, $groupid, $sequenced = false) {
-        global $DB;
+        global $DB, $USER;
 
         // Calculate overall progress for group
         $cumulativeprogress = 0;
@@ -64,9 +64,35 @@ class path {
             $course->link = new \moodle_url('/course/view.php', ['id' => $course->courseid]);
             $course->imageurl = $this->get_course_image_url($course->courseid);
             $fullcourse = $DB->get_record('course', ['id' => $course->courseid], '*', MUST_EXIST);
+
+            // set the default progress from the course completion tables.
             $progress = \core_completion\progress::get_course_progress_percentage($fullcourse);
             $course->hasprogress = $progress !== null;
             $course->progresspercent = $course->hasprogress ? $progress : 0;
+
+            // Is this a course which is currently complete in the reporting tables
+            // and is in date and there isn't another, incomplete enrolment?
+            if ($litrecords = $DB->get_records_select('local_iomad_track',
+                                                     "userid = :userid AND courseid = :courseid AND companyid = :companyid AND timecompleted > 0 AND (timeexpires IS NULL OR timeexpires > :timeexpires)",
+                                                     ['userid' => $USER->id,
+                                                      'companyid' => $this->companyid,
+                                                      'courseid' => $course->courseid,
+                                                      'timeexpires' => time()],
+                                                      'id DESC',
+                                                      '*',
+                                                      '0',
+                                                      '1')) {
+                $litrecord = array_pop($litrecords);
+                if (!$DB->get_records_select('local_iomad_track', 
+                                             "userid = :userid AND courseid = :courseid AND companyid = :companyid AND id > :id AND timecompleted IS NULL",
+                                             ['userid' => $USER->id,
+                                              'companyid' => $this->companyid,
+                                              'courseid' => $course->courseid,
+                                              'id' => $litrecord->id])) {
+                    $course->hasprogress = true;
+                    $course->progresspercent = 100;
+                }
+            }
 
             // Deal with sequencing if we have to.
             if ($first || !$sequenced) {
