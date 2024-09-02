@@ -69,7 +69,6 @@ function mycourses_get_my_completion($sort = 'coursefullname', $dir = 'ASC') {
                                           FROM {companylicense_users} clu
                                           JOIN {course} c ON (c.id = clu.licensecourseid)
                                           WHERE clu.userid = :userid
-                                          AND cl.companyid = :companyid
                                           AND clu.isusing = 0",
                                           ['userid' => $USER->id,
                                            'companyid' => $companyid]);
