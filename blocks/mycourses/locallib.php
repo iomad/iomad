@@ -71,7 +71,8 @@ function mycourses_get_my_completion($sort = 'coursefullname', $dir = 'ASC') {
                                           WHERE clu.userid = :userid
                                           AND cl.companyid = :companyid
                                           AND clu.isusing = 0",
-                                          array('userid' => $USER->id));
+                                          ['userid' => $USER->id,
+                                           'companyid' => $companyid]);
 
     // Get courses which are available as self sign up and assigned to the company.
     // First we discount everything else we have in progress.
@@ -181,12 +182,12 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
                                        WHERE cc.userid = :userid
                                        AND cc.companyid = :companyid
                                        AND cc.timecompleted > 0",
-                                       array('userid' => $USER->id));
+                                      ['userid' => $USER->id,
+                                       'companyid' => $companyid]);
 
     // Deal with completed course scores and links for certificates.
     foreach ($myarchive as $id => $archive) {
        if (!empty($marchive->courseid)) {
-echo "COURSEID = $myarchive->courseid</br>";
            $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
        }
        $certstring = '';
