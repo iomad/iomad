@@ -2439,7 +2439,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Define field ispublic to be added to classroom.
         $table = new xmldb_table('classroom');
-        $field = new xmldb_field('ispublic', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'descriptionformat');
+        $field = new xmldb_field('ispublic', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'isvirtual');
 
         // Conditionally launch add field ispublic.
         if (!$dbman->field_exists($table, $field)) {
