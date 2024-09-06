@@ -2435,5 +2435,20 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023072900, 'local', 'iomad');
     }
 
+    if ($oldversion < 2023072901) {
+
+        // Define field ispublic to be added to classroom.
+        $table = new xmldb_table('classroom');
+        $field = new xmldb_field('ispublic', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'descriptionformat');
+
+        // Conditionally launch add field ispublic.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2023072901, 'local', 'iomad');
+    }
+
     return $result;
 }
