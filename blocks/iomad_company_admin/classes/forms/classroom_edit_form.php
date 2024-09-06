@@ -92,6 +92,9 @@ class classroom_edit_form extends moodleform {
         $mform->hideIf('country', 'isvirtual', 'checked');
         $mform->hideIf('capacity', 'isvirtual', 'checked');
 
+        $mform->addElement('checkbox', 'ispublic', get_string('public', 'block_iomad_company_admin'));
+        $mform->addHelpButton('ispublic', 'public', 'block_iomad_company_admin');
+
         $this->add_action_buttons();
     }
 

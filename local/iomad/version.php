@@ -24,4 +24,4 @@
 $plugin->release  = '4.1.13 (Build: 20240902)'; // Human-friendly version name
 $plugin->component  = 'local_iomad';
 $plugin->requires = 2019052000;   // Requires this Moodle version.
-$plugin->version  = 2023042700;   // The (date) version of this plugin.
+$plugin->version  = 2023042701;   // The (date) version of this plugin.
