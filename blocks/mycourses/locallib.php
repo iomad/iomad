@@ -166,6 +166,8 @@ function mycourses_get_my_completion($sort = 'coursefullname', $dir = 'ASC') {
 function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
     global $DB, $USER, $CFG;
 
+    $companyid = iomad::get_my_companyid(context_system::instance(), false);
+
     // Check if there is a iomadcertificate module.
     if ($certmodule = $DB->get_record('modules', array('name' => 'iomadcertificate'))) {
         $hasiomadcertificate = true;
