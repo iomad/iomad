@@ -15,16 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version file for Iomad Learning Paths
- *
- * @package    local_iomadlearninpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Task definition for block_iomad_company_admin.
+ * @author    Derick Turner
+ * @copyright Derick Turner 2024
+ * @package   block_iomad_learningpath
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.13 (Build: 20240902)'; // Human-friendly version name
-$plugin->version  = 2024090400;   // The (date) version of this plugin.
-$plugin->requires = 2019052000;   // Requires this Moodle version. (3.3)
-$plugin->component = 'local_iomad_learningpath';
+$tasks = array(
+    array(
+        'classname' => '\block_iomad_learningpath\task\sync_plans_from_template_learningpaths_task',
+        'blocking' => 0,
+        'minute' => '*',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+        'disabled' => 0
+    )
+);
+
