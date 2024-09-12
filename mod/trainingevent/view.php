@@ -54,6 +54,8 @@ if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
 
 require_course_login($course, false, $cm);
 
+$systemcontext = context_system::instance();
+
 // Get the database entry.
 if (!$event = $DB->get_record('trainingevent', array('id' => $cm->instance))) {
     throw new moodle_exception('noinstance');
