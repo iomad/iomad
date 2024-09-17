@@ -496,7 +496,7 @@ class current_company_course_user_selector extends company_user_selector_base {
         $countfields = 'SELECT COUNT(1)';
 
         $sql = " FROM {user} u
-                 JOIN {company_users} cu ON (cu.userid = u.id AND cu.managertype = 0 $departmentsql)
+                 JOIN {company_users} cu ON (cu.userid = u.id AND cu.educator = 0 $departmentsql)
                  LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
                  JOIN {user_enrolments} ue ON (ue.userid = u.id)
                  JOIN {enrol} e ON (ue.enrolid = e.id AND ".$DB->sql_compare_text('e.enrol')."='manual' AND e.status = 0)
