@@ -49,12 +49,13 @@ function xmldb_local_report_user_logins_install() {
     $count = 0;
     $warn = 10;
 
+    // SELECT COUNT(*) should never return NULL
     $DB->execute("INSERT INTO {local_report_user_logins} (userid, created, firstlogin, lastlogin, logincount, modifiedtime) 
                   SELECT id as userid,
                          timecreated,
                          NULLIF(firstaccess,0) AS firstaccess,
                          NULLIF(currentlogin,0) AS currentlogin,
-                         $SQLIF (currentlogin = 0, 0, $SQLIFNULL((SELECT COUNT(id) FROM {logstore_standard_log} l WHERE u.id = l.userid AND eventname = :eventname),0)) AS totallogins,
+                         CASE WHEN currentlogin = 0 THEN 0 ELSE (SELECT COUNT(id) FROM {logstore_standard_log} l WHERE u.id = l.userid AND eventname = :eventname) END AS totallogins,
                          " . time() . " as modifiedtime
                          FROM {user} u",
                   array('eventname' => '\core\event\user_loggedin'));
