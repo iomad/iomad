@@ -26,6 +26,30 @@
 
 namespace theme_iomadbootstrap\output;
 
+use coding_exception;
+use html_writer;
+use tabobject;
+use tabtree;
+use custom_menu_item;
+use custom_menu;
+use block_contents;
+use navigation_node;
+use action_link;
+use stdClass;
+use moodle_url;
+use preferences_groups;
+use action_menu;
+use help_icon;
+use single_button;
+use paging_bar;
+use context_course;
+use pix_icon;
+
+defined('MOODLE_INTERNAL') || die;
+
+require_once($CFG->dirroot.'/local/iomad/lib/user.php');
+require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
