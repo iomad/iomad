@@ -111,7 +111,7 @@ class report {
         $report = manager::get_report_from_id($reportid);
 
         if (!array_key_exists($uniqueidentifier, $report->get_columns())) {
-            throw new invalid_parameter_exception('Invalid column');
+            throw new invalid_parameter_exception('Invalid column ' . $uniqueidentifier);
         }
 
         $column = new column(0, (object) [
@@ -319,7 +319,7 @@ class report {
 
         $reportfilters = $report->get_filters();
         if (!array_key_exists($uniqueidentifier, $reportfilters)) {
-            throw new invalid_parameter_exception('Invalid filter');
+            throw new invalid_parameter_exception('Invalid filter ' . $uniqueidentifier);
         }
 
         $filter = new filter(0, (object) [
