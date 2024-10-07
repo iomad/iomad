@@ -15764,7 +15764,12 @@ blockquote {
   margin: 0 0.5rem 1rem;
   padding-left: 1rem;
   color: #495057;
-  border-left: 5px solid #ced4da;
+  border-left: 5px solid #8f959e;
+}
+
+.pagelayout-maintenance .page-header-headings,
+.pagelayout-secure .page-header-headings {
+  background-color: #fff;
 }
 
 /* Prevent long strings exceeding page width */
