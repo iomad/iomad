@@ -55,8 +55,9 @@ class cron_task extends \core\task\scheduled_task {
                                                JOIN {company_users} cu ON cu.userid = u.id
                                                JOIN {company} c ON cu.companyid = c.id
                                                WHERE u.institution != c.shortname
-                                               AND c.parentid = 0
-                                               LIMIT 1000");
+                                               AND c.parentid = 0",
+                                               [], 0, 1);
+
             } else if ($CFG->iomad_sync_institution == 2) {
                 mtrace("Copying company name to user institution fields\n");
 
@@ -66,8 +67,8 @@ class cron_task extends \core\task\scheduled_task {
                                                JOIN {company_users} cu ON cu.userid = u.id
                                                JOIN {company} c ON cu.companyid = c.id
                                                WHERE u.institution != c.name
-                                               AND c.parentid = 0
-                                               LIMIT 1000");
+                                               AND c.parentid = 0",
+                                               [], 0, 1);
             }
 
             // Update the users.
@@ -89,8 +90,8 @@ class cron_task extends \core\task\scheduled_task {
                                            JOIN {company} c ON cu.companyid = c.id
                                            JOIN {department} d ON cu.departmentid = d.id
                                            WHERE u.department != d.name
-                                           AND c.parentid = 0
-                                           LIMIT 1000");
+                                           AND c.parentid = 0",
+                                           [], 0, 1);
             // Update the users.
             foreach ($users as $user) {
                 $DB->set_field('user', 'department', $user->targetname, ['id' => $user->id]);
