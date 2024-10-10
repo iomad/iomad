@@ -46,7 +46,7 @@ function xmldb_local_report_user_logins_install() {
                          timecreated,
                          NULLIF(firstaccess,0) AS firstaccess,
                          NULLIF(currentlogin,0) AS currentlogin,
-                         IF (currentlogin = 0, 0, IFNULL((SELECT COUNT(id) FROM {logstore_standard_log} l WHERE u.id = l.userid AND eventname = :eventname),0)) AS totallogins,
+                         CASE WHEN currentlogin = 0 THEN 0 ELSE (SELECT COUNT(id) FROM {logstore_standard_log} l WHERE u.id = l.userid AND eventname = :eventname) END AS totallogins,
                          " . time() . " as modifiedtime
                          FROM {user} u",
                   array('eventname' => '\core\event\user_loggedin'));
