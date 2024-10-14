@@ -3879,6 +3879,7 @@ class company {
                     }
                 } else {
                     company_user::enrol($user, array($course->id), $this->id);
+                    EmailTemplate::send('user_added_to_course', array('course' => $course, 'user' => $user, 'company' => $this));
                 }
             }
         }
@@ -5442,7 +5443,7 @@ mtrace("Only the one - removing them completely");
 
         $companyinfo = self::get_company_byuserid($user->id);
         $company = new company($companyinfo->id);
-        $supervisortemplate = new EmailTemplate('completion_expiry_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
+        $template = new EmailTemplate('completion_expiry_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('completion_expiry_warn_supervisor', 2)) {
