@@ -239,7 +239,7 @@ if ($hassiteconfig) {
     // Display locking / mapping of profile fields.
     $authplugin = get_auth_plugin('iomadoidc');
     auth_iomadoidc_display_auth_lock_options($fieldmappingspage, $authplugin->authtype, $authplugin->userfields,
-        get_string('cfg_field_mapping_desc', 'auth_iomadoidc'), true, false, $authplugin->get_custom_user_profile_fields());
+        get_string('cfg_field_mapping_desc', 'auth_iomadoidc'), true, false, $authplugin->get_custom_user_profile_fields(), $postfix);
 }
 
 $settings = null;
