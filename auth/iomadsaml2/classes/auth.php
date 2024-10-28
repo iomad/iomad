@@ -745,7 +745,12 @@ class auth extends \auth_plugin_base {
                 $user->timemodified = $user->timecreated;
                 $user->mnethostid = $CFG->mnet_localhost_id;
 
-                $user->id = \user_create_user($user, true, true);
+				$companyid = iomad::get_my_companyid(context_system::instance(), false);
+				if (empty($companyid)) {
+					$companyid = 0;
+				}
+				$user->companyid = $companyid;
+				$user->id = \company_user::create($user);
                 $newuser = true;
                 // Store any custom profile fields.
                 profile_save_data($user);
