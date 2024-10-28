@@ -77,7 +77,7 @@ class company_user {
         $clashed = false;
         if ($existinguser = $DB->get_record('user', ['username' => $user->username])){
             $clashed = true;
-        } else if (!empty($CFG->allowaccountssameemail) && $existinguser = $DB->get_record('user', ['email' => $user->email])) {
+        } else if ($CFG->allowaccountssameemail = false && $existinguser = $DB->get_record('user', ['email' => $user->email])) {
             $clashed = true;
         } else if ($existinguser = $DB->get_record('user', ['firstname' => $user->firstname, 'lastname' => $user->lastname, 'email' => $user->email])) {
             $clashed = true;
