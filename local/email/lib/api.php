@@ -244,7 +244,27 @@ class EmailTemplate {
      *
      **/
     public function subject() {
-        return $this->fill($this->template->subject);
+        // Ensure $USER is initialized
+        if (!isset($USER) || is_null($USER)) {
+            global $USER;
+            // Attempt to get the current logged-in user
+            if (isloggedin() && !isguestuser()) {
+                $USER = $USER;
+            } else {
+                // If no user is logged in, use a known valid user ID
+                $validuserid = 0; // Using 0 to get the guest user
+                $USER = get_complete_user_data('id', $validuserid);
+            }
+        }
+        // Store the current user's language preference    
+        $originaluserlang = $USER->lang;
+        // Temporarily override the current language
+        $USER->lang = $this->user->lang;
+        // Apply the format_text function    
+        $formatted_text = format_string($this->fill($this->template->subject));        
+        // Restore the original language
+        $USER->lang = $originaluserlang; 
+        return $formatted_text;
     }
 
     /**
@@ -253,7 +273,28 @@ class EmailTemplate {
      *
      **/
     public function body() {
-        return $this->fill($this->template->body);
+        // Ensure $USER is initialized        
+        if (!isset($USER) || is_null($USER)) {
+            global $USER;
+            // Attempt to get the current logged-in user
+            if (isloggedin() && !isguestuser()) {
+                $USER = $USER;
+            } else {
+                // If no user is logged in, use a known valid user ID
+                $validuserid = 0; // Using 0 to get the guest user
+                $USER = get_complete_user_data('id', $validuserid);
+            }
+        }
+        // Store the current user's language preference    
+        $originaluserlang = $USER->lang;
+        // Temporarily override the current language
+        $USER->lang = $this->user->lang;
+        // Apply the format_text function    
+        $formatted_text = format_text($this->fill($this->template->body));
+        //.PHP_EOL.PHP_EOL."(Ref. c".$this->company->id."u".$this->user->id.$this->user->lang."U".$USER->id.$originaluserlang.")";        
+        // Restore the original language
+        $USER->lang = $originaluserlang; 
+        return $formatted_text;   
     }
 
     /**
