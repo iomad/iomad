@@ -156,7 +156,34 @@ if (!empty($courseid)) {
                                                AND userid IN ('.$allowedlist.') AND waitlisted=0' )) {
                 foreach ($users as $user) {
                     $fulluserdata = $DB->get_record('user', array('id' => $user->id));
-                    $fulluserdata->department = company_user::get_department_name($user->id);
+                    // Get the user departments
+                    $userdepartments = $DB->get_records_sql("select d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid)
+                                                 WHERE cu.userid = :userid
+                                                 AND cu.companyid = :companyid",
+                                                 ['userid' => $user->id,
+                                                  'companyid' => $companyid]);
+                    $count = count($userdepartments);
+                    $current = 1;
+                    $userdepartmentstring = "";
+                    if ($count > 5) {
+                        $userdepartmentstring = "<details><summary>" . get_string('show') . "</summary>";
+                    }
+
+                    $first = true;
+                    foreach($userdepartments as $department) {
+                        $userdepartmentstring .= format_string($department->name);
+            
+                        if ($current < $count) {
+                            $userdepartmentstring .= ",<br>";
+                        }
+                        $current++;
+                    }
+
+                    if ($count > 5) {
+                        $userdepartmentstring .= "</details>";
+                    }
+
+                    $fulluserdata->department = $userdepartmentstring;
                     $fullusername = $fulluserdata->firstname.' '.$fulluserdata->lastname;
                     $attendancetable->data[] = array($fullusername,
                                                      $fulluserdata->department,
