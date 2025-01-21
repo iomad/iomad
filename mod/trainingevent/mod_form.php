@@ -70,7 +70,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         }
         
         $publicchoices = array();
-        if ($rooms = $DB->get_recordset_sql('SELECT * FROM mdl_classroom WHERE ispublic = 1 AND companyid <> ?',
+        if ($rooms = $DB->get_recordset_sql('SELECT * FROM {classroom} WHERE ispublic = 1 AND companyid <> ?',
         [
             $params['companyid']
         ]
