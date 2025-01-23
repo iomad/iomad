@@ -67,7 +67,7 @@ class authcode extends base {
 
         $configname = "customicon" . $postfix;
         if (!empty($this->config->$configname)) {
-            $icon = new pix_icon('0/'.$configname, get_string('pluginname', 'auth_iomadoidc'), 'auth_iomadoidc');
+            $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_iomadoidc'), 'auth_iomadoidc');
         } else {
             $configname = "icon" . $postfix;
             $icon = (!empty($this->config->$configname)) ? $this->config->$configname : 'auth_iomadoidc:o365';
