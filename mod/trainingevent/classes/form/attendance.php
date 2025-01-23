@@ -22,7 +22,7 @@
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
- 
+
 namespace mod_trainingevent\form;
 
 use context;
@@ -49,7 +49,7 @@ class attendance extends dynamic_form {
      * Define the form
      */
     public function definition () {
-        global $CFG;
+        global $CFG, $DB;
 
         // We need to set the variables as class ones don't seem to work.
         $companyid = $this->optional_param('companyid', 0, PARAM_INT);
@@ -61,19 +61,20 @@ class attendance extends dynamic_form {
         $requesttype = $this->optional_param('requesttype', 0, PARAM_INT);
         $approvaltype = $this->optional_param('approvaltype', 0, PARAM_INT);
         $dorefresh = $this->optional_param('dorefresh', false, PARAM_INT);
-        $trainingeventid = $this->optional_param('trainingeventid', 0, PARAM_INT);
         $userid = $this->optional_param('userid', 0, PARAM_INT);
         $courseid = $this->optional_param('courseid', 0, PARAM_INT);
- 
+
+        // Get the trainingevent info as we need it.
+        $trainingevent = $DB->get_record('trainingevent', ['id' => $trainingeventid]);
 
         $mform = $this->_form;
 
         $mform->addElement('hidden', 'companyid');
         $mform->setType('companyid', PARAM_INT);
         $mform->addElement('hidden', 'trainingeventid');
-        $mform->setType('attendanceid', PARAM_INT);
-        $mform->addElement('hidden', 'attendanceid');
         $mform->setType('trainingeventid', PARAM_INT);
+        $mform->addElement('hidden', 'attendanceid');
+        $mform->setType('attendanceid', PARAM_INT);
         $mform->addElement('hidden', 'cmid');
         $mform->setType('cmid', PARAM_INT);
         $mform->addElement('hidden', 'waitlisted');
@@ -90,7 +91,12 @@ class attendance extends dynamic_form {
         $mform->setType('approvaltype', PARAM_INT);
 
         // Add the options field.
-        $mform->addElement('textarea', 'booking_notes', get_string('bookingnotes', 'mod_trainingevent'), 'wrap="virtual" rows="5" cols="5"');
+        if (!empty($trainingevent->requirenotes)) {
+            $mform->addElement('textarea', 'booking_notes', get_string('bookingnotes', 'mod_trainingevent'), 'wrap="virtual" rows="5" cols="5"');
+        } else {
+            $mform->addElement('hidden', 'booking_notes');
+            $mform->setType('booking_notes', PARAM_TEXT);
+        }
 
         // Add an alternative list of training events.
         $availableevents = trainingevent_get_available_events($trainingeventid, $courseid, $userid, $waitlisted, true);
@@ -175,7 +181,7 @@ class attendance extends dynamic_form {
                 $event->trigger();
                 $returnmessage = get_string('removerequest_successfull', 'mod_trainingevent');
             }
-                
+
         } else if (!empty($data->requesttype) &&
                    !empty($data->removeme)) {
 
@@ -301,7 +307,7 @@ class attendance extends dynamic_form {
                     if (!empty($data->requesttype)) {
                         // We need to go through approval.
                         $record->approved = 0;
-    
+
                         // Fire an event for this.
                         $eventother = ['waitlisted' => $data->waitlisted,
                                        'approvaltype' => $data->approvaltype];
@@ -313,7 +319,7 @@ class attendance extends dynamic_form {
                                                                                         'companyid' => $data->companyid,
                                                                                         'other' => $eventother]);
                         $event->trigger();
-    
+
                         // Set up the return message.
                         $returnmessage = get_string('request_successful', 'mod_trainingevent');
                         if ($data->requesttype == 2) {
@@ -323,7 +329,7 @@ class attendance extends dynamic_form {
                     } else {
                         // Automatically approved as not required.
                         $record->approved = 1;
-    
+
                         // Fire an event for this.
                         $eventother = ['waitlisted' => $data->waitlisted];
                         $event = \mod_trainingevent\event\user_attending::create(['context' => $context,
@@ -340,7 +346,7 @@ class attendance extends dynamic_form {
                             $returnmessage = get_string('attend_waitlist_successful', 'mod_trainingevent');
                         }
                     }
-    
+
                     // Add the record.
                     $record->id = $DB->insert_record('trainingevent_users', $record);
                 } else {
@@ -381,10 +387,12 @@ class attendance extends dynamic_form {
         $requesttype = $this->optional_param('requesttype', 0, PARAM_INT);
         $approvaltype = $this->optional_param('approvaltype', 0, PARAM_INT);
         $dorefresh = $this->optional_param('dorefresh', false, PARAM_INT);
-        $trainingeventid = $this->optional_param('trainingeventid', 0, PARAM_INT);
         $userid = $this->optional_param('userid', 0, PARAM_INT);
         $courseid = $this->optional_param('courseid', 0, PARAM_INT);
-        $booking_notes = "";
+
+        // Get the trainingevent info as we need it.
+        $trainingevent = $DB->get_record('trainingevent', ['id' => $trainingeventid]);
+        $booking_notes = $trainingevent->booking_notes_default;
 
         // Do we already have one?
         if ($attendancerec = $DB->get_record('trainingevent_users', ['trainingeventid' => $trainingeventid, 'userid' => $userid])) {
@@ -426,7 +434,7 @@ class attendance extends dynamic_form {
      *
      * @return context
      */
-    protected function get_context_for_dynamic_submission(): context {      
+    protected function get_context_for_dynamic_submission(): context {
         $courseid = $this->optional_param('courseid', 0, PARAM_INT);
         $coursecontext = \context_course::instance($courseid);
 
