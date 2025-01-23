@@ -49,34 +49,38 @@ class attendees_table extends table_sql {
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $context));
 
+        // Do we need to add anything else
+        if (empty($row->requirenotes) ||
+            $this->is_downloading()) {
+            return $name;
+        }
+
         // Set  up the booking notes popup.
         $tooltip = get_string('bookingnotes', 'mod_trainingevent');
         if (!empty($row->booking_notes)) {
             $row->booking_notes = preg_replace('/\s*\R\s*/', ' ', trim($row->booking_notes));
         }
 
-        if (!$this->is_downloading()) {
-            // Add the booking notes.
-            $name .= "&nbsp
-                      <a class='btn btn-link p-0'
-                         role='button'
-                         data-container='body'
-                         data-toggle='popover'
-                         data-placement='right'
-                         data-bookingnotesid='" . $row->id ."'
-                         data-content='<div class=\"no-overflow\">
-                                       <b>" . $tooltip . ":</b>
-                                       <br>" . $row->booking_notes .
-                                       "</div> '
-                         data-html='true'
-                         tabindex='0'
-                         data-trigger='focus'>
-                     <i class='icon fa fa-exclamation-circle fa-fw '
-                        title='$tooltip'
-                        role='img'
-                        aria-label='$tooltip'></i>
-                     </a>";
-        }
+        // Add the booking notes.
+        $name .= "&nbsp
+                  <a class='btn btn-link p-0'
+                     role='button'
+                     data-container='body'
+                     data-toggle='popover'
+                     data-placement='right'
+                     data-bookingnotesid='" . $row->id ."'
+                     data-content='<div class=\"no-overflow\">
+                                   <b>" . $tooltip . ":</b>
+                                   <br>" . $row->booking_notes .
+                                   "</div> '
+                     data-html='true'
+                     tabindex='0'
+                     data-trigger='focus'>
+                 <i class='icon fa fa-exclamation-circle fa-fw '
+                    title='$tooltip'
+                    role='img'
+                    aria-label='$tooltip'></i>
+                 </a>";
 
         return $name;
     }
@@ -106,7 +110,7 @@ class attendees_table extends table_sql {
             return;
         }
         if (has_capability('mod/trainingevent:add', context_module::instance($id))) {
-            // Are we vieing the list on people on the waiting list?       
+            // Are we vieing the list on people on the waiting list?
             if ($waitingoption && $numattending < $maxcapacity) {
                 $addurl = new moodle_url($CFG->wwwroot ."/mod/trainingevent/view.php",
                                          ['userid' => $row->id,
@@ -153,7 +157,7 @@ class attendees_table extends table_sql {
                                  role='img'>
                               </i>
                            </a>";
-       
+
         }
         return $actionhtml;
     }

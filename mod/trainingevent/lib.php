@@ -106,6 +106,10 @@ function trainingevent_update_instance($trainingevent) {
         $trainingevent->emailteachers = 0;
     }
 
+    if (empty($trainingevent->requirenotes)) {
+        $trainingevent->requirenotes = 0;
+    }
+
     grade_update('mod/trainingevent',
                  $trainingevent->course,
                  'mod',

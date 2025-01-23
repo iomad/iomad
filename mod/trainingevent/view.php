@@ -637,28 +637,26 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
 
     $table = new \mod_trainingevent\tables\attendees_table('trainingeventattendees');
     $table->is_downloading($download, format_string($trainingevent->name) . ' ' . get_string('attendance', 'local_report_attendance'), 'trainingevent_attendees123');
-    // If downloading add the booking notes column, otherwise ignore it.        
-    if ($download) {
-        $headers = [get_string('fullname'),
-                    get_string('department', 'block_iomad_company_admin'),
-                    get_string('email'),
-                    get_string('bookingnotes', 'mod_trainingevent')];
-        $columns = ['fullname',
-                    'department',
-                    'email',
-                    'bookingnotes'];
-    } else {
+
+    // Set up the default headers and columns.
+    $columns = ['fullname',
+                'department',
+                'email'];
         $headers = [get_string('fullname'),
                     get_string('department', 'block_iomad_company_admin'),
                     get_string('email')];
-        $columns = ['fullname',
-                    'department',
-                    'email'];
+
+    // If downloading add the booking notes column, otherwise ignore it.        
+    if ($download &&
+        !empty($trainingevent->requirenotes)) {
+        $headers[] = get_string('bookingnotes', 'mod_trainingevent');
+        $columns[] = 'bookingnotes';
     }
 
     $selectsql = "DISTINCT u.*, " .
                            $trainingevent->course . " AS courseid, " .
-                           $trainingevent->approvaltype . " AS approvaltype,
+                           $trainingevent->approvaltype . " AS approvaltype, " .
+                           $trainingevent->requirenotes . " AS requirenotes,
                            teu.booking_notes,
                            teu.trainingeventid,
                            teu.waitlisted,
@@ -721,7 +719,7 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
     $table->no_sorting('action');
 
     if (!$download) {
-        echo "<h3>".get_string('attendance', 'local_report_attendance')."</h3>";
+        echo $OUTPUT->heading(get_string('attendance', 'local_report_attendance'));
     }
     $table->out($CFG->iomad_max_list_users, true);
 
