@@ -32,6 +32,8 @@ class mod_trainingevent_mod_form extends moodleform_mod {
     public function definition() {
         global $USER, $SESSION, $DB;
 
+        $config = get_config('trainingevent');
+
         $mform =& $this->_form;
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -68,7 +70,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
             }
             $rooms->close();
         }
-        
+
         $publicchoices = array();
         if ($rooms = $DB->get_recordset_sql('SELECT * FROM {classroom} WHERE ispublic = 1 AND companyid <> ?',
         [
@@ -92,18 +94,30 @@ class mod_trainingevent_mod_form extends moodleform_mod {
                         get_string('enrolonly', 'trainingevent'));
         $mform->addElement('select', 'approvaltype', get_string('approvaltype', 'trainingevent'), $choices);
 
-        $mform->addElement('checkbox', 'haswaitinglist', get_string('haswaitinglist', 'mod_trainingevent'));
-        $mform->addHelpButton('haswaitinglist', 'haswaitinglist', 'mod_trainingevent');
+        $mform->addElement('checkbox',
+                           'haswaitinglist',
+                           get_string('haswaitinglist', 'mod_trainingevent'),
+                           get_string('haswaitinglist_help', 'mod_trainingevent'));
+
+        $mform->setDefault('haswaitinglist', $config->haswaitinglist);
 
         $mform->addElement('text', 'coursecapacity', get_string('maxsize', 'mod_trainingevent'));
         $mform->addHelpButton('coursecapacity', 'maxsize', 'mod_trainingevent');
         $mform->setType('coursecapacity', PARAM_INT);
 
-        $mform->addElement('checkbox', 'emailteachers',  get_string('alertteachers', 'mod_trainingevent'));
-        $mform->addHelpButton('emailteachers', 'alertteachers', 'mod_trainingevent');
+        $mform->addElement('checkbox',
+                           'emailteachers',
+                           get_string('alertteachers', 'mod_trainingevent'),
+                           get_string('alertteachers_help', 'mod_trainingevent'));
 
-        $mform->addElement('checkbox', 'isexclusive',  get_string('exclusive', 'mod_trainingevent'));
-        $mform->addHelpButton('isexclusive', 'exclusive', 'mod_trainingevent');
+        $mform->setDefault('emailteachers', $config->emailteachers);
+
+        $mform->addElement('checkbox',
+                           'isexclusive',
+                           get_string('exclusive', 'mod_trainingevent'),
+                           get_string('exclusive_help', 'mod_trainingevent'));
+
+        $mform->setDefault('isexclusive', $config->isexclusive);
 
         $remindergroup = [];
         $remindergroup[] =& $mform->createElement('text', 'sendreminder', '');
@@ -120,6 +134,17 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         $mform->addGroup($lockedgroup, 'lockedgroup', get_string('lockdays', 'mod_trainingevent'), ' ', false);
         $mform->disabledIf('lockedgroup', 'lockevent');
         $mform->addHelpButton('lockedgroup', 'lockdays', 'mod_trainingevent');
+
+        // Bits for booking notes.
+        $mform->addElement('checkbox',
+                           'requirenotes',
+                           get_string('requirenotes', 'mod_trainingevent'),
+                           get_string('requirenotes_help', 'mod_trainingevent'));
+        $mform->addElement('textarea', 'booking_notes_default', get_string('booknotesdefault', 'mod_trainingevent'), 'wrap="virtual" rows="5" cols="5"');
+        $mform->addHelpButton('booking_notes_default', 'booknotesdefault', 'mod_trainingevent');
+        $mform->hideIf('booking_notes_default', 'requirenotes');
+
+        $mform->setDefault('requirenotes', $config->requirenotes);
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();

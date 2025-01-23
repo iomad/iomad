@@ -280,5 +280,29 @@ function xmldb_trainingevent_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025011000, 'trainingevent');
     }
 
+    if ($oldversion < 2025012300) {
+
+        // Define field requirenotes to be added to trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $field = new xmldb_field('requirenotes', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'remindersent');
+
+        // Conditionally launch add field requirenotes.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field booking_notes_default to be added to trainingevent.
+        $table = new xmldb_table('trainingevent');
+        $field = new xmldb_field('booking_notes_default', XMLDB_TYPE_TEXT, null, null, null, null, null, 'requirenotes');
+
+        // Conditionally launch add field booking_notes_default.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Trainingevent savepoint reached.
+        upgrade_mod_savepoint(true, 2025012300, 'trainingevent');
+    }
+
     return $result;
 }
