@@ -662,8 +662,8 @@ class company_edit_form extends \company_moodleform {
             $authtypeoptionsselect = $mform->addElement('select',
                                                         'smtpauthtype'.$this->companyid,
                                                         format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
-                                                                      get_string('smtpauthtype', 'admin'),
-                                                        $authtypeoptions));
+                                                                      get_string('smtpauthtype', 'admin')),
+                                                        $authtypeoptions);
             $authtypeoptionsselect->setSelected('LOGIN');
             $mform->addElement('static', 'smtpauthtypedescription', '', get_string('configsmtpauthtype', 'admin'));
             if (count($enabledissuers) > 0) {
