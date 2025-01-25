@@ -44,26 +44,16 @@ class observer {
         // Get all of the templates.
         $templates = array_keys(local_email::get_templates());
 
-        foreach ($langs as $lang) {
-            if ($DB->count_records('email_template', ['companyid' => $companyid, 'lang' => $lang]) != count($templates)) {
-                foreach ($templates as $template) {
-                    $templaterec = (object) [];
-                    $templaterec->companyid = $companyid;
-                    $templaterec->name = $template;
-                    $templaterec->lang = $lang;
-                    $DB->execute("INSERT INTO {email_template} (companyid,name,lang)
-                                  SELECT :companyid, :name, :lang
-                                  WHERE NOT EXISTS (
-                                    SELECT * FROM {email_template}
-                                    WHERE companyid = :companyid2
-                                    AND name = :name2
-                                    AND lang = :lang2)",
-                                  ['companyid' => $companyid,
-                                   'companyid2' => $companyid,
-                                   'name' => $template,
-                                   'name2' => $template,
-                                   'lang' => $lang,
-                                   'lang2' => $lang]);
+        foreach ($templates as $template) {
+            if (!$DB->get_record('email_template', ['companyid' => $companyid, 'name' => $template])) {
+                $templaterec = (object) [];
+                $templaterec->companyid = $companyid;
+                $templaterec->name = $template;
+                $templaterec->id = $DB->insert_record('email_template', $templaterec);
+            }
+            foreach ($langs as $lang) {
+                if (!$DB->get_record('email_template_strings', ['templateid' => $templaterec->id, 'lang' => $lang])) {
+                    $DB->insert_record('email_template_strings', ['templateid' => $templaterec->id, 'lang' => $lang]);
                 }
             }
         }

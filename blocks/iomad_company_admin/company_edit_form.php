@@ -88,6 +88,36 @@ if (!$new) {
     if ($companytemplates = $DB->get_records('company_role_templates_ass', array('companyid' => $companyid), null, 'templateid')) {
         $companyrecord->templates = array_keys($companytemplates);
     }
+
+    // Get the Outgoing email config - if there are any.
+    $smtphostsname = "smtphosts" . $companyid;
+    $smtpsecurename = "smtpsecure" . $companyid;
+    $smtpauthtypename = "smtpauthtype" . $companyid;
+    $smtpoauthservicename = "smtpoauthservice" . $companyid;
+    $smtpusername = "smtpuser" . $companyid;
+    $smtppassname = "smtppass" . $companyid;
+    $smtpmaxbulkname = "smtpmaxbulk" . $companyid;
+    $noreplyaddressname = "noreplyaddress" . $companyid;
+    $emaildkimselectorname = "emaildkimselector" . $companyid;
+    $companyrecord->$smtphostsname = !empty($CFG->$smtphostsname) ? $CFG->$smtphostsname : "";
+    $companyrecord->$smtpsecurename = !empty($CFG->$smtpsecurename) ? $CFG->$smtpsecurename : "";
+    $companyrecord->$smtpauthtypename = !empty($CFG->$smtpauthtypename) ? $CFG->$smtpauthtypename : "";
+    $companyrecord->$smtpoauthservicename = !empty($CFG->$smtpoauthservicename) ? $CFG->$smtpoauthservicename : "";
+    $companyrecord->$smtpusername = !empty($CFG->$smtpusername) ? $CFG->$smtpusername : "";
+    $companyrecord->$smtppassname = !empty($CFG->$smtppassname) ? $CFG->$smtppassname : "";
+    $companyrecord->$smtpmaxbulkname = !empty($CFG->$smtpmaxbulkname) ? $CFG->$smtpmaxbulkname : "";
+    $companyrecord->$noreplyaddressname = !empty($CFG->$noreplyaddressname) ? $CFG->$noreplyaddressname : "";
+    $companyrecord->$emaildkimselectorname = !empty($CFG->$emaildkimselectorname) ? $CFG->$emaildkimselectorname : "";
+    $companyrecord->usecompanysmtpsettings = 0;
+    if (!empty($companyrecord->$smtphostsname) ||
+        !empty($companyrecord->$smtpsecurename) ||
+        !empty($companyrecord->$smtpoauthservicename) ||
+        !empty($companyrecord->$smtpusername) ||
+        !empty($companyrecord->$smtppassname) ||
+        !empty($companyrecord->$noreplyaddressname) ||
+        !empty($companyrecord->$emaildkimselectorname)) {
+        $companyrecord->usecompanysmtpsettings = 1;
+    }
 } else {
     $isadding = true;
     $companyid = 0;
@@ -96,6 +126,7 @@ if (!$new) {
     $companyrecord->previousroletemplateid = 0;
     $companyrecord->previousemailtemplateid = 0;
     $companyrecord->maxusers = 0;
+    $companyrecord->usecompanysmtpsettings = 0;
     $companycontext = $systemcontext;
     if ($emailtemplateset = $DB->get_record('email_templateset', ['isdefault' => 1])) {
         $companyrecord->emailtemplate = $emailtemplateset->id;
@@ -296,6 +327,45 @@ if (!empty($new) && !empty($parentid)) {
                             'favicon' . $parentid, 0,
                             ['maxfiles' => 1]);
     $companyrecord->companyfavicon = $draftcompanyfaviconid;
+
+    // Deal with the SMTP settings.
+    // Set the defaults for the SMPT settings to the parentid if there is one.
+    $newsmtphostsname = "smtphosts0";
+    $newsmtpsecurename = "smtpsecure0";
+    $newsmtpauthtypename = "smtpauthtype0";
+    $newsmtpoauthservicename = "smtpoauthservice0";
+    $newsmtpusername = "smtpuser0";
+    $newsmtppassname = "smtppass0";
+    $newsmtpmaxbulkname = "smtpmaxbulk0";
+    $newnoreplyaddressname = "noreplyaddress0";
+    $newemaildkimselectorname = "emaildkimselector0";
+    $smtphostsname = "smtphosts" . $parentid;
+    $smtpsecurename = "smtpsecure" . $parentid;
+    $smtpauthtypename = "smtpauthtype" . $parentid;
+    $smtpoauthservicename = "smtpoauthservice" . $parentid;
+    $smtpusername = "smtpuser" . $parentid;
+    $smtppassname = "smtppass" . $parentid;
+    $smtpmaxbulkname = "smtpmaxbulk" . $parentid;
+    $noreplyaddressname = "noreplyaddress" . $parentid;
+    $emaildkimselectorname = "emaildkimselector" . $parentid;
+    $companyrecord->$newsmtphostsname = !empty($CFG->$smtphostsname) ? $CFG->$smtphostsname : "";
+    $companyrecord->$newsmtpsecurename = !empty($CFG->$smtpsecurename) ? $CFG->$smtpsecurename : "";
+    $companyrecord->$newsmtpauthtypename = !empty($CFG->$smtpauthtypename) ? $CFG->$smtpauthtypename : "";
+    $companyrecord->$newsmtpoauthservicename = !empty($CFG->$smtpoauthservicename) ? $CFG->$smtpoauthservicename : "";
+    $companyrecord->$newsmtpusername = !empty($CFG->$smtpusername) ? $CFG->$smtpusername : "";
+    $companyrecord->$newsmtppassname = !empty($CFG->$smtppassname) ? $CFG->$smtppassname : "";
+    $companyrecord->$newsmtpmaxbulkname = !empty($CFG->$smtpmaxbulkname) ? $CFG->$smtpmaxbulkname : "";
+    $companyrecord->$newnoreplyaddressname = !empty($CFG->$noreplyaddressname) ? $CFG->$noreplyaddressname : "";
+    $companyrecord->$newemaildkimselectorname = !empty($CFG->$emaildkimselectorname) ? $CFG->$emaildkimselectorname : "";
+    if (!empty($companyrecord->$newsmtphostsname) ||
+        !empty($companyrecord->$newsmtpsecurename) ||
+        !empty($companyrecord->$newsmtpoauthservicename) ||
+        !empty($companyrecord->$newsmtpusername) ||
+        !empty($companyrecord->$newsmtppassname) ||
+        !empty($companyrecord->$newnoreplyaddressname) ||
+        !empty($companyrecord->$newemaildkimselectorname)) {
+        $companyrecord->usecompanysmtpsettings = 1;
+    }
 } else {
     $draftcompanycertificatesealid = file_get_submitted_draft_itemid('companycertificateseal');
     file_prepare_draft_area($draftcompanycertificatesealid,
@@ -369,23 +439,23 @@ if ($mform->is_cancelled()) {
         $data->validto = null;
     }
     if ($isadding) {
-        // Set up a profiles field category for this company.
-        $catdata = new stdclass();
-        $catdata->sortorder = $DB->count_records('user_info_category') + 1;
-        $catdata->name = $data->shortname;
-        $data->profileid = $DB->insert_record('user_info_category', $catdata);
-
-        // Deal with leading/trailing spaces
-        $data->name = trim($data->name);
-        $data->shortname = trim($data->shortname);
-        $data->code = trim($data->code);
-        $data->city = trim($data->city);
-        $data->region = trim($data->region);
-        $data->custom1 = trim($data->custom1);
-        $data->custom2 = trim($data->custom2);
-        $data->custom3 = trim($data->custom3);
-
         if (!empty($data->submitbutton)) {
+            // Set up a profiles field category for this company.
+            $catdata = new stdclass();
+            $catdata->sortorder = $DB->count_records('user_info_category') + 1;
+            $catdata->name = $data->shortname;
+            $data->profileid = $DB->insert_record('user_info_category', $catdata);
+    
+            // Deal with leading/trailing spaces
+            $data->name = trim($data->name);
+            $data->shortname = trim($data->shortname);
+            $data->code = trim($data->code);
+            $data->city = trim($data->city);
+            $data->region = trim($data->region);
+            $data->custom1 = trim($data->custom1);
+            $data->custom2 = trim($data->custom2);
+            $data->custom3 = trim($data->custom3);
+    
             // We hit create.
             $companyid = $DB->insert_record('company', $data);
             $company = new company($companyid);
@@ -436,6 +506,25 @@ if ($mform->is_cancelled()) {
                                         'usewatermark' => $data->usewatermark,
                                         'showgrade' => $data->showgrade);
             $DB->insert_record('companycertificate', $certificateinforec);
+
+            if (!empty($data->usecompanysmtpsettings)) {
+                // Deal with any SMTP stuff.
+                $smtpfields = ["smtphosts",
+                               "smtpsecure",
+                               "smtpauthtype",
+                               "smtpoauthservice",
+                               "noreplyaddress",
+                               "smtpuser",
+                               "smtppass",
+                               "smtpmaxbulk"];
+                foreach ($smtpfields as $smtpfield) {
+                    $fieldname = $smtpfield . $companyid;
+                    $dataname = $smtpfield . "0";
+                    if (!empty($data->$dataname)) {
+                        set_config($fieldname, $data->$dataname);
+                    }
+                }
+            }
         } else {
             $redirectmessage = "";
             $SESSION->createcompanyform = $data;
@@ -540,6 +629,25 @@ if ($mform->is_cancelled()) {
                                         'usewatermark' => $data->usewatermark,
                                         'showgrade' => $data->showgrade);
             $DB->insert_record('companycertificate', $certificateinforec);
+        }
+        // Deal with any SMTP stuff.
+        $smtpfields = ["smtphosts",
+                       "smtpsecure",
+                       "smtpauthtype",
+                       "smtpoauthservice",
+                       "noreplyaddress",
+                       "smtpuser",
+                       "smtppass",
+                       "smtpmaxbulk"];
+        foreach ($smtpfields as $smtpfield) {
+            $fieldname = $smtpfield . $companyid;
+            if (!empty($CFG->$fieldname)) {
+                unset_config($fieldname);
+            }
+            if (!empty($data->usecompanysmtpsettings) &&
+                !empty($data->$fieldname)) {
+                set_config($fieldname, $data->$fieldname);
+            }
         }
 
         if (company_user::is_company_user()) {

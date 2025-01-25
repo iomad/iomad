@@ -215,6 +215,15 @@ $capabilities = array(
         ),
     ),
 
+    'block/iomad_company_admin:company_edit_smtp' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => array(
+            'clientadministrator' => CAP_ALLOW
+        ),
+    ),
+
     'block/iomad_company_admin:company_delete' => array(
 
         'captype' => 'write',

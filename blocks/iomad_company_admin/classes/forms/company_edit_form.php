@@ -435,8 +435,9 @@ class company_edit_form extends \company_moodleform {
         }
         // Only show the Appearence section if the theme is iomad or you have abilities
         // to change that.
-        if (iomad::has_capability('block/iomad_company_admin:company_edit_appearance', $this->context) ||
-             $isiomadtheme || $ischild) {
+        if (iomad::has_capability('block/iomad_company_admin:company_edit_appearance', $this->context) &&
+            ($isiomadtheme ||
+             $ischild)) {
 
             $mform->addElement('header', 'appearance',
                                     get_string('appearance', 'block_iomad_company_admin'));
@@ -616,6 +617,139 @@ class company_edit_form extends \company_moodleform {
             $mform->addElement('hidden', 'showgrade', $this->companyrecord->showgrade);
             $mform->setType('showgrade', PARAM_INT);
         }
+
+        // Only show the Company SMTP section if you have the capability.
+        if (iomad::has_capability('block/iomad_company_admin:company_edit_smtp', $this->context)) {
+            $mform->addElement('header', 'companysmtpsettings', get_string('outgoingmailconfig', 'admin'));
+
+            $mform->addElement('advcheckbox', 'usecompanysmtpsettings', get_string('company_usesmtpsettings', 'block_iomad_company_admin'), null, null, array(0,1));
+            $mform->setDefault('usecompanysmtpsettings', 'checked');
+            $mform->addElement('text',
+                               'smtphosts' . $this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . " " .
+                                             get_string('smtphosts', 'admin')));
+            $mform->addElement('static', 'smtphostsdescription', '', get_string('configsmtphosts', 'admin'));
+            $secureoptions = [
+                              '' => get_string('none', 'admin'),
+                              'ssl' => 'SSL',
+                              'tls' => 'TLS',
+                              ];
+            $mform->addElement('select',
+                               'smtpsecure' . $this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                             get_string('smtpsecure', 'admin')),
+                               $secureoptions);
+            $mform->addElement('static', 'smtpsecuredescription', '', get_string('configsmtpsecure', 'admin'));
+            $authtypeoptions = [
+                                'LOGIN' => 'LOGIN',
+                                'PLAIN' => 'PLAIN',
+                                'NTLM' => 'NTLM',
+                                'CRAM-MD5' => 'CRAM-MD5',
+                              ];
+
+            // Get all the issuers.
+            $issuers = \core\oauth2\api::get_all_issuers();
+            $enabledissuers = [];
+            foreach ($issuers as $issuer) {
+                // Get the enabled issuer only.
+                if ($issuer->get('enabled')) {
+                    $enabledissuers[] = $issuer;
+                }
+            }
+            if (count($enabledissuers) > 0) {
+                $authtypeoptions['XOAUTH2'] = 'XOAUTH2';
+            }
+            $authtypeoptionsselect = $mform->addElement('select',
+                                                        'smtpauthtype'.$this->companyid,
+                                                        format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                                                      get_string('smtpauthtype', 'admin'),
+                                                        $authtypeoptions));
+            $authtypeoptionsselect->setSelected('LOGIN');
+            $mform->addElement('static', 'smtpauthtypedescription', '', get_string('configsmtpauthtype', 'admin'));
+            if (count($enabledissuers) > 0) {
+                $oauth2services = [
+                    '' => get_string('none', 'admin'),
+                ];
+                foreach ($enabledissuers as $issuer) {
+                    $oauth2services[$issuer->get('id')] = s($issuer->get('name'));
+                }
+                $mform->addElement('select',
+                                   'smtpoauthservice'.$this->companyid,
+                                   format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                                  get_string('issuer', 'auth_oauth2')),
+                                   $oauth2services);
+            $mform->addElement('static', 'smtpoauthservicedescription', '', get_string('configsmtpoauthservice', 'admin'));
+            }
+            $mform->addElement('text',
+                               'smtpuser'.$this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                             get_string('smtpuser', 'admin')));
+            $mform->addElement('static', 'smtpuserdescription', '', get_string('configsmtpuser', 'admin'));
+            $mform->addElement('passwordunmask',
+                               'smtppass'.$this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                             get_string('smtppass', 'admin')));
+            $mform->addElement('static', 'smtppassdescription', '', get_string('configsmtpuser', 'admin'));
+            $mform->addElement('text',
+                               'smtpmaxbulk'.$this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                             get_string('smtpmaxbulk', 'admin')));
+            $mform->setDefault('smtpmaxbulk'.$this->companyid, 1);
+            $mform->addElement('static', 'smtpmaxbulkdescription', '', get_string('configsmtpmaxbulk', 'admin'));
+            $mform->addElement('text',
+                               'noreplyaddress'.$this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                             get_string('noreplyaddress', 'admin')));
+            $mform->setDefault('noreplyaddress'.$this->companyid, 'noreply@' . get_host_from_url($CFG->wwwroot));
+            $mform->addElement('static', 'noreplyaddressdescription', '', get_string('confignoreplyaddress', 'admin'));
+            $mform->addElement('text',
+                               'emaildkimselector'.$this->companyid,
+                               format_string(get_string('company', 'block_iomad_company_admin') . ' ' .
+                                             get_string('emaildkimselector', 'admin')));
+            $mform->addElement('static', 'emaildkimselectordescription', '', get_string('configemaildkimselector', 'admin'));
+
+            // Set the show/hide depending on checked option;
+            $mform->hideIf('smtphosts' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtpsecure' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtpauthtype' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtpoauthservice' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtpuser' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtppass' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtpmaxbulk' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('noreplyaddress' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('emaildkimselector' . $this->companyid, 'usecompanysmtpsettings');
+            $mform->hideIf('smtphostsdescription', 'usecompanysmtpsettings');
+            $mform->hideIf('smtpsecuredescription', 'usecompanysmtpsettings');
+            $mform->hideIf('smtpauthtypedescription', 'usecompanysmtpsettings');
+            $mform->hideIf('smtpoauthservicedescription', 'usecompanysmtpsettings');
+            $mform->hideIf('smtpuserdescription', 'usecompanysmtpsettings');
+            $mform->hideIf('smtppassdescription', 'usecompanysmtpsettings');
+            $mform->hideIf('smtpmaxbulkdescription', 'usecompanysmtpsettings');
+            $mform->hideIf('noreplyaddressdescription', 'usecompanysmtpsettings');
+            $mform->hideIf('emaildkimselectordescription', 'usecompanysmtpsettings');
+        } else {
+            $mform->addElement('hidden', 'usecompanysmtpsettings');
+            $mform->addElement('hidden', 'smtphosts' . $this->companyid);
+            $mform->addElement('hidden', 'smtpsecure' . $this->companyid);
+            $mform->addElement('hidden', 'smtpauthtype'.$this->companyid);
+            $mform->addElement('hidden', 'smtpoauthservice'.$this->companyid);
+            $mform->addElement('hidden', 'smtpuser'.$this->companyid);
+            $mform->addElement('hidden', 'smtppass'.$this->companyid);
+            $mform->addElement('hidden', 'smtpmaxbulk'.$this->companyid);
+            $mform->addElement('hidden', 'noreplyaddress'.$this->companyid);
+            $mform->addElement('hidden', 'emaildkimselector'.$this->companyid);
+        }
+        $mform->setType('usecompanysmtpsettings', PARAM_BOOL);
+        $mform->setType('smtphosts' . $this->companyid, PARAM_RAW);
+        $mform->setType('smtpsecure' . $this->companyid, PARAM_TEXT);
+        $mform->setType('smtpauthtype'.$this->companyid, PARAM_TEXT);
+        $mform->setType('smtpoauthservice'.$this->companyid, PARAM_INT);
+        $mform->setType('smtpuser'.$this->companyid, PARAM_NOTAGS);
+        $mform->setType('smtppass'.$this->companyid, PARAM_RAW);
+        $mform->setType('smtpmaxbulk'.$this->companyid, PARAM_INT);
+        $mform->setType('noreplyaddress'.$this->companyid, PARAM_EMAIL);
+        $mform->setType('emaildkimselector'.$this->companyid, PARAM_FILE);
+
         $submitlabel = null; // Default.
         if ($this->isadding) {
             $submitlabel = get_string('saveasnewcompany', 'block_iomad_company_admin');
