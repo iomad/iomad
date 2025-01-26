@@ -597,7 +597,7 @@ class authcode extends base {
             }
         }
 
-        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change');
+        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change' . $this->postfix);
 
         if (!empty($tokenrec)) {
             // Already connected user.
