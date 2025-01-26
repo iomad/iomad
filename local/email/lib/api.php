@@ -207,11 +207,11 @@ class EmailTemplate {
         if (isset($this->user->id) && !isset($this->user->profile)) {
             profile_load_custom_fields($this->user);
         }
-        // Check if we are an admin with a company set.
-        if (!empty($SESSION->currenteditingcompany)) {
-            $this->company = new company($SESSION->currenteditingcompany);
+
+        // If there is no company already set
+        // Get it by another means.
+        if (empty($this->company)) {
             // Otherwise use the creating users company.
-        } else if (empty($this->company)) {
             $companyid = iomad::get_my_companyid(context_system::instance(), false);
             $this->company = new company($companyid);
         }
