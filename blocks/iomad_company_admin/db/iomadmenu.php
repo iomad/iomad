@@ -92,6 +92,17 @@ function block_iomad_company_admin_menu() {
                 'icon' => 'fa-user',
                 'iconsmall' => 'fa-gear'
             ),
+            'uploadcompanies' => array(
+                'category' => 'CompanyAdmin',
+                'tab' => 1,
+                'name' => get_string('importcompanies', 'block_iomad_company_admin'),
+                'url' => 'company_upload.php',
+                'cap' => 'block/iomad_company_admin:company_add_child',
+                'icondefault' => 'editcompany',
+                'style' => 'company',
+                'icon' => 'fa-building',
+                'iconsmall' => 'fa-arrow-up-from-bracket'
+            ),
             'createuser' => array(
                 'category' => 'UserAdmin',
                 'tab' => 2,
