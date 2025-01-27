@@ -4251,7 +4251,7 @@ class company {
         $currentsettings = [];
         $pluginsettings = get_config($pluginname);
         foreach ($pluginsettings as $setting => $value) {
-            if (preg_match('/_'.$postfix.'$/', $setting)) {
+            if (preg_match('/'.$postfix.'$/', $setting)) {
                 $currentsettings[$setting] = $value;
             } else if ($setting == 'version' || preg_match('/_\d+$/', $setting)) {
                 continue;
@@ -4261,6 +4261,7 @@ class company {
         }
         // should have all the defaults - strip any we have config for.
         foreach ($currentsettings as $current => $dump) {
+            $current = str_replace($postfix, "", $current);
             unset($settings[$current]);
         }
         // Set any missing.
