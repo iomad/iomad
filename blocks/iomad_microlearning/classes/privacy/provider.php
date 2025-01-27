@@ -52,42 +52,26 @@ class provider implements
      */
     public static function get_metadata(collection $collection) : collection {
         $collection->add_database_table(
-            'invoice',
+            'microlearning_thread_user',
             [
-                'id' => 'privacy:metadata:invoice:id',
-                'reference' => 'privacy:metadata:invoice:reference',
-                'userid' => 'privacy:metadata:invoice:userid',
-                'status' => 'privacy:metadata:invoice:status',
-                'checkout_method' => 'privacy:metadata:invoice:checkout_method',
-                'email' => 'privacy:metadata:invoice:email',
-                'phone1' => 'privacy:metadata:invoice:phone1',
-                'pp_payerid' => 'privacy:metadata:invoice:pp_payerid',
-                'pp_payerstatus' => 'privacy:metadata:invoice:pp_payerstatus',
-                'company' => 'privacy:metadata:invoice:company',
-                'address' => 'privacy:metadata:invoice:address',
-                'city' => 'privacy:metadata:invoice:city',
-                'state' => 'privacy:metadata:invoice:state',
-                'country' => 'privacy:metadata:invoice:country',
-                'postcode' => 'privacy:metadata:invoice:postcode',
-                'firstname' => 'privacy:metadata:invoice:firstname',
-                'lastname' => 'privacy:metadata:invoice:lastname',
-                'pp_ack' => 'privacy:metadata:invoice:pp_ack',
-                'pp_transactionid' => 'privacy:metadata:invoice:pp_transactionid',
-                'pp_transactiontype' => 'privacy:metadata:invoice:pp_transactiontype',
-                'pp_paymenttype' => 'privacy:metadata:invoice:pp_paymenttype',
-                'pp_ordertime' => 'privacy:metadata:invoice:pp_ordertime',
-                'pp_currencycode' => 'privacy:metadata:invoice:pp_currencycode',
-                'pp_amount' => 'privacy:metadata:invoice:pp_amount',
-                'pp_feeamt' => 'privacy:metadata:invoice:pp_feeamt',
-                'pp_settleamt' => 'privacy:metadata:invoice:pp_settleamt',
-                'pp_taxamt' => 'privacy:metadata:invoice:pp_taxamt',
-                'pp_exchangerate' => 'privacy:metadata:invoice:pp_exchangerate',
-                'pp_paymentstatus' => 'privacy:metadata:invoice:pp_paymentstatus',
-                'pp_pendingreason' => 'privacy:metadata:invoice:pp_pendingreason',
-                'pp_reason' => 'privacy:metadata:invoice:pp_reason',
-                'date' => 'privacy:metadata:invoice:date',
+                'id' => 'privacy:metadata:microlearning_thread_user:id',
+                'userid' => 'privacy:metadata:microlearning_thread_user:userid',
+                'threadid' => 'privacy:metadata:microlearning_thread_user:threadid',
+                'nuggetid' => 'privacy:metadata:microlearning_thread_user:nuggetid',
+                'groupid' => 'privacy:metadata:microlearning_thread_user:groupid',
+                'schedule_date' => 'privacy:metadata:microlearning_thread_user:schedule_date',
+                'due_date' => 'privacy:metadata:microlearning_thread_user:due_date',
+                'reminder1_date' => 'privacy:metadata:microlearning_thread_user:reminder1_date',
+                'reminder2_date' => 'privacy:metadata:microlearning_thread_user:reminder2_date',
+                'messagetime' => 'privacy:metadata:microlearning_thread_user:messagetime',
+                'message_delivered' => 'privacy:metadata:microlearning_thread_user:message_delivered',
+                'reminder1_delivered' => 'privacy:metadata:microlearning_thread_user:reminder1_delivered',
+                'reminder2_delivered' => 'privacy:metadata:microlearning_thread_user:reminder2_delivered',
+                'timecompleted' => 'privacy:metadata:microlearning_thread_user:timecompleted',
+                'accesskey' => 'privacy:metadata:microlearning_thread_user:accesskey',
+                'timecreated' => 'privacy:metadata:microlearning_thread_user:timecreated',
             ],
-            'privacy:metadata:invoice'
+            'privacy:metadata:microlearning_thread_user'
         );
 
         return $collection;
@@ -131,7 +115,7 @@ class provider implements
 
         $context = context_system::instance();
 
-        // Get the invoice information.
+        // Get the microlearning_thread_user information.
         if ($microlearnings = $DB->get_records('microlearning_thread_user', array('userid' => $user->id))) {
             $microlearningout = (object) [];
             foreach ($microlearnings as $id => $microlearning) {
@@ -171,7 +155,7 @@ class provider implements
         if (empty($context)) {
             return;
         }
-        $DB->delete_records('invoice');
+        $DB->delete_records('microlearning_thread_user');
     }
 
     /**
@@ -187,7 +171,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        $DB->delete_records('invoice', array('userid' => $userid));
+        $DB->delete_records('microlearning_thread_user', array('userid' => $userid));
     }
 
     /**
@@ -208,7 +192,7 @@ class provider implements
         ];
 
         $sql = "SELECT i.userid as userid
-                  FROM {invoice} i
+                  FROM {microlearning_thread_user} i
                   JOIN {context} ctx
                        ON ctx.instanceid = i.userid
                        AND ctx.contextlevel = :contextuser
@@ -228,7 +212,7 @@ class provider implements
         $context = $userlist->get_context();
 
         if ($context instanceof context_user) {
-            $DB->delete_records('invoice', array('userid' => $context->id));
+            $DB->delete_records('microlearning_thread_user', array('userid' => $context->id));
         }
     }
 }
