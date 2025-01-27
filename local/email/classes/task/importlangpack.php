@@ -37,7 +37,7 @@ class importlangpack extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('importlangpackaddhoc', 'local_email');
+        return get_string('importlangpackadhoc', 'local_email');
     }
 
     /**
