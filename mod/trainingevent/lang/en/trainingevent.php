@@ -117,6 +117,7 @@ $string['summary'] = 'Summary';
 $string['slotsleft'] = 'Slots left';
 $string['trainingeventintro'] = 'Description';
 $string['trainingeventname'] = 'Name';
+$string['trainingevent_reset'] = 'Training event was reset by user';
 $string['unattend'] = 'Delete booking';
 $string['unattend_successfull'] = 'You are no longer attending this event';
 $string['unpublish'] = 'Remove event from course calendar';
