@@ -66,11 +66,16 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                                          ['time' => $runtime]);
         foreach ($courses as $course) {       
             // Get all of the users on the course who are not already signed up for an event or waiting list.
-            $users = $DB->get_records_sql("SELECT DISTINCT u.* FROM {user} u
+            $users = $DB->get_records_sql("SELECT DISTINCT u.*,lit.companyid FROM {user} u
                                            JOIN {user_enrolments} ue ON (ue.userid = u.id)
                                            JOIN {enrol} e ON (ue.enrolid = e.id)
                                            JOIN {trainingevent} t ON (e.courseid = t.course)
                                            JOIN {classroom} v ON (t.classroomid = v.id)
+                                           JOIN {local_iomad_track} lit
+                                             ON (e.courseid = lit.courseid
+                                                 AND t.course = lit.courseid
+                                                 AND ue.userid = lit.userid
+                                                 AND ue.timestart = lit.timeenrolled)
                                            LEFT JOIN {trainingevent_users} tu ON (u.id = tu.userid AND ue.userid = tu.userid AND t.id = tu.trainingeventid)
                                            WHERE e.courseid = :courseid
                                            AND ue.timestart < :warntime
