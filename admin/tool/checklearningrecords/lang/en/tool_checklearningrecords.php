@@ -26,6 +26,7 @@
 
 $string['brokenlicenses'] = 'Number of records with broken license information : {$a}';
 $string['brokencompletions'] = 'Number of records with broken completion information : {$a}';
+$string['checklearningrecordstask'] = 'Check learning records adhoc task';
 $string['companyid'] = 'Company ID';
 $string['courseid'] = 'Course ID';
 $string['doit'] = 'Yes, do it!';

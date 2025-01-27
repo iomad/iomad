@@ -40,7 +40,7 @@ class deletecompanytask extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('deletecompany', 'block_iomad_company_admin');
+        return get_string('deletecompany', 'local_iomad');
     }
 
     /**
