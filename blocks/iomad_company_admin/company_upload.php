@@ -80,6 +80,7 @@ $stdfields = ['name',
               'code',
               'address',
               'city',
+              'region',
               'postcode',
               'country',
               'parent',
@@ -358,6 +359,7 @@ class upload_progress_tracker {
                        'code',
                        'address',
                        'city',
+                       'region',
                        'postcode',
                        'country',
                        'parent',
@@ -390,6 +392,7 @@ class upload_progress_tracker {
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('companycode', 'block_iomad_company_admin').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('address').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('companycity', 'block_iomad_company_admin').'</th>';
+        echo '<th class="header c'.$ci++.'" scope="col">'.get_string('region', 'block_iomad_company_admin').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('postcode', 'block_iomad_company_admin').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('selectacountry').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('parentcompany', 'block_iomad_company_admin').'</th>';
