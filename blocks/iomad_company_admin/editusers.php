@@ -677,5 +677,13 @@ $table->sort_default_column = 'fullname DESC';
 
 $table->out($CFG->iomad_max_list_users, true);
 
+// Set up the add new user button
+if (iomad::has_capability('block/iomad_company_admin:user_create', $companycontext)) {
+    // Add the button to add a user.
+    echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_user_create_form.php'),
+                                               get_string('createuser', 'block_iomad_company_admin'));
+}
+
+
 // Finish the display
 echo $output->footer();

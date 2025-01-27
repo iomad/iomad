@@ -83,9 +83,6 @@ class company_user {
             $clashed = true;
         }
 
-        // Deal with the company theme.
-        $user->theme = $company->get_theme();
-
         // Only create the user if there is no clash.
         if (!$clashed) {
             if ($user->sendnewpasswordemails && !$user->preference_auth_forcepasswordchange) {
@@ -180,6 +177,10 @@ class company_user {
             $user = $existinguser;
             $id = $user->id;
         }
+
+        // Deal with the company theme.
+        $usertheme = $company->get_theme();
+        $DB->set_field('user', 'theme', $usertheme, ['id' => $user->id]);
 
         // Attach user to company.
         // Do we have a department?
