@@ -269,7 +269,7 @@ if ($usernew = $userform->get_data()) {
             // Redirect to admin/ to continue with installation.
             redirect("$CFG->wwwroot/$CFG->admin/");
         } else {
-            redirect("$CFG->wwwroot/user/view.php?id=$USER->id&course=$course->id");
+            redirect("$CFG->wwwroot/blocks/iomad_company_admin/editusers.php");
         }
     } else {
         \core\session\manager::gc(); // Remove stale sessions.
