@@ -300,6 +300,7 @@ if ($action == 'grade' && !empty($usergradeusers)) {
     }
 }
 
+// Are we attending?
 if ($attendance = (array) $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id, 'waitlisted' => 0, 'approved' => 1], null, 'userid')) {
     $attendancecount = count($attendance);
     if (array_key_exists($USER->id, $attendance)) {
@@ -310,6 +311,24 @@ if ($attendance = (array) $DB->get_records('trainingevent_users', ['trainingeven
 } else {
     $attendancecount = 0;
     $attending = false;
+}
+
+// Are we attending another exclusive?
+$attendingother = false;
+if ($trainingevent->isexclusive &&
+    $DB->get_records_sql("SELECT teu.id
+                          FROM {trainingevent_users} teu
+                          JOIN {trainingevent} t ON (teu.trainingeventid = t.id)
+                          WHERE t.isexclusive = 1
+                          AND t.couresid = :courseid
+                          AND t.id != :thiseventid
+                          AND tue.userid = :userid
+                          AND tue.waitlisted = 0
+                          AND tue.approved = 1",
+                         ['courseid' => $trainingevent->course,
+                          'userid' => $USER->id,
+                          'thiseventid' => $trainingevent->id])) {
+    $attendingother = true;
 }
 
 // Are we sending out emails?
@@ -448,7 +467,9 @@ if (!$download) {
     $requesttype = 0;
 
     // Output the buttons.
-    if ($attending) {
+    if ($attendingother) {
+        $template->eventstatus_array[] = get_string('alreadyenrolled', 'trainingevent');
+    } else if ($attending) {
         $template->eventstatus_array[] = get_string('youareattending', 'trainingevent');
         if (time() > $trainingevent->startdatetime) {
             $template->eventstatus_array[] = get_string('eventhaspassed', 'mod_trainingevent');
