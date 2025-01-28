@@ -375,7 +375,7 @@ class observer {
             //mtrace('Iomad completion recorded for userid ' . $userid . ' in courseid ' . $courseid);
         }
 
-        self::record_certificates($courseid, $userid, $trackid);
+        self::record_certificates($courseid, $userid, $trackid, false);
 
         return true;
     }
