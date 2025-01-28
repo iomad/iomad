@@ -189,30 +189,6 @@ if (!empty($exportcalendar)) {
     }
 }
 
-/*if ($action == 'delete' &&
-    !empty($userid)) {
-
-
-    // Remove the userid from the event.
-    if ($currentrecord = $DB->get_record('trainingevent_users', ['userid' => $userid, 'trainingeventid' => $trainingevent->id])) {
-        $DB->delete_records('trainingevent_users', ['id' => $currentrecord->id]);
-
-        $messagestring = get_string('userremovedsuccessfully', 'trainingevent');
-
-        // Fire an event for this.
-        $eventother = ['waitlisted' => $currentrecord->waitlisted];
-        $event = \mod_trainingevent\event\user_removed::create(['context' => $context,
-                                                                'userid' => $USER->id,
-                                                                'relateduserid' => $userid,
-                                                                'objectid' => $trainingevent->id,
-                                                                'courseid' => $trainingevent->course,
-                                                                'companyid' => $usercompany->id,
-                                                                'other' => $eventother]);
-        $event->trigger();
-    }
-}
-*/
-
 if ($action == 'add' &&
     !empty($userid)) {
     $chosenlocation = $DB->get_record('classroom', ['id' => $trainingevent->classroomid]);

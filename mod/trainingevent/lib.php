@@ -511,6 +511,9 @@ function trainingevent_user_attending($event) {
                                                                 'company' => $company,
                                                                 'event' => $event));
 
+        // Reset the module cache.
+        course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
+
         // Go no further.
         return;
     }
