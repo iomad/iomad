@@ -58,7 +58,7 @@ class authcode extends base {
             return [];
         }
 
-        $configname = "customicon" . $this->postfix;
+        $customname = "customicon" . $this->postfix;
         if (!empty($this->config->$customname)) {
             $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_iomadoidc'), 'auth_iomadoidc');
         } else {

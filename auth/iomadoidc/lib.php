@@ -630,7 +630,7 @@ function auth_iomadoidc_is_setup_complete() {
     }
 
     $clientid = 'clientid' . $postfix;
-    $idtype = 'idtype' . $postfix;
+    $idptype = 'idptype' . $postfix;
     $clientauthmethod = 'clientauthmethod' . $postfix;
     $clientsecret = 'clientsecret' . $postfix;
     $clientcert = "clientcert" . $postfix;

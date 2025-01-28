@@ -50,7 +50,7 @@ class base {
     protected $httpclient;
 
     /** @var string postfix for config based off of company id */
-    private $postfix;
+    protected $postfix;
 
     /**
      * Constructor.
