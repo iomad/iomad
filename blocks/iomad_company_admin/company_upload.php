@@ -144,9 +144,19 @@ if (empty($iid)) {
             foreach ($line as $key => $value) {
                 if ($value !== '') {
                     $key = $columns[$key];
+                    $value = trim($value);
 
                     if (strpos($key, 'name') !== false) {
-                        if ($DB->get_record('company', array('name' => $value))) {
+                        $value = clean_param($value, PARAM_NOTAGS);
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
+                            $upt->track('name', $errorstr, 'error');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if ($DB->get_record('company', array('name' => $value))) {
                             $upt->track('status', get_string('duplicatecompany', 'block_iomad_company_admin', 'name'), 'error');
                             $upt->track('name', $errorstr, 'error');
                             $line[] = get_string('duplicatecompany', 'block_iomad_company_admin', 'name');
@@ -161,10 +171,28 @@ if (empty($iid)) {
                             }
                         }
                     } else if (strpos($key, 'shortname') !== false) {
-                        if ($DB->get_record('company', array('shortname' => $value))) {
+                        $value = clean_param($value, PARAM_NOTAGS);
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
+                            $upt->track('shortname', $errorstr, 'error');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if ($DB->get_record('company', array('shortname' => $value))) {
                             $upt->track('status', get_string('duplicatecompany', 'block_iomad_company_admin', 'shortname'), 'error');
                             $upt->track('shortname', $errorstr, 'error');
                             $line[] = get_string('duplicatecompany', 'block_iomad_company_admin', 'shortname');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if (!preg_match('/^[A-Za-z0-9_]+$/', $data['shortname'])) {
+                            // Check allowed pattern (numbers, letters and underscore).
+                            $upt->track('status', get_string('invalidshortnameerror', 'core_customfield'), 'error');
+                            $upt->track('shortname', get_string('invalidshortnameerror', 'core_customfield'), 'error');
+                            $line[] = get_string('invalidshortnameerror', 'core_customfield');
                             $companyerrors++;
                             $errornum++;
                             $erroredcompanies[] = $line;
@@ -176,10 +204,67 @@ if (empty($iid)) {
                             }
                         }
                     } else if (strpos($key, 'code') !== false) {
-                        if ($DB->get_record('company', array('code' => $value))) {
-                            $upt->track('status', get_string('duplicatecompany', 'block_iomad_company_admin', 'code'), 'error');
+                        $value = clean_param($value, PARAM_NOTAGS);
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
                             $upt->track('code', $errorstr, 'error');
-                            $line[] = get_string('duplicatecompany', 'block_iomad_company_admin', 'code');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if ($DB->get_record('company', array('code' => $value))) {
+                            $upt->track('status', get_string('companycodetaken', 'block_iomad_company_admin', $value), 'error');
+                            $upt->track('code', $errorstr, 'error');
+                            $line[] = get_string('companycodetaken', 'block_iomad_company_admin', $value);
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else {
+                            $companyrec->$key = $value;
+                            if (in_array($key, $upt->columns)) {
+                                $upt->track($key, $value);
+                            }
+                        }
+                    } else if (strpos($key, 'hostname') !== false) {
+                        $value = clean_param($value, PARAM_NOTAGS);
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
+                            $upt->track('hostname', $errorstr, 'error');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if ($DB->get_record('company', array('hostname' => $value))) {
+                            $upt->track('status', get_string('companyhostnametaken', 'block_iomad_company_admin', $value), 'error');
+                            $upt->track('hostname', $errorstr, 'error');
+                            $line[] = get_string('duplicatecompany', 'block_iomad_company_admin', $value);
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else {
+                            $companyrec->$key = $value;
+                            if (in_array($key, $upt->columns)) {
+                                $upt->track($key, $value);
+                            }
+                        }
+                    } else if (strpos($key, 'maxusers') !== false) {
+                        $value = clean_param($value, PARAM_INT);
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
+                            $upt->track('maxusers', $errorstr, 'error');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if ($value < 1) {
+                            $upt->track('status', get_string('invalidnum', 'error'));
+                            $upt->track('maxusers', $errorstr, 'error');
+                            $line[] = get_string('invalidnum', 'error');
                             $companyerrors++;
                             $errornum++;
                             $erroredcompanies[] = $line;
@@ -191,7 +276,16 @@ if (empty($iid)) {
                             }
                         }
                     } else if (strpos($key, 'parent') !== false) {
-                        if (! $parentrec = $DB->get_record('company', array('shortname' => $value))) {
+                        $value = clean_param($value, PARAM_NOTAGS);
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
+                            $upt->track('parent', $errorstr, 'error');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else if (! $parentrec = $DB->get_record('company', array('shortname' => $value))) {
                             $upt->track('status', get_string('missingparent', 'block_iomad_company_admin', 'parent'), 'error');
                             $upt->track('parent', $errorstr, 'error');
                             $line[] = get_string('missingparent', 'block_iomad_company_admin', 'parent');
@@ -213,9 +307,33 @@ if (empty($iid)) {
                             $upt->track($key, $value);
                         }
                     } else {
-                        $companyrec->$key = $value;
-                        if (in_array($key, $upt->columns)) {
-                            $upt->track($key, $value);
+                        if (strpos($key, 'country') !== false) {
+                            $value = clean_param($value, PARAM_ALPHA);
+                        } else if (strpos($key, 'hostname') !== false) {
+                            $value = clean_param($value, PARAM_HOST);
+                        } else if (strpos($key, 'validto') !== false ||
+                                   strpos($key, 'suspendafter') !== false) {
+                            $value = clean_param($value, PARAM_INT);
+                        } else if (strpos($key, 'maincolor') !== false ||
+                                   strpos($key, 'headingcolor') !== false ||
+                                   strpos($key, 'linkcolor') !== false) {
+                            $value = clean_param($value, PARAM_CLEAN);
+                        } else if (!strpos($key, 'hostname') !== false) {
+                            $value = clean_param($value, PARAM_NOTAGS);
+                        }
+                        if (empty($value)) {
+                            $upt->track('status', get_string('profileinvaliddata', 'error'), 'error');
+                            $upt->track($key, $errorstr, 'error');
+                            $line[] = get_string('profileinvaliddata', 'error');
+                            $companyerrors++;
+                            $errornum++;
+                            $erroredcompanies[] = $line;
+                            continue 2;
+                        } else {
+                            $companyrec->$key = $value;
+                            if (in_array($key, $upt->columns)) {
+                                $upt->track($key, $value);
+                            }
                         }
                     }
                 }
