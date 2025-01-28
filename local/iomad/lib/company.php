@@ -308,26 +308,24 @@ class company {
             if ($showsuspended) {
                 $suspendedsql = '';
             } else {
-                $suspendedsql = "AND suspended = 0";
+                $suspendedsql = "AND cu.suspended = 0";
             }
             // Show the hierarchy if required.
             if (!empty($CFG->iomad_show_company_structure)) {
-                $companies = $DB->get_records_sql_menu("SELECT DISTINCT c.id, CASE WHEN c.suspended=0 THEN c.name ELSE concat(c.name, ' (S)') END AS name, cu.lastused
+                $companies = $DB->get_records_sql_menu("SELECT DISTINCT c.id, CASE WHEN c.suspended=0 THEN c.name ELSE concat(c.name, ' (S)') END AS name
                                                         FROM {company} c
                                                         JOIN {company_users} cu ON (c.id = cu.companyid)
                                                         WHERE cu.userid = :userid
-                                                        AND cu.suspended = 0
                                                         $suspendedsql
                                                         ORDER BY name",
                                                         ['userid' => $USER->id,
                                                          'userid2' => $USER->id,
                                                          'suspended' => $showsuspended]);
             } else {
-                $companies = $DB->get_records_sql_menu("SELECT DISTINCT c.id, CASE WHEN c.suspended=0 THEN c.name ELSE concat(c.name, ' (S)') END AS name, cu.lastused
+                $companies = $DB->get_records_sql_menu("SELECT DISTINCT c.id, CASE WHEN c.suspended=0 THEN c.name ELSE concat(c.name, ' (S)') END AS name
                                                         FROM {company} c
                                                         JOIN {company_users} cu ON (c.id = cu.companyid)
                                                         WHERE cu.userid = :userid
-                                                        AND cu.suspended = 0
                                                         $suspendedsql
                                                         ORDER BY name",
                                                         ['userid' => $USER->id,
