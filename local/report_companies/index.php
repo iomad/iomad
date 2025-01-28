@@ -26,12 +26,23 @@ require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
 use local_report_companies\companyrep;
 
+$chosencompanyid = optional_param('companyid', 0, PARAM_INT);
+
 require_login();
 
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+if ($chosencompanyid > 0) {
+    $companyid = $chosencompanyid;
+    $reportcompanyid = $chosencompanyid;
+} else if ($chosencompanyid == -1) {
+    $reportcompanyid = 0;
+    $companyid = iomad::get_my_companyid($systemcontext);
+} else {
+    $companyid = iomad::get_my_companyid($systemcontext);
+    $reportcompanyid = $companyid;
+}
 $companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
 
@@ -54,13 +65,13 @@ $PAGE->set_heading($strcompletion);
 $output = $PAGE->get_renderer('local_report_companies');
 
 // Navigation and header.
-echo $OUTPUT->header();
+echo $output->header();
 
 // Ajax odds and sods.
 $PAGE->requires->js_init_call('M.local_report_companies.init');
 
 // Get the company list.
-$companies = companyrep::companylist($USER, $companyid);
+$companies = companyrep::companylist($USER, $reportcompanyid);
 companyrep::addmanagers($companies) ;
 companyrep::addusers($companies);
 companyrep::addcourses($companies);

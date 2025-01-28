@@ -253,7 +253,10 @@ foreach ($columns as $column) {
     } else {
         $columndir = $dir == "ASC" ? "DESC":"ASC";
         $columnicon = $dir == "ASC" ? "down":"up";
-        $columnicon = " <img src=\"" . $OUTPUT->image_url('t/' . $columnicon) . "\" alt=\"\" />";
+        $columnicontitle = get_string(strtolower($dir)); 
+        $columnicon = " <i class='icon fa fa-arrow-" . $columnicon . "-short-wide fa-fw ' 
+                         title='" . $columnicontitle ."'
+                         role='img' aria-label='" . $columnicontitle ."'></i>";
 
     }
     $params['sort'] = $column;

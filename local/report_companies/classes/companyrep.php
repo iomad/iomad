@@ -22,6 +22,10 @@
  */
 
 namespace local_report_companies;
+use iomad;
+use context_system;
+
+//require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
 class companyrep{
 
@@ -52,7 +56,8 @@ class companyrep{
 
         // Get the companies they manage.
         $managedcompanies = array();
-        if ($managers = $DB->get_records_sql("SELECT * from {company_users} WHERE
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance()) &&
+            $managers = $DB->get_records_sql("SELECT * from {company_users} WHERE
                                               userid = :userid
                                               AND managertype != 0", array('userid' => $user->id))) {
             foreach ($managers as $manager) {
@@ -61,13 +66,20 @@ class companyrep{
         }
 
         // Get companies information.
+        $single = false;
         if ($companyid) {
             $params = ['id' => $companyid];
+            $single = true;
         } else {
             $params = [];
         }
         if (!$companies = $DB->get_records('company', $params)) {
             return [];
+        }
+
+        if ($single) {
+            $topcompany = new \company($companyid);
+            $companies = $companies + $topcompany->get_child_companies_recursive();
         }
 
         // And finally build the list.
@@ -91,9 +103,14 @@ class companyrep{
             $companylist[$company->id] = $company;
         }
 
+        $singlecompanylist = $companylist;
         $companylist = \block_iomad_company_admin\iomad_company_admin::order_companies_by_parent($companylist);
 
-        return $companylist;
+        if (!empty($companylist)) {
+            return $companylist;
+        } else {
+            return $singlecompanylist;
+        }
     }
 
     /**
