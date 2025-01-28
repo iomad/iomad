@@ -274,7 +274,7 @@ class observer {
                     $trackrec->modifiedtime = time();
                     $DB->update_record('local_iomad_track', $trackrec);
                     // Record the certificate.
-                    self::record_certificates($courseid, $userid, $trackrec->id);
+                    self::record_certificates($courseid, $userid, $trackrec->id, false);
                     $trackid = $trackrec->id;
                 }
             } else {
@@ -344,7 +344,7 @@ class observer {
                 $trackid = $DB->insert_record('local_iomad_track', $completion);
 
                 // Deal with the certificate.
-                self::record_certificates($courseid, $userid, $trackid);
+                self::record_certificates($courseid, $userid, $trackid, false);
             }
         }
 
