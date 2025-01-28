@@ -168,7 +168,7 @@ class auth extends \auth_plugin_base {
         $this->metadatalist = $parser->parse($this->config->idpmetadata);
 
         // Fetch active entitiyIDs provided by the metadata and populate metadataentities list.
-        $idpentities = $DB->get_records('auth_iomadsaml2_idps', ['activeidp' => 1]);
+        $idpentities = $DB->get_records('auth_iomadsaml2_idps', ['activeidp' => 1, 'companyid' => $companyid]);
         foreach ($idpentities as $idpentity) {
             // Set name.
             $idpentity->name = empty($idpentity->displayname) ? $idpentity->defaultname : $idpentity->displayname;
@@ -201,7 +201,7 @@ class auth extends \auth_plugin_base {
      */
     public function get_saml2_directory() {
         global $CFG;
-        $directory = "{$CFG->dataroot}/saml2";
+        $directory = "{$CFG->dataroot}/iomadsaml2";
         if (!file_exists($directory)) {
             mkdir($directory);
         }
