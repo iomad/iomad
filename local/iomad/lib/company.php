@@ -1905,7 +1905,7 @@ class company {
         if (isset($parent->id)) {
             if ($children = $DB->get_records('department', array('parent' => $parent->id), 'name', '*')) {
                 foreach ($children as $child) {
-                    $returnarray->children[] = self::get_subdepartments($child, $ignorecurrentbranch);
+                    $returnarray->children[$child->id] = self::get_subdepartments($child, $ignorecurrentbranch);
                 }
             }
         }
@@ -2147,6 +2147,32 @@ class company {
             } else {
                 $result[$key] = $value;
             }
+        }
+        if ($r) {
+            return $result;
+        }
+    }
+
+    /**
+     * function to flatten a multi-dimension array to a single dimension array.
+     *
+     * Parameters -
+     *              $array = array();
+     *              &$result = array();
+     *
+     * Returns array();
+     *
+     **/
+    public static function array_flatten_children($array, &$result=null) {
+
+        $r = null === $result;
+        $i = 0;
+        foreach ($array as $key => $value) {
+            $i++;
+            if (!empty($value->children) && is_array($value->children)) {
+                self::array_flatten_children($value->children, $result);
+            }
+            $result[$key] = $value;
         }
         if ($r) {
             return $result;
