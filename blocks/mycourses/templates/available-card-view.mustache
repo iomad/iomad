@@ -32,12 +32,14 @@
         <div class="tab-pane active " id="mycourses_available_view">
             <div id="paged-content-container-{{uniqid}}" data-region="paged-content-container">
                 <div id="paged-content-page" data-page="1">
-                    <div class="card-deck dashboard-card-deck {{$classes}}{{/classes}}" data-region="card-deck" role="list">
+                    <div class="card-grid mx-0 row row-cols-1 row-cols-sm-2 row-cols-lg-3 {{$classes}}{{/classes}}" data-region="card-deck" role="list">
                         {{#availableview.courses}}
-                            {{> block_mycourses/coursecard }}
+                            <div class="col d-flex px-0 mb-2">
+                                {{> block_mycourses/coursecard }}
+                            </div>
                         {{/availableview.courses}}
                         {{^availableview.courses}}
-                            </br>
+                            <div class="text-xs-center text-center m-t-3"></div>
                             <div class="text-xs-center text-center m-t-3">
                                 <img class="empty-placeholder-image-lg"
                                     src="{{nocourses}}"
@@ -45,6 +47,7 @@
                                     role="presentation">
                                 <p class="text-muted m-t-1">{{#str}} noavailable, block_mycourses {{/str}}</p>
                             </div>
+                            <div class="text-xs-center text-center m-t-3"></div>
                         {{/availableview.courses}}
                     </div>
                 </div>

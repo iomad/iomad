@@ -32,12 +32,15 @@
         <div class="tab-pane active " id="mycourses_inprogress_view">
             <div id="paged-content-container-{{uniqid}}" data-region="paged-content-container">
                 <div id="paged-content-page" data-page="1">
-                    <div class="card-deck dashboard-card-deck {{$classes}}{{/classes}}" data-region="card-deck" role="list">
+                    <div class="card-grid mx-0 row row-cols-1 row-cols-sm-2 row-cols-lg-3 {{$classes}}{{/classes}}" data-region="card-deck" role="list">
                         {{#inprogressview.courses}}
-                            {{> block_mycourses/coursecard }}
+                            <div class="col d-flex px-0 mb-2">
+                                {{> block_mycourses/coursecard }}
+                            </div>
                         {{/inprogressview.courses}}
                         {{^inprogressview.courses}}
                             </br>
+                            <div class="text-xs-center text-center m-t-3"></div>
                             <div class="text-xs-center text-center m-t-3">
                                 <img class="empty-placeholder-image-lg"
                                     src="{{nocourses}}"
@@ -45,6 +48,7 @@
                                     role="presentation">
                                 <p class="text-muted m-t-1">{{#str}} noinprogress, block_mycourses {{/str}}</p>
                             </div>
+                            <div class="text-xs-center text-center m-t-3"></div>
                         {{/inprogressview.courses}}
                     </div>
                 </div>
