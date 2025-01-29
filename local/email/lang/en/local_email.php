@@ -98,6 +98,7 @@ $string['templatesetsetdefault'] = 'The default company template set has been up
 $string['templatesetdeleted'] = 'Template set deleted successfully';
 $string['templatesetname'] = 'Template set name';
 $string['templatesetname_help'] = 'This is name which the template set will be referenced by.';
+$string['templatesetnamealreadyinuse'] = 'This template set name already exists';
 $string['templatesnoaccessigble'] = '<h4>The email templates are not currently accessible</h4><p>This is due to an adhoc migration task which is being run against them. Emails will still be sent out from the system as normal and access to the templates will return once the task has completed.</p>';
 $string['templatetype'] = 'Template type';
 $string['templateupdatedok'] = 'Template was successfully updated.';
