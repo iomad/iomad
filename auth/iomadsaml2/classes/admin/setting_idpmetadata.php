@@ -188,6 +188,7 @@ class setting_idpmetadata extends admin_setting_configtextarea {
             $newidp->adminidp = 0;
             $newidp->defaultname = $idpname;
             $newidp->logo = $logo;
+            $newidp->companyid = $this->companyid;
 
             $DB->insert_record('auth_iomadsaml2_idps', $newidp);
         }
