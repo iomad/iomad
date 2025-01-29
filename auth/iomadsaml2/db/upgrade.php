@@ -410,5 +410,20 @@ function xmldb_auth_iomadsaml2_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023100300, 'auth', 'iomadsaml2');
     }
 
+    if ($oldversion < 2024090901) {
+
+        // Define field companyid to be added to auth_iomadsaml2_idps.
+        $table = new xmldb_table('auth_iomadsaml2_idps');
+        $field = new xmldb_field('companyid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'whitelist');
+
+        // Conditionally launch add field companyid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomadsaml2 savepoint reached.
+        upgrade_plugin_savepoint(true, 2024090901, 'auth', 'iomadsaml2');
+    }
+
     return true;
 }
