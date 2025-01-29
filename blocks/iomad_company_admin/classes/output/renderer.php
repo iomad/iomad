@@ -286,8 +286,19 @@ class renderer extends plugin_renderer_base {
         $departmenttree = array();
         foreach ($userlevels as $userlevelid => $userlevel) {
             $subhierarchieslist = $subhierarchieslist + company::get_all_subdepartments($userlevelid, $addchildcompanies);
-            $departmenttree[] = company::get_all_subdepartments_raw($userlevelid, false, $addchildcompanies);
+            $departmenttree[$userlevelid] = company::get_all_subdepartments_raw($userlevelid, false, $addchildcompanies);
         }
+
+        // Prune any nodes which are somewhere else down another branch.
+        foreach ($departmenttree as $key => $branch) {
+            $rest = $departmenttree;
+            unset($rest[$key]);
+            $flat = company::array_flatten_children($rest);
+            if (!empty($flat[$key])) {
+                unset($departmenttree[$key]);
+            }
+        }
+
         if (empty($departmentid)) {
             $departmentid = key($userlevels);
         }
