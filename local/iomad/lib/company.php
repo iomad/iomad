@@ -1184,7 +1184,7 @@ class company {
                 if ($companycount == 0) {
                     // Fire an email for this.
                     EmailTemplate::send('user_promoted',
-                                   array('company' => $company->companyrecord,
+                                   array('company' => $company,
                                          'user' => $userrec));
                 }
             } else if ($managertype == 2) {
@@ -1214,7 +1214,7 @@ class company {
                 if ($companycount == 0) {
                     // Fire an email for this.
                     EmailTemplate::send('user_promoted',
-                                   array('company' => $company->companyrecord,
+                                   array('company' => $company,
                                          'user' => $userrec));
                 }
             } else if ($managertype == 4 ) {
@@ -1283,7 +1283,7 @@ class company {
                         if ($companycount == 0) {
                             // Fire an email for this.
                             EmailTemplate::send('user_promoted',
-                                           array('company' => $company->companyrecord,
+                                           array('company' => $company,
                                                  'user' => $userrec));
                         }
                     }
@@ -1308,7 +1308,7 @@ class company {
                     if ($user->managertype == 0) {
                         // Fire an email for this.
                         EmailTemplate::send('user_promoted',
-                                       array('company' => $company->companyrecord,
+                                       array('company' => $company,
                                              'user' => $userrec));
                     }   
                 } else if ($managertype == 3 && !$CFG->iomad_autoenrol_managers) {
@@ -1419,7 +1419,7 @@ class company {
                     if ($companycount == 1) {
                         // Fire an email for this.
                         EmailTemplate::send('admin_deleted',
-                                       array('company' => $company->companyrecord,
+                                       array('company' => $company,
                                              'user' => $userrec));
                     }
                 }
