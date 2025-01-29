@@ -87,7 +87,7 @@ $showgrade = $iomadcertificate->printgrade;
 $uselogo = true;
 $usesignature = true;
 $useborder = true;
-$usewaterkark = true;
+$usewatermark = true;
 
 // Get the site defaults
 $sitecontext = context_system::instance();
