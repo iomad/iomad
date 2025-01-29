@@ -43,7 +43,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = $systemcontext;
 $company = new company($companyid);
 $useparentid = false;
 
