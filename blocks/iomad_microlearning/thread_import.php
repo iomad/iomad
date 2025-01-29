@@ -77,12 +77,9 @@ if ($importid) {
 
     // Have we confirmed it?
     if(confirm_sesskey() && $confirm == md5($importid)) {
-        // Get the list of thread ids which are to be removed..
-        if (!empty($importid)) {
-            // If it is then delete it.
-            microlearning::import_thread($importid, $companyid);
-            redirect($threadsurl);
-        }
+        // If we have then import it.
+        microlearning::import_thread($importid, $companyid);
+        redirect($threadsurl);
     } else {
         // No so show the confirmation question.
         echo $output->header();
