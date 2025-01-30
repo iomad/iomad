@@ -742,6 +742,7 @@ $capabilities = array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
         'archetypes' => array(
+            'companymanager' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW
         ),
     ),

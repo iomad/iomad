@@ -49,6 +49,7 @@ $ifirst = optional_param('firstinitial', '', PARAM_ALPHA);
 $ilast = optional_param('lastinitial', '', PARAM_ALPHA);
 $showexpiryonly = optional_param('showexpiryonly', get_config('local_report_completion_overview', 'showexpiryonly'), PARAM_BOOL);
 $bycourse = optional_param('bycourse', false, PARAM_BOOL);
+$viewchildren = optional_param('viewchildren', true, PARAM_BOOL);
 
 // Deal with pagination.
 if ($perpage == 0) {
@@ -99,6 +100,7 @@ if ($courses) {
 $params['firstinitial'] = $ifirst;
 $params['lastinitial'] = $ilast;
 $params['showexpiryonly'] = $showexpiryonly;
+$params['viewchildren'] = $viewchildren;
 if ($showsuspended) {
     $params['showsuspended'] = $showsuspended;
 }
@@ -116,6 +118,7 @@ if ($sort == "name") {
 }
 
 require_login();
+
 // Get course customfields.
 $usedfields = [];
 $customfields = $DB->get_records_sql("SELECT cff.* FROM
@@ -140,6 +143,12 @@ $companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
 
 iomad::require_capability('local/report_completion_overview:view', $companycontext);
+
+// Are we showing any child companies?
+$canseechildren = false;
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+    $canseechildren = true;
+}
 
 // Get the associated department id.
 $parentlevel = company::get_company_parentnode($company->id);
@@ -313,7 +322,7 @@ if (!$download) {
     if (!empty($companyid)) {
 
         // Display the tree selector thing.
-        echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid);
+        echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid, false);
 
         echo html_writer::start_tag('div', ['id' => 'completion_overview_forms',
                                             'class' => 'report_completion_overview_forms',

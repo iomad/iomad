@@ -55,8 +55,11 @@ $company = new company($companyid);
 
 iomad::require_capability('local/report_user_logins:view', $companycontext);
 
-$canseechildren = true; //iomad::has_capability('block/iomad_company_admin:canviewchildren', $systemcontext);
-
+// Are we showing any child companies?
+$canseechildren = false;
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+    $canseechildren = true;
+}
 
 if (!empty($download)) {
     $page = 0;
