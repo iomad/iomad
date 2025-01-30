@@ -126,9 +126,12 @@ class block_starredcourses_external extends core_course_external {
             if ($course->visible || $canviewhiddencourses) {
                 $exporter = new course_summary_exporter($course, ['context' => $context, 'isfavourite' => true]);
                 $formattedcourse = $exporter->export($renderer);
-                $formattedcourses[] = $formattedcourse;
+                $formattedcourses[$formattedcourse->id] = $formattedcourse;
             }
         }
+
+        //IOMAD filter courses to only show those available for the current company.
+        $formattedcourses = \iomad::iomad_filter_courses($formattedcourses);
 
         return $formattedcourses;
     }
