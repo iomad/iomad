@@ -375,9 +375,14 @@ class company {
         if (!empty($CFG->iomad_show_company_structure)) {
             $companyselect = array();
             foreach ($companies as $id => $companyname) {
+                $currentcompanycontext = \core\context\company::instance($id);
                 $companyselect[$id] = $companyname;
-                $allchildren = self::get_formatted_child_companies_select($id);
-                $companyselect = $companyselect + $allchildren;
+                // Only show children is we are able to.
+                if ($showchildren &&
+                    iomad::has_capability('block/iomad_company_admin:canviewchildren', $currentcompanycontext)) {
+                    $allchildren = self::get_formatted_child_companies_select($id);
+                    $companyselect = $companyselect + $allchildren;
+                }
             }
             return $companyselect;
         } else {

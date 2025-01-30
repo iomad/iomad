@@ -39,7 +39,7 @@ $SESSION->showsuspendedcompanies = $showsuspendedcompanies;
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
 if (!empty($company)) {
-    $companycontext =  \core\context\company::instance($company);
+    $companycontext = \core\context\company::instance($company);
 }
 
 if ($companychange &&
