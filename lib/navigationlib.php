@@ -3287,6 +3287,10 @@ class global_navigation extends navigation_node {
         $limit = (int) $CFG->navcourselimit;
 
         $courses = enrol_get_my_courses('*');
+
+        // IOMAD - filter out the courses not within the current company
+        $courses = iomad::iomad_filter_courses($courses);
+
         $flatnavcourses = [];
 
         // Go through the courses and see which ones we want to display in the flatnav.

@@ -67,6 +67,9 @@ class helper {
             $courses[$record->courseid][$order++] = $record;
         }
 
+        // IOMAD filter courses to only show those available for the current company.
+        $courses = \iomad::iomad_filter_courses($courses);
+
         // Group by courses to reduce get_fast_modinfo requests.
         foreach ($courses as $key => $items) {
             $modinfo = get_fast_modinfo($key);
