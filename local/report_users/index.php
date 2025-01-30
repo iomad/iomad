@@ -85,6 +85,15 @@ $company = new company($companyid);
 
 iomad::require_capability('local/report_users:view', $companycontext);
 
+// Are we showing any child companies?
+$canseechildren = false;
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+    $canseechildren = true;
+}
+if (!$canseechildren) {
+    $viewchildren = false;
+}
+
 // Correct the navbar.
 // Set the name for the page.
 $linktext = get_string('report_users_title', 'local_report_users');

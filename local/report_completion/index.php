@@ -87,7 +87,11 @@ if ($action == 'downloadcerts' && $USER->id == $certusers) {
     iomad::require_capability('local/report_completion:view', $companycontext);
 }
 
-$canseechildren = iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext);
+// Are we showing any child companies?
+$canseechildren = false;
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+    $canseechildren = true;
+}
 
 $params['courseid'] = $courseid;
 if ($firstname) {
@@ -863,7 +867,7 @@ if (empty($courseid)) {
     $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 
     // all companies?
-    if (!$viewchildren && !$canseechildren && $parentslist = $company->get_parent_companies_recursive()) {
+    if ((!$viewchildren || !$canseechildren) && $parentslist = $company->get_parent_companies_recursive()) {
         $companysql = " AND u.id NOT IN (
                         SELECT userid FROM {company_users}
                         WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
