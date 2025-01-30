@@ -453,7 +453,7 @@ class iomad {
                 $children = $DB->get_records_sql("SELECT DISTINCT id
                                                   FROM {course_categories}
                                                   WHERE " . $DB->sql_like("path", ":parentpath"),
-                                                  ['parentpath' => "/" . $companyroot->category . "/%"]);
+                                                  ['parentpath' => "/" . $companyroot->category . "%"]);
                 foreach ($children as $child) {
                     $allcompanycategories[$child->id] = $child->id;
                 }
