@@ -166,45 +166,58 @@ class cron_task extends \core\task\scheduled_task {
 
         // Clear users from courses where the license has expired and the option is chosen
         mtrace ("Clear users from courses where the license has expired and the option is chosen");
-        if ($userlicenses = $DB->get_records_sql("SELECT clu.*,cl.type FROM {companylicense_users} clu
-                                                  JOIN {companylicense} cl on (clu.licenseid = cl.id)
-                                                  WHERE cl.clearonexpire = 1
-                                                  AND cl.cutoffdate < :time
-                                                  AND clu.timecompleted IS NULL",
+        if ($licenses = $DB->get_records_sql("SELECT DISTINCT cl.*  FROM {companylicense} cl
+                                              JOIN {local_iomad_track} lit ON (cl.id = lit.licenseid)
+                                              WHERE cl.clearonexpire = 1
+                                              AND cl.cutoffdate < :time
+                                              AND lit.coursecleared = 0",
                                                   array('time' => $runtime))) {
-            foreach ($userlicenses as $userlicense) {
-                mtrace("Clearing userid $userlicense->userid from courseid $userlicense->licensecourseid");
-                if ($userlicense->isusing == 1) {
-                    // Get the corresponding entry from the LIT table.
-                    if ($litrecs = $DB->get_records_select('local_iomad_track',
-                                                           '*',
-                                                           'userid = :userid
-                                                            AND courseid = :courseid
-                                                            AND licenseid =: licenseid
-                                                            AND timecompleted IS NULL',
-                                                           ['userid' => $userlicense->userid,
-                                                            'courseid' => $userlicense->licensecourseid,
-                                                            'licenseid' => $userlicense->licenseid])) {
-                        foreach ($litrecs as $litrec) {
-                            \company_user::delete_user_course($userlicense->userid, $userlicense->licensecourseid, 'autodelete', $litrec->id);
+            foreach ($licenses as $license) {
+                mtrace("Dealing with license id $license->id for company id $license->companyid");
+                // Get the corresponding entry from the LIT table.
+                if ($litrecs = $DB->get_records_select('local_iomad_track',
+                                                       '*',
+                                                       'AND licenseid = :licenseid
+                                                        AND coursecleared != 1 
+                                                        AND companyid = :companyid',
+                                                       ['companyid' => $license->companyid,
+                                                        'licenseid' => $license->id])) {
+                    mtrace("Dealing with userid $licrec->userid from courseid $licrec->courseid");
+                    foreach ($litrecs as $litrec) {
+                        if ($litrec->timestarted > 0) {
+                            if ($DB->get_record_select('local_iomad_track',
+                                                       'courseid = :courseid AND userid = :userid AND id > :myid',
+                                                      ['courseid' => $litrec->courseid,
+                                                       'userid' => $litrec->userid,
+                                                       'myid' => $litrec->id])) {
+                                mtrace("User already has a new course allocation - mark coursecleared so we skip it next time");
+                                // Already been re-enrolled - so mark it as dealt with.
+                                $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $litrec->id]);
+                            } else {
+                                mtrace("Auto clearing userid $litrec->userid from courseid $litrec->courseid");
+                                \company_user::delete_user_course($litrec->userid, $litrec->courseid, 'autodelete', $litrec->id);
+                            }
+                        } else {
+                            mtrace("Removing unused license for userid $litrec->userid from courseid $litrec->courseid");
+                            $DB->delete_records('companylicense_users', array('licenseid' => $litrec->licensid,
+                                                                              'licensecourseid' => $litrec->courseid,
+                                                                              'userid' => $litrec->userid,
+                                                                              'issuedate' => $litrec->licenseallocated));
+                            // Create an event.
+                            $eventother = array('licenseid' => $litrec->licenseid,
+                                                'duedate' => 0);
+                            $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => \context_course::instance($litrec->courseid),
+                                                                                                            'objectid' => $litrec->licenseid,
+                                                                                                            'courseid' => $litrec->courseid,
+                                                                                                            'userid' => $litrec->userid,
+                                                                                                            'other' => $eventother));
+                            $event->trigger();
                         }
                     }
                     // If this is a re-usable license we want to dump the allocation record too.
-                    if ($userlicense->type == 1 || $userlicense->type ==3) {
-                        $DB->delete_records('companylicense_users', ['id' => $userlicense->id]);
+                    if ($license->type == 1 || $license->type ==3) {
+                        $DB->delete_records('companylicense_users', ['licenseid' => $license->id]);
                     }
-                } else {
-                    $DB->delete_records('companylicense_users', array('id' => $userlicense->id));
-
-                    // Create an event.
-                    $eventother = array('licenseid' => $userlicense->licenseid,
-                                        'duedate' => 0);
-                    $event = \block_iomad_company_admin\event\user_license_unassigned::create(array('context' => \context_course::instance($userlicense->licensecourseid),
-                                                                                                    'objectid' => $userlicense->licenseid,
-                                                                                                    'courseid' => $userlicense->licensecourseid,
-                                                                                                    'userid' => $userlicense->userid,
-                                                                                                    'other' => $eventother));
-                    $event->trigger();
                 }
             }
         }
