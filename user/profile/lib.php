@@ -673,13 +673,15 @@ function profile_get_user_fields_with_data(int $userid): array {
 
     // IOMAD - Filter the categories
     if ($DB->get_manager()->table_exists('company')) {
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        $sql .= " WHERE (uif.categoryid IN (
-                  SELECT profileid FROM {company} where id = :companyid)
-                  OR uif.categoryid IN (
-                  SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profileid from {company}))) ";
-        $params['companyuserid'] = $userid;
-        $params['companyid'] = $companyid;
+        if(!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
+            $companyid = iomad::get_my_companyid(context_system::instance(), false);
+            $sql .= " WHERE (uif.categoryid IN (
+                      SELECT profileid FROM {company} where id = :companyid)
+                      OR uif.categoryid IN (
+                      SELECT id FROM {user_info_category} WHERE id NOT IN (SELECT profileid from {company}))) ";
+            $params['companyuserid'] = $userid;
+	    $params['companyid'] = $companyid;
+        }
     }
 
     $sql .= 'ORDER BY uic.sortorder ASC, uif.sortorder ASC ';
@@ -730,7 +732,9 @@ function profile_definition(MoodleQuickForm $mform, int $userid = 0): void {
     $categories = profile_get_user_fields_with_data_by_category($userid);
 
     // IOMAD - Filter categories which only apply to this company.
-    $categories = iomad::iomad_filter_profile_categories($categories, $userid);
+    if(!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
+        $categories = iomad::iomad_filter_profile_categories($categories, $userid);
+    }
 
     foreach ($categories as $categoryid => $fields) {
         // Check first if *any* fields will be displayed.
