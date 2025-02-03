@@ -176,14 +176,13 @@ class cron_task extends \core\task\scheduled_task {
                 mtrace("Dealing with license id $license->id for company id $license->companyid");
                 // Get the corresponding entry from the LIT table.
                 if ($litrecs = $DB->get_records_select('local_iomad_track',
-                                                       '*',
-                                                       'AND licenseid = :licenseid
+                                                       'licenseid = :licenseid
                                                         AND coursecleared != 1 
                                                         AND companyid = :companyid',
                                                        ['companyid' => $license->companyid,
                                                         'licenseid' => $license->id])) {
-                    mtrace("Dealing with userid $licrec->userid from courseid $licrec->courseid");
                     foreach ($litrecs as $litrec) {
+                        mtrace("Dealing with userid $litrec->userid from courseid $litrec->courseid");
                         if ($litrec->timestarted > 0) {
                             if ($DB->get_record_select('local_iomad_track',
                                                        'courseid = :courseid AND userid = :userid AND id > :myid',
@@ -194,7 +193,7 @@ class cron_task extends \core\task\scheduled_task {
                                 // Already been re-enrolled - so mark it as dealt with.
                                 $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $litrec->id]);
                             } else {
-                                mtrace("Auto clearing userid $litrec->userid from courseid $litrec->courseid");
+                                mtrace("Auto clearing userid $litrec->userid from courseid $litrec->courseid with record id $litrec->id");
                                 \company_user::delete_user_course($litrec->userid, $litrec->courseid, 'autodelete', $litrec->id);
                             }
                         } else {
