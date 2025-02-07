@@ -498,6 +498,7 @@ if (!empty($action)) {
                     // We are only removing the saved record for this.
                     echo $OUTPUT->confirm(get_string('purgerecordconfirm', 'local_report_users'), $confirmurl, $cancel);
                 }
+                echo $OUTPUT->footer();
                 die;
             } else {
                 $confirmurl = new moodle_url('/local/report_completion/index.php',
@@ -512,6 +513,8 @@ if (!empty($action)) {
                                              ));
                 $cancel = new moodle_url('/local/report_completion/index.php', $params);
                 echo $OUTPUT->confirm(get_string('redocertificateconfirm', 'local_report_users'), $confirmurl, $cancel);
+                echo $OUTPUT->footer();
+                die;
             }
         }
     }
