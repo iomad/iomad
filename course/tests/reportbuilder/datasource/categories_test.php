@@ -19,13 +19,8 @@ declare(strict_types=1);
 namespace core_course\reportbuilder\datasource;
 
 use core_reportbuilder_generator;
-use core_reportbuilder_testcase;
 use core_reportbuilder\local\filters\{select, text};
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 
 /**
  * Unit tests for course categories datasource
@@ -35,7 +30,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2023 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class categories_test extends core_reportbuilder_testcase {
+final class categories_test extends core_reportbuilder_testcase {
 
     /**
      * Test default datasource

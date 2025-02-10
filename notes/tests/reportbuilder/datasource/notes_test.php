@@ -20,13 +20,8 @@ namespace core_notes\reportbuilder\datasource;
 
 use core_notes_generator;
 use core_reportbuilder_generator;
-use core_reportbuilder_testcase;
 use core_reportbuilder\local\filters\{date, select, text};
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 
 /**
  * Unit tests for notes datasource
@@ -36,7 +31,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2022 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class notes_test extends core_reportbuilder_testcase {
+final class notes_test extends core_reportbuilder_testcase {
 
     /**
      * Load required test libraries
