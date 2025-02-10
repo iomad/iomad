@@ -20,14 +20,9 @@ namespace core_reportbuilder\local\aggregation;
 
 use core_badges_generator;
 use core_badges\reportbuilder\datasource\badges;
-use core_reportbuilder_testcase;
 use core_reportbuilder_generator;
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 use core_user\reportbuilder\datasource\users;
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
 
 /**
  * Unit tests for group concatenation aggregation
@@ -38,7 +33,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class groupconcat_test extends core_reportbuilder_testcase {
+final class groupconcat_test extends core_reportbuilder_testcase {
 
     /**
      * Test aggregation when applied to column
