@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.4.5 (Build: 20241209)'; // Human-friendly version name
+$plugin->release  = '4.4.6 (Build: 20250210)'; // Human-friendly version name
 $plugin->version   = 2019051400; // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2017050500; // Requires this Moodle version
 $plugin->component = 'tool_redocerts'; // Full name of the plugin (used for diagnostics)
