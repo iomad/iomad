@@ -68,7 +68,7 @@ if ($ADMIN->fulltree) {
         get_string('settings:gateway_help', 'factor_sms'),
         'aws_sns', $gateways));
 
-    if (empty(get_config('factor_sms', 'gateway'))) {
+    if (empty(get_config('factor_sms', 'gateway' . $postfix))) {
         return;
     }
 
