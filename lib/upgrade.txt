@@ -1,6 +1,30 @@
 This files describes API changes in core libraries and APIs,
 information provided here is intended especially for developers.
 
+=== 4.4.6 ===
+
+* A new core\ip_utils::normalize_internet_address() method is created to
+sanitize an IP address, a range of IP addresses, a domain name or a
+wildcard domain matching pattern.
+
+Moodle previously allowed entries such as 192.168. or .moodle.org for
+certain variables (eg: $CFG->proxybypass). Since MDL-74289, these
+formats are no longer allowed. This method converts this informations
+into an authorized format. For example, 192.168. becomes 192.168.0.0/16
+and .moodle.org becomes *.moodle.org.
+
+Also a new core\ip_utils::normalize_internet_address_list() method is
+created. Based on core\ip_utils::normalize_internet_address(), this
+method normalizes a string containing a series of Internet addresses.
+
+* The method `count_modules_completed` now delegate the logic to count the
+completed modules to the DBMS improving the performance of the method.
+
+* New Behat step `\behat_general::the_url_should_match()` has been added
+  to allow checking the current URL. You can use it to check whether a
+  user has been redirected to the expected location.
+  e.g. `And the url should match "/mod/forum/view\.php\?id=[0-9]+"`
+
 === 4.4.5 ===
 
 * All uses of the following PHPUnit methods have been removed as these methods are deprecated upstream without direct replacement:
@@ -8,6 +32,8 @@ information provided here is intended especially for developers.
     - `willReturnConsecutive`
     - `onConsecutive`
   Any plugin using these methods must update their uses.
+* The `core_renderer::tag_list` function now has a new parameter named `displaylink`. When `displaylink` is set to `true`,
+  the tag name will be displayed as a clickable hyperlink. Otherwise, it will be rendered as plain text.
 
 * `\core\output\activity_header` now uses the `is_title_allowed()` method when setting the title in the constructor.
   This method has been improved to give priority to the 'notitle' option in the theme config for the current page layout,

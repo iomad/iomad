@@ -35,28 +35,30 @@ if (!empty($companyid)) {
     $postfix = "_$companyid";
 }
 
-$enabled = new admin_setting_configcheckbox('factor_cohort/enabled' . $postfix,
-    new lang_string('settings:enablefactor', 'tool_mfa'),
-    new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
-$enabled->set_updatedcallback(function () {
-    global $postfix;
-    \tool_mfa\manager::do_factor_action('cohort', get_config('factor_cohort', 'enabled' . $postfix) ? 'enable' : 'disable');
-});
-$settings->add($enabled);
+if ($ADMIN->fulltree) {
+    $enabled = new admin_setting_configcheckbox('factor_cohort/enabled' . $postfix,
+        new lang_string('settings:enablefactor', 'tool_mfa'),
+        new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
+    $enabled->set_updatedcallback(function () {
+        global $postfix;
+        \tool_mfa\manager::do_factor_action('cohort', get_config('factor_cohort', 'enabled' . $postfix) ? 'enable' : 'disable');
+    });
+    $settings->add($enabled);
 
-$settings->add(new admin_setting_configtext('factor_cohort/weight' . $postfix,
-    new lang_string('settings:weight', 'tool_mfa'),
-    new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
+    $settings->add(new admin_setting_configtext('factor_cohort/weight' . $postfix,
+        new lang_string('settings:weight', 'tool_mfa'),
+        new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
 
-$cohorts = cohort_get_all_cohorts();
-$choices = [];
+    $cohorts = cohort_get_all_cohorts();
+    $choices = [];
 
-foreach ($cohorts['cohorts'] as $cohort) {
-    $choices[$cohort->id] = $cohort->name;
-}
+    foreach ($cohorts['cohorts'] as $cohort) {
+        $choices[$cohort->id] = $cohort->name;
+    }
 
-if (!empty($choices)) {
-    $settings->add(new admin_setting_configmultiselect('factor_cohort/cohorts' . $postfix,
-    new lang_string('settings:cohort', 'factor_cohort'),
-    new lang_string('settings:cohort_help', 'factor_cohort'), [], $choices));
+    if (!empty($choices)) {
+        $settings->add(new admin_setting_configmultiselect('factor_cohort/cohorts' . $postfix,
+        new lang_string('settings:cohort', 'factor_cohort'),
+        new lang_string('settings:cohort_help', 'factor_cohort'), [], $choices));
+    }
 }

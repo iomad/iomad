@@ -18,17 +18,12 @@ declare(strict_types=1);
 
 namespace core_reportbuilder\local\aggregation;
 
-use core_reportbuilder_testcase;
 use core_reportbuilder_generator;
 use core_reportbuilder\manager;
 use core_reportbuilder\local\report\column;
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 use core_user\reportbuilder\datasource\users;
 use stdClass;
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
 
 /**
  * Unit tests for group concatenation distinct aggregation
@@ -39,7 +34,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class groupconcatdistinct_test extends core_reportbuilder_testcase {
+final class groupconcatdistinct_test extends core_reportbuilder_testcase {
 
     /**
      * Test setup, we need to skip these tests on non-supported databases

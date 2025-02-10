@@ -43,7 +43,7 @@ require_once($CFG->dirroot . '/repository/lib.php');
  * @copyright 2009 Jerome Mouneyrac
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class filelib_test extends \advanced_testcase {
+final class filelib_test extends \advanced_testcase {
     public function test_format_postdata_for_curlcall(): void {
 
         // POST params with just simple types.
@@ -1824,6 +1824,38 @@ EOF;
         $this->assertEquals($thirdrecord['filename'], $allfiles[2]->filename);
         $this->assertEquals($fourthrecord['filename'], $allfiles[3]->filename);
         $this->assertEquals($fifthrecord['filename'], $allfiles[4]->filename);
+    }
+
+    /**
+     * Test that zip files in the draftarea are returned.
+     * @covers ::file_get_all_files_in_draftarea
+     */
+    public function test_file_get_all_files_in_draftarea_zip_files(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $zip1 = ['filename' => 'basezip.zip'];
+        $file = self::create_draft_file($zip1);
+
+        $zip2 = [
+            'filename' => 'infolder.zip',
+            'filepath' => '/assignment/',
+            'itemid' => $file->get_itemid(),
+        ];
+        $file = self::create_draft_file($zip2);
+
+        $otherfile = [
+            'filename' => 'otherfile.txt',
+            'filepath' => '/secondfolder/',
+            'itemid' => $file->get_itemid(),
+        ];
+        $file = self::create_draft_file($otherfile);
+
+        $allfiles = file_get_all_files_in_draftarea($file->get_itemid());
+        $this->assertCount(3, $allfiles);
+        $this->assertEquals($zip1['filename'], $allfiles[0]->filename);
+        $this->assertEquals($zip2['filename'], $allfiles[1]->filename);
+        $this->assertEquals($otherfile['filename'], $allfiles[2]->filename);
     }
 
     public function test_file_copy_file_to_file_area(): void {

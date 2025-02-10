@@ -18,18 +18,12 @@ declare(strict_types=1);
 
 namespace core_blog\reportbuilder\datasource;
 
-use context_system;
-use context_user;
 use core_blog_generator;
 use core_comment_generator;
+use core\context\{system, user};
 use core_reportbuilder_generator;
-use core_reportbuilder_testcase;
 use core_reportbuilder\local\filters\{boolean_select, date, select, text};
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 
 /**
  * Unit tests for blogs datasource
@@ -39,7 +33,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2022 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class blogs_test extends core_reportbuilder_testcase {
+final class blogs_test extends core_reportbuilder_testcase {
 
     /**
      * Test default datasource
@@ -98,7 +92,7 @@ class blogs_test extends core_reportbuilder_testcase {
         // Add an attachment.
         $blog->attachment = 1;
         get_file_storage()->create_file_from_string([
-            'contextid' => context_system::instance()->id,
+            'contextid' => system::instance()->id,
             'component' => 'blog',
             'filearea' => 'attachment',
             'itemid' => $blog->id,
@@ -109,7 +103,7 @@ class blogs_test extends core_reportbuilder_testcase {
         /** @var core_comment_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('core_comment');
         $generator->create_comment([
-            'context' => context_user::instance($user->id),
+            'context' => user::instance($user->id),
             'component' => 'blog',
             'area' => 'format_blog',
             'itemid' => $blog->id,

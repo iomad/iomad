@@ -29,7 +29,7 @@ use question_bank;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \question_bank
  */
-class version_test extends \advanced_testcase {
+final class version_test extends \advanced_testcase {
 
     /**
      * @var \context_module module context.
@@ -325,6 +325,42 @@ class version_test extends \advanced_testcase {
         $questionbankentryids = array_keys($questionversionsofquestions)[0];
         $this->assertEquals($questionbankentryid->questionbankentryid, $questionbankentryids);
         $this->assertEquals($questionversions, $questionversionsofquestions[$questionbankentryids]);
+    }
+
+    /**
+     * Test the get_version_of_questions function.
+     *
+     * @covers ::get_version_of_questions
+     */
+    public function test_get_version_of_questions(): void {
+        global $DB;
+
+        $qcategory = $this->qgenerator->create_question_category(['contextid' => $this->context->id]);
+        $question = $this->qgenerator->create_question('shortanswer', null, ['category' => $qcategory->id]);
+
+        // Update the question to create new versions.
+        $question = $this->qgenerator->update_question($question, null, ['name' => 'Version 2']);
+
+        // Get the current version of the question.
+        $currentversions = question_bank::get_version_of_questions([$question->id]);
+
+        // Get questionbankentryid for assertion.
+        $questionbankentryid = $DB->get_field('question_versions', 'questionbankentryid',
+            ['questionid' => $question->id]);
+
+        // Assert that the structure matches.
+        $this->assertArrayHasKey($questionbankentryid, $currentversions);
+        $this->assertArrayHasKey(2, $currentversions[$questionbankentryid]);
+        $this->assertEquals($question->id, $currentversions[$questionbankentryid][2]);
+
+        // Update the question to create new versions.
+        $question = $this->qgenerator->update_question($question, null, ['name' => 'Version 3']);
+        $currentversions = question_bank::get_version_of_questions([$question->id]);
+
+        // Assert the updated version.
+        $this->assertArrayHasKey($questionbankentryid, $currentversions);
+        $this->assertArrayHasKey(3, $currentversions[$questionbankentryid]);
+        $this->assertEquals($question->id, $currentversions[$questionbankentryid][3]);
     }
 
     /**

@@ -20,7 +20,6 @@ namespace core_reportbuilder\local\helpers;
 
 use core_customfield_generator;
 use core_reportbuilder_generator;
-use core_reportbuilder_testcase;
 use core_reportbuilder\local\entities\course;
 use core_reportbuilder\local\filters\boolean_select;
 use core_reportbuilder\local\filters\date;
@@ -28,12 +27,8 @@ use core_reportbuilder\local\filters\select;
 use core_reportbuilder\local\filters\text;
 use core_reportbuilder\local\report\column;
 use core_reportbuilder\local\report\filter;
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 use core_course\reportbuilder\datasource\{categories, courses};
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
 
 /**
  * Unit tests for custom fields helper
@@ -43,7 +38,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2021 David Matamoros <davidmc@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class custom_fields_test extends core_reportbuilder_testcase {
+final class custom_fields_test extends core_reportbuilder_testcase {
 
     /**
      * Generate custom fields, one of each type

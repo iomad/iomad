@@ -1391,23 +1391,21 @@ function quiz_send_notification_messages($course, $quiz, $attempt, $context, $cm
     $a = new stdClass();
     // Course info.
     $a->courseid        = $course->id;
-    $a->coursename      = $course->fullname;
-    $a->courseshortname = $course->shortname;
+    $a->coursename      = format_string($course->fullname, true, ['context' => $context]);
+    $a->courseshortname = format_string($course->shortname, true, ['context' => $context]);
     // Quiz info.
-    $a->quizname        = $quiz->name;
+    $a->quizname        = format_string($quiz->name, true, ['context' => $context]);
     $a->quizreporturl   = $CFG->wwwroot . '/mod/quiz/report.php?id=' . $cm->id;
-    $a->quizreportlink  = '<a href="' . $a->quizreporturl . '">' .
-            format_string($quiz->name) . ' report</a>';
+    $a->quizreportlink  = '<a href="' . $a->quizreporturl . '">' . $a->quizname . ' report</a>';
     $a->quizurl         = $CFG->wwwroot . '/mod/quiz/view.php?id=' . $cm->id;
-    $a->quizlink        = '<a href="' . $a->quizurl . '">' . format_string($quiz->name) . '</a>';
+    $a->quizlink        = '<a href="' . $a->quizurl . '">' . $a->quizname . '</a>';
     $a->quizid          = $quiz->id;
     $a->quizcmid        = $cm->id;
     // Attempt info.
     $a->submissiontime  = userdate($attempt->timefinish);
     $a->timetaken       = format_time($attempt->timefinish - $attempt->timestart);
     $a->quizreviewurl   = $CFG->wwwroot . '/mod/quiz/review.php?attempt=' . $attempt->id;
-    $a->quizreviewlink  = '<a href="' . $a->quizreviewurl . '">' .
-            format_string($quiz->name) . ' review</a>';
+    $a->quizreviewlink  = '<a href="' . $a->quizreviewurl . '">' . $a->quizname . ' review</a>';
     $a->attemptid       = $attempt->id;
     // Student who sat the quiz info.
     $a->studentidnumber = $submitter->idnumber;
@@ -1637,10 +1635,11 @@ function quiz_get_js_module() {
  * @param bool $showidnumber If true, show the question's idnumber, if any. False by default.
  * @param core_tag_tag[]|bool $showtags if array passed, show those tags. Else, if true, get and show tags,
  *       else, don't show tags (which is the default).
+ * @param bool $displaytaglink Indicates whether the tag should be displayed as a link.
  * @return string HTML fragment.
  */
 function quiz_question_tostring($question, $showicon = false, $showquestiontext = true,
-        $showidnumber = false, $showtags = false) {
+        $showidnumber = false, $showtags = false, $displaytaglink = true) {
     global $OUTPUT;
     $result = '';
 
@@ -1667,7 +1666,7 @@ function quiz_question_tostring($question, $showicon = false, $showquestiontext 
         $tags = [];
     }
     if ($tags) {
-        $result .= $OUTPUT->tag_list($tags, null, 'd-inline', 0, null, true);
+        $result .= $OUTPUT->tag_list($tags, null, 'd-inline', 0, null, true, $displaytaglink);
     }
 
     // Question text.

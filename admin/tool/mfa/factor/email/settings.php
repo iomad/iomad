@@ -35,23 +35,25 @@ if (!empty($companyid)) {
     $postfix = "";
 }
 
-$enabled = new admin_setting_configcheckbox('factor_email/enabled' . $postfix,
-    new lang_string('settings:enablefactor', 'tool_mfa'),
-    new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
-$enabled->set_updatedcallback(function () {
-    global $postfix;
-    \tool_mfa\manager::do_factor_action('email', get_config('factor_email', 'enabled' . $postfix) ? 'enable' : 'disable');
-});
-$settings->add($enabled);
+if ($ADMIN->fulltree) {
+    $enabled = new admin_setting_configcheckbox('factor_email/enabled' . $postfix,
+        new lang_string('settings:enablefactor', 'tool_mfa'),
+        new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
+    $enabled->set_updatedcallback(function () {
+        global $postfix;
+        \tool_mfa\manager::do_factor_action('email', get_config('factor_email', 'enabled' . $postfix) ? 'enable' : 'disable');
+    });
+    $settings->add($enabled);
 
-$settings->add(new admin_setting_configtext('factor_email/weight' . $postfix,
-    new lang_string('settings:weight', 'tool_mfa'),
-    new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
+    $settings->add(new admin_setting_configtext('factor_email/weight' . $postfix,
+        new lang_string('settings:weight', 'tool_mfa'),
+        new lang_string('settings:weight_help', 'tool_mfa'), 100, PARAM_INT));
 
-$settings->add(new admin_setting_configduration('factor_email/duration' . $postfix,
-    get_string('settings:duration', 'factor_email'),
-    get_string('settings:duration_help', 'factor_email'), 30 * MINSECS, MINSECS));
+    $settings->add(new admin_setting_configduration('factor_email/duration' . $postfix,
+        get_string('settings:duration', 'factor_email'),
+        get_string('settings:duration_help', 'factor_email'), 30 * MINSECS, MINSECS));
 
-$settings->add(new admin_setting_configcheckbox('factor_email/suspend' . $postfix,
-    get_string('settings:suspend', 'factor_email'),
-    get_string('settings:suspend_help', 'factor_email'), 0));
+    $settings->add(new admin_setting_configcheckbox('factor_email/suspend' . $postfix,
+        get_string('settings:suspend', 'factor_email'),
+        get_string('settings:suspend_help', 'factor_email'), 0));
+}

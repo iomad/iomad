@@ -1998,7 +1998,7 @@ class core_renderer extends renderer_base {
         $context->skiptitle = strip_tags($bc->title);
         $context->showskiplink = !empty($context->skiptitle);
         $context->arialabel = $bc->arialabel;
-        $context->ariarole = !empty($bc->attributes['role']) ? $bc->attributes['role'] : 'complementary';
+        $context->ariarole = !empty($bc->attributes['role']) ? $bc->attributes['role'] : '';
         $context->class = $bc->attributes['class'];
         $context->type = $bc->attributes['data-block'];
         $context->title = $bc->title;
@@ -4305,19 +4305,31 @@ EOD;
      */
     public function blocks($region, $classes = array(), $tag = 'aside', $fakeblocksonly = false) {
         $displayregion = $this->page->apply_theme_region_manipulations($region);
+        $headingid = $displayregion . '-block-region-heading';
         $classes = (array)$classes;
         $classes[] = 'block-region';
         $attributes = array(
             'id' => 'block-region-'.preg_replace('#[^a-zA-Z0-9_\-]+#', '-', $displayregion),
             'class' => join(' ', $classes),
             'data-blockregion' => $displayregion,
-            'data-droptarget' => '1'
+            'data-droptarget' => '1',
+            'aria-labelledby' => $headingid,
         );
+        // Generate an appropriate heading to uniquely identify the block region.
+        $blocksheading = match ($displayregion) {
+            'side-post' => get_string('blocks_supplementary'),
+            'content' => get_string('blocks_main'),
+            default => get_string('blocks'),
+        };
+        $content = html_writer::tag('h2', $blocksheading, ['class' => 'sr-only', 'id' => $headingid]);
         if ($this->page->blocks->region_has_content($displayregion, $this)) {
-            $content = html_writer::tag('h2', get_string('blocks'), ['class' => 'sr-only']) .
-                $this->blocks_for_region($displayregion, $fakeblocksonly);
-        } else {
-            $content = html_writer::tag('h2', get_string('blocks'), ['class' => 'sr-only']);
+            $content .= $this->blocks_for_region($displayregion, $fakeblocksonly);
+        }
+        // Given that <aside> has a default role of a complementary landmark and is supposed to be a top-level landmark,
+        // blocks rendered as part of the main content should not have a complementary role and should be rendered in a more generic
+        // container.
+        if ($displayregion === 'content' && $tag === 'aside') {
+            $tag = 'section';
         }
         return html_writer::tag($tag, $content, $attributes);
     }
@@ -5031,11 +5043,12 @@ EOD;
      *               will be appended to the end, JS will toggle the rest of the tags
      * @param context $pagecontext specify if needed to overwrite the current page context for the view tag link
      * @param bool $accesshidelabel if true, the label should have class="accesshide" added.
+     * @param bool $displaylink Indicates whether the tag should be displayed as a link.
      * @return string
      */
     public function tag_list($tags, $label = null, $classes = '', $limit = 10,
-            $pagecontext = null, $accesshidelabel = false) {
-        $list = new \core_tag\output\taglist($tags, $label, $classes, $limit, $pagecontext, $accesshidelabel);
+            $pagecontext = null, $accesshidelabel = false, $displaylink = true) {
+        $list = new \core_tag\output\taglist($tags, $label, $classes, $limit, $pagecontext, $accesshidelabel, $displaylink);
         return $this->render_from_template('core_tag/taglist', $list->export_for_template($this));
     }
 

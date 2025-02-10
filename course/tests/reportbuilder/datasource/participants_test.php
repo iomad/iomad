@@ -20,20 +20,11 @@ namespace core_course\reportbuilder\datasource;
 
 use completion_completion;
 use completion_criteria_self;
-use core_reportbuilder\local\filters\boolean_select;
-use core_reportbuilder\local\filters\date;
-use core_reportbuilder\local\filters\duration;
-use core_reportbuilder\local\filters\select;
-use core_reportbuilder\local\filters\text;
 use core_reportbuilder_generator;
-use core_reportbuilder_testcase;
+use core_reportbuilder\local\filters\{boolean_select, date, duration, select, text};
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 use core_user;
 use grade_item;
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
 
 /**
  * Course participants datasource tests
@@ -43,7 +34,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2022 David Matamoros <davidmc@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class participants_test extends core_reportbuilder_testcase {
+final class participants_test extends core_reportbuilder_testcase {
 
     /**
      * Load required test libraries

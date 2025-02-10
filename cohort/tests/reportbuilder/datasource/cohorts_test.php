@@ -18,17 +18,11 @@ declare(strict_types=1);
 
 namespace core_cohort\reportbuilder\datasource;
 
-use context_coursecat;
-use context_system;
+use core\context\{coursecat, system};
 use core_customfield_generator;
 use core_reportbuilder_generator;
-use core_reportbuilder_testcase;
 use core_reportbuilder\local\filters\{boolean_select, date, select, text};
-
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
+use core_reportbuilder\tests\core_reportbuilder_testcase;
 
 /**
  * Unit tests for cohorts datasource
@@ -38,7 +32,7 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  * @copyright   2021 Paul Holden <paulh@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cohorts_test extends core_reportbuilder_testcase {
+final class cohorts_test extends core_reportbuilder_testcase {
 
     /**
      * Test default datasource
@@ -47,7 +41,7 @@ class cohorts_test extends core_reportbuilder_testcase {
         $this->resetAfterTest();
 
         // Test subject.
-        $contextsystem = context_system::instance();
+        $contextsystem = system::instance();
         $cohortone = $this->getDataGenerator()->create_cohort([
             'contextid' => $contextsystem->id,
             'name' => 'Legends',
@@ -56,7 +50,7 @@ class cohorts_test extends core_reportbuilder_testcase {
         ]);
 
         $category = $this->getDataGenerator()->create_category();
-        $contextcategory = context_coursecat::instance($category->id);
+        $contextcategory = coursecat::instance($category->id);
         $cohorttwo = $this->getDataGenerator()->create_cohort([
             'contextid' => $contextcategory->id,
             'name' => 'Category cohort',
@@ -153,7 +147,7 @@ class cohorts_test extends core_reportbuilder_testcase {
             ], false],
             'Filter context' => ['cohort:context', [
                 'cohort:context_operator' => select::EQUAL_TO,
-                'cohort:context_value' => context_system::instance()->id,
+                'cohort:context_value' => system::instance()->id,
             ], true],
             'Filter content (no match)' => ['cohort:context', [
                 'cohort:context_operator' => select::EQUAL_TO,

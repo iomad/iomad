@@ -362,6 +362,8 @@ $CFG->admin = 'admin';
 //      $CFG->session_redis_lock_expire = 7200;              // Optional, defaults to session timeout.
 //      $CFG->session_redis_lock_retry = 100;                // Optional wait between lock attempts in ms, default is 100.
 //                                                           // After 5 seconds it will throttle down to once per second.
+//      $CFG->session_redis_connection_timeout = 3;          // Optional, default is 3.
+//      $CFG->session_redis_maxretries = 3;                  // Optional, default is 3.
 //
 //      Use the igbinary serializer instead of the php default one. Note that phpredis must be compiled with
 //      igbinary support to make the setting to work. Also, if you change the serializer you have to flush the database!
@@ -773,7 +775,13 @@ $CFG->admin = 'admin';
 // Defaults to 60 minutes.
 //
 //      $CFG->enrolments_sync_interval = 3600
-
+//
+// Set limit for grade items that can be shown on a single page of the grader
+// report. Browsers struggle when the number of grade items is very large and
+// one tries to view all students.
+//
+//      $CFG->maxgradesperpage = 200000;
+//
 //=========================================================================
 // 7. SETTINGS FOR DEVELOPMENT SERVERS - not intended for production use!!!
 //=========================================================================

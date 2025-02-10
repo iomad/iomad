@@ -28,7 +28,7 @@ require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
  * @copyright 2023 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class helper_test extends \advanced_testcase {
+final class helper_test extends \advanced_testcase {
 
     /**
      * @var \context_module module context.
@@ -125,10 +125,10 @@ class helper_test extends \advanced_testcase {
         $this->assertEquals(['confirmtitle' => get_string('deleteversiontitle', 'question')],
             $title5);
         $this->assertEquals(get_string('deleteselectedquestioncheck', 'question',
-            $question->name) . '<br />', $message5);
+            $question->name) . ' v1' . '<br />', $message5);
 
         // Verify confirmation title and confirmation message in history page with multiple question selected.
-        $listnameofquestionversion6 = 'Question 1<br />* Question 1<br />';
+        $listnameofquestionversion6 = 'Question 1 v1' . '<br />* Question 1 v2<br />';
         [$title6, $message6] = \qbank_deletequestion\helper::get_delete_confirmation_message([$questionfirstversionid,
             $questionsecondversionid], $deleteallversions);
         $this->assertEquals(['confirmtitle' => get_string('deleteversiontitle_plural', 'question')],

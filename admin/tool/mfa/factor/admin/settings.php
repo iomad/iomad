@@ -34,15 +34,17 @@ if (!empty($companyid)) {
     $postfix = "_$companyid";
 }
 
-$enabled = new admin_setting_configcheckbox('factor_admin/enabled' . $postfix,
-    new lang_string('settings:enablefactor', 'tool_mfa'),
-    new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
-$enabled->set_updatedcallback(function () {
-    global $postfix;
-    \tool_mfa\manager::do_factor_action('admin', get_config('factor_admin', 'enabled' . $postfix) ? 'enable' : 'disable');
-});
-$settings->add($enabled);
+if ($ADMIN->fulltree) {
+    $enabled = new admin_setting_configcheckbox('factor_admin/enabled' . $postfix,
+        new lang_string('settings:enablefactor', 'tool_mfa'),
+        new lang_string('settings:enablefactor_help', 'tool_mfa'), 0);
+    $enabled->set_updatedcallback(function () {
+        global $postfix;
+        \tool_mfa\manager::do_factor_action('admin', get_config('factor_admin', 'enabled' . $postfix) ? 'enable' : 'disable');
+    });
+    $settings->add($enabled);
 
-$settings->add(new admin_setting_configtext('factor_admin/weight' . $postfix,
-    new lang_string('settings:weight', 'tool_mfa'),
-    new lang_string('settings:weight_help', 'factor_admin'), 100, PARAM_INT));
+    $settings->add(new admin_setting_configtext('factor_admin/weight' . $postfix,
+        new lang_string('settings:weight', 'tool_mfa'),
+        new lang_string('settings:weight_help', 'factor_admin'), 100, PARAM_INT));
+}

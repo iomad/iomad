@@ -1834,7 +1834,7 @@ function glossary_print_approval_menu($cm, $glossary,$mode, $hook, $sortkey = ''
 
     glossary_print_all_links($cm, $glossary, $mode, $hook);
 
-    glossary_print_sorting_links($cm, $mode, 'CREATION', 'asc');
+    glossary_print_sorting_links($cm, $mode, $sortkey, $sortorder);
 }
 /**
  * @param object $cm
@@ -2056,9 +2056,14 @@ function glossary_print_sorting_links($cm, $mode, $sortkey = '',$sortorder = '')
     $bopen  = '<b>';
     $bclose = '</b>';
 
-     $neworder = '';
-     $currentorder = '';
-     $currentsort = '';
+    $neworder = '';
+    $currentorder = '';
+    $currentsort = '';
+
+    if ($sortkey === '') {
+        $sortkey = 'CREATION';
+    }
+
      if ( $sortorder ) {
          if ( $sortorder == 'asc' ) {
              $currentorder = $asc;
@@ -2081,20 +2086,18 @@ function glossary_print_sorting_links($cm, $mode, $sortkey = '',$sortorder = '')
              $icon = " " . $OUTPUT->pix_icon('asc', $newordertitle, 'glossary');
          }
      }
-     $ficon     = '';
-     $fneworder = '';
-     $fbtag     = '';
-     $fendbtag  = '';
 
-     $sicon     = '';
-     $sneworder = '';
+    $ficon     = '';
+    $fneworder = '';
 
-     $sbtag      = '';
-     $fbtag      = '';
-     $fendbtag      = '';
-     $sendbtag      = '';
+    $sicon     = '';
+    $sneworder = '';
 
-     $sendbtag  = '';
+    $sbtag      = '';
+    $fbtag      = '';
+    $fendbtag      = '';
+
+    $sendbtag  = '';
 
      if ( $sortkey == 'CREATION' or $sortkey == 'FIRSTNAME' ) {
          $ficon       = $icon;
@@ -2363,6 +2366,7 @@ function glossary_generate_export_file($glossary, $ignored = "", $hook = 0) {
                     $co .= glossary_full_tag("CONCEPT",4,false,trim($entry->concept));
                     $co .= glossary_full_tag("DEFINITION",4,false,$entry->definition);
                     $co .= glossary_full_tag("FORMAT",4,false,$entry->definitionformat); // note: use old name for BC reasons
+                    $co .= glossary_full_tag('DEFINITIONTRUST', 4, false, $entry->definitiontrust);
                     $co .= glossary_full_tag("USEDYNALINK",4,false,$entry->usedynalink);
                     $co .= glossary_full_tag("CASESENSITIVE",4,false,$entry->casesensitive);
                     $co .= glossary_full_tag("FULLMATCH",4,false,$entry->fullmatch);

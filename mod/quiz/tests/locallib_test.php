@@ -39,7 +39,7 @@ require_once($CFG->dirroot . '/mod/quiz/tests/quiz_question_helper_test_trait.ph
  * @copyright  2008 Tim Hunt
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class locallib_test extends \advanced_testcase {
+final class locallib_test extends \advanced_testcase {
 
     use \quiz_question_helper_test_trait;
 
@@ -119,6 +119,32 @@ class locallib_test extends \advanced_testcase {
         $summary = quiz_question_tostring($question);
         $this->assertEquals('<span class="questionname">The question name</span> ' .
                 '<span class="questiontext">What sort of INEQUALITY is x &lt; y[?]' . "\n" . '</span>', $summary);
+    }
+
+    /**
+     * Test the method quiz_question_to_string with the tag display.
+     *
+     * @covers ::quiz_question_tostring
+     */
+    public function test_quiz_question_tostring_with_tags(): void {
+        $this->resetAfterTest();
+        $context = \context_coursecat::instance($this->getDataGenerator()->create_category()->id);
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $questioncat = $questiongenerator->create_question_category(['contextid' => $context->id]);
+        // Create a question.
+        $question = $questiongenerator->create_question('shortanswer', null, ['category' => $questioncat->id]);
+        // Add tag to question.
+        \core_tag_tag::set_item_tags('core_question', 'question', $question->id,
+            $context, ['Banana']);
+
+        // Retrieve the question text to display, including the tag, with the tag displayed as a link.
+        $summary = quiz_question_tostring(question: $question, showtags: true);
+        // Ensure the tag is enclosed within a link.
+        $this->assertMatchesRegularExpression('/<a[^>]*>\s*Banana\s*<\/a>/', $summary);
+
+        // Retrieve the question text to display, including the tag, but ensure the tag is not displayed as a link.
+        $summary = quiz_question_tostring(question: $question, showtags: true, displaytaglink: false);
+        $this->assertMatchesRegularExpression('/<span[^>]*>\s*Banana\s*<\/span>/', $summary);
     }
 
     /**
