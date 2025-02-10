@@ -33,7 +33,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release  = '4.3.9 (Build: 20241209)'; // Human-friendly version name
+$plugin->release  = '4.3.10 (Build: 20250210)'; // Human-friendly version name
 $plugin->version   = 2021072200;
 $plugin->requires  = 2020061500; // Moodle 3.9, 15 June 2020, https://docs.moodle.org/dev/Releases#Moodle_3.9_.28LTS.29
 $plugin->component = 'tool_iomadmerge';
