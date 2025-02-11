@@ -52,7 +52,11 @@ if ($companychange &&
 
 // Set the session to a user if they are editing a company other than their own.
 if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)
-    || $companyuser = $DB->get_record('company_users', array('companyid' => $company, 'userid' => $USER->id)))) {
+    || $companyuser = $DB->get_record_sql("SELECT DISTINCT managertype
+                                           FROM {company_users}
+                                           WHERE companyid = :companyid
+                                           AND userid = :userid",
+                                          ['companyid' => $company, 'userid' => $USER->id]))) {
     $SESSION->currenteditingcompany = $company;
     $DB->set_field('company_users', 'lastused', time(), ['userid' => $USER->id, 'companyid' => $company]);
     if (!empty($companyuser) && $companyuser->managertype == 0) {
