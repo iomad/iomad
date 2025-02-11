@@ -204,7 +204,14 @@ if (empty($iid)) {
                     $usercheck->{$columns[$key]} = '';
                 }
             }
-            if (!$DB->get_record('user', array('username' =>  $usercheck->username)) && $optype != 3) {
+            if (!$DB->get_records_sql("SELECT * FROM {user} u
+                                       JOIN {company_users} cu 
+                                       ON (u.id = cu.userid)
+                                       WHERE u.username = :username
+                                       AND cu.companyid = :companyid",
+                                      ['username' =>  $usercheck->username,
+                                       'companyid' => $companyid]) &&
+                $optype != 3) {
                 $newusercount++;
             } else if (($optype == 2 || $optype ==3) && isset($usercheck->suspended)
                        && $usercheck->suspended == 0
@@ -449,7 +456,16 @@ if (!empty($cancelled)) {
                 continue;
             }
 
-            if ($existinguser = $DB->get_record('user', array('username' => $user->username, 'mnethostid' => $user->mnethostid))) {
+            if ($existinguser = $DB->get_record_sql("SELECT DISTINCT u.*
+                                                     FROM {user} u
+                                                     JOIN {company_users} cu
+                                                     ON (u.id = cu.userid)
+                                                     WHERE u.username = :username
+                                                     AND u.mnethostid = :mnethostid
+                                                     AND cu.companyid = :companyid",
+                                                    ['username' => $user->username,
+                                                     'mnethostid' => $user->mnethostid,
+                                                     'companyid' => $companyid])) {
                 $upt->track('id', $existinguser->id, 'normal', false);
             }
 
@@ -513,7 +529,7 @@ if (!empty($cancelled)) {
                         $deleteerrors++;
                         continue;
                     }
-                    if (delete_user($existinguser)) {
+                    if (company_user::delete($existinguser->id, $companyid)) {
                         $upt->track('status', $struserdeleted);
                         $deletes++;
                     } else {
@@ -659,7 +675,14 @@ if (!empty($cancelled)) {
                             }
                             if ($existinguser->$column !== $user->$column) {
                                 if ($column == 'email') {
-                                    if ($DB->record_exists('user', array('email' => $user->email))) {
+                                    if ($DB->record_exists_sql("SELECT DISTINCT u.id
+                                                                FROM {user} u
+                                                                JOIN {company_users} cu
+                                                                ON (u.id = cu.userid)
+                                                                WHERE u.email = :email
+                                                                AND cu.companyid = :companyid",
+                                                               ['email' => $user->email,
+                                                                'companyid' => $companyid])) {
                                         if ($noemailduplicates) {
                                             $upt->track('email', $stremailduplicate, 'error');
                                             $upt->track('status', $strusernotupdated, 'error');
@@ -859,7 +882,14 @@ if (!empty($cancelled)) {
                     }
                 }
 
-                if ($DB->record_exists('user', array('email' => $user->email))) {
+                if ($DB->record_exists_sql("SELECT DISTINCT u.id
+                                            FROM {user} u
+                                            JOIN {company_users} cu
+                                            ON (u.id = cu.userid)
+                                            WHERE u.email = :email
+                                            AND cu.companyid = :companyid",
+                                           ['email' => $user->email,
+                                            'companyid' => $companyid])) {
                     if ($noemailduplicates) {
                         $upt->track('email', $stremailduplicate, 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
@@ -1277,8 +1307,20 @@ while ($fields = $cir->next()) {
         }
     }
 
-    $usernameexist = $DB->record_exists('user', array('username' => $rowcols['username']));
-    $emailexist    = $DB->record_exists('user', array('email' => $rowcols['email']));
+    $usernameexist = $DB->record_exists_sql("SELECT DISTINCT u.id FROM {user} u
+                                             JOIN {company_users} cu
+                                             ON (u.id = cu.userid)
+                                             WHERE u.username = :username
+                                             AND cu.companyid = :companyid",
+                                            ['username' => $rowcols['username'],
+                                             'companyid' => $companyid]);
+    $emailexist    = $DB->record_exists_sql("SELECT DISTINCT u.id FROM {user} u
+                                             JOIN {company_users} cu
+                                             ON (u.id = cu.userid)
+                                             WHERE u.email = :email
+                                             AND cu.companyid = :companyid",
+                                            ['email' => $rowcols['email'],
+                                             'companyid' => $companyid]);
     $cleanusername = clean_param($rowcols['username'], PARAM_USERNAME);
     $validusername = strcmp($rowcols['username'], $cleanusername);
     $validemail = validate_email($rowcols['email']);
