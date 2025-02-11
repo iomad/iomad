@@ -225,7 +225,7 @@ function trainingevent_get_coursemodule_info($coursemodule) {
                                                          ON (cmc.userid = teu.userid)
                                                          WHERE cmc.coursemoduleid = :cmid
                                                          AND teu.trainingeventid = :trainingeventid
-                                                         AND cmc.completionstate > 0
+                                                         AND cmc.completionstate IN (1,2)
                                                          AND teu.approved = 1
                                                          AND teu.waitlisted =0",
                                                          ["trainingeventid" => $trainingevent->id,
