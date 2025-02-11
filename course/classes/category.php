@@ -264,7 +264,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         // IOMAD - dont show categories which a user can't see.
         $companycategories = iomad::iomad_filter_categories([$id => $id]);
         if (empty($companycategories)) {
-            throw new moodle_exception('unknowncategory');
             return null;
         }
 
