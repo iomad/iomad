@@ -229,7 +229,7 @@ class company_user {
 
         if (!$user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0])) {
             // User doesn't exist
-            return;
+            return false;
         }
 
         // Get the company details for the user.
@@ -264,6 +264,7 @@ class company_user {
             // Delete the user.
             delete_user($user);
         }
+        return true;
     }
 
     /**
