@@ -1002,7 +1002,7 @@ class microlearning {
                     if ($nugget = $DB->get_record('microlearning_nugget', array('id' => $scheduleuser->nuggetid))) {
                         $company = new company($scheduleuser->companyid);
                         // Get the nugget link.
-                        $nugget->url = new moodle_url('/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$scheduleuser->accesskey));
+                        $nugget->url = new moodle_url($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$scheduleuser->accesskey));
                         // Fire the email.
                         EmailTemplate::send('microlearning_nugget_scheduled', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
                         $DB->set_field('microlearning_thread_user', 'message_delivered', true, array('id' => $scheduleuser->id));
@@ -1038,7 +1038,7 @@ class microlearning {
                         $company = new company($reminder1user->companyid);
                         // Fix the payload.
                         $nugget->name = format_text($nugget->name);
-                        $nugget->url = new moodle_url('/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$reminder1user->accesskey));
+                        $nugget->url = new moodle_url($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$reminder1user->accesskey));
                         // Fire the email.
                         EmailTemplate::send('microlearning_nugget_reminder1', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
                     }
@@ -1074,7 +1074,7 @@ class microlearning {
                         $company = new company($reminder2user->companyid);;
                         // Fix the payload.
                         $nugget->name = format_text($nugget->name);
-                        $nugget->url = new moodle_url('/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$reminder2user->accesskey));
+                        $nugget->url = new moodle_url($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$reminder2user->accesskey));
                         // Fire the email.
                         EmailTemplate::send('microlearning_nugget_reminder2', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
                     }
