@@ -38,6 +38,7 @@ $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $companyid = optional_param('companyid', 0, PARAM_INT);
 $parentid = optional_param('parentid', 0, PARAM_INT);
 $new = optional_param('createnew', 0, PARAM_INT);
+$parentchanged = optional_param('parentchanged', 0, PARAM_INT);
 
 $systemcontext = context_system::instance();
 require_login();
@@ -132,17 +133,19 @@ if (!$new) {
         $companyrecord->emailtemplate = $emailtemplateset->id;
     }
 
-    if (!empty($parentid)) {
-        $companycontext = \core\context\company::instance($parentid);
-        iomad::require_capability('block/iomad_company_admin:company_add_child', $companycontext);
+    if (!empty($parentid) || $parentchanged) {
+        if (!empty($parentid)) {
+            $companycontext = \core\context\company::instance($parentid);
+            iomad::require_capability('block/iomad_company_admin:company_add_child', $companycontext);
 
-        // We are adding a child company.
-        $child = true;
-        // Can this user manage this parentid?
-        if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
-            !$DB->get_record('company_users', array('companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1))) {
-            throw new moodle_exception(get_string('invalidcompany', 'block_iomad_company_admin'), 'error', new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
-            die;
+            // We are adding a child company.
+            $child = true;
+            // Can this user manage this parentid?
+            if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
+                !$DB->get_record('company_users', array('companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1))) {
+                throw new moodle_exception(get_string('invalidcompany', 'block_iomad_company_admin'), 'error', new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
+                die;
+            }
         }
 
         // Deal with any already set form values from redirect/$SESSION.
@@ -172,6 +175,15 @@ if (!$new) {
                 } else {
                     $companyrecord->$index = $value;
                 }
+            }
+            $companyrecord->id = $SESSION->current_editing_company_data['companyid'];
+
+            // Is this an existing company we are moving?
+            if (!empty($companyrecord->id)) {
+                $isadding = false;
+                $companyid = $companyrecord->id;
+                $companycontext =  \core\context\company::instance($companyid);
+                $new = false;
             }
             unset($SESSION->current_editing_company_data);
         }
@@ -367,6 +379,10 @@ if (!empty($new) && !empty($parentid)) {
         $companyrecord->usecompanysmtpsettings = 1;
     }
 } else {
+    // If the parent has been set to none, we need to capture that here.
+    if ($parentchanged) {
+        $companyrecord->parentid = $parentid;
+    }
     $draftcompanycertificatesealid = file_get_submitted_draft_itemid('companycertificateseal');
     file_prepare_draft_area($draftcompanycertificatesealid,
                             $systemcontext->id,
@@ -581,10 +597,6 @@ if ($mform->is_cancelled()) {
                 // Assign the new ones.
                 $company->assign_parent_managers($data->parentid);
             }
-
-            // We only want to change the parent, not submit the form.
-            $companylist = $linkurl;
-            $redirectmessage = "";
         }
 
         // Did we apply a template?
