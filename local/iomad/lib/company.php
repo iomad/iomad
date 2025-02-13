@@ -1294,10 +1294,14 @@ class company {
             $parentcompanysql = " AND companyid != :companyid";
         }
 
-
-        // Get the list of company courses.
-        $companyassignedcourses = $DB->get_records('company_course', ['companyid' => $companyid]);
-        $sharedcourses = $DB->get_records('iomad_courses', ['shared' => 1]);
+        // Get the list of non-licensed company courses.
+        $companyassignedcourses = $DB->get_records_sql("SELECT cc.* FROM {company_course} cc
+                                                        JOIN {iomad_courses} ic
+                                                        ON cc.courseid = ic.courseid
+                                                        WHERE cc.companyid = :companyid
+                                                        AND ic.licensed = 0",
+                                                       ['companyid' => $companyid]);
+        $sharedcourses = $DB->get_records('iomad_courses', ['shared' => 1, 'licensed' => 0]);
         $companycourses = [];
         foreach ($companyassignedcourses as $companyassignedcourse) {
             $companycourses[$companyassignedcourse->courseid] = $companyassignedcourse;
