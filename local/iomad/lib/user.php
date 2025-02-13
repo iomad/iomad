@@ -1261,7 +1261,7 @@ class company_user {
         $returnobject = (object) [];
 
         // Set the companyid
-        $mycompanies = company::get_companies_select(false, false, false, 'cu.lastused DESC, name ASC', $search);
+        $mycompanies = company::get_companies_select(false, false, true, 'cu.lastused DESC, name ASC', $search);
         $returncompanies = (object) [];
         $returncompanies->companies = (object) [];    
         $rows = [];
