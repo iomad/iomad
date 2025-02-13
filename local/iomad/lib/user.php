@@ -1212,7 +1212,7 @@ class company_user {
             $company = new company($companyid);
             $returnobject->companyname = $company->get_name();
             $returnobject->companylogo = company::get_logo_url($companyid, null, 25);
-            $mycompanies = company::get_companies_select(false, false, false, 'cu.lastused DESC, name ASC');
+            $mycompanies = company::get_companies_select(false, false, true, 'cu.lastused DESC, name ASC');
             $returncompanies = [];
             if (count($mycompanies) > 1 ||
                 (count($mycompanies) == 1
