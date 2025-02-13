@@ -320,11 +320,11 @@ if ($trainingevent->isexclusive &&
                           FROM {trainingevent_users} teu
                           JOIN {trainingevent} t ON (teu.trainingeventid = t.id)
                           WHERE t.isexclusive = 1
-                          AND t.couresid = :courseid
+                          AND t.course = :courseid
                           AND t.id != :thiseventid
-                          AND tue.userid = :userid
-                          AND tue.waitlisted = 0
-                          AND tue.approved = 1",
+                          AND teu.userid = :userid
+                          AND teu.waitlisted = 0
+                          AND teu.approved = 1",
                          ['courseid' => $trainingevent->course,
                           'userid' => $USER->id,
                           'thiseventid' => $trainingevent->id])) {
