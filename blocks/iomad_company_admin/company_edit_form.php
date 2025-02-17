@@ -574,7 +574,7 @@ if ($mform->is_cancelled()) {
         if ($topdepartment = $company->get_company_parentnode($companyid)) {
             if ($topdepartment->name != $data->name) {
                 $topdepartment->name = $data->name;
-                $topdepartment->shorname = $data->shortname;
+                $topdepartment->shortname = $data->shortname;
                 $DB->update_record('department', $topdepartment);
             }
         }
