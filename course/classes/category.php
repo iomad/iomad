@@ -1198,6 +1198,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $sql = "SELECT ". join(',', $fields). ", $ctxselect
                 FROM {course} c
                 JOIN {context} ctx ON c.id = ctx.instanceid AND ctx.contextlevel = :contextcourse
+                WHERE $whereclause
                 ORDER BY c.sortorder";
         $list = $DB->get_records_sql($sql,
                 array('contextcourse' => CONTEXT_COURSE) + $params);
