@@ -937,12 +937,28 @@ class company_user {
         global $DB, $CFG;
 
         $rebuildcache = false;
+        $singleentry = true;
+
+        // Is this more complicated than 1 entry?
+        if (!empty($litid)) {
+            $litrec = $DB->get_record('local_iomad_track', ['id' => $litid]);
+            if ($DB->record_exists_sql("SELECT DISTINCT userid FROM {local_iomad_track}
+                                        WHERE userid = :userid
+                                        AND courseid = :courseid
+                                        AND timecompleted IS NULL
+                                        AND coursecleared = 0
+                                        AND timeenrolled >= :timeenrolled
+                                        AND id != :id",
+                                        (array) $litrec)) {
+                $singleentry = false;
+            }
+        }
 
         try {
             $transaction = $DB->start_delegated_transaction();
 
             // Is this a single entry only?
-            if (empty($litid)) {
+            if (empty($litid) || $singleentry) {
                 $rebuildcache = true;
 
                 // Remove enrolments
