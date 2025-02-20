@@ -90,3 +90,8 @@ html.yui3-js-enabled body#page-my-index.format-site.path-my.gecko.dir-ltr.lang-e
     background-position: center;
     background-size: cover;
 }
+
+.block_mycourses .certificatediv img {
+    height: 36px;
+    width: 36px;
+}

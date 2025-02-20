@@ -192,27 +192,22 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
        if (!empty($marchive->courseid)) {
            $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
        }
-       $certstring = '';
 
         // Deal with the iomadcertificate info.
+        $myarchive[$id]->certificates = [];
+        $coursecontext = context_course::instance($archive->courseid);
+
         if ($hasiomadcertificate) {
-            if ($iomadcertificateinfo = $DB->get_record('iomadcertificate',
-                                                         array('course' => $archive->courseid))) {
-                // Get the certificate from the download files thing.
-                if ($traccertrec = $DB->get_record('local_iomad_track_certs', array('trackid' => $id))) {
-                    // create the file download link.
-                    $coursecontext = context_course::instance($archive->courseid);
-                    $certstring = moodle_url::make_file_url('/pluginfile.php', '/'.$coursecontext->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
+            // Get the certificate from the download files thing.
+            if ($traccerts = $DB->get_records('local_iomad_track_certs', array('trackid' => $id))) {
+                foreach ($traccerts as $traccertrec) {
+                    $certobj = (object) [];
+                    $certobj->certificateurl = moodle_url::make_file_url('/pluginfile.php', '/'.$coursecontext->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
+                    $certobj->certificatename = $traccertrec->filename;
+                    $myarchive[$id]->certificates[] = $certobj;
                 }
-            } else {
-                $certstring = '';
             }
-        } else {
-            $certstring = '';
         }
-
-        $myarchive[$id]->certificate = $certstring;
-
     }
 
     $myarchive = mycourses_sort($myarchive, $sort, $dir);
