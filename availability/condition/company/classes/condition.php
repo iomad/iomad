@@ -50,6 +50,7 @@ class condition extends \core_availability\condition {
      * @throws \coding_exception If invalid data structure.
      */
     public function __construct($structure) {
+
         // Get company id.
         if (!property_exists($structure, 'id')) {
             $this->companyid = 0;
@@ -73,25 +74,25 @@ class condition extends \core_availability\condition {
 
         $course = $info->get_course();
         $context = \context_course::instance($course->id);
-        $allow = true;
-        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $context, $userid)) {
-            // Get all companys the user belongs to.
-            $companys = $DB->get_records_sql("SELECT DISTINCT companyid FROM {company_users} WHERE userid = :userid", ['userid' => $userid]);
-            if ($this->companyid) {
-                $allow = array_key_exists($this->companyid, $companys);
-            } else {
-                // No specific company. Allow if they belong to any company at all.
-                $allow = $companys ? true : false;
-            }
+        $allow = false;
 
-            // The NOT condition applies before accessallcompanys (i.e. if you
-            // set something to be available to those NOT in company X,
-            // people with accessallcompanys can still access it even if
-            // they are in company X).
-            if ($not) {
-                $allow = !$allow;
-            }
+        // Get all companys the user belongs to.
+        $companys = $DB->get_records_sql("SELECT DISTINCT companyid FROM {company_users} WHERE userid = :userid", ['userid' => $userid]);
+        if ($this->companyid) {
+            $allow = array_key_exists($this->companyid, $companys);
+        } else {
+            // No specific company. Allow if they belong to any company at all.
+            $allow = $companys ? true : false;
         }
+
+        // The NOT condition applies before accessallcompanys (i.e. if you
+        // set something to be available to those NOT in company X,
+        // people with accessallcompanys can still access it even if
+        // they are in company X).
+        if ($not) {
+            $allow = !$allow;
+        }
+
         return $allow;
     }
 
