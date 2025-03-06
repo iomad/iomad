@@ -103,9 +103,9 @@ class auth extends \auth_plugin_base {
     /**
      * Constructor.
      */
-    protected $certpem;
-    protected $certcrt;
-    protected $metadatalist;
+    public $certpem;
+    public $certcrt;
+    public $metadatalist;
     public function __construct() {
         global $CFG, $DB;
 
