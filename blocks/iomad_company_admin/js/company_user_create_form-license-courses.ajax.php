@@ -31,6 +31,8 @@
 require_once(dirname(__FILE__) . '/../../../config.php');
 require_once('../lib.php');
 
+$licenseid = required_param('licenseid', PARAM_INT);
+
 require_login();
 
 $return = 'none';
