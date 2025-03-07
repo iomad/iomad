@@ -168,7 +168,7 @@ class editusers_table extends table_sql {
             $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $row->id], '', 'departmentid'));
             $usertypeselect = $this->usertypeselect;
             if (count($userdepartments) > 1 ||
-                $userdepartments[0] != $this->parentlevel->id) {
+                isset($userdepartments[0]) && $userdepartments[0] != $this->parentlevel->id) {
                 unset($usertypeselect[10]);
                 unset($usertypeselect[11]);
             }
