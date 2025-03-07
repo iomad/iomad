@@ -2834,12 +2834,12 @@ class block_iomad_company_admin_external extends external_api {
             'licenseid' => $licenseid,
         ]);
 
-        // Security.
-        $context = context_system::instance();
-        iomad::require_capability('block/iomad_company_admin:allocate_licenses', $context);
-
         // Get license
         $license = $DB->get_record('companylicense', ['id' => $params['licenseid']], '*', MUST_EXIST);
+
+        // Security.
+        $context = \core\context\company::instance($license->companyid);
+        iomad::require_capability('block/iomad_company_admin:allocate_licenses', $context);
 
         // Get license courses (with extra)
         $sql = 'SELECT co.id AS id, co.fullname AS fullname
