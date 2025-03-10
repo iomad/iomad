@@ -2397,7 +2397,7 @@ class block_iomad_company_admin_external extends external_api {
             }
 
             // Is it more than one?
-            if (count($companycourses > 1)) {
+            if (count($companycourses) > 1) {
                 if (!$usercompanies = $DB->get_records_sql("SELECT companyid FROM {company_user}
                                                             WHERE userid = :userid
                                                             AND companyid IN (" . implode(',', array_keys($companycourses)) . ")",
@@ -2419,7 +2419,7 @@ class block_iomad_company_admin_external extends external_api {
             }
 
             // Is the user already in this company?
-            if (!$db->get_records('company_users', ['companyid' => $company->id, 'userid' => $enrolment['userid']])) {
+            if (!$DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $enrolment['userid']])) {
                 // No - so we add them.
                 $company->assign_user_to_company($user->id, 0, 0, true, false);
             }
