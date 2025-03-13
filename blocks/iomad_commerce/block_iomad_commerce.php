@@ -58,8 +58,16 @@ class block_iomad_commerce extends block_base {
 
         $this->content = new stdClass;
         $this->content->footer = '';
+        $fatype = "fa-" . strtolower($CFG->commerce_admin_currency);
 
-        if (!empty($CFG->commerce_enable_external)) {
+        if (!isloggedin() || isguestuser()) {
+            if (!\block_iomad_commerce\helper::is_commerce_configured()) {
+                return null;
+            }
+            $this->content->text = "<p>";
+            $this->content->text .= ' <a href="' . new moodle_url($CFG->wwwroot . '/login/index.php') .
+                                   '">' . get_string('shop_login_title', 'block_iomad_commerce') . '</a></p>';
+        } else if (!empty($CFG->commerce_enable_external)) {
             // Get and store a one time token.
             $token = company_user::generate_token();
             $configname = "commerce_externalshop_url_$companyid";
@@ -73,15 +81,14 @@ class block_iomad_commerce extends block_base {
             if (!\block_iomad_commerce\helper::is_commerce_configured()) {
                 $link = new moodle_url('/admin/settings.php', array('section' => 'blocksettingiomad_commerce'));
                 $this->content->text = '<div class="alert alert-danger">' . get_string('notconfigured', 'block_iomad_commerce', $link->out()) . '</div>';
-                return $this->content;
+            } else {
+
+                $this->content->text = "<p><span class='fa $fatype'></span>";
+                $this->content->text .= ' <a href="' . new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/shop.php') .
+                                       '">' . get_string('shop_title', 'block_iomad_commerce') . '</a></p>';
+
+                $this->content->text .= \block_iomad_commerce\helper::get_basket_info();
             }
-
-            $fatype = "fa-" . strtolower($CFG->commerce_admin_currency);
-            $this->content->text = "<p><span class='fa $fatype'></span>";
-            $this->content->text .= ' <a href="' . new moodle_url('/blocks/iomad_commerce/shop.php') .
-                                   '">' . get_string('shop_title', 'block_iomad_commerce') . '</a></p>';
-
-            $this->content->text .= \block_iomad_commerce\helper::get_basket_info();
         }
 
         return $this->content;
