@@ -136,7 +136,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
                 } else if ($templateinfo->repeatperiod == 99) {
                     $notifyperiod = "";
                 } else {
-                    $notifytime = strtotime("- 1" . $periods[$templateinfo->repeatperiod], $runtime);
+                    $notifytime = strtotime("- 1" . $periods[$templateinfo->repeatperiod], $runtime) - 86400;
                     $notifyperiod = "AND sent < $notifytime";
                 }
             } else {
