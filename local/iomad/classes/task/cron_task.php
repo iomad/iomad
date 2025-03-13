@@ -69,7 +69,7 @@ class cron_task extends \core\task\scheduled_task {
                                                WHERE u.institution != c.shortname
                                                AND c.parentid = 0
                                                $notmultisql",
-                                               [], 0, 1);
+                                               [], 0, 500);
 
             } else if ($CFG->iomad_sync_institution == 2) {
                 mtrace("Copying company name to user institution fields\n");
