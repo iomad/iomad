@@ -171,6 +171,7 @@ $string['search'] = 'Search';
 $string['selectcoursetoadd'] = 'Select product to add to shop';
 $string['select_tag'] = 'Select category';
 $string['shop'] = 'Shop';
+$string['shop_login_title'] = 'Please log in to access the shop';
 $string['shop_title'] = 'Shop';
 $string['show'] = 'Show in shop';
 $string['single_purchase'] = 'Single purchase';
