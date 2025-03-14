@@ -51,6 +51,8 @@ class editusers_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
+        global $companycontext;
+
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
 
         // Deal with suspended users.
@@ -60,8 +62,8 @@ class editusers_table extends table_sql {
         }
 
         // Can we see a link?
-        $usercontext = context_user::instance($row->id);
-        if (has_capability('moodle/user:viewdetails', $usercontext) || has_capability('moodle/user:viewalldetails', $usercontext)) {
+        if (has_capability('block/iomad_company_admin:editusers', $companycontext) ||
+            has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
             $profileurl = new moodle_url('/user/profile.php', ['id' => $row->id]);
             return html_writer::tag('a', $name, ['href' => $profileurl]);
         } else {
