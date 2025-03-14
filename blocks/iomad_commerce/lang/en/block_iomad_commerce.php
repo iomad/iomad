@@ -162,6 +162,7 @@ $string['productexportedsuccessfully'] = 'Product item was successfully saved as
 $string['productexportfailed'] = 'There was an issue when trying to save this product item as a template. If this persists, please contact your site administrator.';
 $string['productimportedsuccessfully'] = 'Template item was successfully saved as a product.';
 $string['productimportfailed'] = 'There was an issue when trying to save this template item as a product. If this persists, please contact your site administrator.';
+$string['product_login'] = "to buy this product";
 $string['purchaser_details'] = 'Purchaser';
 $string['reference'] = 'Reference';
 $string['remove_filter'] = 'Show all products';
