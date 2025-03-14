@@ -4520,7 +4520,7 @@ class company {
 
             $user = $DB->get_record('user', array('id' => $userid));
             EmailTemplate::send('user_deleted',
-                                 array('company' => $usercompany,
+                                 array('company' => $company,
                                        'user' => $user));
         }
 
