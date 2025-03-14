@@ -62,7 +62,14 @@ flush();
 \block_iomad_commerce\helper::show_basket_info();
 
 if ($item) {
+    $mustlogin = false;
+    $strextra = "";
     $strbuynow = get_string('buynow', 'block_iomad_commerce');
+    if (!isloggedin() || isguestuser()) {
+        $mustlogin = true;
+        $strbuynow = get_string('login', 'moodle');
+        $strextra = get_string('product_login', 'block_iomad_commerce');
+    }
     $strmoreinfo = get_string('moreinfo', 'block_iomad_commerce');
 
     echo '<h3>' . format_string($item->name) . "</h3>";
@@ -83,11 +90,15 @@ if ($item) {
 
         if ($item->allow_single_purchase && iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext)) {
             $buynowurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $item->id]);
+            if ($mustlogin) {
+                $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
+            }
+
             $table->data[] = [get_string('single_purchase', 'block_iomad_commerce'),
                               $item->single_purchase_currency . number_format($item->single_purchase_price, 2),
                               "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>" .
-                                   get_string('buynow', 'block_iomad_commerce') .
-                                   "<a>"];
+                                   $strbuynow .
+                                   "<a>&nbsp$strextra"];
         }
 
         $form = '';
@@ -104,23 +115,30 @@ if ($item) {
                                                 '');
                     }
 
-                //if (isloggedin() && iomad::is_company_admin()) {
-                    $msg = '';
-                    if ($licenseformempty) {
-                        $msg = "<p class='error'>" . get_string('licenseformempty', 'block_iomad_commerce') . "</p>";
-                    }
+                    if ($mustlogin) {
+                        $buynowurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $item->id]);
+                        $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
+                        $form = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>" .
+                                   $strbuynow .
+                                   "<a>&nbsp $strextra<br>";
+                    } else {
+                        $msg = '';
+                        if ($licenseformempty) {
+                            $msg = "<p class='error'>" . get_string('licenseformempty', 'block_iomad_commerce') . "</p>";
+                        }
 
-                    $licenseformurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $itemid]);
-                    $form = '<form action="' . $licenseformurl->out() .'" method="get">
-                        <input type="hidden" name="itemid" value="' . $itemid . '" />
-                        <input type="hidden" name="licenses" value="1" />
-                        ' . $msg . '
-                        <div style="float:left;display:inline-flex;">
-                        <label for="id_nlicenses"> How many licenses? </label>
-                        <input type="text" class="form-control" style="width: 195px;margin-left:20px;" name="nlicenses" id="id_nlicenses" value="" />
-                        <input type="submit" class="btn btn-primary" style="margin-left:20px;" value="' . get_string('buynow', 'block_iomad_commerce') . '" />
-                        </div>
-                    </form>';
+                        $licenseformurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $itemid]);
+                        $form = '<form action="' . $licenseformurl->out() .'" method="get">
+                            <input type="hidden" name="itemid" value="' . $itemid . '" />
+                            <input type="hidden" name="licenses" value="1" />
+                            ' . $msg . '
+                            <div style="float:left;display:inline-flex;">
+                            <label for="id_nlicenses"> How many licenses? </label>
+                            <input type="text" class="form-control" style="width: 195px;margin-left:20px;" name="nlicenses" id="id_nlicenses" value="" />
+                            <input type="submit" class="btn btn-primary" style="margin-left:20px;" value="' . get_string('buynow', 'block_iomad_commerce') . '" />
+                            </div>
+                        </form>';
+                    }
                 }
             }
         }

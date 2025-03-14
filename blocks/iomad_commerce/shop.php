@@ -171,7 +171,14 @@ $itemcount = count($items);
 echo $OUTPUT->paging_bar($itemcount, $page, $perpage, $baseurl);
 
 if ($itemcount) {
+    $mustlogin = false;
+    $strextra = "";
     $strbuynow = get_string('buynow', 'block_iomad_commerce');
+    if (!isloggedin() || isguestuser()) {
+        $mustlogin = true;
+        $strbuynow = get_string('login', 'moodle');
+        $strextra = get_string('product_login', 'block_iomad_commerce');
+    }
     $strmoreinfo = get_string('moreinfo', 'block_iomad_commerce');
 
     $table = new html_table();
@@ -189,7 +196,10 @@ if ($itemcount) {
             } else {
                 $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
             }
-            $buynowbutton = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>$strbuynow</a>";
+            if ($mustlogin) {
+                $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
+            }
+            $buynowbutton = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>$strbuynow</a>&nbsp$strextra";
 
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
             $moreinfobutton = "$price <a href='" . $moreinfourl->out() . "' class='btn btn-secondary'>$strmoreinfo</a>";
