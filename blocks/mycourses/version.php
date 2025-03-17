@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.4.6 (Build: 20250210)'; // Human-friendly version name
+$plugin->release  = '4.4.7 (Build: 20250317)'; // Human-friendly version name
 $plugin->version   = 2024082700;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2012112900;        // Requires this Moodle version
 $plugin->component = 'block_mycourses'; // Full name of the plugin (used for diagnostics)
