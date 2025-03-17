@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.3.10 (Build: 20250210)'; // Human-friendly version name
+$plugin->release  = '4.3.11 (Build: 20250317)'; // Human-friendly version name
 $plugin->version = 2022041900;
 $plugin->requires = 2022041200;
 $plugin->component = 'availability_trainingevent';
