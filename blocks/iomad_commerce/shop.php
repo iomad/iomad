@@ -196,15 +196,18 @@ if ($itemcount) {
             } else {
                 $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
             }
-            if ($mustlogin) {
-                $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
-            }
             $buynowbutton = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>$strbuynow</a>&nbsp$strextra";
 
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
             $moreinfobutton = "$price <a href='" . $moreinfourl->out() . "' class='btn btn-secondary'>$strmoreinfo</a>";
         } else {
-            $buynowbutton = "";
+            if ($mustlogin) {
+                $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
+                $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
+                $buynowbutton = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>$strbuynow</a>&nbsp$strextra";
+            } else {
+                $buynowbutton = "";
+            }
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
             $moreinfobutton = "$price <a href='" . $moreinfourl->out() . "' class='btn btn-secondary'>$strmoreinfo</a>";
         }
