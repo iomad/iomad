@@ -26528,6 +26528,10 @@ body.behat-site .action-menu .dropdown-subpanel-content.show {
   text-align: left;
 }
 
+#page-admin-index .upgradekeyreq {
+  min-width: 220px;
+}
+
 #page-admin-index .adminwarning.availableupdatesinfo .moodleupdateinfo span {
   display: block;
 }
@@ -28527,16 +28531,6 @@ span.editinstructions .alert-link {
   border-radius: 0.5rem;
 }
 
-.subcategories .coursebox > .info > .coursename a,
-#frontpage-category-names .coursebox > .info > .coursename a,
-#frontpage-category-combo .coursebox > .info > .coursename a {
-  display: block;
-  background-image: url([[pix:moodle|i/course]]);
-  background-repeat: no-repeat;
-  padding-left: 21px;
-  background-position: left 0.2em;
-}
-
 .coursebox > .info > .coursename {
   font-size: 0.9375rem;
   font-weight: normal;
@@ -29691,6 +29685,9 @@ span.editinstructions .alert-link {
   padding-top: 0.5rem;
   border-top: 1px solid #dee2e6;
   font-size: 0.875em;
+}
+.activity-item .activity-altcontent.activity-description ul:not(.activity-description ul ul) {
+  margin-bottom: 1rem;
 }
 .activity-item .activity-altcontent img {
   border-radius: 1rem;
