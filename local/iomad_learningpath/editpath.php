@@ -62,7 +62,7 @@ $companypaths->check_group($id);
 
 // Set up picture draft area
 $picturedraftid = file_get_submitted_draft_itemid('picture');
-file_prepare_draft_area($picturedraftid, $companycontext->id, 'local_iomad_learningpath', 'picture', $id,
+file_prepare_draft_area($picturedraftid, $systemcontext->id, 'local_iomad_learningpath', 'picture', $id,
     ['maxfiles' => 1]);
 
 // Form
@@ -93,10 +93,10 @@ if ($form->is_cancelled()) {
         file_save_draft_area_files($data->picture, $systemcontext->id, 'local_iomad_learningpath', 'picture', $id,
             ['maxfiles' => 1]);
         // Resize image and create thumbnail
-        $companypaths->process_image($context, $id);
+        $companypaths->process_image($systemcontext, $id);
     } else {
         foreach (['mainpicture', 'thumbnail', 'picture'] as $filearea) {
-            $companypaths->delete_file($context->id, 'local_iomad_learningpath', $filearea, $id, true);
+            $companypaths->delete_file($systemcontext->id, 'local_iomad_learningpath', $filearea, $id, true);
         }
     }
     redirect($exiturl);
