@@ -56,7 +56,14 @@ flush();
 \block_iomad_commerce\helper::show_basket_info();
 
 if ($item) {
+    $mustlogin = false;
+    $strextra = "";
     $strbuynow = get_string('buynow', 'block_iomad_commerce');
+    if (!isloggedin() || isguestuser()) {
+        $mustlogin = true;
+        $strbuynow = get_string('login', 'moodle');
+        $strextra = get_string('product_login', 'block_iomad_commerce');
+    }
     $strmoreinfo = get_string('moreinfo', 'block_iomad_commerce');
 
     echo '<h3>' . format_string($item->name) . "</h3>";
@@ -67,7 +74,11 @@ if ($item) {
         echo $item->summary;
     }
 
-    if (($item->allow_single_purchase || $item->allow_license_blocks) &&
+    if ($mustlogin) {
+        $buynowurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $item->id]);
+        $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
+        echo "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>" . $strbuynow . "<a>&nbsp $strextra<br>";
+    } else if (($item->allow_single_purchase || $item->allow_license_blocks) &&
         (iomad::has_capability('block/iomad_commerce:buyitnow', $context) || iomad::has_capability('block/iomad_commerce:buyinbulk', $context))) {
         $table = new html_table();
         $table->head = array (get_string('priceoptions', 'block_iomad_commerce'), "", "");
@@ -80,8 +91,8 @@ if ($item) {
             $table->data[] = [get_string('single_purchase', 'block_iomad_commerce'),
                               $item->single_purchase_currency . number_format($item->single_purchase_price, 2),
                               "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>" .
-                                   get_string('buynow', 'block_iomad_commerce') .
-                                   "<a>"];
+                                   $strbuynow .
+                                   "<a>&nbsp$strextra"];
         }
 
         $form = '';
@@ -98,7 +109,6 @@ if ($item) {
                                                 '');
                     }
 
-                //if (isloggedin() && iomad::is_company_admin()) {
                     $msg = '';
                     if ($licenseformempty) {
                         $msg = "<p class='error'>" . get_string('licenseformempty', 'block_iomad_commerce') . "</p>";

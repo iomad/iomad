@@ -56,7 +56,7 @@ class cron_task extends \core\task\scheduled_task {
                                                JOIN {company} c ON cu.companyid = c.id
                                                WHERE u.institution != c.shortname
                                                AND c.parentid = 0",
-                                               [], 0, 1);
+                                               [], 0, 500);
 
             } else if ($CFG->iomad_sync_institution == 2) {
                 mtrace("Copying company name to user institution fields\n");

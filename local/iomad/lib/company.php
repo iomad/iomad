@@ -3889,11 +3889,9 @@ class company {
             return true;
         }
 
-        if ($managertype == 0) {
-            if ($DB->get_records('email_template', array('companyid' => $this->id, 'name' => $templatename, 'disabled' => 1))) {
-                // Disabled for the company.
-                return false;
-            }
+        if ($DB->get_records('email_template', array('companyid' => $this->id, 'name' => $templatename, 'disabled' => 1))) {
+            // Disabled for the company.
+            return false;
         }
 
         if ($managertype == 1) {
@@ -4520,7 +4518,7 @@ class company {
 
             $user = $DB->get_record('user', array('id' => $userid));
             EmailTemplate::send('user_deleted',
-                                 array('company' => $usercompany,
+                                 array('company' => $company,
                                        'user' => $user));
         }
 
