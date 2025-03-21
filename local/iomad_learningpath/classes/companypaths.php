@@ -51,7 +51,7 @@ class companypaths {
      * Convenience function to return the company
      * @return object
      */
-    public function get_company() {
+    public function get_company():object {
         return $this->company;
     }
 
@@ -59,7 +59,7 @@ class companypaths {
      * Get learning paths for company.
      * @return array
      */
-    public function get_paths() {
+    public function get_paths():array {
         global $DB;
 
         $paths = $DB->get_records('iomad_learningpath', array('company' => $this->companyid));
@@ -73,7 +73,7 @@ class companypaths {
      * @param bool $create new if does not exist
      * @return object $path
      */
-    public function get_path($id, $create = true) {
+    public function get_path(int $id, bool $create = true): object {
         global $DB;
 
         if ($path = $DB->get_record('iomad_learningpath', array('id' => $id))) {
@@ -104,7 +104,7 @@ class companypaths {
      * @param int $groupid
      * @return object
      */
-    public function get_group($pathid, $groupid) {
+    public function get_group(int $pathid, int $groupid): object {
         global $DB;
 
         if ($groupid) {
@@ -127,7 +127,7 @@ class companypaths {
      * if not, create a default group and add all the courses
      * @param int $pathid
      */
-    public function check_group($pathid) {
+    public function check_group(int $pathid) {
         global $DB;
 
         if (!$DB->count_records('iomad_learningpathgroup', ['learningpath' => $pathid])) {
@@ -147,7 +147,7 @@ class companypaths {
      * @param int $pathid
      * @param int $groupid
      */
-    public function delete_group($pathid, $groupid) {
+    public function delete_group(int $pathid, int $groupid) {
         global $DB;
 
         // Remove group courses from LP
@@ -158,12 +158,88 @@ class companypaths {
     }
 
     /**
+     * Return array of valid extensions
+     */
+    private function ext_array(): array {
+        return [
+            'gif',
+            'jpe',
+            'jpeg',
+            'jpg',
+            'png',
+        ];
+    }
+
+    /**
+     * Validate the extension to be valid and if not return .png
+     * @param string $ext
+     */
+    private function validate_ext(string $ext): string {
+        // Check the file extension is a valid extension for a image
+        return (in_array($ext, $this->ext_array(), true)) ? '.'.$ext : '.png';
+    }
+
+    /**
+     * Take contextid and id and return a fileinfo array
+     * @param int $contextid
+     * @param int $id
+     * @param string $filearea
+     * @param string $filename
+     * @param string $ext
+     */
+    private function fileinfo_array(int $contextid, int $id, string $filearea, string $filename, string $ext): array {
+        // Vailidate file extension
+        $extension = $this->validate_ext($ext);
+        // Return array of fileinfo
+        return [
+            'contextid' => $contextid,
+            'component' => 'local_iomad_learningpath',
+            'filearea' => $filearea,
+            'itemid' => $id,
+            'filepath' => '/',
+            'filename' => $filename.''.$extension,
+        ];
+    }
+
+    /**
+     * Delete a file
+     * @param int $contextid
+     * @param string $component
+     * @param string $filearea
+     * @param int $id
+     * @param bool $delpath
+     */
+    public function delete_file(int $contextid, string $component, string $filearea, int $id, bool $delpath): void {
+        // Get file storage
+        $fs = get_file_storage();
+        // Get the files which are stored in a specific area
+        $oldfile = $fs->get_area_files($contextid, $component, $filearea, $id);
+        // Loop through the files found
+        foreach ($oldfile as $old) {
+            // If $delpath is set to true delete the directory for the file
+            if ($delpath) {
+                $old->delete();
+            } else {
+                if ($old->is_directory()) {
+                    continue;
+                }
+                // Check the file has a valid file extension for a image file
+                if(in_array(pathinfo($old->get_filename(), PATHINFO_EXTENSION), ['ai','bmp','gdraw','gif','ico','jpe','jpeg','jpg','pct','pic','pict','png','svg','svgz','tif','tiff'], true)){
+                    // Delete the file
+                    $old->delete();
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * Take image uploaded on learning path form and
      * process for size and thumbnail
      * @param object $context
      * @param int $id learning path id
      */
-    public function process_image($context, $id) {
+    public function process_image(object $context, int $id) {
         global $CFG;
 
         // Get file storage
@@ -178,37 +254,21 @@ class companypaths {
 
             // Process main picture
             $picture = $file->resize_image(null, 150);
+            $ext = pathinfo($file->get_filename(), PATHINFO_EXTENSION);
 
             // store mainpicture
-            if ($oldfile = $fs->get_file($context->id, 'local_iomad_learningpath', 'mainpicture', $id, '/', 'picture.png')) {
-                $oldfile->delete();
-            }
-            $fileinfo = [
-                'contextid' => $context->id,
-                'component' => 'local_iomad_learningpath',
-                'filearea' => 'mainpicture',
-                'itemid' => $id,
-                'filepath' => '/',
-                'filename' => 'picture.png',
-            ];
+            $this->delete_file($context->id, 'local_iomad_learningpath', 'mainpicture', $id, false);
+            $fileinfo = $this->fileinfo_array($context->id, $id, 'mainpicture', 'picture', $ext);
             $fs->create_file_from_string($fileinfo, $picture);
 
             // Process thumbnail
             $thumb = $file->resize_image(null, 50);
 
             // store thumbnail
-            if ($oldfile = $fs->get_file($context->id, 'local_iomad_learningpath', 'thumbnail', $id, '/', 'thumbnail.png')) {
-                $oldfile->delete();
-            }
-            $fileinfo = [
-                'contextid' => $context->id,
-                'component' => 'local_iomad_learningpath',
-                'filearea' => 'thumbnail',
-                'itemid' => $id,
-                'filepath' => '/',
-                'filename' => 'thumbnail.png',
-            ];
+            $this->delete_file($context->id, 'local_iomad_learningpath', 'thumbnail', $id, false);
+            $fileinfo = $this->fileinfo_array($context->id, $id, 'thumbnail', 'thumbnail', $ext);
             $fs->create_file_from_string($fileinfo, $thumb);
+            break;
         }
     }
 
@@ -217,7 +277,7 @@ class companypaths {
      * @param string $linktext (optional) final link
      * @param moodle_url $linkurl (optional) final link
      */
-    public function breadcrumb($linktext = '', $linkurl = null) {
+    public function breadcrumb(string $linktext = '', $linkurl = null) {
         global $PAGE;
 
         $PAGE->navbar->ignore_active();
@@ -233,7 +293,7 @@ class companypaths {
      * @param int $courseid
      * @return mixed url or false if no image
      */
-    public function get_course_image_url($courseid) {
+    public function get_course_image_url(int $courseid) {
         global $OUTPUT;
 
         $fs = get_file_storage();
@@ -258,7 +318,7 @@ class companypaths {
      * @param bool $idonly just return course ids if set
      * @return array
      */
-    public function get_courselist($pathid, $groupid = 0, $idonly = false) {
+    public function get_courselist(int $pathid, int $groupid = 0, bool $idonly = false): array {
         global $DB;
 
         $sql = 'SELECT c.id courseid, c.shortname shortname, c.fullname fullname, lpc.*
@@ -293,7 +353,7 @@ class companypaths {
      * @param int $pathid
      * @return array
      */
-    public function get_display_courselist($pathid) {
+    public function get_display_courselist(int $pathid): array {
         global $DB;
 
         $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
@@ -314,7 +374,7 @@ class companypaths {
      * @param int $category (course category)
      * @return array of courses
      */
-    public function get_prospective_courses($pathid, $filter = '', $category = 0, $programlicenseid = 0) {
+    public function get_prospective_courses(int $pathid, string $filter = '', int $category = 0, int $programlicenseid = 0) {
         global $DB;
 
         // Get currently selected courses
@@ -336,7 +396,7 @@ class companypaths {
             $categories[$course->category] = $course->category;
 
             // Do not include courses already selected
-            if (in_array($depcourse->courseid, $selectedcourses)) {
+            if (in_array($depcourse->courseid, $selectedcourses, true)) {
                 continue;
             }
 
@@ -372,7 +432,7 @@ class companypaths {
      * @param int $pathid
      * @return array
      */
-    public function get_categories($pathid) {
+    public function get_categories(int $pathid): array {
         global $DB;
 
         // Check if categories have been collected
@@ -399,7 +459,7 @@ class companypaths {
      * @param int $pathid
      * @return array
      */
-    public function get_programlicenses($pathid) {
+    public function get_programlicenses(int $pathid): array {
         global $DB;
 
         $programlicenses = $DB->get_records('companylicense', array('companyid' => $this->companyid, 'program' => 1));
@@ -434,7 +494,7 @@ class companypaths {
      * @param array $courseids
      * @param int $groupid (0 = add to first group)
      */
-    public function add_courses($pathid, $courseids, $groupid = 0) {
+    public function add_courses(int $pathid, array $courseids, int $groupid = 0) {
         global $DB;
 
         // Make sure we only add courses in the prospective list.
@@ -482,7 +542,7 @@ class companypaths {
      * @param int $pathid
      * @param array $courseids
      */
-    public function remove_courses($pathid, $courseids) {
+    public function remove_courses(int $pathid, array $courseids) {
         global $DB;
 
         // Work through courses.
@@ -499,7 +559,7 @@ class companypaths {
      * Used if one (or more) has been deleted
      * @param int $pathid
      */
-    public function fix_sequence($pathid) {
+    public function fix_sequence(int $pathid) {
         global $DB;
 
         $courses = $DB->get_records('iomad_learningpathcourse', ['path' => $pathid], 'sequence ASC');
@@ -515,7 +575,7 @@ class companypaths {
      * Delete a path
      * @param int $pathid
      */
-    public function deletepath($pathid) {
+    public function deletepath(int $pathid) {
         global $DB;
 
         // Delete the users.
@@ -526,25 +586,52 @@ class companypaths {
 
         // Delete courses from path
         $DB->delete_records('iomad_learningpathcourse', ['path' => $pathid]);
+        
+        // Delete groups from path
+        $DB->delete_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
 
         // Delete image from path (if any)
-        $fs = get_file_storage();
-        if ($oldfile = $fs->get_file($this->context->id, 'local_iomad_learningpath', 'mainpicture', $pathid, '/', 'picture.png')) {
-            $oldfile->delete();
+        foreach (['picture', 'mainpicture', 'thumbnail'] as $component) {
+            $this->delete_file($this->context->id, 'local_iomad_learningpath', $component, $pathid, true);
         }
-        if ($oldfile = $fs->get_file($this->context->id, 'local_iomad_learningpath', 'thumbnail', $pathid, '/', 'thumbnail.png')) {
-            $oldfile->delete();
-        }
-
         // Delete path itself
         $DB->delete_records('iomad_learningpath', ['id' => $pathid]);
+    }
+
+    /**
+     * Copy a image from the file system
+     * @param int $contextid
+     * @param string $component
+     * @param int $pathid
+     * @param string $filename
+     * @param int $newpathid
+     */
+    private function copy_image(int $contextid, string $component, string $filearea, int $pathid, string $filename, int $newpathid): void {
+        // Get file storage
+        $fs = get_file_storage();
+        // Get the files which are stored in a specific area
+        $pictures = $fs->get_area_files($contextid, $component, $filearea, $pathid);
+        // Loop through the files found
+        foreach ($pictures as $picture) {
+            if ($picture->is_directory()) {
+                continue;
+            }
+            $extension = pathinfo($picture->get_filename(), PATHINFO_EXTENSION);
+            if (in_array($extension, $this->ext_array(), true)) {
+                // Get file info array
+                $fileinfo = $this->fileinfo_array($this->context->id, $newpathid, $filearea, $filename, $extension);
+                // Copy file
+                $fs->create_file_from_storedfile($fileinfo, $picture);
+                break;
+            }
+        }
     }
 
     /**
      * Copy a path
      * @param int $pathid
      */
-    public function copypath($pathid) {
+    public function copypath(int $pathid) {
         global $DB;
 
         // Get original path
@@ -571,29 +658,8 @@ class companypaths {
         $newpathid = $DB->insert_record('iomad_learningpath', $newpath);
 
         // Copy images
-        $fs = get_file_storage();
-        if ($picture = $fs->get_file($this->context->id, 'local_iomad_learningpath', 'mainpicture', $pathid, '/', 'picture.png')) {
-            $fileinfo = [
-                'contextid' => $this->context->id,
-                'component' => 'local_iomad_learningpath',
-                'filearea' => 'mainpicture',
-                'itemid' => $newpathid,
-                'filepath' => '/',
-                'filename' => 'picture.png',
-            ];
-            $fs->create_file_from_storedfile($fileinfo, $picture);
-        }
-        if ($thumbnail = $fs->get_file($this->context->id, 'local_iomad_learningpath', 'thumbnail', $pathid, '/', 'thumbnail.png')) {
-            $fileinfo = [
-                'contextid' => $this->context->id,
-                'component' => 'local_iomad_learningpath',
-                'filearea' => 'thumbnail',
-                'itemid' => $newpathid,
-                'filepath' => '/',
-                'filename' => 'thumbnail.png',
-            ];
-            $fs->create_file_from_storedfile($fileinfo, $thumbnail);
-        }
+        $this->copy_image($this->context->id, 'local_iomad_learningpath', 'mainpicture', $pathid, 'picture', $newpathid);
+        $this->copy_image($this->context->id, 'local_iomad_learningpath', 'thumbnail', $pathid, 'thumbnail', $newpathid);
 
         // Copy groups.
         $groups = $DB->get_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
@@ -624,7 +690,7 @@ class companypaths {
      * @param bool idonly just give us the ids
      * @return array
      */
-    public function get_users($pathid, $idonly = false) {
+    public function get_users(int $pathid, bool $idonly = false): array {
         global $DB;
 
         $sql = "SELECT u.*
@@ -652,7 +718,7 @@ class companypaths {
      * @param array $excludeids
      * @return array of objects
      */
-    public function get_prospective_users($pathid, $filter, $profilefieldid = 0) {
+    public function get_prospective_users(int $pathid, string $filter, int $profilefieldid = 0): array {
         global $DB;
 
         // Set up some defaults for the SQL.
@@ -722,7 +788,7 @@ class companypaths {
      * @param int $pathid
      * @param array $userids
      */
-    public function add_users($pathid, $userids) {
+    public function add_users(int $pathid, array $userids) {
         global $DB;
 
         foreach ($userids as $userid) {
@@ -752,7 +818,7 @@ class companypaths {
      * @param int $pathid
      * @param array $userids
      */
-    public function delete_users($pathid, $userids) {
+    public function delete_users(int $pathid, array $userids) {
         global $DB;
 
         foreach ($userids as $userid) {
@@ -774,7 +840,7 @@ class companypaths {
      * @param int $licenseid
      * @return boolean.
      */
-    public function assign_license_to_plan($pathid, $licenseid) {
+    public function assign_license_to_plan(int $pathid, int $licenseid) {
         global $DB;
 
         $path = $DB->get_record('iomad_learningpath', array('id' => $pathid));

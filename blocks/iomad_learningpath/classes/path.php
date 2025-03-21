@@ -88,6 +88,9 @@ class path {
                 $completioncoursecount++;
             }
 
+            // Round course progress percent
+            $course->progresspercent = round($course->progresspercent);
+
             // Stash the previous course in case we need it.
             if ($sequenced) {
                 $previouscourse = clone($course);
@@ -176,14 +179,24 @@ class path {
         global $OUTPUT;
 
         $fs = get_file_storage();
-        $pic = $fs->get_file(
-            $this->context->id,
-            'local_iomad_learningpath',
-            'mainpicture',
-            $pathid,
-            '/',
-            'picture.png'
-        );
+        $pic = false;
+        $files = $fs->get_area_files($this->context->id, 'local_iomad_learningpath', 'mainpicture', $pathid);
+        foreach ($files as $file) {
+            if ($file->is_directory()) {
+                continue;
+            }
+            $extensions = [
+                'gif',
+                'jpe',
+                'jpeg',
+                'jpg',
+                'png',
+            ];
+            if (in_array(pathinfo($file->get_filename(), PATHINFO_EXTENSION), $extensions, true)) {
+                $pic = $file;
+                break;
+            }
+        }
 
         if (!$pic) {
             return $OUTPUT->image_url('learningpath', 'local_iomad_learningpath');
