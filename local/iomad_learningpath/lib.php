@@ -45,28 +45,19 @@ function local_iomad_learningpath_pluginfile($course,
                                            $filearea,
                                            $args,
                                            $forcedownload) {
-    global $USER, $DB, $CFG;
+    require_login();
+    $itemid = (int)array_shift($args);
 
-    $companyid = iomad::get_my_companyid($systemcontext);
-    $companycontext = \core\context\company::instance($companyid);
+    $relativepath = implode('/', $args);
 
-    if ($context->contextlevel == $companycontext->contextlevel) {
+    $fullpath = "/{$context->id}/local_iomad_learningpath/$filearea/$itemid/$relativepath";
 
-        require_login();
-        $itemid = (int)array_shift($args);
-
-        $relativepath = implode('/', $args);
-
-        $fullpath = "/{$context->id}/local_iomad_learningpath/$filearea/$itemid/$relativepath";
-
-        $fs = get_file_storage();
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
-            return false;
-        }
-        // Download MUST be forced - security!
-        send_stored_file($file, 0, 0, true);// Check if we want to retrieve the stamps.
+    $fs = get_file_storage();
+    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        return false;
     }
-
+    // Download MUST be forced - security!
+    send_stored_file($file, 0, 0, true);// Check if we want to retrieve the stamps.
 }
 
 /**
