@@ -49,7 +49,24 @@ class manage_page implements renderable, templatable {
     protected function munge_paths(renderer_base $output) {
         $fs = get_file_storage();
         foreach ($this->paths as $path) {
-            $thumb = $fs->get_file($this->context->id, 'local_iomad_learningpath', 'thumbnail', $path->id, '/', 'thumbnail.png');
+            $thumb = false;
+            $files = $fs->get_area_files($this->context->id, 'local_iomad_learningpath', 'thumbnail', $path->id);
+            $extensions = [
+                'gif',
+                'jpe',
+                'jpeg',
+                'jpg',
+                'png',
+            ];
+            foreach ($files as $file) {
+                if ($file->is_directory()) {
+                    continue;
+                }
+                if (in_array(pathinfo($file->get_filename(), PATHINFO_EXTENSION), $extensions, true)) {
+                    $thumb = $file;
+                    break;
+                }
+            }
             $path->linkedit = new \moodle_url('/local/iomad_learningpath/editpath.php', ['id' => $path->id]);
             if ($thumb) {
                 $path->linkthumbnail = \moodle_url::make_pluginfile_url($thumb->get_contextid(), $thumb->get_component(), $thumb->get_filearea(),

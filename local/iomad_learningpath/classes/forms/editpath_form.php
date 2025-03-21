@@ -65,7 +65,7 @@ class editpath_form extends moodleform {
         $mform->addElement('filemanager', 'picture', get_string('picture', 'local_iomad_learningpath'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
-            'accepted_types' => ['image'],
+            'accepted_types' => ['gif','jpe','jpeg','jpg','png'],
         ]);
         $mform->addHelpButton('picture', 'picture', 'local_iomad_learningpath');
 

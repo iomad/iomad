@@ -80,12 +80,19 @@ if ($form->is_cancelled()) {
     } else {
         $DB->update_record('iomad_learningpath', $path);
     }
-    file_save_draft_area_files($data->picture, $context->id, 'local_iomad_learningpath', 'picture', $id,
-        ['maxfiles' => 1]);
-
-    // Resize image and create thumbnail
-    $companypaths->process_image($context, $id);
-
+    // Check if a file has been uploaded
+    $fs = get_file_storage();
+    $files = $fs->get_area_files(5, 'user', 'draft', $data->picture, 'itemid', false);
+    if (!empty($files)) {
+        file_save_draft_area_files($data->picture, $context->id, 'local_iomad_learningpath', 'picture', $id,
+            ['maxfiles' => 1]);
+        // Resize image and create thumbnail
+        $companypaths->process_image($context, $id);
+    } else {
+        foreach (['mainpicture', 'thumbnail', 'picture'] as $filearea) {
+            $companypaths->delete_file($context->id, 'local_iomad_learningpath', $filearea, $id, true);
+        }
+    }
     redirect($exiturl);
 }
 
