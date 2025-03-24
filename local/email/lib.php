@@ -34,7 +34,7 @@ function email_cron() {
     $DB->delete_records_select('email', "modifiedtime < $halfyearagoish AND due < $now");
 
     // Send emails.
-    mtrace("Processign email cron");
+    mtrace("Processing email cron");
     if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
                                         JOIN {user} u ON (e.userid = u.id)
                                         WHERE e.sent IS NULL
