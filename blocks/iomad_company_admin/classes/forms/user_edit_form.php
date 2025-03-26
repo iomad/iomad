@@ -85,6 +85,7 @@ class user_edit_form extends \moodleform {
         }
         $this->userdepartment = $userhierarchylevel;
         $this->companycourses = $this->company->get_menu_courses(true, true);
+        unset($this->companycourses[0]);
         $this->context = \context_coursecat::instance($CFG->defaultrequestcategory);
 
         parent::__construct($actionurl);
