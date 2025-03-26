@@ -166,11 +166,6 @@ class editusers_table extends table_sql {
             // Can't be a company manager if you are in more than one department or the department you are in is not the top level department.
             $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $row->id], '', 'departmentid'));
             $usertypeselect = $this->usertypeselect;
-            if (count($userdepartments) > 1 ||
-                $userdepartments[0] != $this->parentlevel->id) {
-                unset($usertypeselect[1]);
-                unset($usertypeselect[11]);
-            }
 
             // Set up the current value for the inplace form and display it.
             if (empty($CFG->iomad_autoenrol_managers)) {
@@ -178,6 +173,13 @@ class editusers_table extends table_sql {
             } else {
                 $currentvalue = $row->managertype;
             }
+
+            // Output text if the department doesn't match the top level department
+            if (count($userdepartments) > 1 ||
+                $userdepartments[0] != $this->parentlevel->id) {
+                return $usertypeselect[$currentvalue];
+            }
+
             // Added due to value mismatch when editing under certain circumstances.
             if (empty($currentvalue)) {
                 $currentvalue = 0;
@@ -205,7 +207,6 @@ class editusers_table extends table_sql {
         return $row->email;
     }
 
-    /**
     /**
      * Generate the display of the user's departments
      * @param object $user the table row being output.
