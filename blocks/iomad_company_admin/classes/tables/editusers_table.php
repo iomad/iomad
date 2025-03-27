@@ -107,6 +107,11 @@ class editusers_table extends table_sql {
                 return $returnstr;
 
             } else {
+                // If there are no departments available to the current user then return a empty string
+                if (empty($userdepartments)) {
+                    return '';
+                }
+
                 $editable = new \block_iomad_company_admin\output\user_departments_editable($company,
                                                               $companycontext,
                                                               $row,
@@ -185,6 +190,11 @@ class editusers_table extends table_sql {
             // Added due to value mismatch when editing under certain circumstances.
             if (empty($currentvalue)) {
                 $currentvalue = 0;
+            }
+
+            // If there are no departments for the current user then output their role as text
+            if (empty($userdepartments)) {
+                return $usertypeselect[$currentvalue];
             }
 
             $editable = new \block_iomad_company_admin\output\user_roles_editable($company,
