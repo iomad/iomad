@@ -32,6 +32,8 @@ class company {
     public $id = 0;
 
     protected $companyrecord = null;
+    
+    public $context = null;
 
     // These are the fields that will be retrieved by.
     public $cssfields = array('bgcolor_header', 'bgcolor_content');
@@ -44,8 +46,10 @@ class company {
             unset($SESSION->currenteditingcompany);
             unset($SESSION->company);
             unset($this->id);
+            unset($this->context);
             return;
         }
+        $this->context = \core\context\company::instance($companyid);
     }
 
     /**
@@ -3101,6 +3105,16 @@ class company {
     public function get_menu_courses($shared = false, $licensed = false, $groups = false, $default = true, $onlylicensed = false, $noncompany = false) {
         global $DB;
 
+        // Can we view hidden courses?
+        $hiddensql = " AND c.visible = 0 ";
+        $showhidden = false;
+        $hiddenstring = " (" . get_string('hidden', 'grades') . ")";
+        if (iomad::has_capability('block/iomad_company_admin:hideshowcourses', $this->context) ||
+            iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $this->context)) {
+            $hiddensql = "";
+            $showhidden = true;
+        }
+
         // Deal with license option.
         if ($licensed) {
             $licensesql = "c.id NOT IN (
@@ -3159,25 +3173,35 @@ class company {
                               )";
         }
         // Get the courses.
-        $retcourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
-                                                 FROM {course} c
-                                                 WHERE
-                                                 $groupsql
-                                                 $licensesql
-                                                 $onlylicensedsql
-                                                 c.id IN (
-                                                     SELECT courseid FROM {company_course}
-                                                     WHERE companyid = :companyid
-                                                 )
-                                                 $sharedsql
-                                                 $noncompanysql
-                                                 ORDER BY c.fullname",
-                                                 array('companyid' => $this->id,
-                                                       'companyid2' => $this->id));
+        $retcourses = $DB->get_records_sql("SELECT c.id, c.fullname, c.visible
+                                            FROM {course} c
+                                            WHERE
+                                            $groupsql
+                                            $licensesql
+                                            $onlylicensedsql
+                                            c.id IN (
+                                                SELECT courseid FROM {company_course}
+                                                WHERE companyid = :companyid
+                                            )
+                                            $sharedsql
+                                            $noncompanysql
+                                            $hiddensql
+                                            ORDER BY c.fullname",
+                                           ['companyid' => $this->id,
+                                            'companyid2' => $this->id]);
 
         // Take care of multilanguage
         foreach ($retcourses as $courseid => $course) {
-            $retcourses[$courseid] = format_string($course, true, 1);
+            $displayname = format_string($course->fullname, true, 1);
+            if ($course->visible == 0) {
+                if ($showhidden) {
+                    $displayname = format_string($displayname . $hiddenstring);
+                } else {
+                    unset($retcourses[$courseid]);
+                    continue;
+                }
+            }
+            $retcourses[$courseid] = $displayname;
         }
 
         // Add a default entry and return the courses.
