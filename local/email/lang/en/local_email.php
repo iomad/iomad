@@ -519,7 +519,7 @@ $string['licensepoolexpiring_body'] = "<p>Hi {User_FirstName} {User_LastName}</p
 You will not be able to allocate further licenses to users once you reach expiration date. Please contact your Program Manager if you have further questions</p>";
 $string['user_promoted_subject'] = 'New role granted';
 $string['user_promoted_body'] = "<p>Hello {User_FirstName} {User_LastName},</p>
-<p>You have been granted admin privilidges. To access the administrative suite, tracking and reporting tools please click the following link or copy and paste the link into your browser to set your password and login
+<p>You have been granted admin privileges. To access the administrative suite, tracking and reporting tools please click the following link or copy and paste the link into your browser to set your password and login
  {SiteURL}</p>
 <p>On the login page, Click Activate button to activate your account for first time login.</p>
 <p>Your email: {User_Email}</p>";
