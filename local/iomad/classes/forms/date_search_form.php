@@ -47,7 +47,7 @@ class date_search_form extends moodleform {
 
         $mform =& $this->_form;
         foreach ($this->params as $param => $value) {
-            if ($param == 'compfrom' || $param == 'compto' || $param == 'yearfrom' || $param == 'yearto') {
+            if ($param == 'compfrom' || $param == 'compto' || $param == 'yearfrom' || $param == 'yearto' || $param == 'page') {
                 continue;
             }
             $mform->addElement('hidden', $param, $value);
