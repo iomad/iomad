@@ -63,7 +63,7 @@ class course_search_form extends moodleform {
         $mform->setExpanded('searchcourses', false);
 
         foreach ($this->params as $param => $value) {
-            if ($param == 'coursesearch' || strpos($param, 'customfield_') !== false) {
+            if ($param == 'coursesearch' || strpos($param, 'customfield_') !== false || $param == 'page') {
                 continue;
             }
             $mform->addElement('hidden', $param, $value);
