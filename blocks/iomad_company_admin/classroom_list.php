@@ -111,6 +111,9 @@ if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companyco
 
 $PAGE->set_button($buttons);
 
+// Remove page parameter from the $baseurl variable
+$baseurl->remove_params(['page']);
+
 $searchform = new iomad_company_search_form($baseurl, []);
 
 

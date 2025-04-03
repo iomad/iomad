@@ -393,7 +393,12 @@ $selectsql = "DISTINCT u.*";
 $fromsql = " {user} u JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id and cu.companyid = d.company)";
 
 // Set up the headers for the form.
+// Remove page from the params and the url
 $sortparams = $params;
+unset($sortparams['page']);
+$sorturl = $baseurl;
+$sorturl->remove_params(['page']);
+// Set the sort for the headers
 if (!$bycourse) {
     $sortparams['sort'] = 'firstname';
 } else {
@@ -404,38 +409,41 @@ if ($sort == 'c.fullnamename') {
 } else {
     $sortparams['dir'] = $dir;
 }
-$coursenamesort = new moodle_url($baseurl, $sortparams);
+$coursenamesort = new moodle_url($sorturl, $sortparams);
 if ($sort == 'u.firstname') {
     $sortparams['dir'] = $reversedir;
 } else {
     $sortparams['dir'] = $dir;
 }
-$firstnamesort = new moodle_url($baseurl, $sortparams);
+$firstnamesort = new moodle_url($sorturl, $sortparams);
 $sortparams = $params;
+unset($sortparams['page']);
 $sortparams['sort'] = 'lastname';
 if ($sort == 'u.lastname') {
     $sortparams['dir'] = $reversedir;
 } else {
     $sortparams['dir'] = $dir;
 }
-$lastnamesort = new moodle_url($baseurl, $sortparams);
+$lastnamesort = new moodle_url($sorturl, $sortparams);
 $sortparams = $params;
+unset($sortparams['page']);
 $sortparams['sort'] = 'email';
 if ($sort == 'u.email') {
     $sortparams['dir'] = $reversedir;
 } else {
     $sortparams['dir'] = $dir;
 }
-$emailsort = new moodle_url($baseurl, $sortparams);
+$emailsort = new moodle_url($sorturl, $sortparams);
 $sortparams = $params;
+unset($sortparams['page']);
 $sortparams['sort'] = 'name';
 if ($sort == 'd.name') {
     $sortparams['dir'] = $reversedir;
 } else {
     $sortparams['dir'] = $dir;
 }
-$departmentsort = new moodle_url($baseurl, $sortparams);
-
+$departmentsort = new moodle_url($sorturl, $sortparams);
+// Set the headers for the form
 if (!$download) {
     if (!$bycourse) {
         $headers = [html_writer::tag('a', get_string('firstname'), ['href' => $firstnamesort]) . '&nbsp/&nbsp' . html_writer::tag('a', get_string('lastname'), ['href' => $lastnamesort]),
@@ -646,8 +654,11 @@ if (!$bycourse) {
 
 if (!$download) {
     $pagingurl = new moodle_url($baseurl, $params);
-    echo $OUTPUT->initials_bar($ifirst, 'firstinitial', get_string('firstname'), 'firstinitial', $pagingurl);
-    echo $OUTPUT->initials_bar($ilast, 'lastinitial', get_string('lastname'), 'lastinitial', $pagingurl);
+    // Create a new variable for the initials bar url and remove the page parameter
+    $initialsbarurl = $pagingurl;
+    $initialsbarurl->remove_params(['page']);
+    echo $OUTPUT->initials_bar($ifirst, 'firstinitial', get_string('firstname'), 'firstinitial', $initialsbarurl);
+    echo $OUTPUT->initials_bar($ilast, 'lastinitial', get_string('lastname'), 'lastinitial', $initialsbarurl);
     $downloadparams = $params;
     $downloadparams['download'] = true;
     echo html_writer::start_tag("div", ['class' => 'displayflex']);

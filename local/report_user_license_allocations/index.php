@@ -436,6 +436,7 @@ $table->no_sorting('dateunallocated');
 $table->no_sorting('numallocations');
 $table->no_sorting('numunallocations');
 
+$linkurl->remove_params(['page']);
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->set_count_sql($countsql, $sqlparams);
 $table->define_baseurl($linkurl);

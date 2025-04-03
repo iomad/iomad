@@ -224,12 +224,12 @@ if (!$showsummary) {
 }
 
 // Url stuff.
-$url = new moodle_url('/local/report_user_logins/index.php');
+$baseurl = new moodle_url('/local/report_user_logins/index.php');
 
 // Page stuff:.
 $strcompletion = get_string('pluginname', 'local_report_user_logins');
 $PAGE->set_context($companycontext);
-$PAGE->set_url($url);
+$PAGE->set_url($baseurl);
 $PAGE->set_pagelayout('report');
 $PAGE->set_title($strcompletion);
 $PAGE->requires->css("/local/report_user_logins/styles.css");
@@ -298,9 +298,9 @@ if (!$showsummary) {
 }
 
 $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'), new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/index.php'));
-$PAGE->navbar->add($strcompletion, $url);
+$PAGE->navbar->add($strcompletion, $baseurl);
 
-$url = new moodle_url('/local/report_user_logins/index.php', $params);
+$baseurl = new moodle_url('/local/report_user_logins/index.php', $params);
 
 // Do we have any additional reporting fields?
 $extrafields = array();
@@ -469,7 +469,7 @@ if (!$table->is_downloading()) {
     echo $output->header();
     $treeparams = $params;
     $treeparams['showsummary'] = false;
-    echo $output->display_tree_selector($realcompany, $parentlevel, $url, $treeparams, $departmentid, $viewchildren);
+    echo $output->display_tree_selector($realcompany, $parentlevel, $baseurl, $treeparams, $departmentid, $viewchildren);
 
     // Display the search form and department picker.
     if (!$showsummary && !empty($companyid)) {
@@ -493,10 +493,12 @@ if (!$table->is_downloading()) {
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));
     }
 }
+// Remove page parameter from $baseurl
+$baseurl->remove_params(['page']);
 
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->set_count_sql($countsql, $sqlparams);
-$table->define_baseurl($url);
+$table->define_baseurl($baseurl);
 $table->define_columns($columns);
 $table->define_headers($headers);
 $table->out($CFG->iomad_max_list_users, true);
