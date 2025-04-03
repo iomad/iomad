@@ -107,6 +107,9 @@ if ($delete and confirm_sesskey()) {
 
 }
 
+// Remove page parameter from the $baseurl variable
+$baseurl->remove_params(['page']);
+
 $searchform = new iomad_company_search_form($baseurl, []);
 
 
