@@ -666,6 +666,7 @@ $usercount = $DB->count_records_sql($countsql, $sqlparams);
 echo $output->heading(get_string('totalusers', 'block_iomad_company_admin', $usercount));
 
 // Actually create and display the table.
+$baseurl->remove_params(['page']);
 $table = new \block_iomad_company_admin\tables\editusers_table('block_iomad_company_admin_editusers_table');
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->set_count_sql($countsql, $sqlparams);
