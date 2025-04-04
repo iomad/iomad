@@ -26,9 +26,11 @@ use iomad;
 use company;
 use company_user;
 use context_system;
+use EmailTemplate;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+require_once($CFG->dirroot . '/local/email/lib.php');
 
 class processor {
     public static function trigger_oncheckout($invoiceid) {
@@ -46,6 +48,7 @@ class processor {
         self::trigger_invoiceitem_onordercomplete($invoice->id, 'onordercomplete', $invoice );
         $invoice->status = \block_iomad_commerce\helper::INVOICESTATUS_PAID;
         $DB->update_record('invoice', $invoice);
+        self::email_invoices($invoice->id);
     }
 
     private static function process_all_items($invoiceid, $eventname, $invoice = null) {
@@ -260,5 +263,60 @@ class processor {
         $invoiceitem->processed = 1;
         $DB->update_record('invoiceitem', $invoiceitem);
         $transaction->allow_commit();
+    }
+
+    public static function email_invoices($invoiceid) {
+        global $CFG, $DB;
+
+        if (empty($invoiceid)) {
+            return;
+        }
+
+        $basket = \block_iomad_commerce\helper::get_basket_by_id($invoiceid);
+        $basket->itemized = \block_iomad_commerce\helper::get_invoice_html($basketid, 0, 0);
+
+        // Notify shop admin.
+        if (isset($CFG->commerce_admin_email)) {
+            if (!$shopadmin = $DB->get_record('user', array('email' => $CFG->commerce_admin_email))) {
+                $shopadmin = (object) [];
+                $shopadmin->email = $CFG->commerce_admin_email;
+                if (empty($CFG->commerce_admin_firstname)) {
+                    $shopadmin->firstname = "Shop";
+                } else {
+                    $shopadmin->firstname = $CFG->commerce_admin_firstname;
+                }
+                if (empty($CFG->commerce_admin_lastname)) {
+                    $shopadmin->lastname = "Admin";
+                } else {
+                    $shopadmin->lastname = $CFG->commerce_admin_lastname;
+                }
+                $shopadmin->id = -999;
+            }
+        } else {
+                $shopadmin = (object) [];
+            $shopadmin->email = $CFG->support_email;
+            if (empty($CFG->commerce_admin_firstname)) {
+                $shopadmin->firstname = "Shop";
+            } else {
+                $shopadmin->firstname = $CFG->commerce_admin_firstname;
+            }
+            if (empty($CFG->commerce_admin_lastname)) {
+                $shopadmin->lastname = "Admin";
+            } else {
+                $shopadmin->lastname = $CFG->commerce_admin_lastname;
+            }
+            $shopadmin->id = -999;
+        }
+
+        if ($user = $DB->get_record('user',  array('id' => $basket->userid))) {
+            EmailTemplate::send('invoice_ordercomplete', array('user' => $user, 'invoice' => $basket, 'sender' => $shopadmin));
+
+            // Notify shop admin.
+            if (isset($CFG->commerce_admin_email)) {
+                EmailTemplate::send('invoice_ordercomplete_admin', array('user' => $shopadmin,
+                                                                         'invoice' => $basket,
+                                                                         'sender' => $shopadmin));
+            }
+        }
     }
 }
