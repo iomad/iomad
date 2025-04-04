@@ -273,7 +273,7 @@ class processor {
         }
 
         $basket = \block_iomad_commerce\helper::get_basket_by_id($invoiceid);
-        $basket->itemized = \block_iomad_commerce\helper::get_invoice_html($basketid, 0, 0);
+        $basket->itemized = \block_iomad_commerce\helper::get_invoice_html($basket->id, 0, 0);
 
         // Notify shop admin.
         if (isset($CFG->commerce_admin_email)) {
@@ -293,7 +293,7 @@ class processor {
                 $shopadmin->id = -999;
             }
         } else {
-                $shopadmin = (object) [];
+            $shopadmin = (object) [];
             $shopadmin->email = $CFG->support_email;
             if (empty($CFG->commerce_admin_firstname)) {
                 $shopadmin->firstname = "Shop";
