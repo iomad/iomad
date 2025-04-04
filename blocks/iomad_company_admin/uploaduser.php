@@ -490,7 +490,7 @@ if (!empty($cancelled)) {
                 }
             }
             foreach ($prffields as $field) {
-                if (isset($user->$field)) {
+                if (isset($user->$field) && is_string($user->$field)) {
                     if (preg_match('/(?P<day>\d{2})-(?P<month>[a-zA-Z]{3})-(?P<year>\d{4})/', $user->$field, $datearray)) {
                         $month = $montharray[$datearray[2]];
                         $unixtime = mktime (0, 0, 0, $month, $datearray['day'], $datearray['year']);
@@ -498,7 +498,7 @@ if (!empty($cancelled)) {
                     }
                     continue;
                 }
-                if (isset($formdata->$field)) {
+                if (isset($formdata->$field) && is_string($user->$field)) {
                     // Process templates.
                     // Check if is in a dd-Mon-yyy format.
                     if (preg_match('/(?P<day>\d{2})-(?P<month>[a-zA-Z]{3})-(?P<year>\d{4})/', $formdata->$field, $datearray)) {
