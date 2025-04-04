@@ -73,4 +73,13 @@ class editpath_form extends moodleform {
         $this->add_action_buttons();
     }
 
+    public function validation($data, $files) {
+        global $DB;
+        $errors = array();
+        if ($DB->record_exists('iomad_learningpath', ['name' => $data['name']])) {
+            $errors['name'] = get_string('learningpathnameused', 'local_iomad_learningpath');
+        }
+        return $errors;
+    }
+
 }

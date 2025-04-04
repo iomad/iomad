@@ -55,6 +55,7 @@ $string['iomad_learningpath:view'] = 'View learning path';
 $string['learningpathedit'] = 'Edit learning path';
 $string['learningpathmanage'] = 'Learning path management';
 $string['learningpaths'] = 'Learning paths';
+$string['learningpathnameused'] = 'Name is already used by another learning path';
 $string['managecourses'] = 'Manage courses for \'{$a}\'';
 $string['managestudents'] = 'Manage student assignments';
 $string['managetitle'] = 'Manage learning paths';
