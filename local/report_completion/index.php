@@ -1119,15 +1119,12 @@ if (empty($courseid)) {
                                                                                  AND d.company = cu.companyid)
                                                      WHERE u.deleted=0 $suspendedsql $educatorsql $companysql $departmentsql",
                                                      $sqlparams);
-            $total = !empty($totalcompanyusers) ? number_format($total * 100 / $totalcompanyusers, 2) : 0;
-            $totalstring = get_string('percents','moodle', $total); 
-            $totalstarted = !empty($totalcompanyusers) ? number_format($totalstarted * 100 / $totalcompanyusers, 2) : 0; 
-            $totalstartedstring = get_string('percents','moodle', $totalstarted); 
-            $totalcompleted = !empty($totalcompanyusers) ? number_format($totalcompleted * 100 / $totalcompanyusers, 2) : 0;
-            $totalcompletedstring = get_string('percents', 'moodle', $totalcompleted);
-            $remainder = $totalcompanyusers - $total - $totalstarted - $totalcompleted;
-            $remainder = !empty($totalcompanyusers) ? number_format($remainder * 100 / $totalcompanyusers, 2) : 0;
-            $remainderstring = get_string('percents', 'moodle', $remainder);
+            $remainder = !empty($totalcompanyusers) ? 100 - ((($total - $totalstarted) / $total) * 100) : 0;
+            $totalstarted = !empty($totalcompanyusers) ? ($totalstarted / $total) * 100 : 0;
+            $totalcompleted = !empty($totalcompanyusers) ? ($totalcompleted / $total) * 100 : 0;
+            $totalstartedstring = get_string('percents','moodle', number_format($totalstarted, 2)); 
+            $totalcompletedstring = get_string('percents', 'moodle', number_format($totalcompleted, 2));
+            $remainderstring = get_string('percents', 'moodle', number_format($remainder, 2));
     }
     if ($params['showpercentage'] != 1) {
         $summarystring = get_string('usercoursetotal', 'block_iomad_company_admin',
