@@ -68,7 +68,7 @@ class cron_task extends \core\task\scheduled_task {
                                                JOIN {company} c ON cu.companyid = c.id
                                                WHERE u.institution != c.name
                                                AND c.parentid = 0",
-                                               [], 0, 1);
+                                               [], 0, 500);
             }
 
             // Update the users.
