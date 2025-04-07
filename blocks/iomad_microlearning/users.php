@@ -123,8 +123,32 @@ if ($threadsform->is_cancelled() || $usersform->is_cancelled() ||
     if ($companyid > 0) {
         $threadsform->set_data($params);
         echo $threadsform->display();
-        if ($data = $threadsform->get_data() || !empty($selectedthread)) {
-             if ($threadid > 0) {
+        if ($threadid != 0){
+            if ($data = $threadsform->get_data() || !empty($selectedthread)) {
+                if ($threadid > 0) {
+                    if (!$thread = $DB->get_record('microlearning_thread', array('id' => $threadid))) {
+                        throw new moodle_exception('invalidthreadid', 'block_iomad_microlearning');
+                    }
+                    if (!$DB->get_records('microlearning_nugget', ['threadid' => $thread->id])) {
+                        // We don't have anything to assign.
+                        echo $output->notification(get_string('nonuggets', 'block_iomad_microlearning'), 'info', false);
+
+                        // Add the button to manage nuggets
+                        echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php',
+                                                    ['threadid' => $thread->id]),
+                                                    get_string('learningnuggets', 'block_iomad_microlearning'));
+
+                        echo $output->footer();
+                        die;
+                    }
+                    $usersform->process();
+                    $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $threadid, $groupid);
+                } else if (!empty($selectedthread)) {
+                    $usersform->set_thread($selectedthread);
+                }
+                echo $usersform->display();
+            } else if ($threadid > 0) {
+                $thread = $DB->get_record('microlearning_thread', array('id' => $threadid));
                 if (!$thread = $DB->get_record('microlearning_thread', array('id' => $threadid))) {
                     throw new moodle_exception('invalidthreadid', 'block_iomad_microlearning');
                 }
@@ -136,36 +160,16 @@ if ($threadsform->is_cancelled() || $usersform->is_cancelled() ||
                     echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php',
                                                 ['threadid' => $thread->id]),
                                                 get_string('learningnuggets', 'block_iomad_microlearning'));
-
-                    $output->footer();
+    
+                    echo $output->footer();
                     die;
                 }
                 $usersform->process();
-                $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $threadid, $groupid);
-            } else if (!empty($selectedthread)) {
-                $usersform->set_thread($selectedthread);
+                $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form($PAGE->url, $context, $companyid, $departmentid, $threadid, $groupid);
+                echo $usersform->display();
             }
-            echo $usersform->display();
-        } else if ($threadid > 0) {
-            $thread = $DB->get_record('microlearning_thread', array('id' => $threadid));
-            if (!$thread = $DB->get_record('microlearning_thread', array('id' => $threadid))) {
-                throw new moodle_exception('invalidthreadid', 'block_iomad_microlearning');
-            }
-            if (!$DB->get_records('microlearning_nugget', ['threadid' => $thread->id])) {
-                // We don't have anything to assign.
-                echo $output->notification(get_string('nonuggets', 'block_iomad_microlearning'), 'info', false);
-
-                // Add the button to manage nuggets
-                echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php',
-                                            ['threadid' => $thread->id]),
-                                            get_string('learningnuggets', 'block_iomad_microlearning'));
-
-                $output->footer();
-                die;
-            }
-            $usersform->process();
-            $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $threadid, $groupid);
-            echo $usersform->display();
+        } else {
+            echo("No thread selected.");
         }
     }
     echo html_writer::end_tag('div');
