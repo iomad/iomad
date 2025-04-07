@@ -1072,10 +1072,10 @@ class iomad_company_search_form extends moodleform {
 
         $mform =& $this->_form;
 
-        $sarcharray = array();
+        $searcharray = array();
         $searcharray[] = $mform->createElement('text', 'search');
         $searcharray[] = $mform->createElement('submit', 'searchbutton', get_string('search'));
         $mform->addGroup($searcharray, 'searcharray', '', ' ', false);
-        $mform->setType('search', PARAM_ALPHANUM);
+        $mform->setType('search', PARAM_CLEAN);
     }
 }
