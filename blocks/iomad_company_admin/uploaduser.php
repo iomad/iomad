@@ -498,7 +498,7 @@ if (!empty($cancelled)) {
                     }
                     continue;
                 }
-                if (isset($formdata->$field) && is_string($user->$field)) {
+                if (isset($formdata->$field) && isset($user->field) && is_string($user->$field)) {
                     // Process templates.
                     // Check if is in a dd-Mon-yyy format.
                     if (preg_match('/(?P<day>\d{2})-(?P<month>[a-zA-Z]{3})-(?P<year>\d{4})/', $formdata->$field, $datearray)) {
