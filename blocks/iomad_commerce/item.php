@@ -74,7 +74,7 @@ if ($item) {
 
     echo '<h3>' . format_string($item->name) . "</h3>";
 
-    if ($item->long_description) {
+    if (isset($item->long_description)) {
         echo $item->long_description;
     } else {
         echo $item->summary;
