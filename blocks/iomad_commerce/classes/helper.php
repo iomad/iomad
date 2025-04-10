@@ -64,7 +64,7 @@ class helper {
         if ($course_shopsetting_with_lowest_block_price->allow_license_blocks) {
             if ($blockprices = $DB->get_records_sql("SELECT * FROM {course_shopblockprice}
                                                     WHERE itemid = :itemid
-                                                    AND price_bracket_start < 2",
+                                                    AND price_bracket_start <= 2",
                                                     ['itemid' => $course_shopsetting_with_lowest_block_price->id])) {
                 foreach ($blockprices as $blockprice) {
                     $prices[] = $blockprice->price;
