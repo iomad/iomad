@@ -250,7 +250,17 @@ class product_edit_form extends moodleform {
 
         if (count($data['itemcourses']) == 0) {
             $errors['itemcourses'] = get_string('required');
-        } 
+        }
+
+        if (!empty($data['item_block_start'][0]) && $data['item_block_start'][0] > 2) {
+            $errors['item_block_start[0]'] = get_string('error_invalidlicensenumber', 'block_iomad_commerce');
+        }
+
+        for($i = 0; $i < count($data['item_block_start']); $i++){
+            if(!empty($data['item_block_start'][$i]) && !isset($data['item_block_price'][$i])){
+                $errors['item_block_price['.$i.']'] = get_string('error_invalidlicenseprice', 'block_iomad_commerce');
+            }
+        }
 
         return $errors;
     }
