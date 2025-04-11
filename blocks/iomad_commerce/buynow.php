@@ -74,6 +74,8 @@ if ($nlicenses) {
         $invoiceitem->license_allocation = $nlicenses;
         $invoiceitem->license_validlength = $block->validlength;
         $invoiceitem->license_shelflife = $block->shelflife;
+    } else {
+        redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/item.php?itemid='.$itemid.'&invalidamount=true'));
     }
 
 } else {

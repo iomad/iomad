@@ -28,6 +28,7 @@ require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
 $itemid         = required_param('itemid', PARAM_INT);
 $licenseformempty = optional_param('licenseformempty', 0, PARAM_INT);
+$invalidamount = optional_param('invalidamount', 0, PARAM_BOOL);
 
 require_login();
 
@@ -129,8 +130,14 @@ if ($item) {
                         'item_id' => $itemid,
                         'msg_txt' => $msg,
                         'howmany_txt' => 'How many licenses?',
-                        'buynow_txt' => get_string('buynow', 'block_iomad_commerce')
+                        'buynow_txt' => get_string('buynow', 'block_iomad_commerce'),
+                        'noerror_style' => 'display: none;'
                     ];
+                    if(isset($invalidamount) && $invalidamount == true){
+                        $template->error_class = 'text-danger';
+                        unset($template->noerror_style);
+                        $template->error_txt = get_string('error_singlepurchaseunavailable', 'block_iomad_commerce');
+                    }
                     // Save the mustache file output in the variable $form
                     $form = $OUTPUT->render_from_template("block_iomad_commerce/item_license_amount_form", $template);
                 }
