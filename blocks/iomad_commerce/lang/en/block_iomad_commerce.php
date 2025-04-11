@@ -98,6 +98,7 @@ $string['error_invalidlicenseprice'] = 'Price required';
 $string['error_invalidlicensenumber'] = 'Value for the first # of licenses record must be 1 or 2';
 $string['error_singlepurchaseprice'] = 'Single purchase price should be more than 0.';
 $string['error_singlepurchasevalidlength'] = 'Valid length should be more than 0.';
+$string['error_singlepurchaseunavailable'] = 'A single license purchase is not available for this product';
 $string['filter_by_tag'] = 'Choose products by category: ';
 $string['filtered_by_tag'] = 'Products within the category - {$a}.';
 $string['filtered_by_search'] = 'You searched for {$a}.';
