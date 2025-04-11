@@ -93,6 +93,7 @@ $string['error_invalidblockstarts'] = 'One or more # of licenses is invalid.';
 $string['error_invalidblockprices'] = 'One or more prices are invalid.';
 $string['error_invalidblockvalidlengths'] = 'One or more valid lengths are invalid.';
 $string['error_invalidblockshelflives'] = 'One or more shelf lives are invalid.';
+$string['error_invalidlicenseamount'] = 'License amount must be 1 or more';
 $string['error_invalidlicenseprice'] = 'Price required';
 $string['error_invalidlicensenumber'] = 'Value for the first # of licenses record must be 1 or 2';
 $string['error_singlepurchaseprice'] = 'Single purchase price should be more than 0.';
