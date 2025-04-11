@@ -1,0 +1,11 @@
+<form action="{{ form_url }}" method="get" id="license_amount_form">
+    <input type="hidden" name="itemid" value="{{ item_id }}" />
+    <input type="hidden" name="licenses" value="1" />
+    {{ msg_txt }}
+    <div style="float:left;display:inline-flex;">
+    <label for="id_nlicenses"> {{ howmany_txt }} </label>
+    <input type="text" class="form-control" style="width: 195px;margin-left:20px;" name="nlicenses" id="id_nlicenses" value="" />
+    <input type="submit" class="btn btn-primary" style="margin-left:20px;" value="{{ buynow_txt }}" />
+    <p style="display:none;" class="text-danger ml-1 mr-1" id="id_nlicenses_error"></p>
+    </div>
+</form>
