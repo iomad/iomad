@@ -50,6 +50,7 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->navbar->add($linktext, $linkurl);
+$PAGE->requires->js_call_amd('block_iomad_commerce/item_license_amount_form', 'init');
 
 if ($item = $DB->get_record('course_shopsettings', ['id' => $itemid, 'enabled' => 1, 'companyid' => $companyid])) {
     $PAGE->navbar->add($item->name);
@@ -120,17 +121,18 @@ if ($item) {
                         $msg = "<p class='error'>" . get_string('licenseformempty', 'block_iomad_commerce') . "</p>";
                     }
 
+                    // Create url for the form
                     $licenseformurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $itemid]);
-                    $form = '<form action="' . $licenseformurl->out() .'" method="get">
-                        <input type="hidden" name="itemid" value="' . $itemid . '" />
-                        <input type="hidden" name="licenses" value="1" />
-                        ' . $msg . '
-                        <div style="float:left;display:inline-flex;">
-                        <label for="id_nlicenses"> How many licenses? </label>
-                        <input type="text" class="form-control" style="width: 195px;margin-left:20px;" name="nlicenses" id="id_nlicenses" value="" />
-                        <input type="submit" class="btn btn-primary" style="margin-left:20px;" value="' . get_string('buynow', 'block_iomad_commerce') . '" />
-                        </div>
-                    </form>';
+                    // Create the tempalte for the mustache file
+                    $template = (object)[
+                        'form_url' => $licenseformurl->out(),
+                        'item_id' => $itemid,
+                        'msg_txt' => $msg,
+                        'howmany_txt' => 'How many licenses?',
+                        'buynow_txt' => get_string('buynow', 'block_iomad_commerce')
+                    ];
+                    // Save the mustache file output in the variable $form
+                    $form = $OUTPUT->render_from_template("block_iomad_commerce/item_license_amount_form", $template);
                 }
             }
         }
