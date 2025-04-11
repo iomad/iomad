@@ -6,6 +6,6 @@
     <label for="id_nlicenses"> {{ howmany_txt }} </label>
     <input type="text" class="form-control" style="width: 195px;margin-left:20px;" name="nlicenses" id="id_nlicenses" value="" />
     <input type="submit" class="btn btn-primary" style="margin-left:20px;" value="{{ buynow_txt }}" />
-    <p style="display:none;" class="text-danger ml-1 mr-1" id="id_nlicenses_error"></p>
+    <p style="{{ noerror_style }}" class="text-danger ml-1 mr-1 {{ error_class }}" id="id_nlicenses_error">{{ error_txt }}</p>
     </div>
 </form>
