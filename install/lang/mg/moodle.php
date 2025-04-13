@@ -29,8 +29,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['language'] = 'Hizkuntza';
-$string['moodlelogo'] = 'Moodleko logoa';
-$string['next'] = 'Hurrengoa';
-$string['previous'] = 'Aurrekoa';
-$string['reload'] = 'Berriz kargatu';
+$string['language'] = 'Fiteny';
+$string['moodlelogo'] = 'Sarim-pamantarana ny Moodle';
+$string['next'] = 'Manaraka';
+$string['previous'] = 'Teo aloha';
+$string['reload'] = 'Avereno';
