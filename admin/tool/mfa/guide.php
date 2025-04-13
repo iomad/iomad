@@ -29,7 +29,7 @@ require_once(__DIR__ . '/../../../config.php');
 $PAGE->set_context(\context_system::instance());
 $PAGE->set_url(new moodle_url('/admin/tool/mfa/guide.php'));
 $PAGE->set_title(get_string('guidance', 'tool_mfa'));
-$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('secure');
 
 // IOMAD
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');

@@ -1,6 +1,22 @@
 This files describes API changes in core libraries and APIs,
 information provided here is intended especially for developers.
 
+=== 4.4.8 ===
+
+* Behat now supports email content verification using Mailpit.
+You can check the contents of an email using the step `Then the email to "user@example.com" with subject containing "subject" should contain "content".`
+To use this feature:
+1. Ensure that Mailpit is running
+2. Define the following constants in your `config.php`:
+ - `TEST_EMAILCATCHER_MAIL_SERVER` - The Mailpit server address (e.g. `0.0.0.0:1025`)
+ - `TEST_EMAILCATCHER_API_SERVER` - The Mailpit API server (qe.g. `http://localhost:8025`)
+3. Ensure that the email catcher is set up using the step `Given an email catcher server is configured`.
+
+* A new method, `core_text::trim_ctrl_chars()`, has been introduced to clean control characters from text.
+  This ensures cleaner input handling and prevents issues caused by invisible or non-printable characters
+
+* The public method `get_slashargument` has been added to the `moodle_url` class.
+
 === 4.4.6 ===
 
 * A new core\ip_utils::normalize_internet_address() method is created to
@@ -24,6 +40,9 @@ completed modules to the DBMS improving the performance of the method.
   to allow checking the current URL. You can use it to check whether a
   user has been redirected to the expected location.
   e.g. `And the url should match "/mod/forum/view\.php\?id=[0-9]+"`
+
+* A new function `file_clear_draft_area()` has been added to delete the files in a draft area.
+  For more information see [MDL-72050](https://tracker.moodle.org/browse/MDL-72050)
 
 === 4.4.5 ===
 

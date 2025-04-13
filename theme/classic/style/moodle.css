@@ -25199,6 +25199,10 @@ h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
   bottom: calc(4rem + max(80px, 0.9375rem * 3));
 }
 
+.hasstickyfooter .maintenancewarning {
+  bottom: max(80px, 0.9375rem * 3);
+}
+
 .popover.footer .popover-body {
   padding: 0;
 }
@@ -25225,6 +25229,10 @@ h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
   .jsenabled .btn-footer-communication {
     display: block;
     z-index: 1000;
+  }
+  .jsenabled .maintenancewarning,
+  .jsenabled.hasstickyfooter:has(.drawer-right-toggle) .maintenancewarning {
+    right: 5rem;
   }
 }
 .bg-inverse a {
@@ -26943,8 +26951,18 @@ body.behat-site .action-menu .dropdown-subpanel-content.show {
   position: fixed;
   bottom: 0;
   right: 0;
+  margin: 1rem;
   overflow: hidden;
   z-index: 1000;
+}
+
+.jsenabled .maintenancewarning {
+  transition: 0.2s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jsenabled .maintenancewarning {
+    transition: none;
+  }
 }
 
 .modal.modal-in-page {
@@ -32056,7 +32074,7 @@ table.question-bank-table .header.checkbox .form-check {
 body.path-question-type {
   /* Hacks to display the labels within a form group. */
 }
-body.path-question-type .fitem .col-form-label.sr-only:not(legend):not([for=id_category]) {
+body.path-question-type .fitem .col-form-label.sr-only:not(legend):not([for=id_category], [for=id_filetypeslist]) {
   position: static;
   width: auto;
   height: auto;
@@ -36273,6 +36291,7 @@ body {
   right: 0;
   top: 0;
   height: 500px;
+  max-height: 80vh;
   width: 380px;
   border: 1px solid #ddd;
   transition: height 0.25s;
@@ -36937,6 +36956,12 @@ body.tox-fullscreen .tox.tox-tinymce-aux {
     pointer-events: auto;
     visibility: hidden;
   }
+  .hasstickyfooter:has(.drawer-right-toggle) .maintenancewarning {
+    right: 2rem;
+  }
+  .hasstickyfooter:has(.drawer-left-toggle) .maintenancewarning {
+    margin-left: 3.5rem;
+  }
 }
 @media (min-width: 576px) {
   #page.drawers .main-inner {
@@ -36995,6 +37020,9 @@ body.tox-fullscreen .tox.tox-tinymce-aux {
   }
   .jsenabled #page.drawers.show-drawer-right .popover-process-monitor, .jsenabled #page.drawers.show-drawer-right .btn-footer-popover, .jsenabled #page.drawers.show-drawer-right .btn-footer-communication {
     right: calc(315px + 2rem);
+  }
+  .jsenabled:has(#page.drawers.show-drawer-right) .maintenancewarning {
+    right: calc(315px + 5rem);
   }
 }
 @media (min-width: 992px) {
@@ -38631,59 +38659,51 @@ div.editor_atto_toolbar button .icon {
   width: fit-content;
 }
 
-.dropdown-item.text-primary {
-  color: #0f6cbf;
-}
-.dropdown-item.text-primary:hover {
+.dropdown-item:hover.text-primary,
+.dropdown-item:hover a.text-primary, .dropdown-item:focus.text-primary,
+.dropdown-item:focus a.text-primary {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-secondary {
-  color: #ced4da;
-}
-.dropdown-item.text-secondary:hover {
+.dropdown-item:hover.text-secondary,
+.dropdown-item:hover a.text-secondary, .dropdown-item:focus.text-secondary,
+.dropdown-item:focus a.text-secondary {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-success {
-  color: #357a32;
-}
-.dropdown-item.text-success:hover {
+.dropdown-item:hover.text-success,
+.dropdown-item:hover a.text-success, .dropdown-item:focus.text-success,
+.dropdown-item:focus a.text-success {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-info {
-  color: #008196;
-}
-.dropdown-item.text-info:hover {
+.dropdown-item:hover.text-info,
+.dropdown-item:hover a.text-info, .dropdown-item:focus.text-info,
+.dropdown-item:focus a.text-info {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-warning {
-  color: #f0ad4e;
-}
-.dropdown-item.text-warning:hover {
+.dropdown-item:hover.text-warning,
+.dropdown-item:hover a.text-warning, .dropdown-item:focus.text-warning,
+.dropdown-item:focus a.text-warning {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-danger {
-  color: #ca3120;
-}
-.dropdown-item.text-danger:hover {
+.dropdown-item:hover.text-danger,
+.dropdown-item:hover a.text-danger, .dropdown-item:focus.text-danger,
+.dropdown-item:focus a.text-danger {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-light {
-  color: #f8f9fa;
-}
-.dropdown-item.text-light:hover {
+.dropdown-item:hover.text-light,
+.dropdown-item:hover a.text-light, .dropdown-item:focus.text-light,
+.dropdown-item:focus a.text-light {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
-.dropdown-item.text-dark {
-  color: #343a40;
-}
-.dropdown-item.text-dark:hover {
+.dropdown-item:hover.text-dark,
+.dropdown-item:hover a.text-dark, .dropdown-item:focus.text-dark,
+.dropdown-item:focus a.text-dark {
   color: #fff !important; /* stylelint-disable-line declaration-no-important */
 }
 
@@ -38703,7 +38723,7 @@ body.behat-site .path-course-view li.activity form.togglecompletion,
 body.behat-site .path-course-view li.activity form.togglecompletion::before,
 .path-course-view li.activity form.togglecompletion body.behat-site.path-course-view li.activity form.togglecompletion::before, body.themedesignermode .path-course-view li.activity form.togglecompletion::before,
 .path-course-view li.activity form.togglecompletion body.themedesignermode.path-course-view li.activity form.togglecompletion::before {
-  content: "Deprecated style in use" !important;
+  content: "Deprecated style in use (.togglecompletion)" !important;
   color: #ca3120 !important;
   font-size: smaller !important;
 }
