@@ -25968,18 +25968,6 @@ form.popupform div {
   overflow: auto;
 }
 
-.no-overflow > .generaltable {
-  margin-bottom: 0;
-}
-
-.no-overflow .generaltable .visually-hidden,
-.no-overflow .generaltable .accesshide,
-.table-responsive .generaltable .visually-hidden,
-.table-responsive .generaltable .accesshide {
-  position: relative;
-  display: block;
-}
-
 .accesshide {
   width: 1px !important;
   height: 1px !important;
@@ -28715,8 +28703,8 @@ body.behat-site .action-menu .dropdown-subpanel-content.show {
   font-size: 64px;
 }
 .icon.emoticon {
-  max-width: 20px;
-  max-height: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 img.icon {
@@ -33942,15 +33930,11 @@ body.path-question-type {
   /* Hacks to display the labels within a form group. */
 }
 body.path-question-type .fitem .col-form-label.visually-hidden:not(legend):not([for=id_category], [for=id_filetypeslist]) {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: 0;
-  margin: 0 0.5rem 0 0;
-  overflow: visible;
-  clip: auto;
-  clip-path: none;
-  border: 0;
+  /* stylelint-disable declaration-no-important */
+  position: static !important;
+  width: auto !important;
+  overflow: visible !important;
+  /* stylelint-enable declaration-no-important */
 }
 
 .que {
@@ -37126,6 +37110,18 @@ table .sticky-column {
   font-size: 3rem;
 }
 
+.table-responsive .dropdown {
+  position: static !important; /* stylelint-disable-line declaration-no-important */
+}
+.table-responsive .table {
+  margin-bottom: 0;
+}
+.table-responsive .table .visually-hidden,
+.table-responsive .table .accesshide {
+  position: relative !important; /* stylelint-disable-line declaration-no-important */
+  display: block;
+}
+
 /**
  * File buttons.scss.
  * Contains styles for buttons.
@@ -38842,6 +38838,9 @@ span[data-flexitour=container][x-placement=right] div[data-role=arrow]:after, sp
   }
   .container {
     width: auto;
+  }
+  .navbar {
+    display: none;
   }
 }
 .modal .modal-body > .loading-icon {
