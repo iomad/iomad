@@ -21,7 +21,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.1.17 (Build: 20250317)'; // Human-friendly version name
+$plugin->release  = '4.1.18 (Build: 20250414)'; // Human-friendly version name
 $plugin->version  = 2021021500;
 $plugin->requires = 2019052000;
 $plugin->component  = 'local_report_emails';
