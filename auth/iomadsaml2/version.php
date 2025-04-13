@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.3.11 (Build: 20250317)'; // Human-friendly version name
+$plugin->release  = '4.3.12 (Build: 20250414)'; // Human-friendly version name
 $plugin->version   = 2022111702;    // The current plugin version (Date: YYYYMMDDXX).
 $plugin->release   = 2022111701;    // Match release exactly to version.
 $plugin->requires  = 2017051509;    // Requires PHP 7, 2017051509 = T12. M3.3
