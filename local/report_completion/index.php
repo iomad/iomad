@@ -800,8 +800,28 @@ if (empty($courseid)) {
     $coursetable->define_baseurl($baseurl);
     $coursetable->define_columns($coursecolumns);
     $coursetable->define_headers($courseheaders);
-    $coursetable->no_sorting('licenseallocated');
-    $coursetable->no_sorting('usersummary');
+    if (iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext) &&
+    $haslicenses) { 
+        if ($showcharts) {
+            $coursetable->no_sorting('licenseallocated');
+        } else {
+            $coursetable->no_sorting('licenseuserused');
+            $coursetable->no_sorting('licenseunused');
+            if ($params['showpercentage'] == 1) {
+                $coursetable->no_sorting('neverassigned');
+            }
+        }
+    }
+    if ($showcharts) {
+        $coursetable->no_sorting('usersummary');
+    } else {
+        $coursetable->no_sorting('usernotstarted');
+        $coursetable->no_sorting('userinprogress');
+        $coursetable->no_sorting('usercompleted');
+        if ($params['showpercentage'] == 1) {
+            $coursetable->no_sorting('neverenrolled');
+        }
+    }
     $coursetable->sort_default_column = 'coursename';
     $coursetable->out($CFG->iomad_max_list_users, true);
 
