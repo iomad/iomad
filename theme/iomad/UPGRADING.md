@@ -1,5 +1,31 @@
 # theme_iomad Upgrade notes
 
+## 5.0
+
+### Changed
+
+- From now on, themes can customise the activity icon colours using simple CSS variables. The new variables are $activity-icon-administration-bg, $activity-icon-assessment-bg, $activity-icon-collaboration-bg, $activity-icon-communication-bg, $activity-icon-content-bg, $activity-icon-interactivecontent-bg. All previous `$activity-icon-*-filter` elements can be removed, as they are no longer in use.
+
+  For more information see [MDL-83725](https://tracker.moodle.org/browse/MDL-83725)
+
+### Deprecated
+
+- Added new bs4-compat SCSS file (initially deprecated) to help third-party plugins the migration process from BS4 to BS5
+
+  For more information see [MDL-80519](https://tracker.moodle.org/browse/MDL-80519)
+- New `theme_iomad/bs4-compat` JS module added (directly deprecated) to allow third-party-plugins to directly convert old Bootstrap 4 data attribute syntax to the new Bootstrap 5
+
+  For more information see [MDL-84450](https://tracker.moodle.org/browse/MDL-84450)
+
+### Removed
+
+- Remove SCSS deprecated in 4.4
+
+  For more information see [MDL-80156](https://tracker.moodle.org/browse/MDL-80156)
+- Remove chat and survey styles. Important note: the styles have been moved to the plugins as CSS files (and not SCSS) so themes might now need to override the mod_chat and mod_survey styles specifically as css does not have any definition for primary, gray and other colors accessible in the original scss version.
+
+  For more information see [MDL-82457](https://tracker.moodle.org/browse/MDL-82457)
+
 ## 4.5
 
 ### Added

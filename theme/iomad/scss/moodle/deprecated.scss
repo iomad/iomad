@@ -5,7 +5,7 @@
 //
 // Deprecation mixin.
 //
-@mixin deprecated-styles() {
+@mixin deprecated-styles($deprecatedrule) {
     /* stylelint-disable declaration-no-important */
     body.behat-site &,
     body.behat-site#{&},
@@ -14,7 +14,7 @@
         outline: 3px dotted $red !important;
         background-color: lighten($red, 50%) !important;
         &::before {
-            content: "Deprecated style in use" !important;
+            content: "Deprecated style in use (#{$deprecatedrule})" !important;
             color: $red !important;
             font-size: smaller !important;
         }
@@ -38,25 +38,14 @@
 // }
 
 //
-// Deprecated since Moodle 4.4.
+// Deprecated since Moodle 5.0.
 //
 
-// The .togglecompletion usage was deprecated in 311 and finally removed in 403.
-// Replaced by core_renderer::activity_information() and proper use of templates.
-.path-course-view li.activity form.togglecompletion {
-    @include deprecated-styles();
+// In 6.0 all YUI section spinners wont be needed.
+.course-content .stateready .section .spinner {
+    @include deprecated-styles(".course-content .stateready .section .spinner");
+    display: none;
 }
-.path-course-view li.activity form.togglecompletion .ajaxworking {
-    width: 16px;
-    height: 16px;
-    position: absolute;
-    right: 22px;
-    top: 3px;
-    background: url([[pix:i/ajaxloader]]) no-repeat;
-}
-.path-course-view li.activity form.togglecompletion .btn {
-    padding: 0;
-}
-.path-course-view li.activity form.togglecompletion img {
-    max-width: none; /* The width is 0 so ensure we don't end up with a relative max-width */
-}
+
+// TODO: MDL-84465 Final deprecation in 6.0. Remove this line when the Bootstrap 4 backward compatibility period ends.
+@import "bs4-compat";

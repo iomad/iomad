@@ -37,12 +37,12 @@
     }}>
     <div class="drawerheader">
         <button
-            class="btn drawertoggle icon-no-margin hidden"
+            class="btn btn-icon drawertoggle hidden"
             data-toggler="drawers"
             data-action="closedrawer"
             data-target="{{$id}}{{/id}}"
-            data-toggle="tooltip"
-            data-placement="{{$tooltipplacement}}right{{/tooltipplacement}}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="{{$tooltipplacement}}right{{/tooltipplacement}}"
             title="{{$closebuttontext}}{{#str}}closedrawer, core{{/str}}{{/closebuttontext}}"
         >
             {{#pix}} e/cancel, core {{/pix}}

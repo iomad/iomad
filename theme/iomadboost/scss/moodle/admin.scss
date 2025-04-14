@@ -14,20 +14,6 @@
     text-align: left;
 }
 
-.environmenttable {
-    .warn {
-        @extend .alert-warning;
-    }
-
-    .error {
-        @extend .alert-danger;
-    }
-
-    .ok {
-        @extend .alert-success;
-    }
-}
-
 .path-admin .admintable.environmenttable .name,
 .path-admin .admintable.environmenttable .info,
 .path-admin #assignrole .admintable .role,
@@ -139,6 +125,10 @@
 #page-admin-roles-define .definenotice {
     margin: 1em 10% 2em 10%;
     text-align: left;
+}
+
+#page-admin-index .upgradekeyreq {
+    min-width: 220px;
 }
 
 #page-admin-index .adminwarning.availableupdatesinfo .moodleupdateinfo span {
@@ -340,7 +330,7 @@
 }
 
 .form-item .form-setting .defaultsnext {
-    display: inline;
+    display: inline-block;
 }
 
 .form-item .form-setting .locked-checkbox {
@@ -400,7 +390,7 @@
     }
 }
 
-@include media-breakpoint-down(sm) {
+@include media-breakpoint-down(md) {
     .jsenabled .admin_colourpicker {
         height: 150px;
         margin-bottom: 10px;
@@ -473,7 +463,8 @@
     }
 
     #plugins-control-panel {
-        .status-missing td {
+        .status-missing td,
+        .deprecatedtype td {
             background-color: $state-warning-bg;
         }
 
@@ -518,6 +509,7 @@
     // Plugins check table.
     #plugins-check {
         .status-missing,
+        .deprecatedtype,
         .status-downgrade {
             td {
                 background-color: $state-danger-bg;
@@ -622,8 +614,12 @@
     position: fixed;
     bottom: 0;
     right: 0;
+    margin: 1rem;
     overflow: hidden;
     z-index: $zindex-dropdown;
+}
+.jsenabled .maintenancewarning {
+    @include transition(0.2s);
 }
 
 .modal.modal-in-page {

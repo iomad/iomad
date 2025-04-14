@@ -27,8 +27,8 @@ defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/lib.php');
 
 $THEME->name = 'iomad';
-$THEME->sheets = ['iomad'];
-$THEME->editor_sheets = [];
+$THEME->sheets = [];
+$THEME->editor_sheets = ['iomad'];
 $THEME->editor_scss = ['editor'];
 $THEME->usefallback = true;
 $THEME->scss = function($theme) {

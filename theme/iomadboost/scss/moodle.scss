@@ -1,12 +1,3 @@
-$breadcrumb-divider: "▶" !default;
-$breadcrumb-divider-rtl: "◀" !default;
-
-// Specific overrides to make Bootstrap RTL.
-@import "moodle/bootstrap-rtl";
-
-// Specific SCSS to make some Bootstrap 5 syntax work with Moodle.
-@import "moodle/bs5-bridge";
-
 // Old Moodle stuff from base theme.
 // Massive, needs broken up.
 @import "moodle/variables";
@@ -18,6 +9,8 @@ $breadcrumb-divider-rtl: "◀" !default;
 @import "moodle/calendar";
 @import "moodle/contentbank";
 @import "moodle/course";
+@import "moodle/coursemanagement";
+@import "moodle/courselisting";
 @import "moodle/drawer";
 @import "moodle/filemanager";
 @import "moodle/message";
@@ -27,7 +20,6 @@ $breadcrumb-divider-rtl: "◀" !default;
 @import "moodle/forms";
 @import "moodle/login";
 @import "moodle/modules";
-@import "moodle/chat";
 @import "moodle/reports";
 @import "moodle/backup-restore";
 @import "moodle/tables";
@@ -56,3 +48,4 @@ $breadcrumb-divider-rtl: "◀" !default;
 @import "moodle/moodlenet";
 @import "moodle/dropdown";
 @import "moodle/deprecated";
+@import "moodle/task-indicator";

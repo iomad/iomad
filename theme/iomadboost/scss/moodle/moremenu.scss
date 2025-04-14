@@ -31,7 +31,7 @@
         &:focus {
             position: relative;
         }
-        &[data-toggle="tab"] {
+        &[data-bs-toggle="tab"] {
             display: inline-flex;
             flex-direction: column;
             align-items: center;
@@ -87,6 +87,10 @@
                 display: none;
             }
         }
+        // Make space for active item indicator.
+        .dropdown-item {
+            padding-left: map-get($spacers, 4);
+        }
     }
 
     .dropdown-item[aria-current="true"],
@@ -102,7 +106,7 @@
             }
         }
         &:before {
-            @extend .fa-solid;
+            font: var(--fa-font-solid);
             content: fa-content($fa-var-check);
         }
     }

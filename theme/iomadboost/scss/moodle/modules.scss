@@ -161,7 +161,7 @@ select {
 }
 
 .discussion-settings-container {
-    .custom-select {
+    .form-select {
         width: 100%;
     }
 
@@ -313,7 +313,7 @@ $author-image-margin-sm: 8px;
         height: auto;
         border-radius: 10rem;
 
-        @include media-breakpoint-down(sm) {
+        @include media-breakpoint-down(md) {
             margin-top: .5rem;
         }
     }
@@ -328,7 +328,7 @@ $author-image-margin-sm: 8px;
 
     /** Don't show the discussion locked alert in this mode because it's already indicated with a badge. */
     .alert.discussionlocked {
-        @include sr-only();
+        @include visually-hidden();
     }
 
     /** Fix muted text contrast ratios for accessibility. */
@@ -347,7 +347,7 @@ $author-image-margin-sm: 8px;
 
     /** Make the tag list text screen reader visible only */
     .tag_list > b {
-        @include sr-only();
+        @include visually-hidden();
     }
 
     :target > .focus-target {
@@ -425,7 +425,7 @@ $author-image-margin-sm: 8px;
 }
 
 /** Extra small devices (portrait phones, less than 576px). */
-@include media-breakpoint-down(sm) {
+@include media-breakpoint-down(md) {
     #page-mod-forum-discuss.nested-v2-display-mode {
         .forum-post-container {
             .author-image-container {
@@ -468,10 +468,12 @@ $grading-drawer-width: 430px !default;
 $grading-animation-duration: .3s !default;
 $grading-icon-button-size: 36px !default;
 $grading-search-button-padding-left: calc(#{map-get($spacers, 2)} + 8px) !default;
-$grading-search-input-padding-left: calc(#{map-get($spacers, 2)} + #{map-get($spacers, 2)} + #{$grading-icon-button-size - ($input-border-width * 2)}) !default; /* stylelint-disable-line max-line-length */
+$grading-search-input-padding-left: calc(#{map-get($spacers, 2)} + #{map-get($spacers, 2)} + #{$grading-icon-button-size} - calc(#{$input-border-width} * 2)) !default; /* stylelint-disable-line max-line-length */
 $grading-search-input-padding-right: calc(#{map-get($spacers, 2)} + #{$grading-icon-button-size}) !default;
 $grading-nav-bar-active-drawer-button-bottom: calc(#{map-get($spacers, 2) * -1} - 1px) !default;
 $grading-content-show-content-button-padding-left: calc(#{map-get($spacers, 2) * 2} + 45px) !default;
+
+$input-line-height-lg:  1.5 !default;
 
 @keyframes expandSearchButton {
     from {
@@ -634,7 +636,7 @@ $grading-content-show-content-button-padding-left: calc(#{map-get($spacers, 2) *
                         transform: translateY(-50%);
                         color: $input-color;
                         height: $grading-icon-button-size;
-                        width: $grading-icon-button-size - ($input-border-width * 2);
+                        width: calc(#{$grading-icon-button-size} - calc(#{$input-border-width} * 2));
                         background-color: $input-bg;
                         opacity: 1;
                         visibility: visible;
@@ -941,7 +943,7 @@ $grading-content-show-content-button-padding-left: calc(#{map-get($spacers, 2) *
     }
 }
 
-@include media-breakpoint-down(xs) {
+@include media-breakpoint-down(sm) {
     .path-mod-forum .unified-grader {
         .grader-grading-panel {
             width: 100%;
@@ -965,10 +967,6 @@ $grading-content-show-content-button-padding-left: calc(#{map-get($spacers, 2) *
 
 .path-grade-report-grader h1 {
     text-align: inherit;
-}
-
-#page-mod-chat-gui_basic input#message {
-    max-width: 100%;
 }
 
 #page-mod-data-view #singleimage {
@@ -1026,7 +1024,7 @@ div#dock {
             margin-top: 1rem;
         }
     }
-    .fitem .felement .custom-select {
+    .fitem .felement .form-select {
         align-self: flex-start;
     }
 }
@@ -1052,25 +1050,6 @@ div#dock {
 
 .path-mod-wiki .wiki_contentbox {
     width: 100%;
-}
-
-// Survey module
-
-.path-mod-survey {
-    .surveytable {
-        > tbody > tr:nth-of-type(odd) {
-            background-color: $table-bg;
-        }
-
-        > tbody > tr:nth-of-type(even) {
-            background-color: $table-accent-bg;
-        }
-
-        .rblock label {
-            text-align: center;
-        }
-    }
-
 }
 
 .nav .caret {
@@ -1184,7 +1163,7 @@ img.userpicture {
     margin-right: $spacer * 0.25;
 }
 
-@include media-breakpoint-down(sm) {
+@include media-breakpoint-down(md) {
     .usertext {
         display: none;
     }
@@ -1263,10 +1242,6 @@ img.userpicture {
         border-width: 1px;
     }
 
-    .qnbutton.flagged .thispageholder {
-        background: transparent url([[pix:theme|mod/quiz/flag-on]]) 15px 0 no-repeat;
-    }
-
     .qnbutton .trafficlight {
         border: 0;
         background: $card-bg none center / 10px no-repeat scroll;
@@ -1316,10 +1291,6 @@ img.userpicture {
     .qnbutton.notyetanswered .trafficlight,
     .qnbutton.invalidanswer .trafficlight {
         background-color: $card-bg;
-    }
-
-    .qnbutton.invalidanswer .trafficlight {
-        background-image: url([[pix:theme|mod/quiz/warningtriangle]]);
     }
 
     .qnbutton.correct .trafficlight {
@@ -1400,7 +1371,7 @@ img.userpicture {
     #quiz-timer-wrapper #quiz-timer.timeleft#{$i} {
         $bg: lighten($red, ($i * 3%));
         background-color: $bg;
-        color: color-yiq($bg);
+        color: color-contrast($bg);
     }
 }
 
@@ -1529,8 +1500,10 @@ $popout-header-height: 4rem;
     padding: $alert-padding-y $alert-padding-x;
     margin-bottom: $alert-margin-bottom;
     border: $alert-border-width solid transparent;
+    color: shift-color($info, $alert-color-scale);
+    border-color: shift-color($info, $alert-border-scale);
     @include border-radius($alert-border-radius);
-    @include alert-variant(shift-color($info, $alert-bg-scale), shift-color($info, $alert-border-scale), shift-color($info, $alert-color-scale)); /* stylelint-disable-line max-line-length */
+    @include gradient-bg(shift-color($info, $alert-bg-scale));
 }
 
 .assignfeedback_editpdf_menu {
@@ -1589,12 +1562,6 @@ $popout-header-height: 4rem;
         border: 0;
         margin: 0;
     }
-    .drag_target_active {
-        opacity: .25;
-    }
-    .drag_item_active {
-        opacity: .5;
-    }
     .feedback_bar_image {
         height: 10px;
     }
@@ -1611,37 +1578,50 @@ $popout-header-height: 4rem;
             width: 10%;
         }
     }
-    .feedback_form {
-        .itemactions {
-            display: inline-block;
-            margin: 0 map-get($spacers, 2);
-        }
-    }
     .feedback-item-label {
         width: 100%;
     }
     // Feedback edit form.
     #feedback_edit_form {
-        [id*=_feedback_item_].feedback_itemlist {
+        [id*=_feedback_item_].feedback_itemlist,
+        .feedback_itemlist.sortable-list-is-dragged {
             padding: map-get($spacers, 3);
             border: $border-width solid $border-color;
+            background-color: $white;
+            position: relative;
             @include border-radius();
-            .itemhandle {
-                position: absolute;
-                width: 32px;
-                height: 32px;
-                text-align: center;
-                align-content: center;
+            .itemname {
+                margin-right: map-get($spacers, 5);
             }
-            .action-menu {
+            .itemactions {
                 position: absolute;
-                top: 0;
-                right: 0;
+                top: map-get($spacers, 3);
+                right: map-get($spacers, 3);
             }
-            .dropdown-toggle {
-                border-radius: .5rem;
-                width: 32px;
-                height: 32px;
+            &.sortable-list-current-position {
+                background-color: $light;
+            }
+        }
+        .sortable-list-is-dragged {
+            opacity: .75;
+            max-width: $course-content-maxwidth;
+        }
+        .loading-icon {
+            position: absolute;
+            left: 50%;
+            top: calc(50% - .5rem);
+        }
+    }
+
+    // Templates page.
+    &#page-mod-feedback-manage_templates {
+        .coursetemplates,
+        .publictemplates {
+            .no-overflow {
+                overflow: visible;
+            }
+            .action-menu .menubar {
+                justify-content: end;
             }
         }
     }

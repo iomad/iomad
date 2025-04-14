@@ -290,7 +290,6 @@ class core_renderer extends \core_renderer {
 
         return $output;
     }
-
     /**
      * This code renders the navbar button to control the display of the custom menu
      * on smaller screens.
