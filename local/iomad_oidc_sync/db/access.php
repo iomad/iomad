@@ -25,11 +25,7 @@
 // Need to add this or you get warning in the roles pages.
 global $CFG;
 
-// Deal with change in contexts.
-$contextlevel = CONTEXT_SYSTEM;
-if ($CFG->branch > 402) {
-    $contextlevel = CONTEXT_COMPANY;
-}
+$contextlevel = CONTEXT_COMPANY;
 
 $capabilities = array(
 
