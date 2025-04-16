@@ -129,7 +129,7 @@ class helper {
         return 0;
     }
 
-    public static function get_basket_by_id($basketid = 0) {
+    public static function get_basket_by_id($basketid = 0, $status = self::INVOICESTATUS_BASKET) {
         global $DB, $SESSION;
 
         if (empty($basketid)) {
@@ -148,7 +148,7 @@ class helper {
                                             i.id = :basketid
                                            GROUP BY
                                             i.id
-                                        ', array('basketid' => $basketid, 'status' => self::INVOICESTATUS_BASKET))) {
+                                        ', array('basketid' => $basketid, 'status' => $status))) {
 
             $currency = $DB->get_record_sql("SELECT DISTINCT ii.currency
                                              FROM {invoice} i
@@ -157,7 +157,7 @@ class helper {
                                              i.status = :status
                                              AND
                                              i.id = :basketid
-                                           ", ['basketid' => $basketid, 'status' => self::INVOICESTATUS_BASKET]);
+                                           ", ['basketid' => $basketid, 'status' => $status]);
             $basket->currency = $currency->currency;
             return $basket;
         }
