@@ -48,7 +48,7 @@ class processor {
         self::trigger_invoiceitem_onordercomplete($invoice->id, 'onordercomplete', $invoice );
         $invoice->status = \block_iomad_commerce\helper::INVOICESTATUS_PAID;
         $DB->update_record('invoice', $invoice);
-        self::email_invoices($invoice->id);
+        self::email_invoices($invoice);
     }
 
     private static function process_all_items($invoiceid, $eventname, $invoice = null) {
@@ -265,15 +265,15 @@ class processor {
         $transaction->allow_commit();
     }
 
-    public static function email_invoices($invoiceid) {
+    public static function email_invoices($invoice) {
         global $CFG, $DB;
 
-        if (empty($invoiceid)) {
+        if (empty($invoice)) {
             return;
         }
 
-        $basket = \block_iomad_commerce\helper::get_basket_by_id($invoiceid);
-        $basket->itemized = \block_iomad_commerce\helper::get_invoice_html($basket->id, 0, 0);
+        $basket = \block_iomad_commerce\helper::get_basket_by_id($invoice->id, \block_iomad_commerce\helper::INVOICESTATUS_PAID);
+        $invoice->itemized = \block_iomad_commerce\helper::get_invoice_html($basket->id, 0, 0);
 
         // Notify shop admin.
         if (isset($CFG->commerce_admin_email)) {
@@ -308,14 +308,55 @@ class processor {
             $shopadmin->id = -999;
         }
 
-        if ($user = $DB->get_record('user',  array('id' => $basket->userid))) {
-            EmailTemplate::send('invoice_ordercomplete', array('user' => $user, 'invoice' => $basket, 'sender' => $shopadmin));
+        if ($user = $DB->get_record('user',  array('id' => $invoice->userid))) {
+            EmailTemplate::send('invoice_ordercomplete', ['user' => $user, 'invoice' => $invoice, 'sender' => $shopadmin]);
 
             // Notify shop admin.
             if (isset($CFG->commerce_admin_email)) {
-                EmailTemplate::send('invoice_ordercomplete_admin', array('user' => $shopadmin,
-                                                                         'invoice' => $basket,
-                                                                         'sender' => $shopadmin));
+                $template = new EmailTemplate('invoice_ordercomplete_admin', ['user' => $user,
+                                                                              'invoice' => $invoice,
+                                                                              'sender' => $shopadmin]);
+                $company = new company($invoice->companyid);
+                if ($company->email_template_is_enabled('invoice_ordercomplete_admin', 2)) {
+                    $params = (object) [];
+                    $params->fullname = fullname($shopadmin);
+                    $params->firstname = $shopadmin->firstname;
+                    $params->lastname = $shopadmin->lastname;
+                    $mail = get_mailer();
+
+                    $supportuser = core_user::get_support_user();
+                    if (!empty($CFG->supportemail)) {
+                        $supportuser->email = $CFG->supportemail;
+                    }
+                    if ($CFG->supportname) {
+                        $supportuser->firstname = $CFG->supportname;
+                    }
+
+                    $subject = $user->email . ": " . $template->subject();
+                    $messagetext = $template->body();
+
+                    $mail->Sender = $CFG->noreplyaddress;
+                    $mail->FromName = $supportuser->firstname;
+                    $mail->From     = $CFG->noreplyaddress;
+                    if (empty($CFG->divertallemailsto)) {
+                        $mail->Subject = substr($subject, 0, 900);
+                    } else {
+                        $mail->Subject = substr('[DIVERTED ' . $shopadmin->email . '] ' . $subject, 0, 900);
+                        $shopadmin->email = $CFG->divertallemailsto;
+                    }
+
+                    $mail->addAddress($shopadmin->email, '');
+
+                    // Set word wrap.
+                    $mail->WordWrap = 79;
+
+                    $mail->Body =  "\n$messagetext\n";
+                    $mail->IsHTML();
+
+                    if (empty($CFG->noemailever)) {
+                        $mail->send();
+                    }
+                }
             }
         }
     }
