@@ -54,6 +54,10 @@ function local_iomad_signup_user_created($user) {
             $company->autoenrol($user);
         }
 
+        // Need to set the manager type.
+        $userrecord->managertype = 0;
+        $userrecord->educator = 0;
+
         // Do we have a company department profile field?
         $autodepartmentid = $company->get_auto_department($user);
         company::upsert_company_user($user->id, $userrecord->companyid, $autodepartmentid, $userrecord->managertype, $userrecord->educator, false, true);
