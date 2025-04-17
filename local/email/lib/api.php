@@ -505,9 +505,9 @@ class EmailTemplate {
                                $supportuser,
                                $email->subject,
                                html_to_text($email->body),
+                               $email->companyid,
                                $email->body,
-                               $attachment,
-                               $email->companyid)) {
+                               $attachment)) {
                 return false;
             }
             // Send to all of the to user emails.
@@ -519,9 +519,9 @@ class EmailTemplate {
                                            $supportuser,
                                            $email->subject,
                                            html_to_text($email->body),
+                                           $email->companyid,
                                            $email->body,
-                                           $attachment,
-                                           $email->companyid)) {
+                                           $attachment)) {
                             return false;
                         }
                     }
@@ -537,9 +537,9 @@ class EmailTemplate {
                                            $supportuser,
                                            $email->subject,
                                            html_to_text($email->body),
+                                           $email->companyid,
                                            $email->body,
-                                           $attachment,
-                                           $email->companyid)) {
+                                           $attachment)) {
                             return false;
                         }
                     }
@@ -555,9 +555,9 @@ class EmailTemplate {
                                                 $supportuser,
                                                 $email->subject,
                                                 html_to_text($email->body),
+                                                $email->companyid,
                                                 $email->body,
-                                                $attachment,
-                                                $email->companyid)) {
+                                                $attachment)) {
                             return false;
                         }
                     }
@@ -573,9 +573,9 @@ class EmailTemplate {
                                                 $supportuser,
                                                 $email->subject,
                                                 html_to_text($email->body),
+                                                $email->companyid,
                                                 $email->body,
-                                                $attachment,
-                                                $email->companyid)) {
+                                                $attachment)) {
                             return false;
                         }
                     }
@@ -594,9 +594,9 @@ class EmailTemplate {
                                                         $supportuser,
                                                         $email->subject,
                                                         html_to_text($email->body),
+                                                        $email->companyid,
                                                         $email->body,
-                                                        $attachment,
-                                                        $email->companyid)) {
+                                                        $attachment)) {
                                     return false;
                                 }
                             }
@@ -613,9 +613,9 @@ class EmailTemplate {
                                                     $supportuser,
                                                     $email->subject,
                                                     html_to_text($email->body),
+                                                    $email->companyid,
                                                     $email->body,
-                                                    $attachment,
-                                                    $email->companyid)) {
+                                                    $attachment)) {
                                 return false;
                             }
                         }
@@ -734,16 +734,16 @@ class EmailTemplate {
                                $supportuser,
                                 $email->subject,
                                 html_to_text($email->body),
-                                $email->body,
-                                $this->companyid);
+                                $this->companyid,
+                                $email->body);
         } else {
             self::email_direct($user->email,
                                 $supportuser,
                                 $email->subject,
                                 html_to_text($email->body),
+                                $this->companyid,
                                 $email->body,
-                                $this->attachment,
-                                $this->companyid);
+                                $this->attachment);
         }
 
         $this->email_supervisor;
@@ -821,7 +821,7 @@ class EmailTemplate {
      *
      *
      **/
-    private static function email_direct($emailaddress, $supportuser, $subject, $messagetext, $messagehtml = '', $attachment = null, $companyid = 0) {
+    private static function email_direct($emailaddress, $supportuser, $subject, $messagetext, $companyid = 0, $messagehtml = '', $attachment = null) {
         global $USER, $CFG;
 
         $mail = get_mailer();
