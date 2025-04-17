@@ -66,7 +66,7 @@ file_prepare_draft_area($picturedraftid, $systemcontext->id, 'local_iomad_learni
     ['maxfiles' => 1]);
 
 // Form
-$form = new local_iomad_learningpath\forms\editpath_form();
+$form = new local_iomad_learningpath\forms\editpath_form(null, ['id' => $id, 'companyid' => $companyid]);
 
 // Handle form activity.
 $exiturl = new moodle_url('/local/iomad_learningpath/manage.php');
