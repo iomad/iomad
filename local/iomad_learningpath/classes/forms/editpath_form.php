@@ -76,7 +76,13 @@ class editpath_form extends moodleform {
     public function validation($data, $files) {
         global $DB;
         $errors = array();
-        if ($DB->record_exists('iomad_learningpath', ['name' => $data['name']])) {
+        if ($this->_customdata['id'] != 0 && $DB->record_exists('iomad_learningpath', ['id' => $this->_customdata['id']])) {
+            if (!empty($DB->get_record_sql("SELECT id, name, company FROM {iomad_learningpath} WHERE id != ? AND name = ? AND company = ?",[$this->_customdata['id'], $data['name'], $this->_customdata['companyid']]))){
+                $errors['name'] = get_string('learningpathnameused', 'local_iomad_learningpath');
+            } else {
+                return $errors;
+            }
+        } elseif (!empty($DB->get_record_sql("SELECT company, name FROM {iomad_learningpath} where company = ? AND name = ?",[$this->_customdata['companyid'], $data['name']]))) {
             $errors['name'] = get_string('learningpathnameused', 'local_iomad_learningpath');
         }
         return $errors;
