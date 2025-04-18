@@ -25,6 +25,7 @@ namespace block_iomad_commerce;
 use iomad;
 use company;
 use company_user;
+use core_user;
 use context_system;
 use EmailTemplate;
 
