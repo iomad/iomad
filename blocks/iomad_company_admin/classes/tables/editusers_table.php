@@ -174,15 +174,15 @@ class editusers_table extends table_sql {
                 $currentvalue = $row->managertype;
             }
 
+            // Added due to value mismatch when editing under certain circumstances.
+            if (empty($currentvalue)) {
+                $currentvalue = 0;
+            }
+
             // Output text if the department doesn't match the top level department
             if (count($userdepartments) > 1 ||
                 isset($userdepartments[0]) && $userdepartments[0] != $this->parentlevel->id && $userdepartments[0] != $params['deptid']) {
                 return $usertypeselect[$currentvalue];
-            }
-
-            // Added due to value mismatch when editing under certain circumstances.
-            if (empty($currentvalue)) {
-                $currentvalue = 0;
             }
 
             $editable = new \block_iomad_company_admin\output\user_roles_editable($company,
