@@ -176,7 +176,7 @@ class editusers_table extends table_sql {
 
             // Output text if the department doesn't match the top level department
             if (count($userdepartments) > 1 ||
-                $userdepartments[0] != $this->parentlevel->id && $userdepartments[0] != $params['deptid']) {
+                isset($userdepartments[0]) && $userdepartments[0] != $this->parentlevel->id && $userdepartments[0] != $params['deptid']) {
                 return $usertypeselect[$currentvalue];
             }
 
