@@ -189,7 +189,7 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
 
     // Deal with completed course scores and links for certificates.
     foreach ($myarchive as $id => $archive) {
-       if (!empty($marchive->courseid)) {
+       if (!empty($archive->courseid)) {
            $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
        }
 
