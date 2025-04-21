@@ -148,6 +148,7 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                                         AND u.suspended = 0
                                         AND lit.companyid = :companyid
                                         AND lit.timecompleted IS NULL
+                                        $companyusql
                                         $warnsql
                                         $educatorsql
                                         $departmentusersql
