@@ -125,7 +125,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                                                       WHERE c.visible = 1
                                                       AND cc.userid IN (" . $departmentids . ")
                                                       AND cc.userid != :managerid
-                                                      $companysql
+                                                      $companyusql
                                                       AND cc.timecompleted > :weekago",
                                                       array('managerid' => $manager->userid, 'weekago' => $runtime - (60 * 60 * 24 * 7)));
 
