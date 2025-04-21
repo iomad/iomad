@@ -151,7 +151,7 @@ class editusers_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_managertype($row) {
-        global $CFG, $DB, $USER, $selectedcompanyid, $company, $OUTPUT;
+        global $CFG, $DB, $USER, $selectedcompanyid, $company, $OUTPUT, $params;
 
         $returnstr = "";
 
@@ -176,7 +176,7 @@ class editusers_table extends table_sql {
 
             // Output text if the department doesn't match the top level department
             if (count($userdepartments) > 1 ||
-                $userdepartments[0] != $this->parentlevel->id) {
+                $userdepartments[0] != $this->parentlevel->id && $userdepartments[0] != $params['deptid']) {
                 return $usertypeselect[$currentvalue];
             }
 
