@@ -132,72 +132,10 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Include this condition only if we are including trainingevents in restore, or
-     * if it's a generic 'same activity' one.
-     *
-     * @param int $restoreid The restore Id.
-     * @param int $courseid The ID of the course.
-     * @param base_logger $logger The logger being used.
-     * @param string $name Name of item being restored.
-     * @param base_task $task The task being performed.
-     *
-     * @return Integer trainingeventid
-     */
-    public function include_after_restore($restoreid, $courseid, \base_logger $logger,
-            $name, \base_task $task) {
-        return !$this->trainingeventid || $task->get_setting_value('trainingevents');
-    }
-
-    public function update_after_restore($restoreid, $courseid, \base_logger $logger, $name) {
-        global $DB;
-        if (!$this->trainingeventid) {
-            return false;
-        }
-        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'trainingevent', $this->trainingeventid);
-        if (!$rec || !$rec->newitemid) {
-            // If we are on the same course (e.g. duplicate) then we can just
-            // use the existing one.
-            if ($DB->record_exists('trainingevent',
-                    array('id' => $this->trainingeventid, 'courseid' => $courseid))) {
-                return false;
-            }
-            // Otherwise it's a warning.
-            $this->trainingeventid = -1;
-            $logger->process('Restored item (' . $name .
-                    ') has availability condition on trainingevent that was not restored',
-                    \backup::LOG_WARNING);
-        } else {
-            $this->trainingeventid = (int)$rec->newitemid;
-        }
-        return true;
-    }
-
-    public function update_dependency_id($table, $oldid, $newid) {
-        if ($table === 'trainingevent' && (int)$this->trainingeventid === (int)$oldid) {
-            $this->trainingeventid = $newid;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
      * Wipes the static cache used to store trainingeventing names.
      */
     public static function wipe_static_cache() {
         self::$trainingeventnames = array();
-    }
-
-    public function is_applied_to_user_lists() {
-        // Group conditions are assumed to be 'permanent', so they affect the
-        // display of user lists for activities.
-        return true;
-    }
-
-    public function filter_user_list(array $users, $not, \core_availability\info $info,
-            \core_availability\capability_checker $checker) {
-
-        return $users;
     }
 
     /**
@@ -216,39 +154,5 @@ class condition extends \core_availability\condition {
             $result->id = (int)$trainingeventid;
         }
         return $result;
-    }
-
-    public function get_user_list_sql($not, \core_availability\info $info, $onlyactive) {
-        global $DB;
-
-        // Get all enrolled users.
-        list ($enrolsql, $enrolparams) =
-                get_enrolled_sql($info->get_context(), '', 0, $onlyactive);
-
-        // Condition for specified or any trainingevent.
-        $matchparams = array();
-        if ($this->trainingeventid) {
-            $matchsql = "SELECT 1
-                           FROM {trainingevent_users} gm
-                          WHERE gm.userid = userids.id
-                                AND gm.waitlisted = 0
-                                AND gm.trainingeventid = " .
-                    self::unique_sql_parameter($matchparams, $this->trainingeventid);
-        } else {
-            $matchsql = "SELECT 1
-                           FROM {trainingevent_users} gm
-                           JOIN {trainingevent} g ON g.id = gm.trainingeventid
-                          WHERE gm.userid = userids.id
-                                AND gm.waitlisted = 0
-                                AND g.courseid = " .
-                    self::unique_sql_parameter($matchparams, $info->get_course()->id);
-        }
-
-        // Overall query combines all this.
-        $condition = $not ? 'NOT' : '';
-        $sql = "SELECT userids.id
-                  FROM ($enrolsql) userids
-                 WHERE $condition EXISTS ($matchsql)";
-        return array($sql, array_merge($enrolparams, $aagparams, $matchparams));
     }
 }
