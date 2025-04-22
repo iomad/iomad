@@ -77,12 +77,12 @@ class condition extends \core_availability\condition {
         $allow = false;
 
         // Get all companys the user belongs to.
-        $companys = $DB->get_records_sql("SELECT DISTINCT companyid FROM {company_users} WHERE userid = :userid", ['userid' => $userid]);
+        $companies = $DB->get_records_sql("SELECT DISTINCT companyid FROM {company_users} WHERE userid = :userid", ['userid' => $userid]);
         if ($this->companyid) {
-            $allow = array_key_exists($this->companyid, $companys);
+            $allow = array_key_exists($this->companyid, $companies);
         } else {
             // No specific company. Allow if they belong to any company at all.
-            $allow = $companys ? true : false;
+            $allow = $companies ? true : false;
         }
 
         // The NOT condition applies before accessallcompanys (i.e. if you
@@ -131,121 +131,10 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Include this condition only if we are including companys in restore, or
-     * if it's a generic 'same activity' one.
-     *
-     * @param int $restoreid The restore Id.
-     * @param int $courseid The ID of the course.
-     * @param base_logger $logger The logger being used.
-     * @param string $name Name of item being restored.
-     * @param base_task $task The task being performed.
-     *
-     * @return Integer companyid
-     */
-    public function include_after_restore($restoreid, $courseid, \base_logger $logger,
-            $name, \base_task $task) {
-        return !$this->companyid || $task->get_setting_value('companys');
-    }
-
-    public function update_after_restore($restoreid, $courseid, \base_logger $logger, $name) {
-        global $DB;
-        if (!$this->companyid) {
-            return false;
-        }
-        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'company', $this->companyid);
-        if (!$rec || !$rec->newitemid) {
-            // If we are on the same course (e.g. duplicate) then we can just
-            // use the existing one.
-            if ($DB->record_exists('companys',
-                    array('id' => $this->companyid, 'courseid' => $courseid))) {
-                return false;
-            }
-            // Otherwise it's a warning.
-            $this->companyid = -1;
-            $logger->process('Restored item (' . $name .
-                    ') has availability condition on company that was not restored',
-                    \backup::LOG_WARNING);
-        } else {
-            $this->companyid = (int)$rec->newitemid;
-        }
-        return true;
-    }
-
-    public function update_dependency_id($table, $oldid, $newid) {
-        if ($table === 'companys' && (int)$this->companyid === (int)$oldid) {
-            $this->companyid = $newid;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
      * Wipes the static cache used to store companying names.
      */
     public static function wipe_static_cache() {
         self::$companynames = array();
-    }
-
-    public function is_applied_to_user_lists() {
-        // Group conditions are assumed to be 'permanent', so they affect the
-        // display of user lists for activities.
-        return true;
-    }
-
-    public function filter_user_list(array $users, $not, \core_availability\info $info,
-            \core_availability\capability_checker $checker) {
-        global $CFG, $DB;
-
-        // If the array is empty already, just return it.
-        if (!$users) {
-            return $users;
-        }
-
-        $course = $info->get_course();
-
-        // List users for this course who match the condition.
-        if ($this->companyid) {
-            $companyusers = $DB->get_records_sql("
-                    SELECT DISTINCT cu.userid
-                      FROM {company_users} cu
-                      JOIN {user_enrolments} ue ON ue.userid = cu.userid
-                      JOIN {enrol} e ON ue.enrolid = e.id
-                     WHERE e.courseid = :courseid
-                     AND cu.companyid = :companyid",
-                    ['courseid' => $course->id,
-                     'companyid' => $this->companyid]);
-        } else {
-            $companyusers = $DB->get_records_sql("
-                    SELECT DISTINCT cu.userid
-                      FROM {company_users} cu
-                      JOIN {user_enrolments} ue ON ue.userid = cu.userid
-                      JOIN {enrol} e ON ue.enrolid = e.id
-                     WHERE e.courseid = :courseid",
-                    ['courseid' => $course->id]);
-        }
-
-        // List users who have access all companys.
-        $aagusers = $checker->get_users_by_capability('moodle/site:accessallcompanys');
-
-        // Filter the user list.
-        $result = array();
-        foreach ($users as $id => $user) {
-            // Always include users with access all companys.
-            if (array_key_exists($id, $aagusers)) {
-                $result[$id] = $user;
-                continue;
-            }
-            // Other users are included or not based on company membership.
-            $allow = array_key_exists($id, $companyusers);
-            if ($not) {
-                $allow = !$allow;
-            }
-            if ($allow) {
-                $result[$id] = $user;
-            }
-        }
-        return $result;
     }
 
     /**
@@ -265,40 +154,4 @@ class condition extends \core_availability\condition {
         }
         return $result;
     }
-
-    public function get_user_list_sql($not, \core_availability\info $info, $onlyactive) {
-        global $DB;
-
-        // Get enrolled users with access all companys. These always are allowed.
-        list($aagsql, $aagparams) = get_enrolled_sql(
-                $info->get_context(), 'moodle/site:accessallcompanys', 0, $onlyactive);
-
-        // Get all enrolled users.
-        list ($enrolsql, $enrolparams) =
-                get_enrolled_sql($info->get_context(), '', 0, $onlyactive);
-
-        // Condition for specified or any company.
-        $matchparams = array();
-        if ($this->companyid) {
-            $matchsql = "SELECT 1
-                           FROM {companys_members} gm
-                          WHERE gm.userid = userids.id
-                                AND gm.companyid = " .
-                    self::unique_sql_parameter($matchparams, $this->companyid);
-        } else {
-            $matchsql = "SELECT 1
-                           FROM {companys_members} gm
-                           JOIN {companys} g ON g.id = gm.companyid
-                          WHERE gm.userid = userids.id
-                                AND g.courseid = " .
-                    self::unique_sql_parameter($matchparams, $info->get_course()->id);
-        }
-
-        // Overall query combines all this.
-        $condition = $not ? 'NOT' : '';
-        $sql = "SELECT userids.id
-                  FROM ($enrolsql) userids
-                 WHERE (userids.id IN ($aagsql)) OR $condition EXISTS ($matchsql)";
-        return array($sql, array_merge($enrolparams, $aagparams, $matchparams));
-    }
-}
+ }
