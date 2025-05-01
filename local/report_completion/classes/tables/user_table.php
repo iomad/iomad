@@ -29,6 +29,7 @@ use \iomad;
 use \html_writer;
 use \context_system;
 use \context_course;
+use \context_user;
 use \completion_info;
 
 defined('MOODLE_INTERNAL') || die();
@@ -271,12 +272,12 @@ class user_table extends table_sql {
         if (!empty($row->timecompleted) && $certmodule = $DB->get_record('modules', array('name' => 'iomadcertificate'))) {
             if ($traccertrecs = $DB->get_records('local_iomad_track_certs', array('trackid' => $row->certsource))) {
                 if (empty($USER->editing) || !iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
-                    $coursecontext = context_course::instance($row->courseid);
+                    $usercontext = context_user::instance($row->userid);
                     $returntext = "";
                     foreach ($traccertrecs as $traccertrec) {
                         // create the file download link.
 
-                        $certurl = moodle_url::make_file_url('/pluginfile.php', '/'.$coursecontext->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
+                        $certurl = moodle_url::make_file_url('/pluginfile.php', '/'.$usercontext->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
                         $returntext .= '<a href="' . $certurl . '" title="' . format_string($traccertrec->filename) .'">
                                         <img src="' . $output->image_url('f/pdf') . '" alt="' . format_string($traccertrec->filename) . '" width="32px"></a>&nbsp';
                     }
