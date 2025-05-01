@@ -43,9 +43,8 @@ iomad::require_capability('local/report_completion:view', $companycontext);
 // Get the details fro db
 $certificate = $DB->get_record('local_iomad_track_certs', array('id' => $id), '*', MUST_EXIST);
 $track = $DB->get_record('local_iomad_track', array('id' => $certificate->trackid), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $track->courseid), '*', MUST_EXIST);
 $user = $DB->get_record('user', array('id' => $track->userid), '*', MUST_EXIST);
-$context = context_course::instance($course->id);
+$context = context_user::instance($user->id);
 
 // Get the certificate pdf from filesystem
 $fs = get_file_storage();
