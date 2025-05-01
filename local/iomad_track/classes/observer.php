@@ -131,7 +131,7 @@ class observer {
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 
         // Get context
-        $context = \context_course::instance($courseid);
+        $context = \context_user::instance($userid);
 
         // Get user
         $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);

@@ -46,7 +46,7 @@ require_once($CFG->libdir.'/filelib.php');
 function local_iomad_track_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
     global $DB, $CFG, $USER;
 
-    if ($context->contextlevel != CONTEXT_COURSE) {
+    if ($context->contextlevel != CONTEXT_USER) {
         send_file_not_found();
     }
 
