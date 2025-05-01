@@ -137,8 +137,7 @@ function xmldb_local_iomad_track_record_certificates($courseid, $userid, $tracki
 
     // Get user
     $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
-    debugging($courseid);
-    debugging($userid);
+
     // Get the certificate activities in given course
     if (!$certificates = xmldb_local_iomad_track_get_certificatemods($courseid)) {
         return false;
