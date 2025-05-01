@@ -86,7 +86,7 @@ function do_redocerts($user = 0, $course = 0, $company = 0, $idnumber = 0, $from
         if (xmldb_local_iomad_track_record_certificates($track->courseid, $track->userid, $track->id, true, false)) {
             echo get_string('success');
         } else {
-            echo get_string('falied', 'scorm');
+            echo get_string('failed', 'scorm');
         }
         echo html_writer::end_tag('p');
 
