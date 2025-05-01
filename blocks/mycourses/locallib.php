@@ -189,6 +189,12 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
 
     // Deal with completed course scores and links for certificates.
     foreach ($myarchive as $id => $archive) {
+        if (!empty($archive->courseid)) {
+            $myarchive[$id]->coursefullname = format_string($archive->coursefullname, true, ['context' => context_course::instance($archive->courseid)]);
+        }
+        // Deal with the iomadcertificate info.
+        $myarchive[$id]->certificates = [];
+
         if ($hasiomadcertificate) {
             // Get the certificate from the download files thing.
             if ($traccerts = $DB->get_records('local_iomad_track_certs', array('trackid' => $id))) {
