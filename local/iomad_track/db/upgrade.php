@@ -668,5 +668,18 @@ mtrace("enrol end " . time());
         upgrade_plugin_savepoint(true, 2021030200, 'local', 'iomad_track');
     }
 
+    if ($oldversion < 2021030201) {
+
+        // Deal with all of the previous data
+        require_once(dirname(__FILE__) . '/../classes/task/fixcertificatetask.php');
+
+        // Fire off the adhoc task to ensure that the certificates contexts are changed and references to certificates that no longer exist are removed
+        $task = new local_iomad_track\task\fixcertificatetask();
+        \core\task\manager::queue_adhoc_task($task, true);
+        
+        // Iomad_track savepoint reached.
+        upgrade_plugin_savepoint(true, 2021030201, 'local', 'iomad_track');
+    }
+
    return $result;
 }

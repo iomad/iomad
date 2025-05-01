@@ -50,6 +50,7 @@ $string['importmoodlecompletioninformation'] = 'Ad-hoc task to import completion
 $string['fixenrolleddatetask'] = 'Ad-hoc task to update the stored completion information to use the enrolment \'timecreated\' timestamp where this is not already set.';
 $string['fixcourseclearedtask'] = 'Ad-hoc task to update the \'coursecleared\' field in the stored completion records';
 $string['fixtracklicensetask'] = 'Ad-hoc task to fix stored records license information';
+$string['fixcertificatetask'] = 'Change certificate context to user context';
 $string['importcompletionrecords'] = 'Import completion records';
 $string['uploadcompletionresult'] = 'Upload completion file result';
 $string['completionimportfromfile'] = 'Completion import from file';
