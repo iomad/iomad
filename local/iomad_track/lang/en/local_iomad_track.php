@@ -47,6 +47,7 @@ $string['importcompletionsfrommoodle'] = 'Import stored completion information f
 $string['importcompletionsfrommoodlefull'] = 'This will run an AdHoc task to import all of the completion information from Moodle to the IOMAD reporting tables';
 $string['importcompletionsfrommoodlefullwitherrors'] = 'This will run an AdHoc task to import SOME of the completion information from Moodle to the IOMAD reporting tables. Not all courses have completion enabled or criteria set up and their information will be missed out.  If you want to know which courses these are use the check link on the previous page';
 $string['importmoodlecompletioninformation'] = 'Adhoc task to import completion information from Moodle tables';
+$string['fixcertificatetask'] = 'Change certificate context to user context';
 $string['fixenrolleddatetask'] = 'Adhoc task to update the stored completion information to use the enrolment timecreated timestamp where this is not already set.';
 $string['fixcourseclearedtask'] = 'Adhoc task to update the coursecleared field in the stored completion records';
 $string['fixtracklicensetask'] = 'Adhoc task to fix stored records license information';
