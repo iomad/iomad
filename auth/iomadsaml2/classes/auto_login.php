@@ -24,7 +24,7 @@
 
 namespace auth_iomadsaml2;
 
-use auth_iomadsaml2\admin\saml2_settings;
+use auth_iomadsaml2\admin\iomadsaml2_settings;
 
 /**
  * Auto-login class.

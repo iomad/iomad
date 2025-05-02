@@ -341,6 +341,57 @@ class company_user {
     }
 
     /**
+     * Perform signup form validation for a new user.
+     * @param  array $data  the sign-up data
+     * @param  array $files files among the data
+     * @return array list of errors, being the key the data element name and the value the error itself
+     * @since Moodle 3.2
+     */
+    public static function signup_validate_data($data, $files) {
+        global $CFG, $DB, $SESSION;
+
+        $companyid = $SESSION->currenteditingcompany;
+        $errors = [];
+
+        // Check if there is a username already with a different email.
+        if ($DB->get_record_sql("SELECT id FROM {user}
+                                 WHERE username = :username
+                                 AND email != :email",
+                                 ['username' => $data['username'],
+                                  'email' => $data['email']])) {
+            $errors['username'] = get_string('usernameexists');
+            if ($CFG->local_iomad_signup_useemail) {
+                $errors['email'] = get_string('emailexists');
+            }
+        } else if ($DB->get_records_sql("SELECT u.id FROM {user} u
+                                         JOIN {company_users} cu ON u.id = cu.userid
+                                         WHERE cu.companyid = :companyid
+                                         AND u.username = :username",
+                                        ['companyid' => $companyid,
+                                         'username' => $data['username']])) {
+            $errors['username'] = get_string('usernameexists');
+            if ($CFG->local_iomad_signup_useemail) {
+                $errors['email'] = get_string('emailexists');
+            }
+        } else if ($currentuserid = $DB->get_record_sql("SELECT DISTINCT u.id FROM {user} u
+                                                         JOIN {company_users} cu ON u.id = cu.userid
+                                                         WHERE cu.companyid != :companyid
+                                                         AND u.username = :username
+                                                         AND password != ''",
+                                                        ['companyid' => $companyid,
+                                                         'username' => $data['username']])) {
+            $SESSION->signupuserinothercompany = true;
+            $SESSION->clasheduserid = $currentuserid->id;
+            return ['companyid' => get_string('error')];
+        } else {
+            // Use the core Moodle checks.
+            $errors = signup_validate_data($data, $files);
+        }
+
+        return $errors;
+    }
+
+    /**
      * Enrol a user in courses
      * @param object $user
      * @param array $courseids

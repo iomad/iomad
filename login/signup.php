@@ -29,9 +29,16 @@ require_once($CFG->dirroot . '/user/editlib.php');
 require_once($CFG->libdir . '/authlib.php');
 require_once('lib.php');
 
+$userdecision = optional_param('userdecision', false, PARAM_BOOL);
+$userclashed = optional_param('userclashed', false, PARAM_BOOL);
+$wanteddepartment = optional_param('dept', '', PARAM_CLEAN);
+
 if (!$authplugin = signup_is_enabled()) {
     throw new \moodle_exception('notlocalisederrormessage', 'error', '', 'Sorry, you may not use this page.');
 }
+
+$PAGE->set_url('/login/signup.php');
+$PAGE->set_context(context_system::instance());
 
 // IOMAD - Deal with any passed company information from parameters or from SESSION.
 if (empty($SESSION->company)) {
@@ -48,10 +55,36 @@ if (empty($SESSION->company)) {
     $wantedcompanyid = $SESSION->company->id;
     $wantedcompanyshort = $SESSION->company->shortname;
 }
-$wanteddepartment = optional_param('dept', '', PARAM_CLEAN);
 
-$PAGE->set_url('/login/signup.php');
-$PAGE->set_context(context_system::instance());
+// Did we get redirected here due to a user clash?
+if (!empty($SESSION->signupuserinothercompany) || $userclashed) {
+    // Take away the stored setting.
+    unset($SESSION->signupuserinothercompany);
+
+    // What does the user want to do now?
+    if (empty($userdecision)) {
+        // Find out what they want to do.
+        $optionsyes = ['userdecision' => true,
+                       'userclashed' => true];
+        echo $OUTPUT->header();
+        echo $OUTPUT->heading(get_string('usercompanyclashed', 'block_iomad_company_admin'), 2, 'headingblock header');
+        echo $OUTPUT->confirm(get_string('usercompanyclashedfull', 'block_iomad_company_admin'),
+                              new moodle_url('/login/signup.php', $optionsyes), '/login/signup.php');
+        echo $OUTPUT->footer();
+        die;
+    } else {
+        // User decided to add this account to the current company.
+        $company = new company($wantedcompanyid);
+        $company->assign_user_to_company($SESSION->clasheduserid);
+        unset($SESSION->clasheduserid);
+        redirect(new moodle_url('/login/index.php'),
+                 get_string('userassignedtocompanyclashed', 'block_iomad_company_admin'),
+                 null,
+                 \core\output\notification::NOTIFY_SUCCESS);
+        die;
+    }
+
+}
 
 // If wantsurl is empty or /login/signup.php, override wanted URL.
 // We do not want to end up here again if user clicks "Login".

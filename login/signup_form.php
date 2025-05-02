@@ -160,7 +160,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
      *         or an empty array if everything is OK (true allowed for backwards compatibility too).
      */
     public function validation($data, $files) {
-        global $CFG;
+        global $CFG, $SESSION;
 
         $errors = parent::validation($data, $files);
 
@@ -184,7 +184,15 @@ class login_signup_form extends moodleform implements renderable, templatable {
                 $data['username'] = strtolower($data['email']);
         }
 
-        $errors += signup_validate_data($data, $files);
+        if (!empty($SESSION->currenteditingcompany)) {
+            $errors += \company_user::signup_validate_data($data, $files);
+            if (!empty($SESSION->signupuserinothercompany)) {
+                redirect(new moodle_url("/login/signup.php"));
+                die;
+            }
+        } else {
+            $errors += signup_validate_data($data, $files);
+        }
 
         return $errors;
     }
