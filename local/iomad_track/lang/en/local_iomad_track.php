@@ -51,6 +51,7 @@ $string['fixcertificatetask'] = 'Change certificate context to user context';
 $string['fixenrolleddatetask'] = 'Adhoc task to update the stored completion information to use the enrolment timecreated timestamp where this is not already set.';
 $string['fixcourseclearedtask'] = 'Adhoc task to update the coursecleared field in the stored completion records';
 $string['fixtracklicensetask'] = 'Adhoc task to fix stored records license information';
+$string['savecertificatetask'] = 'Adhoc task to store a certificate for a user on course completion';
 $string['importcompletionrecords'] = 'Import completion records';
 $string['uploadcompletionresult'] = 'Upload completion file result';
 $string['completionimportfromfile'] = 'Completion import from file';

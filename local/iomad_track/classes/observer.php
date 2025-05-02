@@ -269,7 +269,6 @@ class observer {
             $usercompany = \company::by_userid($userid);
             $companyrec = $DB->get_record('company', array('id' => $usercompany->id));
             $userrec = $DB->get_record('user', array('id' => $userid));
-            $department = $DB->get_record_sql("SELECT d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid) WHERE cu.userid = :userid AND cu.companyid = :companyid", array('userid' => $userid, 'companyid' => $companyrec->id));
             $courserec = $DB->get_record('course', array('id' => $courseid));
             if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
                 // Its a licensed course, get the last license.
@@ -303,8 +302,6 @@ class observer {
             $completion->coursename = $courserec->fullname;
             $completion->companyid = $companyrec->id;
             $completion->companyname = $companyrec->name;
-            $completion->departmentid = $department->id;
-            $completion->departmentname = $department->name;
             $completion->firstname = $userrec->firstname;
             $completion->lastname = $userrec->lastname;
             $completion->licenseid = $licenseid;
@@ -375,7 +372,11 @@ class observer {
             //mtrace('Iomad completion recorded for userid ' . $userid . ' in courseid ' . $courseid);
         }
 
-        self::record_certificates($courseid, $userid, $trackid, false);
+        // Fire the ad-hoc task to generate the certificate.
+        // Slower but avoids race conditions with course activity restictions that
+        // are potentially part of this event listener set.
+        $task = new \local_iomad_track\task\savecertificatetask();
+        $task->queue_task($userid, $courseid, $trackid);
 
         return true;
     }
