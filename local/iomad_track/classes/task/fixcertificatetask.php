@@ -45,8 +45,15 @@ class fixcertificatetask extends adhoc_task {
      */
     public function execute() {
         global $DB;
-        if ($records = $DB->get_records_sql("SELECT id FROM {local_iomad_track_certs} WHERE trackid NOT IN 
-                                             (SELECT itemid FROM {files} WHERE component = 'local_iomad_track' AND filearea = 'issue' AND filename = '.')")) {
+        if ($records = $DB->get_records_sql("SELECT id FROM {local_iomad_track_certs}
+                                             WHERE trackid NOT IN 
+                                             (SELECT itemid FROM {files}
+                                              WHERE component = :component
+                                              AND filearea = :filearea
+                                              AND filename = :filename)",
+                                             ['component' => 'local_iomad_track',
+                                              'filearea' => 'issue',
+                                              'filename' => '.'])) {
             foreach ($records as $record) {
                 $DB->delete_records('local_iomad_track_certs', ['id' => $record->id]);
             }
@@ -54,14 +61,19 @@ class fixcertificatetask extends adhoc_task {
         // Get all certificate records which are related to the current course id
         if ($certs = $DB->get_records_sql("SELECT f.id as id, f.contextid as contextid, f.component as component, f.filearea as filearea, f.itemid as itemid, f.filepath as filepath, f.filename as filename, lit.userid as userid FROM {files} f
                                            JOIN {local_iomad_track} lit ON (f.itemid = lit.id)
-                                           WHERE filearea = 'issue'
-                                           AND component = 'local_iomad_track'")) {
+                                           JOIN {user} u ON (lit.userid = u.id)
+                                           WHERE f.filearea = :filearea
+                                           AND f.component = :component
+                                           AND u.deleted = 0",
+                                           ['filearea' => 'issue',
+                                            'component' => 'local_iomad_track'])) {
             foreach ($certs as $cert) {
                 // Create a stdClass with the updated data to update a specific record in the files table so it is accessible after the course is deleted
+                $usercontext = context_user::instance($cert->userid);
                 $record = (object)[
                     'id' => $cert->id,
-                    'contextid' => context_user::instance($cert->userid)->id,
-                    'pathnamehash' => sha1('/'.$record->contextid.'/'.$cert->component.'/'.$cert->filearea.'/'.$cert->itemid.''.$cert->filepath.''.$cert->filename)
+                    'contextid' => $usercontext->id,
+                    'pathnamehash' => sha1('/'.$usercontext->id.'/'.$cert->component.'/'.$cert->filearea.'/'.$cert->itemid.''.$cert->filepath.''.$cert->filename)
                 ];
                 $DB->update_record('files', $record);
             }
