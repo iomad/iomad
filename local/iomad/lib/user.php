@@ -300,7 +300,7 @@ class company_user {
 
         // Did we get passed a user id?
         if (!is_object($user)) {
-            $userrec = $DB->get_record('user', array('id' => $user));
+            $userrec = $DB->get_record('user', array('id' => $user), '*', MUST_EXIST);
             $user = $userrec;
         }
         // Did we get passed a single course id?

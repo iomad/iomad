@@ -44,9 +44,9 @@ class processor {
 
     public static function trigger_onordercomplete($invoice) {
         global $DB;
-        
+
         self::process_all_items($invoice->id, 'onordercomplete', $invoice );
-        self::trigger_invoiceitem_onordercomplete($invoice->id, 'onordercomplete', $invoice );
+        //self::trigger_invoiceitem_onordercomplete($invoice->id, 'onordercomplete', $invoice );
         $invoice->status = \block_iomad_commerce\helper::INVOICESTATUS_PAID;
         $DB->update_record('invoice', $invoice);
         self::email_invoices($invoice);
@@ -106,74 +106,79 @@ class processor {
                                                       WHERE
                                                       ic.licensed = 1
                                                       AND csc.itemid = :itemid",
-                                                      ['itemid' => $iteminfo->id]); 
+                                                      ['itemid' => $iteminfo->id]);
 
         $transaction = $DB->start_delegated_transaction();
 
-        // Get name for company license.
-        $companyid = iomad::get_my_companyid(context_system::instance());
-        $company = $DB->get_record('company', ['id' => $companyid]);
-        $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), $CFG->iomad_date_format);
-        $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE " . $DB->sql_like('name', ":licensename"),
-                                         ['licensename' => str_replace("'", "\'", $licensename) . "%'"]);
+	// Are there any licensed courses?
+	if ($licensecoursecount > 0) {
+            // Get name for company license.
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $company = $DB->get_record('company', ['id' => $companyid]);
+            $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), $CFG->iomad_date_format);
+            $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE " . $DB->sql_like('name', ":licensename"),
+                                             ['licensename' => str_replace("'", "\'", $licensename) . "%'"]);
 
-        if ($count) {
-            $licensename .= ' (' . ($count + 1) . ')';
-        }
+            if ($count) {
+                $licensename .= ' (' . ($count + 1) . ')';
+            }
 
-        // Create mdl_companylicense record.
-        $companylicense = (object) [];
-        $companylicense->name = $licensename;
-        if (empty($iteminfo->program)) {
-            $companylicense->allocation = $licensecoursecount;
-            $companylicense->humanallocation = $licensecoursecount;
-        } else {
-            $companylicense->allocation = $licensecoursecount;
-            $companylicense->humanallocation = 1;
-        }
-        $companylicense->used = 0;
-        $companylicense->program = $iteminfo->program;
-        $companylicense->clearonexpire = $iteminfo->clearonexpire;
-        $companylicense->instant = $iteminfo->instant;
-        $validlength = (int) $iteminfo->single_purchase_validlength / 86400;
-        if ($validlength == 0 ) {
-            // Always get 1 day.
-            $validlength = 1;
-        } 
-        $companylicense->validlength = $validlength;
-        if (!empty($iteminfo->single_purchase_shelflife)) {
-            $companylicense->expirydate = $iteminfo->single_purchase_shelflife + $runtime;
-        } else {
-            $companylicense->expirydate = 0;
-        }
-        if (!empty($iteminfo->cutofftime)) {
-            $companylicense->cutoffdate = $iteminfo->cutofftime + $runtime;
-        } else {
-            $companylicense->cutoffdate = 0;
-        }
-        $companylicense->companyid = $company->id;
-        $companylicenseid = $DB->insert_record('companylicense', $companylicense);
-
-        foreach ($courses as $course) {
-            if ($DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
-                $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid, 'courseid' => $course->courseid]);
-
-                // Create an event to assign the license.
-                $eventother = array('licenseid' => $companylicenseid,
-                                    'issuedate' => $runtime,
-                                    'duedate' => $runtime);
-                $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => \context_course::instance($course->courseid),
-                                                                                              'objectid' => $companylicenseid,
-                                                                                              'courseid' => $course->courseid,
-                                                                                              'userid' => $invoice->userid,
-                                                                                              'other' => $eventother));
-                $event->trigger();
+            // Create mdl_companylicense record.
+            $companylicense = (object) [];
+            $companylicense->name = $licensename;
+            if (empty($iteminfo->program)) {
+                $companylicense->allocation = $licensecoursecount;
+                $companylicense->humanallocation = $licensecoursecount;
             } else {
+                $companylicense->allocation = $licensecoursecount;
+                $companylicense->humanallocation = 1;
+            }
+            $companylicense->used = 0;
+            $companylicense->program = $iteminfo->program;
+            $companylicense->clearonexpire = $iteminfo->clearonexpire;
+            $companylicense->instant = $iteminfo->instant;
+            $validlength = (int) $iteminfo->single_purchase_validlength / 86400;
+            if ($validlength == 0 ) {
+                // Always get 1 day.
+                $validlength = 1;
+            }
+            $companylicense->validlength = $validlength;
+            if (!empty($iteminfo->single_purchase_shelflife)) {
+                $companylicense->expirydate = $iteminfo->single_purchase_shelflife + $runtime;
+            } else {
+                $companylicense->expirydate = 0;
+            }
+            if (!empty($iteminfo->cutofftime)) {
+                $companylicense->cutoffdate = $iteminfo->cutofftime + $runtime;
+            } else {
+                $companylicense->cutoffdate = 0;
+            }
+            $companylicense->companyid = $company->id;
+            $companylicenseid = $DB->insert_record('companylicense', $companylicense);
 
-                // Enrol user into course.
-                $user = (object) [];
-                $user->id = $invoice->userid;
-                company_user::enrol($user, array($course->courseid));
+            foreach ($courses as $course) {
+                if ($DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
+                    $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid, 'courseid' => $course->courseid]);
+
+                    // Create an event to assign the license.
+                    $eventother = array('licenseid' => $companylicenseid,
+                                        'issuedate' => $runtime,
+                                        'duedate' => $runtime);
+                    $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => \context_course::instance($course->courseid),
+                                                                                                  'objectid' => $companylicenseid,
+                                                                                                  'courseid' => $course->courseid,
+                                                                                                  'userid' => $invoice->userid,
+                                                                                                  'other' => $eventother));
+                    $event->trigger();
+                }
+            }
+        } else {
+            foreach ($courses as $course) {
+                if (!$DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
+
+                    // Enrol user into course.
+                    company_user::enrol($invoice->userid, array($course->courseid));
+                }
             }
         }
 
@@ -235,7 +240,7 @@ class processor {
         if ($validlength == 0 ) {
             // Always get 1 day.
             $validlength = 1;
-        } 
+        }
         $companylicense->validlength = $validlength;
 
         // Deal with license shelf life.
