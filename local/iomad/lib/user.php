@@ -560,12 +560,13 @@ class company_user {
             if ($DB->get_record('iomad_courses', array('courseid' => $user->courseid, 'licensed' => true))) {
                 return;
             }
-            $roles = get_user_roles(context_course::instance($user->courseid), $user->id, false);
+            $coursecontext = context_course::instance($user->courseid);
+            $roles = get_user_roles($coursecontext, $user->id, false);
             foreach ($roles as $role) {
                 if (!$all && $role->roleid == $studentrole->id) {
                     $isstudent = true;
                 } else {
-                    $DB->delete_records('role_assignments', array('id' => $role->id));
+                    role_unassign($role->id, $user->id, $coursecontext->id);
                 }
             }
             if (!$isstudent) {
@@ -581,8 +582,7 @@ class company_user {
 
                 foreach ($ues as $ue) {
                     if ( $ue->enrolmentinstance->courseid == $user->courseid ) {
-                        //$courseenrolmentmanager->unenrol_user($ue);
-                        $DB->delete_records('user_enrolments', array('id' => $ue->id));
+                        $courseenrolmentmanager->unenrol_user($ue);
                     }
                 }
                 if ($shared) {
@@ -606,12 +606,13 @@ class company_user {
                 if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => true))) {
                     continue;
                 }
-                $roles = get_user_roles(context_course::instance($courseid), $user->id, false);
+                $coursecontext = context_course::instance($courseid);
+                $roles = get_user_roles($coursecontext, $user->id, false);
                 foreach ($roles as $role) {
                     if (!$all && $role->roleid == $studentrole->id) {
                         $isstudent = true;
                     } else {
-                        $DB->delete_records('role_assignments', array('id' => $role->id));
+                        role_unassign($role->id, $user->id, $coursecontext->id);
                     }
                 }
                 if (!$isstudent) {
@@ -627,8 +628,7 @@ class company_user {
 
                     foreach ($ues as $ue) {
                         if ( $ue->enrolmentinstance->courseid == $courseid ) {
-                            $DB->delete_records('user_enrolments', array('id' => $ue->id));
-                            //$courseenrolmentmanager->unenrol_user($ue);
+                            $courseenrolmentmanager->unenrol_user($ue);
                         }
                     }
                     if ($shared) {
@@ -647,8 +647,10 @@ class company_user {
                     }
                 }
 
-                // Remove the tracking inf if the user hasn't completed the course.
-                $DB->delete_records('local_iomad_track', array('courseid' => $courseid, 'userid' => $user->id, 'timecompleted' => null));
+                if (!is_enrolled(context_course::instance($courseid), $user->id)) {
+                    // Remove the tracking info if the user hasn't completed the course and doesn't still have a role in the course
+                    $DB->delete_records('local_iomad_track', array('courseid' => $courseid, 'userid' => $user->id, 'timecompleted' => null));
+                }
             }
         }
     }
