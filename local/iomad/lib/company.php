@@ -1378,7 +1378,7 @@ class company {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                             company_user::unenrol($userid, array($companycourse->courseid),
-                                                  $companycourse->companyid);
+                                                  $companycourse->companyid, false);
                         }
                     }
                 }
