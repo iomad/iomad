@@ -3195,7 +3195,7 @@ class company {
             $displayname = format_string($course->fullname, true, 1);
             if ($course->visible == 0) {
                 if ($showhidden) {
-                    $displayname = format_string($displayname . $hiddenstring);
+                    $displayname = format_string($displayname . $hiddenstring, true, 1);
                 } else {
                     unset($retcourses[$courseid]);
                     continue;
