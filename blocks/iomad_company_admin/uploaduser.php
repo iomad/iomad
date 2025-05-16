@@ -345,6 +345,13 @@ if (!empty($cancelled)) {
         $upt = new uu_progress_tracker();
         $upt->init(); // Start table.
 
+        // Get a array of the profile fields which are the type datetime
+        $datetime = $DB->get_records('user_info_field', ['categoryid' => $companyid, 'datatype' => 'datetime'], '', 'shortname');
+        $datetimearray = [];
+        foreach ($datetime as $dt) {
+            array_push($datetimearray, 'profile_field_'.$dt->shortname);
+        }
+
         while ($line = $cir->next()) {
             $upt->flush();
             $linenum++;
@@ -489,28 +496,49 @@ if (!empty($cancelled)) {
                     $user->$field = process_template($formdata->$field, $user);
                 }
             }
+            $error = false;
             foreach ($prffields as $field) {
                 if (isset($user->$field) && is_string($user->$field)) {
-                    if (preg_match('/(?P<day>\d{2})-(?P<month>[a-zA-Z]{3})-(?P<year>\d{4})/', $user->$field, $datearray)) {
-                        $month = $montharray[$datearray[2]];
-                        $unixtime = mktime (0, 0, 0, $month, $datearray['day'], $datearray['year']);
-                        $user->$field = $unixtime;
+                    if (in_array($field, $datetimearray)) {
+                        if (preg_match('/(?P<day>\d{2})-(?P<month>[a-z]{3})-(?P<year>\d{4})/', strtolower($user->$field), $datearray)) {
+                            $month = $montharray[$datearray[2]];
+                            $unixtime = mktime (0, 0, 0, $month, $datearray['day'], $datearray['year']);
+                            $user->$field = $unixtime;
+                        } else {
+                            $upt->track('status', get_string('invalid_date_format', 'block_iomad_company_admin', $field), 'error');
+                            $line[] = get_string('invalid_date_format', 'block_iomad_company_admin', $field);
+                            $errornum++;
+                            $userserrors++;
+                            $erroredusers[] = $line;
+                            $error = true;
+                        }
                     }
                     continue;
                 }
                 if (isset($formdata->$field) && isset($user->field) && is_string($user->$field)) {
                     // Process templates.
                     // Check if is in a dd-Mon-yyy format.
-                    if (preg_match('/(?P<day>\d{2})-(?P<month>[a-zA-Z]{3})-(?P<year>\d{4})/', $formdata->$field, $datearray)) {
-                        $month = $montharray[$datearray[2]];
-                        $unixtime = mktime (0, 0, 0, $month, $datearray['day'], $datearray['year']);
-                        $user->$field = $unixtime;
+                    if (in_array($field, $datetimearray)) {
+                        if (preg_match('/(?P<day>\d{2})-(?P<month>[a-z]{3})-(?P<year>\d{4})/', strtolower($formdata->$field), $datearray)) {
+                            $month = $montharray[$datearray[2]];
+                            $unixtime = mktime (0, 0, 0, $month, $datearray['day'], $datearray['year']);
+                            $user->$field = $unixtime;
+                        } else {
+                            $upt->track('status', get_string('invalid_date_format', 'block_iomad_company_admin', $field), 'error');
+                            $line[] = get_string('invalid_date_format', 'block_iomad_company_admin', $field);
+                            $errornum++;
+                            $userserrors++;
+                            $erroredusers[] = $line;
+                            $error = true;
+                        }
                     } else {
                         $user->$field = process_template($formdata->$field, $user);
                     }
                 }
             }
-
+            if ($error) {
+                continue;
+            }
             // Delete user.
             if (!empty($user->deleted)) {
                 if (!$allowdeletes) {

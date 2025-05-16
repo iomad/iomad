@@ -464,6 +464,7 @@ $string['group_users_for'] = 'Group {$a->group} in course {$a->course}';
 $string['hasenrollments'] = 'existing enrolments';
 $string['hide_suspended_companies'] = 'Hide suspended companies?';
 $string['invalid_company'] = 'Optional field profile_field_company must match your company\'s shortname.';
+$string['invalid_date_format'] = 'Field {$a} is a invalid date format';
 $string['inuse'] = 'In use';
 $string['iomad_frameworks_title'] = 'Manage competency frameworks';
 $string['iomad_templates_title'] = 'Manage learning plan templates';
