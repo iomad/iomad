@@ -187,6 +187,14 @@ class company_managers_form extends moodleform {
                     }
                     // Do the actual work.
                     company::upsert_company_user($adduser->id, $this->selectedcompany, $departmentid, $roletype, $educator, false, $moving);
+                    // Check if the user is in any other department
+                    if ($otherdepartments = $DB->get_records_sql('SELECT departmentid FROM {company_users} 
+                                              WHERE userid = :userid AND departmentid != :departmentid AND companyid = :companyid',
+                                              ['userid' => $adduser->id, 'departmentid' => $departmentid, 'companyid' => $this->selectedcompany])) {
+                        foreach ($otherdepartments as $otherdepart) {
+                            company::upsert_company_user($adduser->id, $this->selectedcompany, $otherdepart->departmentid, $roletype, $educator, false, $moving);
+                        }
+                    }
                 }
 
                 $this->potentialusers->invalidate_selected_users();
