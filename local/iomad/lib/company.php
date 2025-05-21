@@ -3106,7 +3106,7 @@ class company {
         global $DB;
 
         // Can we view hidden courses?
-        $hiddensql = " AND c.visible = 0 ";
+        $hiddensql = " AND c.visible = 1 ";
         $showhidden = false;
         $hiddenstring = " (" . get_string('hidden', 'grades') . ")";
         if (iomad::has_capability('block/iomad_company_admin:hideshowcourses', $this->context) ||
