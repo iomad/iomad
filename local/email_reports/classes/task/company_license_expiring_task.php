@@ -87,7 +87,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
                     $license->expirydate =  userdate($license->expirydate, $CFG->iomad_date_format);
                     // Passed all checks, send the email.
                     mtrace("Sending license pool expiring email to $user->email");
-                    EmailTemplate::send('licensepoolexpiringq', array('user' => $user, 'license' => $license, 'company' => $company));
+                    EmailTemplate::send('licensepoolexpiring', array('user' => $user, 'license' => $license, 'company' => $company));
                 }
             }
         }
