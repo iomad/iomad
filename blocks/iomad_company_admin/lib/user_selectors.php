@@ -868,6 +868,14 @@ class potential_department_user_selector extends company_user_selector_base {
             $userfilter = " AND NOT u.id IN (" . implode(",",$departmentusers) . ")";
         }
 
+        // Filter out users who are in another department with a elevated role and that elevated role is not selected
+        $userfilter .= " AND u.id NOT IN (
+                            SELECT userid FROM {company_users} 
+                            WHERE companyid = ".$this->companyid." 
+                            AND managertype != 0 
+                            AND departmentid != ".$this->departmentid." 
+                            AND managertype != ".$this->roletype.")";
+
         if ($this->roletype != 0) {
             // Dealing with management possibles could be from anywhere.
             $deptids = implode(',', array_keys($this->subdepartments));
