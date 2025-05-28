@@ -121,6 +121,9 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                 $event->trigger();
                 $compuser->coursecleared = true;
 
+                // Set the local record object to match.
+                $compuser->coursecleared = 1;
+
                 // Get the company template info.
                 // Check against per company template repeat instead.
                 if ($templateinfo = $DB->get_record('email_template', array('companyid' => $company->id, 'name' => 'expiry_warn_user'))) {
