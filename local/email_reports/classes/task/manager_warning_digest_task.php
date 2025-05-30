@@ -91,7 +91,7 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
 
                 // We only want to report on the users - no educators.
                 $educatorsql = "";
-                $educatoruserids = get_records_sql("SELECT DISTINCT userid FROM {company_users}
+                $educatoruserids = $DB->get_records_sql("SELECT DISTINCT userid FROM {company_users}
                                                  WHERE educator = 1
                                                  AND companyid = :companyid",
                                                 ['companyid' => $company->id]);
