@@ -480,6 +480,84 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2024112400, 'iomad_commerce');
     }
+    if ($oldversion < 2025052900) {
 
+        // Define field id to be added to shoptag.
+        $table = new xmldb_table('shoptag');
+        $field = new xmldb_field('companyid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, '0', 'tag');
+
+        // Conditionally launch add field id.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Delete shop tags that aren't used
+        if ($unusedtags = $DB->get_records_sql('SELECT id FROM {shoptag} WHERE 
+                                               id not in (SELECT shoptagid FROM {course_shoptag})
+                                               AND id != 1') ){
+            foreach ($unusedtags as $unusedtag) {
+                $DB->delete_records('shoptag', ['id' => $unusedtag->id]);
+            }
+        }
+
+        // Add a company id for each shoptag record and if it is used in multiple companies then create a seperate record for each company
+        if ($usedtags = $DB->get_records_sql('SELECT 
+                                                s.id as shoptag_id, 
+                                                s.tag as shoptag,
+                                                COUNT(DISTINCT cs.companyid) as distinct_companyid_count,
+                                                GROUP_CONCAT(DISTINCT cs.companyid ORDER BY cs.companyid SEPARATOR ",") AS companyids
+                                                FROM {shoptag} s
+                                                INNER JOIN {course_shoptag} cst ON cst.shoptagid = s.id
+                                                INNER JOIN {course_shopsettings} cs ON cs.id = cst.itemid
+                                                GROUP BY s.id, s.tag')) {
+            // Loop through the records returned
+            foreach ($usedtags as $usedtag) {
+                // If the shoptag id is 1 don't continue since this is a default tag for all shop items
+                if ($usedtag->shoptag_id == 1) { 
+                    continue; 
+                }
+                // Check if there is more than 1 company using the same shop tag
+                if ($usedtag->distinct_companyid_count > 1) {
+                    // More than one company is using the shop tag so need to create new records and update the current record for the shop tag
+                    $firstvalue = true;
+                    foreach (array_map('intval', explode(',', $usedtag->companyids)) as $companyid) {
+                        // Create stdClass for the record
+                        $record = new stdClass();
+                        $record->companyid = $companyid;
+                        if (!$firstvalue) {
+                            // Create a new record for the shop tag if this isn't the first company in the loop
+                            $record->tag = $usedtag->shoptag;
+                            $recordupdate = new stdClass();
+                            $recordupdate->shoptagid = $DB->insert_record('shoptag', $record, true);
+                            // Update all records is course_shoptag to match the new shoptag record
+                            $courseshoptags = $DB->get_records_sql('SELECT id, itemid FROM {course_shoptag} 
+                                                                       WHERE shoptagid = :shoptagid 
+                                                                       AND itemid IN (SELECT id FROM {course_shopsettings} WHERE companyid = :companyid)',
+                                                                       ['shoptagid' => $usedtag->shoptag_id, 'companyid' => $companyid]);
+                            foreach ($courseshoptags as $courseshoptag) {
+                                $recordupdate->id = $courseshoptag->id;
+                                $recordupdate->itemid = $courseshoptag->itemid;
+                                $DB->update_record('course_shoptag', $recordupdate);
+                            }
+                        } else {
+                            // Assign the first company in the loop to the shop tag record which already exists
+                            $record->id = $usedtag->shoptag_id;
+                            $DB->update_record('shoptag', $record);
+                        }
+                        $firstvalue = false;
+                    }
+                } else {
+                    // Only 1 company using this shop tag so add that companies ID to the record
+                    $record = new stdClass();
+                    $record->id = $usedtag->shoptag_id;
+                    $record->companyid = $usedtag->companyids;
+                    $DB->update_record('shoptag', $record);
+                }
+            }
+        }
+
+        // Iomad_commerce savepoint reached.
+        upgrade_block_savepoint(true, 2025052900, 'iomad_commerce');
+    }
     return $result;
 }

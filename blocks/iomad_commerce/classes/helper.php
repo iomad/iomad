@@ -524,23 +524,31 @@ class helper {
         return $html;
     }
 
-    public static function get_shop_tags() {
+    // Get all shop tags which are assigned to a specific company
+    public static function get_shop_tags($all = false) {
         global $DB;
 
-        if ($shoptags = $DB->get_records_sql('SELECT
-                                                st.tag
-                                              FROM
-                                                {shoptag} st
-                                              WHERE
-                                                EXISTS (SELECT id FROM {course_shoptag} WHERE shoptagid = st.id)
-                                              ORDER BY
-                                                st.tag')) {
+        // If all is set to true, filter all shop tags which aren't being used by a shop item
+        $filter = '';
+        if (!$all) {
+            $filter = 'AND EXISTS (SELECT cst.id FROM {course_shoptag} cst 
+                                    INNER JOIN {course_shopsettings} css ON css.id = cst.itemid 
+                                    WHERE cst.shoptagid = st.id AND css.enabled = 1)';
+        }
+
+        // Get all relevant records from the database and then create a array of values to return
+        if ($shoptags = $DB->get_records_sql('SELECT st.tag FROM {shoptag} st
+                                              WHERE st.companyid = :companyid '.$filter.'
+                                              ORDER BY st.tag',
+                                              ['companyid' => iomad::get_my_companyid(context_system::instance(), true)])) {
             $tags = array();
             foreach ($shoptags as $st) {
                 $tags[] = $st->tag;
             }
             return $tags;
         }
+
+        // Return a empty array when there are no records retrieved from the database
         return array();
     }
 

@@ -186,7 +186,7 @@ class product_edit_form extends moodleform {
             $mform->addHelpButton('tags', 'tags', 'block_iomad_commerce');
             $mform->setType('tags', PARAM_NOTAGS);
 
-            $vars = helper::get_shop_tags();
+            $vars = helper::get_shop_tags(true);
             $options = "<option value=''>" . get_string('select_tag', 'block_iomad_commerce') . "</option>";
             foreach ($vars as $i) {
                 $options .= "<option value='{$i}'>$i</option>";
