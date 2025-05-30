@@ -199,6 +199,7 @@ $string['type_quantity_n_singlepurchase'] = 'Single purchase';
 $string['type_quantity_1_licenseblock'] = '{$a} license';
 $string['type_quantity_n_licenseblock'] = '{$a} licenses';
 $string['unitprice'] = 'Price per license';
+$string['uniquifyshoptagstask'] = 'Create unique records for shop tags for each company';
 $string['unprocessed'] = 'Unprocessed';
 $string['unprocesseditems'] = 'Unprocessed items';
 $string['useexternalshop'] = 'Use an external eCommerce solution for purchases';

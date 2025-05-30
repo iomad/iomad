@@ -178,14 +178,20 @@ if ($mform->is_cancelled()) {
 
     // Find shoptag ids.
     $tags = preg_split('/\s*,\s*/', $data->tags);
-    $newcourseshoptagrecord = (object) [];
+    $newcourseshoptagrecord = new stdClass();
     $newcourseshoptagrecord->itemid = $data->id;
     foreach ($tags as $tag) {
-        if (!$st = $DB->get_record('shoptag', ['tag' => $tag])) {
-            $st = (object) [];
-            $st->id = $DB->insert_record('shoptag', (object) ['tag' => $tag], true);
+        // Check if the tag exists for the company and if it doesn't then create a new record for the tag for the current company
+        if ($tag == ''){
+            $st = $DB->get_record('shoptag', ['tag' => $tag]);
+        } else if (!$st = $DB->get_record('shoptag', ['tag' => $tag, 'companyid' => $companyid])) {
+            $st = new stdClass();
+            $st->tag = $tag;
+            $st->companyid = $companyid;
+            $st->id = $DB->insert_record('shoptag', $st, true);
         }
 
+        // Create a new record in course_shoptag for the tag being used for the shop item
         $newcourseshoptagrecord->shoptagid = $st->id;
         $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
     }
