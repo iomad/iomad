@@ -1373,8 +1373,13 @@ class company {
                  && $managertype == 0) {
                 // Demoting a manager to a user.
                 // Deal with company course roles.
+                $multidepartment = $DB->get_records_sql('SELECT * FROM {company_users} 
+                                                            WHERE companyid = :companyid 
+                                                            AND departmentid != :departmentid',
+                                                            ['companyid' => $companyid, 'departmentid' => $departmentid]);
                 if ($CFG->iomad_autoenrol_managers &&
-                    !empty($companycourses)) {
+                    !empty($companycourses) && 
+                    empty($multidepartment)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                             company_user::unenrol($userid, array($companycourse->courseid),
@@ -1405,9 +1410,11 @@ class company {
                     $event->trigger();
                     return true;
                 } else {
-                    role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
-                    role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
+                    if (empty($multidepartment)) {
+                        role_unassign($companymanagerrole->id, $userid, $systemcontext->id);
+                        role_unassign($departmentmanagerrole->id, $userid, $systemcontext->id);
+                        role_unassign($companyreporterrole->id, $userid, $systemcontext->id);
+                    }
                 }   
                 if ($user->managertype == 1) {
                     // Deal with child companies.
@@ -1430,8 +1437,10 @@ class company {
                                              'user' => $userrec));
                     }
                 }
-                // Make sure all department records in the company match this.
-                $DB->set_field('company_users', 'managertype', 0, ['companyid' => $companyid, 'userid' => $userid]);
+                if (empty($multidepartment)) {
+                    // Make sure all department records in the company match this.
+                    $DB->set_field('company_users', 'managertype', 0, ['companyid' => $companyid, 'userid' => $userid]);
+                }
             }
             if ($educator && $user->educator != 1 &&
                  !$CFG->iomad_autoenrol_managers &&
