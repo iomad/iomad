@@ -436,11 +436,28 @@ class EmailTemplate {
      *
      **/
     static public function send_to_user($email) {
-        global $USER, $DB;
+        global $USER, $CFG, $DB;
 
         $supportuser = new stdclass();
         $company = new company($email->companyid);
 
+        // Is this a special to id?
+        if ($email->userid == -999) {
+            $shopadmin = (object) [];
+            $shopadmin->email = $CFG->commerce_admin_email;
+            if (empty($CFG->commerce_admin_firstname)) {
+                $shopadmin->firstname = "Shop";
+            } else {
+                $shopadmin->firstname = $CFG->commerce_admin_firstname;
+            }
+            if (empty($CFG->commerce_admin_lastname)) {
+                $shopadmin->lastname = "Admin";
+            } else {
+                $shopadmin->lastname = $CFG->commerce_admin_lastname;
+            }
+            $shopadmin->id = -999;
+            $email->userid = $shopadmin;
+        }
         // Check if the user to be sent to is valid.
         if ($user = self::get_user($email->userid)) {
             if (isset($email->senderid) && !is_siteadmin($email->senderid) && $email->senderid > 0) {
