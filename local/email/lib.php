@@ -62,6 +62,32 @@ function email_cron() {
         }
     }
 
+    // Deal with special destination users like shop admin.
+    if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
+                                        WHERE e.sent IS NULL
+                                        AND e.due < :now
+                                        AND e.userid IN (:specialusers)",
+                                       ['now' => $now,
+                                        'specialusers' => join (',', ['-999'])])) {
+        foreach ($emails as $email) {
+            $company = new company($email->companyid);
+            $managertype = 0;
+
+            // We need to stash the emails current userid as this will be converted to an object in the process of sending.
+            $currentid = $email->userid;
+            if (!$company->email_template_is_enabled($email->templatename, $managertype)) {
+                $DB->delete_records('email', array('id' => $email->id));
+                continue;
+            } else {
+                EmailTemplate::send_to_user($email);
+                $email->modifiedtime = $email->sent = time();
+                $email->id = $email->id;
+                $email->userid = $currentid;
+                $DB->update_record('email', $email);
+            }
+        }
+    }
+
     // Send company suspended emails. Users are suspended so not picked up above.
     if ($emails = $DB->get_records_sql("SELECT e.* from {email} e
                                         JOIN {user} u ON (e.userid = u.id)
