@@ -114,7 +114,7 @@ class nugget_edit_form extends \moodleform {
                                                           WHERE threadid = :threadid
                                                           AND sectionid = :sectionid
                                                           AND id != :id", $data)) {
-            $errors['cmid'] = get_string('sectionidalreadyinuse', 'block_iomad_microlearning');
+            $errors['sectionid'] = get_string('sectionidalreadyinuse', 'block_iomad_microlearning');
         }
         if (!empty($data['url']) && strpos($data['url'], $CFG->wwwroot) === false) {
             $errors['url'] = get_string('incorrecturl', 'block_iomad_microlearning');
