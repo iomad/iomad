@@ -69,7 +69,7 @@ $PAGE->set_title($linktext);
 
 // Array of all valid fields for validation.
 $stdfields = array('username', 'userid', 'courseid', 'coursename', 'coursecode', 'timeenrolled', 'timestarted', 'timecompleted',
-        'finalscore', 'licensename', 'licenseallocated', 'licenseid', 'companyid', 'company', 'departmentid', 'department');
+        'timeexpires', 'finalscore', 'licensename', 'licenseallocated', 'licenseid', 'companyid', 'company', 'departmentid', 'department');
 
 // Check if there are any potential errors.
 $courseswithoutcompletionenabled = $DB->get_records_sql("SELECT * FROM {course} WHERE enablecompletion = 0 AND id != :siteid", ['siteid' => SITEID]);
@@ -416,6 +416,7 @@ class upload_progress_tracker {
                             'timeenrolled',
                             'timestarted',
                             'timecompleted',
+                            'timeexpires',
                             'finalscore',
                             'licensename',
                             'licenseallocated');
@@ -438,6 +439,7 @@ class upload_progress_tracker {
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('dateenrolled', 'local_report_completion').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('datestarted', 'local_report_completion').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('datecompleted', 'local_report_completion').'</th>';
+        echo '<th class="header c'.$ci++.'" scope="col">'.get_string('timeexpires', 'local_report_completion').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('grade', 'iomadcertificate').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('licensename', 'block_iomad_company_admin').'</th>';
         echo '<th class="header c'.$ci++.'" scope="col">'.get_string('licensedateallocated', 'block_iomad_company_admin').'</th>';
