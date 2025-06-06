@@ -538,7 +538,7 @@ class current_company_course_user_selector extends company_user_selector_base {
         if ($search) {
             $groupname = get_string('currentlyenrolledusersmatching', 'block_iomad_company_admin', $search);
         } else {
-            $groupname = get_string('currentlyenrolledusers', 'block_iomad_company_admin');
+            $groupname = get_string('totalenrolments', 'block_iomad_company_admin');
         }
 
         return array($groupname => $availableusers);
