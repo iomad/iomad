@@ -74,9 +74,11 @@ if (!$new) {
 
     $shopsettings->itemcourses = [];
     foreach ($courses as $course) {
-        $shopsettings->tags = \block_iomad_commerce\helper::get_course_tags($course->courseid);
         $shopsettings->itemcourses[] = $course->courseid;
     }
+    
+    // Get the tags that are being used by the current shop item
+    $shopsettings->tags = \block_iomad_commerce\helper::get_course_tags($shopsettingsid);
     
     //  Get any price bandings
     $shopsettings->block_start = [];
