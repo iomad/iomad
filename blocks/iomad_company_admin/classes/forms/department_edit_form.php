@@ -110,7 +110,7 @@ class department_edit_form extends company_moodleform {
 
         if (!preg_match('/^[A-Za-z0-9_]+$/', trim($data['shortname']))) {
             // Check allowed pattern (numbers, letters and underscore).
-            $errors['shortname'] = get_string('invalidshortnameerror', 'core_customfield');
+            $errors['shortname'] = get_string('invalidshortnameerror', 'block_iomad_company_admin');
         }
 
         return $errors;
