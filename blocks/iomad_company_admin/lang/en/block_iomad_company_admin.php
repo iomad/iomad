@@ -356,6 +356,7 @@ $string['invalidnumber'] = 'Invalid number';
 $string['invalidparent'] = 'Invalid parent company';
 $string['invaliduser'] = 'Invalid user';
 $string['invalidstartdate'] = 'The license start date is not valid';
+$string['invalidshortnameerror'] = 'The short name can only contain alphanumeric characters (both uppercase and lowercase) and underscores (_).';
 $string['iomadcapabilities_boiler'] = 'Please be aware that the capabilities for the IOMAD system are fairly complex and disabling one of these may not completely take away the capability from the role you are editing.  You are advised to <b>test</b> any role changes you make to ensure that they work as you expect.';
 $string['iomaddashboard'] = 'IOMAD dashboard';
 $string['iomad_company_admin:addinstance'] = 'Add a new IOMAD company admin block';
