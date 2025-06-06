@@ -537,39 +537,32 @@ class helper {
         }
 
         // Get all relevant records from the database and then create a array of values to return
-        if ($shoptags = $DB->get_records_sql('SELECT st.tag FROM {shoptag} st
+        if ($shoptags = $DB->get_records_sql('SELECT st.tag as tag FROM {shoptag} st
                                               WHERE st.companyid = :companyid '.$filter.'
                                               ORDER BY st.tag',
                                               ['companyid' => iomad::get_my_companyid(context_system::instance(), true)])) {
-            $tags = array();
-            foreach ($shoptags as $st) {
-                $tags[] = $st->tag;
-            }
-            return $tags;
+            // Return a array of shop tags
+            return array_map(fn($r) => $r->tag, $shoptags);
         }
 
         // Return a empty array when there are no records retrieved from the database
-        return array();
+        return [];
     }
 
+    // Get all tags which the current shop item is using
     public static function get_course_tags($itemid) {
         global $DB;
-
-        if ($shoptags = $DB->get_records_sql('SELECT
-                                                st.tag
-                                              FROM
-                                                {course_shoptag} cst INNER JOIN
-                                                {shoptag} st ON cst.shoptagid = st.id
-                                              WHERE
-                                                cst.itemid = :itemid
-                                              ORDER BY
-                                                st.tag', array('itemid' => $itemid))) {
-            $tags = array();
-            foreach ($shoptags as $st) {
-                $tags[] = $st->tag;
-            }
-            return implode(', ', $tags);
+        // Get all records for the shop it
+        if ($shoptags = $DB->get_records_sql('SELECT st.tag as tag FROM {course_shoptag} cst 
+                                              INNER JOIN {shoptag} st ON cst.shoptagid = st.id
+                                              WHERE cst.itemid = :itemid
+                                              AND st.companyid = :companyid
+                                              ORDER BY st.tag',
+                                              ['itemid' => $itemid, 'companyid' => iomad::get_my_companyid(context_system::instance(), true)])) {
+            // Return the shop tags as a list
+            return implode(', ', array_map(fn($r) => $r->tag, $shoptags));
         }
+        // Return a empty string when there are no shop tags for the current shop item
         return '';
     }
 
