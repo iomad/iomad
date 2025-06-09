@@ -107,6 +107,15 @@ $capabilities = array(
         'archetypes' => array(
             'clientadministrator' => CAP_ALLOW
         ),
+    ),
+
+    'block/iomad_commerce:manage_tags' => array(
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'clientadministrator' => CAP_ALLOW
+        ),
     )
 
 );
