@@ -193,9 +193,11 @@ if ($mform->is_cancelled()) {
             $st->id = $DB->insert_record('shoptag', $st, true);
         }
 
-        // Create a new record in course_shoptag for the tag being used for the shop item
-        $newcourseshoptagrecord->shoptagid = $st->id;
-        $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
+	if (!isset($st)) {
+            // Create a new record in course_shoptag for the tag being used for the shop item
+	    $newcourseshoptagrecord->shoptagid = $st->id;
+	    $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
+	}
     }
 
     $transaction->allow_commit();
