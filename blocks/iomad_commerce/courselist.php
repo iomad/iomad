@@ -313,7 +313,7 @@ if (iomad::has_capability('block/iomad_commerce:manage_default', $companycontext
                                                $defaultstring);
 }
 // Check if the user has the capability to manage shop tags
-if (iomad::has_capability('block/iomad_commerce:manage_tags', $context)) {
+if (iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
     // If the user has the manage_tags capability display the button which redirects them to the manage tags page
     echo $OUTPUT->single_button(new moodle_url("$CFG->wwwroot/blocks/iomad_commerce/manage_tags.php"), get_string('managetags', 'block_iomad_commerce'), 'get');
 }
