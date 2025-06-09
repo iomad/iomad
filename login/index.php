@@ -82,6 +82,7 @@ $context = context_system::instance();
 $PAGE->set_url("$CFG->wwwroot/login/index.php");
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('login');
+$PAGE->set_cacheable(false);
 
 /// Initialize variables
 $errormsg = '';
