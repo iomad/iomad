@@ -165,7 +165,7 @@ if ($threadsform->is_cancelled() || $usersform->is_cancelled() ||
                     die;
                 }
                 $usersform->process();
-                $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form($PAGE->url, $context, $companyid, $departmentid, $threadid, $groupid);
+                $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $threadid, $groupid);
                 echo $usersform->display();
             }
         } else {
