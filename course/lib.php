@@ -763,6 +763,11 @@ function course_delete_module($cmid, $async = false) {
         }
     }
 
+    if (empty($cm->instance)) {
+        throw new moodle_exception('cannotdeletemodulemissinginstance', '', '', null,
+            "Cannot delete course module with ID $cm->id because it does not have a valid activity instance.");
+    }
+
     // Call the delete_instance function, if it returns false throw an exception.
     if (!$deleteinstancefunction($cm->instance)) {
         throw new moodle_exception('cannotdeletemoduleinstance', '', '', null,
@@ -1730,7 +1735,7 @@ function move_courses($courseids, $categoryid) {
  * @see core_courseformat\base::get_section_name()
  *
  * @param int|stdClass $courseorid The course to get the section name for (object or just course id)
- * @param int|stdClass $section Section object from database or just field course_sections.section
+ * @param int|stdClass|section_info $section Section object from database or just field course_sections.section
  * @return string Display name that the course format prefers, e.g. "Week 2"
  */
 function get_section_name($courseorid, $section) {

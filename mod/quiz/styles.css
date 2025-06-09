@@ -320,11 +320,6 @@ body.path-mod-quiz table tbody tr.gradedattempt > td.sticky-column {
     margin-top: 1.5em;
 }
 
-#page-mod-quiz-edit .section .activity .actions .version-selection {
-    width: 8em;
-    padding: 0;
-}
-
 @media print {
     .quiz-secure-window * {
         display: none;
@@ -540,10 +535,6 @@ table.quizreviewsummary td.cell {
 #page-mod-quiz-edit .slotnumber {
     text-align: center;
     margin: 0.1em 0.5em;
-    min-width: 2em;
-    display: inline-block;
-}
-#page-mod-quiz-edit li.section .slotnumber.unshuffled {
     display: inline-block;
 }
 #page-mod-quiz-edit li.section .slotnumber.shuffled {
@@ -554,6 +545,10 @@ table.quizreviewsummary td.cell {
 }
 #page-mod-quiz-edit li.section.shuffled .slotnumber.shuffled {
     display: inline-block;
+}
+
+#page-mod-quiz-edit .slotnumber .inplaceeditable {
+    white-space: nowrap;
 }
 
 #page-mod-quiz-edit .section-heading {
@@ -774,8 +769,6 @@ table.quizreviewsummary td.cell {
     overflow-x: hidden;
     overflow-y: hidden;
     text-overflow: ellipsis;
-    display: inline-block;
-    height: 20px;
 }
 
 #page-mod-quiz-edit ul.slots .activityinstance span.instancename img {
@@ -1105,23 +1098,23 @@ table.quizreviewsummary td.cell {
     text-align: right;
 }
 #page-mod-quiz-editgrading .inplaceeditable .quickeditlink {
-    color: var(--primary);
+    color: var(--bs-primary);
 }
 #page-mod-quiz-edit .inplaceeditable .quickeditlink {
-    color: var(--primary);
+    color: var(--bs-primary);
     text-decoration: none;
     background-color: transparent;
     padding-left: 1px;
     margin: 0;
 }
 #page-mod-quiz-edit .quickeditlink .aalink {
-    color: var(--primary);
+    color: var(--bs-primary);
     text-align: right;
     width: 10px;
     margin: 2px;
 }
 #page-mod-quiz-edit .quickedition {
-    color: var(--primary);
+    color: var(--bs-primary);
     text-align: right;
     width: 10px;
     margin: 2px;
