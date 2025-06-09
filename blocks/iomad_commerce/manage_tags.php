@@ -16,7 +16,7 @@
 
 /**
  * @package   block_iomad_commerce
- * @copyright 2025 Robert Tyrone Cullen
+ * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -34,19 +34,21 @@ $delete       = optional_param('delete', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
 
 // Get the context
-$context = context_system::instance();
+$systemcontext = context_system::instance();
+
+// Set the companyid
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = \core\context\company::instance($companyid);
+$company = new company($companyid);
 
 // Require the user to be logged in
 require_login();
 
 // Ensure that the user has the correct capability
-iomad::require_capability('block/iomad_commerce:manage_tags', $context);
+iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
 
 // Define the component string
 $component = 'block_iomad_commerce';
-
-// Get the current users company ID
-$companyid = iomad::get_my_companyid($context);
 
 // Define the title for the page
 $title = get_string('managetags', $component);
@@ -58,7 +60,7 @@ $baseurl = new moodle_url('/blocks/iomad_commerce/manage_tags.php');
 $tagdeleted = false;
 
 // Set paramters for the page using the PAGE variable
-$PAGE->set_context($context);
+$PAGE->set_context($companycontext);
 $PAGE->set_url($baseurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($title);
@@ -67,7 +69,7 @@ $PAGE->set_heading($title);
 // Delete a tag dependant on the value of the delete parameter passed after 
 if ($delete && confirm_sesskey()) {
     // Check the user has the correct capability to delete a shop tag
-    if (!iomad::has_capability('block/iomad_commerce:manage_tags', $context)) {
+    if (!iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'delete a tag');
     }
     // Check that the record exists
@@ -104,7 +106,7 @@ if ($delete && confirm_sesskey()) {
         $DB->delete_records('course_shoptag', ['shoptagid' => $delete]);
         $DB->delete_records('shoptag', ['id' => $delete]);
         // Create the event and then trigger it
-        $event = \block_iomad_commerce\event\shoptag_deleted::create(['context' => $context,
+        $event = \block_iomad_commerce\event\shoptag_deleted::create(['context' => $companycontext,
                                                                       'objectid' => $delete,
                                                                       'other' => $eventother]);
         $event->trigger();
@@ -144,7 +146,7 @@ echo $OUTPUT->single_button(new moodle_url("$CFG->wwwroot/blocks/iomad_commerce/
 if(!$tagdeleted){
 // Create a event and trigger it
     $eventother = ['companyid' => $companyid];
-    $event = \block_iomad_commerce\event\manage_tags_viewed::create(['context' => $context,
+    $event = \block_iomad_commerce\event\manage_tags_viewed::create(['context' => $companycontext,
                                                                     'objectid' => $delete,
                                                                     'other' => $eventother]);
     $event->trigger();

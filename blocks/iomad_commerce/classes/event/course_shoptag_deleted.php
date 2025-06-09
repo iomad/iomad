@@ -16,7 +16,7 @@
 
 /**
  * @package   block_iomad_commerce
- * @copyright 2025 Robert Tyrone Cullen
+ * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

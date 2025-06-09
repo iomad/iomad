@@ -16,7 +16,7 @@
 
 /**
  * @package   block_iomad_commerce
- * @copyright 2025 Robert Tyrone Cullen
+ * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -47,7 +47,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
      */
     public function __construct($companyid, $shoptagid, $itemsusedby, $assignableitems, $name) {
         // Check the user has the correct permissions
-        $capability = iomad::has_capability('block/iomad_commerce:manage_tags', context_system::instance());
+        $capability = iomad::has_capability('block/iomad_commerce:manage_tags', \core\context\company::instance($companyid));
         // Define variables used in other functions
         $this->assignableitems = $assignableitems;
         $this->edithint = get_string('xshopitems', 'block_iomad_commerce', $name);
@@ -98,8 +98,11 @@ class course_shoptag_editable extends \core\output\inplace_editable {
         // Decode the json string. Loop through the array and add it to a new array as well as clean each value in the array
         $itemid = array_map(fn($v) => clean_param($v, PARAM_INT), json_decode($newvalue));
 
+        // Define the company id
+        $companyid = iomad::get_my_companyid($context, true);
+
         // Define the context
-        $context = context_system::instance();
+        $context = \core\context\company::instance($companyid);
         // Check if the user has permissions to access this
         core_external::validate_context($context);
         // Check the user has the correct capability
@@ -128,9 +131,6 @@ class course_shoptag_editable extends \core\output\inplace_editable {
                 $event->trigger();
             }
         }
-
-        // Define the company id
-        $companyid = iomad::get_my_companyid($context, true);
 
         // Create records which don't exist for the shop items which have been assigned the shop tag
         foreach($itemid as $i) {
