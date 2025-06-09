@@ -24,5 +24,5 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'enrol_license';
-$plugin->release  = '4.4.8 (Build: 20250414)'; // Human-friendly version name
+$plugin->release  = '4.4.9 (Build: 20250609)'; // Human-friendly version name
 $plugin->version = 2022100601;
