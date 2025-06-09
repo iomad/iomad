@@ -491,6 +491,15 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
+        // Rename field itemid on table course_shoptag to NEWNAMEGOESHERE.
+        $table = new xmldb_table('course_shoptag');
+        $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'id');
+
+        // Launch rename field itemid.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'itemid');
+        }
+
         // Delete shop tags that aren't used
         if ($unusedtags = $DB->get_records_sql('SELECT id FROM {shoptag} WHERE 
                                                id not in (SELECT shoptagid FROM {course_shoptag})
