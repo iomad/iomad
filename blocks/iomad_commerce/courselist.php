@@ -69,6 +69,7 @@ if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $co
     $mycompanyid = iomad::get_my_companyid($context);
 } else {
     $companyid = iomad::get_my_companyid($context);
+    $mycompanyid = $companyid;
 }
 
 // Delete a selected product from the shop, after confirmation.
