@@ -72,6 +72,8 @@ $returnurl = $baseurl;
 if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $companycontext)) {
     $mycompanyid = $companyid;
     $companyid = 0;
+} else {
+    $mycompanyid = $companyid;
 }
 
 // Delete a selected product from the shop, after confirmation.
