@@ -262,7 +262,11 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
                 if (!empty($user->$field)) {
-                    $worksheet[0]->write($row, $col, $user->$field);
+                    if (isset($user->$field['text'])){
+                        $worksheet[0]->write($row, $col, $user->$field['text']);
+                    } else {
+                        $worksheet[0]->write($row, $col, $user->$field);
+                    }
                 } else {
                     $worksheet[0]->write($row, $col, '');
                 }
@@ -316,7 +320,11 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
                 if (!empty($user->$field)) {
-                    $row[] = str_replace($delimiter, $encdelim, $user->$field);
+                    if(isset($user->$field['text'])){
+                        $row[] = str_replace($delimiter, $encdelim, $user->$field['text']);
+                    } else {
+                        $row[] = str_replace($delimiter, $encdelim, $user->$field);
+                    }
                 } else {
                     $row[] = str_replace($delimiter, $encdelim, '');
                 }
