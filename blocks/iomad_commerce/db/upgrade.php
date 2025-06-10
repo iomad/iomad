@@ -566,7 +566,7 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         }
 
         // Iomad_commerce savepoint reached.
-        upgrade_block_savepoint(true, 2025006091, 'iomad_commerce');
+        upgrade_block_savepoint(true, 202506091, 'iomad_commerce');
     }
     return $result;
 }
