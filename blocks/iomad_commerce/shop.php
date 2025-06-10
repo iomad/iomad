@@ -161,6 +161,9 @@ $sql = 'FROM {course_shopsettings} css
                                                   WHERE itemid = css.id ORDER BY price LIMIT 1 ))
         WHERE css.enabled = 1
         AND css.companyid =:companyid
+        AND (css.allow_single_purchase = 1 or css.id = sbp.itemid
+                                              AND sbp.id = (SELECT id FROM {course_shopblockprice}
+                                              WHERE itemid = css.id ORDER BY price LIMIT 1 ))
         ' . $tagwhere . $searchwhere . $typewhere . '
         GROUP BY css.id, sbp.id ORDER BY css.name';
 
