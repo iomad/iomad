@@ -81,7 +81,7 @@ if (isset($SESSION->shoptag) && $SESSION->shoptag != '') {
     $tagfilters .= get_string('filtered_by_tag', 'block_iomad_commerce', '<em>' . $SESSION->shoptag . '</em>' );
     $tagfilters .= "</li>";
 
-    $tagjoin = 'INNER JOIN {course_shoptag} cst ON cst.itemid = csc.id
+    $tagjoin = 'INNER JOIN {course_shoptag} cst ON cst.itemid = css.id
                 INNER JOIN {shoptag} st ON cst.shoptagid = st.id';
     $tagwhere = ' AND st.tag = :tag ';
     $sqlparams['tag'] = $SESSION->shoptag;
