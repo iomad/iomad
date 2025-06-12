@@ -236,6 +236,7 @@ if (!empty($fieldnames)) {
         }
         if (!empty(${$fieldname})) {
             $idlist[0] = "We found no one";
+            ${$fieldname} = (isset(${$fieldname}['text'])) ? ${$fieldname}['text'] : ${$fieldname};
             $fieldsql = $DB->sql_compare_text('data')." LIKE '%".${$fieldname}."%' AND fieldid = $id";
             if ($idfields = $DB->get_records_sql("SELECT userid from {user_info_data} WHERE $fieldsql")) {
                 $fieldids[] = $idfields;
