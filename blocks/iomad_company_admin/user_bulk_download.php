@@ -207,14 +207,17 @@ function user_download_ods($userids, $fields, $includecompanyfield) {
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
                 if (!empty($user->$field)) {
-                    $worksheet[0]->write($row, $col, $user->$field);
+                    // Check if the value ['text'] isset and if not return the value
+                    $value = (isset($user->$field['text'])) ? $user->$field['text'] : $user->$field;
+                    $worksheet[0]->write($row, $col, $value);
                 } else {
                     $worksheet[0]->write($row, $col, '');
                 }
                 $col++;
             }
         }
-        $worksheet[0]->write($row, $col, company_user::get_temporary_password($user));
+        // Use write_string for the password to prevent a formatting issue
+        $worksheet[0]->write_string($row, $col, company_user::get_temporary_password($user));
 
         $row++;
     }
@@ -260,11 +263,9 @@ function user_download_xls($userids, $fields, $includecompanyfield) {
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
                 if (!empty($user->$field)) {
-                    if (isset($user->$field['text'])){
-                        $worksheet[0]->write($row, $col, $user->$field['text']);
-                    } else {
-                        $worksheet[0]->write($row, $col, $user->$field);
-                    }
+                    // Check if the value ['text'] isset and if not return the value
+                    $value = (isset($user->$field['text'])) ? $user->$field['text'] : $user->$field;
+                    $worksheet[0]->write($row, $col, $value);
                 } else {
                     $worksheet[0]->write($row, $col, '');
                 }
@@ -318,11 +319,9 @@ function user_download_csv($userids, $fields, $includecompanyfield) {
             set_time_limit(30);
             if ($includecompanyfield || $field != "profile_field_company") {
                 if (!empty($user->$field)) {
-                    if(isset($user->$field['text'])){
-                        $row[] = str_replace($delimiter, $encdelim, $user->$field['text']);
-                    } else {
-                        $row[] = str_replace($delimiter, $encdelim, $user->$field);
-                    }
+                    // Check if the value ['text'] isset and if not return the value
+                    $value = (isset($user->$field['text'])) ? $user->$field['text'] : $user->$field;
+                    $row[] = str_replace($delimiter, $encdelim, $value);
                 } else {
                     $row[] = str_replace($delimiter, $encdelim, '');
                 }
