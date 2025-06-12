@@ -201,7 +201,8 @@ if (!$showall && $category = $DB->get_record_sql('select uic.id, uic.name from {
             $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
             require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
-            ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname, null, PARAM_ALPHANUMEXT);
+            $shortname = ($field->datatype == 'textarea') ? $field->shortname.'[text]' : $field->shortname;
+            ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$shortname, null, PARAM_ALPHANUMEXT);
         }
     }
     if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
