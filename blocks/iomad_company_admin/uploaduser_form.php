@@ -68,6 +68,7 @@ class admin_uploaduser_form1 extends company_moodleform {
 
 class admin_uploaduser_form2 extends company_moodleform {
     protected $courseselector = null;
+    protected $departmentid;
 
     public function definition () {
         global $CFG, $USER, $SESSION;
