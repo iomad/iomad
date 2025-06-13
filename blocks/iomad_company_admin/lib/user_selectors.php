@@ -620,6 +620,9 @@ class current_company_course_user_selector extends company_user_selector_base {
 
 class potential_company_course_user_selector extends company_user_selector_base {
 
+    protected $parentdepartmentid;
+    protected $subdepartments;
+
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
         $this->departmentid = $options['departmentid'];
