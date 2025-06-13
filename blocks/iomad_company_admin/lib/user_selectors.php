@@ -1843,6 +1843,10 @@ class potential_company_group_user_selector extends company_user_selector_base {
 }
 
 class current_company_thread_user_selector extends company_user_selector_base {
+
+    protected $threadid;
+    protected $groupid;
+
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
         $this->threadid = $options['threadid'];
@@ -1934,6 +1938,11 @@ class current_company_thread_user_selector extends company_user_selector_base {
 }
 
 class potential_company_thread_user_selector extends company_user_selector_base {
+
+    protected $threadid;
+    protected $subdepartments;
+    protected $parentdepartmentid;
+    protected $groupid;
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
