@@ -40,6 +40,7 @@ require_once($CFG->libdir.'/tablelib.php');
 class manage_tags_table extends table_sql {
 
     protected $assignableitems;
+    protected $companyid;
 
     /**
      * Constructor
