@@ -57,6 +57,10 @@ class page_managedocs_list implements renderable, templatable {
     protected $iomadpolicyid = null;
     /** @var moodle_url */
     protected $returnurl = null;
+    /** @var array */
+    protected $companylist = [];
+    /** @var boolean  */
+    protected $companyonly = null;
 
     /**
      * page_managedocs_list constructor.

@@ -120,7 +120,11 @@ class api {
         }
 
         // Deal with the company id.
-        $companysql = "AND d.companyid = :companyid";
+        if ($companyid != -1) {
+            $companysql = "AND d.companyid = :companyid";
+        } else {
+            $companysql = "";
+        }
 
         $sql .= " FROM {tool_iomadpolicy} d
              LEFT JOIN {tool_iomadpolicy_versions} v ON v.iomadpolicyid = d.id ";
