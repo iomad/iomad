@@ -29,8 +29,10 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+$plugin->release  = '4.5.5 (Build: 20250609)'; // Human-friendly version name
 $plugin->version = 2025012300;
-$plugin->release = '2025012300 (Happy 2025)';
-$plugin->requires = 2024100700; // Moodle 4.5+, https://moodledev.io/general/releases#moodle-45-lts.
+$plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component = 'tool_iomadmerge';
+$plugin->dependencies = ['local_iomad' => 2024090401];
+$plugin->supported = [405, 405];
 $plugin->maturity = MATURITY_STABLE;

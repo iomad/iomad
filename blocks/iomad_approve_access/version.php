@@ -21,7 +21,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.5.2 (Build: 20240610)'; // Human-friendly version name
+$plugin->release  = '4.5.5 (Build: 20250609)'; // Human-friendly version name
+$plugin->version  = 2024100700;   // The (date) version of this plugin.
+$plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component  = 'block_iomad_approve_access';
-$plugin->version = 2022042300;  // YYYYMMDDHH (year, month, day, 24-hr time).
-$plugin->requires = 2019052000; // YYYYMMDDHH (This is the release version for Moodle 2.0).
+$plugin->dependencies = ['local_iomad' => 2024090401];
+$plugin->supported = [405, 405];
+$plugin->maturity = MATURITY_STABLE;

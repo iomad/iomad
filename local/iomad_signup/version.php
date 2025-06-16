@@ -21,7 +21,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.5.3 (Build: 20250317)'; // Human-friendly version name
+$plugin->release  = '4.5.5 (Build: 20250609)'; // Human-friendly version name
+$plugin->version  = 2024100700;   // The (date) version of this plugin.
+$plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component  = 'local_iomad_signup';
-$plugin->version  = 2016090301;   // The (date) version of this plugin.
-$plugin->requires = 2019052000;   // Requires this Moodle version.
+$plugin->dependencies = ['local_iomad' => 2024090401];
+$plugin->supported = [405, 405];
+$plugin->maturity = MATURITY_STABLE;
