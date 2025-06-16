@@ -24,6 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
 $plugin->version   = 2022112800;
 $plugin->requires  = 2022111800;
 $plugin->component = 'theme_iomadboost';
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;

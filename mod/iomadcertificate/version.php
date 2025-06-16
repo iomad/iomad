@@ -30,5 +30,6 @@ $plugin->version   = 2016052300; // The current module version (Date: YYYYMMDDXX
 $plugin->requires  = 2019052000; // Requires this Moodle version (3.1)
 $plugin->cron      = 0; // Period for cron to check this module (secs)
 $plugin->component = 'mod_iomadcertificate';
-
-$plugin->maturity  = MATURITY_STABLE;
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;

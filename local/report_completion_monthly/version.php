@@ -24,5 +24,7 @@
 $plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
 $plugin->version  = 2019012100;
 $plugin->requires = 2019052000;
-$plugin->dependencies = array('local_report_user_license_allocations' => 2019012100);
 $plugin->component  = 'local_report_completion_monthly';
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;

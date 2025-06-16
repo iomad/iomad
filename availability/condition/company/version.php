@@ -24,7 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.0.6 (Build: 20230116)'; // Human-friendly version name
+$plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
 $plugin->version = 2022041900;
 $plugin->requires = 2022041200;
 $plugin->component = 'availability_company';
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;

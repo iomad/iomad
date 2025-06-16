@@ -27,3 +27,6 @@ $plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
 $plugin->version  = 2025011500;   // The (date) version of this plugin.
 $plugin->requires = 2010021900;   // Requires this Moodle version.
 $plugin->component = 'block_iomad_microlearning';
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;

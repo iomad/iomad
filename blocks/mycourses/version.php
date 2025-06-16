@@ -23,7 +23,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.5 (Build: 20230814)'; // Human-friendly version name
+$plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
 $plugin->version   = 2024082700;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2012112900;        // Requires this Moodle version
 $plugin->component = 'block_mycourses'; // Full name of the plugin (used for diagnostics)
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;

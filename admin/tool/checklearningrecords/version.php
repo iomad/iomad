@@ -26,7 +26,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
 $plugin->version   = 2020043000; // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2017050500; // Requires this Moodle version
 $plugin->component = 'tool_checklearningrecords'; // Full name of the plugin (used for diagnostics)
-
+$plugin->dependencies = ['local_iomad' => 2023042702];
+$plugin->supported = [401, 401];
+$plugin->maturity = MATURITY_STABLE;
