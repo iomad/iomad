@@ -27,7 +27,10 @@
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->release  = '4.4.9 (Build: 20250609)'; // Human-friendly version name
-$plugin->component  = 'mod_trainingevent';
 $plugin->version  = 2025012301;  // The current module version (Date: YYYYMMDDXX).
-$plugin->requires = 2019052000;  // Requires this Moodle version.
-$plugin->cron     = 0;           // Period for cron to check this module (secs).
+$plugin->requires = 2024042200;   // Requires this Moodle version.
+$plugin->component  = 'mod_trainingevent';
+$plugin->dependencies = ['local_iomad' => 2024090401];
+$plugin->supported = [404, 404];
+$plugin->maturity = MATURITY_STABLE;
+

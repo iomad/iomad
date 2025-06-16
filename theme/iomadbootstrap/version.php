@@ -26,7 +26,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->release  = '4.4.9 (Build: 20250609)'; // Human-friendly version name
-$plugin->version = 2024042200;
-$plugin->requires = 2024041600;
+$plugin->version  = 2024042200;   // The (date) version of this plugin.
+$plugin->requires = 2024042200;   // Requires this Moodle version.
 $plugin->component = 'theme_iomadbootstrap';
-$plugin->dependencies = ['theme_boost' => 2024041600];
+$plugin->dependencies = ['theme_boost' => 2024041600,
+                         'local_iomad' => 2024090401];
+$plugin->supported = [404, 404];
+$plugin->maturity = MATURITY_STABLE;
+
