@@ -25,11 +25,11 @@
 // This line protects the file from being accessed by a URL directly.
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.5.5 (Build: 20250609)'; // Human-friendly version name
-$plugin->version  = 2024100700;   // The (date) version of this plugin.
-$plugin->requires = 2024100700;   // Requires this Moodle version.
+$plugin->release  = '5.0.1 (Build: 20250609)';    // Human-friendly version name
+$plugin->version  = 2025041400;   // The (date) version of this plugin.
+$plugin->requires = 2025041400;   // Requires this Moodle version.
 $plugin->component = 'theme_iomadbootstrap';
-$plugin->dependencies = ['theme_boost' => 2024100100,
-                         'local_iomad' => 2024090401];
-$plugin->supported = [405, 405];
+$plugin->dependencies = ['theme_boost' => 2025041400,
+                         'local_iomad' => 2025041400];
+$plugin->supported = [500, 500];
 $plugin->maturity = MATURITY_STABLE;

@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.5.5 (Build: 20250609)'; // Human-friendly version name
+$plugin->release  = '5.0.1 (Build: 20250609)';    // Human-friendly version name
 $plugin->version   = 2024090901;    // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2017051509;    // Requires PHP 7, 2017051509 = T12. M3.3
                                     // Strictly we require either Moodle 3.5 OR
@@ -32,5 +32,5 @@ $plugin->requires  = 2017051509;    // Requires PHP 7, 2017051509 = T12. M3.3
                                     // for Totara 3.3 is the same as Moodle 3.3.
 $plugin->component = 'auth_iomadsaml2';  // Full name of the plugin (used for diagnostics).
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->supported = [39, 404];     // A range of branch numbers of supported moodle versions.
-$plugin->dependencies = ['local_iomad' => 2024090401];
+$plugin->supported = [39, 500];     // A range of branch numbers of supported moodle versions.
+$plugin->dependencies = ['local_iomad' => 2025041400];
