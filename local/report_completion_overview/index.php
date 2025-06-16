@@ -561,13 +561,13 @@ if (!$bycourse) {
                 if ($indate = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                     WHERE userid = :userid
                                                     AND courseid = :courseid
-                                                    AND timecompleted > :time
+                                                    AND timeexpires > :time
                                                     ORDER BY id DESC",
                                                    ['userid' => $userid,
                                                    'courseid' => $courseid,
                                                    'time' => time()], 0, 1)) {
-                    $comprecord->indate = $indaterec->timeexpires;
                     $indaterec = reset($indate);
+                    $comprecord->indate = $indaterec->timeexpires;
                     $comprecord->lastcompleted = $indaterec->timecompleted;
                     $comprecord->timeexpires = $indaterec->timeexpires;
                 // Do we have an out-date record?
@@ -577,7 +577,8 @@ if (!$bycourse) {
                                                             AND timecompleted > 0
                                                             ORDER BY id DESC",
                                                            ['userid' => $userid,
-                                                            'courseid' => $courseid], 0, 1)) {
+                                                            'courseid' => $courseid,
+                                                            'time' => time()], 0, 1)) {
                     $comprecord->outdate = true;
                     $outdaterec = reset($outdate);
                     $comprecord->lastcompleted = $outdaterec->timecompleted;
