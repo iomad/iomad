@@ -667,6 +667,16 @@ if (iomad::has_capability('block/iomad_company_admin:editusers', $companycontext
 $usercount = $DB->count_records_sql($countsql, $sqlparams);
 echo $output->heading(get_string('totalusers', 'block_iomad_company_admin', $usercount));
 
+if (isset($USER->editing) && $USER->editing) {
+    // Don't return users with a role that the user does not have the capability to assign
+    if (!has_capability('block/iomad_company_admin:assign_company_manager', $systemcontext)) {
+        $wheresql .= ' AND managertype != 1';
+    }
+    if (!has_capability('block/iomad_company_admin:assign_company_reporter', $systemcontext)) {
+        $wheresql .= ' AND managertype != 4';
+    }
+}
+
 // Actually create and display the table.
 $baseurl->remove_params(['page']);
 $table = new \block_iomad_company_admin\tables\editusers_table('block_iomad_company_admin_editusers_table');
