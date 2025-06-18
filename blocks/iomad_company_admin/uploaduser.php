@@ -701,7 +701,7 @@ if (!empty($cancelled)) {
                                 // Missing == non-empty only!
                                 continue;
                             }
-                            if ($existinguser->$column !== $user->$column) {
+                            if (isset($user->$column) && $existinguser->$column !== $user->$column) {
                                 if ($column == 'email') {
                                     if ($DB->record_exists_sql("SELECT DISTINCT u.id
                                                                 FROM {user} u
