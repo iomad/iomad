@@ -668,10 +668,10 @@ echo $output->heading(get_string('totalusers', 'block_iomad_company_admin', $use
 
 if (isset($USER->editing) && $USER->editing) {
     // Don't return users with a role that the user does not have the capability to assign
-    if (!has_capability('block/iomad_company_admin:assign_company_manager', $systemcontext)) {
+    if (!has_capability('block/iomad_company_admin:assign_company_manager', $companycontext)) {
         $wheresql .= ' AND managertype != 1';
     }
-    if (!has_capability('block/iomad_company_admin:assign_company_reporter', $systemcontext)) {
+    if (!has_capability('block/iomad_company_admin:assign_company_reporter', $companycontext)) {
         $wheresql .= ' AND managertype != 4';
     }
 }
