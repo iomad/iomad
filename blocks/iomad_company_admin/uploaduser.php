@@ -685,7 +685,7 @@ if ($mform->is_cancelled()) {
                                 // Missing == non-empty only!
                                 continue;
                             }
-                            if ($existinguser->$column !== $user->$column) {
+                            if (isset($user->$column) && $existinguser->$column !== $user->$column) {
                                 if ($column == 'email') {
                                     if ($DB->record_exists('user', array('email' => $user->email))) {
                                         if ($noemailduplicates) {
