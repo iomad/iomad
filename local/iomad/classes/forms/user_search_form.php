@@ -152,6 +152,7 @@ class user_search_form extends moodleform {
             if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
+                    $field->datatype = ($field->datatype == 'textarea') ? 'text' : $field->datatype;
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;
                     $formfield = new $newfield($field->id);
@@ -172,6 +173,7 @@ class user_search_form extends moodleform {
                 if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
                     // Display the header and the fields.
                     foreach ($fields as $field) {
+                        $field->datatype = ($field->datatype == 'textarea') ? 'text' : $field->datatype;
                         require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                         $newfield = 'profile_field_'.$field->datatype;
                         $formfield = new $newfield($field->id);
