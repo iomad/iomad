@@ -346,15 +346,12 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = "";
 }
 
-// All courses or just the one?
-$companycourses = $company->get_menu_courses(true);
-if (empty($companycourses)) {
-    $companycourses = [0];
-}
+// Filter courses dependant on the input to the course name search
+$courseids = array_map(fn($i)=> $i->courseid, $courselist);
 if ($courseid != 1) {
-    $coursesql = " AND lit.courseid = :courseid AND lit.courseid IN (" . join(',', array_keys($companycourses)) . ") ";
+    $coursesql = " AND lit.courseid = :courseid AND lit.courseid IN (" . join(',', array_keys($courseids)) . ") ";
 } else {
-    $coursesql = " AND lit.courseid IN (" . join(',', array_keys($companycourses)) . ") ";
+    $coursesql = " AND lit.courseid IN (" . join(',', array_keys($courseids)) . ") ";
 }
 
 // Deal with completion times.
