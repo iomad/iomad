@@ -301,7 +301,7 @@ class company_edit_form extends \company_moodleform {
             if (!iomad::has_capability('local/custompage:editall', $this->context)) {
                 $mycustompages = \local_custompage\local\helpers\audience::user_pages_list();
                 if (!empty($mycustompages)) {
-                    $custompagesql = " AND id in (" . implode(',', $mycustompages) . ")";
+                    $custompagesql = " AND lcp.id in (" . implode(',', $mycustompages) . ")";
                 } else {
                     $custompagesql = " AND 1=2 ";
                 }
