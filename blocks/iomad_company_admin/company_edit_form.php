@@ -90,6 +90,11 @@ if (!$new) {
         $companyrecord->templates = array_keys($companytemplates);
     }
 
+    // Get the dashboard page - if there is one.
+    if ($companydashboard = $DB->get_record('company_pages', ['companyid' => $companyid, 'type' => 'dashboard'])) {
+        $companyrecord->dashboard = $companydashboard->pageid;
+    }
+
     // Get the Outgoing email config - if there are any.
     $smtphostsname = "smtphosts" . $companyid;
     $smtpsecurename = "smtpsecure" . $companyid;
@@ -461,7 +466,7 @@ if ($mform->is_cancelled()) {
             $catdata->sortorder = $DB->count_records('user_info_category') + 1;
             $catdata->name = $data->shortname;
             $data->profileid = $DB->insert_record('user_info_category', $catdata);
-    
+
             // Deal with leading/trailing spaces
             $data->name = trim($data->name);
             $data->shortname = trim($data->shortname);
@@ -471,7 +476,7 @@ if ($mform->is_cancelled()) {
             $data->custom1 = trim($data->custom1);
             $data->custom2 = trim($data->custom2);
             $data->custom3 = trim($data->custom3);
-    
+
             // We hit create.
             $companyid = $DB->insert_record('company', $data);
             $company = new company($companyid);
@@ -642,6 +647,13 @@ if ($mform->is_cancelled()) {
                                         'showgrade' => $data->showgrade);
             $DB->insert_record('companycertificate', $certificateinforec);
         }
+
+        // Deal with an dashboard stuff.
+        $DB->delete_records('company_pages', ['companyid' => $companyid, 'type' => 'dashboard']);
+        if (!empty($data->dashboard)) {
+            $DB->insert_record('company_pages', ['companyid' => $companyid, 'pageid' => $data->dashboard, 'type' => 'dashboard']);
+        }
+
         // Deal with any SMTP stuff.
         $smtpfields = ["smtphosts",
                        "smtpsecure",

@@ -85,6 +85,7 @@ if (isguestuser()) {  // Force them to see system default, no editing allowed
 }
 
 // Get the My Moodle page info.  Should always return something unless the database is broken.
+company_user::check_dashboard_page();
 if (!$currentpage = my_get_page($userid, MY_PAGE_PRIVATE)) {
     throw new \moodle_exception('mymoodlesetup');
 }

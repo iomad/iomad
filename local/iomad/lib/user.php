@@ -88,35 +88,35 @@ class company_user {
             if ($user->sendnewpasswordemails && !$user->preference_auth_forcepasswordchange) {
                 throw new Exception(get_string('cannotemailnontemporarypasswords', 'local_iomad'));
             }
-    
+
             /*
                 There are 8 possible combinations of password, sendbyemail and forcepasswordchange
                 fields:
-    
+
                 pwd     email yes   force change            -> temporary password
                 pwd     email no    force change            -> temporary password
                 pwd     email no    dont force change       -> not a temporary password
-    
+
                 no pwd  email yes   force change            -> create password -> store temp
                 no pwd  email no    force change            -> create password -> store temp
                 no pwd  email no    dont force change       -> create password -> store temp
-    
+
                 These two combinations shouldn't happen (caught by form validation and exception above):
                 pwd    email yes dont force change->needs to be stored as temp password -> not secure
                 no pwd email yes dont force change->create password->store temp->not secure
-    
+
                 The next set of variables ($sendemail, $passwordentered, $createpassword,
                 $forcepasswordchange, $storetemppassword) are used to distinguish between
                 the first 6 combinations and to take appropriate action.
             */
-    
+
             $sendemail = $user->sendnewpasswordemails;
-    
+
             // We only need the password if it's an internal plugin.
             if (empty($user->auth)) {
                 $user->auth = 'manual';
             }
-    
+
             $authplugin = get_auth_plugin($user->auth);
             if ($authplugin->is_internal()) {
                 $passwordentered = !empty($user->newpassword);
@@ -125,7 +125,7 @@ class company_user {
                 // Store temp password unless password was entered and it's not going to be send by
                 // email nor is it going to be forced to change.
                 $storetemppassword = !( $passwordentered && !$sendemail && !$forcepasswordchange );
-    
+
                 if ($passwordentered) {
                     $user->password = $user->newpassword;   // Don't hash it, user_create_user will do that.
                 }
@@ -135,11 +135,11 @@ class company_user {
                 $storetemppassword = false;
                 unset($user->password);
             }
-    
+
             $user->confirmed = 1;
             $user->mnethostid = $DB->get_field('mnet_application','id',['name'=>'moodle']);
             $user->maildisplay = 0; // Hide email addresses by default.
-    
+
             // Create user record and return id.
             $id = user_create_user($user);
             $user->id = $id;
@@ -163,12 +163,12 @@ class company_user {
             if ($forcepasswordchange) {
                 set_user_preference('auth_forcepasswordchange', 1, $user->id);
             }
-    
+
             if ($createpassword) {
                 $DB->set_field('user', 'password', hash_internal_user_password($user->newpassword),
                                 array('id' => $user->id));
             }
-    
+
             if ($storetemppassword) {
                 // Store password as temporary password, sendemail if necessary.
                 self::store_temporary_password($user, $sendemail, $user->newpassword, false, $data->due);
@@ -1153,7 +1153,7 @@ class company_user {
                             $newlicense->timecompleted = null;
                             if ($licenserecord->used < $licenserecord->allocation && $licenserecord->expirydate > time()) {
                                 $newlicenseid = $DB->insert_record('companylicense_users', (array) $newlicense);
-    
+
                                 // Create an event.
                                 $eventother = array('licenseid' => $licenserecord->id,
                                                     'issuedate' => time(),
@@ -1167,7 +1167,7 @@ class company_user {
                             } else {
                                 // Can we get a newer license?
                                 if ($newlicense = self::auto_allocate_license($userid, $licenserecord->companyid, $courseid)) {
-    
+
                                     // Create an event.
                                     $eventother = array('licenseid' => $newlicense->licenseid,
                                                         'issuedate' => time(),
@@ -1332,7 +1332,7 @@ class company_user {
         // Set the companyid
         $mycompanies = company::get_companies_select(false, false, true, 'cu.lastused DESC, name ASC', $search);
         $returncompanies = (object) [];
-        $returncompanies->companies = (object) [];    
+        $returncompanies->companies = (object) [];
         $rows = [];
         if (count($mycompanies) > 0) {
             $returnobject->hasmultiple = true;
@@ -1358,9 +1358,23 @@ class company_user {
                 $rows[] = (object) ['cells' => $rowcompanies];
             }
         }
-        
+
         $returncompanies->companies->rows = $rows;
         return $returncompanies;
+    }
+
+    /**
+     * Checks if the company has a dashboard URL]
+     * and if so - redirects the user to it.
+     *
+     * @return void
+     */
+    public static function check_dashboard_page() {
+        $companyid = iomad::get_my_companyid(context_system::instance());
+        $company = new company($companyid);
+        if ($dashboardurl = $company->get_dashboard_url()) {
+            redirect ($dashboardurl);
+        }
     }
 }
 /**
