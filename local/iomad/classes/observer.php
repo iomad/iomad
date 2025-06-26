@@ -303,4 +303,15 @@ class local_iomad_observer {
         company::user_unsuspended($event);
         return true;
     }
+
+    /**
+     * Triggered via local_custompage::custompage_delete event.
+     *
+     * @param \local_custompage\event\custompage_deleted $event
+     * @return bool true on success.
+     */
+    public static function custompage_deleted($event) {
+        company::custompage_deleted($event);
+        return true;
+    }
 }

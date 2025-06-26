@@ -2551,5 +2551,29 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024090401, 'local', 'iomad');
     }
 
+    if ($oldversion < 2025062600) {
+
+        // Define table company_pages to be created.
+        $table = new xmldb_table('company_pages');
+
+        // Adding fields to table company_pages.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('companyid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('type', XMLDB_TYPE_CHAR, '10', null, null, null, null);
+        $table->add_field('pageid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table company_pages.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for company_pages.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2025062600, 'local', 'iomad');
+    }
+
     return $result;
+
 }

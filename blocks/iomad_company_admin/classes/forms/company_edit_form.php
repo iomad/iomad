@@ -152,7 +152,7 @@ class company_edit_form extends \company_moodleform {
 
         /* === Company email notifications === */
         $mform->addElement('header', 'manageremails', get_string('manageremails', 'block_iomad_company_admin'));
-        $mform->setExpanded('manageremails', false);         
+        $mform->setExpanded('manageremails', false);
 
         $emailchoices = array('0' => get_string('none'),
                               '1' => get_string('reminderemails', 'block_iomad_company_admin'),
@@ -293,6 +293,33 @@ class company_edit_form extends \company_moodleform {
             $mform->addElement('hidden', 'paymentaccount');
         }
 
+        // Deal with potential custom dashboard.
+        $plugins = \core_component::get_plugin_list('local');
+        if (!empty($plugins['custompage'])) {
+            // Get all of the custom pages the user can see.
+            $custompagesql = "";
+            if (!iomad::has_capability('local/custompage:editall', $this->context)) {
+                $mycustompages = \local_custompage\local\helpers\audience::user_pages_list();
+                if (!empty($mycustompages)) {
+                    $custompagesql = " AND id in (" . implode(',', $mycustompages) . ")";
+                } else {
+                    $custompagesql = " AND 1=2 ";
+                }
+            }
+
+            // Only get the custom pages which are in the company context.
+            $custompages = $DB->get_records_sql_menu("SELECT lcp.id,lcp.name FROM {local_custompages} lcp
+                                                      JOIN {context} c ON lcp.contextid = c.id
+                                                      WHERE " . $DB->sql_like('c.path', ':path') . "
+                                                      $custompagesql
+                                                      ORDER BY lcp.name",
+                                                     ['path' => "/" . SYSCONTEXTID . "/" . $this->context->id . "/%"]);
+            if (!empty($custompages)) {
+                $custompages = ['0' => get_string('none', 'admin')] + $custompages;
+                $mform->addElement('select', 'dashboard', get_string('customdashboard', 'block_iomad_company_admin'), $custompages);
+            }
+        }
+
         // Valid to and suspend after are restricted.
         if (iomad::has_capability('block/iomad_company_admin:company_edit_restricted', $this->context)) {
             $mform->addElement('date_time_selector', 'validto', get_string('companyvalidto', 'block_iomad_company_admin'), array('optional' => true));
@@ -330,19 +357,19 @@ class company_edit_form extends \company_moodleform {
         if (!empty($this->companyid)) {
             // Get the company profile choices.
             $globalmenufields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
-                                                           datatype = :datatype                                                       
+                                                           datatype = :datatype
                                                            AND categoryid NOT IN (
                                                            SELECT profileid from {company}
                                                            )",
                                                            ['datatype' => 'menu']);
             $companymenufields = $DB->get_records_sql_menu("SELECT id,name from {user_info_field} WHERE
-                                                            datatype = :datatype                                                       
+                                                            datatype = :datatype
                                                             AND categoryid = (
                                                               SELECT profileid from {company}
                                                               WHERE id = :companyid
                                                             )",
                                                             ['companyid' => $this->companyid, 'datatype' => 'menu']);
-    
+
             $allmenufields = array_merge(['0' => get_string('none')], $companymenufields, $globalmenufields);
             $mform->addElement('select', 'departmentprofileid', get_string('departmentprofileid', 'block_iomad_company_admin'), $allmenufields, ['optional' => true]);
             $mform->addHelpButton('departmentprofileid', 'departmentprofileid', 'block_iomad_company_admin');
@@ -826,7 +853,7 @@ class company_edit_form extends \company_moodleform {
                                                   $foundcompanynamestring);
             }
         }
-        
+
         if (!empty($data['code']) &&
             $foundcompanies = $DB->get_records('company', array('code' => $data['code']))) {
             if (!empty($this->companyid)) {

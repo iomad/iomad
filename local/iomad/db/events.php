@@ -210,4 +210,11 @@ $observers = array(
         'includefile' => '/local/iomad/classes/observer.php',
         'internal'    => false,
     ),
+
+    array(
+        'eventname'   => '\local_custompage\event\custompage_deleted',
+        'callback'    => 'local_iomad_observer::custompage_deleted',
+        'includefile' => '/local/iomad/classes/observer.php',
+        'internal'    => false,
+    ),
 );
