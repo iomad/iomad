@@ -1,0 +1,42 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_iomadcustompage/local/dynamictabs/editor
+
+}}
+<h2 class="sr-only">{{#str}} iomadcustompagecontents, local_iomadcustompage {{/str}}</h2>
+<div class="iomadcustompage-page"
+     data-region="local_iomadcustompage/page"
+     data-page-id="{{pageid}}"
+     data-parameter="[]">
+  <div class="iomadcustompage-wrapper d-flex flex-column flex-lg-row">
+    {{! page }}
+    <div class="iomadcustompage-page-container">
+      <div data-region="local_iomadcustompage/page-header" class="dropdown d-flex justify-content-end">
+        {{! Edit button }}
+        <a href="{{pageediturl}}" role="button" data-action="toggle-edit-preview" class="btn btn-primary"
+                data-edit-mode="0" title="{{#str}} editpage, local_iomadcustompage {{/str}}">
+          {{#pix}} t/editstring, core {{/pix}}
+          {{#str}} editpage, local_iomadcustompage {{/str}}
+        </a>
+      </div>
+      <div class="iomadcustompage-contents-container mt-2">
+        {{{pagecontents}}}
+      </div>
+    </div>
+  </div>
+</div>

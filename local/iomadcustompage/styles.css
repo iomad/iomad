@@ -1,0 +1,80 @@
+#page-admin-local-iomadcustompage-edit .container-pagedetails {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#page-admin-local-iomadcustompage-edit .container-pagedetails h1 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+#page-admin-local-iomadcustompage-edit .container-pagedetails h2 {
+    color: #666;
+    font-size: 18px;
+}
+
+#page-admin-local-iomadcustompage-edit .iomadcustompage-page-container {
+    flex: 1 1 auto !important;
+}
+
+/* Toggle cards. */
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .card-header {
+    border-bottom: none;
+}
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .card-body {
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .toggle-card-button i.toggle-card-icon {
+    color: #6a737b;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .toggle-card-button .collapsed-icon-container {
+    display: none;
+}
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .toggle-card-button .expanded-icon-container {
+    display: inline-block;
+}
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .toggle-card-button.collapsed .collapsed-icon-container {
+    display: inline-block;
+}
+#page-admin-local-iomadcustompage-edit .iomadcustompage-toggle-card .toggle-card-button.collapsed .expanded-icon-container {
+    display: none;
+}
+
+#page-admin-local-iomadcustompage-edit .container.page-region-content {
+  border-radius: 10px;
+  border: 1px solid #afa7a7;
+  padding: 25px;
+  margin-top: 25px;
+}
+
+#page-admin-local-iomadcustompage-edit .container.page-right-content {
+  border-radius: 10px;
+  border: 1px solid #afa7a7;
+  padding: 25px;
+  margin-top: 25px;
+}
+
+#page-admin-local-iomadcustompage-edit .alert-secondary {
+  background-color: #e7e7e7;
+}
+
+#page-local-iomadcustompage-view #page.drawers .main-inner {
+   width: 95%;
+   max-width: 100%;
+}
+
+#page-local-iomadcustompage-view #page.drawers{
+    padding: unset;
+}
+
+#page-local-iomadcustompage-view #page.drawers .main-inner .container, .container-sm, .container-md, .container-lg{
+    width: 100%;
+    max-width: 100%;
+}

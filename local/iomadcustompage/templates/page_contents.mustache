@@ -1,0 +1,82 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_iomadcustompage/page_contents
+
+    This template renders the iomadcustompage contents
+
+    Example context (json):
+    {
+      "nocontents": false,
+      "content": {
+        "regioncontents": [
+          {
+            "id": "79",
+            "blockname": "contact",
+            "parentcontextid": "277",
+            "showinsubcontexts": "0",
+            "requiredbytheme": "0",
+            "pagetypepattern": "local-iomadcustompage-view",
+            "subpagepattern": "2",
+            "defaultregion": "content",
+            "defaultweight": "0",
+            "configdata": "",
+            "timecreated": "1725603275",
+            "timemodified": "1725603275",
+            "name": "Contact Us"
+          }
+        ],
+        "regionname": "Region content"
+      }
+    }
+}}
+
+{{#nocontents}}
+  <div class="container">
+    <div class="alert alert-primary" role="alert">
+      {{#str}}noblocks, local_iomadcustompage{{/str}}
+    </div>
+  </div>
+{{/nocontents}}
+
+{{#content}}
+  <div class="container page-region-content">
+    <h5>
+      <span>{{#pix}} i/addblock, core {{/pix}}</span>
+      <span>{{regionname}}</span>
+    </h5>
+    {{#regioncontents}}
+      <div class="alert alert-secondary" role="alert">
+        {{name}}
+      </div>
+    {{/regioncontents}}
+  </div>
+{{/content}}
+
+{{#side-pre}}
+  <div class="container page-right-content">
+    <h5>
+      <span>{{#pix}} i/addblock, core {{/pix}}</span>
+      <span>{{regionname}}</span>
+    </h5>
+    {{#regioncontents}}
+      <div class="alert alert-secondary" role="alert">
+        {{name}}
+      </div>
+    {{/regioncontents}}
+  </div>
+{{/side-pre}}
