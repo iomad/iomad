@@ -3660,7 +3660,7 @@ class company {
                     $DB->update_record('user', $user);
                 }
                 if (!empty($suspend)) {
-                    \core\session\manager::kill_user_sessions($user->id);
+                    \core\session\manager::destroy_user_sessions($user->id);
                 }
             }
         }
