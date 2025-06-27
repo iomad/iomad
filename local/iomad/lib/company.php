@@ -139,7 +139,7 @@ class company {
     public function get_dashboard_url() {
         global $CFG, $DB;
         if ($url = $DB->get_record('company_pages', ['companyid' => $this->id, 'type' => 'dashboard'])) {
-            return new moodle_url($CFG->wwwroot . "/local/custompage/view.php", ['id' => $url->pageid]);
+            return new moodle_url($CFG->wwwroot . "/local/iomadcustompage/view.php", ['id' => $url->pageid]);
         }
     }
 
@@ -5566,12 +5566,12 @@ class company {
     }
 
     /**
-     * Triggered via custompage_deleted event.
+     * Triggered via iomadcustompage_deleted event.
      *
-     * @param \local_custompage\event\custompage_deleted $event
+     * @param \local_iomadcustompage\event\iomadcustompage_deleted $event
      * @return bool true on success.
      */
-    public static function custompage_deleted(\local_custompage\event\custompage_deleted $event) {
+    public static function iomadcustompage_deleted(\local_iomadcustompage\event\iomadcustompage_deleted $event) {
         global $DB, $CFG;
         // Delete any company pages which match this event object id.
         $DB->delete_records('company_pages', ['pageid' => $event->objectid]);
