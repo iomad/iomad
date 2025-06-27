@@ -295,28 +295,28 @@ class company_edit_form extends \company_moodleform {
 
         // Deal with potential custom dashboard.
         $plugins = \core_component::get_plugin_list('local');
-        if (!empty($plugins['custompage'])) {
+        if (!empty($plugins['iomadcustompage'])) {
             // Get all of the custom pages the user can see.
-            $custompagesql = "";
-            if (!iomad::has_capability('local/custompage:editall', $this->context)) {
-                $mycustompages = \local_custompage\local\helpers\audience::user_pages_list();
-                if (!empty($mycustompages)) {
-                    $custompagesql = " AND lcp.id in (" . implode(',', $mycustompages) . ")";
+            $iomadcustompagesql = "";
+            if (!iomad::has_capability('local/iomadcustompage:editall', $this->context)) {
+                $myiomadcustompages = \local_iomadcustompage\local\helpers\audience::user_pages_list();
+                if (!empty($myiomadcustompages)) {
+                    $iomadcustompagesql = " AND lcp.id in (" . implode(',', $myiomadcustompages) . ")";
                 } else {
-                    $custompagesql = " AND 1=2 ";
+                    $iomadcustompagesql = " AND 1=2 ";
                 }
             }
 
             // Only get the custom pages which are in the company context.
-            $custompages = $DB->get_records_sql_menu("SELECT lcp.id,lcp.name FROM {local_custompages} lcp
+            $iomadcustompages = $DB->get_records_sql_menu("SELECT lcp.id,lcp.name FROM {local_iomadcustompages} lcp
                                                       JOIN {context} c ON lcp.contextid = c.id
                                                       WHERE " . $DB->sql_like('c.path', ':path') . "
-                                                      $custompagesql
+                                                      $iomadcustompagesql
                                                       ORDER BY lcp.name",
                                                      ['path' => "/" . SYSCONTEXTID . "/" . $this->context->id . "/%"]);
-            if (!empty($custompages)) {
-                $custompages = ['0' => get_string('none', 'admin')] + $custompages;
-                $mform->addElement('select', 'dashboard', get_string('customdashboard', 'block_iomad_company_admin'), $custompages);
+            if (!empty($iomadcustompages)) {
+                $iomadcustompages = ['0' => get_string('none', 'admin')] + $iomadcustompages;
+                $mform->addElement('select', 'dashboard', get_string('customdashboard', 'block_iomad_company_admin'), $iomadcustompages);
             }
         }
 
