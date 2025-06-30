@@ -423,7 +423,7 @@ class iomad_approve_access {
         $approvaltype = $event->other['approvaltype'];
         $tm_ok = ($approvaltype == 1) ? 1 : 0;
         $manager_ok = ($approvaltype == 2) ? 1 : 0;
-        $managertype = empty($tm_ok) ? 2 : 1;
+        $managertype = empty($tm_ok) ? 1 : 2;
 
         // Add the time to the location object.
         $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . ' %I:%M%p');
