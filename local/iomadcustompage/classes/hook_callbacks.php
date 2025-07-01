@@ -16,6 +16,7 @@
 
 namespace local_iomadcustompage;
 
+use core\hook\after_config;
 use core\hook\output\before_standard_top_of_body_html_generation;
 use dml_read_exception;
 use Exception;
@@ -41,6 +42,21 @@ class hook_callbacks {
         if (isset($CFG->dbunmodifiedcustommenuitems)) {
           $CFG->custommenuitems = $CFG->dbunmodifiedcustommenuitems;
           unset($CFG->dbunmodifiedcustommenuitems);
+        }
+    }
+
+    public static function after_config(after_config $hook): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/iomadcustompage/lib.php');
+
+        $customcontextclasses = [
+            CONTEXT_CUSTOMPAGE => 'local_iomadcustompage\\custom_context\\context_iomadcustompage',
+        ];
+
+        if (isset($CFG->custom_context_classes)) {
+            $CFG->custom_context_classes = $CFG->custom_context_classes + $customcontextclasses;
+        } else {
+            $CFG->custom_context_classes = $customcontextclasses;
         }
     }
 }

@@ -23,6 +23,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot . '/local/iomadcustompage/lib.php');
 
 $capabilities = [
   'local/iomadcustompage:edit' => [
