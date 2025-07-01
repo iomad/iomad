@@ -109,7 +109,7 @@ function local_iomadcustompage_extend_navigation(global_navigation $nav) {
         $guest = guest_user();
         $userid = (int)$guest->id;
     }
-    if (!$userid) {
+    if (!isset($userid)) {
         return;
     }
     $pages = audience_helper::user_pages_list($userid);
