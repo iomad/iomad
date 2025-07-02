@@ -40,8 +40,8 @@ class profile_define_base {
      * editing a profile field common to all data types
      * @param   object   instance of the moodleform class
      */
-    public function define_form_common(&$form, $companyid=null) {
-        global $DB;
+    public function define_form_common(&$form) {
+        global $DB, $companyid;
 
         $strrequired = get_string('required');
 
