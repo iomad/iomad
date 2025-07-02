@@ -75,10 +75,10 @@ class completion_table extends table_sql {
                 return;
             }
         } else {
-            if (!empty($row->licenseallocated)) {
+            //if (!empty($row->licenseallocated)) {
                 $element = $output->render_datetime_element('licenseallocated['.$row->id.']', 'licenseallocated_' . $row->id, $row->licenseallocated);
                 return $element;
-            }
+            //}
         }
     }
 
@@ -97,10 +97,10 @@ class completion_table extends table_sql {
                 return;
             }
         } else {
-            if (!empty($row->timeenrolled)) {
+            //if (!empty($row->timeenrolled)) {
                 $element = $output->render_datetime_element('timeenrolled['.$row->id.']', 'timeenrolled_' . $row->id, $row->timeenrolled);
                 return $element;
-            }
+            //}
         }
     }
 
@@ -119,10 +119,10 @@ class completion_table extends table_sql {
                 return;
             }
         } else {
-            if (!empty($row->timecompleted)) {
+            //if (!empty($row->timecompleted)) {
                 $element = $output->render_datetime_element('timecompleted['.$row->id.']', 'timecompleted_' . $row->id, $row->timecompleted);
                 return $element;
-            }
+            //}
         }
     }
 
@@ -159,7 +159,7 @@ class completion_table extends table_sql {
                    return;
                }
             } else {
-                if (!empty($row->timecompleted)) {
+                //if (!empty($row->timecompleted)) {
                     $return = html_writer::tag('input',
                                                '',
                                                array('name' => 'finalscore[' . $row->id . ']',
@@ -177,7 +177,7 @@ class completion_table extends table_sql {
                                                      'value' => round($row->finalscore, $CFG->iomad_report_grade_places),
                                                      'id' => 'id_origfinalscore_' . $row->id));
                     return $return;
-                }
+                //}
             }
         } else {
             return get_string('notapplicable', 'local_report_completion');
