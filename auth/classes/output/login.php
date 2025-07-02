@@ -109,7 +109,7 @@ class login implements renderable, templatable {
 
         // IOMAD - need to check our settings for signup link too.
         $this->cansignup = (!empty($CFG->local_iomad_signup_showinstructions) &&
-                           ($CFG->registerauth == 'email' || !empty($CFG->registerauth)));
+                           isset($CFG->registerauth) && ($CFG->registerauth == 'email' || !empty($CFG->registerauth)));
         if ($CFG->rememberusername == 0) {
             $this->cookieshelpicon = new help_icon('cookiesenabledonlysession', 'core');
         } else {
@@ -130,7 +130,7 @@ class login implements renderable, templatable {
         $this->instructions = $CFG->$auth_instructions;
         if (is_enabled_auth('none')) {
             $this->instructions = get_string('loginstepsnone');
-        } else if ($CFG->registerauth == 'email' && empty($this->instructions)) {
+        } else if (isset($CFG->registerauth) && $CFG->registerauth == 'email' && empty($this->instructions)) {
             $this->instructions = get_string('loginsteps', 'core', 'signup.php');
         }
 
