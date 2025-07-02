@@ -207,18 +207,34 @@ class renderer extends plugin_renderer_base {
             $dateformat = array_reverse($dateformat);
         }
 
+        $checkboxcommand =  "var dmy = ['day','month','year'];";
+        $checkboxcommand .= "for (var i = 0; i < dmy.length; i++) {";
+        $checkboxcommand .= "    if (document.getElementById('id_".$id."_calender_enabled').getAttribute('checked')) {"; // Checkbox *was* checked, and now needs to be un-checked
+        $checkboxcommand .= "        document.getElementById('".$id."_'.concat(dmy[i])).setAttribute('disabled', 'disabled');";
+        $checkboxcommand .= "        if (i == dmy.length-1) {";
+        $checkboxcommand .= "            document.getElementById('id_".$id."_calender_enabled').removeAttribute('checked');";
+        $checkboxcommand .= "        }";
+        $checkboxcommand .= "    } else {"; // Checkbox *was*n't checked, and now needs to be checked
+        $checkboxcommand .= "        document.getElementById('".$id."_'.concat(dmy[i])).removeAttribute('disabled');";
+        $checkboxcommand .= "        if (i == dmy.length-1) {";
+        $checkboxcommand .= "            document.getElementById('id_".$id."_calender_enabled').setAttribute('checked', 'checked');";
+        $checkboxcommand .= "        }";
+        $checkboxcommand .= "    }";
+        $checkboxcommand .= "}";
+        //$checkboxcommand .= "this.form.submit()";
+
         if (!empty($timestamp)) {
             $dayvalue = date('d', $timestamp);
             $monvalue = date('n', $timestamp);
             $yearvalue = date('Y', $timestamp);
             $selectarray = array('class' => 'customselect', 'onchange' => "this.form.submit()");
-            $checkboxarray = array('type' => 'checkbox', 'name' => $name."[enabled]", 'value' => 1, 'checked' => 'checked', 'class' => 'form-check-input datecontrolswitch checkbox', 'id' => 'id_' . $id . '_calender_enabled');
+            $checkboxarray = array('type' => 'checkbox', 'name' => $name."[enabled]", 'onchange' => $checkboxcommand, 'class' => 'form-check-input datecontrolswitch checkbox', 'id' => 'id_'.$id.'_calender_enabled', 'checked' => 'checked');
         } else {
             $dayvalue = date('d', time());
             $monvalue = date('n', time());
             $yearvalue = date('Y', time());
-            $selectarray = array('class' => 'customselect', 'disabled' => 'disabled', 'onchange' => "this.form.submit()");
-            $checkboxarray = array('type' => 'checkbox', 'name' => $name."[enabled]", 'class' => 'form-check-input datecontrolswitch checkbox', 'id' => 'id_' . $id . '_calender_enabled');
+            $selectarray = array('class' => 'customselect', 'onchange' => "this.form.submit()", 'disabled' => 'disabled');
+            $checkboxarray = array('type' => 'checkbox', 'name' => $name."[enabled]", 'onchange' => $checkboxcommand, 'class' => 'form-check-input datecontrolswitch checkbox', 'id' => 'id_'.$id.'_calender_enabled');
         }
 
         $html = html_writer::start_tag('span', array('class' => 'fdate_selector d-flex'));
@@ -264,10 +280,10 @@ class renderer extends plugin_renderer_base {
         }
         $html .= html_writer::tag('input',
                                        '',
-                                       array('name' => 'orig' . $name,
+                                       array('name' => 'orig'.$name,
                                              'type' => 'hidden',
                                              'value' => $timestamp,
-                                             'id' => 'orig' . $id));
+                                             'id' => 'orig'.$id));
 
         return $html;
     }
