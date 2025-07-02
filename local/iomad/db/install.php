@@ -56,7 +56,7 @@ function xmldb_local_iomad_install() {
         if (empty($levels)) {
             $level = (object) [];
             $level->roleid = $companymanagerid;
-            $level->contextlevel = CONTEXT_SYSTEM;
+            $level->contextlevel = CONTEXT_COMPANY;
             $DB->insert_record( 'role_context_levels', $level );
         }
     }
@@ -75,7 +75,7 @@ function xmldb_local_iomad_install() {
         if (empty($levels)) {
             $level = (object) [];
             $level->roleid = $companydepartmentmanagerid;
-            $level->contextlevel = CONTEXT_SYSTEM;
+            $level->contextlevel = CONTEXT_COMPANY;
             $DB->insert_record( 'role_context_levels', $level );
         }
     }
@@ -131,6 +131,24 @@ function xmldb_local_iomad_install() {
         if (empty($levels)) {
             $level = (object) [];
             $level->roleid = $companyreporterid;
+            $level->contextlevel = CONTEXT_COMPANY;
+            $DB->insert_record( 'role_context_levels', $level );
+        }
+    }
+
+    // Create new Client administrator role.
+    if (!$clientadministrator = $DB->get_record( 'role', array( 'shortname' => 'clientadministrator') )) {
+        $clientadministratorid = create_role('Client Administrator',
+                                        'clientadministrator',
+                                        '(IOMAD) Client access to all companies..',
+                                        'clientadministrator'
+                                        );
+
+        // If not done already, allow assignment at system context.
+        $levels = get_role_contextlevels( $clientadministratorid );
+        if (empty($levels)) {
+            $level = (object) [];
+            $level->roleid = $clientadministratorid;
             $level->contextlevel = CONTEXT_SYSTEM;
             $DB->insert_record( 'role_context_levels', $level );
         }
@@ -138,7 +156,7 @@ function xmldb_local_iomad_install() {
 
     // Create new Client reporter role.
     if (!$clientreporter = $DB->get_record( 'role', array( 'shortname' => 'clientreporter') )) {
-        $clientreporterid = create_role('Company Report Only',
+        $clientreporterid = create_role('Client Report Only',
                                         'clientreporter',
                                         '(IOMAD) Client access to all company reports only..',
                                         'clientreporter'

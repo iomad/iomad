@@ -2574,6 +2574,31 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025062600, 'local', 'iomad');
     }
 
+    if ($oldversion < 2025070200) {
+        // Add the company context to the companymanager, companydepartmentmanager and companyreportonly roles
+        // and remove the system context.
+
+        foreach (['companymanager', 'companydepartmentmanager', 'companyreporter'] as $rolename) {
+            if ($rolerec = $DB->get_record('role', ['shortname' => $rolename])) {
+                if (!$DB->get_record('role_context_levels', ['roleid' => $rolerec->id, 'contextlevel' => CONTEXT_COMPANY])) {
+                    $DB->insert_record('role_context_levels', ['roleid' => $rolerec->id, 'contextlevel' => CONTEXT_COMPANY]);
+                }
+                $DB->delete_records('role_context_levels', ['roleid' => $rolerec->id, 'contextlevel' => CONTEXT_SYSTEM]);
+            }
+        }
+
+        // Clear down SYSTEM roles from the company role restrictions and templates tables.
+        $noncompanyroles = $DB->get_records_sql("SELECT id FROM {role} WHERE shortname not in ('companymanager', 'companydepartmentmanager', 'companyreporter')");
+
+        foreach ($noncompanyroles as $role) {
+            $DB->delete_records('company_role_templates_caps', ['roleid' => $role->id]);
+            $DB->delete_records('company_role_restriction', ['roleid' => $role->id]);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2025070200, 'local', 'iomad');
+    }
+
     return $result;
 
 }
