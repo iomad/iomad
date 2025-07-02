@@ -35,17 +35,13 @@ class iomad_company_admin {
     public static function get_roles() {
         global $DB;
 
-        $roles = $DB->get_records('role', array(), 'sortorder ASC');
+        $roles = $DB->get_records_sql("SELECT r.* FROM {role} r
+                                       JOIN {role_context_levels} rcl ON r.id = rcl.roleid
+                                       WHERE rcl.contextlevel = :contextlevel
+                                       ORDER BY name",
+                                       ['contextlevel' => CONTEXT_COMPANY]);
 
-        // Only want the ones that have a 'name' defined please.
-        $namedroles = array();
-        foreach ($roles as $role) {
-            if ($role->name) {
-                $namedroles[$role->id] = $role;
-            }
-        }
-
-        return $namedroles;
+        return $roles;
     }
 
     /**
