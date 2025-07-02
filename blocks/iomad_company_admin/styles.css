@@ -445,3 +445,7 @@ border-radius: 10px;
     float: left;
     margin-right: 10px;
 }
+
+#page-blocks-iomad_company_admin-iomad_courses_form .c0 a {
+    display: inline-block;
+}
