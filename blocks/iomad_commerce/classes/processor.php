@@ -126,6 +126,7 @@ class processor {
             // Create mdl_companylicense record.
             $companylicense = (object) [];
             $companylicense->name = $licensename;
+            $companylicense->type = $iteminfo->type;
             if (empty($iteminfo->program)) {
                 $companylicense->allocation = $licensecoursecount;
                 $companylicense->humanallocation = $licensecoursecount;
