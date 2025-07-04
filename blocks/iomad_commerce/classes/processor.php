@@ -160,13 +160,18 @@ class processor {
             foreach ($courses as $course) {
                 if ($DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
                     $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid, 'courseid' => $course->courseid]);
-
+                    $licenseuserid = $DB->insert_record('companylicense_users', (object)['licenseid' => $companylicenseid, 
+                                                                                         'userid' => $invoice->userid,
+                                                                                         'isusing' => 0,
+                                                                                         'licensecourseid' => $course->id,
+                                                                                         'issuedate' => $runtime,
+                                                                                         'groupid' => 0]);
                     // Create an event to assign the license.
                     $eventother = array('licenseid' => $companylicenseid,
                                         'issuedate' => $runtime,
                                         'duedate' => $runtime);
                     $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => \context_course::instance($course->courseid),
-                                                                                                  'objectid' => $companylicenseid,
+                                                                                                  'objectid' => $licenseuserid,
                                                                                                   'courseid' => $course->courseid,
                                                                                                   'userid' => $invoice->userid,
                                                                                                   'other' => $eventother));
