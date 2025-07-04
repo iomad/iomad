@@ -87,7 +87,6 @@ class user_roles_editable extends \core\output\inplace_editable {
 
         $this->edithint = get_string('xrolesassignments', 'block_iomad_company_admin', fullname($user));
         $this->editlabel = get_string('xrolesassignments', 'block_iomad_company_admin', fullname($user));
-
         $this->set_type_select($assignableroles);
     }
 
@@ -101,7 +100,6 @@ class user_roles_editable extends \core\output\inplace_editable {
         $listofroles = [];
         $role = json_decode($this->value);
 
-        
         if ($this->editable || array_key_exists($role, $this->profileroles)) {
             $listofroles[] = format_string($this->assignableroles[$role], true, ['context' => $this->context]);
         }
@@ -153,43 +151,102 @@ class user_roles_editable extends \core\output\inplace_editable {
 
         // Check that all the roles belong to the company.
         $company = new company($companyid);
+        $parentlevel = company::get_company_parentnode($companyid);
 
         // Deal with role selector.
         $usertypeselect = ['0' => get_string('user', 'block_iomad_company_admin')];
         if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $context)) {
-            $usertypeselect[1] = get_string('companymanager', 'block_iomad_company_admin');
+            $usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $context)) {
-            $usertypeselect[2] = get_string('departmentmanager', 'block_iomad_company_admin');
+            $usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $context)) {
-            $usertypeselect[4] = get_string('companyreporter', 'block_iomad_company_admin');
+            $usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
         }
-        if (!$CFG->iomad_autoenrol_managers && iomad::has_capability('block/iomad_company_admin:assign_educator', $context)) {
-            $usertypeselect[10] = get_string('educator', 'block_iomad_company_admin');
+
+        // Is the user already an educator?
+        $iseducator = $DB->get_records('company_users', ['userid' => $userid, 'companyid' => $companyid, 'educator' => 1]);
+        $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $context);
+
+        // Create the rest of the list.
+        if (!$CFG->iomad_autoenrol_managers &&
+            ($iseducator || $canassigneducators)) {
+            $usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
             if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $context)) {
-                $usertypeselect[11] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('companymanager', 'block_iomad_company_admin');
+
+                if ($canassigneducators) {
+                    $usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
+                } else {
+                    unset($usertypeselect[10]);
+                }
+                $usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $context)) {
-                $usertypeselect[12] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('departmentmanager', 'block_iomad_company_admin');
+                if ($canassigneducators) {
+                    $usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
+                } else {
+                    unset($usertypeselect[20]);
+                }
+                $usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $context)) {
-                $usertypeselect[14] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('companyreporter', 'block_iomad_company_admin');
+                if ($canassigneducators) {
+                    $usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
+                } else {
+                    unset($usertypeselect[40]);
+                }
+                $usertypeselect[41] = get_string('companyreporter', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
         }
 
         if (!isset($usertypeselect[$roleid])) {
-            throw new coding_exception('roles cannot be assigned in this course.');
+            throw new coding_exception('roles cannot be assigned in this user.');
+        }
+
+        // Remove company manager roles if the user is not elligible.
+        $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $companyid, 'userid' => $userid], '', 'departmentid'));
+        if (count($userdepartments) > 1 ||
+            $userdepartments[0] != $parentlevel->id) {
+            unset($usertypeselect[10]);
+            unset($usertypeselect[11]);
         }
 
         // Process changes.
         $userlevels = $DB->get_records('company_users', ['companyid' => $companyid, 'userid' => $userid]);
-        if ($roleid > 9) {
-            $educator = 1;
-            $managertype = $roleid - 10;
-        } else {
-            $educator = 0;
-            $managertype = $roleid;
+        switch ($roleid) {
+            case 0:
+                $educator = 0;
+                $managertype = 0;
+                break;
+            case 1:
+                $educator = 1;
+                $managertype = 0;
+                break;
+            case 10:
+                $educator = 0;
+                $managertype = 1;
+                break;
+            case 11:
+                $educator = 1;
+                $managertype = 1;
+                break;
+            case 20:
+                $educator = 0;
+                $managertype = 2;
+                break;
+            case 21:
+                $educator = 1;
+                $managertype = 2;
+                break;
+            case 40:
+                $educator = 0;
+                $managertype = 4;
+                break;
+            case 41:
+                $educator = 1;
+                $managertype = 4;
+                break;
         }
 
         foreach ($userlevels as $userlevel) {

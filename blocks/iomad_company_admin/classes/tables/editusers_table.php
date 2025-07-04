@@ -77,7 +77,7 @@ class editusers_table extends table_sql {
         global $DB, $USER, $selectedcompanyid, $company, $OUTPUT;
 
         // Only show departments if they are in the current company.
-        if ($company->id == $selectedcompanyid) { 
+        if ($company->id == $selectedcompanyid) {
             $userdepartments = array_keys($DB->get_records('company_users', ['companyid' => $company->id, 'userid' => $row->id], '', 'departmentid'));
             if (empty($USER->editing) || $row->managertype == 1) {
                 $count = count($userdepartments);
@@ -90,7 +90,7 @@ class editusers_table extends table_sql {
                 foreach($userdepartments as $department) {
                     //$returnstr .= format_string($department->name);
                     $returnstr .= format_string($this->departmentsmenu[$department]);
-    
+
                     if ($current < $count) {
                         $returnstr .= ",<br>";
                     }
@@ -110,7 +110,7 @@ class editusers_table extends table_sql {
                                                               $userdepartments,
                                                               $this->departments,
                                                               $this->assignabledepartments);
-    
+
                 return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
             }
         } else {
@@ -160,7 +160,7 @@ class editusers_table extends table_sql {
             if (!empty($row->educator) && empty($CFG->iomad_autoenrol_managers)) {
                 $returnstr .= ",<br>" . $this->usertypes[3];
             }
-    
+
             return $returnstr;
         } else {
             // Can't be a company manager if you are in more than one department or the department you are in is not the top level department.
@@ -169,19 +169,42 @@ class editusers_table extends table_sql {
 
             // Set up the current value for the inplace form and display it.
             if (empty($CFG->iomad_autoenrol_managers)) {
-                $currentvalue = ($row->managertype + 10) * $row->educator;
+                $currentvalue = ($row->managertype * 10) + $row->educator;
+                $iseducator = $DB->get_records('company_users', ['userid' => $row->id, 'companyid' => $company->id, 'educator' => 1]);
+                $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', \context_system::instance());
+                if (!$iseducator && !$canassigneducators) {
+                    unset($usertypeselect[1]);
+                    unset($usertypeselect[11]);
+                    unset($usertypeselect[21]);
+                    unset($usertypeselect[41]);
+                }
+                if ($iseducator || $canassigneducators) {
+                    if (!$canassigneducators) {
+                        unset($usertypeselect[0]);
+                    }
+                }
+                if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', \context_system::instance()) &&
+                    ($iseducator || $canassigneducators)) {
+                    if (!$canassigneducators) {
+                        unset($usertypeselect[20]);
+                    }
+                }
+                if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', \context_system::instance()) &&
+                    ($iseducator || $canassigneducators)) {
+                    if (!$canassigneducators) {
+                        unset($usertypeselect[40]);
+                    }
+                }
             } else {
                 $currentvalue = $row->managertype;
             }
-
             // Added due to value mismatch when editing under certain circumstances.
             if (empty($currentvalue)) {
                 $currentvalue = 0;
             }
 
             // Output text if the department doesn't match the currently selected department
-            if (count($userdepartments) > 1 ||
-                isset($userdepartments[0]) && $userdepartments[0] != $this->parentlevel->id && (!isset($params['deptid']) || $userdepartments[0] != $params['deptid'])) {
+            if (empty($userdepartments)) {
                 return $usertypeselect[$currentvalue];
             }
 
@@ -435,11 +458,7 @@ class editusers_table extends table_sql {
 
         $parentlevel = company::get_company_parentnode($companyid);
         $this->parentlevel = $parentlevel;
-        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $context)) {
-            $userlevels = array($parentlevel->id => $parentlevel->id);
-        } else {
-            $userlevels = $company->get_userlevel($USER);
-        }
+        $userlevels = array($parentlevel->id => $parentlevel->id);
 
         $departmenttree = [];
         foreach ($userlevels as $userlevelid => $userlevel) {
@@ -453,24 +472,26 @@ class editusers_table extends table_sql {
         // Deal with role selector.
         $this->usertypeselect = ['0' => get_string('user', 'block_iomad_company_admin')];
         if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $context)) {
-            $this->usertypeselect[1] = get_string('companymanager', 'block_iomad_company_admin');
+            $this->usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $context)) {
-            $this->usertypeselect[2] = get_string('departmentmanager', 'block_iomad_company_admin');
+            $this->usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $context)) {
-            $this->usertypeselect[4] = get_string('companyreporter', 'block_iomad_company_admin');
+            $this->usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
         }
-        if (!$CFG->iomad_autoenrol_managers && iomad::has_capability('block/iomad_company_admin:assign_educator', $context)) {
-            $this->usertypeselect[10] = get_string('educator', 'block_iomad_company_admin');
+        if (!$CFG->iomad_autoenrol_managers) {
+            $this->usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
             if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $context)) {
-                $this->usertypeselect[11] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('companymanager', 'block_iomad_company_admin');
+                $this->usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
+                $this->usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $context)) {
-                $this->usertypeselect[12] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('departmentmanager', 'block_iomad_company_admin');
+                $this->usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
+                $this->usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $context)) {
-                $this->usertypeselect[14] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('companyreporter', 'block_iomad_company_admin');
+                $this->usertypeselect[41] = get_string('educator', 'block_iomad_company_admin') . ' + ' . get_string('companyreporter', 'block_iomad_company_admin');
             }
         }
     }
