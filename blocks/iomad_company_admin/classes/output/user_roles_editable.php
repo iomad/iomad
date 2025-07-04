@@ -87,7 +87,6 @@ class user_roles_editable extends \core\output\inplace_editable {
 
         $this->edithint = get_string('xrolesassignments', 'block_iomad_company_admin', fullname($user));
         $this->editlabel = get_string('xrolesassignments', 'block_iomad_company_admin', fullname($user));
-
         $this->set_type_select($assignableroles);
     }
 
@@ -165,24 +164,44 @@ class user_roles_editable extends \core\output\inplace_editable {
         if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $companycontext)) {
             $usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
         }
-        if (!$CFG->iomad_autoenrol_managers && iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext)) {
+
+        // Is the user already an educator?
+        $iseducator = $DB->get_records('company_users', ['userid' => $userid, 'companyid' => $companyid, 'educator' => 1]);
+        $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext);
+
+        // Create the rest of the list.
+        if (!$CFG->iomad_autoenrol_managers &&
+            ($iseducator || $canassigneducators)) {
             $usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
             if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $companycontext)) {
-                $usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
+
+                if ($canassigneducators) {
+                    $usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
+                } else {
+                    unset($usertypeselect[10]);
+                }
                 $usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $companycontext)) {
-                $usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
+                if ($canassigneducators) {
+                    $usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
+                } else {
+                    unset($usertypeselect[20]);
+                }
                 $usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
             if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $companycontext)) {
-                $usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
+                if ($canassigneducators) {
+                    $usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
+                } else {
+                    unset($usertypeselect[40]);
+                }
                 $usertypeselect[41] = get_string('companyreporter', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
             }
         }
 
         if (!isset($usertypeselect[$roleid])) {
-            throw new coding_exception('roles cannot be assigned in this course.');
+            throw new coding_exception('roles cannot be assigned in this user.');
         }
 
         // Remove company manager roles if the user is not elligible.
