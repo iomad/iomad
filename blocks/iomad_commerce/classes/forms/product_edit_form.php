@@ -102,11 +102,31 @@ class product_edit_form extends moodleform {
                                           null, $this->editoroptions);
             $mform->setType('summary_editor', PARAM_RAW);
 
+            // Set the license details.
+             if ($CFG->iomad_autoenrol_managers) {
+                $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
+                                 1 => get_string('reusable', 'block_iomad_company_admin'),
+                                 4 => get_string('blanket', 'block_iomad_company_admin')];
+            } else {
+                $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
+                                 1 => get_string('reusable', 'block_iomad_company_admin'),
+                                 2 => get_string('educator', 'block_iomad_company_admin'),
+                                 3 => get_string('educatorreusable', 'block_iomad_company_admin'),
+                                 4 => get_string('blanket', 'block_iomad_company_admin')];
+            }
+
+            $mform->addElement('select', 'type', get_string('licensetype', 'block_iomad_company_admin'), $licensetypes);
+            $mform->addHelpButton('type', 'licensetype', 'block_iomad_company_admin');
+
             $mform->addElement('selectyesno', 'program', get_string('licenseprogram', 'block_iomad_company_admin'));
             $mform->addHelpButton('program', 'licenseprogram', 'block_iomad_company_admin');
 
             $mform->addElement('selectyesno', 'instant', get_string('licenseinstant', 'block_iomad_company_admin'));
             $mform->addHelpButton('instant', 'licenseinstant', 'block_iomad_company_admin');
+
+            // Disable things depending on license type.
+            $mform->disabledIf('program', 'type', 'eq', 4);
+            $mform->disabledIf('instant', 'type', 'eq', 4);
 
             $mform->addElement('duration', 'single_purchase_validlength',
                                         get_string('single_purchase_validlength', 'block_iomad_commerce'),
@@ -140,7 +160,7 @@ class product_edit_form extends moodleform {
             $mform->addRule('single_purchase_price',
                              get_string('decimalnumberonly', 'block_iomad_commerce'), 'numeric');
             $mform->disabledIf('single_purchase_price', 'allow_single_purchase', 'eq', 0);
-                             
+
             $mform->setType('single_purchase_price', PARAM_TEXT);
             $mform->addHelpButton('single_purchase_price', 'single_purchase_price', 'block_iomad_commerce');
 
