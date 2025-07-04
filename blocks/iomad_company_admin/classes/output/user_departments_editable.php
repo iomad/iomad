@@ -168,7 +168,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         // Check that all the departments belong to the company.
         $company = new company($companyid);
         $alldepartments = $DB->get_records('department', ['company' => $companyid]);
-        $parentlevel = company::get_company_parentnode($companyid); 
+        $parentlevel = company::get_company_parentnode($companyid);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
             $userlevels = array($parentlevel->id => $parentlevel->id);
         } else {
