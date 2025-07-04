@@ -117,7 +117,7 @@ class processor {
             $company = $DB->get_record('company', ['id' => $companyid]);
             $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), $CFG->iomad_date_format);
             $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE " . $DB->sql_like('name', ":licensename"),
-                                             ['licensename' => str_replace("'", "\'", $licensename) . "%'"]);
+                                             ['licensename' => str_replace("'", "\'", $licensename) . "%"]);
 
             if ($count) {
                 $licensename .= ' (' . ($count + 1) . ')';
@@ -218,7 +218,7 @@ class processor {
         $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $item->id]);
         $licensename = $company->shortname . " [" . $item->name . "] " . userdate(time(), $CFG->iomad_date_format);
         $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE name LIKE '" .
-                                        (str_replace("'", "\'", $licensename)) . "%'");
+                                        (str_replace("'", "\'", $licensename)) . "%");
         if ($count) {
             $licensename .= ' (' . ($count + 1) . ')';
         }
