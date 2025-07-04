@@ -526,5 +526,21 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2025061000, 'iomad_commerce');
     }
+
+    if ($oldversion < 2025070400) {
+
+        // Define field type to be added to course_shopsettings.
+        $table = new xmldb_table('course_shopsettings');
+        $field = new xmldb_field('type', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'single_purchase_shelflife');
+
+        // Conditionally launch add field type.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad_commerce savepoint reached.
+        upgrade_block_savepoint(true, 2025070400, 'iomad_commerce');
+    }
+
     return $result;
 }
