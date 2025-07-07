@@ -32,6 +32,7 @@ require_once($CFG->dirroot.'/local/iomad/lib/company.php');
  */
 function local_iomad_signup_user_created($user) {
     global $CFG, $DB;
+    $user = (int)$user;
 
     // check if we already have the user object
     if (is_int($user)) {
