@@ -165,3 +165,21 @@ function local_iomadcustompage_extend_navigation(global_navigation $nav) {
         }
     }
 }
+
+/**
+ * Configure custom context classes for the local_iomadcustompage plugin using after_config hook.
+ *
+ * @return void
+ */
+function local_iomadcustompage_after_config() {
+    global $CFG;
+    $customcontextclasses = [
+        CONTEXT_CUSTOMPAGE => 'local_iomadcustompage\\custom_context\\context_iomadcustompage',
+    ];
+
+    if (isset($CFG->custom_context_classes)) {
+        $CFG->custom_context_classes = $CFG->custom_context_classes + $customcontextclasses;
+    } else {
+        $CFG->custom_context_classes = $customcontextclasses;
+    }
+}
