@@ -976,6 +976,9 @@ class EmailTemplate {
         }
 
         $email = local_email::get_templates();
+        if (!isset($this->user->lang)) {
+            $this->user->lang = current_language();
+        }
         // Try to get it out of the database, otherwise get it from config file.
         if (!isset($companyid) || !$template = $DB->get_record_sql("SELECT et.*, ets.lang, ets.subject, ets.body, ets.signature
                                                                     FROM {email_template} et
