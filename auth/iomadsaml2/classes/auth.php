@@ -244,10 +244,10 @@ class auth extends \auth_plugin_base {
         }
 
         // IOMAD
-        if ($url == 'xml') {
-            $filename = md5($url) . $this->postfix . '.idp.xml';
-        } else {
+        if (file_exists($this->get_saml2_directory() . '/' . md5($url) . '.idp.xml')) {
             $filename = md5($url) . '.idp.xml';
+        } else {
+            $filename = md5($url) . $this->postfix . '.idp.xml';
         }
 
         return $this->get_file($filename);
