@@ -369,6 +369,7 @@ class generate {
         $data->newpassword = 'Aa*12345678';
         $data->companyid = $companyid;
         $data->selectedcourses = [];
+        $data->due = 0;
         \company_user::create($data);
     }
 
