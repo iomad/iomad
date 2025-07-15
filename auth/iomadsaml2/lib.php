@@ -76,11 +76,11 @@ function auth_iomadsaml2_before_http_headers() {
  * @return array of check objects
  */
 function auth_iomadsaml2_status_checks() : array {
-    global $iomadsam2auth;
+    global $iomadsaml2auth;
     require_once(__DIR__ . '/setup.php');
 
     // Only if saml is configured then check certificate expiry.
-    if ($iomadsam2auth->is_configured()) {
+    if ($iomadsaml2auth->is_configured()) {
         return [
             new \auth_iomadsaml2\check\certificateexpiry(),
         ];

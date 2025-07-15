@@ -49,7 +49,7 @@ $login = optional_param('login', 0, PARAM_INT);
 if ($login) {
     require_once(__DIR__ . '/../../../setup.php');
 
-    $logouturl = $CFG->wwwroot . '/auth/iomadsaml2/sp/saml2-logout.php/' . $iomadsam2auth->spname;
+    $logouturl = $CFG->wwwroot . '/auth/iomadsaml2/sp/saml2-logout.php/' . $iomadsaml2auth->spname;
 
     // Get data from input request.
     $xpath = new DOMXPath($domxml);

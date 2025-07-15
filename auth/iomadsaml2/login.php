@@ -40,5 +40,5 @@ if ($wantsurl !== '') {
 }
 
 // Crap for hash anchor handling.
-$iomadsam2auth->saml_login();
+$iomadsaml2auth->saml_login();
 

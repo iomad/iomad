@@ -31,7 +31,7 @@ use iomad;
 class oidc_sync {
 
     /**
-     * Function which runs the sync for all configured companies, getting the users 
+     * Function which runs the sync for all configured companies, getting the users
      * from Microsoft and creating them in the company if they do not exist.
      *
      **/
@@ -110,13 +110,41 @@ class oidc_sync {
 
     /**
      * Function which processess all of the users, checks if they already exist
-     * and, if not, creates them an assigns them to the company. 
+     * and, if not, creates them an assigns them to the company.
      *
      **/
     private static function process_users($companyid, $users, $useroption, $unsuspendonsync) {
         global $DB, $CFG;
 
         $postfix = "_$companyid";
+        $authplugin = get_auth_plugin('iomadoidc');
+        $userfields = $authplugin->userfields;
+
+        // get all of the profile field categories.
+        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
+        $customfields = [];
+        if (!empty($profilecategories)) {
+            $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)
+                                                  FROM {user_info_field}
+                                                  WHERE categoryid IN (" . implode(',', array_keys($profilecategories)) . ")");
+            $customfields = array_values($customfields);
+        }
+        if (!empty($customfields)) {
+            $userfields = array_merge($userfields, $customfields);
+        }
+        $companyiomadoidcdata = get_config('auth_iomadoidc');
+        $mappedfields = [];
+        foreach ($userfields as $field) {
+            $fieldname = "field_map_{$field}{$postfix}";
+            if ($field == 'firstname' ||
+                $field == 'lastname' ||
+                $field == 'email') {
+                continue;
+            }
+            if (!empty($companyiomadoidcdata->$fieldname)) {
+                $mappedfields[$fieldname] = $companyiomadoidcdata->$fieldname;
+            }
+        }
 
         // Get the mappings for the client.
         $firstnamename = !empty(get_config('auth_iomadoidc', 'field_map_firstname' . $postfix)) ? get_config('auth_iomadoidc', 'field_map_firstname' . $postfix) : get_config('auth_iomadoidc', 'field_map_firstname');
@@ -127,7 +155,7 @@ class oidc_sync {
         $foundusers = [];
 
         mtrace("Processing " . count($users) . " users from OIDC connection");
-        
+
         // Need to set up the company so we can check it's ok to add new users.
         $company = new company($companyid);
         $hitlimit = false;
@@ -145,7 +173,7 @@ class oidc_sync {
             if (!$founduser = $DB->get_record('user', (array) $userrec)) {
                 if (!$company->check_usercount(1)) {
                    $hitlimit = true;
-                   continue;                   
+                   continue;
                 }
                 if ($CFG->debug > DEBUG_NONE) {
                     mtrace("Creating user $userrec->username");
@@ -176,7 +204,13 @@ class oidc_sync {
                 }
                 $userrec->id = $userid;
 
-                // Save custom profile fields data and fire teh creation 
+                // Save custom profile fields data and fire teh creation
+                foreach ($mappedfields as $profilefield => $mapping) {
+                    if (!empty($adduser[$mapping])) {
+                        $userrec->$profilefield = $adduser[$mapping];
+                    }
+                }
+
                 profile_save_data($userrec);
                 \core\event\user_updated::create_from_userid($userid)->trigger();
 
@@ -187,6 +221,14 @@ class oidc_sync {
                     // We want to unsuspend them.
                     company_user::unsuspend($founduser->id, $companyid);
                 }
+
+                // Sync the profile data.
+                foreach ($mappedfields as $profilefield => $mapping) {
+                    if (!empty($adduser[$mapping])) {
+                        $userrec->$profilefield = $adduser[$mapping];
+                    }
+                }
+                profile_save_data($userrec);
 
                 // Store this for later.
                 $foundusers[] = $founduser->id;
@@ -228,7 +270,7 @@ class oidc_sync {
                             mtrace("Suspending userid $missinguser->id from companyid $companyid");
                         }
                         company_user::suspend($missinguser->id, $companyid);
-                        
+
                     }
                 } else if ($useroption == 2) {
                     mtrace("Deleting " . count($missingusers) . " accounts which no longer exist");
@@ -244,7 +286,7 @@ class oidc_sync {
     }
 
     /**
-     * Function which gets the access token from Microsoft for the company 
+     * Function which gets the access token from Microsoft for the company
      * given the company OIDC connection settings.
      *
      **/
@@ -296,7 +338,7 @@ class oidc_sync {
     }
 
     /**
-     * Function which gets the full list of users from Microsoft using  
+     * Function which gets the full list of users from Microsoft using
      * the accesstoken previously created.
      *
      **/

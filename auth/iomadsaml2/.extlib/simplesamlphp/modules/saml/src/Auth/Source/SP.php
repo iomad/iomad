@@ -1128,7 +1128,7 @@ class SP extends \SimpleSAML\Auth\Source
      */
     public static function handleUnsolicitedAuth(string $authId, array $state, string $redirectTo): void
     {
-        global $SESSION, $saml2auth;
+        global $SESSION, $iomadsaml2auth;
 
         $session = Session::getSessionFromRequest();
         $session->doLogin($authId, Auth\State::getPersistentAuthData($state));
@@ -1141,7 +1141,7 @@ class SP extends \SimpleSAML\Auth\Source
         } else {
             unset($SESSION->saml2idp);
         }
-        $saml2auth->saml_login_complete($state['Attributes']);
+        $iomadsaml2auth->saml_login_complete($state['Attributes']);
         // Should never get to here.
 
         $httpUtils = new Utils\HTTP();

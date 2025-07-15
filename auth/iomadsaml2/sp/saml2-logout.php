@@ -28,7 +28,7 @@ require_once(__DIR__ . '/../../../config.php');
 require('../setup.php');
 
 // First setup the PATH_INFO because that's how SSP rolls.
-$_SERVER['PATH_INFO'] = '/' . $iomadsam2auth->spname;
+$_SERVER['PATH_INFO'] = '/' . $iomadsaml2auth->spname;
 
 /*
  * There are 4 methods of logging out:
@@ -52,13 +52,13 @@ try {
     // When logout is initiated from IdP (we land here from SingleLogoutService call),
     // session is still authenticated, so we can register the handler that will log
     // user out in Moodle.
-    if (!is_null($session->getAuthState($iomadsam2auth->spname))) {
-        $session->registerLogoutHandler($iomadsam2auth->spname, '\auth_iomadsaml2\api', 'logout_from_idp_front_channel');
+    if (!is_null($session->getAuthState($iomadsaml2auth->spname))) {
+        $session->registerLogoutHandler($iomadsaml2auth->spname, '\auth_iomadsaml2\api', 'logout_from_idp_front_channel');
     }
     $config = \SimpleSAML\Configuration::getInstance();
     $session = \SimpleSAML\Session::getSessionFromRequest();
     $controller = new \SimpleSAML\Module\saml\Controller\ServiceProvider($config, $session);
-    $acs = $controller->singleLogoutService($iomadsam2auth->spname);
+    $acs = $controller->singleLogoutService($iomadsaml2auth->spname);
     $acs->sendContent();
 } catch (Exception $e) {
     // TODO SSPHP uses Exceptions for handling valid conditions, so a succesful

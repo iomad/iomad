@@ -35,11 +35,11 @@ use auth_iomadsaml2\event\cert_regenerated;
  * @param string $baseurl
  */
 function auth_iomadsaml2_get_sp_metadata($baseurl = '') {
-    global $iomadsam2auth, $CFG;
+    global $iomadsaml2auth, $CFG;
 
-    $sourceId = $iomadsam2auth->spname;
+    $sourceId = $iomadsaml2auth->spname;
 
-    $file = $iomadsam2auth->get_file_sp_metadata_file($baseurl);
+    $file = $iomadsaml2auth->get_file_sp_metadata_file($baseurl);
     if (file_exists($file)) {
         $xml = file_get_contents($file);
         return $xml;
@@ -269,10 +269,10 @@ function auth_iomadsaml2_get_sp_metadata($baseurl = '') {
  *
  */
 function auth_iomadsaml2_update_sp_metadata() {
-    global $iomadsam2auth;
+    global $iomadsaml2auth;
     require_once(__DIR__ . '/setup.php');
 
-    $file = $iomadsam2auth->get_file_sp_metadata_file();
+    $file = $iomadsaml2auth->get_file_sp_metadata_file();
     @unlink($file);
 }
 
@@ -459,8 +459,8 @@ function auth_iomadsaml2_process_regenerate_form($fromform) {
     );
     $numberofdays = $fromform->expirydays;
 
-    $iomadsam2auth = new \auth_iomadsaml2\auth();
-    $error = create_certificates($iomadsam2auth, $dn, $numberofdays);
+    $iomadsaml2auth = new \auth_iomadsaml2\auth();
+    $error = create_certificates($iomadsaml2auth, $dn, $numberofdays);
 
     if (!$error) {
         // Successfully regenerated cert so emit the cert_regenerated event.
@@ -472,7 +472,7 @@ function auth_iomadsaml2_process_regenerate_form($fromform) {
     }
 
     // Also refresh the SP metadata as well.
-    $file = $iomadsam2auth->get_file_sp_metadata_file();
+    $file = $iomadsaml2auth->get_file_sp_metadata_file();
     @unlink($file);
 
     if ($error) {

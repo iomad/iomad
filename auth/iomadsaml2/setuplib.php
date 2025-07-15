@@ -37,11 +37,11 @@ require_once("{$CFG->dirroot}/auth/iomadsaml2/auth.php");
  * @copyright  Brendan Heywood <brendan@catalyst-au.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @param \auth_iomadsaml2\auth $iomadsam2auth config object
+ * @param \auth_iomadsaml2\auth $iomadsaml2auth config object
  * @param array $dn Certificate Distinguished name details
  * @param integer $numberofdays Certificate expirey period
  */
-function create_certificates($iomadsam2auth, $dn = false, $numberofdays = 3650) {
+function create_certificates($iomadsaml2auth, $dn = false, $numberofdays = 3650) {
     global $CFG, $SITE;
 
     // IOMAD
@@ -57,8 +57,8 @@ function create_certificates($iomadsam2auth, $dn = false, $numberofdays = 3650) 
         throw new iomadsaml2_exception('cert_lock_error', get_string('certificatelock_regenerate', 'auth_iomadsaml2'));
     }
     $signaturealgorithm = ssl_algorithms::get_default_saml_signature_algorithm();
-    if (!empty($iomadsam2auth->config->signaturealgorithm)) {
-        $signaturealgorithm = $iomadsam2auth->config->signaturealgorithm;
+    if (!empty($iomadsaml2auth->config->signaturealgorithm)) {
+        $signaturealgorithm = $iomadsaml2auth->config->signaturealgorithm;
     }
     $opensslargs = array(
       'digest_alg' => ssl_algorithms::convert_signature_algorithm_to_digest_alg_format($signaturealgorithm),
@@ -100,10 +100,10 @@ function create_certificates($iomadsam2auth, $dn = false, $numberofdays = 3650) 
         return get_string('nullpubliccert', 'auth_iomadsaml2') . $errors;
     }
 
-    if ( !file_put_contents($iomadsam2auth->certpem, $privatekey) ) {
+    if ( !file_put_contents($iomadsaml2auth->certpem, $privatekey) ) {
         return get_string('nullprivatecert', 'auth_iomadsaml2');
     }
-    if ( !file_put_contents($iomadsam2auth->certcrt, $publickey) ) {
+    if ( !file_put_contents($iomadsaml2auth->certcrt, $publickey) ) {
         return get_string('nullpubliccert', 'auth_iomadsaml2');
     }
 

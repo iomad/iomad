@@ -290,10 +290,10 @@ class setting_idpmetadata extends admin_setting_configtextarea {
      * @param string $xml
      */
     private function save_idp_metadata_xml($url, $xml) {
-        global $CFG, $iomadsam2auth;
+        global $CFG, $iomadsaml2auth;
         require_once("{$CFG->dirroot}/auth/iomadsaml2/setup.php");
 
-        $file = $iomadsam2auth->get_file_idp_metadata_file($url);
+        $file = $iomadsaml2auth->get_file_idp_metadata_file($url);
         file_put_contents($file, $xml);
     }
 }

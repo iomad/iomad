@@ -51,7 +51,7 @@ if ($data = $form->get_data()) {
 
     if ($form->is_submitted()) {
 
-        $certfiles = array($iomadsam2auth->certpem, $iomadsam2auth->certcrt);
+        $certfiles = array($iomadsaml2auth->certpem, $iomadsaml2auth->certcrt);
         if (isset($data->unlockcertsbutton)) {
             // Change the permissions in order to regenerate if unlocked.
             foreach ($certfiles as $certfile) {

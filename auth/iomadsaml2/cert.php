@@ -30,7 +30,7 @@ require('setup.php');
 auth_iomadsaml2_admin_nav(get_string('certificatedetails', 'auth_iomadsaml2'),
     '/auth/iomadsaml2/cert.php');
 
-$path = $iomadsam2auth->certcrt;
+$path = $iomadsaml2auth->certcrt;
 $data = openssl_x509_parse(file_get_contents($path));
 
 echo $OUTPUT->header();

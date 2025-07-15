@@ -368,8 +368,8 @@ function local_hookimplement_extend_auth_iomadsaml2_proc() {
 }
 
 function update_attributes($attributes) {
-   global $SESSION, $iomadsam2auth;
-    $idps = $iomadsam2auth->metadataentities;
+   global $SESSION, $iomadsaml2auth;
+    $idps = $iomadsaml2auth->metadataentities;
     foreach ($idps as $idp) {
         foreach ($idp as $key => $value) {
             if ($SESSION->iomadsaml2idp == $key) {

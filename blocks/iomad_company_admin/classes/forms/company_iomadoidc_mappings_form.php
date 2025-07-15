@@ -59,7 +59,7 @@ class company_iomadoidc_mappings_form extends moodleform {
                                                   WHERE categoryid IN (" . implode(',', array_keys($profilecategories)) . ")");
             $customfields = array_values($customfields);
         }
-        
+
         // Introductory explanation and help text.
         $mform->addElement('html', "<h2>" . format_string(get_string('pluginname', 'auth_iomadoidc') . " : " .
                                                           get_string('auth_data_mapping', 'auth')) . "</h2>");
@@ -132,9 +132,16 @@ class company_iomadoidc_mappings_form extends moodleform {
                                         get_string('auth_fieldmapping', 'auth', $fieldname),
                                         $emailremotefields);
                 } else {
-                    $mform->addElement('select', "field_map_{$field}{$postfix}",
-                                        get_string('auth_fieldmapping', 'auth', $fieldname),
-                                        $remotefields);
+                    if ($field == 'firstname' ||
+                        $field == 'lastname') {
+                        $mform->addElement('select', "field_map_{$field}{$postfix}",
+                                            get_string('auth_fieldmapping', 'auth', $fieldname),
+                                            $remotefields);
+                    } else {
+                        $mform->addElement('text', "field_map_{$field}{$postfix}",
+                                            get_string('auth_fieldmapping', 'auth', $fieldname));
+                        $mform->setType("field_map_{$field}{$postfix}", PARAM_CLEAN);
+                    }
                 }
 
                 // Update local.

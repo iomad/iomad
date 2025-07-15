@@ -39,7 +39,7 @@ if ($mform->is_cancelled()) {
     redirect("$CFG->wwwroot/admin/settings.php?section=authsettingsaml2");
 }
 
-$path = $iomadsam2auth->certcrt;
+$path = $iomadsaml2auth->certcrt;
 $error = '';
 $success = false;
 

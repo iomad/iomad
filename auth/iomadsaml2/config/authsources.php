@@ -26,17 +26,17 @@ use auth_iomadsaml2\ssl_signing_algorithm;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $iomadsam2auth, $CFG, $SITE, $SESSION;
+global $iomadsaml2auth, $CFG, $SITE, $SESSION;
 
 $config = [];
 
 $baseurl = optional_param('baseurl', $CFG->wwwroot, PARAM_URL);
 
-if (!empty($SESSION->iomadsaml2idp) && array_key_exists($SESSION->iomadsaml2idp, $iomadsam2auth->metadataentities)) {
-    $idpentityid = $iomadsam2auth->metadataentities[$SESSION->iomadsaml2idp]->entityid;
+if (!empty($SESSION->iomadsaml2idp) && array_key_exists($SESSION->iomadsaml2idp, $iomadsaml2auth->metadataentities)) {
+    $idpentityid = $iomadsaml2auth->metadataentities[$SESSION->iomadsaml2idp]->entityid;
 } else {
     // Case for specifying no $SESSION IdP, select the first configured IdP as the default.
-    $idpentityid = reset($iomadsam2auth->metadataentities)->entityid;
+    $idpentityid = reset($iomadsaml2auth->metadataentities)->entityid;
 }
 
 $defaultspentityid = "$baseurl/auth/iomadsaml2/sp/metadata.php";
@@ -45,7 +45,7 @@ $defaultspentityid = "$baseurl/auth/iomadsaml2/sp/metadata.php";
 $attributes = [];
 $attributesrequired = [];
 
-foreach (explode(PHP_EOL, $iomadsam2auth->config->requestedattributes) as $attr) {
+foreach (explode(PHP_EOL, $iomadsaml2auth->config->requestedattributes) as $attr) {
     $attr = trim($attr);
     if (empty($attr)) {
         continue;
@@ -68,12 +68,12 @@ if (!empty($companyid)) {
     $postfix = "";
 }
 
-$config[$iomadsam2auth->spname] = [
+$config[$iomadsaml2auth->spname] = [
     'saml:SP',
-    'entityID' => !empty($iomadsam2auth->config->spentityid) ? $iomadsam2auth->config->spentityid : $defaultspentityid,
+    'entityID' => !empty($iomadsaml2auth->config->spentityid) ? $iomadsaml2auth->config->spentityid : $defaultspentityid,
     'discoURL' => !empty($CFG->auth_iomadsaml2_disco_url) ? $CFG->auth_iomadsaml2_disco_url : null,
     'idp' => empty($CFG->auth_iomadsaml2_disco_url) ? $idpentityid : null,
-    'NameIDPolicy' => ['Format' => $iomadsam2auth->config->nameidpolicy, 'AllowCreate' => true],
+    'NameIDPolicy' => ['Format' => $iomadsaml2auth->config->nameidpolicy, 'AllowCreate' => true],
     'OrganizationName' => array(
         $lang => $SITE->shortname,
     ),
@@ -83,13 +83,13 @@ $config[$iomadsam2auth->spname] = [
     'OrganizationURL' => array(
         $lang => $baseurl,
     ),
-    'privatekey' => $iomadsam2auth->spname . '.pem',
+    'privatekey' => $iomadsaml2auth->spname . '.pem',
     'privatekey_pass' => get_config('auth_iomadsaml2', 'privatekeypass' . $postfix),
-    'certificate' => $iomadsam2auth->spname . '.crt',
+    'certificate' => $iomadsaml2auth->spname . '.crt',
     'sign.logout' => true,
     'redirect.sign' => true,
-    'signature.algorithm' => $iomadsam2auth->config->signaturealgorithm,
-    'WantAssertionsSigned' => $iomadsam2auth->config->wantassertionssigned == 1,
+    'signature.algorithm' => $iomadsaml2auth->config->signaturealgorithm,
+    'WantAssertionsSigned' => $iomadsaml2auth->config->wantassertionssigned == 1,
 
     'name' => [
         $lang => $SITE->fullname,
@@ -98,20 +98,20 @@ $config[$iomadsam2auth->spname] = [
     'attributes.required' => $attributesrequired,
 ];
 
-if (!empty($iomadsam2auth->config->assertionsconsumerservices)) {
-    $config[$iomadsam2auth->spname]['acs.Bindings'] = explode(',', $iomadsam2auth->config->assertionsconsumerservices);
+if (!empty($iomadsaml2auth->config->assertionsconsumerservices)) {
+    $config[$iomadsaml2auth->spname]['acs.Bindings'] = explode(',', $iomadsaml2auth->config->assertionsconsumerservices);
 }
 
-if (!empty($iomadsam2auth->config->authncontext)) {
-    $config[$iomadsam2auth->spname]['AuthnContextClassRef'] = $iomadsam2auth->config->authncontext;
+if (!empty($iomadsaml2auth->config->authncontext)) {
+    $config[$iomadsaml2auth->spname]['AuthnContextClassRef'] = $iomadsaml2auth->config->authncontext;
 }
 
 /*
  * If we're configured to expose the nameid as an attribute, set this authproc filter up
  * the nameid value appears under the attribute "nameid"
  */
-if ($iomadsam2auth->config->nameidasattrib) {
-    $config[$iomadsam2auth->spname]['authproc'] = array(
+if ($iomadsaml2auth->config->nameidasattrib) {
+    $config[$iomadsaml2auth->spname]['authproc'] = array(
         20 => array(
             'class' => 'saml:NameIDAttribute',
             'format' => '%V',

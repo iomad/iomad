@@ -28,7 +28,7 @@ require_once(__DIR__ . '/../../config.php');
 require('setup.php');
 
 // Check we are in debug mode to use this tool.
-if (!$iomadsam2auth->is_debugging()) {
+if (!$iomadsaml2auth->is_debugging()) {
     throw new \moodle_exception('testdebuggingdisabled', 'auth_iomadsaml2');
 }
 
@@ -55,7 +55,7 @@ if (!empty($idp)) {
 
 if (empty($SESSION->iomadsaml2idp)) {
     // Specify the default IdP to use.
-    $SESSION->iomadsaml2idp = reset($iomadsam2auth->metadataentities)->md5entityid;
+    $SESSION->iomadsaml2idp = reset($iomadsaml2auth->metadataentities)->md5entityid;
     echo '<p>Setting IdP to default</p>';
 }
 
@@ -63,12 +63,12 @@ if (!empty($logout)) {
     $SESSION->iomadsaml2idp = $idplogout;
 }
 
-echo '<p>SP name: ' . $iomadsam2auth->spname;
+echo '<p>SP name: ' . $iomadsaml2auth->spname;
 echo '<p>Which IdP will be used? ' . s($SESSION->iomadsaml2idp);
 
-$auth = new SimpleSAML\Auth\Simple($iomadsam2auth->spname);
+$auth = new SimpleSAML\Auth\Simple($iomadsaml2auth->spname);
 
-foreach ($iomadsam2auth->metadataentities as $idpentity) {
+foreach ($iomadsaml2auth->metadataentities as $idpentity) {
     echo '<hr>';
     echo "<h4>IDP: $idpentity->entityid</h4>";
     echo "<p>md5: $idpentity->md5entityid</p>";

@@ -28,14 +28,14 @@ use auth_iomadsaml2\event\cert_regenerated;
 
 require_once(__DIR__ . '/setuplib.php');
 
-global $CFG, $iomadsam2auth;
+global $CFG, $iomadsaml2auth;
 
 // Tell SSP that we are on 443 if we are terminating SSL elsewhere.
 if (isset($CFG->sslproxy) && $CFG->sslproxy) {
       $_SERVER['SERVER_PORT'] = '443';
 }
 
-$iomadsam2auth = new \auth_iomadsaml2\auth();
+$iomadsaml2auth = new \auth_iomadsaml2\auth();
 
 // Auto create unique certificates for this moodle SP.
 //
@@ -43,9 +43,9 @@ $iomadsam2auth = new \auth_iomadsaml2\auth();
 // default certificates which is very insecure. Here we create a customized
 // cert/key pair just-in-time. If for some reason you do want to use existing
 // files then just copy them over the files in /sitedata/saml2/.
-$iomadsam2auth->get_saml2_directory(); // It will create it if needed.
-$missingcertpem = !file_exists($iomadsam2auth->certpem);
-$missingcertcrt = !file_exists($iomadsam2auth->certcrt);
+$iomadsaml2auth->get_saml2_directory(); // It will create it if needed.
+$missingcertpem = !file_exists($iomadsaml2auth->certpem);
+$missingcertcrt = !file_exists($iomadsaml2auth->certcrt);
 if ($missingcertpem || $missingcertcrt) {
     // Could not find one or both certificates. Log an error.
     $errorstring = "";
@@ -57,7 +57,7 @@ if ($missingcertpem || $missingcertcrt) {
         debugging($errorstring);
     }
     try {
-        create_certificates($iomadsam2auth);
+        create_certificates($iomadsaml2auth);
     } catch (saml2_exception $exception) {
         debugging($exception->getMessage(), DEBUG_DEVELOPER, $exception->getTrace());
     }

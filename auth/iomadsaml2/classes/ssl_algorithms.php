@@ -17,7 +17,7 @@ namespace auth_iomadsaml2;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $iomadsam2auth;
+global $iomadsaml2auth;
 
 /**
  * SSL Algorithms class
