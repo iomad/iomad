@@ -2483,7 +2483,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $progressbar = new progress_bar('assigningcompanreporters', 500, true);
         $count = 0;
         foreach ($companyreporters as $companyreporter) {
-            $companycontext = \core\context\company::instance($companymanager->companyid);
+            $companycontext = \core\context\company::instance($companyreporter->companyid);
             // Assign role at company level.
             role_assign($companyreporterrole->id, $companyreporter->userid, $companycontext->id);
             // Remove role at site level. 
