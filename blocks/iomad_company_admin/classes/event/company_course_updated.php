@@ -80,7 +80,7 @@ class company_course_updated extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/block/iomad_company_admin/iomad_courses_form.php');
+        return new \moodle_url('/blocks/iomad_company_admin/iomad_courses_form.php');
     }
 
     /**
