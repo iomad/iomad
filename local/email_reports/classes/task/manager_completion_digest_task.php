@@ -67,10 +67,12 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
             if ($parentslist = $companyobj->get_parent_companies_recursive()) {
                 $companyusql = " AND u.id NOT IN (
                                 SELECT userid FROM {company_users}
-                                WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                WHERE managertype = 1
+                                AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
                 $companysql = " AND userid NOT IN (
                                 SELECT userid FROM {company_users}
-                                WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                WHERE managertype = 1
+                                AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
             } else {
                 $companyusql = "";
                 $companysql = "";
@@ -93,7 +95,8 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                                           WHERE userid = :userid
                                           AND userid IN (
                                           SELECT userid FROM {company_users}
-                                          WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))
+                                          WHERE managertype = 1
+                                          AND companyid IN (" . implode(',', array_keys($parentslist)) ."))
                                           ", array('userid' => $manager->userid))) {
                     continue;
                 }
@@ -152,7 +155,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                     $foundusers = true;
                     // Get the user's departments.
                     $userdepartments = $DB->get_records_sql("SELECT DISTINCT d.name
-                                                             FROM {department} d 
+                                                             FROM {department} d
                                                              JOIN {company_users} cu ON (d.id = cu.departmentid AND d.company = cu.companyid)
                                                              WHERE cu.userid = :userid
                                                              AND cu.companyid = :companyid",

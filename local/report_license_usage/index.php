@@ -260,10 +260,12 @@ $parentcompanies = $company->get_parent_companies_recursive();
 if (!empty($parentcompanies)) {
     $userfilter = " AND id NOT IN (
                      SELECT userid FROM {company_users}
-                     WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                     WHERE managertype = 1
+                     AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
     $userfilterwithu = " AND u.id NOT IN (
                          SELECT userid FROM {company_users}
-                         WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                         WHERE managertype = 1
+                         AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
 } else {
     $userfilter = "";
     $userfilterwithu = "";

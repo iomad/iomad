@@ -70,10 +70,12 @@ class company_license_expiring_task extends \core\task\scheduled_task {
             if ($parentslist = $company->get_parent_companies_recursive()) {
                 $companyusql = " AND u.id NOT IN (
                                 SELECT userid FROM {company_users}
-                                WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                WHERE managertype = 1
+                                AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
                 $companysql = " AND userid NOT IN (
                                 SELECT userid FROM {company_users}
-                                WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                WHERE managertype = 1
+                                AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
             }
 
             $managers = $DB->get_records_sql("SELECT * FROM {company_users}

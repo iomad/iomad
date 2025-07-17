@@ -126,7 +126,7 @@ require_login();
 // Get course customfields.
 $usedfields = [];
 $customfields = $DB->get_records_sql("SELECT cff.* FROM
-                                      {customfield_field} cff 
+                                      {customfield_field} cff
                                       JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
                                       WHERE cfc.area = 'course'
                                       AND cfc.component = 'core_course'
@@ -284,7 +284,7 @@ if (!empty($usedfields)) {
     if (empty($fieldcourseids)) {
         $fieldcourseids[0] = "We didn't find any courses";
     }
-    $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")"; 
+    $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")";
 }
 
 $courselist = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
@@ -341,7 +341,8 @@ $departmentsql = " AND cu.departmentid IN (" . implode(',', array_keys($showdepa
 if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {company_users}
-                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                    WHERE managertype = 1
+                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
 } else {
     $companysql = "";
 }

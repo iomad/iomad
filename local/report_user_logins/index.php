@@ -258,7 +258,8 @@ $companydepartment = $parentlevel->id;
 if (!$viewchildren && !$canseechildren && $parentslist = $company->get_parent_companies_recursive()) {
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {company_users}
-                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                    WHERE managertype = 1
+                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
 } else {
     $companysql = "";
 }
@@ -358,7 +359,7 @@ if (!$showsummary) {
     $sqlparams = array('companyid' => $companyid) + $searchinfo->searchparams;
 
     $totalusers = $DB->count_records_sql($countsql, $sqlparams);
-    $loggedinusers = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id) FROM $fromsql WHERE url.logincount > 0 AND $wheresql", $sqlparams); 
+    $loggedinusers = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id) FROM $fromsql WHERE url.logincount > 0 AND $wheresql", $sqlparams);
 
     // Set up the headers for the form.
     if ($viewchildren) {
@@ -366,7 +367,7 @@ if (!$showsummary) {
                          get_string('company', 'block_iomad_company_admin'),
                          get_string('department', 'block_iomad_company_admin'),
                          get_string('email'));
-    
+
         $columns = array('fullname',
                          'company',
                          'department',
@@ -375,7 +376,7 @@ if (!$showsummary) {
         $headers = array(get_string('fullname'),
                          get_string('department', 'block_iomad_company_admin'),
                          get_string('email'));
-    
+
         $columns = array('fullname',
                          'department',
                          'email');

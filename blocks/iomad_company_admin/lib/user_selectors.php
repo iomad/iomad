@@ -711,7 +711,8 @@ class potential_company_course_user_selector extends company_user_selector_base 
         if (!empty($parentcompanies)) {
             $userfilter = " AND u.id NOT IN (
                              SELECT userid FROM {company_users}
-                             WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                             WHERE managertype = 1
+                             AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
         } else {
             $userfilter = "";
         }
@@ -863,17 +864,18 @@ class potential_department_user_selector extends company_user_selector_base {
             $userfilter = " AND NOT u.id IN (" . implode(",",$departmentusers) . ")
                             AND u.id NOT IN (
                               SELECT userid FROM {company_users}
-                              WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                              WHERE managertype = 1
+                              AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
         } else {
             $userfilter = " AND NOT u.id IN (" . implode(",",$departmentusers) . ")";
         }
 
         // Filter out users who are in another department with a elevated role and that elevated role is not selected
         $userfilter .= " AND u.id NOT IN (
-                            SELECT userid FROM {company_users} 
-                            WHERE companyid = ".$this->companyid." 
-                            AND managertype != 0 
-                            AND departmentid != ".$this->departmentid." 
+                            SELECT userid FROM {company_users}
+                            WHERE companyid = ".$this->companyid."
+                            AND managertype != 0
+                            AND departmentid != ".$this->departmentid."
                             AND managertype != ".$this->roletype.")";
 
         if ($this->roletype != 0) {
@@ -1296,7 +1298,8 @@ class potential_license_user_selector extends company_user_selector_base {
         if (!empty($parentcompanies)) {
             $userfilter .= " AND u.id NOT IN (
                               SELECT userid FROM {company_users}
-                              WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                              WHERE managertype = 1
+                              AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
         }
 
         // Get the department ids for this license.
@@ -1781,7 +1784,8 @@ class potential_company_group_user_selector extends company_user_selector_base {
         if (!empty($parentcompanies)) {
             $userfilter = " AND u.id NOT IN (
                              SELECT userid FROM {company_users}
-                             WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                             WHERE managertype = 1
+                             AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
         } else {
             $userfilter = "";
         }
@@ -1909,7 +1913,7 @@ class current_company_thread_user_selector extends company_user_selector_base {
         //  Add the group details.
         foreach ($availableusers as $id => $user) {
             if ($threadgroup = $DB->get_record_sql("
-                SELECT DISTINCT tg.name 
+                SELECT DISTINCT tg.name
                 FROM {microlearning_thread_group} tg
                 JOIN {microlearning_thread_user} tu ON (tg.id = tu.groupid)
                 WHERE tu.userid = $user->id
@@ -1987,7 +1991,8 @@ class potential_company_thread_user_selector extends company_user_selector_base 
         if (!empty($parentcompanies)) {
             $userfilter = " AND u.id NOT IN (
                              SELECT userid FROM {company_users}
-                             WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                             WHERE managertype = 1
+                             AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
         } else {
             $userfilter = "";
         }

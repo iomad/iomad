@@ -74,10 +74,12 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                 if ($parentslist = $companyobj->get_parent_companies_recursive()) {
                     $companyusql = " AND u.id NOT IN (
                                     SELECT userid FROM {company_users}
-                                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                    WHERE managertype = 1
+                                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
                     $companysql = " AND userid NOT IN (
                                     SELECT userid FROM {company_users}
-                                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                                    WHERE managertype = 1
+                                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
                 } else {
                     $companyusql = "";
                     $companysql = "";
@@ -114,7 +116,8 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                                               WHERE userid = :userid
                                               AND userid IN (
                                               SELECT userid FROM {company_users}
-                                              WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))
+                                              WHERE managertype > 0
+                                              AND companyid IN (" . implode(',', array_keys($parentslist)) ."))
                                               ", array('userid' => $manager->userid))) {
                         continue;
                     }

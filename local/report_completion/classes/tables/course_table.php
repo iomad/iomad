@@ -114,7 +114,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -160,7 +161,7 @@ class course_table extends table_sql {
         } else {
             $totalusers = 1;
         }
-    
+
         // Deal with any search dates.
         $datesql = "";
         if (!empty($params['from'])) {
@@ -221,7 +222,7 @@ class course_table extends table_sql {
                     $licensesunused = !empty($totalusers) ? number_format($licensesunused / $totalusers * 100, 2) : 0;
                     $remainder = !empty($totalusers) ? number_format($remainder / $totalusers * 100, 2) : 0;
                     $labelarray = [get_string('used', 'local_report_completion') . " (" . $licensesallocated . "%)",
-                                   get_string('unused', 'local_report_completion') . " (" . $licensesunused . "%)"]; 
+                                   get_string('unused', 'local_report_completion') . " (" . $licensesunused . "%)"];
                     if ($params['showpercentage'] == 1) {
                         $seriesarray = [$licensesallocated, $licensesunused, $remainder];
                         $labelarray[] = get_string('neverassigned', 'local_report_completion') . " (" . $remainder . "%)";
@@ -297,7 +298,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -326,7 +328,7 @@ class course_table extends table_sql {
                                               $suspendedsql",
                                               $sqlparams);
 
-    
+
         // Deal with any search dates.
         $datesql = "";
         if (!empty($params['from'])) {
@@ -424,7 +426,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -468,7 +471,7 @@ class course_table extends table_sql {
                                                   $sqlparams);
 
         }
-    
+
         // Deal with any search dates.
         $datesql = "";
         if (!empty($params['from'])) {
@@ -497,7 +500,7 @@ class course_table extends table_sql {
                                                   $suspendedsql
                                                   $departmentsql",
                                                   $sqlparams);
-     
+
         if (!empty($licensesunused) || $DB->get_record('iomad_courses', array('courseid' => $row->id, 'licensed' => 1))) {
             if ($params['showpercentage']== 0) {
                 return $licensesunused;
@@ -554,7 +557,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -598,7 +602,7 @@ class course_table extends table_sql {
                                                   $sqlparams);
 
         }
-    
+
         // Deal with any search dates.
         $datesql = "";
         if (!empty($params['from'])) {
@@ -684,7 +688,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -818,7 +823,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -952,7 +958,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -1085,7 +1092,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -1219,7 +1227,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
@@ -1369,7 +1378,8 @@ class course_table extends table_sql {
             if (!empty($parentcompanies)) {
                 $companyuserfilter = " AND cu.userid NOT IN (
                                        SELECT userid FROM {company_users}
-                                       WHERE companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
+                                       WHERE managertype = 1
+                                       AND companyid IN (" . implode(',', array_keys($parentcompanies)) . "))";
                 $userfilter .= $companyuserfilter;
             }
 
