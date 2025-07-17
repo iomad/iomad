@@ -26,6 +26,8 @@
         "auth": [
             "db",
             "email",
+            "iomadoidc",
+            "iomadsaml2",
             "ldap",
             "lti",
             "manual",
@@ -36,12 +38,14 @@
             "webservice"
         ],
         "availability": [
+            "company",
             "completion",
             "date",
             "grade",
             "group",
             "grouping",
-            "profile"
+            "profile",
+            "trainingevent"
         ],
         "block": [
             "accessreview",
@@ -62,9 +66,21 @@
             "globalsearch",
             "glossary_random",
             "html",
+            "iomad_approve_access",
+            "iomad_commerce",
+            "iomad_company_admin",
+            "iomad_company_selector",
+            "iomad_html",
+            "iomad_learningpath",
+            "iomad_link",
+            "iomad_microlearning",
+            "iomad_onlineusers",
+            "iomad_reports",
+            "iomad_welcome",
             "login",
             "lp",
             "mentees",
+            "mycourses",
             "myoverview",
             "myprofile",
             "navigation",
@@ -162,6 +178,7 @@
             "guest",
             "imsenterprise",
             "ldap",
+            "license",
             "lti",
             "manual",
             "meta",
@@ -241,7 +258,30 @@
         "h5plib": [
             "v127"
         ],
-        "local": [],
+        "local": [
+            "course_selector",
+            "email",
+            "email_reports",
+            "framework_selector",
+            "iomad",
+            "iomadcustompage",
+            "iomad_learningpath",
+            "iomad_oidc_sync",
+            "iomad_settings",
+            "iomad_signup",
+            "iomad_track",
+            "report_attendance",
+            "report_companies",
+            "report_completion",
+            "report_completion_monthly",
+            "report_completion_overview",
+            "report_emails",
+            "report_license_usage",
+            "report_user_license_allocations",
+            "report_user_logins",
+            "report_users",
+            "template_selector"
+        ],
         "logstore": [
             "database",
             "standard"
@@ -284,6 +324,7 @@
             "glossary",
             "h5pactivity",
             "imscp",
+            "iomadcertificate",
             "label",
             "lesson",
             "lti",
@@ -293,6 +334,7 @@
             "resource",
             "scorm",
             "subsection",
+            "trainingevent",
             "url",
             "wiki",
             "workshop"
@@ -456,7 +498,10 @@
         ],
         "theme": [
             "boost",
-            "classic"
+            "classic",
+            "iomad",
+            "iomadboost",
+            "iomadbootstrap"
         ],
         "tiny": [
             "accessibilitychecker",
@@ -478,6 +523,7 @@
             "behat",
             "brickfield",
             "capability",
+            "checklearningrecords",
             "cohortroles",
             "componentlibrary",
             "customlang",
@@ -487,6 +533,9 @@
             "generator",
             "httpsreplace",
             "installaddon",
+            "iomadmerge",
+            "iomadpolicy",
+            "iomadsite",
             "langimport",
             "licensemanager",
             "log",
@@ -504,6 +553,7 @@
             "policy",
             "profiling",
             "recyclebin",
+            "redocerts",
             "replace",
             "spamcleaner",
             "task",
