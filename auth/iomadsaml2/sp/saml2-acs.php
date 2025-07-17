@@ -37,6 +37,6 @@ try {
     $acs = $controller->assertionConsumerService($iomadsam2auth->spname);
     $acs->sendContent();
 } catch (Exception $e) {
-    throw new saml2_exception($e->getMessage(), $e->getTraceAsString());
+    throw new iomadsaml2_exception($e->getMessage(), $e->getTraceAsString());
 }
 
