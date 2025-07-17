@@ -50,6 +50,7 @@ $ilast = optional_param('lastinitial', '', PARAM_ALPHA);
 $showexpiryonly = optional_param('showexpiryonly', get_config('local_report_completion_overview', 'showexpiryonly'), PARAM_BOOL);
 $bycourse = optional_param('bycourse', false, PARAM_BOOL);
 $viewchildren = optional_param('viewchildren', true, PARAM_BOOL);
+$showenrolledonly = optional_param('showenrolledonly', get_config('local_report_completion_overview', 'showenrolledonly'), PARAM_BOOL);
 
 // Deal with pagination.
 if ($perpage == 0) {
@@ -100,6 +101,7 @@ if ($courses) {
 $params['firstinitial'] = $ifirst;
 $params['lastinitial'] = $ilast;
 $params['showexpiryonly'] = $showexpiryonly;
+$params['showenrolledonly'] = $showenrolledonly;
 $params['viewchildren'] = $viewchildren;
 if ($showsuspended) {
     $params['showsuspended'] = $showsuspended;
@@ -213,6 +215,15 @@ if (iomad::has_capability('local/report_completion:view', $companycontext)) {
     $showexpiryparams['showexpiryonly'] = !$showexpiryonly;
     $displaylink = new moodle_url('/local/report_completion_overview/index.php', $showexpiryparams);
     $buttons .= $OUTPUT->single_button($displaylink, $displaycaption, 'get');
+    if (!$showenrolledonly) {
+        $displaycaption = get_string('showenrolledonly', 'local_report_completion_overview');
+    } else {
+        $displaycaption = get_string('hideenrolledonly', 'local_report_completion_overview');
+    }
+    $showenrolledonlyparams = $params;
+    $showenrolledonlyparams['showenrolledonly'] = !$showenrolledonly;
+    $displaylink = new moodle_url('/local/report_completion_overview/index.php', $showenrolledonlyparams);
+    $buttons .= $OUTPUT->single_button($displaylink, $displaycaption, 'get');
     $buttoncaption = get_string('pluginname', 'local_report_completion');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php");
     $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
@@ -251,6 +262,12 @@ $userhierarchylevel = key($userlevels);
 if ($departmentid == 0 ) {
     $departmentid = $userhierarchylevel;
 }
+
+// Deal with where we are on the department tree.
+$currentdepartment = company::get_departmentbyid($departmentid);
+$showdepartments = company::get_subdepartments_list($currentdepartment);
+$showdepartments[$departmentid] = $departmentid;
+$departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 
 $coursesform = new \local_iomad\forms\course_search_form($linkurl, $params);
 // Deal with company courses and search.
@@ -300,11 +317,22 @@ if (!empty($usedfields)) {
     $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")";
 }
 
+// Are we only showing courses where the users are enrolled?
+$enrolledonlysql = "";
+if (!empty($showenrolledonly)) {
+    $enrolledonlysql = "AND c.id IN (
+                            SELECT lit.courseid FROM {local_iomad_track} lit
+                            JOIN {company_users} cu ON (lit.userid = cu.userid AND lit.companyid = cu.companyid)
+                            JOIN {department} d ON (cu.companyid = d.company AND lit.companyid = d.company AND cu.departmentid = d.id)
+                            WHERE 1 = 1 $departmentsql)";
+}
+
 if (empty($courses)) {
     $courses = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
-                                                JOIN {course} c ON (ic.courseid = c.id)
-                                                WHERE 1=1 $courselistsql
-                                                ORDER BY c.fullname", $coursesearchparams);
+                                    JOIN {course} c ON (ic.courseid = c.id)
+                                    WHERE 1=1 $courselistsql
+                                    $enrolledonlysql
+                                    ORDER BY c.fullname", $coursesearchparams);
 }
 
 $expirecourses = $courses;
@@ -382,14 +410,8 @@ if (!empty($CFG->iomad_report_fields)) {
     }
 }
 
-// Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
-$showdepartments[$departmentid] = $departmentid;
-$departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
-$coursesql = " AND lit.courseid IN (" . implode (',', array_keys($courses)) . ")";
-
 //Set up the SQL to get the users.
+$coursesql = " AND lit.courseid IN (" . implode (',', array_keys($courses)) . ")";
 $selectsql = "DISTINCT u.*";
 $fromsql = " {user} u JOIN {company_users} cu ON (u.id = cu.userid) JOIN {department} d ON (cu.departmentid = d.id and cu.companyid = d.company)";
 
