@@ -22,7 +22,7 @@
  */
 
 $plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
-$plugin->version  = 2023060200;
+$plugin->version  = 2025071700;   // The (date) version of this plugin.
 $plugin->requires = 2019052000;
 $plugin->component  = 'local_report_completion_overview';
 $plugin->dependencies = ['local_iomad' => 2023042702];
