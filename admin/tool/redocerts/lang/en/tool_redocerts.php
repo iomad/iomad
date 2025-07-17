@@ -32,6 +32,7 @@ $string['pageheader'] = 'Recreate stored certificates';
 $string['privacy:metadata'] = 'Admin tool redo certs doesn\'t store any user details';
 $string['pluginname'] = 'Recreate stored certificates';
 $string['recreatingcertificate'] = 'Recreating Certificate - ';
+$string['redocerts:redocertificates'] = 'Regenerate stored user certificates for a course'; 
 $string['searchusers'] = 'Select a user';
 $string['searchcourses'] = 'Select a course';
 $string['searchcompanies'] = 'Select a company';

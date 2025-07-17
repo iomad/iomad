@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_completion_monthly
+ * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,19 +23,19 @@
 
 // Define the Iomad menu items that are defined by this plugin
 
-function local_report_completion_monthly_menu() {
+function local_iomad_track_menu() {
 
         return array(
-            'completionmonthly' => array(
-                'category' => 'Reports',
-                'tab' => 8,
-                'name' => get_string('pluginname', 'local_report_completion_monthly'),
-                'url' => '/local/report_completion_monthly/index.php',
-                'cap' => 'local/report_completion_monthly:view',
+            'iomad_track' => array(
+                'category' => 'CourseAdmin',
+                'tab' => 3,
+		'name' => get_string('importcompletionrecords', 'local_iomad_track'),
+		'url' => '/local/iomad_track/import.php',
+                'cap' => 'local/iomad_track:importfrommoodle',
                 'icondefault' => 'report',
                 'style' => 'report',
-                'icon' => 'fa-calendar-check', // 'fa-check-square-o',
-                'iconsmall' => 'fa-bar-chart-o',
+                'icon' => 'fa-bar-chart-o',
+                'iconsmall' => 'fa-upload',
             ),
         );
 }

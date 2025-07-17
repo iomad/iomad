@@ -15,27 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_completion_monthly
+ * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
+defined('MOODLE_INTERNAL') || die();
 
-function local_report_completion_monthly_menu() {
+$capabilities = array(
 
-        return array(
-            'completionmonthly' => array(
-                'category' => 'Reports',
-                'tab' => 8,
-                'name' => get_string('pluginname', 'local_report_completion_monthly'),
-                'url' => '/local/report_completion_monthly/index.php',
-                'cap' => 'local/report_completion_monthly:view',
-                'icondefault' => 'report',
-                'style' => 'report',
-                'icon' => 'fa-calendar-check', // 'fa-check-square-o',
-                'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
-}
+    'tool/redocerts:redocertificates' => array(
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => array(
+            'clientadministrator' => CAP_ALLOW,
+        ),
+    ),
+);

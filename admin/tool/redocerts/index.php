@@ -29,6 +29,8 @@ require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 
+iomad::require_capability('tool/redocerts:redocertificates', context_system::instance());
+
 admin_externalpage_setup('toolredocerts');
 
 echo $OUTPUT->header();
@@ -42,6 +44,7 @@ if (!$data = $form->get_data()) {
     echo $OUTPUT->footer();
     die();
 }
+
 
 // Scroll to the end when finished.
 $PAGE->requires->js_init_code("window.scrollTo(0, 5000000);");
