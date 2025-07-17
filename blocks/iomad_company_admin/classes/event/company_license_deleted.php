@@ -80,7 +80,7 @@ class company_license_deleted extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/block/iomad_company_admin/company_license_edit_form.php');
+        return new \moodle_url('/blocks/iomad_company_admin/company_license_edit_form.php');
     }
 
     /**
