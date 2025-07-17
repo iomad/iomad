@@ -37,6 +37,7 @@ $string['showexpiryonly_help'] = 'If this option is checked, then courses which 
 $string['showfulldetail'] = 'Show full completion detail';
 $string['showfulldetail_help'] = 'If this option is checked, then all of the completion information is displayed, otherwise it\'s just the completion and expiry dates.';
 $string['warningduration'] = 'Expired warning limit';
+$string['warningdurationcompany'] = 'Company specific expired warning limit';
 $string['warningduration_help'] = 'This is the value of time before a course expires where the report will show the expiry warning colours instead of the OK colours.';
 $string['coursesummary'] = 'Enroled: {$a->enrolled}
 Started: {$a->timestarted}

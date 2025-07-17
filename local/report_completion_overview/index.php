@@ -122,7 +122,7 @@ require_login();
 // Get course customfields.
 $usedfields = [];
 $customfields = $DB->get_records_sql("SELECT cff.* FROM
-                                      {customfield_field} cff 
+                                      {customfield_field} cff
                                       JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
                                       WHERE cfc.area = 'course'
                                       AND cfc.component = 'core_course'
@@ -163,7 +163,8 @@ $foundfields = $foundobj->foundfields;
 if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {company_users}
-                    WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                    WHERE managertype = 1
+                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
 } else {
     $companysql = "";
 }
@@ -296,7 +297,7 @@ if (!empty($usedfields)) {
     if (empty($fieldcourseids)) {
         $fieldcourseids[0] = "We didn't find any courses";
     }
-    $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")"; 
+    $courselistsql .= " AND c.id IN (" . join(',', array_keys($fieldcourseids)) . ")";
 }
 
 if (empty($courses)) {
@@ -673,7 +674,7 @@ if (!$download) {
 // Are we showing all detail or not?
 $showfulldetails = get_config('local_report_completion_overview', 'showfulldetail');
 
-// Set up the table. 
+// Set up the table.
 $table = new html_table();
 
 // Class is different depending on which way around we are looking at this.
@@ -788,6 +789,11 @@ if (!$bycourse) {
             }
 
             // Set up the cell classes.
+            if (empty(get_config('local_report_completion_overview', 'warningduration' . "_$companyid"))) {
+                $warningduration = get_config('local_report_completion_overview', 'warningduration');
+            } else {
+                $warningduration = get_config('local_report_completion_overview', 'warningduration' . "_$companyid");
+            }
             if (empty($expirecourses[$usercourse->courseid])) {
                 $rowclass = "ignored";
                 $statustext = "";
@@ -821,7 +827,7 @@ if (!$bycourse) {
                 if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires > $runtime) {
                     $rowclass = "indate";
                 }
-                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime + get_config('local_report_completion_overview', 'warningduration')) {
+                if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime + $warningduration) {
                     $rowclass = "expiring";
                 }
                 if (!empty($usercourse->timeenrolled) && !empty($usercourse->timecompleted) && $usercourse->timeexpires < $runtime) {
@@ -829,20 +835,20 @@ if (!$bycourse) {
                         $rowclass = "indate";
                     } else {
                         $rowclass = "expired";
-                    } 
+                    }
                 }
                 $statustext = get_string($rowclass, 'local_report_completion_overview');
             }
-    
+
             if ($download) {
                 $row[] = $statustext;
                 $row[] = $coursesummary['timecompleted'];
                 $row[] = $coursesummary['timeexpires'];
             } else if (!$showtext) {
                 $row[] = "<div class='completion_overview_icon' title='$rowtext'><span class='dot $rowclass'></span></div>";
-            } else { 
+            } else {
                 $row[] = "<span>" . nl2br($rowtext) . "</span>";
-            } 
+            }
         }
         $table->data[] = $row;
     }
@@ -859,7 +865,7 @@ if (!$bycourse) {
     }
 
     $table->head = $headers;
-            
+
     foreach ($courses as $course) {
         $runtime = time();
         if (!$download) {
@@ -974,20 +980,20 @@ if (!$bycourse) {
                         $rowclass = "indate";
                     } else {
                         $rowclass = "expired";
-                    } 
+                    }
                 }
                 $statustext = get_string($rowclass, 'local_report_completion_overview');
             }
-    
+
             if ($download) {
                 $row[] = $statustext;
                 $row[] = $coursesummary['timecompleted'];
                 $row[] = $coursesummary['timeexpires'];
             } else if (!$showtext) {
                 $row[] = "<div class='completion_overview_icon' title='$rowtext'><span class='dot $rowclass'></span></div>";
-            } else { 
+            } else {
                 $row[] = "<span>" . nl2br($rowtext) . "</span>";
-            } 
+            }
         }
         $table->data[] = $row;
     }
