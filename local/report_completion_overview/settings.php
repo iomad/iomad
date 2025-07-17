@@ -23,6 +23,15 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+// IOMAD
+require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
+$postfix = "";
+if (!empty($companyid)) {
+    $postfix = "_$companyid";
+}
+
+
 // Basic navigation settings
 require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
 
@@ -42,6 +51,15 @@ if ($hassiteconfig && !empty($USER->id)) {
         get_string('warningduration_help', 'local_report_completion_overview'),
         30*24*60*60)
     );
+
+    if ($companyid > 0) {
+        $settings->add(new admin_setting_configduration(
+            'local_report_completion_overview/warningduration' . $postfix,
+            get_string('warningdurationcompany', 'local_report_completion_overview'),
+            get_string('warningduration_help', 'local_report_completion_overview'),
+            30*24*60*60)
+        );
+    }
 
     $settings->add(new admin_setting_configcheckbox(
         'local_report_completion_overview/showfulldetail',
