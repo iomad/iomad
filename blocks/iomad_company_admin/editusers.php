@@ -116,7 +116,7 @@ if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontex
 }
 
 // Set the name for the page.
-$linktext = get_string('edit_users_title', 'block_iomad_company_admin');    
+$linktext = get_string('edit_users_title', 'block_iomad_company_admin');
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/editusers.php');
 
@@ -590,8 +590,9 @@ if (!empty($showall)) {
 
     if ($parentslist = $company->get_parent_companies_recursive()) {
         $companysql = " AND c.id = :companyid AND u.id NOT IN (
-                        SELECT userid FROM {company_users}
-                        WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                          SELECT userid FROM {company_users}
+                          WHERE managertype = 1 AND
+                          companyid IN (" . implode(',', array_keys($parentslist)) ."))";
     } else {
         $companysql = " AND c.id = :companyid";
     }

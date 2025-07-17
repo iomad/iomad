@@ -93,7 +93,8 @@ class course_not_completed_task extends \core\task\scheduled_task {
             $companyobj = new company($company->id);
             if ($parentslist = $companyobj->get_parent_companies_recursive()) {
                 if ($DB->get_records_sql("SELECT userid FROM {company_users}
-                                          WHERE companyid IN (" . implode(',', array_keys($parentslist)) .")
+                                          WHERE managertype = 1
+                                          AND companyid IN (" . implode(',', array_keys($parentslist)) .")
                                           AND userid = :userid",
                                           array('userid' => $compuser->userid))) {
                     continue;

@@ -178,7 +178,7 @@ $params['userid'] = $userid;
 // Get course customfields.
 $usedfields = [];
 $customfields = $DB->get_records_sql("SELECT cff.* FROM
-                                      {customfield_field} cff 
+                                      {customfield_field} cff
                                       JOIN {customfield_category} cfc ON (cff.categoryid = cfc.id)
                                       WHERE cfc.area = 'course'
                                       AND cfc.component = 'core_course'
@@ -440,7 +440,7 @@ if (!empty($action)) {
             require_once($CFG->dirroot . "/local/iomad_track/lib.php");
             local_iomad_track_download_certs($companyid, $mycourses, $myusers);
             die;
-        } else {            
+        } else {
             // Do nothing further.
             throw new moodle_exception('nopermissions', 'error', '', get_string('downloadcertificates', 'block_iomad_company_admin'));
             die;
@@ -738,7 +738,7 @@ if (empty($courseid)) {
         if (empty($fieldcourseids)) {
             $fieldcourseids[0] = "We didn't find any courses";
         }
-        $coursesearchsql .= " AND lit.courseid IN (" . join(',', array_keys($fieldcourseids)) . ")"; 
+        $coursesearchsql .= " AND lit.courseid IN (" . join(',', array_keys($fieldcourseids)) . ")";
     }
 
     // Set up the SQL for the table.
@@ -801,7 +801,7 @@ if (empty($courseid)) {
     $coursetable->define_columns($coursecolumns);
     $coursetable->define_headers($courseheaders);
     if (iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext) &&
-    $haslicenses) { 
+    $haslicenses) {
         if ($showcharts) {
             $coursetable->no_sorting('licenseallocated');
         } else {
@@ -882,7 +882,7 @@ if (empty($courseid)) {
         if (!empty($coursecompletioncrits)) {
             foreach ($coursecompletioncrits as $completioncrit) {
                 $modinfo = get_coursemodule_from_id('', $completioncrit->moduleinstance);
-                
+
                 $completionheaders[$completioncrit->id] = format_string($completioncrit->get_title() . " " . $modinfo->name);
                 $gradeheaders[$completioncrit->id] = format_string(get_string('grade', 'iomadcertificate') . " " . $modinfo->name);
                 $completioncolumns[$completioncrit->id] = "criteria_" . $completioncrit->id;
@@ -904,7 +904,8 @@ if (empty($courseid)) {
     if ((!$viewchildren || !$canseechildren) && $parentslist = $company->get_parent_companies_recursive()) {
         $companysql = " AND u.id NOT IN (
                         SELECT userid FROM {company_users}
-                        WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                        WHERE managertype = 1
+                        AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
     } else if ($showsummary) {
         // Deal with the company list..
         $companysql = " AND lit.companyid IN (" . implode(',', array_keys($childcompanies)) . ")";
@@ -1125,8 +1126,8 @@ if (empty($courseid)) {
     $totalstartedstring = $totalstarted;
 
     if ($showpercentage == 2) {
-        $totalstarted = !empty($total) ? number_format($totalstarted * 100 / $total,2 ) : 0; 
-        $totalstartedstring = get_string('percents','moodle', $totalstarted); 
+        $totalstarted = !empty($total) ? number_format($totalstarted * 100 / $total,2 ) : 0;
+        $totalstartedstring = get_string('percents','moodle', $totalstarted);
         $totalcompleted = !empty($total) ? number_format($totalcompleted * 100 / $total, 2) : 0;
         $totalcompletedstring = get_string('percents', 'moodle', $totalcompleted);
     } else if ($showpercentage == 1) {
@@ -1143,7 +1144,7 @@ if (empty($courseid)) {
             $remainder = !empty($totalcompanyusers) ? 100 - ((($total - $totalstarted) / $total) * 100) : 0;
             $totalstarted = !empty($totalcompanyusers) ? ($totalstarted / $total) * 100 : 0;
             $totalcompleted = !empty($totalcompanyusers) ? ($totalcompleted / $total) * 100 : 0;
-            $totalstartedstring = get_string('percents','moodle', number_format($totalstarted, 2)); 
+            $totalstartedstring = get_string('percents','moodle', number_format($totalstarted, 2));
             $totalcompletedstring = get_string('percents', 'moodle', number_format($totalcompleted, 2));
             $remainderstring = get_string('percents', 'moodle', number_format($remainder, 2));
     }
@@ -1214,7 +1215,7 @@ if (empty($courseid)) {
         echo html_writer::end_tag('div');
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));
 
-    }  
+    }
 
     // Create a variable called $tableurl and remove the page paramater
     $tableurl = $baseurl;
