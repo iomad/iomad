@@ -200,7 +200,7 @@ if (!empty($action) &&
             $idpmetadata = 'idpmetadata'. $postfix;
             unset($data->idpmetadata);
             // We need the auth plugin definition.
-            $iomadsam2auth = new \auth_iomadsaml2\auth();
+            $iomadsaml2auth = new \auth_iomadsaml2\auth();
             // We also need the current config.
             $iomadsaml2config = get_config('auth_iomadsaml2');
             foreach ($data as $id => $value) {
@@ -216,7 +216,7 @@ if (!empty($action) &&
                 if ($id == 'assertionsconsumerservices' . $postfix) {
                     $value = implode(',', $value);
                 }
-                set_config($id, $value, 'auth_iomasaml2');
+                set_config($id, $value, 'auth_iomadsaml2');
             }
             $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
         }

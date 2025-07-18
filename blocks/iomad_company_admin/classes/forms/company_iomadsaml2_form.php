@@ -66,7 +66,7 @@ class company_iomadsaml2_form extends moodleform {
         $mform->addElement('static', 'headingdescription', '', get_string('auth_iomadsaml2description', 'auth_iomadsaml2'));
 
         // IDP Metadata.
-        $mform->addElement('textarea', 
+        $mform->addElement('textarea',
                            'idpmetadata'. $postfix,
                             get_string('idpmetadata', 'auth_iomadsaml2'));
         $mform->addElement('static', 'idpmetadatadesc', '', get_string('idpmetadata_help', 'auth_iomadsaml2'));
@@ -199,7 +199,7 @@ class company_iomadsaml2_form extends moodleform {
 
         $acssetting = $mform->addElement('select',
                                          'assertionsconsumerservices' . $postfix,
-                                         get_string('assertionsconsumerservices', 'auth_iomadsaml2'), 
+                                         get_string('assertionsconsumerservices', 'auth_iomadsaml2'),
                                          $assertionsconsumerservices);
         $acssetting->setMultiple('true');
         $mform->addElement('static', 'assertionsconsumerservicesdesc', '', get_string('assertionsconsumerservices_help', 'auth_iomadsaml2'));
@@ -424,7 +424,7 @@ class company_iomadsaml2_form extends moodleform {
         global $DB, $CFG, $SESSION, $postfix;
 
         $errors = parent::validation($data, $files);
-        
+
         $idpmetadata = 'idpmetadata'. $postfix;
         $value = trim($data[$idpmetadata]);
         if (!empty($value)) {
@@ -643,10 +643,10 @@ class company_iomadsaml2_form extends moodleform {
      * @param string $xml
      */
     private function save_idp_metadata_xml($url, $xml) {
-        global $CFG, $iomadsam2auth;
+        global $CFG, $iomadsaml2auth;
         require_once("{$CFG->dirroot}/auth/iomadsaml2/setup.php");
 
-        $file = $iomadsam2auth->get_file_idp_metadata_file($url);
+        $file = $iomadsaml2auth->get_file_idp_metadata_file($url);
         file_put_contents($file, $xml);
     }
 }
