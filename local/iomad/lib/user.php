@@ -55,6 +55,11 @@ class company_user {
             $company = company::by_shortname( $data->company );
         }
 
+        // Deal with empty due field.
+        if (empty($data->due)) {
+            $data->due = time();
+        };
+
         // Deal with manager email CCs.
         $companyrec = $DB->get_record('company', array('id' => $company->id));
         if ($companyrec->managernotify == 0) {
