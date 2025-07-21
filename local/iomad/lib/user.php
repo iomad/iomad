@@ -419,7 +419,7 @@ class company_user {
                 if (!$all && $role->roleid == $studentrole->id) {
                     $isstudent = true;
                 } else {
-                    role_unassign($role->id, $user->id, $coursecontext->id);
+                    role_unassign($role->roleid, $user->id, $coursecontext->id);
                 }
             }
             if (!$isstudent) {
@@ -465,7 +465,7 @@ class company_user {
                     if (!$all && $role->roleid == $studentrole->id) {
                         $isstudent = true;
                     } else {
-                        role_unassign($role->id, $user->id, $coursecontext->id);
+                        role_unassign($role->roleid, $user->id, $coursecontext->id);
                     }
                 }
                 if (!$isstudent) {
