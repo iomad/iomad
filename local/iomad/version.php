@@ -19,7 +19,7 @@
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @push date 2025/07/04
+ * @push date 2025/07/21
  */
 
 $plugin->release  = '5.0.1 (Build: 20250609)';    // Human-friendly version name
