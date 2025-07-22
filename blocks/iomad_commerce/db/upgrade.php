@@ -542,5 +542,31 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         upgrade_block_savepoint(true, 2025070400, 'iomad_commerce');
     }
 
+    if ($oldversion < 2025070700) {
+        // Define the table
+        $table = new xmldb_table('course_shopsettings_paths');
+
+        // Define field id and add to course_shopsettings_threads
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
+
+        // Define field itemid and add to course_shopsettings_threads
+        $table->add_field('itemid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null, 'id');
+
+        // Define field threadid and add to course_shopsettings_threads
+        $table->add_field('pathid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null, 'pathid');
+
+        // Define the primary key and add to course_shopsettings_threads
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for course_shopsettings_threads
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Iomad_commerce savepoint reached.
+        upgrade_block_savepoint(true, 2025070700, 'iomad_commerce');
+    }
+
+
     return $result;
 }

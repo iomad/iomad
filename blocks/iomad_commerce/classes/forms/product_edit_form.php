@@ -39,7 +39,7 @@ class product_edit_form extends moodleform {
     protected $editoroptions;
     protected $currencies;
 
-    public function __construct($actionurl, $isadding, $shopsettingsid, $courses = [], $priceblocks = null, $editoroptions = []) {
+    public function __construct($actionurl, $isadding, $shopsettingsid, $courses = [], $priceblocks = null, $editoroptions = [], $paths = []) {
         global $CFG;
 
         $this->isadding = $isadding;
@@ -48,6 +48,7 @@ class product_edit_form extends moodleform {
         $this->priceblocks = $priceblocks;
         $this->context = context_system::instance();
         $this->editoroptions = $editoroptions;
+        $this->paths = $paths;
 
         // Get the supported currencies.
         $codes = \core_payment\helper::get_supported_currencies();
@@ -93,6 +94,9 @@ class product_edit_form extends moodleform {
             $mform->addHelpButton('enabled', 'course_shop_enabled', 'block_iomad_commerce');
 
             $mform->addElement('autocomplete', 'itemcourses', get_string('courses'), $this->courses, ['multiple' => true]);
+
+            // Create a element for learning paths
+            $mform->addElement('autocomplete', 'itempaths', get_string('learning_paths', 'block_iomad_commerce'), $this->paths, ['multiple' => true]);
 
             $mform->addElement('editor', 'short_summary_editor', get_string('course_short_summary', 'block_iomad_commerce'),
                                           null, $this->editoroptions);
@@ -270,8 +274,12 @@ class product_edit_form extends moodleform {
             $errors['allow_single_purchase'] = get_string('error_incompatibletype', 'block_iomad_commerce');
         }
 
-        if (count($data['itemcourses']) == 0) {
-            $errors['itemcourses'] = get_string('required');
+        if (count($data['itemcourses']) == 0 and count($data['itempaths']) == 0) {
+            $errors['itempaths'] = get_string('requiredcoursepath', 'block_iomad_commerce');
+        }
+
+        if (count($data['itemcourses']) > 0 and count($data['itempaths']) > 0) {
+            $errors['itempaths'] = get_string('onlyonecoursepath', 'block_iomad_commerce');
         }
 
         if (!empty($data['item_block_start'][0]) && $data['item_block_start'][0] > 2) {
