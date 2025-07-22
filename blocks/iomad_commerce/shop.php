@@ -128,9 +128,11 @@ if (isset($SESSION->shopsearch)) {
          ' . $DB->sql_like("css.long_description", ":searchkey5") . '
          OR
          ' . $DB->sql_like("css.name", ":searchkey6") . '
+         OR
+         ' . $DB->sql_like("ilp.name", ":searchkey7") . '
         )
     ';
-    for ($i = 1; $i < 7; $i++) {
+    for ($i = 1; $i < 8; $i++) {
         $sqlparams['searchkey' . $i] = '%' . $searchkey . '%';
     }
 }
@@ -153,8 +155,10 @@ if (!iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
 }
 
 $sql = 'FROM {course_shopsettings} css
-        JOIN {course_shopsettings_courses} csc ON (css.id = csc.itemid)
-        JOIN {course} c ON (csc.courseid = c.id)
+        LEFT JOIN {course_shopsettings_courses} csc ON (css.id = csc.itemid)
+        LEFT JOIN {course} c ON (csc.courseid = c.id)
+        LEFT JOIN {course_shopsettings_paths} cssp ON (css.id = cssp.itemid)
+        LEFT JOIN {iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
             ' . $tagjoin . '
             LEFT JOIN {course_shopblockprice} sbp ON (css.id = sbp.itemid
                                                   AND sbp.id = (SELECT id FROM {course_shopblockprice}

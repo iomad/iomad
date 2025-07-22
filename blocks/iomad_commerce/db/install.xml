@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/iomad_commerce/db" VERSION="20250704" COMMENT="XMLDB file for Moodle blocks/iomad_commerce"
+<XMLDB PATH="blocks/iomad_commerce/db" VERSION="20250718" COMMENT="XMLDB file for Moodle blocks/iomad_commerce"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -127,6 +127,18 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
         <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="course_shopsettings" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="course_shopsettings_paths" COMMENT="Table stores the learning paths a shop item is linked to">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Uniquely identifies a record in the course_shopsettings table"/>
+        <FIELD NAME="pathid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Uniquely identifies a record in the iomad_learningpath table"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="course_shopsettings" REFFIELDS="id" COMMENT="Uniquely identifies a record in the course_shopsettings table"/>
+        <KEY NAME="pathid" TYPE="foreign" FIELDS="pathid" REFTABLE="iomad_learningpath" REFFIELDS="id" COMMENT="Uniquely identifies a record in the iomad_learningpath table"/>
       </KEYS>
     </TABLE>
   </TABLES>

@@ -65,6 +65,13 @@ if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $co
     $companycourses = $company->get_menu_courses(true, false);
 }
 
+// Get all learning paths that have courses and are active
+$companypaths = $DB->get_records_sql_menu("SELECT ilp.id as id, ilp.name as name FROM {iomad_learningpath} ilp
+                                           WHERE ilp.company = :companyid
+                                           AND ilp.id in (SELECT path from {iomad_learningpathcourse} ilpc WHERE ilp.id = ilpc.path)
+                                           AND ilp.active = 1",
+                                           ['companyid' => $companyid]);
+
 $priceblocks = [];
 
 if (!$new) {
@@ -76,7 +83,15 @@ if (!$new) {
     foreach ($courses as $course) {
         $shopsettings->itemcourses[] = $course->courseid;
     }
-    
+
+    // Get the learning paths that are already assigned to the shop item
+    $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $shopsettingsid]);
+    // Create the array to store the learning paths
+    $shopsettings->itempaths = [];
+    foreach ($paths as $path) {
+        $shopsettings->itempaths[] = $path->pathid;
+    }
+
     // Get the tags that are being used by the current shop item
     $shopsettings->tags = \block_iomad_commerce\helper::get_course_tags($shopsettingsid);
     
@@ -133,7 +148,7 @@ $editoroptions = ['maxfiles' => EDITOR_UNLIMITED_FILES,
                   'trusttext' => false,
                   'noclean' => true];
 
-$mform = new block_iomad_commerce\forms\product_edit_form(new moodle_url('/blocks/iomad_commerce/edit_course_shopsettings_form.php'), $isadding, $shopsettingsid, $companycourses, $priceblocks, $editoroptions);
+$mform = new block_iomad_commerce\forms\product_edit_form(new moodle_url('/blocks/iomad_commerce/edit_course_shopsettings_form.php'), $isadding, $shopsettingsid, $companycourses, $priceblocks, $editoroptions, $companypaths);
 $mform->set_data($shopsettings);
 
 if ($mform->is_cancelled()) {
@@ -175,19 +190,26 @@ if ($mform->is_cancelled()) {
         $DB->insert_record('course_shopsettings_courses', ['itemid' => $data->id, 'courseid' => $itemcourse]);
     }
 
+    // Delete associated learning paths
+    $DB->delete_records('course_shopsettings_paths', ['itemid' => $data->id]);
+    // Create records for the learning paths
+    foreach ($data->itempaths as $itempath) {
+        $DB->insert_record('course_shopsettings_paths', ['itemid' => $data->id, 'pathid' => $itempath]);
+    }
+
     // Delete course_shoptag records.
     $DB->delete_records('course_shoptag', ['itemid' => $data->id]);
 
     // Find shoptag ids.
     $tags = preg_split('/\s*,\s*/', $data->tags);
-    $newcourseshoptagrecord = new stdClass();
+    $newcourseshoptagrecord = (object)[];
     $newcourseshoptagrecord->itemid = $data->id;
     foreach ($tags as $tag) {
         // Check if the tag exists for the company and if it doesn't then create a new record for the tag for the current company
         if ($tag == ''){
             $st = $DB->get_record('shoptag', ['tag' => $tag]);
         } else if (!$st = $DB->get_record('shoptag', ['tag' => $tag, 'companyid' => $companyid])) {
-            $st = new stdClass();
+            $st = (object)[];
             $st->tag = $tag;
             $st->companyid = $companyid;
             $st->id = $DB->insert_record('shoptag', $st, true);
