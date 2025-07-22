@@ -51,12 +51,12 @@ class iomad_courses_table extends table_sql {
                                            array('courseid' => $row->courseid));
         $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
 
-        if($row->visible == 0) {        
+        if($row->visible == 0) {
             $return = "<span class=\"dimmed_text\">";
         } elseif($row->visible == 1) {
         	   $return = "";
         }
- 
+
         $first = true;
         foreach ($companies as $company) {
             if ($first) {
@@ -68,11 +68,11 @@ class iomad_courses_table extends table_sql {
                            "'>$company->shortname</a>";
             }
         }
-        
-        if($row->visible == 0) {        
+
+        if($row->visible == 0) {
             $return .= "</span>";
         }
-        
+
         return $return;
     }
 
@@ -85,20 +85,20 @@ class iomad_courses_table extends table_sql {
         global $output;
 
         $courseurl = "/course/view.php";
-        
-        if($row->visible == 0) {        
+
+        if($row->visible == 0) {
             $coursereturn = "<span class=\"dimmed_text\">";
         } elseif($row->visible == 1) {
         	   $coursereturn = "";
         }
-        
+
         $coursereturn .= "<a href='" . new moodle_url($courseurl, array('id' => $row->courseid)) .
                "'>" . format_string($row->coursename, true, 1) . "</a>";
-               
-        if($row->visible == 0) {        
+
+        if($row->visible == 0) {
             $coursereturn .= "</span>";
         }
-        
+
         return $coursereturn;
 
     }
@@ -110,39 +110,53 @@ class iomad_courses_table extends table_sql {
      */
     public function col_licensed($row) {
         global $USER, $companycontext, $company, $OUTPUT, $DB;
-        
-        // Apply styling if the course is hidden
-        if($row->visible == 0) {        
-            $licenseselectoutput = "<span class=\"dimmed_text\">";
-        } elseif($row->visible == 1) {
-            $licenseselectoutput = "";        
-        }
+
+        // Is this a course the company manages themselves?
+        $canbemanaged = false;
 
         // Deal with self enrol.
         if ($DB->get_record('enrol', array('courseid' => $row->courseid, 'enrol' => 'self', 'status' => 0))) {
             $row->licensed = 3;
-            $licenseselectoutput = get_string('pluginname', 'enrol_self');
+        }
+
+        // If it's not a license course and it's in the company_created_courses table - then we can do more things with it.
+        if (($row->licensed == 0 || $row->licensed == 3) &&
+             $row->shared == 0 &&
+             $DB->get_record('company_created_courses', ['companyid' => $company->id, 'courseid' => $row->courseid])) {
+            $canbemanaged = true;
+        }
+
+        // Apply styling if the course is hidden
+        if($row->visible == 0) {
+            $licenseselectoutput = "<span class=\"dimmed_text\">";
+        } elseif($row->visible == 1) {
+            $licenseselectoutput = "";
         }
 
         if (!empty($USER->editing) &&
-        iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext)) {
+            (iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext) ||
+             ($canbemanaged && iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)))) {
+            $hidelicensed = !iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext);
 
             $editable = new \block_iomad_company_admin\output\courses_license_editable($company,
                                                           $companycontext,
                                                           $row,
-                                                          $row->licensed);
+                                                          $row->licensed,
+                                                          $hidelicensed);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 
         } else {
             if ($row->licensed == 0) {
-                $licenseselectoutput .= get_string('no');
+                $licenseselectoutput .= get_string('pluginname', 'enrol_manual');
             } else if ($row->licensed == 1) {
                 $licenseselectoutput .= get_string('yes');
+            } else if ($row->licensed == 3) {
+                $licenseselectoutput .= get_string('pluginname', 'enrol_self');
             }
         }
-        
-        if($row->visible == 0) {        
+
+        if($row->visible == 0) {
             $licenseselectoutput .= "</span>";
         }
 
@@ -176,11 +190,11 @@ class iomad_courses_table extends table_sql {
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 
         } elseif($row->visible == 0) {
-        	
+
             return "<span class=\"dimmed_text\">" . $options[$value] . "</span>";
-            
+
         } elseif($row->visible == 1){
-        	
+
             return $options[$value];
         }
     }
@@ -206,11 +220,11 @@ class iomad_courses_table extends table_sql {
                                                           $row->shared);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
-        
+
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $sharedselectoptions[$row->shared] . "</span>";
-        
+
         } else if($row->visible == 1) {
 
             return $sharedselectoptions[$row->shared];
@@ -253,7 +267,7 @@ class iomad_courses_table extends table_sql {
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $row->validlength . "</span>";
-        
+
         } else if($row->visible == 1) {
 
             return $row->validlength;
@@ -295,7 +309,7 @@ class iomad_courses_table extends table_sql {
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $row->expireafter . "</span>";
-        
+
         } else if($row->visible == 1) {
 
             return $row->expireafter;
@@ -337,9 +351,9 @@ class iomad_courses_table extends table_sql {
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $row->warnexpire . "</span>";
-        
+
         } else if($row->visible == 1) {
-        	
+
             return $row->warnexpire;
         }
 
@@ -380,9 +394,9 @@ class iomad_courses_table extends table_sql {
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $row->warnnotstarted . "</span>";
-        
+
         } else if($row->visible == 1) {
-        	
+
             return $row->warnnotstarted;
         }
     }
@@ -422,9 +436,9 @@ class iomad_courses_table extends table_sql {
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $row->warncompletion . "</span>";
-        
+
         } else if($row->visible == 1) {
-        	
+
             return $row->warncompletion;
         }
     }
@@ -464,9 +478,9 @@ class iomad_courses_table extends table_sql {
         } else if($row->visible == 0) {
 
             return "<span class=\"dimmed_text\">" . $row->notifyperiod . "</span>";
-        
+
         } else if($row->visible == 1) {
-        	
+
             return $row->notifyperiod;
         }
     }
@@ -505,7 +519,7 @@ class iomad_courses_table extends table_sql {
 
 
         } else {
-        	
+
             $gradereturn = "";
             if ($row->hasgrade) {
                 $gradereturn = get_string('yes');
@@ -516,13 +530,13 @@ class iomad_courses_table extends table_sql {
             if ($row->visible == 0) {
                 return "<span class=\"dimmed_text\">" . $gradereturn . "</span>";
             } elseif ($row->visible == 1) {
-                return $gradereturn;        
-            }     
+                return $gradereturn;
+            }
 
         }
 
     }
-    
+
     /**
      * Generate the display of the course visibility column.
      * @param object $user the table row being output.
@@ -530,14 +544,14 @@ class iomad_courses_table extends table_sql {
      */
     public function col_coursevisibility($row) {
         global $output;
-        
-        if ($row->visible == 0) {        
+
+        if ($row->visible == 0) {
             $visiblereturn = "<span class=\"dimmed_text\"><i class='icon fa fa-eye-slash fa-fw ' title='" . get_string('hidden', 'badges') . "' role='img' aria-label='" . get_string('hidden', 'badges') . "'></i></span>";
         } elseif($row->visible == 1) {
             $visiblereturn = "<i class='icon fa fa-eye fa-fw ' title='" . get_string('visible', 'badges') . "' role='img' aria-label='" . get_string('visible', 'badges') . "'></i>";
-        }   
-            
-        
+        }
+
+
         return $visiblereturn;
 
     }
@@ -568,21 +582,21 @@ class iomad_courses_table extends table_sql {
 
             $actionsoutput .= html_writer::start_tag('div');
             // Handle course visibility action
-            if (iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext) || 
-            (iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) && 
+            if (iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext) ||
+            (iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
             $companycreatedcourse)) {
-                $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";            
+                $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
                 $linkparams = $params;
                 if (!empty($params['coursesearchtext'])) {
                     $linkparams['coursesearch'] = $params['coursesearchtext'];
-                }             
+                }
                 $linkparams['sesskey'] = sesskey();
 
                 if($row->visible == 1) {
                     $linkparams['hideid'] = $row->courseid;
                     $hideurl = new moodle_url($linkurl, $linkparams);
                     $actionsoutput .= "<a href='$hideurl'><i class='icon fa fa-eye fa-fw ' title='" . get_string('hide') . "' role='img' aria-label='" . get_string('hide') . "'></i></a>";
-                    
+
                 } else if($row->visible == 0) {
                     $linkparams['showid'] = $row->courseid;
                     $showurl = new moodle_url($linkurl, $linkparams);
@@ -607,7 +621,7 @@ class iomad_courses_table extends table_sql {
                 }
 
                 // Handle course delete action.
-                if ($row->shared == 0 && 
+                if ($row->shared == 0 &&
                     (iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext) ||
                     iomad::has_capability('block/iomad_company_admin:deletecourses', $companycontext))) {
                     $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
@@ -633,7 +647,7 @@ class iomad_courses_table extends table_sql {
                 }
 
                 // Handle course delegation action - give to company or remove.
-                if (($companycreatedcourse || $canbemanaged) && 
+                if (($companycreatedcourse || $canbemanaged) &&
                     iomad::has_capability('block/iomad_company_admin:delegatecourse', $companycontext)) {
                     $linkurl = "/blocks/iomad_company_admin/iomad_courses_form.php";
                     $linkparams = $params;
