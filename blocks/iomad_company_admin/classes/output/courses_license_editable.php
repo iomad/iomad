@@ -57,7 +57,7 @@ class courses_license_editable extends \core\output\inplace_editable {
      * @param \stdClass[] $profileroles The list of roles that should be visible in a users profile.
      * @param \stdClass[] $userroles The list of user roles.
      */
-    public function __construct($company, $companycontext, $course, $currentvalue) {
+    public function __construct($company, $companycontext, $course, $currentvalue, $hidelicensed = false) {
 
         // Check capabilities to get editable value.
         $editable = iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
@@ -68,9 +68,14 @@ class courses_license_editable extends \core\output\inplace_editable {
         $value = $currentvalue;
 
         // Remember these for the display value.
-        $this->licenseoptions = ['0' => get_string('no'),
-                                 '1' => get_string('yes'),
+        $this->licenseoptions = ['0' => get_string('pluginname', 'enrol_manual'),
+                                 '1' => get_string('pluginname', 'enrol_license'),
                                  '3' => get_string('pluginname', 'enrol_self')];
+
+        // Do we show the licensed option?
+        if ($hidelicensed) {
+            unset($this->licenseoptions[1]);
+        }
 
         $this->context = $companycontext;
 
