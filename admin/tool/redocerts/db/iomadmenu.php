@@ -26,12 +26,11 @@
 function tool_redocerts_menu() {
 
         return array(
-            'users' => array(
+            'redocerts' => array(
                 'category' => 'CourseAdmin',
                 'tab' => 3,
                 'name' => get_string('pluginname', 'tool_redocerts'),
                 'url' => '/admin/tool/redocerts/index.php',
-		// 'cap' => 'local/report_users:redocertificates',
                 'cap' => 'tool/redocerts:redocertificates',
                 'icondefault' => 'report',
                 'style' => 'report',
