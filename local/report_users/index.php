@@ -196,7 +196,7 @@ if (!empty($fieldnames)) {
                 ${$fieldname} = $paramarray[${$fieldname}];
             }
         }
-        if (!empty(${$fieldname}) ) {
+        if (!empty(${$fieldname} && ${$fieldname} != -1) ) {
             $idlist[0] = "We found no one";
             $fieldsql = $DB->sql_compare_text('data')." LIKE '%".${$fieldname}."%'
                                                         AND fieldid = $id";
