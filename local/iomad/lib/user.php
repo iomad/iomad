@@ -440,7 +440,8 @@ class company_user {
 
                 foreach ($ues as $ue) {
                     if ( $ue->enrolmentinstance->courseid == $user->courseid ) {
-                        $courseenrolmentmanager->unenrol_user($ue);
+                        list ($instance, $plugin) = $courseenrolmentmanager->get_user_enrolment_components($ue);
+                        $plugin->unenrol_user($instance, $ue->userid);
                     }
                 }
                 if ($shared) {
@@ -486,7 +487,8 @@ class company_user {
 
                     foreach ($ues as $ue) {
                         if ( $ue->enrolmentinstance->courseid == $courseid ) {
-                            $courseenrolmentmanager->unenrol_user($ue);
+                            list ($instance, $plugin) = $courseenrolmentmanager->get_user_enrolment_components($ue);
+                            $plugin->unenrol_user($instance, $ue->userid);
                         }
                     }
                     if ($shared) {
