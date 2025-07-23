@@ -168,7 +168,7 @@ $sql = 'FROM {course_shopsettings} css
         AND (css.allow_single_purchase = 1 or css.id = sbp.itemid
                                               AND sbp.id = (SELECT id FROM {course_shopblockprice}
                                               WHERE itemid = css.id ORDER BY price LIMIT 1 ))
-        AND (ilp.id is null or ilp.id is not null AND ilp.id in (SELECT path FROM {iomad_learningpathcourse} WHERE path = ilp.id))
+        AND (ilp.id IS NULL OR (ilp.id IS NOT NULL AND ilp.id in (SELECT path FROM {iomad_learningpathcourse} WHERE path = ilp.id)))
         ' . $tagwhere . $searchwhere . $typewhere . '
         GROUP BY css.id, sbp.id ORDER BY css.name';
 
