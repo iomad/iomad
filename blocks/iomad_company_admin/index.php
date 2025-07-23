@@ -218,7 +218,6 @@ foreach ($plugins as $plugintype) {
     }
 }
 
-
 $somethingtodisplay = false;
 foreach ($menus as $key => $menu) {
     $tab = $menu['tab'];
