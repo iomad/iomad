@@ -57,10 +57,47 @@ if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:compa
                                            WHERE companyid = :companyid
                                            AND userid = :userid",
                                           ['companyid' => $company, 'userid' => $USER->id]))) {
+    // Deal with any potential theme changes.
+    if ($companyrec = $DB->get_record('company', ['id' => $company])) {
+        if ($companyrec->theme != $SESSION->theme) {
+            try {
+                $themeconfig = theme_config::load($companyrec->theme);
+                // Makes sure the theme can be loaded without errors.
+                if ($themeconfig->name === $companyrec->theme) {
+                    $SESSION->theme = $companyrec->theme;
+                } else {
+                    unset($SESSION->theme);
+                }
+                unset($themeconfig);
+            } catch (Exception $e) {
+                debugging('Failed to set the theme from the company hostname setting.', DEBUG_DEVELOPER, $e->getTrace());
+            }
+        }
+    }
     $SESSION->currenteditingcompany = $company;
     $DB->set_field('company_users', 'lastused', time(), ['userid' => $USER->id, 'companyid' => $company]);
     if (!empty($companyuser) && $companyuser->managertype == 0) {
         redirect(new moodle_url('/my'));
+    }
+}
+
+// Change the theme if necessary.
+if (!empty($company) && $company != $SESSION->currenteditingcompany) {
+    if ($companyrec = $DB->get_record('company', ['id' => $company])) {
+        if ($companyrec->theme != $SESSION->theme) {
+            try {
+                $themeconfig = theme_config::load($companyrec->theme);
+                // Makes sure the theme can be loaded without errors.
+                if ($themeconfig->name === $companyrec->theme) {
+                    $SESSION->theme = $companyrec->theme;
+                } else {
+                    unset($SESSION->theme);
+                }
+                unset($themeconfig);
+            } catch (Exception $e) {
+                debugging('Failed to set the theme from the company hostname setting.', DEBUG_DEVELOPER, $e->getTrace());
+            }
+        }
     }
 }
 
