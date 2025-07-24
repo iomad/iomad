@@ -1024,10 +1024,10 @@ class microlearning {
                                                    AND mtu.reminder1_delivered = 0
                                                    AND mtu.reminder1_date IS NOT NULL
                                                    AND (
-                                                     mtu.reminder1_date < mtu.due_date + mtu.schedule_date
+                                                     mtu.reminder1_date < mtu.due_date
                                                      OR mtu.due_date = 0
                                                    )
-                                                   AND mtu.reminder1_date <      :runtime",
+                                                   AND mtu.reminder1_date < :runtime",
                                                    array('runtime' => $runtime))) {
             foreach ($reminder1users as $reminder1user) {
                 $reminder1user->reminder1_delivered = true;
@@ -1059,7 +1059,7 @@ class microlearning {
                                                    AND mtu.reminder2_delivered = 0
                                                    AND mtu.reminder2_date IS NOT NULL
                                                    AND (
-                                                     mtu.reminder2_date < mtu.due_date + mtu.schedule_date
+                                                     mtu.reminder2_date < mtu.due_date
                                                      OR mtu.due_date = 0
                                                    )
                                                    AND mtu.reminder2_date < :runtime",
