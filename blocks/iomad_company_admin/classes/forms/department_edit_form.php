@@ -33,6 +33,7 @@ class department_edit_form extends company_moodleform {
     protected $output = null;
     protected $departmentid;
     protected $parentid;
+    protected $department;
 
     public function __construct($actionurl, $companyid, $departmentid, $output) {
         global $CFG, $DB;
