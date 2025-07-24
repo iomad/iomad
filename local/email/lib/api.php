@@ -976,6 +976,12 @@ class EmailTemplate {
         }
 
         $email = local_email::get_templates();
+
+        // Check if the user's lang is set and set it to default if not.
+        if (empty($this->user->lang)) {
+            $this->user->lang = current_language();
+        }
+
         // Try to get it out of the database, otherwise get it from config file.
         if (!isset($companyid) || !$template = $DB->get_record('email_template', array('name' => $templatename,
                                                                                        'companyid' => $companyid,
