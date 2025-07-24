@@ -588,6 +588,14 @@ class PHPMailer
     public static $validator = 'php';
 
     /**
+     * IOMAD - we want to add a no reply address field and need to define it here
+     * so PHP2+ doesn't complain.
+     *
+     * @var string
+     */
+     public $noreplyaddress = '';
+
+    /**
      * An instance of the SMTP sender class.
      *
      * @var SMTP
