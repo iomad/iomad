@@ -31,6 +31,10 @@ require_once($CFG->dirroot . '/user/editlib.php');
 require_once('lib.php');
 
 class login_signup_form extends moodleform implements renderable, templatable {
+
+    // IOMAD.
+    protected $company;
+
     function definition() {
         global $USER, $CFG, $SESSION;
 
