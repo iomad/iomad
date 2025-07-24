@@ -40,7 +40,44 @@ $systemcontext = context_system::instance();
 // Set the session to a user if they are editing a company other than their own.
 if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)
     || $DB->get_record('company_users', array('managertype' => 1, 'companyid' => $company, 'userid' => $USER->id)))) {
+    // Deal with any potential theme changes.
+    if ($companyrec = $DB->get_record('company', ['id' => $company])) {
+        if ($companyrec->theme != $SESSION->theme) {
+            try {
+                $themeconfig = theme_config::load($companyrec->theme);
+                // Makes sure the theme can be loaded without errors.
+                if ($themeconfig->name === $companyrec->theme) {
+                    $SESSION->theme = $companyrec->theme;
+                } else {
+                    unset($SESSION->theme);
+                }
+                unset($themeconfig);
+            } catch (Exception $e) {
+                debugging('Failed to set the theme from the company hostname setting.', DEBUG_DEVELOPER, $e->getTrace());
+            }
+        }
+    }
     $SESSION->currenteditingcompany = $company;
+}
+
+// Change the theme if necessary.
+if (!empty($company) && $company != $SESSION->currenteditingcompany) {
+    if ($companyrec = $DB->get_record('company', ['id' => $company])) {
+        if ($companyrec->theme != $SESSION->theme) {
+            try {
+                $themeconfig = theme_config::load($companyrec->theme);
+                // Makes sure the theme can be loaded without errors.
+                if ($themeconfig->name === $companyrec->theme) {
+                    $SESSION->theme = $companyrec->theme;
+                } else {
+                    unset($SESSION->theme);
+                }
+                unset($themeconfig);
+            } catch (Exception $e) {
+                debugging('Failed to set the theme from the company hostname setting.', DEBUG_DEVELOPER, $e->getTrace());
+            }
+        }
+    }
 }
 
 // Check if there are any companies.
