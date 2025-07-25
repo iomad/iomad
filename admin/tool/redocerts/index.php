@@ -31,7 +31,22 @@ require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 
 iomad::require_capability('tool/redocerts:redocertificates', context_system::instance());
 
-admin_externalpage_setup('toolredocerts');
+$systemcontext = context_system::instance();
+if (has_capability('moodle/site:configview', $systemcontext)) {
+    admin_externalpage_setup(
+        'toolredocerts',
+        null,
+        [],
+        new moodle_url('/local/iomadcustompage/index.php'),
+        ['pagelayout' => 'admin', 'nosearch' => true]
+    );
+} else {
+    $PAGE->set_pagelayout('standard');
+    $PAGE->set_url('/admin/tool/redocerts/index.php');
+}
+$PAGE->set_context($systemcontext);
+$PAGE->set_secondary_navigation(false);
+$PAGE->set_heading('');
 
 echo $OUTPUT->header();
 

@@ -29,30 +29,111 @@ require_once("$CFG->libdir/formslib.php");
  * Site wide search-redocerts form.
  */
 class tool_redocerts_form extends moodleform {
+    //protected $systemcontext;
+    //protected $companyid;
+    
     function definition() {
         global $CFG, $DB;
-        $users = $DB->get_records_sql_menu("SELECT id, concat(firstname, ' ', lastname) AS fullname
-                                            FROM {user}
-                                            WHERE deleted = 0
-                                            ORDER BY fullname", array());
-        $courses = $DB->get_records_menu('course', array(), 'fullname', 'id,fullname');
-        $companies = $DB->get_records_menu('company', array(), 'name', 'id,name');
-        $allusers = array(0 => get_string('all')) + $users;
-        $allcourses = array(0 => get_string('all')) + $courses;
-        $allcompanies = array(0 => get_string('all')) + $companies;
-                                            
+        $systemcontext = context_system::instance();
+        $companyid = iomad::get_my_companyid($systemcontext);
+
+        // Gathering Companies, Courses, and Users for lists
+        if (false && iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+            // Array of all User names identified by User ID
+            $users = $DB->get_records_sql_menu(
+                                                "SELECT
+                                                    id,
+                                                    concat(firstname, ' ', lastname) AS fullname
+                                                FROM {user}
+                                                WHERE deleted = 0
+                                                ORDER BY fullname",
+                                                array());
+
+            // Array of all Course name identified by ID
+            $courses = $DB->get_records_menu('course', array(), 'fullname', 'id,fullname');
+
+            // Array of all Company names identified by ID
+            $companies = $DB->get_records_menu('company', array(), 'name', 'id,name');
+
+            // All companies, courses, and users
+            $allusers = array(0 => get_string('all')) + $users;
+            $allcourses = array(0 => get_string('all')) + $courses;
+            $allcompanies = array(0 => get_string('all')) + $companies;
+            $disable_if_unviewable = array();
+        } else {
+            // Array of this company's name identified by Company ID
+            $mycompanies = $DB->get_records_sql_menu(
+                                                "SELECT
+                                                    id,
+                                                    name
+                                                FROM mdl_company
+                                                WHERE id = $companyid
+                                                ORDER BY name;",
+                                                array());
+
+            // Get all child companies and grandchildren and greatgrandchildren and so on...
+            $iterator = new ArrayIterator($mycompanies);
+            foreach ($iterator as $thiscompanyid => $thiscompanyname) {
+                $mychildren = $DB->get_records_sql_menu(
+                                                "SELECT
+                                                    id,
+                                                    name 
+                                                FROM mdl_company
+                                                WHERE parentid = $thiscompanyid;",
+                                                array());
+                
+                foreach ($mychildren as $child) {
+                    $iterator->append($child);
+                }
+            }
+
+            $myusers = array();
+            $mycourses = array();
+            foreach ($iterator->getArrayCopy() as $mycompanyid => $mycompanyname) {
+                // Array of this company's (and company's children's) User names identified by User ID
+                $myusers = array_merge($myusers, $DB->get_records_sql_menu(
+                                                "SELECT
+                                                    mdl_user.id,
+                                                    concat(firstname, ' ', lastname) AS fullname
+                                                FROM mdl_user
+                                                INNER JOIN mdl_company
+                                                    ON mdl_user.institution = mdl_company.shortname
+                                                WHERE mdl_user.deleted = 0 AND mdl_company.id = $mycompanyid
+                                                ORDER BY fullname;",
+                                                array()));
+
+                // Array of this company's (and company's children's) Course names identified by Course ID
+                $mycourses = array_merge($mycourses, $DB->get_records_sql_menu(
+                                                "SELECT
+                                                    mdl_course.id,
+                                                    mdl_course.fullname
+                                                FROM mdl_course
+                                                INNER JOIN mdl_company_course
+                                                    ON mdl_course.id=mdl_company_course.courseid
+                                                INNER JOIN mdl_company
+                                                    ON mdl_company_course.companyid=mdl_company.id
+                                                WHERE mdl_company.id = $mycompanyid
+                                                ORDER BY mdl_course.fullname;",
+                                                array()));
+            }
+
+            // All companies, courses, and users that this user is allowed to select
+            $allusers = array(0 => get_string('all')) + $myusers;
+            $allcourses = array(0 => get_string('all')) + $mycourses;
+            $allcompanies = $iterator->getArrayCopy(); // array(0 => get_string('all')) + $mycompany;  'all' includes companies they don't have access to
+            $disable_if_unviewable = array('disabled' => true);
+        }
 
         $mform = $this->_form;
 
         $mform->addElement('header', 'searchhdr', get_string('pluginname', 'tool_redocerts'));
         $mform->setExpanded('searchhdr', true);
-
         $mform->addElement('autocomplete', 'user', get_string('searchusers', 'tool_redocerts'), $allusers);
         $mform->addElement('text', 'userid', get_string('userid', 'tool_redocerts'));
         $mform->addElement('autocomplete', 'course', get_string('searchcourses', 'tool_redocerts'), $allcourses);
         $mform->addElement('text', 'courseid', get_string('courseid', 'tool_redocerts'));
         $mform->addElement('autocomplete', 'company', get_string('searchcompanies', 'tool_redocerts'), $allcompanies);
-        $mform->addElement('text', 'companyid', get_string('companyid', 'tool_redocerts'));
+        $mform->addElement('text', 'companyid', get_string('companyid', 'tool_redocerts'), $disable_if_unviewable);
         $mform->addElement('text', 'idnumber', get_string('idnumber', 'tool_redocerts'));
         $mform->addElement('date_time_selector', 'fromdate', get_string('fromdate', 'tool_redocerts'), array('optional' => true));
         $mform->addElement('date_time_selector', 'todate', get_string('todate', 'tool_redocerts'), array('optional' => true));
