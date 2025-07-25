@@ -300,6 +300,16 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
 
         \core\session\manager::apply_concurrent_login_limit($user->id, session_id());
 
+        // IOMAD
+        // Update the company for the user if there is one.
+        if ($DB->get_manager()->table_exists('company')) {
+            $mycompanyid = iomad::get_my_companyid(context_system::instance(), false);
+            if ($mycompanyid > 0) {
+                $mycompany = new company($mycompanyid);
+                $SESSION->theme = $mycompany->get_theme();
+            }
+        }
+
         // sets the username cookie
         if (!empty($CFG->nolastloggedin)) {
             // do not store last logged in user in cookie
