@@ -310,9 +310,17 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
 
         // IOMAD
         // Update the company for the user if there is one.
-        if ($DB->get_manager()->table_exists('company') &&
-            !empty($SESSION->currenteditingcompany)) {
-            $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $SESSION->currenteditingcompany]);
+        if ($DB->get_manager()->table_exists('company')) {
+            if (!empty($SESSION->currenteditingcompany)) {
+                $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $SESSION->currenteditingcompany]);
+            } else {
+                $mycompanyid = iomad::get_my_companyid(context_system::instance(), false);
+                if ($mycompanyid > 0) {
+                    $mycompany = new company($mycompanyid);
+                    $SESSION->theme = $mycompany->get_theme();
+                    $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $mycompanyid]);
+                }
+            }
         }
 
         // sets the username cookie
