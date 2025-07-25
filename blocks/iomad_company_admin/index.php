@@ -59,7 +59,8 @@ if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:compa
                                           ['companyid' => $company, 'userid' => $USER->id]))) {
     // Deal with any potential theme changes.
     if ($companyrec = $DB->get_record('company', ['id' => $company])) {
-        if ($companyrec->theme != $SESSION->theme) {
+        if (!empty($SESSION->theme) &&
+            $companyrec->theme != $SESSION->theme) {
             try {
                 $themeconfig = theme_config::load($companyrec->theme);
                 // Makes sure the theme can be loaded without errors.
