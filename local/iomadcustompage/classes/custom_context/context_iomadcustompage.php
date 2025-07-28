@@ -205,12 +205,20 @@ class context_iomadcustompage extends context {
      * @return string cleanup SQL
      */
     protected static function get_cleanup_sql() {
-      return "
-                SELECT c.*
-                  FROM {context} c
-       LEFT OUTER JOIN {local_iomadcustompages} sp ON c.instanceid = sp.id
-                 WHERE sp.id IS NULL AND c.contextlevel = ".CONTEXT_CUSTOMPAGE."
-             ";
+        global $DB;
+
+        $sql = "";
+        if ($DB->get_manager()->table_exists('local_iomadcustompages')) {
+            $sql = "
+                      SELECT c.*
+                        FROM {context} c
+             LEFT OUTER JOIN {local_iomadcustompages} sp ON c.instanceid = sp.id
+                       WHERE sp.id IS NULL AND c.contextlevel = ".CONTEXT_CUSTOMPAGE."
+                   ";
+
+        }
+
+        return $sql;
     }
 
   /**
