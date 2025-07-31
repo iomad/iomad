@@ -187,16 +187,18 @@ class context_iomadcustompage extends context {
     protected static function create_level_instances() {
         global $DB;
 
-        $sql = "SELECT ".CONTEXT_CUSTOMPAGE.", sp.id
-                  FROM {local_iomadcustompages} sp
-                 WHERE NOT EXISTS (SELECT 'x'
-                                     FROM {context} cx
-                                    WHERE sp.id = cx.instanceid AND cx.contextlevel=".CONTEXT_CUSTOMPAGE.")";
-        $contextdata = $DB->get_recordset_sql($sql);
-        foreach ($contextdata as $context) {
-            context::insert_context_record(CONTEXT_CUSTOMPAGE, $context->id, null);
+        if ($DB->get_manager()->table_exists('local_iomadcustompages')) {
+            $sql = "SELECT ".CONTEXT_CUSTOMPAGE.", sp.id
+                      FROM {local_iomadcustompages} sp
+                     WHERE NOT EXISTS (SELECT 'x'
+                                         FROM {context} cx
+                                        WHERE sp.id = cx.instanceid AND cx.contextlevel=".CONTEXT_CUSTOMPAGE.")";
+            $contextdata = $DB->get_recordset_sql($sql);
+            foreach ($contextdata as $context) {
+                context::insert_context_record(CONTEXT_CUSTOMPAGE, $context->id, null);
+            }
+            $contextdata->close();
         }
-        $contextdata->close();
     }
 
     /**
@@ -207,7 +209,10 @@ class context_iomadcustompage extends context {
     protected static function get_cleanup_sql() {
         global $DB;
 
-        $sql = "";
+        $sql = " SELECT c.*
+                 FROM {context} c
+                 WHERE 1=2";
+
         if ($DB->get_manager()->table_exists('local_iomadcustompages')) {
             $sql = "
                       SELECT c.*
