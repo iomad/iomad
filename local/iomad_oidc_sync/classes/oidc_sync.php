@@ -225,10 +225,10 @@ class oidc_sync {
                 // Sync the profile data.
                 foreach ($mappedfields as $profilefield => $mapping) {
                     if (!empty($adduser[$mapping])) {
-                        $userrec->$profilefield = $adduser[$mapping];
+                        $founduser->$profilefield = $adduser[$mapping];
                     }
                 }
-                profile_save_data($userrec);
+                profile_save_data($founduser);
 
                 // Store this for later.
                 $foundusers[] = $founduser->id;
