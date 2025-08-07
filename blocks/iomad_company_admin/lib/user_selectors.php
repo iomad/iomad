@@ -629,7 +629,7 @@ class potential_company_course_user_selector extends company_user_selector_base 
             unset ($selectedcourses[0]);
             $countsql = "";
             $coursesql = " 1 = 2";
-            if (!empty($companycourses)) {
+            if (!empty($selectedcourses)) {
                 $coursesql = "e.courseid IN (" . implode(',', array_keys($selectedcourses)) . ") ";
                 $countsql = " HAVING count(ue.enrolid) = " . count($selectedcourses);
             }
