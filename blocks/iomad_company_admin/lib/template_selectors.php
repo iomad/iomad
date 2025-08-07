@@ -169,7 +169,7 @@ class potential_company_templates_selector extends company_template_selector_bas
         $sharedsql = " AND ct.id NOT IN (SELECT cct.templateid FROM {company_comp_templates} cct
                                          LEFT JOIN {iomad_templates} it
                                          ON (cct.templateid = it.templateid)
-                                         WHERE it.shared=1 ) ";
+                                         WHERE it.shared = 1 OR it.shared != 2 OR (cct.companyid = :companyid)) ";
 
         $fields      = 'SELECT ' . $this->required_fields_sql('ct');
         $countfields = 'SELECT COUNT(1)';
