@@ -239,7 +239,7 @@ if (!empty($fileimport)) {
                     $completionrec->companyid = $company->id;
                     $upt->track('company', $company->get_name());
                 } else {
-                    if (!$usercompany = $DB->get_record('company', array('id', $completionrec->companyid))) {
+                    if (!$usercompany = $DB->get_record('company', array('id' => $completionrec->companyid))) {
                         $upt->track('status', get_string('missingfield', 'error', 'companyid'), 'error');
                         $upt->track('company', $errorstr, 'error');
                         $line[] = get_string('missingfield', 'error', 'companyid');
