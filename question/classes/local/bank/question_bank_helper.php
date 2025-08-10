@@ -339,6 +339,7 @@ class question_bank_helper {
         int $userid,
         int $notincourseid = 0,
         ?context $filtercontext = null,
+        array $havingcap = [],
     ): array {
         $prefs = get_user_preferences(self::RECENTLY_VIEWED, null, $userid);
         $contextids = !empty($prefs) ? explode(',', $prefs) : [];
@@ -358,6 +359,9 @@ class question_bank_helper {
             }
             [, $cm] = get_module_from_cmid($context->instanceid);
             if (!empty($notincourseid) && $notincourseid == $cm->course) {
+                continue;
+            }
+            if (!empty($havingcap) && !(new question_edit_contexts($context))->have_one_cap($havingcap)) {
                 continue;
             }
             $record = self::get_formatted_bank($cm, filtercontext: $filtercontext);
@@ -525,13 +529,16 @@ class question_bank_helper {
         $defaultyactivityname = self::get_default_question_bank_activity_name();
         $qbanks = $modinfo->get_instances_of($defaultyactivityname);
 
+        $whereclause = "AND m.name = '" . $defaultyactivityname . "'";
+
         if (!empty($qbanks)) {
             $sql = "SELECT cm.id
                       FROM {course_modules} cm
                       JOIN {modules} m ON m.id = cm.module
-                      JOIN {{$defaultyactivityname}} q ON q.id = cm.instance AND cm.module = m.id
+                      JOIN {{$defaultyactivityname}} q ON q.id = cm.instance
                      WHERE cm.course = :course
-                       AND q.type = :type";
+                       AND q.type = :type " .
+            $whereclause;
 
             return $DB->get_fieldset_sql($sql, ['type' => $subtype, 'course' => $course->id]);
         }
@@ -582,7 +589,7 @@ class question_bank_helper {
             }
         }
 
-        if (strlen($bankname) > self::BANK_NAME_MAX_LENGTH) {
+        if (\core_text::strlen($bankname) > self::BANK_NAME_MAX_LENGTH) {
             throw new \coding_exception(
                 'The provided bankname is too long for the database field.',
                 'Use question_bank_helper::get_bank_name_string to get a suitably truncated name.',
@@ -641,7 +648,8 @@ class question_bank_helper {
     public static function has_bank_migration_task_completed_successfully(): bool {
         $defaultbank = self::get_default_question_bank_activity_name();
         $task = manager::get_adhoc_tasks("\\mod_{$defaultbank}\\task\\transfer_question_categories");
-        return empty($task);
+        $subtasks = manager::get_adhoc_tasks("\\mod_{$defaultbank}\\task\\transfer_questions");
+        return empty($task) && empty($subtasks);
     }
 
     /**

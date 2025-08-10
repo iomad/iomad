@@ -467,7 +467,7 @@ class core_renderer extends renderer_base {
      */
     #[\core\attribute\deprecated(null, since: '4.3', mdl: 'MDL-78744', final: true)]
     public function activity_information() {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**
@@ -1387,7 +1387,7 @@ class core_renderer extends renderer_base {
         mdl: 'MDL-83164',
     )]
     protected function render_action_menu_link(\action_menu_link $action) {
-        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([$this, __FUNCTION__]);
         return $this->render_action_menu__link($action);
     }
 
@@ -1400,7 +1400,7 @@ class core_renderer extends renderer_base {
         mdl: 'MDL-83164',
     )]
     protected function render_action_menu_filler(\action_menu_filler $action) {
-        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([$this, __FUNCTION__]);
         return $this->render_action_menu__filler($action);
     }
 
@@ -1413,7 +1413,7 @@ class core_renderer extends renderer_base {
         mdl: 'MDL-83164',
     )]
     protected function render_action_menu_primary(\action_menu_link $action) {
-        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([$this, __FUNCTION__]);
         return $this->render_action_menu__link_primary($action);
     }
 
@@ -1426,7 +1426,7 @@ class core_renderer extends renderer_base {
         mdl: 'MDL-83164',
     )]
     protected function render_action_menu_secondary(\action_menu_link $action) {
-        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([$this, __FUNCTION__]);
         return $this->render_action_menu__link_secondary($action);
     }
 
@@ -2897,7 +2897,7 @@ EOD;
      */
     #[\core\attribute\deprecated('core_renderer::visually_hidden_text()', since: '5.0', mdl: 'MDL-81825')]
     public function sr_text(string $contents): string {
-        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([$this, __FUNCTION__]);
         return $this->visually_hidden_text($contents);
     }
 
@@ -3062,7 +3062,8 @@ EOD;
             'hiddenfields' => (object) ['name' => 'context', 'value' => $this->page->context->id],
             'inputname' => 'q',
             'searchstring' => get_string('search'),
-            ];
+            'grouplabel' => get_string('sitewidesearch', 'search'),
+        ];
         return $this->render_from_template('core/search_input_navbar', $data);
     }
 
@@ -4214,6 +4215,7 @@ EOD;
                     ];
 
                     if ($USER->id != $user->id) {
+                        $cancreatecontact = \core_message\api::can_create_contact($USER->id, $user->id);
                         $iscontact = \core_message\api::is_contact($USER->id, $user->id);
                         $isrequested = \core_message\api::get_contact_requests_between_users($USER->id, $user->id);
                         $contacturlaction = '';
@@ -4226,6 +4228,9 @@ EOD;
                         // If the user is not a contact.
                         if (!$iscontact) {
                             if ($isrequested) {
+                                // Set it to true if a request has been sent.
+                                $cancreatecontact = true;
+
                                 // We just need the first request.
                                 $requests = array_shift($isrequested);
                                 if ($requests->userid == $USER->id) {
@@ -4251,7 +4256,8 @@ EOD;
                             $contacturlaction = 'removecontact';
                             $contactimage = 't/removecontact';
                         }
-                        $userbuttons['togglecontact'] = [
+                        if ($cancreatecontact) {
+                            $userbuttons['togglecontact'] = [
                                 'buttontype' => 'togglecontact',
                                 'title' => get_string($contacttitle, 'message'),
                                 'url' => new moodle_url('/message/index.php', [
@@ -4264,6 +4270,7 @@ EOD;
                                 'linkattributes' => $linkattributes,
                                 'page' => $this->page,
                             ];
+                        }
                     }
                 }
             } else {

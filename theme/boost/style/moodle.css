@@ -28392,10 +28392,14 @@ body.dragging .dragging {
   padding-left: calc(1rem * 3);
 }
 
-.drawers .block_myoverview {
+.page-mycourses .block_myoverview .block-cards {
+  border-top: 1px solid #dee2e6;
+  padding-top: 0.5rem;
+}
+.page-mycourses .drawers .block_myoverview {
   border: 0;
 }
-.drawers .block_myoverview > .card-body {
+.page-mycourses .drawers .block_myoverview > .card-body {
   padding-top: 0 !important; /* stylelint-disable-line declaration-no-important */
   padding-left: 0 !important; /* stylelint-disable-line declaration-no-important */
   padding-right: 0 !important; /* stylelint-disable-line declaration-no-important */
@@ -28691,10 +28695,9 @@ body.behat-site .action-menu .dropdown-subpanel-content.show {
 .icon {
   max-width: 30px;
   max-height: 24px;
-  margin: 0;
+  margin: 0 0.5rem 0 0;
   padding: 0;
   box-sizing: content-box;
-  margin-right: 0.5rem;
 }
 .icon.spacer {
   margin-right: 0;
@@ -29805,6 +29808,10 @@ aside[id^=block-region-side-] .block_recentlyaccesseditems .card:nth-of-type(n+4
 
 .block_timeline .event-action {
   padding-left: 5.55em;
+}
+
+.block_timeline .dropdown-menu .dropdown-item {
+  padding-left: 1.5rem;
 }
 
 .block_settings .block_tree [aria-expanded=true],
@@ -33963,19 +33970,30 @@ body.path-question-type .fitem .col-form-label.visually-hidden:not(legend):not([
 }
 
 .que {
-  clear: left;
   text-align: left;
   margin: 0 auto 1.8em auto;
+  display: flex;
+  align-items: start;
+  gap: 1rem;
+}
+@media (max-width: 767.98px) {
+  .que {
+    flex-direction: column;
+  }
 }
 
 .que .info {
-  float: left;
+  flex-shrink: 0;
   width: 7em;
   padding: 0.5em;
-  margin-bottom: 1.8em;
   background-color: #f8f9fa;
   border: 1px solid #cad0d7;
   border-radius: 2px;
+}
+@media (max-width: 767.98px) {
+  .que .info {
+    width: 100%;
+  }
 }
 
 .que h3.no, .que .no.h3 {
@@ -34006,7 +34024,12 @@ body.path-question-type .fitem .col-form-label.visually-hidden:not(legend):not([
 }
 
 .que .content {
-  margin: 0 0 0 8.5em;
+  flex-grow: 1;
+}
+@media (max-width: 767.98px) {
+  .que .content {
+    width: 100%;
+  }
 }
 
 .que .formulation,
@@ -34354,15 +34377,6 @@ body.path-question-type .mform fieldset.hidden {
   position: relative;
 }
 
-@media (max-width: 767.98px) {
-  .que .info {
-    float: none;
-    width: auto;
-  }
-  .que .content {
-    margin: 0;
-  }
-}
 .qbank_managecategories-item.qbank_managecategories-droptarget-before,
 .qbank_managecategories-item .qbank_managecategories-item.qbank_managecategories-droptarget-before,
 .qbank_managecategories-categorylist.qbank_managecategories-droptarget-before > .qbank_managecategories-item:first-child {
@@ -38252,6 +38266,21 @@ body.reset-style .btn:not(.btn-icon) {
   border-radius: 0.6rem;
 }
 
+/**
+ * Reset the Bootstrap _reboot.scss styles for tables.
+ * That reboot mainly affects tables added by the tiny editor.
+ */
+table:not(.table):not(.ygtvtable) thead,
+table:not(.table):not(.ygtvtable) tbody,
+table:not(.table):not(.ygtvtable) tfoot,
+table:not(.table):not(.ygtvtable) tr,
+table:not(.table):not(.ygtvtable) td,
+table:not(.table):not(.ygtvtable) th {
+  border-color: var(--bs-border-color);
+  border-style: solid;
+  border-width: var(--bs-border-width);
+}
+
 body.behat-site .fixed-top {
   position: absolute;
 }
@@ -38345,7 +38374,7 @@ body {
   height: max(80px, 0.9375rem * 3);
   bottom: calc(max(80px, 0.9375rem * 3) * -1);
   transition: bottom 0.5s;
-  z-index: 1030;
+  z-index: 1020;
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.15);
   font-size: calc(0.9375rem * 1.10);
 }

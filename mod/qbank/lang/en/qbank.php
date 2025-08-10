@@ -26,6 +26,7 @@
 $string['addanotherbank'] = 'Add question bank';
 $string['coursecategory'] = 'Shared teaching resources for category: {$a}';
 $string['courserestore'] = 'Course restore';
+$string['createqbank'] = 'Create question bank {$a}';
 $string['modulename'] = 'Question bank';
 $string['modulename_help'] = 'This activity allows a teacher to create, preview, and edit questions in a database of question categories.
 
@@ -37,6 +38,7 @@ $string['noqbankinstances'] = 'There are no question banks in this course.';
 $string['pluginadministration'] = 'Question bank administration';
 $string['pluginname'] = 'Question bank';
 $string['privacy:metadata'] = 'The Question bank plugin does not store any personal data, core_question automatically tracks all sorts of data for questions.';
+$string['progress_createqbank'] = 'Creating question banks';
 $string['qbank:addinstance'] = 'Add a new question bank';
 $string['qbank:view'] = 'View question bank';
 $string['qbankname'] = 'Question bank name';
@@ -46,5 +48,5 @@ $string['saveandreturn'] = 'Save and return to question bank list';
 $string['sharedbank'] = '{$a} shared question bank';
 $string['showdescription'] = 'Display description on manage question banks page';
 $string['showdescription_help'] = 'If enabled, the description above will be displayed on the manage question bank page just below the link to the bank.';
-$string['transfernotfinished'] = 'Adhoc task \\mod_qbank\\task\\transfer_question_categories has not yet completed or has failed. Some of your pre-installed question banks may not be transferred to mod_qbank instances yet. Any question categories they contained can\'t be shared or managed until the task has completed.';
+$string['transfernotfinished'] = 'The adhoc tasks \\mod_qbank\\task\\transfer_question_categories and \\mod_qbank\\task\\transfer_questions are not yet complete or have failed. Questions previously created in different contexts may not be transferred to course shared question banks yet. Questions can\'t be managed or shared until these tasks are complete.';
 $string['unknownbanktype'] = 'Unknown question bank type {$a}';

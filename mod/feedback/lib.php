@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_feedback\manager;
+
 defined('MOODLE_INTERNAL') || die();
 
 // Include forms lib.
@@ -1123,16 +1125,12 @@ function feedback_get_viewreports_users($cmid, $groups = false) {
  * @uses CONTEXT_MODULE
  * @param int $cmid
  * @param mixed $groups single groupid or array of groupids - group(s) user is in
- * @return object the userrecords
+ * @return stdClass[] the userrecords
  */
 function feedback_get_receivemail_users($cmid, $groups = false) {
-
     $context = context_module::instance($cmid);
 
-    //description of the call below:
-    //get_users_by_capability($context, $capability, $fields='', $sort='', $limitfrom='',
-    //                          $limitnum='', $groups='', $exceptions='', $doanything=true)
-    return get_users_by_capability($context,
+    $allusers = get_users_by_capability($context,
                             'mod/feedback:receivemail',
                             '',
                             'lastname',
@@ -1141,6 +1139,23 @@ function feedback_get_receivemail_users($cmid, $groups = false) {
                             $groups,
                             '',
                             false);
+    if (empty($groups)) {
+        // Here the user that has submitted the feedback is not in any group.
+        [$course, $cm]  = get_course_and_cm_from_cmid($cmid);
+        $groupmode = groups_get_activity_groupmode($cm, $course);
+        if ($groupmode == SEPARATEGROUPS) {
+            // In separate group mode, only the user who can see all groups can see the feedback, so
+            // in turn can receive the notification.
+            $viewallgroupsusers = get_users_by_capability(
+                $context,
+                'moodle/site:accessallgroups',
+                'u.id, u.id'
+            );
+            // Remove users cannot access all groups.
+            $allusers = array_intersect_key($allusers, $viewallgroupsusers);
+        }
+    }
+    return $allusers;
 }
 
 ////////////////////////////////////////////////
@@ -2692,10 +2707,12 @@ function feedback_extend_settings_navigation(settings_navigation $settings, navi
     }
 
     if (has_capability('mod/feedback:viewreports', $context)) {
-        $feedbacknode->add_node($analysisnode);
-        $feedbacknode->add(get_string(($hassecondary ? 'responses' : 'show_entries'), 'feedback'),
-            new moodle_url('/mod/feedback/show_entries.php', ['id' => $settings->get_page()->cm->id]),
-            navigation_node::TYPE_CUSTOM, null, 'responses');
+        if (manager::can_see_others_in_groups($settings->get_page()->cm)) {
+            $feedbacknode->add_node($analysisnode);
+            $feedbacknode->add(get_string(($hassecondary ? 'responses' : 'show_entries'), 'feedback'),
+                new moodle_url('/mod/feedback/show_entries.php', ['id' => $settings->get_page()->cm->id]),
+                navigation_node::TYPE_CUSTOM, null, 'responses');
+        }
     } else {
         $feedbackcompletion = new mod_feedback_completion($feedback, $context, $settings->get_page()->course->id);
         if ($feedbackcompletion->can_view_analysis()) {

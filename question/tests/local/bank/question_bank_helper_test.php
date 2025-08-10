@@ -280,6 +280,33 @@ final class question_bank_helper_test extends \advanced_testcase {
     }
 
     /**
+     * Create a default instance, passing a multibyte-character name.
+     *
+     * The name has more bytes than the max length, but is within the character limit as they are multibyte characters.
+     */
+    public function test_create_default_open_instance_with_multibyte_name(): void {
+        $this->resetAfterTest();
+        self::setAdminUser();
+
+        $coursename = '';
+        while (strlen($coursename) < question_bank_helper::BANK_NAME_MAX_LENGTH) {
+            $coursename .= '🙂';
+        }
+        $course = self::getDataGenerator()->create_course(['shortname' => '🙂']);
+        $bankname = get_string('defaultbank', 'core_question', ['coursename' => $coursename]);
+        $this->assertTrue(strlen($bankname) > question_bank_helper::BANK_NAME_MAX_LENGTH);
+        $this->assertTrue(\core_text::strlen($bankname) < question_bank_helper::BANK_NAME_MAX_LENGTH);
+
+        question_bank_helper::create_default_open_instance($course, $bankname);
+
+        $modinfo = get_fast_modinfo($course);
+        $cminfos = $modinfo->get_instances_of('qbank');
+        $this->assertCount(1, $cminfos);
+        $cminfo = reset($cminfos);
+        $this->assertEquals($bankname, $cminfo->get_name());
+    }
+
+    /**
      * Assert that viewing a question bank logs the view for that user up to a maximum of 5 unique bank views.
      *
      * @return void
@@ -292,6 +319,7 @@ final class question_bank_helper_test extends \advanced_testcase {
         $user = self::getDataGenerator()->create_user();
         $course1 = self::getDataGenerator()->create_course();
         $course2 = self::getDataGenerator()->create_course();
+        self::getDataGenerator()->enrol_user($user->id, $course1->id, 'editingteacher');
         $banks = [];
         $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course1->id]);
         $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course1->id]);
@@ -313,6 +341,16 @@ final class question_bank_helper_test extends \advanced_testcase {
         // Check that the courseid filter works.
         $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id, $course1->id);
         $this->assertCount(3, $recentlyviewed);
+        // We should have the viewed banks in course 2.
+        $courseviewed = array_slice($banks, 3, 3);
+        $this->assertEqualsCanonicalizing(array_column($recentlyviewed, 'modid'), array_column($courseviewed, 'cmid'));
+
+        // Check that the capability filter works.
+        $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id, havingcap: ['moodle/question:useall']);
+        $this->assertCount(2, $recentlyviewed);
+        // We should have the 2 most recently viewed banks in course 1.
+        $capabilityviewed = array_slice($banks, 1, 2);
+        $this->assertEqualsCanonicalizing(array_column($recentlyviewed, 'modid'), array_column($capabilityviewed, 'cmid'));
 
         $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id);
 
@@ -385,6 +423,24 @@ final class question_bank_helper_test extends \advanced_testcase {
         $qbank = question_bank_helper::get_default_open_instance_system_type($course);
         $this->assertNull($qbank);
         $qbank = question_bank_helper::get_default_open_instance_system_type($course, true);
+        $this->assertEquals(get_string('systembank', 'question'), $qbank->get_name());
+        $modrecord = $DB->get_record('qbank', ['id' => $qbank->instance]);
+        $this->assertEquals(question_bank_helper::TYPE_SYSTEM, $modrecord->type);
+        // Create module other than a qbank with an ID that isn't used by a qbank yet.
+        do {
+            $wiki = self::getDataGenerator()->create_module('wiki', [
+                'course' => $course->id,
+            ]);
+        } while ($DB->record_exists('qbank', ['id' => $wiki->id]));
+        // Swap the qbank instance record for one with the same ID as the wiki instance.
+        $newqbank = clone($modrecord);
+        $newqbank->id = $wiki->id;
+        $DB->insert_record_raw('qbank', $newqbank, customsequence: true);
+        $DB->delete_records('qbank', ['id' => $qbank->id]);
+        $DB->set_field('course_modules', 'instance', $newqbank->id, ['instance' => $qbank->instance]);
+        // Retry the above again.
+        \course_modinfo::purge_course_caches([$course->id]);
+        $qbank = question_bank_helper::get_default_open_instance_system_type($course);
         $this->assertEquals(get_string('systembank', 'question'), $qbank->get_name());
         $modrecord = $DB->get_record('qbank', ['id' => $qbank->instance]);
         $this->assertEquals(question_bank_helper::TYPE_SYSTEM, $modrecord->type);

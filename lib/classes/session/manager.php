@@ -81,7 +81,7 @@ class manager {
     public static function restart_with_write_lock(bool $readonlysession) {
         global $CFG;
 
-        if (!empty($CFG->enable_read_only_sessions_debug)) {
+        if (!empty($CFG->enable_read_only_sessions) || !empty($CFG->enable_read_only_sessions_debug)) {
             self::$requireslockdebug = !$readonlysession;
         }
 
@@ -153,7 +153,7 @@ class manager {
 
             if (!self::$handler->start()) {
                 // Could not successfully start/recover session.
-                throw new \core\session\exception(get_string('servererror'));
+                throw new \core\session\exception('sessionstarterror', 'error');
             }
 
             if ($requireslock) {
@@ -896,7 +896,7 @@ class manager {
         since: '4.5',
     )]
     public static function kill_all_sessions(): void {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
         self::destroy_all();
     }
 
@@ -913,7 +913,7 @@ class manager {
         since: '4.5',
     )]
     public static function kill_session($sid): void {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
         self::destroy($sid);
     }
 
@@ -930,7 +930,7 @@ class manager {
         since: '4.5',
     )]
     public static function kill_sessions_for_auth_plugin(string $pluginname): void {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
         self::destroy_by_auth_plugin($pluginname);
     }
 
@@ -947,7 +947,7 @@ class manager {
             since: '4.5',
     )]
     public static function kill_user_sessions($userid, $keepsid = null) {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
         self::destroy_user_sessions($userid, $keepsid);
     }
 

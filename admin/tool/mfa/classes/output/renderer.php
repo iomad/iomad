@@ -149,7 +149,7 @@ class renderer extends \plugin_renderer_base {
      */
     #[\core\attribute\deprecated(null, reason: 'It is no longer used', since: '4.4', mdl: 'MDL-79920', final: true)]
     public function setup_factor(): void {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**
@@ -360,7 +360,7 @@ class renderer extends \plugin_renderer_base {
                         WHERE deleted = 0
                         AND suspended = 0
                     GROUP BY auth";
-        $allusersinfo = $DB->get_records_sql($alluserssql, []);
+        $allusersinfo = $DB->get_records_sql_menu($alluserssql);
 
         $noncompletesql = "SELECT u.auth, COUNT(u.id)
                              FROM {user} u
@@ -369,7 +369,7 @@ class renderer extends \plugin_renderer_base {
                               AND (mfaa.lastverified < ?
                                OR mfaa.lastverified IS NULL)
                          GROUP BY u.auth";
-        $noncompleteinfo = $DB->get_records_sql($noncompletesql, [$lookback, $lookback]);
+        $noncompleteinfo = $DB->get_records_sql_menu($noncompletesql, [$lookback, $lookback]);
 
         $nologinsql = "SELECT auth, COUNT(id)
                          FROM {user}
@@ -377,7 +377,7 @@ class renderer extends \plugin_renderer_base {
                           AND suspended = 0
                           AND lastlogin < ?
                      GROUP BY auth";
-        $nologininfo = $DB->get_records_sql($nologinsql, [$lookback]);
+        $nologininfo = $DB->get_records_sql_menu($nologinsql, [$lookback]);
 
         $mfauserssql = "SELECT auth,
                             COUNT(DISTINCT tm.userid)
@@ -387,7 +387,7 @@ class renderer extends \plugin_renderer_base {
                         AND u.deleted = 0
                         AND u.suspended = 0
                     GROUP BY u.auth";
-        $mfausersinfo = $DB->get_records_sql($mfauserssql, [$lookback]);
+        $mfausersinfo = $DB->get_records_sql_menu($mfauserssql, [$lookback]);
 
         $factorsusedsql = "SELECT CONCAT(u.auth, '_', tm.factor) as id,
                                 COUNT(*)
@@ -398,7 +398,7 @@ class renderer extends \plugin_renderer_base {
                             AND u.suspended = 0
                             AND (tm.revoked = 0 OR (tm.revoked = 1 AND tm.timemodified > ?))
                         GROUP BY CONCAT(u.auth, '_', tm.factor)";
-        $factorsusedinfo = $DB->get_records_sql($factorsusedsql, [$lookback, $lookback]);
+        $factorsusedinfo = $DB->get_records_sql_menu($factorsusedsql, [$lookback, $lookback]);
 
         // Auth rows.
         $authtypes = get_enabled_auth_plugins(true);
@@ -407,10 +407,10 @@ class renderer extends \plugin_renderer_base {
             $row[] = \html_writer::tag('b', $authtype);
 
             // Setup the overall totals columns.
-            $row[] = $allusersinfo[$authtype]->count ?? '-';
-            $row[] = $mfausersinfo[$authtype]->count ?? '-';
-            $row[] = $noncompleteinfo[$authtype]->count ?? '-';
-            $row[] = $nologininfo[$authtype]->count ?? '-';
+            $row[] = $allusersinfo[$authtype] ?? '-';
+            $row[] = $mfausersinfo[$authtype] ?? '-';
+            $row[] = $noncompleteinfo[$authtype] ?? '-';
+            $row[] = $nologininfo[$authtype] ?? '-';
 
             // Create a running counter for the total.
             $authtotal = 0;
@@ -420,7 +420,7 @@ class renderer extends \plugin_renderer_base {
                 if (!empty($column)) {
                     // Get the information from the data key.
                     $key = $authtype . '_' . $column;
-                    $count = $factorsusedinfo[$key]->count ?? 0;
+                    $count = $factorsusedinfo[$key] ?? 0;
                     $authtotal += $count;
 
                     $row[] = $count ? format_float($count, 0) : '-';

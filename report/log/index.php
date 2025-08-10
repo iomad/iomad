@@ -113,15 +113,23 @@ if ($isactivitypage) {
 }
 
 // Get course details.
+$sitecoursefilter = 0;
 if ($id != $SITE->id) {
-    $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-    require_login($course);
-    $context = context_course::instance($course->id);
-    if ($cminfo !== null) {
-        $context = $cminfo->context;
-        $PAGE->set_cm($cminfo);
+    $course = $DB->get_record('course', ['id' => $id], '*');
+    if ($course) {
+        require_login($course);
+        $context = context_course::instance($course->id);
+        if ($cminfo !== null) {
+            $context = $cminfo->context;
+            $PAGE->set_cm($cminfo);
+        }
+    } else {
+        // Missing courses may have be deleted, so display them in site context.
+        $sitecoursefilter = $id;
     }
-} else {
+}
+
+if (empty($course)) {
     $course = $SITE;
     require_login();
     $context = context_system::instance();
@@ -166,6 +174,14 @@ if ($course->id == $SITE->id) {
     $PAGE->set_heading($course->fullname);
 }
 
+$output = $PAGE->get_renderer('report_log');
+if (!report_helper::has_valid_group($context)) {
+    echo $output->header();
+    echo $output->notification(get_string('notingroup'));
+    echo $output->footer();
+    exit();
+}
+
 $reportlog = new report_log_renderable(
     logreader: $logreader,
     course: $course,
@@ -186,11 +202,10 @@ $reportlog = new report_log_renderable(
     order: 'timecreated DESC',
     origin: $origin,
     isactivitypage: $isactivitypage,
+    sitecoursefilter: $sitecoursefilter,
 );
 
 $readers = $reportlog->get_readers();
-$output = $PAGE->get_renderer('report_log');
-
 if (empty($readers)) {
     echo $output->header();
     echo $output->heading(get_string('nologreaderenabled', 'report_log'));

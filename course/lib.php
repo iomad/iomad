@@ -746,6 +746,8 @@ function course_delete_module($cmid, $async = false) {
             "Cannot delete this module as the file mod/$modulename/lib.php is missing.");
     }
 
+    // Warning! there is very similar code in remove_course_contents.
+    // If you are changing this code, you probably need to change that too.
     $deleteinstancefunction = $modulename . '_delete_instance';
 
     // Ensure the delete_instance function exists for this module.
@@ -774,6 +776,9 @@ function course_delete_module($cmid, $async = false) {
             "Cannot delete the module $modulename (instance).");
     }
 
+    // We delete the questions after the activity database is removed,
+    // because questions are referenced via question reference tables
+    // and cannot be deleted while the activities that use them still exist.
     question_delete_activity($cm);
 
     // Remove all module files in case modules forget to do that.
@@ -1375,7 +1380,7 @@ function moveto_module($mod, $section, $beforemod=NULL) {
 function course_get_cm_edit_actions(cm_info $mod, $indent = -1, $sr = null) {
     global $COURSE, $SITE, $CFG;
 
-    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+    \core\deprecation::emit_deprecation(__FUNCTION__);
 
     static $str;
 
@@ -1767,7 +1772,7 @@ function course_format_uses_sections($format) {
  */
 #[\core\attribute\deprecated(since: '5.0', mdl: 'MDL-82351')]
 function course_format_ajax_support($format) {
-    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+    \core\deprecation::emit_deprecation(__FUNCTION__);
     $course = new stdClass();
     $course->format = $format;
     return course_get_format($course)->supports_ajax();

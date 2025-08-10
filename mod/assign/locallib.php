@@ -6607,6 +6607,7 @@ class assign {
         global $USER;
         $userid = core_user::is_real_user($userfrom->id) ? $userfrom->id : $USER->id;
         $uniqueid = $this->get_uniqueid_for_user($userid);
+        $oldforcelang = force_current_language($userto->lang);
         self::send_assignment_notification($userfrom,
                                            $userto,
                                            $messagetype,
@@ -6620,6 +6621,7 @@ class assign {
                                            $this->is_blind_marking(),
                                            $uniqueid,
                                            $extrainfo);
+        force_current_language($oldforcelang);
     }
 
     /**
@@ -6668,7 +6670,9 @@ class assign {
             $user = $USER;
         }
         // Prepare extra data for submission receipt notification.
+        $oldforcelang = force_current_language($user->lang);
         $extrainfo = $this->get_submission_summaries_for_messages($submission);
+        force_current_language($oldforcelang);
         if ($submission->userid == $USER->id) {
             $this->send_notification(core_user::get_noreply_user(),
                                      $user,
@@ -7389,7 +7393,7 @@ class assign {
         mdl: 'MDL-82681',
     )]
     protected function process_save_grading_options() {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

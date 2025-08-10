@@ -2248,7 +2248,7 @@ final class accesslib_test extends advanced_testcase {
 
         $this->expectException('coding_exception');
         $this->expectExceptionMessage("Capability '{$capability}' was not found! This has to be fixed in code.");
-        unassign_capability($capability, CAP_ALLOW, $teacherrole->id, $coursecontext);
+        unassign_capability($capability, $teacherrole->id, $coursecontext);
     }
 
     /**
@@ -3597,10 +3597,10 @@ final class accesslib_test extends advanced_testcase {
         $rc = $DB->get_record('role_capabilities', array('contextid'=>$frontpagecontext->id, 'roleid'=>$allroles['teacher'], 'capability'=>'moodle/site:accessallgroups'));
         $this->assertFalse($rc);
         assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $allroles['teacher'], $frontpagecontext);
-        unassign_capability('moodle/site:accessallgroups', $allroles['teacher'], $frontpagecontext, true);
+        unassign_capability('moodle/site:accessallgroups', $allroles['teacher'], $frontpagecontext);
         $rc = $DB->get_record('role_capabilities', array('contextid'=>$frontpagecontext->id, 'roleid'=>$allroles['teacher'], 'capability'=>'moodle/site:accessallgroups'));
         $this->assertFalse($rc);
-        unassign_capability('moodle/site:accessallgroups', $allroles['teacher'], $frontpagecontext->id, true);
+        unassign_capability('moodle/site:accessallgroups', $allroles['teacher'], $frontpagecontext->id);
         unset($rc);
 
         accesslib_clear_all_caches_for_unit_testing(); // Must be done after assign_capability().
@@ -4315,70 +4315,6 @@ final class accesslib_test extends advanced_testcase {
             $perms2 = array_values($DB->get_records('role_capabilities', array('capability'=>'mod/page:addinstance', 'roleid'=>$role->id), 'contextid, permission', 'contextid, permission'));
         }
         $this->assertEquals($perms1, $perms2);
-    }
-
-    /**
-     * Checks install performance in update_capabilities.
-     *
-     * @covers ::update_capabilities()
-     */
-    public function test_update_capabilities_install_performance(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        // Get rid of all the capabilities for forum.
-        $testmodule = 'forum';
-        $DB->delete_records_select('capabilities', 'name LIKE ?', ['mod/' . $testmodule . ':%']);
-
-        $beforeq = $DB->perf_get_queries();
-        update_capabilities('mod_' . $testmodule);
-        $afterq = $DB->perf_get_queries();
-
-        // In my testing there are currently 237 queries; there were 373 before a performance
-        // fix. This test confirms performance doesn't degrade to near the previous level.
-        $this->assertLessThan(300, $afterq - $beforeq);
-    }
-
-    /**
-     * Checks install performance in update_capabilities when a new capability is cloned.
-     *
-     * This only has impact if there are a significant number of overrides of the existing
-     * capability.
-     *
-     * @covers ::update_capabilities()
-     */
-    public function test_update_capabilities_clone_performance(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        // Create a bunch of activities in a course. In each one, override so manager doesn't have
-        // moodle/course:manageactivities.
-        $generator = $this->getDataGenerator();
-        $course = $generator->create_course();
-        $roleid = $DB->get_field('role', 'id', ['shortname' => 'manager']);
-        for ($i = 0; $i < 100; $i++) {
-            $page = $generator->create_module('page', ['course' => $course->id]);
-            $contextid = context_module::instance($page->cmid)->id;
-            assign_capability('moodle/course:manageactivities', CAP_PREVENT, $roleid, $contextid);
-        }
-
-        // Get rid of one of the capabilities for forum, which clones moodle/course:manageactivities.
-        $DB->delete_records('capabilities', ['name' => 'mod/forum:addinstance']);
-
-        // Clear the context cache to simulate a realistic situation where we don't already have
-        // all those contexts in the cache.
-        accesslib_clear_all_caches_for_unit_testing();
-
-        $beforeq = $DB->perf_get_queries();
-        update_capabilities('mod_forum');
-        $afterq = $DB->perf_get_queries();
-
-        // In my testing there are currently 214 queries after performance was improved for cloning,
-        // compared to 414 before. This test confirms performance doesn't degrade to near the
-        // previous level.
-        $this->assertLessThan(300, $afterq - $beforeq);
     }
 
     /**
@@ -5315,6 +5251,28 @@ final class accesslib_test extends advanced_testcase {
         $this->assertNotEmpty(get_capability_info('fake/fullfeatured:fakecapability'));
         $this->assertTrue(has_capability('fake/fullfeatured:fakecapability', \core\context\system::instance(), $user));
         $this->assertEquals('Fullfeatured capability description', get_capability_string('fake/fullfeatured:fakecapability'));
+    }
+
+    /**
+     * Test get_deprecated_capability_info() debugging messages.
+     *
+     * @covers ::get_deprecated_capability_info
+     */
+    public function test_get_deprecated_capability_info_debugging(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->create_and_enrol($course);
+        $this->setup_fake_plugin('access');
+        // Debugging messages should not be called with valid capability.
+        get_capability_info('fake/access:existingcapability');
+        $this->assertDebuggingNotCalled();
+        // Debugging messages should be called with invalid capability.
+        get_capability_info('fake/access:fakecapability');
+        $this->assertDebuggingCalled("The capability 'fake/access:fakecapability' is"
+            . " deprecated.This capability should not be used anymore.");
+        // Debugging messages should not be called with invalid capability with suppression param supplied.
+        get_capability_info('fake/access:fakecapability', false);
+        $this->assertDebuggingNotCalled();
     }
 }
 

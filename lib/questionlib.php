@@ -667,17 +667,19 @@ function move_question_set_references(int $oldcategoryid, int $newcatgoryid,
     if ($delete || $oldcontextid !== $newcontextid) {
         $setreferences = $DB->get_recordset('question_set_references', ['questionscontextid' => $oldcontextid]);
         foreach ($setreferences as $setreference) {
-            $filter = json_decode($setreference->filtercondition);
-            if (isset($filter->questioncategoryid)) {
-                if ((int)$filter->questioncategoryid === $oldcategoryid) {
-                    $setreference->questionscontextid = $newcontextid;
-                    if ($oldcategoryid !== $newcatgoryid) {
-                        $filter->questioncategoryid = $newcatgoryid;
-                        $setreference->filtercondition = json_encode($filter);
-                    }
-                    $DB->update_record('question_set_references', $setreference);
-                }
+            $filter = json_decode($setreference->filtercondition, true);
+            if (isset($filter['questioncategoryid'])) {
+                $filter = question_reference_manager::convert_legacy_set_reference_filter_condition($filter);
             }
+            $setreference->questionscontextid = $newcontextid;
+            if (
+                (int)$filter['filter']['category']['values'][0] === $oldcategoryid
+                && $oldcategoryid !== $newcatgoryid
+            ) {
+                $filter['filter']['category']['values'][0] = $newcatgoryid;
+                $setreference->filtercondition = json_encode($filter);
+            }
+            $DB->update_record('question_set_references', $setreference);
         }
         $setreferences->close();
     }
@@ -728,6 +730,7 @@ function question_move_category_to_context($categoryid, $oldcontextid, $newconte
 
     $subcatids = $DB->get_records_menu('question_categories', ['parent' => $categoryid], '', 'id,1');
     foreach ($subcatids as $subcatid => $notused) {
+        move_question_set_references($subcatid, $subcatid, $oldcontextid, $newcontext->id);
         $DB->set_field('question_categories', 'contextid', $newcontextid, ['id' => $subcatid]);
         question_move_category_to_context($subcatid, $oldcontextid, $newcontextid);
     }
@@ -1276,7 +1279,7 @@ function question_default_export_filename($course, $category): string {
  *
  * @param int|stdClass|question_definition $questionorid object or id.
  *      If an object is passed, it should include ->contextid and ->createdby.
- * @param string $cap 'add', 'edit', 'view', 'use', 'move' or 'tag'.
+ * @param string $cap 'add', 'edit', 'view', 'use', 'move', or 'tag'.
  * @param int $notused no longer used.
  * @return bool this user has the capability $cap for this question $question?
  */
