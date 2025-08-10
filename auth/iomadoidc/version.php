@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.19 (Build: 20250609)'; // Human-friendly version name
+$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
 $plugin->version = 2022112800;
 $plugin->requires = 2022112800;
 $plugin->supported = [401, 401];
