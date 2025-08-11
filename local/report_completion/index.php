@@ -429,7 +429,7 @@ if (!empty($action)) {
             } else {
                 $myusers[$certusers] = $certusers;
             }
-            if (!empty($certcourses)) {
+            if (!empty($certcourses) && $certcourses != 1) {
                 $mycourses[$certcourses] = $certcourses;
             }
 
