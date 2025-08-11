@@ -4,9 +4,9 @@
   <img src="https://avatars.githubusercontent.com/u/5493428?v=4" alt="The IOMAD Logo">
 </a></p>
 
-The IOMAD admin tool IOMAD merge is a clone of the tool_merge plugin developed and maintained by Nocolas Dunand. This version is tenant aware.
+The IOMAD site admin tool plugin allows site administrators to generate test IOMAD company data.
 
-This plugin is part of the IOMAD suite of plugins. It must be installed with all other plugins from the suite and the core code patch must also be applied in order for these to work.
+This plugin is part of the IOMAD suite of plugins. It must be installed with all other plugins from the suite and the core code patch must also be applied in order for these to work.  
 
 ## Installing via uploaded ZIP file ##
 
@@ -18,7 +18,7 @@ Check the plugin validation report and finish the installation.
 
 The plugin can be also installed by adding the contents of this directory to
 
-    {your/moodle/dirroot}/mod/iomadcertificate
+    {your/moodle/dirroot}/admin/tool/iomadsite
 
 Afterwards, log in to your Moodle site as an admin and go to _Site administration > Notifications_ to complete the installation.
 
@@ -30,16 +30,4 @@ to complete the installation from the command line.
 
 ## License ##
 2010+ e-Learn Design Ltd. https://www.e-learndesign.co.uk
-IOMAD is a registered trademark in the UK belonging to Derick Turner
-
-GNU GPL v3 or later. http://www.gnu.org/copyleft/gpl.html
-
-Contributors
-============
-
-Maintained by:
-
-* Nicolas Dunand.
-* [Jordi Pujol-Ahulló](https://recursoseducatius.urv.cat).
-
-[See all Github contributors](https://github.com/ndunand/moodle-tool_iomadmerge/graphs/contributors)
+IOMAD is a registered trademark in the UK belonging to Derick Turner 
