@@ -4,10 +4,11 @@
   <img src="https://avatars.githubusercontent.com/u/5493428?v=4" alt="The IOMAD Logo">
 </a></p>
 
-The IOMAD auth SAML2 plugin is a clone of the optional auth_saml2 plugin - https://moodle.org/plugins/auth_iomadsaml2 - with provision for per tenant configuration.
+The IOMAD training event activity allows for users to book onto a face to face training event which can be held either at a physical or virtual location. Training locations
+as defined and then used for the activity, which can be self sign-up, require one or more managers approval or signed up by a manager. The activity has an optional waiting room,
+reminders and can be set so that only one activvity can be selected by a user within a course.
 
-
-This plugin is part of the IOMAD suite of plugins. It must be installed with all other plugins from the suite and the core code patch must also be applied in order for these to work.
+This plugin is part of the IOMAD suite of plugins. It must be installed with all other plugins from the suite and the core code patch must also be applied in order for these to work.  
 
 ## Installing via uploaded ZIP file ##
 
@@ -19,7 +20,7 @@ Check the plugin validation report and finish the installation.
 
 The plugin can be also installed by adding the contents of this directory to
 
-    {your/moodle/dirroot}/mod/iomadcertificate
+    {your/moodle/dirroot}/mod/trainingevent
 
 Afterwards, log in to your Moodle site as an admin and go to _Site administration > Notifications_ to complete the installation.
 
@@ -31,9 +32,4 @@ to complete the installation from the command line.
 
 ## License ##
 2010+ e-Learn Design Ltd. https://www.e-learndesign.co.uk
-IOMAD is a registered trademark in the UK belonging to Derick Turner
-
-
-The original plugin plugin was developed by [Catalyst IT Australia](https://www.catalyst-au.net/).
-
-<img alt="Catalyst IT" src="https://cdn.rawgit.com/CatalystIT-AU/moodle-auth_iomadsaml2/MOODLE_39_STABLE/pix/catalyst-logo.svg" width="400">
+IOMAD is a registered trademark in the UK belonging to Derick Turner 
