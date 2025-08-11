@@ -1,12 +1,14 @@
-# Microsoft 365 and Azure Active Directory Plugins for Moodle
+# IOMAD
+
+# Microsoft 365 and Microsoft Entra ID Plugins for Moodle
 
 ## OpenID Connect Authentication Plugin.
 
-The OpenID Connect plugin provides single-sign-on functionality using configurable identity providers.
+The IOMAD OpenID Connect plugin provides single-sign-on functionality using configurable identity providers that can be configured on a per tenant basis. It is based on the auth_oidc plugin
+which is part of the suite of Microsoft 365 plugins for Moodle.
 
-This is part of the suite of Microsoft 365 plugins for Moodle.
+This plugin is part of the IOMAD suite of plugins. It must be installed with all other plugins from the suite and the core code patch must also be applied in order for these to work.
 
-This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 
 ## Installation
 
@@ -23,6 +25,10 @@ For more information including support and instructions on how to contribute, pl
 ## Issues and Contributing
 Please post issues for this plugin to: https://github.com/Microsoft/o365-moodle/issues/
 Pull requests for this plugin should be submitted against our main repository: https://github.com/Microsoft/o365-moodle 
+
+## License ##
+2010+ e-Learn Design Ltd. https://www.e-learndesign.co.uk
+IOMAD is a registered trademark in the UK belonging to Derick Turner
 
 ## Copyright
 
