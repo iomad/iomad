@@ -196,7 +196,7 @@ class editusers_table extends table_sql {
                     }
                 }
             } else {
-                $currentvalue = $row->managertype;
+                $currentvalue = $row->managertype*10;
             }
             // Added due to value mismatch when editing under certain circumstances.
             if (empty($currentvalue)) {
