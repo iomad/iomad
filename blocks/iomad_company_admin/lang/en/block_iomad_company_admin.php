@@ -730,6 +730,7 @@ $string['templatenamealreadyinuse'] = 'Template name is already in use';
 $string['templatesettings'] = 'Manage IOMAD template settings';
 $string['theoptionsbelow'] = '<p><b>NOTE: The options below may only work with the IOMAD themes</b></p>';
 $string['timecompletedbeforetimeenrollederror'] = 'The date completed is before the date started!';
+$string['toomanyenrolments'] = 'Too many enrolments ({$a}) to show';
 $string['todashboard'] = 'Return to Dashboard';
 $string['totalenrolments'] = 'Total enrolments';
 $string['triedtoallocatetoomanylicenses'] = 'You have tried to allocate licenses for more courses than there are available allocations';

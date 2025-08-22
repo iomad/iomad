@@ -515,7 +515,10 @@ class current_company_course_user_selector extends company_user_selector_base {
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > $CFG->iomad_max_select_users) {
-                return $this->too_many_results($search, $potentialmemberscount);
+                return [
+                    get_string('toomanyenrolments', 'block_iomad_company_admin', $potentialmemberscount) => [],
+                    get_string('pleaseusesearch') => []
+                ];
             }
         }
         $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
