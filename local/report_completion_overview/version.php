@@ -22,7 +22,7 @@
  */
 
 $plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name
-$plugin->version  = 2025071700;   // The (date) version of this plugin.
+$plugin->version  = 2025071700.500;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
 $plugin->component  = 'local_report_completion_overview';
 $plugin->dependencies = ['local_iomad' => 2025041400];
