@@ -22,7 +22,7 @@
  */
 
 $plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
-$plugin->version  = 2016120600;
+$plugin->version  = 2016120600.401;
 $plugin->requires = 2019052000;
 $plugin->component  = 'local_report_attendance';
 $plugin->dependencies = ['local_iomad' => 2023042702];

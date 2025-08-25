@@ -22,7 +22,7 @@
  */
 
 $plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
-$plugin->version = 2016083100;
+$plugin->version = 2016083100.401;
 $plugin->requires = 2019052000;   // Requires this Moodle version.
 $plugin->component  = 'block_iomad_link';
 $plugin->dependencies = ['local_iomad' => 2023042702];

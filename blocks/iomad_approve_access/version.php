@@ -23,7 +23,7 @@
 
 $plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
 $plugin->component  = 'block_iomad_approve_access';
-$plugin->version = 2022042300;  // YYYYMMDDHH (year, month, day, 24-hr time).
+$plugin->version = 2022042300.401;  // YYYYMMDDHH (year, month, day, 24-hr time).
 $plugin->requires = 2019052000; // YYYYMMDDHH (This is the release version for Moodle 2.0).
 $plugin->dependencies = ['local_iomad' => 2023042702];
 $plugin->supported = [401, 401];
