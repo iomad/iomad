@@ -25,7 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
 $plugin->component  = 'enrol_license';
-$plugin->version = 2022100601.401;
+$plugin->version = 2022100641;
 $plugin->requires = 2019052000;  // Requires this Moodle version.
 $plugin->dependencies = ['local_iomad' => 2023042702];
 $plugin->supported = [401, 401];

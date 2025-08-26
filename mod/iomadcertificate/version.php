@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
-$plugin->version   = 2016052300.401; // The current module version (Date: YYYYMMDDXX)
+$plugin->version   = 2016052341; // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2019052000; // Requires this Moodle version (3.1)
 $plugin->cron      = 0; // Period for cron to check this module (secs)
 $plugin->component = 'mod_iomadcertificate';
