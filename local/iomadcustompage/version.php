@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_iomadcustompage';
 $plugin->release = '0.1.1';
-$plugin->version = 2024110401.404;
+$plugin->version = 2024110444;
 $plugin->requires = 2022112800;
 $plugin->maturity = MATURITY_RC;
 $plugin->supported = [404, 405];
