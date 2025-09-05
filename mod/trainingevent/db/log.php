@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Definition of log events.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,18 +25,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$logs = array(
-    array('module' => 'trainingevent', 'action' => 'add', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'update', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User attending', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User removed', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User seeking approved access', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User removed approved access', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User moved to another event', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User added to event', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'User denied access', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'Department manager approved', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'Department manager denied', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'Company manager approved', 'mtable' => 'trainingevent', 'field' => 'name'),
-    array('module' => 'trainingevent', 'action' => 'Company manager denied', 'mtable' => 'trainingevent', 'field' => 'name'),
-);
+$logs = [
+    ['module' => 'trainingevent', 'action' => 'add', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'update', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User attending', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User removed', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User seeking approved access', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User removed approved access', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User moved to another event', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User added to event', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'User denied access', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'Department manager approved', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'Department manager denied', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'Company manager approved', 'mtable' => 'trainingevent', 'field' => 'name'],
+    ['module' => 'trainingevent', 'action' => 'Company manager denied', 'mtable' => 'trainingevent', 'field' => 'name'],
+];

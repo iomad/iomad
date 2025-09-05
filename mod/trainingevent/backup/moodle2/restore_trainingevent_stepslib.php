@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Restore stepslib class for trainging even activity.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -30,47 +32,62 @@
  */
 class restore_trainingevent_activity_structure_step extends restore_activity_structure_step {
 
+    /**
+     * Defines the structure expected to be found for restoring data.
+     *
+     * @return void
+     */
     protected function define_structure() {
 
-        $paths = array();
+        $paths = [];
         $paths[] = new restore_path_element('trainingevent', '/activity/trainingevent');
 
         // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
     }
 
+    /**
+     * Process the data for the training event activity.
+     *
+     * @param object $data
+     * @return void
+     */
     protected function process_trainingevent($data) {
         global $DB;
 
         $data = (object)$data;
-        $oldid = $data->id;
-        $newtrainingevent = array('course' => $this->get_courseid(),
-                                  'name' => $data->name,
-                                  'intro' => $data->intro,
-                                  'introformat' => $data->introformat,
-                                  'timemodified' => $data->timemodified,
-                                  'startdatetime' => $data->startdatetime,
-                                  'enddatetime' => $data->enddatetime,
-                                  'classroomid' => $data->classroomid,
-                                  'approvaltype' => $data->approvaltype);
+        $newtrainingevent = ['course' => $this->get_courseid(),
+                             'name' => $data->name,
+                             'intro' => $data->intro,
+                             'introformat' => $data->introformat,
+                             'timemodified' => $data->timemodified,
+                             'startdatetime' => $data->startdatetime,
+                             'enddatetime' => $data->enddatetime,
+                             'classroomid' => $data->classroomid,
+                             'approvaltype' => $data->approvaltype];
         $newtrainingeventid = $DB->insert_record('trainingevent', $newtrainingevent);
+
         // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newtrainingeventid);
 
         // Insert the trainingevent record.
-        // Iterate over all the feed elements, creating them if needed
+        // Iterate over all the feed elements, creating them if needed.
         if (isset($data->trainingevent_user['trainingevent_users'])) {
             foreach ($data->trainingevent_user['trainingevent_users'] as $trainingeventuser) {
                 $trainingeventuser = (object)$trainingeventuser;
                 $trainingeventuser->trainingeventid = $newtrainingeventid;
-                $catcourse_catid = $DB->insert_record('trainingevent_users', $trainingeventuser);
+                $DB->insert_record('trainingevent_users', $trainingeventuser);
             }
         }
     }
 
+    /**
+     * Define call back functions which should be run after the restore completes.
+     *
+     * @return void
+     */
     protected function after_execute() {
         // Add trainingevent related files, no need to match by itemname (just internally handled context).
-        //$this->add_related_files('mod_trainingevent', 'intro', null);
+        // $this->add_related_files('mod_trainingevent', 'intro', null);.
     }
-
 }

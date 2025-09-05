@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Settings form for the activity.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -26,9 +28,21 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 
-
+/**
+ * Settings form for the activity.
+ *
+ * @package   mod_trainingevent
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_trainingevent_mod_form extends moodleform_mod {
 
+    /**
+     * Settings form definition.
+     *
+     * @return void
+     */
     public function definition() {
         global $USER, $SESSION, $DB;
 
@@ -38,7 +52,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'64'));
+        $mform->addElement('text', 'name', get_string('name'), ['size' => '64']);
         if (!empty($CFG->formatstringstriptags)) {
             $mform->setType('name', PARAM_TEXT);
         } else {
@@ -56,14 +70,14 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         $mform->addRule('enddatetime', get_string('missingenddatetime', 'trainingevent'), 'required', null, 'client');
 
         // Set the companyid to bypass the company select form if possible.
-        $params = array();
+        $params = [];
         if (!empty($SESSION->currenteditingcompany)) {
             $params['companyid'] = $SESSION->currenteditingcompany;
         } else if (!empty($USER->company)) {
             $params['companyid'] = company_user::companyid();
         }
 
-        $choices = array();
+        $choices = [];
         if ($rooms = $DB->get_recordset('classroom', $params, 'name', '*')) {
             foreach ($rooms as $room) {
                 $choices[$room->id] = $room->name;
@@ -71,10 +85,10 @@ class mod_trainingevent_mod_form extends moodleform_mod {
             $rooms->close();
         }
 
-        $publicchoices = array();
+        $publicchoices = [];
         if ($rooms = $DB->get_recordset_sql('SELECT * FROM {classroom} WHERE ispublic = 1 AND companyid <> ?',
         [
-            $params['companyid']
+            $params['companyid'],
         ]
         )) {
             foreach ($rooms as $room) {
@@ -83,15 +97,15 @@ class mod_trainingevent_mod_form extends moodleform_mod {
             $rooms->close();
         }
 
-        $choices = array('' => get_string('selectaroom', 'trainingevent').'...') + $choices + $publicchoices;
+        $choices = ['' => get_string('selectaroom', 'trainingevent').'...'] + $choices + $publicchoices;
         $mform->addElement('select', 'classroomid', get_string('selectaroom', 'trainingevent'), $choices);
         $mform->addRule('classroomid', get_string('required'), 'required', null, 'client');
 
-        $choices = array(get_string('none', 'trainingevent'),
-                        get_string('manager', 'trainingevent'),
-                        get_string('companymanager', 'trainingevent'),
-                        get_string('both', 'trainingevent'),
-                        get_string('enrolonly', 'trainingevent'));
+        $choices = [get_string('none', 'trainingevent'),
+                    get_string('manager', 'trainingevent'),
+                    get_string('companymanager', 'trainingevent'),
+                    get_string('both', 'trainingevent'),
+                    get_string('enrolonly', 'trainingevent')];
         $mform->addElement('select', 'approvaltype', get_string('approvaltype', 'trainingevent'), $choices);
 
         $mform->addElement('checkbox',
@@ -140,7 +154,10 @@ class mod_trainingevent_mod_form extends moodleform_mod {
                            'requirenotes',
                            get_string('requirenotes', 'mod_trainingevent'),
                            get_string('requirenotes_help', 'mod_trainingevent'));
-        $mform->addElement('textarea', 'booking_notes_default', get_string('booknotesdefault', 'mod_trainingevent'), 'wrap="virtual" rows="5" cols="5"');
+        $mform->addElement('textarea', 'booking_notes_default',
+                                       get_string('booknotesdefault',
+                                       'mod_trainingevent'),
+                                       'wrap="virtual" rows="5" cols="5"');
         $mform->addHelpButton('booking_notes_default', 'booknotesdefault', 'mod_trainingevent');
         $mform->hideIf('booking_notes_default', 'requirenotes');
 
@@ -154,11 +171,18 @@ class mod_trainingevent_mod_form extends moodleform_mod {
 
     }
 
+    /**
+     * Settings form validation.
+     *
+     * @param array $data
+     * @param array $files
+     * @return void
+     */
     public function validation($data, $files) {
         global $DB;
 
-        $errors = array();
-        if (empty($data['classroomid']) || !$DB->get_record('classroom', array('id' => $data['classroomid']))) {
+        $errors = [];
+        if (empty($data['classroomid']) || !$DB->get_record('classroom', ['id' => $data['classroomid']])) {
             $errors['classroomid'] = get_string('invalidclassroom', 'trainingevent');
             return $errors;
         }

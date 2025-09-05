@@ -17,7 +17,7 @@
 /**
  * mod_trainingevent attendance Modal form.
  *
- * @package     mod_trainingevent
+ * @package    mod_trainingevent
  * @copyright  2024 E-Learn Design
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,23 +33,23 @@ use core_form\dynamic_form;
 use moodle_url;
 use moodle_exception;
 
-require_once($CFG->dirroot .'/mod/trainingevent/lib.php');
-
 /**
  * Class attendance_form used for to store the company MS attendance value.
  *
- * @package mod_trainingevent
+ * @package    mod_trainingevent
  * @copyright  2024 E-Learn Design
  * @author     Derick Turner
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class attendance extends dynamic_form {
 
     /**
      * Define the form
      */
-    public function definition () {
+    public function definition() {
         global $CFG, $DB;
+
+        require_once($CFG->dirroot .'/mod/trainingevent/lib.php');
 
         // We need to set the variables as class ones don't seem to work.
         $companyid = $this->optional_param('companyid', 0, PARAM_INT);
@@ -92,7 +92,10 @@ class attendance extends dynamic_form {
 
         // Add the options field.
         if (!empty($trainingevent->requirenotes)) {
-            $mform->addElement('textarea', 'booking_notes', get_string('bookingnotes', 'mod_trainingevent'), 'wrap="virtual" rows="5" cols="5"');
+            $mform->addElement('textarea',
+                               'booking_notes',
+                               get_string('bookingnotes', 'mod_trainingevent'),
+                               'wrap="virtual" rows="5" cols="5"');
         } else {
             $mform->addElement('hidden', 'booking_notes');
             $mform->setType('booking_notes', PARAM_TEXT);
@@ -115,7 +118,7 @@ class attendance extends dynamic_form {
             if ($approvaltype != 0) {
                 $removemestring = get_string('removerequest', 'mod_trainingevent');
             }
-            $mform->addElement('advcheckbox', 'removeme', $removemestring, ' ', [], [0,1]);
+            $mform->addElement('advcheckbox', 'removeme', $removemestring, ' ', [], [0, 1]);
         } else {
             $mform->addElement('hidden', 'removeme', 0);
             $mform->setType('removeme', PARAM_INT);
@@ -131,6 +134,8 @@ class attendance extends dynamic_form {
      */
     public function process_dynamic_submission(): array {
         global $DB, $USER, $COURSE;
+
+        require_once($CFG->dirroot .'/mod/trainingevent/lib.php');
 
         // Get the info from the form.
         $data = $this->get_data();
@@ -201,7 +206,7 @@ class attendance extends dynamic_form {
             $returnmessage = get_string('removerequest_successfull', 'mod_trainingevent');
         } else if (empty($data->removeme)) {
 
-            // Adding or updating
+            // Adding or updating?
             $oldbookingnotes = $record->booking_notes;
             $record->booking_notes = $data->booking_notes;
 
@@ -233,7 +238,10 @@ class attendance extends dynamic_form {
 
                 // Get the location details.
                 $chosenlocation = $DB->get_record('classroom', ['id' => $chosenevent->classroomid]);
-                $alreadyattending = $DB->count_records('trainingevent_users', ['trainingeventid' => $chosenevent->id, 'waitlisted' => 0, 'approved' => 1]);
+                $alreadyattending = $DB->count_records('trainingevent_users',
+                                                       ['trainingeventid' => $chosenevent->id,
+                                                        'waitlisted' => 0,
+                                                        'approved' => 1]);
 
                 // Is the capacity overridden?
                 if (!empty($chosenevent->coursecapacity)) {
@@ -351,7 +359,7 @@ class attendance extends dynamic_form {
                     $record->id = $DB->insert_record('trainingevent_users', $record);
                 } else {
 
-                    // Updating an existing booking
+                    // Updating an existing booking.
                     $dorefesh = false;
                     $DB->update_record('trainingevent_users', $record);
                     $returnmessage = get_string('updateattendance_successful', 'mod_trainingevent');
@@ -359,14 +367,14 @@ class attendance extends dynamic_form {
             }
         }
 
-        // Return stuff the the JS.
+        // Return stuff for the JS.
         return [
             'result' => true,
             'returnmessage' => $returnmessage,
             'userid' => $data->userid,
             'oldnotes' => preg_replace('/\s*\R\s*/', ' ', trim($oldbookingnotes)),
             'newnotes' => preg_replace('/\s*\R\s*/', ' ', trim($record->booking_notes)),
-            'dorefresh' => $dorefresh
+            'dorefresh' => $dorefresh,
         ];
     }
 
@@ -392,13 +400,13 @@ class attendance extends dynamic_form {
 
         // Get the trainingevent info as we need it.
         $trainingevent = $DB->get_record('trainingevent', ['id' => $trainingeventid]);
-        $booking_notes = $trainingevent->booking_notes_default;
+        $bookingnotes = $trainingevent->booking_notes_default;
 
         // Do we already have one?
         if ($attendancerec = $DB->get_record('trainingevent_users', ['trainingeventid' => $trainingeventid, 'userid' => $userid])) {
             $attendanceid = $attendancerec->id;
             $waitlisted = $attendancerec->waitlisted;
-            $booking_notes = $attendancerec->booking_notes;
+            $bookingnotes = $attendancerec->booking_notes;
         }
 
         // Send it.
@@ -406,7 +414,7 @@ class attendance extends dynamic_form {
             'companyid' => $companyid,
             'attendanceid' => $attendanceid,
             'waitlisted' => $waitlisted,
-            'booking_notes' => $booking_notes,
+            'booking_notes' => $bookingnotes,
             'cmid' => $cmid,
             'requesttype' => $requesttype,
             'approvaltype' => $approvaltype,
