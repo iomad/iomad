@@ -15,28 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * Base class for the table used by {@link mdl_trainingevent}.
  *
- * @package   local_report_user_logins
- * @copyright 2012 Derick Turner
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_trainingevent
+ * @copyright  2024 E-Learn Design
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_trainingevent\tables;
 
-use \table_sql;
-use \iomad;
-use \context_system;
-use \moodle_url;
-use \context_module;
-use \single_select;
+use table_sql;
+use iomad;
+use context_system;
+use moodle_url;
+use context_module;
+use single_select;
 use html_writer;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * Base class for the table used by {@link mdl_trainingevent}.
+ *
+ * @package    mod_trainingevent
+ * @copyright  2024 E-Learn Design
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class attendees_table extends table_sql {
 
     /**
@@ -49,7 +57,7 @@ class attendees_table extends table_sql {
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $context));
 
-        // Do we need to add anything else
+        // Do we need to add anything else?
         if (empty($row->requirenotes) ||
             $this->is_downloading()) {
             return $name;
@@ -221,7 +229,7 @@ class attendees_table extends table_sql {
         }
 
         $first = true;
-        foreach($userdepartments as $department) {
+        foreach ($userdepartments as $department) {
             $returnstr .= format_string($department->name);
 
             if ($current < $count) {
@@ -237,6 +245,11 @@ class attendees_table extends table_sql {
         return $returnstr;
     }
 
+    /**
+     * Function to add HTML to the start of the form depending on capability.
+     *
+     * @return void
+     */
     public function wrap_html_start() {
         global $params, $id, $waitingoption;
 
@@ -245,6 +258,11 @@ class attendees_table extends table_sql {
         }
     }
 
+    /**
+     * Function to add HTML to the end of the form depending on capability.
+     *
+     * @return void
+     */
     public function wrap_html_finish() {
         global $params, $id, $waitingoption;
 

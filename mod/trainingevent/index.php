@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Redirect from index.php to view.php.
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -26,7 +27,9 @@ require_once("lib.php");
 
 $id = required_param('id', PARAM_INT);   // Course.
 
-$PAGE->set_url('/mod/trainingevent/index.php', array('id' => $id));
+require_login(null, false, $id);
+
+$PAGE->set_url('/mod/trainingevent/index.php', ['id' => $id]);
 
 redirect("$CFG->wwwroot/course/view.php?id=$id");
 

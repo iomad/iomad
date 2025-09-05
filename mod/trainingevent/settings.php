@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -18,8 +17,9 @@
 /**
  * Page module admin settings and defaults
  *
- * @package mod_page
- * @copyright  2009 Petr Skoda (http://skodak.org)
+ * @package mod_trainingevent
+ * @copyright  2014 E-Learn Design Ltd. {@link https://www.e-learndesign.co.uk}
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,9 +27,10 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
 
-
-    //--- modedit defaults -----------------------------------------------------------------------------------
-    $settings->add(new admin_setting_heading('trainingeventmodeditdefaults', get_string('modeditdefaults', 'admin'), get_string('condifmodeditdefaults', 'admin')));
+    // Module edit defaults.
+    $settings->add(new admin_setting_heading('trainingeventmodeditdefaults',
+                                             get_string('modeditdefaults', 'admin'),
+                                             get_string('condifmodeditdefaults', 'admin')));
 
     $settings->add(new admin_setting_configcheckbox('trainingevent/haswaitinglist',
         get_string('haswaitinglist', 'trainingevent'), get_string('haswaitinglist_help', 'trainingevent'), 1));

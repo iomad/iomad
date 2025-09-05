@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Training event activity language strings.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner

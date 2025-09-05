@@ -25,8 +25,6 @@
 
 namespace mod_trainingevent\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_trainingevent user attendance withdrawn event.
  *
@@ -81,7 +79,7 @@ class attendance_withdrawn extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/course/view.php', array('id' => $this->courseid));
+        return new \moodle_url('/course/view.php', ['id' => $this->courseid]);
     }
 
     /**
@@ -90,22 +88,17 @@ class attendance_withdrawn extends \core\event\base {
      * @return array
      */
     protected function get_legacy_logdata() {
-        return array($this->courseid, 'mod_trainingevent', 'user attandance request withdrawn', '/mod/trainingevent/view.php',
-            ' trainingevent id ' . $this->objectid, $this->contextinstanceid);
+        return [$this->courseid, 'mod_trainingevent', 'user attandance request withdrawn', '/mod/trainingevent/view.php',
+            ' trainingevent id ' . $this->objectid, $this->contextinstanceid];
     }
 
     /**
-     * Custom validation.
+     * Get any other data mappings.
      *
-     * @throws \coding_exception
      * @return void
      */
-    protected function validate_data() {
-        parent::validate_data();
-    }
-
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }
