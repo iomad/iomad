@@ -33,12 +33,18 @@ use core_privacy\local\request\deletion_criteria;
 use core_privacy\local\request\helper;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
-use \context_system;
-use \context_module;
-use \context_user;
+use context_system;
+use context_module;
+use context_user;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Privacy Subsystem implementation for mod_trainingevent.
+ *
+ * @package    mod_trainingevent
+ * @copyright  2021 Derick Turner
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         // This plugin stores personal data.
         \core_privacy\local\metadata\provider,
@@ -55,7 +61,7 @@ class provider implements
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $items) : collection {
+    public static function get_metadata(collection $items): collection {
         $items->add_database_table(
             'trainingevent_users',
             [
@@ -75,8 +81,8 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
-        // Fetch all training events
+    public static function get_contexts_for_userid(int $userid): contextlist {
+        // Fetch all training events.
         $sql = "SELECT c.id
                   FROM {context} c
             INNER JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
@@ -153,7 +159,7 @@ class provider implements
         $trainingevents = $DB->get_recordset_sql($sql, $params);
         $trainingeventsout = (object) [];
         $trainingeventsout->trainingevents = $trainingevents;
-        writer::with_context($context)->export_data(array(get_string('pluginname', 'trainingevent')), $trainingevent);
+        writer::with_context($context)->export_data([get_string('pluginname', 'trainingevent')], $trainingevent);
         $trainintevents->close();
 
     }
@@ -165,13 +171,15 @@ class provider implements
      * @param context_module $context the context of the trainingevent.
      * @param \stdClass $user the user record
      */
-    protected static function export_trainingevent_data_for_user(array $trainingeventdata, context_module $context, \stdClass $user) {
+    protected static function export_trainingevent_data_for_user(array $trainingeventdata,
+                                                                 context_module $context,
+                                                                 \stdClass $user) {
         // Fetch the generic module data for the trainingevent.
         $contextdata = helper::get_context_data($context, $user);
 
         // Merge with trainingevent data and write it.
         $contextdata = (object)array_merge((array)$contextdata, $trainingeventdata);
-        writer::with_context($context)->export_data(array(get_string('pluginname', 'trainingevent')), $contextdata);
+        writer::with_context($context)->export_data([get_string('pluginname', 'trainingevent']), $contextdata);
 
         // Write generic module intro files.
         helper::export_context_files($context, $user);

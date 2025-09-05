@@ -25,8 +25,6 @@
 
 namespace mod_trainingevent\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_trainingevent user added event.
  *
@@ -71,7 +69,9 @@ class user_added extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' added the user id '$this->relateduserid' to trainingevent id  '$this->objectid' in " .
+        return "The user with id '$this->userid' " .
+               "added the user id '$this->relateduserid' " .
+               "to trainingevent id  '$this->objectid' in " .
             $this->courseid;
     }
 
@@ -81,21 +81,16 @@ class user_added extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/course/view.php', array('id' => $this->courseid));
+        return new \moodle_url('/course/view.php', ['id' => $this->courseid]);
     }
 
     /**
-     * Custom validation.
+     * Get any other data mappings.
      *
-     * @throws \coding_exception
      * @return void
      */
-    protected function validate_data() {
-        parent::validate_data();
-    }
-
     public static function get_other_mapping() {
-        $othermapped = array();
+        $othermapped = [];
 
         return $othermapped;
     }

@@ -15,19 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Main plugin librabry.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
 /** COURSECLASSROOM_MAX_NAME_LENGTH = 50 */
 define("COURSECLASSROOM_MAX_NAME_LENGTH", 50);
 define("TRAININGEVENT_EVENT_TYPE", 1512);
 
 /**
+ * Get the human name for the training event.
+ *
  * @uses COURSECLASSROOM_MAX_NAME_LENGTH
  * @param object $trainingevent
  * @return string
@@ -53,7 +55,6 @@ function get_trainingevent_name($trainingevent) {
  * will create a new instance and return the id number
  * of the new instance.
  *
- * @global object
  * @param object $trainingevent
  * @return bool|int
  */
@@ -70,7 +71,7 @@ function trainingevent_add_instance($trainingevent) {
                  $trainingevent->id,
                  0,
                  null,
-                 array('itemname' => $trainingevent->name));
+                 ['itemname' => $trainingevent->name]);
     return $trainingevent->id;
 }
 
@@ -79,7 +80,6 @@ function trainingevent_add_instance($trainingevent) {
  * (defined by the form in mod_form.php) this function
  * will update an existing instance with new data.
  *
- * @global object
  * @param object $trainingevent
  * @return bool
  */
@@ -97,11 +97,11 @@ function trainingevent_update_instance($trainingevent) {
     if (empty($trainingevent->haswaitinglist)) {
         $trainingevent->haswaitinglist = 0;
     }
-    
+
     if (empty($trainingevent->isexclusive)) {
         $trainingevent->isexclusive = 0;
     }
-    
+
     if (empty($trainingevent->emailteachers)) {
         $trainingevent->emailteachers = 0;
     }
@@ -117,7 +117,7 @@ function trainingevent_update_instance($trainingevent) {
                  $trainingevent->id,
                  0,
                  null,
-                 array('itemname' => $trainingevent->name));
+                 ['itemname' => $trainingevent->name]);
 
     return $DB->update_record("trainingevent", $trainingevent);
 }
@@ -127,7 +127,6 @@ function trainingevent_update_instance($trainingevent) {
  * this function will permanently delete the instance
  * and any data that depends on it.
  *
- * @global object
  * @param int $id
  * @return bool
  */
@@ -137,13 +136,13 @@ function trainingevent_delete_instance($id) {
     if (!function_exists('grade_update')) { // Workaround for buggy PHP versions.
         require_once($CFG->libdir.'/gradelib.php');
     }
-    if (! $trainingevent = $DB->get_record("trainingevent", array("id" => $id))) {
+    if (! $trainingevent = $DB->get_record("trainingevent", ["id" => $id])) {
         return false;
     }
 
     $result = true;
 
-    if (! $DB->delete_records("trainingevent", array("id" => $trainingevent->id))) {
+    if (! $DB->delete_records("trainingevent", ["id" => $trainingevent->id])) {
         $result = false;
     } else {
         grade_update('mod/trainingevent',
@@ -153,7 +152,7 @@ function trainingevent_delete_instance($id) {
                      $trainingevent->id,
                      0,
                      null,
-                     array('deleted' => 1));
+                     ['deleted' => 1]);
     }
 
     return $result;
@@ -176,31 +175,30 @@ function trainingevent_get_participants($trainingeventid) {
  * this activity in a course listing.
  * See get_array_of_activities() in course/lib.php
  *
- * @global object
  * @param object $coursemodule
  * @return object|null
  */
 function trainingevent_get_coursemodule_info($coursemodule) {
     global $DB, $CFG;
 
-    if ($trainingevent = $DB->get_record('trainingevent', array('id' => $coursemodule->instance), '*')) {
+    if ($trainingevent = $DB->get_record('trainingevent', ['id' => $coursemodule->instance], '*')) {
         if (empty($trainingevent->name)) {
             // Trainingevent name missing, fix it.
             $trainingevent->name = "trainingevent{$trainingevent->id}";
-            $DB->set_field('trainingevent', 'name', $trainingevent->name, array('id' => $trainingevent->id));
+            $DB->set_field('trainingevent', 'name', $trainingevent->name, ['id' => $trainingevent->id]);
         }
         $info = new cached_cm_info();
 
-        //Create template variable
+        // Create template variable.
         $template = (object)[];
         if ($trainingevent->classroomid) {
-            if ($classroom = $DB->get_record('classroom', array('id' => $trainingevent->classroomid), '*')) {
+            if ($classroom = $DB->get_record('classroom', ['id' => $trainingevent->classroomid], '*')) {
                 $template->name = $classroom->name;
             }
         }
         $dateformat = "$CFG->iomad_date_format %I:%M%p";
 
-        //Define objects to be passed to the mustache file
+        // Define objects to be passed to the mustache file.
         $template->startdatetime = userdate($trainingevent->startdatetime, $dateformat);
         $template->moduleurl = "$CFG->wwwroot/mod/trainingevent/view.php?id=$coursemodule->id";
         $template->usersbooked = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
@@ -208,17 +206,15 @@ function trainingevent_get_coursemodule_info($coursemodule) {
                                                                             'approved' => 1]);
         $classroom = $DB->get_record('classroom', ['id' => $trainingevent->classroomid]);
         if (time() < $trainingevent->startdatetime) {
-            $template->slotsleft = ($classroom->isvirtual == 0) ? 
-            ((!empty($trainingevent->coursecapacity)) ? ($trainingevent->coursecapacity - $template->usersbooked) : 
-                ((empty($classroom->isvirtual)) ? ($classroom->capacity - $template->usersbooked) : null)) : null
-            ;
-            $template->waitinglist = (empty($template->slotsleft) && $classroom->isvirtual == 0) ? 
+            $template->slotsleft = ($classroom->isvirtual == 0) ?
+            ((!empty($trainingevent->coursecapacity)) ? ($trainingevent->coursecapacity - $template->usersbooked) :
+                ((empty($classroom->isvirtual)) ? ($classroom->capacity - $template->usersbooked) : null)) : null;
+            $template->waitinglist = (empty($template->slotsleft) && $classroom->isvirtual == 0) ?
                 $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                            'waitlisted' => 1,
-                                                           'approved' => 1])." " : null
-            ;
+                                                           'approved' => 1])." " : null;
         }
-        $template->usersattended = (time() > $trainingevent->startdatetime) ? 
+        $template->usersattended = (time() > $trainingevent->startdatetime) ?
                                     $DB->get_record_sql("SELECT COUNT(*) as total
                                                          FROM {course_modules_completion} cmc
                                                          JOIN {trainingevent_users} teu
@@ -229,14 +225,15 @@ function trainingevent_get_coursemodule_info($coursemodule) {
                                                          AND teu.approved = 1
                                                          AND teu.waitlisted =0",
                                                          ["trainingeventid" => $trainingevent->id,
-                                                          "cmid" => $coursemodule->id])->total." " :
-                                    null;
+                                                          "cmid" => $coursemodule->id])->total." " : null;
+
         // Have to use flat HTML - no templates here or it will cause issues when you reset the cache.
         $trainingevent->intro = html_writer::start_tag('div');
         $trainingevent->intro .= get_string('location', 'trainingevent') . ": " . $template->name;
         $trainingevent->intro .= html_writer::empty_tag('br');
         $trainingevent->intro .= get_string('startdatetime', 'trainingevent') . ": " . $template->startdatetime;
         $trainingevent->intro .= html_writer::empty_tag('br');
+
         if (!empty($template->usersbooked)) {
             $trainingevent->intro .= get_string('usersbooked', 'trainingevent') . ": " . $template->usersbooked;
             $trainingevent->intro .= html_writer::empty_tag('br');
@@ -263,7 +260,7 @@ function trainingevent_get_coursemodule_info($coursemodule) {
 
         $info->content = null;
         $info->content = format_module_intro('trainingevent', $trainingevent, $coursemodule->id, false);
-        
+
         $info->name  = format_string($trainingevent->name, true, ['context' => context_module::instance($coursemodule->id)]);
 
         return $info;
@@ -274,17 +271,21 @@ function trainingevent_get_coursemodule_info($coursemodule) {
 }
 
 /**
+ * Get the view actions for the activity.
+ *
  * @return array
  */
 function trainingevent_get_view_actions() {
-    return array();
+    return [];
 }
 
 /**
+ * Get the post actions for the activity.
+ *
  * @return array
  */
 function trainingevent_get_post_actions() {
-    return array();
+    return [];
 }
 
 /**
@@ -294,7 +295,7 @@ function trainingevent_get_post_actions() {
  * @return array status array
  */
 function trainingevent_reset_userdata($data) {
-    return array();
+    return [];
 }
 
 /**
@@ -303,10 +304,12 @@ function trainingevent_reset_userdata($data) {
  * @return array
  */
 function trainingevent_get_extra_capabilities() {
-    return array('moodle/site:accessallgroups');
+    return []'moodle/site:accessallgroups'];
 }
 
 /**
+ * Get the list of supported features for the training event activity.
+ *
  * @uses FEATURE_IDNUMBER
  * @uses FEATURE_GROUPS
  * @uses FEATURE_GROUPINGS
@@ -320,19 +323,33 @@ function trainingevent_get_extra_capabilities() {
  */
 function trainingevent_supports($feature) {
     switch($feature) {
-        case FEATURE_IDNUMBER:                return true;
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_GRADE_HAS_GRADE:         return true;
-        case FEATURE_GRADE_OUTCOMES:          return true;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
-        case FEATURE_NO_VIEW_LINK:            return false;
-        case FEATURE_MOD_PURPOSE:             return MOD_PURPOSE_ASSESSMENT;
-        default: return null;
+        case FEATURE_IDNUMBER:
+            return true;
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GROUPINGS:
+            return true;
+        case FEATURE_GROUPMEMBERSONLY:
+            return true;
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+             true;
+        case FEATURE_GRADE_HAS_GRADE:
+            return true;
+        case FEATURE_GRADE_OUTCOMES:
+            return true;
+        case FEATURE_BACKUP_MOODLE2:
+            return true;
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
+        case FEATURE_NO_VIEW_LINK:
+             false;
+        case FEATURE_MOD_PURPOSE:
+            return MOD_PURPOSE_ASSESSMENT;
+
+        default:
+            return null;
     }
 }
 
@@ -340,9 +357,9 @@ function trainingevent_supports($feature) {
  * Checks if the user is already booked on another training even at
  * the same time as the one passed.
  *
- * @uses event = object
- * @usese $userid = int
- * @returns boolean
+ * @param object $event
+ * @param int $userid
+ * @return boolean
  */
 function trainingevent_event_clashes($event, $userid, $ignoreeventid = 0) {
     global $DB;
@@ -457,6 +474,8 @@ function trainingevent_get_available_events($currenteventid, $courseid, $userid,
 /****
  * Processes anything else that needs to happen when the trainingevent_user_attending event is fired.
  *
+ * @param object $event
+ * @return bool
  */
 function trainingevent_user_attending($event) {
     global $DB, $CFG;
@@ -505,11 +524,11 @@ function trainingevent_user_attending($event) {
         !empty($event->other['waitlisted'])) {
 
         // Send the added to waiting list email.
-        EmailTemplate::send('user_signed_up_to_waitlist', array('course' => $course,
-                                                                'user' => $user,
-                                                                'classroom' => $location,
-                                                                'company' => $company,
-                                                                'event' => $event));
+        EmailTemplate::send('user_signed_up_to_waitlist', ['course' => $course,
+                                                           'user' => $user,
+                                                           'classroom' => $location,
+                                                           'company' => $company,
+                                                           'event' => $event]);
 
         // Reset the module cache.
         course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
@@ -521,17 +540,18 @@ function trainingevent_user_attending($event) {
     // Send an email as long as it hasn't already started.
     if ($sendemails &&
         $trainingevent->startdatetime > $event->timecreated) {
-        EmailTemplate::send('user_signed_up_for_event', array('course' => $course,
-                                                              'user' => $user,
-                                                              'classroom' => $location,
-                                                              'company' => $company,
-                                                              'event' => $event));
+        EmailTemplate::send('user_signed_up_for_event', ['course' => $course,
+                                                         'user' => $user,
+                                                         'classroom' => $location,
+                                                         'company' => $company,
+                                                         'event' => $event);
     }
 
     // Add to the users calendar.
     $calendarevent = (object) [];
     $calendarevent->eventtype = 'user';
-    $calendarevent->type = CALENDAR_EVENT_TYPE_ACTION; // This is used for events we only want to display on the calendar, and are not needed on the block_myoverview.
+    // This is used for events we only want to display on the calendar, and are not needed on the block_myoverview.
+    $calendarevent->type = CALENDAR_EVENT_TYPE_ACTION;
     $calendarevent->name = get_string('calendartitle', 'trainingevent',
                                       (object) ['coursename' => format_string($course->fullname),
                                                 'eventname' => format_string($trainingevent->name)]);
@@ -550,7 +570,7 @@ function trainingevent_user_attending($event) {
     if (!empty($location->postcode)) {
         $eventlocation .= ", " . format_string($location->postcode);
     }
-    $calendarevent->location = $eventlocation; 
+    $calendarevent->location = $eventlocation;
     $calendarevent->courseid = 0;
     $calendarevent->groupid = 0;
     $calendarevent->userid = $user->id;
@@ -570,8 +590,10 @@ function trainingevent_user_attending($event) {
         $userteachers = [];
         foreach ($usergroups as $usergroup => $junk) {
             $userteachers = $userteachers +
-                            get_enrolled_users(context_course::instance($course->id), 'mod/trainingevent:viewattendees', $usergroup);
-        } 
+                            get_enrolled_users(context_course::instance($course->id),
+                                               'mod/trainingevent:viewattendees',
+                                               $usergroup);
+        }
         foreach ($userteachers as $userteacher) {
 
             // Send an email as long as it hasn't already started.
@@ -663,10 +685,10 @@ function trainingevent_user_removed($event) {
     }
 
     // Remove from the users calendar.
-    if ($calendareventrecs = $DB->get_records('event',['userid' => $user->id,
-                                                       'courseid' => 0,
-                                                       'modulename' => 'trainingevent',
-                                                       'instance' => $trainingevent->id])) {
+    if ($calendareventrecs = $DB->get_records('event', ['userid' => $user->id,
+                                                        'courseid' => 0,
+                                                        'modulename' => 'trainingevent',
+                                                        'instance' => $trainingevent->id])) {
         foreach ($calendareventrecs as $calendareventrec) {
             $calendarevent = calendar_event::load($calendareventrec->id);
             $calendarevent->delete(true);
@@ -680,8 +702,10 @@ function trainingevent_user_removed($event) {
         $userteachers = [];
         foreach ($usergroups as $usergroup => $junk) {
             $userteachers = $userteachers +
-                            get_enrolled_users(context_course::instance($course->id), 'mod/trainingevent:viewattendees', $usergroup);
-        } 
+                            get_enrolled_users(context_course::instance($course->id),
+                                               'mod/trainingevent:viewattendees',
+                                               $usergroup);
+        }
         foreach ($userteachers as $userteacher) {
 
             // Send an email as long as it hasn't already started.
@@ -724,7 +748,7 @@ function trainingevent_user_removed($event) {
         // Only add someone if there is no capacity or there is still space.
         if ($attending < $maxcapacity) {
             $waitlistuser = reset($waitlistusers);
-            $DB->set_field('trainingevent_users', 'waitlisted', 0, ['id'=>$waitlistuser->id]);
+            $DB->set_field('trainingevent_users', 'waitlisted', 0, ['id' => $waitlistuser->id]);
 
             // Is this an exclusive event?
             if (!empty($trainingevent->isexclusive)) {
@@ -735,10 +759,10 @@ function trainingevent_user_removed($event) {
                                                                     'userid' => $waitlistuser->userid,
                                                                     'waitlisted' => 1]);
                     }
-                } 
+                }
             }
 
-            $course = $DB->get_record('course', array('id' => $trainingevent->course));
+            $course = $DB->get_record('course', ['id' => $trainingevent->course]);
             $context = context_course::instance($trainingevent->course);
             $user = $DB->get_record('user', ['id' => $waitlistuser->userid]);
             $usercompany = new company($location->companyid);
@@ -746,7 +770,8 @@ function trainingevent_user_removed($event) {
 
             // Fire an event for this.
             $eventother = ['waitlisted' => 0];
-            $moodleevent = \mod_trainingevent\event\user_attending::create(['context' => context_module::instance($event->contextinstanceid),
+            $modulecontext = context_module::instance($event->contextinstanceid);
+            $moodleevent = \mod_trainingevent\event\user_attending::create(['context' => $modulecontext,
                                                                             'userid' => $user->id,
                                                                             'objectid' => $trainingevent->id,
                                                                             'companyid' => $usercompany->id,
@@ -786,8 +811,8 @@ function trainingevent_attendance_changed($event) {
         throw new moodle_exception('invalidcoursemodule');
     }
 
-    if (!$user = $DB->get_record('user', ['id' => $event->relateduserid])) {
     // Does the user exist?
+    if (!$user = $DB->get_record('user', ['id' => $event->relateduserid])) {
         return false;
     }
 
@@ -812,14 +837,14 @@ function trainingevent_attendance_changed($event) {
     // Add the time to the location object.
     $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
     $chosenlocation->time = userdate($chosenevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
- 
+
     // Get the course teachers using using groups if required.
     $usergroups = groups_get_user_groups($course->id, $user->id);
     $userteachers = [];
     foreach ($usergroups as $usergroup => $junk) {
         $userteachers = $userteachers +
                         get_enrolled_users(context_course::instance($course->id), 'mod/trainingevent:viewattendees', $usergroup);
-    } 
+    }
 
     // Send an email as long as it hasn't already started.
     if ($trainingevent->startdatetime > $event->timecreated) {
@@ -836,8 +861,8 @@ function trainingevent_attendance_changed($event) {
                                                                         'classroom' => $location,
                                                                         'company' => $company,
                                                                         'event' => $trainingevent]);
-            }                
-        }                
+            }
+        }
     }
 
     // Deal with the chosen event.
@@ -890,7 +915,7 @@ function trainingevent_attendance_changed($event) {
         // Only add someone if there is no capacity or there is still space.
         if ($attending < $maxcapacity) {
             $waitlistuser = reset($waitlistusers);
-            $DB->set_field('trainingevent_users', 'waitlisted', 0, ['id'=>$waitlistuser->id]);
+            $DB->set_field('trainingevent_users', 'waitlisted', 0, ['id' => $waitlistuser->id]);
 
             // Is this an exclusive event?
             if (!empty($trainingevent->isexclusive)) {
@@ -901,17 +926,18 @@ function trainingevent_attendance_changed($event) {
                                                                     'userid' => $waitlistuser->userid,
                                                                     'waitlisted' => 1]);
                     }
-                } 
+                }
             }
 
-            $course = $DB->get_record('course', array('id' => $trainingevent->course));
+            $course = $DB->get_record('course', ['id' => $trainingevent->course]);
             $context = context_course::instance($trainingevent->course);
             $user = $DB->get_record('user', ['id' => $waitlistuser->userid]);
             $usercompany = company::by_userid($user->id);
 
             // Fire an event for this.
             $eventother = ['waitlisted' => 0];
-            $moodleevent = \mod_trainingevent\event\user_attending::create(['context' => context_module::instance($event->contextinstanceid),
+            $modulecontext = context_module::instance($event->contextinstanceid);
+            $moodleevent = \mod_trainingevent\event\user_attending::create(['context' => $modulecontext,
                                                                             'userid' => $user->id,
                                                                             'objectid' => $trainingevent->id,
                                                                             'companyid' => $usercompany->id,
@@ -921,7 +947,7 @@ function trainingevent_attendance_changed($event) {
         }
     }
 
-   return;
+    return;
 }
 
 /**

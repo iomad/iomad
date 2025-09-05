@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Main page for the activity.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -117,10 +119,10 @@ if (has_capability('block/iomad_company_admin:company_add', $systemcontext) ||
 }
 
 if (!empty($exportcalendar)) {
-    if ($calendareventrec = $DB->get_record('event',['userid' => $USER->id,
-                                                                 'courseid' => 0,
-                                                                 'modulename' => 'trainingevent',
-                                                                 'instance' => $trainingevent->id])) {
+    if ($calendareventrec = $DB->get_record('event', ['userid' => $USER->id,
+                                                      'courseid' => 0,
+                                                      'modulename' => 'trainingevent',
+                                                      'instance' => $trainingevent->id])) {
         $calendarevent = calendar_event::load($calendareventrec->id);
         $ical = new iCalendar;
         $ical->add_property('method', 'PUBLISH');
@@ -141,17 +143,18 @@ if (!empty($exportcalendar)) {
         $description = html_to_text($description, 0);
         $ev->add_property('description', $description);
 
-        $ev->add_property('class', 'PUBLIC'); // PUBLIC / PRIVATE / CONFIDENTIAL
+        $ev->add_property('class', 'PUBLIC');
         $ev->add_property('last-modified', Bennu::timestamp_to_datetime($calendarevent->timemodified));
 
         if (!empty($calendarevent->location)) {
             $ev->add_property('location', $calendarevent->location);
         }
 
-        $ev->add_property('dtstamp', Bennu::timestamp_to_datetime()); // now
+        // Set the timestamp to now.
+        $ev->add_property('dtstamp', Bennu::timestamp_to_datetime());
         if ($calendarevent->timeduration > 0) {
-            //dtend is better than duration, because it works in Microsoft Outlook and works better in Korganizer
-            $ev->add_property('dtstart', Bennu::timestamp_to_datetime($calendarevent->timestart)); // when event starts.
+            // Using dtend is better than duration, because it works in Microsoft Outlook and works better in Korganizer.
+            $ev->add_property('dtstart', Bennu::timestamp_to_datetime($calendarevent->timestart)); // When event starts.
             $ev->add_property('dtend', Bennu::timestamp_to_datetime($calendarevent->timestart + $calendarevent->timeduration));
         } else if ($calendarevent->timeduration == 0) {
             // When no duration is present, the event is instantaneous event, ex - Due date of a module.
@@ -168,8 +171,7 @@ if (!empty($exportcalendar)) {
         $ical->add_component($ev);
 
         $serialized = $ical->serialize();
-        if(empty($serialized)) {
-            // TODO
+        if (empty($serialized)) {
             die('bad serialization');
         }
 
@@ -210,7 +212,7 @@ if ($action == 'add' &&
             ($trainingevent->startdatetime < time() && has_capability('mod/trainingevent:addoverride', $context))
             ) {
 
-            //Fully approved.
+            // Fully approved.
             $approved = 1;
 
             $messagestring = get_string('useraddedsuccessfully', 'trainingevent');
@@ -296,12 +298,21 @@ if ($action == 'grade' && !empty($usergradeusers)) {
         $gradeparams['grademax']  = 100;
         $gradeparams['grademin']  = 0;
         $gradeparams['reset'] = false;
-        grade_update('mod/trainingevent', $trainingevent->course, 'mod', 'trainingevent', $trainingevent->id, 0, $gradegrade, $gradeparams);
+        grade_update('mod/trainingevent',
+                     $trainingevent->course,
+                     'mod',
+                     'trainingevent',
+                     $trainingevent->id,
+                     0,
+                     $gradegrade,
+                     $gradeparams);
     }
 }
 
 // Are we attending?
-if ($attendance = (array) $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id, 'waitlisted' => 0, 'approved' => 1], null, 'userid')) {
+if ($attendance = (array) $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
+                                                                   'waitlisted' => 0,
+                                                                   'approved' => 1], null, 'userid')) {
     $attendancecount = count($attendance);
     if (array_key_exists($USER->id, $attendance)) {
         $attending = true;
@@ -341,8 +352,10 @@ if (!empty($publish)) {
         // Add to the course calendar.
         $calendarevent = new stdClass();
         $calendarevent->eventtype = 'trainingevent';
-        $calendarevent->type = CALENDAR_EVENT_TYPE_ACTION; // This is used for events we only want to display on the calendar, and are not needed on the block_myoverview.
-        $calendarevent->name = get_string('publishedtitle', 'trainingevent', (object) ['coursename' => format_string($course->fullname), 'eventname' => format_string($trainingevent->name)]);
+        $calendarevent->type = CALENDAR_EVENT_TYPE_ACTION;
+        $calendarevent->name = get_string('publishedtitle', 'trainingevent',
+                                          (object) ['coursename' => format_string($course->fullname),
+                                                    'eventname' => format_string($trainingevent->name)]);
         $calendarevent->description = format_module_intro('trainingevent', $trainingevent, $cm->id, false);
         $calendarevent->format = FORMAT_HTML;
         $eventlocation = format_string($location->name);
@@ -381,12 +394,12 @@ $numattending = $DB->count_records('trainingevent_users', ['trainingeventid' => 
                                                            'waitlisted' => 0,
                                                            'approved' => 1]);
 
-//Create object to be used for the mustache file
+// Create object to be used for the mustache file.
 $template = (object)[
-    'event_name' => $trainingevent->name
+    'event_name' => $trainingevent->name,
 ];
 
-//Define buttons variable to store all the html for the control buttons
+// Define buttons variable to store all the html for the control buttons.
 $buttons = null;
 if (has_capability('mod/trainingevent:invite', $context)) {
     $publishparams = ['id' => $id,
@@ -433,9 +446,9 @@ if (!$waitingoption && has_capability('mod/trainingevent:resetattendees', $conte
                                         get_string('resetattending', 'trainingevent'));
 }
 
-//Define a location object for the template
+// Define a location object for the template.
 $template->location = format_text($location->name);
-//Define objects for extra details if the location is not virtual
+// Define objects for extra details if the location is not virtual.
 if (empty($location->isvirtual)) {
     $template->trainingeventdetails_array[] = [get_string('address'), $location->address];
     $template->trainingeventdetails_array[] = [get_string('city'), $location->city];
@@ -443,23 +456,25 @@ if (empty($location->isvirtual)) {
     $template->trainingeventdetails_array[] = [get_string('country'), $location->country];
 }
 
-//Define the date format and the objects for the start and end date
+// Define the date format and the objects for the start and end date.
 $dateformat = "d F Y, g:ia";
-$template->trainingeventdetails_array[] = [get_string('startdatetime', 'trainingevent'), date($dateformat, $trainingevent->startdatetime)];
-$template->trainingeventdetails_array[] = [get_string('enddatetime', 'trainingevent'), date($dateformat, $trainingevent->enddatetime)];
+$template->trainingeventdetails_array[] = [get_string('startdatetime', 'trainingevent'),
+                                           date($dateformat, $trainingevent->startdatetime)];
+$template->trainingeventdetails_array[] = [get_string('enddatetime', 'trainingevent'),
+                                           date($dateformat, $trainingevent->enddatetime)];
 
-//Create a object for attending if it is true
+// Create a object for attending if it is true.
 if ($attending) {
     $template->attending = new moodle_url('/mod/trainingevent/view.php', ['id' => $id, 'exportcalendar' => 'yes']);
 }
 
-//Create a capacity_array object if it isn't virtual or if the course capacity is not empty
+// Create a capacity_array object if it isn't virtual or if the course capacity is not empty.
 if (empty($location->isvirtual) || !empty($trainingevent->coursecapacity)) {
     $template->capacity_array = [[$attendancecount, $maxcapacity]];
 }
 
 if (!$download) {
-    if($buttons != null){
+    if ($buttons != null) {
         $PAGE->set_button($buttons);
     }
     echo $OUTPUT->header();
@@ -474,7 +489,7 @@ if (!$download) {
         if (time() > $trainingevent->startdatetime) {
             $template->eventstatus_array[] = get_string('eventhaspassed', 'mod_trainingevent');
         } else if (!empty($trainingevent->lockdays) &&
-            time() + $trainingevent->lockdays*24*60*60 > $trainingevent->startdatetime) {
+            time() + $trainingevent->lockdays * 24 * 60 * 60 > $trainingevent->startdatetime) {
             $template->eventstatus_array[] = get_string('eventislocked', 'mod_trainingevent');
         } else {
             $buttonstring = get_string("updateattendance", 'mod_trainingevent');
@@ -490,7 +505,7 @@ if (!$download) {
                         $printbuttons = false;
                     }
                     if (!empty($trainingevent->lockdays) &&
-                        time() + $trainingevent->lockdays*24*60*60 > $trainingevent->startdatetime) {
+                        time() + $trainingevent->lockdays * 24 * 60 * 60 > $trainingevent->startdatetime) {
                         $template->eventstatus_array[] = get_string('eventislocked', 'trainingevent');
                         $printbuttons = false;
                     }
@@ -523,12 +538,12 @@ if (!$download) {
                 if (!empty($trainingevent->haswaitinglist)) {
                     $printbuttons = true;
                     if (!empty($trainingevent->lockdays) &&
-                        time() + $trainingevent->lockdays*24*60*60 > $trainingevent->startdatetime) {
+                        time() + $trainingevent->lockdays * 24 * 60 * 60 > $trainingevent->startdatetime) {
                         $template->eventstatus_array[] = get_string('eventislocked', 'trainingevent');
                         $printbuttons = false;
                     }
                     if ($printbuttons) {
-                        if (!$DB->get_records('trainingevent_users', ['userid' =>$USER->id,
+                        if (!$DB->get_records('trainingevent_users', ['userid' => $USER->id,
                                                                       'trainingeventid' => $trainingevent->id,
                                                                       'waitlisted' => 1])) {
                             $buttonstring = get_string("waitlist", 'trainingevent');
@@ -560,7 +575,7 @@ if (!empty($buttonstring)) {
                            $trainingevent->approvaltype,
                            $USER->id,
                            $trainingevent->course,
-                           $requesttype
+                           $requesttype,
                           ];
 }
 
@@ -595,7 +610,7 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
         if ($courseevent->id == $trainingevent->id && empty($waitingoption) ) {
             continue;
         }
-        // is there space??
+        // Is there space??
         $currentcount = $DB->count_records('trainingevent_users',
                                            ['trainingeventid' => $courseevent->id,
                                            'waitlisted' => 0]);
@@ -633,15 +648,17 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
     }
 
     $table = new \mod_trainingevent\tables\attendees_table('trainingeventattendees');
-    $table->is_downloading($download, format_string($trainingevent->name) . ' ' . get_string('attendance', 'local_report_attendance'), 'trainingevent_attendees123');
+    $table->is_downloading($download, format_string($trainingevent->name) . ' ' .
+                                                    get_string('attendance', 'local_report_attendance'),
+                                                    'trainingevent_attendees123');
 
     // Set up the default headers and columns.
     $columns = ['fullname',
                 'department',
                 'email'];
-        $headers = [get_string('fullname'),
-                    get_string('department', 'block_iomad_company_admin'),
-                    get_string('email')];
+    $headers = [get_string('fullname'),
+                get_string('department', 'block_iomad_company_admin'),
+                get_string('email')];
 
     // If downloading add the booking notes column, otherwise ignore it.        
     if ($download &&
@@ -677,10 +694,7 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
         foreach ($extrafields as $extrafield) {
             $headers[] = $extrafield->title;
             $columns[] = $extrafield->name;
-            if (!empty($extrafield->fieldid)) {
-                // Its a profile field.
-                // Skip it this time as these may not have data.
-            } else {
+            if (empty($extrafield->fieldid)) {
                 $selectsql .= ", u." . $extrafield->name;
             }
         }
@@ -688,7 +702,9 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
             if (!empty($extrafield->fieldid)) {
                 // Its a profile field.
                 $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
-                $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid . " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
+                $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid .
+                            " ON (u.id = P" . $extrafield->fieldid . ".userid
+                                  AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
                 $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
             }
         }
@@ -721,7 +737,7 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
     $table->out($CFG->iomad_max_list_users, true);
 
 } else {
-    // Output the view template
+    // Output the view template.
     echo $OUTPUT->render_from_template('mod_trainingevent/view', $template);
 }
 

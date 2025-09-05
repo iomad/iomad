@@ -25,41 +25,41 @@
 defined('MOODLE_INTERNAL') || die();
 
 // List of observers.
-$observers = array(
+$observers = [
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\attendance_changed',
         'callback'    => 'mod_trainingevent_observer::attendance_changed',
         'includefile' => '/mod/trainingevent/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\user_attending',
         'callback'    => 'mod_trainingevent_observer::user_attending',
         'includefile' => '/mod/trainingevent/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\mod_trainingevent\event\user_removed',
         'callback'    => 'mod_trainingevent_observer::user_removed',
         'includefile' => '/mod/trainingevent/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\block_iomad_approve_access\event\request_denied',
         'callback'    => 'mod_trainingevent_observer::request_denied',
         'includefile' => '/mod/trainingevent/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname'   => '\core\event\course_module_completion_updated',
         'callback'    => 'mod_trainingevent_observer::course_module_completion_updated',
         'includefile' => '/mod/trainingevent/classes/observer.php',
         'internal'    => false,
-    ),
+    ],
 
-);
+];

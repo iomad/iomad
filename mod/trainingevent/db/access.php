@@ -15,108 +15,110 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    mod
- * @subpackage trainingevent
+ * Capability definitions for the trainingevent activity.
+ *
+ * @package    mod_trainingevent
  * @copyright  2011- E-Learn Design Ltd.
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'mod/trainingevent:addinstance' => array(
+$capabilities = [
+
+    'mod/trainingevent:addinstance' => [
         'riskbitmask' => RISK_XSS,
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'moodle/course:manageactivities'
-    ),
+            'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'moodle/course:manageactivities',
+    ],
 
-    'mod/trainingevent:invite' => array(
+    'mod/trainingevent:invite' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'mod/trainingevent:add' => array(
+    'mod/trainingevent:add' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'mod/trainingevent:addoverride' => array(
+    'mod/trainingevent:addoverride' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'mod/trainingevent:viewattendees' => array(
+    'mod/trainingevent:viewattendees' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
-    
-    'mod/trainingevent:viewallattendees' => array(
+        ],
+    ],
+
+    'mod/trainingevent:viewallattendees' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'companycoursenoneditor' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'mod/trainingevent:resetattendees' => array(
+    'mod/trainingevent:resetattendees' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'mod/trainingevent:grade' => array(
+    'mod/trainingevent:grade' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+        'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'companycourseeditor' => CAP_ALLOW,
             'companycoursenoneditor' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
-
-);
+        ],
+    ],
+];

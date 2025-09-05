@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Upgrade functions for trainingevent activity.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -31,13 +33,9 @@
  * was complex due to us wanting to remvoe the outmoded blocks that this
  * block was going to replace.
  *
- * @global moodle_database $DB
  * @param int $oldversion
  * @param object $block
  */
-
-defined('MOODLE_INTERNAL') || die();
-
 function xmldb_trainingevent_upgrade($oldversion) {
     global $CFG, $DB;
 
@@ -55,7 +53,7 @@ function xmldb_trainingevent_upgrade($oldversion) {
         $table->add_field('trainingeventid', XMLDB_TYPE_INTEGER, '20', XMLDB_UNSIGNED, null, null, null);
 
         // Adding keys to table trainingevent_users.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
         // Conditionally launch create table for trainingevent_users.
         if (!$dbman->table_exists($table)) {
@@ -81,7 +79,7 @@ function xmldb_trainingevent_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2014012301, 'trainingevent');
     }
 
-    if ($oldversion < 2020091600){
+    if ($oldversion < 2020091600) {
 
         // Define field approvaltype to be added to trainingevent.
         $table = new xmldb_table('trainingevent');
@@ -273,7 +271,9 @@ function xmldb_trainingevent_upgrade($oldversion) {
         $DB->set_field_select('trainingevent',
                               'remindersent',
                                1,
-                              "setreminder = 1 AND sendreminder > 0 AND (sendreminder - 1) *24 * 60 * 60 + :runtime > startdatetime",
+                              "setreminder = 1
+                               AND sendreminder > 0
+                               AND (sendreminder - 1) *24 * 60 * 60 + :runtime > startdatetime",
                               ['runtime' => $runtime]);
 
         // Define field requirenotes to be added to trainingevent.

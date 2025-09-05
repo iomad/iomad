@@ -26,6 +26,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/trainingevent/lib.php');
 
+/**
+ * Event observer for trainingevent activity plugin.
+ *
+ * @package    mod_trainingevent
+ * @copyright  2022 Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_trainingevent_observer {
 
     /**

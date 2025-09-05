@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Backup stepslib class for training event activity.
+ *
  * @package   mod_trainingevent
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -30,26 +32,42 @@
  */
 class backup_trainingevent_activity_structure_step extends backup_activity_structure_step {
 
+    /**
+     * Function which defines the XML struction to use when backing up.
+     */
     protected function define_structure() {
 
         // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
 
         // Define each element separated.
-        $trainingevent = new backup_nested_element('trainingevent', array('id'), array(
-            'course', 'name', 'intro', 'introformat', 'timemodified', 'startdatetime', 'enddatetime', 'classroomid', 'approvaltype'));
-        $trainingevent_users = new backup_nested_element('trainingevent_user');
-        $trainingevent_user = new backup_nested_element('trainingevent_users', array('id'), array('userid', 'trainingeventid', 'waitlisted'));
+        $trainingevent = new backup_nested_element('trainingevent',
+                                                   ['id'],
+                                                   ['course',
+                                                    'name',
+                                                    'intro',
+                                                    'introformat',
+                                                    'timemodified',
+                                                    'startdatetime',
+                                                    'enddatetime',
+                                                    'classroomid',
+                                                    'approvaltype']);
+        $trainingeventusers = new backup_nested_element('trainingevent_user');
+        $trainingeventuser = new backup_nested_element('trainingevent_users',
+                                                       ['id'],
+                                                       ['userid',
+                                                        'trainingeventid',
+                                                        'waitlisted']);
 
-        $trainingevent->add_child($trainingevent_users);
-        $trainingevent_users->add_child($trainingevent_user);
+        $trainingevent->add_child($trainingeventusers);
+        $trainingeventusers->add_child($trainingeventuser);
 
         // Build the tree.
         // (love this).
 
         // Define sources.
-        $trainingevent->set_source_table('trainingevent', array('id' => backup::VAR_ACTIVITYID));
-        $trainingevent_user->set_source_table('trainingevent_users', array('trainingeventid' => backup::VAR_ACTIVITYID));
+        $trainingevent->set_source_table('trainingevent', ['id' => backup::VAR_ACTIVITYID]);
+        $trainingeventuser->set_source_table('trainingevent_users', ['trainingeventid' => backup::VAR_ACTIVITYID]);
 
         // Define id annotations.
         // (none).
