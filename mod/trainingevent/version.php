@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Label module version info
+ * Trainingevent module version info
  *
  * @package    mod_trainingevent
  * @copyright  2014 E-Learn Design Ltd. {@link https://www.e-learndesign.co.uk}
