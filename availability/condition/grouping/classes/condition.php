@@ -35,7 +35,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class condition extends \core_availability\condition {
     /** @var array Array from grouping id => name */
-    protected static $groupingnames = array();
+    protected static $groupingnames = [];
 
     /** @var int ID of grouping that this condition requires */
     protected $groupingid = 0;
@@ -212,7 +212,7 @@ class condition extends \core_availability\condition {
      * Wipes the static cache used to store grouping names.
      */
     public static function wipe_static_cache() {
-        self::$groupingnames = array();
+        self::$groupingnames = [];
     }
 
     public function is_applied_to_user_lists() {
@@ -242,7 +242,7 @@ class condition extends \core_availability\condition {
         $aagusers = $checker->get_users_by_capability('moodle/site:accessallgroups');
 
         // Filter the user list.
-        $result = array();
+        $result = [];
         foreach ($users as $id => $user) {
             // Always include users with access all groups.
             if (array_key_exists($id, $aagusers)) {
@@ -292,7 +292,7 @@ class condition extends \core_availability\condition {
                 get_enrolled_sql($info->get_context(), '', 0, $onlyactive);
 
         // Condition for specified or any group.
-        $matchparams = array();
+        $matchparams = [];
         $matchsql = "SELECT 1
                        FROM {groups_members} gm
                        JOIN {groupings_groups} gg ON gg.groupid = gm.groupid

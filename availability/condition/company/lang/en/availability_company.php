@@ -18,7 +18,8 @@
  * Language strings.
  *
  * @package availability_company
- * @copyright 2014 The Open University
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

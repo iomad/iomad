@@ -45,7 +45,7 @@ class frontend extends \core_availability\frontend {
         $groupings = $this->get_all_groupings($course->id);
 
         // Change to JS array format and return.
-        $jsarray = array();
+        $jsarray = [];
         $context = \context_course::instance($course->id);
         foreach ($groupings as $rec) {
             $jsarray[] = (object)array('id' => $rec->id, 'name' =>

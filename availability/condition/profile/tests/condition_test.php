@@ -28,7 +28,7 @@ final class condition_test extends \advanced_testcase {
     protected $profilefield;
 
     /** @var array Array of user IDs for whome we already set the profile field */
-    protected $setusers = array();
+    protected $setusers = [];
 
     /** @var condition Current condition */
     private $cond;
@@ -410,7 +410,7 @@ final class condition_test extends \advanced_testcase {
         $student1 = $generator->create_user(array('institution' => 'Unseen University'));
         $student2 = $generator->create_user(array('institution' => 'Hogwarts'));
         $student3 = $generator->create_user(array('institution' => 'Unseen University'));
-        $allusers = array();
+        $allusers = [];
         foreach (array($student1, $student2, $student3) as $student) {
             $generator->enrol_user($student->id, $course->id);
             $allusers[$student->id] = $student;
@@ -463,7 +463,7 @@ final class condition_test extends \advanced_testcase {
         $student2 = $generator->create_user(array('institution' => 'Hogwarts'));
         $student3 = $generator->create_user(array('institution' => 'Unseen University'));
         $student4 = $generator->create_user(array('institution' => '0'));
-        $allusers = array();
+        $allusers = [];
         foreach (array($student1, $student2, $student3, $student4) as $student) {
             $generator->enrol_user($student->id, $course->id);
             $allusers[$student->id] = $student;
@@ -516,7 +516,7 @@ final class condition_test extends \advanced_testcase {
                 $student4->id));
         $this->cond = new condition((object)array('cf' => 'tonguestyle',
                 'op' => condition::OP_IS_EMPTY));
-        $this->assert_user_list_sql_results(array());
+        $this->assert_user_list_sql_results([]);
     }
 
     /**

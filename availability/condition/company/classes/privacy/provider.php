@@ -18,18 +18,18 @@
  * Privacy Subsystem implementation for availability_company.
  *
  * @package    availability_company
- * @copyright  2018 Andrew Nicols <andrew@nicols.co.uk>
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace availability_company\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for availability_company implementing null_provider.
  *
- * @copyright  2018 Andrew Nicols <andrew@nicols.co.uk>
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements \core_privacy\local\metadata\null_provider {
@@ -40,7 +40,7 @@ class provider implements \core_privacy\local\metadata\null_provider {
      *
      * @return  string
      */
-    public static function get_reason() : string {
+    public static function get_reason(): string {
         return 'privacy:metadata';
     }
 }
