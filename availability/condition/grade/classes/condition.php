@@ -233,7 +233,7 @@ class condition extends \core_availability\condition {
         }
         $cache = \cache::make('availability_grade', 'scores');
         if (($cachedgrades = $cache->get($userid)) === false) {
-            $cachedgrades = array();
+            $cachedgrades = [];
         }
         if (!array_key_exists($gradeitemid, $cachedgrades)) {
             if ($grabthelot) {

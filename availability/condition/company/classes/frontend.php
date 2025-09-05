@@ -18,7 +18,8 @@
  * Front-end class.
  *
  * @package availability_company
- * @copyright 2014 The Open University
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,13 +27,12 @@ namespace availability_company;
 
 use company;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Front-end class.
  *
  * @package availability_company
- * @copyright 2014 The Open University
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class frontend extends \core_availability\frontend {
@@ -41,23 +41,36 @@ class frontend extends \core_availability\frontend {
     /** @var int Course id that $allcompanys is for */
     protected $allcompanyscourseid;
 
+    /**
+     * Function to get the string for the javascript menu.
+     *
+     * @return void
+     */
     protected function get_javascript_strings() {
-        return array('anycompany');
+        return ['anycompany'];
     }
 
+    /**
+     * Function to get javascript params.
+     *
+     * @param object $course
+     * @param \cm_info|null $cm
+     * @param \section_info|null $section
+     * @return void
+     */
     protected function get_javascript_init_params($course, \cm_info $cm = null,
             \section_info $section = null) {
         // Get all companys for course.
         $companys = $this->get_all_companys($course->id);
 
         // Change to JS array format and return.
-        $jsarray = array();
+        $jsarray = [];
         $context = \context_course::instance($course->id);
         foreach ($companys as $id => $name) {
-            $jsarray[] = (object)array('id' => $id, 'name' =>
-                    format_string($name, true, array('context' => $context)));
+            $jsarray[] = (object) ['id' => $id,
+                                   'name' => format_string($name, true, ['context' => $context])];
         }
-        return array($jsarray);
+        return [jsarray];
     }
 
     /**
@@ -77,6 +90,14 @@ class frontend extends \core_availability\frontend {
         return $this->allcompanys;
     }
 
+    /**
+     * Function to check if we can add the condition.
+     *
+     * @param (object) $course
+     * @param \cm_info|null $cm
+     * @param \section_info|null $section
+     * @return void
+     */
     protected function allow_add($course, \cm_info $cm = null,
             \section_info $section = null) {
         global $CFG;

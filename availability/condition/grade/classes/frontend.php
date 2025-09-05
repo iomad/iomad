@@ -45,10 +45,10 @@ class frontend extends \core_availability\frontend {
         require_once($CFG->dirroot . '/course/lib.php');
 
         // Get grades as basic associative array.
-        $gradeoptions = array();
+        $gradeoptions = [];
         $items = \grade_item::fetch_all(array('courseid' => $course->id));
         // For some reason the fetch_all things return null if none.
-        $items = $items ? $items : array();
+        $items = $items ? $items : [];
         foreach ($items as $id => $item) {
             // Don't include the grade item if it's linked with a module that is being deleted.
             if (course_module_instance_pending_deletion($item->courseid, $item->itemmodule, $item->iteminstance)) {
@@ -65,7 +65,7 @@ class frontend extends \core_availability\frontend {
         \core_collator::asort($gradeoptions);
 
         // Change to JS array format and return.
-        $jsarray = array();
+        $jsarray = [];
         foreach ($gradeoptions as $id => $name) {
             $jsarray[] = (object)array('id' => $id, 'name' => $name);
         }

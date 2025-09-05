@@ -18,7 +18,8 @@
  * Condition main class.
  *
  * @package availability_company
- * @copyright 2014 The Open University
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,8 +27,6 @@ namespace availability_company;
 
 use iomad;
 use company;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Condition main class.
@@ -38,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class condition extends \core_availability\condition {
     /** @var array Array from company id => name */
-    protected static $companynames = array();
+    protected static $companynames = [];
 
     /** @var int ID of company that this condition requires, or 0 = any company */
     protected $companyid;
@@ -61,14 +60,28 @@ class condition extends \core_availability\condition {
         }
     }
 
+    /**
+     * Function to save the chosen company conditional.
+     *
+     * @return void
+     */
     public function save() {
-        $result = (object)array('type' => 'company');
+        $result = (object) ['type' => 'company'];
         if ($this->companyid) {
             $result->id = $this->companyid;
         }
         return $result;
     }
 
+    /**
+     * Function to check is the condition is passed.
+     *
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @param bool $grabthelot
+     * @param int $userid
+     * @return boolean
+     */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
         global $DB;
 
@@ -77,7 +90,10 @@ class condition extends \core_availability\condition {
         $allow = false;
 
         // Get all companys the user belongs to.
-        $companies = $DB->get_records_sql("SELECT DISTINCT companyid FROM {company_users} WHERE userid = :userid", ['userid' => $userid]);
+        $companies = $DB->get_records_sql("SELECT DISTINCT companyid
+                                           FROM {company_users}
+                                           WHERE userid = :userid",
+                                          ['userid' => $userid]);
         if ($this->companyid) {
             $allow = array_key_exists($this->companyid, $companies);
         } else {
@@ -96,6 +112,14 @@ class condition extends \core_availability\condition {
         return $allow;
     }
 
+    /**
+     * Function to get condition discription for display.
+     *
+     * @param bool $full
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @return void
+     */
     public function get_description($full, $not, \core_availability\info $info) {
         global $DB;
 
@@ -126,6 +150,11 @@ class condition extends \core_availability\condition {
                 'availability_company', $name);
     }
 
+    /**
+     * Function to return the debugging string.
+     *
+     * @return void
+     */
     protected function get_debug_string() {
         return $this->companyid ? '#' . $this->companyid : 'any';
     }
@@ -134,7 +163,7 @@ class condition extends \core_availability\condition {
      * Wipes the static cache used to store companying names.
      */
     public static function wipe_static_cache() {
-        self::$companynames = array();
+        self::$companynames = [];
     }
 
     /**
@@ -147,11 +176,11 @@ class condition extends \core_availability\condition {
      * @return stdClass Object representing condition
      */
     public static function get_json($companyid = 0) {
-        $result = (object)array('type' => 'company');
+        $result = (object) ['type' => 'company'];
         // Id is only included if set.
         if ($companyid) {
             $result->id = (int)$companyid;
         }
         return $result;
     }
- }
+}

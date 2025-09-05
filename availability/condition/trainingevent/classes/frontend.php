@@ -51,7 +51,7 @@ class frontend extends \core_availability\frontend {
         $trainingevents = $this->get_all_trainingevents($course->id);
 
         // Change to JS array format and return.
-        $jsarray = array();
+        $jsarray = [];
         $context = \context_course::instance($course->id);
         foreach ($trainingevents as $id => $name) {
             $jsarray[] = (object)array('id' => $id, 'name' =>
