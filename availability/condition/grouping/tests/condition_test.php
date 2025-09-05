@@ -215,7 +215,7 @@ final class condition_test extends \advanced_testcase {
         $teacher = $generator->create_user();
         $generator->enrol_user($teacher->id, $course->id, $roleids['editingteacher']);
         $allusers = array($teacher->id => $teacher);
-        $students = array();
+        $students = [];
         for ($i = 0; $i < 3; $i++) {
             $student = $generator->create_user();
             $students[$i] = $student;

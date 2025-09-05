@@ -83,7 +83,7 @@ final class condition_test extends \advanced_testcase {
      */
     public function test_constructor(): void {
         // No parameters.
-        $structure = (object)array();
+        $structure = (object)[];
         try {
             $date = new condition($structure);
             $this->fail();

@@ -20,7 +20,8 @@ namespace availability_company;
  * Unit tests for the condition.
  *
  * @package availability_company
- * @copyright 2014 The Open University
+ * @copyright 2022 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author Derick Turner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class condition_test extends \advanced_testcase {
@@ -52,13 +53,13 @@ class condition_test extends \advanced_testcase {
         $info = new \core_availability\mock_info($course, $user->id);
 
         // Make 2 test companys, one in a companying and one not.
-        $companying = $generator->create_companying(array('courseid' => $course->id));
-        $company1 = $generator->create_company(array('courseid' => $course->id, 'name' => 'G1!'));
+        $companying = $generator->create_companying(['courseid' => $course->id]);
+        $company1 = $generator->create_company(['courseid' => $course->id, 'name' => 'G1!']);
         companys_assign_companying($companying->id, $company1->id);
-        $company2 = $generator->create_company(array('courseid' => $course->id, 'name' => 'G2!'));
+        $company2 = $generator->create_company(['courseid' => $course->id, 'name' => 'G2!']);
 
         // Do test (not in company).
-        $cond = new condition((object)array('id' => (int)$company1->id));
+        $cond = new condition((object)['id' => (int)$company1->id]);
 
         // Check if available (when not available).
         $this->assertFalse($cond->is_available(false, $info, true, $user->id));
@@ -80,11 +81,11 @@ class condition_test extends \advanced_testcase {
         $this->assertMatchesRegularExpression('~do not belong to.*G1!~', $information);
 
         // Check company 2 works also.
-        $cond = new condition((object)array('id' => (int)$company2->id));
+        $cond = new condition((object) ['id' => (int)$company2->id]);
         $this->assertTrue($cond->is_available(false, $info, true, $user->id));
 
         // What about an 'any company' condition?
-        $cond = new condition((object)array());
+        $cond = new condition((object)[]);
         $this->assertTrue($cond->is_available(false, $info, true, $user->id));
         $this->assertFalse($cond->is_available(true, $info, true, $user->id));
         $information = $cond->get_description(false, true, $info);
@@ -98,7 +99,7 @@ class condition_test extends \advanced_testcase {
         $this->assertTrue($cond->is_available(true, $info, true, $USER->id));
 
         // Group that doesn't exist uses 'missing' text.
-        $cond = new condition((object)array('id' => $company2->id + 1000));
+        $cond = new condition((object) ['id' => $company2->id + 1000]);
         $this->assertFalse($cond->is_available(false, $info, true, $user->id));
         $information = $cond->get_description(false, false, $info);
         $information = \core_availability\info::format_info($information, $course);
@@ -111,7 +112,7 @@ class condition_test extends \advanced_testcase {
      */
     public function test_constructor() {
         // Invalid id (not int).
-        $structure = (object)array('id' => 'bourne');
+        $structure = (object) ['id' => 'bourne'];
         try {
             $cond = new condition($structure);
             $this->fail();
@@ -134,12 +135,12 @@ class condition_test extends \advanced_testcase {
      * Tests the save() function.
      */
     public function test_save() {
-        $structure = (object)array('id' => 123);
+        $structure = (object) ['id' => 123];
         $cond = new condition($structure);
         $structure->type = 'company';
         $this->assertEquals($structure, $cond->save());
 
-        $structure = (object)array();
+        $structure = (object)[];
         $cond = new condition($structure);
         $structure->type = 'company';
         $this->assertEquals($structure, $cond->save());
@@ -149,7 +150,7 @@ class condition_test extends \advanced_testcase {
      * Tests the update_dependency_id() function.
      */
     public function test_update_dependency_id() {
-        $cond = new condition((object)array('id' => 123));
+        $cond = new condition((object) ['id' => 123]);
         $this->assertFalse($cond->update_dependency_id('frogs', 123, 456));
         $this->assertFalse($cond->update_dependency_id('companys', 12, 34));
         $this->assertTrue($cond->update_dependency_id('companys', 123, 456));
@@ -174,8 +175,8 @@ class condition_test extends \advanced_testcase {
         $roleids = $DB->get_records_menu('role', null, '', 'shortname, id');
         $teacher = $generator->create_user();
         $generator->enrol_user($teacher->id, $course->id, $roleids['editingteacher']);
-        $allusers = array($teacher->id => $teacher);
-        $students = array();
+        $allusers = [$teacher->id => $teacher];
+        $students = [];
         for ($i = 0; $i < 3; $i++) {
             $student = $generator->create_user();
             $students[$i] = $student;
@@ -185,8 +186,8 @@ class condition_test extends \advanced_testcase {
         $info = new \core_availability\mock_info($course);
 
         // Make test companys.
-        $company1 = $generator->create_company(array('courseid' => $course->id));
-        $company2 = $generator->create_company(array('courseid' => $course->id));
+        $company1 = $generator->create_company(['courseid' => $course->id]);
+        $company2 = $generator->create_company(['courseid' => $course->id]);
 
         // Assign students to companys as follows (teacher is not in a company):
         // 0: no companys.
@@ -197,10 +198,10 @@ class condition_test extends \advanced_testcase {
 
         // Test 'any company' condition.
         $checker = new \core_availability\capability_checker($info->get_context());
-        $cond = new condition((object)array());
+        $cond = new condition((object)[]);
         $result = array_keys($cond->filter_user_list($allusers, false, $info, $checker));
         ksort($result);
-        $expected = array($teacher->id, $students[1]->id, $students[2]->id);
+        $expected = [$teacher->id, $students[1]->id, $students[2]->id];
         $this->assertEquals($expected, $result);
 
         // Test it with get_user_list_sql.
@@ -213,7 +214,7 @@ class condition_test extends \advanced_testcase {
         // both ways).
         $result = array_keys($cond->filter_user_list($allusers, true, $info, $checker));
         ksort($result);
-        $expected = array($teacher->id, $students[0]->id);
+        $expected = [$teacher->id, $students[0]->id];
         $this->assertEquals($expected, $result);
 
         // Test with get_user_list_sql.
@@ -223,10 +224,10 @@ class condition_test extends \advanced_testcase {
         $this->assertEquals($expected, $result);
 
         // Test specific company.
-        $cond = new condition((object)array('id' => (int)$company1->id));
+        $cond = new condition((object) ['id' => (int)$company1->id]);
         $result = array_keys($cond->filter_user_list($allusers, false, $info, $checker));
         ksort($result);
-        $expected = array($teacher->id, $students[1]->id);
+        $expected = [$teacher->id, $students[1]->id];
         $this->assertEquals($expected, $result);
 
         list ($sql, $params) = $cond->get_user_list_sql(false, $info, true);
@@ -236,7 +237,7 @@ class condition_test extends \advanced_testcase {
 
         $result = array_keys($cond->filter_user_list($allusers, true, $info, $checker));
         ksort($result);
-        $expected = array($teacher->id, $students[0]->id, $students[2]->id);
+        $expected = [$teacher->id, $students[0]->id, $students[2]->id];
         $this->assertEquals($expected, $result);
 
         list ($sql, $params) = $cond->get_user_list_sql(true, $info, true);

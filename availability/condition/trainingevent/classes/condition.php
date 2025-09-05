@@ -38,7 +38,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class condition extends \core_availability\condition {
     /** @var array Array from trainingevent id => name */
-    protected static $trainingeventnames = array();
+    protected static $trainingeventnames = [];
 
     /** @var int ID of trainingevent that this condition requires, or 0 = any trainingevent */
     protected $trainingeventid;
@@ -135,7 +135,7 @@ class condition extends \core_availability\condition {
      * Wipes the static cache used to store trainingeventing names.
      */
     public static function wipe_static_cache() {
-        self::$trainingeventnames = array();
+        self::$trainingeventnames = [];
     }
 
     /**

@@ -89,7 +89,7 @@ final class condition_test extends \advanced_testcase {
         $this->assertFalse($cond->is_available(false, $info, true, $usertwo->id));
 
         // What about an 'any group' condition?
-        $cond = new condition((object)array());
+        $cond = new condition((object)[]);
         $this->assertTrue($cond->is_available(false, $info, true, $user->id));
         $this->assertFalse($cond->is_available(true, $info, true, $user->id));
         $this->assertFalse($cond->is_available(false, $info, true, $usertwo->id));
@@ -146,7 +146,7 @@ final class condition_test extends \advanced_testcase {
         $structure->type = 'group';
         $this->assertEquals($structure, $cond->save());
 
-        $structure = (object)array();
+        $structure = (object)[];
         $cond = new condition($structure);
         $structure->type = 'group';
         $this->assertEquals($structure, $cond->save());
@@ -182,7 +182,7 @@ final class condition_test extends \advanced_testcase {
         $teacher = $generator->create_user();
         $generator->enrol_user($teacher->id, $course->id, $roleids['editingteacher']);
         $allusers = array($teacher->id => $teacher);
-        $students = array();
+        $students = [];
         for ($i = 0; $i < 3; $i++) {
             $student = $generator->create_user();
             $students[$i] = $student;
@@ -204,7 +204,7 @@ final class condition_test extends \advanced_testcase {
 
         // Test 'any group' condition.
         $checker = new \core_availability\capability_checker($info->get_context());
-        $cond = new condition((object)array());
+        $cond = new condition((object)[]);
         $result = array_keys($cond->filter_user_list($allusers, false, $info, $checker));
         ksort($result);
         $expected = array($teacher->id, $students[1]->id, $students[2]->id);

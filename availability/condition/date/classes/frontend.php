@@ -100,11 +100,11 @@ class frontend extends \core_availability\frontend {
                 'hour' => 0, 'minute' => 0);
 
         // Time part is handled the same everywhere.
-        $hours = array();
+        $hours = [];
         for ($i = 0; $i <= 23; $i++) {
             $hours[$i] = sprintf("%02d", $i);
         }
-        $minutes = array();
+        $minutes = [];
         for ($i = 0; $i < 60; $i += 5) {
             $minutes[$i] = sprintf("%02d", $i);
         }

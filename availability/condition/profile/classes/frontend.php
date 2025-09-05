@@ -48,7 +48,7 @@ class frontend extends \core_availability\frontend {
         \core_collator::asort($standardfields);
 
         // Custom fields.
-        $customfields = array();
+        $customfields = [];
         $options = array('context' => \context_course::instance($course->id));
         foreach (condition::get_custom_profile_fields() as $field) {
             $customfields[$field->shortname] = format_string($field->name, true, $options);
