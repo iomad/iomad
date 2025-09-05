@@ -304,7 +304,7 @@ function trainingevent_reset_userdata($data) {
  * @return array
  */
 function trainingevent_get_extra_capabilities() {
-    return []'moodle/site:accessallgroups'];
+    return ['moodle/site:accessallgroups'];
 }
 
 /**
@@ -544,7 +544,7 @@ function trainingevent_user_attending($event) {
                                                          'user' => $user,
                                                          'classroom' => $location,
                                                          'company' => $company,
-                                                         'event' => $event);
+                                                         'event' => $event]);
     }
 
     // Add to the users calendar.

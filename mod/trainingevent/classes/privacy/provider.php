@@ -179,7 +179,7 @@ class provider implements
 
         // Merge with trainingevent data and write it.
         $contextdata = (object)array_merge((array)$contextdata, $trainingeventdata);
-        writer::with_context($context)->export_data([get_string('pluginname', 'trainingevent']), $contextdata);
+        writer::with_context($context)->export_data([get_string('pluginname', 'trainingevent')], $contextdata);
 
         // Write generic module intro files.
         helper::export_context_files($context, $user);
