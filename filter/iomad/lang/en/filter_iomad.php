@@ -17,8 +17,9 @@
 /**
  * Languages configuration for the filter_iomad plugin.
  *
- * @package   filter_iomad
- * @copyright  2025 E-Learn Design LTD
+ * @package   core_filters
+ * @subpackage iomad
+ * @copyright  2025 E-Learn Design Ltd https://www.e-learndesign.co.uk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
