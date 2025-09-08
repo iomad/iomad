@@ -26,8 +26,6 @@ namespace availability_trainingevent;
 
 use trainingevent;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Front-end class.
  *
@@ -41,23 +39,36 @@ class frontend extends \core_availability\frontend {
     /** @var int Course id that $alltrainingevents is for */
     protected $alltrainingeventscourseid;
 
+    /**
+     * Function to get the javascript strings.
+     *
+     * @return void
+     */
     protected function get_javascript_strings() {
-        return array('anytrainingevent');
+        return ['anytrainingevent'];
     }
 
-    protected function get_javascript_init_params($course, \cm_info $cm = null,
-            \section_info $section = null) {
+    /**
+     * Function to get the javascript initialisation params.
+     *
+     * @param object $course
+     * @param \cm_info|null $cm
+     * @param \section_info|null $section
+     * @return void
+     */
+    protected function get_javascript_init_params($course, \cm_info $cm = '',
+            \section_info $section = '') {
         // Get all trainingevents for course.
         $trainingevents = $this->get_all_trainingevents($course->id);
 
         // Change to JS array format and return.
-        $jsarray = array();
+        $jsarray = [];
         $context = \context_course::instance($course->id);
         foreach ($trainingevents as $id => $name) {
-            $jsarray[] = (object)array('id' => $id, 'name' =>
-                    format_string($name, true, array('context' => $context)));
+            $jsarray[] = (object) ['id' => $id,
+                                   'name' => format_string($name, true, ['context' => $context]]);
         }
-        return array($jsarray);
+        return [$jsarray];
     }
 
     /**
@@ -70,14 +81,25 @@ class frontend extends \core_availability\frontend {
         global $CFG, $DB;
 
         if ($courseid != $this->alltrainingeventscourseid) {
-            $this->alltrainingevents = $DB->get_records_sql_menu("SELECT id, name FROM {trainingevent} WHERE course = :courseid", ['courseid' => $courseid]);
+            $this->alltrainingevents = $DB->get_records_sql_menu("SELECT id, name
+                                                                  FROM {trainingevent}
+                                                                  WHERE course = :courseid",
+                                                                 ['courseid' => $courseid]);
             $this->alltrainingeventscourseid = $courseid;
         }
         return $this->alltrainingevents;
     }
 
-    protected function allow_add($course, \cm_info $cm = null,
-            \section_info $section = null) {
+    /**
+     * Function to check if we can add this condition.
+     *
+     * @param object $course
+     * @param \cm_info|null $cm
+     * @param \section_info|null $section
+     * @return void
+     */
+    protected function allow_add($course, \cm_info $cm = ''null'',
+            \section_info $section = '') {
 
         // Only show this option if there are some trainingevents.
         return count($this->get_all_trainingevents($course->id)) > 0;
