@@ -15,32 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Access definition for IOMAD welcome block.
+ *
  * @package   block_iomad_welcome
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_welcome:addinstance' => array(
+$capabilities = [
 
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
-
-    'block/iomad_welcome:myaddinstance' => array(
+    'block/iomad_welcome:addinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_welcome:view' => array(
+    'block/iomad_welcome:myaddinstance' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
+
+    'block/iomad_welcome:view' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    )
-);
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+];
