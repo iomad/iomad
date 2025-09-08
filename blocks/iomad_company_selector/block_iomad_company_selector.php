@@ -15,35 +15,62 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD company selector
+ *
  * @package   block_iomad_company_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . "/local/iomad/lib/company.php");
 
+/**
+ * Default block class.
+ */
 class block_iomad_company_selector extends block_base {
 
+    /**
+     * Class initialisation function
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('title', 'block_iomad_company_selector');
     }
 
+    /**
+     * Function to check if the block has configuration.
+     *
+     * @return boolean
+     */
     public function has_config() {
         return false;
     }
 
+    /**
+     * Function to check if we display the block header.
+     *
+     * @return void
+     */
     public function hide_header() {
         return false;
     }
 
+    /**
+     * Get the block content.
+     *
+     * @return void
+     */
     public function get_content() {
         global $USER, $CFG, $DB, $OUTPUT, $SESSION;
 
         $systemcontext = context_system::instance();
         $companycontext = $systemcontext;
         if (!empty($company)) {
-            $companycontext =  \core\context\company::instance($company);
+            $companycontext = \core\context\company::instance($company);
         }
 
         // Only display if you have the correct capability.
@@ -55,7 +82,7 @@ class block_iomad_company_selector extends block_base {
             return $this->content;
         }
 
-        $this->content = new stdClass;
+        $this->content = (object) [];
         $this->content->text = '';
         $this->content->footer = '';
 
@@ -68,7 +95,7 @@ class block_iomad_company_selector extends block_base {
             return $this->content;
         }
 
-        //  Check users session and profile settings to get the current editing company.
+        // Check users session and profile settings to get the current editing company.
         if (!empty($SESSION->currenteditingcompany)) {
             $selectedcompany = $SESSION->currenteditingcompany;
         } else if (!empty($USER->profile->company)) {
@@ -87,15 +114,20 @@ class block_iomad_company_selector extends block_base {
 
         // Get a list of companies.
         $companylist = company::get_companies_select();
-        $select = new single_select(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'), 'company', $companylist, $selectedcompany);
+        $select = new single_select(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'),
+                                                   'company',
+                                                   $companylist,
+                                                   $selectedcompany);
         $select->label = get_string('selectacompany', 'block_iomad_company_selector');
         $select->formid = 'choosecompany';
-        $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), array('id' => 'iomad_company_selector'));
+        $fwselectoutput = html_writer::tag('div', $OUTPUT->render($select), ['id' => 'iomad_company_selector']);
         $this->content->text = $OUTPUT->container_start('companyselect');
         if (!empty($SESSION->currenteditingcompany)) {
-            $this->content->text .= '<p>'. get_string('currentcompanyname', 'block_iomad_company_selector', $companyname) .'</p>';
+            $this->content->text .= '<p>' . get_string('currentcompanyname', 'block_iomad_company_selector', $companyname) .
+                                    '</p>';
         } else {
-            $this->content->text .= '<p>'. get_string('nocurrentcompany', 'block_iomad_company_selector').'</p>';
+            $this->content->text .= '<p>' . get_string('nocurrentcompany', 'block_iomad_company_selector') .
+                                    '</p>';
         }
         $this->content->text .= $fwselectoutput;
         $this->content->text .= $OUTPUT->container_end();
