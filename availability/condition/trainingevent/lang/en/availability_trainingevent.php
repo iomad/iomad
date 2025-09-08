@@ -24,12 +24,12 @@
 
 $string['anytrainingevent'] = '(Any trainingevent)';
 $string['description'] = 'Allow only students who are signed up to a specified trainingevent.';
+$string['error_selecttrainingevent'] = 'You must select a trainingevent.';
 $string['missing'] = '(Missing trainingevent)';
 $string['pluginname'] = 'Restriction by trainingevent';
-$string['error_selecttrainingevent'] = 'You must select a trainingevent.';
+$string['privacy:metadata'] = 'The Restriction by trainingevent plugin does not store any personal data.';
 $string['requires_anytrainingevent'] = 'You are signed up to a trainingevent';
-$string['requires_trainingevent'] = 'You are signed up to <strong>{$a}</strong>';
 $string['requires_notanytrainingevent'] = 'You are not signed up to any trainingevent';
 $string['requires_nottrainingevent'] = 'You are notsigned upbelong to <strong>{$a}</strong>';
+$string['requires_trainingevent'] = 'You are signed up to <strong>{$a}</strong>';
 $string['title'] = 'Training event';
-$string['privacy:metadata'] = 'The Restriction by trainingevent plugin does not store any personal data.';

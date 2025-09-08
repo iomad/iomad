@@ -27,8 +27,6 @@ namespace availability_trainingevent;
 use iomad;
 use trainingevent;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Condition main class.
  *
@@ -38,7 +36,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class condition extends \core_availability\condition {
     /** @var array Array from trainingevent id => name */
-    protected static $trainingeventnames = array();
+    protected static $trainingeventnames = [];
 
     /** @var int ID of trainingevent that this condition requires, or 0 = any trainingevent */
     protected $trainingeventid;
@@ -60,14 +58,28 @@ class condition extends \core_availability\condition {
         }
     }
 
+    /**
+     * Function to save chosen condition settings.
+     *
+     * @return void
+     */
     public function save() {
-        $result = (object)array('type' => 'trainingevent');
+        $result = (object)['type' => 'trainingevent'];
         if ($this->trainingeventid) {
             $result->id = $this->trainingeventid;
         }
         return $result;
     }
 
+    /**
+     * Function to check if condition passes.
+     *
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @param bool $grabthelot
+     * @param int $userid
+     * @return boolean
+     */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
         global $DB;
 
@@ -75,8 +87,12 @@ class condition extends \core_availability\condition {
         $context = \context_course::instance($course->id);
         $allow = true;
         if (!iomad::has_capability('mod/trainingevent:add', $context, $userid)) {
-            // Get all trainingevents the user is signed up to
-            $trainingevents = $DB->get_records_sql("SELECT DISTINCT trainingeventid FROM {trainingevent_users} WHERE userid = :userid AND waitlisted = 0", ['userid' => $userid]);
+            // Get all trainingevents the user is signed up to.
+            $trainingevents = $DB->get_records_sql("SELECT DISTINCT trainingeventid
+                                                    FROM {trainingevent_users}
+                                                    WHERE userid = :userid
+                                                    AND waitlisted = 0",
+                                                   ['userid' => $userid]);
             if ($this->trainingeventid) {
                 $allow = array_key_exists($this->trainingeventid, $trainingevents);
             } else {
@@ -95,6 +111,14 @@ class condition extends \core_availability\condition {
         return $allow;
     }
 
+    /**
+     * FUnction to get the conditional description.
+     *
+     * @param bool $full
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @return void
+     */
     public function get_description($full, $not, \core_availability\info $info) {
         global $DB;
 
@@ -105,7 +129,10 @@ class condition extends \core_availability\condition {
             // a database query. To save queries, get all trainingevents for course at
             // once in a static cache.
             if (!array_key_exists($this->trainingeventid, self::$trainingeventnames)) {
-                $alltrainingevents = $DB->get_records_sql_menu("SELECT id,name from {trainingevent} where course = :courseid", ['courseid' => $course->id]);
+                $alltrainingevents = $DB->get_records_sql_menu("SELECT id,name
+                                                                FROM {trainingevent}
+                                                                WHERE course = :courseid",
+                                                               ['courseid' => $course->id]);
                 foreach ($alltrainingevents as $id => $name) {
                     self::$trainingeventnames[$id] = $name;
                 }
@@ -127,6 +154,11 @@ class condition extends \core_availability\condition {
                 'availability_trainingevent', $name);
     }
 
+    /**
+     * Function to get any debug information.
+     *
+     * @return void
+     */
     protected function get_debug_string() {
         return $this->trainingeventid ? '#' . $this->trainingeventid : 'any';
     }
@@ -135,7 +167,7 @@ class condition extends \core_availability\condition {
      * Wipes the static cache used to store trainingeventing names.
      */
     public static function wipe_static_cache() {
-        self::$trainingeventnames = array();
+        self::$trainingeventnames = [];
     }
 
     /**
@@ -148,10 +180,10 @@ class condition extends \core_availability\condition {
      * @return stdClass Object representing condition
      */
     public static function get_json($trainingeventid = 0) {
-        $result = (object)array('type' => 'trainingevent');
+        $result = (object) ['type' => 'trainingevent'];
         // Id is only included if set.
         if ($trainingeventid) {
-            $result->id = (int)$trainingeventid;
+            $result->id = (int) $trainingeventid;
         }
         return $result;
     }
