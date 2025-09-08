@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report companies main page.
+ *
  * @package   local_report_companies
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -32,6 +34,8 @@ $context = context_system::instance();
 iomad::require_capability('local/report_companies:view', $context);
 $companyid = optional_param('companyid', 0, PARAM_INT);
 
+iomad::require_capability('local/report_companies:view', $context);
+
 // Url stuff.
 $url = new moodle_url('/local/report_companies/index.php', ['companyid' => $companyid]);
 
@@ -45,7 +49,7 @@ $PAGE->requires->css("/local/report_companies/styles.css");
 // Set the page heading.
 $PAGE->set_heading($strcompletion);
 
-// Renderer
+// Renderer.
 $output = $PAGE->get_renderer('local_report_companies');
 
 // Navigation and header.
@@ -60,7 +64,7 @@ companyrep::addmanagers($companies) ;
 companyrep::addusers($companies);
 companyrep::addcourses($companies);
 
-// Render report
+// Render report.
 $main = new local_report_companies\output\main($companies);
 echo $output->render_main($main);
 

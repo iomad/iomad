@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report companies - menu definition.
+ *
  * @package   local_report_companies
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Function to define the plugin iomad menu definition.
+ *
+ * @return array
+ */
 function local_report_companies_menu() {
 
-        return array(
-            'companies' => array(
+        return [
+            'companies' => [
                 'category' => 'Reports',
                 'tab' => 8,
                 'name' => get_string('pluginname', 'local_report_companies'),
@@ -36,6 +41,6 @@ function local_report_companies_menu() {
                 'style' => 'report',
                 'icon' => 'fa-building',
                 'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+            ],
+        ];
 }
