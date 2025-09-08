@@ -15,23 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * block IOMAD company selector capabilities
+ *
  * @package   block_iomad_company_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_company_selector:addinstance' => array(
+$capabilities = [
 
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
-
-    'block/iomad_company_selector:myaddinstance' => array(
+    'block/iomad_company_selector:addinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
-);
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
+
+    'block/iomad_company_selector:myaddinstance' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
+];
