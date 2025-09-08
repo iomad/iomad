@@ -15,22 +15,47 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * BLock IOMAD reports.
+ *
  * @package   block_iomad_reports
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * default block class.
+ *
+ * @package   block_iomad_reports
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_reports extends block_base {
 
+    /**
+     * class initialisation function.
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('pluginname', 'block_iomad_reports');
     }
 
+    /**
+     * Function to check if we hide the block header.
+     *
+     * @return void
+     */
     public function hide_header() {
         return true;
     }
 
+    /**
+     * Function to get the block contents.
+     *
+     * @return void
+     */
     public function get_content() {
         global $SITE, $CFG, $OUTPUT, $USER;
 
@@ -48,7 +73,9 @@ class block_iomad_reports extends block_base {
 
         // If no selected company then no report options to be shown.
         if (!iomad::get_my_companyid(context_system::instance(), false)) {
-            $this->content->text .= '<div class="alert alert-warning">' . get_string('nocompanyselected', 'block_iomad_reports') . '</div>';
+            $this->content->text .= '<div class="alert alert-warning">' .
+                                    get_string('nocompanyselected', 'block_iomad_reports') .
+                                    '</div>';
             return $this->content;
         }
 
@@ -64,20 +91,16 @@ class block_iomad_reports extends block_base {
                 $name = get_string( 'pluginname', "local_$report" );
                 $icon = '<img src="'.$imgsrc.'" alt="'.$name.'" /><br />';
 
-                // Report link html.
-                // $this->content->text .= '<div class="iomadlink">';
-                // $this->content->text .= "<a href=\"$url\">" . $icon . $name. "</a>";
-                // $this->content->text .= '</div>';
-
-
                 // Put together link.
                 $this->content->text .= "<a class=\"testlink\" href=\"$url\">";
                 $this->content->text .= '<div class="iomadlinkreports">';
 
-                if ((empty($USER->theme) && (strpos($CFG->theme, 'iomad') !== false)) || (strpos($USER->theme, 'iomad') !== false)) {
+                if ((empty($USER->theme) &&
+                    (strpos($CFG->theme, 'iomad') !== false)) ||
+                   (strpos($USER->theme, 'iomad') !== false)) {
                     $this->content->text .= '<div class="iomadicon"><div class="fa fa-topic fa-bar-chart-o"> </div>';
                 } else {
-                    $this->content->text .= '<div class="iomadicon">' . $icon ;
+                    $this->content->text .= '<div class="iomadicon">' . $icon;
                 }
                 $this->content->text .= '<div class="actiondescription">' . $name . "</div>";
                 $this->content->text .= '</div>';
@@ -95,15 +118,20 @@ class block_iomad_reports extends block_base {
         return $this->content;
     }
 
+    /**
+     * Function to get all of the IOMAD report plugins.
+     *
+     * @return void
+     */
     private function getreportpaths() {
         // Find all /local/report_* directories.
         global $CFG;
 
         $path = "{$CFG->dirroot}/local/";
         $items = new DirectoryIterator( $path );
-        $reports = array();
+        $reports = [];
         foreach ($items as $item) {
-            if ($item->isDot() or !$item->isDir()) {
+            if ($item->isDot() || !$item->isDir()) {
                 continue;
             }
             $dirname = $item->getFilename();

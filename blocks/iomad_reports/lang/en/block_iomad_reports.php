@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * BLock IOMAD reports strings.
+ *
  * @package   block_iomad_reports
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
