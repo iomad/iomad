@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * companyrep class for local_report_companies
+ *
  * @package   local_report_companies
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,25 +27,35 @@ namespace local_report_companies;
 use iomad;
 use context_system;
 
-//require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+/**
+ * companyrep class for local_report_companies
+ *
+ * @package   local_report_companies
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class companyrep {
 
-class companyrep{
-
-    // Get the jsmodule setup thingy.
+    /**
+     * Function to tget the jsmodule setup defaults.
+     *
+     * @return void
+     */
     public function getjsmodule() {
-        $jsmodule = array(
+        $jsmodule = [
             'name'     => 'local_report_completion',
             'fullpath' => '/local/report_completion/module.js',
-            'requires' => array('base', 'node', 'charts', 'json'),
-            'strings' => array(
-                )
-        );
+            'requires' => ['base', 'node', 'charts', 'json'],
+            'strings' => [],
+            ];
         return $jsmodule;
     }
 
     /**
      * Create the select list of companies.
      * If the user is in the company managers table then the list is restricted.
+     *
      * @param object $user
      * @param int $companyid
      * @return array
@@ -52,14 +64,16 @@ class companyrep{
         global $DB;
 
         // Create "empty" array.
-        $companylist = array();
+        $companylist = [);
 
         // Get the companies they manage.
-        $managedcompanies = array();
+        $managedcompanies = [);
         if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance()) &&
-            $managers = $DB->get_records_sql("SELECT * from {company_users} WHERE
-                                              userid = :userid
-                                              AND managertype != 0", array('userid' => $user->id))) {
+            $managers = $DB->get_records_sql("SELECT *
+                                              FROM {company_users}
+                                              WHERE userid = :userid
+                                              AND managertype != 0",
+                                             ['userid' => $user->id])) {
             foreach ($managers as $manager) {
                 $managedcompanies[] = $manager->companyid;
             }
@@ -96,7 +110,7 @@ class companyrep{
 
             // If managers found then only allow selected companies.
             if (!empty($managedcompanies)) {
-                if (!in_array($company->id, $managedcompanies)) {
+                if (!in_[$company->id, $managedcompanies)) {
                     continue;
                 }
             }
@@ -115,6 +129,7 @@ class companyrep{
 
     /**
      * Append the company managers to companies.
+     *
      * @param array $companies
      */
     public static function addmanagers(&$companies) {
@@ -123,14 +138,14 @@ class companyrep{
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
 
-            // Company managers
+            // Company managers.
             $company->companymanagers = $DB->get_records_sql(
                 "SELECT u.* from {company_users} cu
                 JOIN {user} u ON u.id = cu.userid
                 WHERE companyid = :companyid
                 AND managertype = 1", ['companyid' => $company->id]);
 
-            // Department managers
+            // Department managers.
             $company->departmentmanagers = $DB->get_records_sql(
                 "SELECT DISTINCT u.* from {company_users} cu
                 JOIN {user} u ON u.id = cu.userid
@@ -147,17 +162,18 @@ class companyrep{
 
     /**
      * Append the company users to companies.
+     *
      * @param array $companies
      */
-    public static function addusers( &$companies ) {
+    public static function addusers(&$companies) {
         global $DB;
 
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
-            $users = array();
-            if ($companyusers = $DB->get_records('company_users', array('companyid' => $company->id))) {
+            $users = [);
+            if ($companyusers = $DB->get_records('company_users', ['companyid' => $company->id])) {
                 foreach ($companyusers as $companyuser) {
-                    if ($user = $DB->get_record( 'user', array('id' => $companyuser->userid))) {
+                    if ($user = $DB->get_record( 'user', ['id' => $companyuser->userid])) {
                         $users[$user->id] = $user;
                     }
                 }
@@ -168,16 +184,21 @@ class companyrep{
         }
     }
 
-    // Append the company courses to companies.
-    public static function addcourses( &$companies ) {
+    /**
+     * Append the company courses to the coourses.
+     *
+     * @param array $companies
+     * @return void
+     */
+    public static function addcourses(&$companies) {
         global $DB;
 
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
-            $courses = array();
-            if ($companycourses = $DB->get_records( 'company_course', array('companyid' => $company->id))) {
+            $courses = [];
+            if ($companycourses = $DB->get_records( 'company_course', ['companyid' => $company->id))) {
                 foreach ($companycourses as $companycourse) {
-                    if ($course = $DB->get_record( 'course', array('id' => $companycourse->courseid))) {
+                    if ($course = $DB->get_record( 'course', ['id' => $companycourse->courseid])) {
                         $courses[$course->id] = $course;
                     }
                 }
@@ -190,6 +211,7 @@ class companyrep{
 
     /**
      * Update users for template
+     *
      * @param array users
      * @return array
      */
@@ -203,6 +225,5 @@ class companyrep{
 
         return array_values($users);
     }
-
 }
 

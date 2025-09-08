@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report companies output renderer class.
+ *
  * @package   local_report_companies
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,10 +25,16 @@
 
 namespace local_report_companies\output;
 
-defined('MOODLE_INTERNAL') || die();
-
 use plugin_renderer_base;
 
+/**
+ * IOMAD report companies output renderer class.
+ *
+ * @package   local_report_companies
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class renderer extends plugin_renderer_base {
 
     /**

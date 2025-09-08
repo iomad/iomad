@@ -15,31 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report companies strings.
+ *
  * @package   local_report_companies
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['report_companies:view'] = 'View companies report';
 $string['childcompany'] = 'This is a child company. Parent is \'{$a}\'';
 $string['companies'] = 'Companies';
 $string['completed'] = 'Completed';
+$string['completionreportlink'] = 'Completion information';
 $string['course'] = 'Course';
 $string['coursemanagers'] = 'Company managers';
+$string['courses'] = 'Company courses';
 $string['courseusers'] = 'Company users';
 $string['departmentmanagers'] = 'Department managers';
 $string['iomad_companies:view'] = 'IOMAD companies report';
+$string['nocourses'] = 'No courses specified for this company';
 $string['nomanagers'] = 'No managers specified for this company';
+$string['notheme'] = 'No theme is defined';
 $string['nousers'] = 'No users specified for this company';
 $string['overview'] = 'Overview';
 $string['pluginname'] = 'IOMAD company overview report';
 $string['privacy:metadata'] = 'The Local IOMAD company overview report only shows data stored in other locations.';
-$string['totalusercount'] = 'Total number of users: {$a}';
-$string['totalcoursecount'] = 'Total number of courses: {$a}';
-$string['courses'] = 'Company courses';
-$string['nocourses'] = 'No courses specified for this company';
-$string['completionreportlink'] = 'Completion information';
-$string['themeinfo'] = 'Company theme';
+$string['report_companies:view'] = 'View companies report';
 $string['themedetails'] = 'Theme details: ';
-$string['notheme'] = 'No theme is defined';
+$string['themeinfo'] = 'Company theme';
+$string['totalcoursecount'] = 'Total number of courses: {$a}';
+$string['totalusercount'] = 'Total number of users: {$a}';
