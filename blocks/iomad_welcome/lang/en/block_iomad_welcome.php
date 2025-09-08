@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Language string for IOMAD welcome block.
+ *
  * @package   block_iomad_welcome
  * @copyright 2021 Derick Turner
  * @author    Derick Turner

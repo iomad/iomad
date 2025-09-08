@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD welcome block
+ *
  * @package   block_iomad_welcome
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name.
 $plugin->version = 2017020141;
 $plugin->requires = 2019052000;   // Requires this Moodle version.
 $plugin->component  = 'block_iomad_welcome';
