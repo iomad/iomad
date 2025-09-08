@@ -17,15 +17,21 @@
 /**
  * Post install hook for the filter_iomad plugin.
  *
- * @package   filter_iomad
- * @copyright  2025 E-Learn Design LTD
+ * @package    core_filters
+ * @subpackage iomad
+ * @copyright  2025 E-Learn Design Ltd https://www.e-learndesign.co.uk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Install function.
+ *
+ * @return void
+ */
 function xmldb_filter_iomad_install() {
     global $CFG;
     require_once("$CFG->libdir/filterlib.php");
-    // Enable the filter by default
+
+    // Enable the filter by default.
     filter_set_global_state('iomad', TEXTFILTER_ON);
 }
-
