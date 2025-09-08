@@ -17,16 +17,23 @@
 /**
  * Filter main class for the filter_iomad plugin.
  *
- * @package   filter_iomad
- * @copyright  2025 E-Learn Design LTD
+ * @package   core_filters
+ * @subpackage iomad
+ * @copyright  2025 E-Learn Design Ltd https://www.e-learndesign.co.uk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-
 class filter_iomad extends moodle_text_filter {
-    function filter($text, array $options = []) {
+
+    /**
+     * Main filter function.
+     *
+     * @param string $text
+     * @param array $options
+     * @return string
+     */
+    public static function filter($text, array $options = []) {
         global $CFG;
-        error_log('iomad filter initiated');
+
         if (!is_string($text) || empty($text)) {
             // Non-string data can not be filtered anyway.
             return $text;
@@ -38,13 +45,16 @@ class filter_iomad extends moodle_text_filter {
         }
 
         // Alter the URL used to match the current url.
-        // Find all URLS for any src attribute
+        // Find all URLS for any src attribute.
         $pattern = '/((?:src|href)="http?:\/\/)\S*?(\/\S*?pluginfile\.php\S*?")/i';
-        // Get the current URL which is being used
+
+        // Get the current URL which is being used.
         $url = $CFG->wwwroot;
-        // Get only the URL without the protocol and anything after site url
+
+        // Get only the URL without the protocol and anything after site url.
         $url = explode('/', explode('//', $url)[1])[0];
-        // Replace the URL with the current URL being used
+
+        // Replace the URL with the current URL being used.
         $text = preg_replace($pattern, '$1'.$url.'$2', $text);
 
         // Return the modified text.
