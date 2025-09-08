@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD company selecto strings.
+ *
  * @package   block_iomad_company_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
