@@ -31,7 +31,7 @@ class filter_iomad extends moodle_text_filter {
      * @param array $options
      * @return string
      */
-    public static function filter($text, array $options = []) {
+    public function filter($text, array $options = []) {
         global $CFG;
 
         if (!is_string($text) || empty($text)) {
