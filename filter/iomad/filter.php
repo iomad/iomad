@@ -15,49 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Filter main class for the filter_iomad plugin.
+ * File only retained to prevent fatal errors in code that tries to require/include this.
  *
- * @package   core_filters
- * @subpackage iomad
+ * @todo MDL-82708 delete this file as part of Moodle 6.0 development.
+ * @deprecated This file is no longer required in Moodle 4.5+.
+ * @package filter_iomad
  * @copyright  2025 E-Learn Design Ltd https://www.e-learndesign.co.uk
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class filter_iomad extends moodle_text_filter {
+defined('MOODLE_INTERNAL') || die();
 
-    /**
-     * Main filter function.
-     *
-     * @param string $text
-     * @param array $options
-     * @return string
-     */
-    public function filter($text, array $options = []) {
-        global $CFG;
-
-        if (!is_string($text) || empty($text)) {
-            // Non-string data can not be filtered anyway.
-            return $text;
-        }
-
-        if (stripos($text, 'src=') === false && stripos($text, 'href=') === false) {
-            // Performance shortcut - if there is no src, nothing can match.
-            return $text;
-        }
-
-        // Alter the URL used to match the current url.
-        // Find all URLS for any src attribute.
-        $pattern = '/((?:src|href)="http?:\/\/)\S*?(\/\S*?pluginfile\.php\S*?")/i';
-
-        // Get the current URL which is being used.
-        $url = $CFG->wwwroot;
-
-        // Get only the URL without the protocol and anything after site url.
-        $url = explode('/', explode('//', $url)[1])[0];
-
-        // Replace the URL with the current URL being used.
-        $text = preg_replace($pattern, '$1'.$url.'$2', $text);
-
-        // Return the modified text.
-        return $text;
-    }
-}
+debugging('This file is no longer required in Moodle 4.5+. Please do not include/require it.', DEBUG_DEVELOPER);

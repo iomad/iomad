@@ -15,19 +15,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the filter_iomad plugin.
+ * Privacy Subsystem implementation for filter_iomad.
  *
- * @package   filter_iomad
+ * @package    filter_iomad
  * @copyright  2025 E-Learn Design Ltd https://www.e-learndesign.co.uk
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace filter_iomad\privacy;
 
-$plugin->release  = '5.0.2 (Build: 20250811)'; // Human-friendly version name.
-$plugin->version  = 2025081350;   // The (date) version of this plugin.
-$plugin->requires = 2025041400;   // Requires this Moodle version.
-$plugin->component = 'filter_iomad';
-$plugin->dependencies = ['local_iomad' => 2025041400];
-$plugin->supported = [500, 500];
-$plugin->maturity = MATURITY_STABLE;
+/**
+ * Privacy Subsystem for filter_iomad implementing null_provider.
+ *
+ * @copyright  2025 E-Learn Design Ltd https://www.e-learndesign.co.uk
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class provider implements \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}
