@@ -17,12 +17,18 @@
 // This script is run after the link block has been installed.
 
 /**
+ * Block IOMAD link installation script.
  * @package   block_iomad_link
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * lock installation script.
+ *
+ * @return void
+ */
 function xmldb_block_iomad_link_install() {
     global $SITE;
 
@@ -30,7 +36,7 @@ function xmldb_block_iomad_link_install() {
     $page = new moodle_page();
     $page->set_course($SITE);
     $page->set_pagetype('site-index');
-    $page->blocks->add_regions(array(BLOCK_POS_RIGHT));
+    $page->blocks->add_regions([BLOCK_POS_RIGHT]);
     $page->blocks->add_block('iomad_link', BLOCK_POS_RIGHT, 0, false);
 
     return true;

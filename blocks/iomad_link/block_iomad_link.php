@@ -15,25 +15,50 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD link block
+ *
  * @package   block_iomad_link
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Block default class.
+ */
 class block_iomad_link extends block_base {
+    /**
+     * Initial the class.
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('pluginname', 'block_iomad_link');
     }
 
+    /**
+     * Check if should show the block header.
+     *
+     * @return void
+     */
     public function hide_header() {
         return true;
     }
 
+    /**
+     * Check what page formats this will show.
+     *
+     * @return void
+     */
     public function applicable_formats() {
-        return array('site' => true, 'my' => true);
+        return ['site' => true, 'my' => true];
     }
 
+    /**
+     * Get the block content.
+     *
+     * @return void
+     */
     public function get_content() {
         global $USER, $CFG, $DB, $OUTPUT;
 
@@ -55,10 +80,11 @@ class block_iomad_link extends block_base {
         }
 
         $strlink = get_string('link', 'block_iomad_link');
-        $this->content = new stdClass;
+        $this->content = (object) [];
         $this->content->text = "<center><a href=\"{$CFG->wwwroot}/blocks/iomad_company_admin/index.php\">
                                 <img src='" . $OUTPUT->image_url('iomad_logo', 'block_iomad_link') ."' /></a></center>";
-        $this->content->text .= "<center><b><a href=\"{$CFG->wwwroot}/blocks/iomad_company_admin/index.php\">$strlink</a></b></center>";
+        $this->content->text .= "<center><b><a href=\"{$CFG->wwwroot}/blocks/iomad_company_admin/index.php\">" .
+                                 $strlink . "</a></b></center>";
         $this->content->footer = '';
 
         return $this->content;

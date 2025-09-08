@@ -15,34 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD link capabilities.
+ *
  * @package   block_iomad_link
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_link:addinstance' => array(
+$capabilities = [
 
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
-
-    'block/iomad_link:myaddinstance' => array(
+    'block/iomad_link:addinstance' => [
 
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_link:view' => array(
+    'block/iomad_link:myaddinstance' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
+
+    'block/iomad_link:view' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-         'archetypes' => array(
+         'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        )
-    )
-);
+            'clientadministrator' => CAP_ALLOW,
+         ],
+        ],
+    ];
