@@ -15,29 +15,54 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Welcome block for IOMAD.
+ *
  * @package   block_iomad_welcome
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Default block class.
+ */
 class block_iomad_welcome extends block_base {
+    /**
+     * Initialisation.
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('pluginname', 'block_iomad_welcome');
     }
 
+    /**
+     * function to check if we hide the header.
+     *
+     * @return void
+     */
     public function hide_header() {
         return false;
     }
 
+    /**
+     * Where do we show this block?
+     *
+     * @return void
+     */
     public function applicable_formats() {
-        return array('my' => true);
+        return ['my' => true];
     }
 
+    /**
+     * Get the block content.
+     *
+     * @return void
+     */
     public function get_content() {
         global $USER, $CFG, $DB, $OUTPUT;
 
-        // Empty by default;
+        // Empty by default.
         $this->content = new stdClass;
         $this->content->footer = '';
         $this->content->text = '';
@@ -45,7 +70,7 @@ class block_iomad_welcome extends block_base {
         $systemcontext = context_system::instance();
         $companycontext = $systemcontext;
         if (!empty($company)) {
-            $companycontext =  \core\context\company::instance($company);
+            $companycontext = \core\context\company::instance($company);
         }
 
         // Only display if you have the correct capability.
@@ -53,8 +78,8 @@ class block_iomad_welcome extends block_base {
             return;
         }
 
-        // Only display until companies have been created
-        if ($DB->record_exists('company', array())) {
+        // Only display until companies have been created.
+        if ($DB->record_exists('company', [])) {
             return;
         }
 
