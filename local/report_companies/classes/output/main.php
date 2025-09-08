@@ -24,8 +24,6 @@
 
 namespace local_report_companies\output;
 
-defined('MOODLE_INTERNAL') || die;
-
 use renderable;
 use renderer_base;
 use templatable;
@@ -38,16 +36,31 @@ use templatable;
  */
 class main implements renderable, templatable {
 
+    /**
+     * Class variables.
+     *
+     * @var array companyies
+     */
     protected $companies;
 
+    /**
+     * Constructor function.
+     *
+     * @param array $companies
+     */
     public function __construct($companies) {
         $this->companies = $companies;
     }
 
+    /**
+     * Export information for mustach templates.
+     *
+     * @param renderer_base $output
+     * @return void
+     */
     public function export_for_template(renderer_base $output) {
         return [
             'companies' => array_values($this->companies),
         ];
     }
-
 }

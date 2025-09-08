@@ -15,13 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Version info
  * @package   local_report_companies
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.4.10 (Build: 20250811)'; // Human-friendly version name
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->release  = '4.4.10 (Build: 20250811)'; // Human-friendly version name.
 $plugin->version  = 2024042244;   // The (date) version of this plugin.
 $plugin->requires = 2024042200;   // Requires this Moodle version.
 $plugin->component  = 'local_report_companies';
