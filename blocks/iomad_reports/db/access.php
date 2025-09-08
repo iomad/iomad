@@ -15,35 +15,39 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD reports capabilities.
+ *
  * @package   block_iomad_reports
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_reports:addinstance' => array(
+$capabilities = [
+
+    'block/iomad_reports:addinstance' => [
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_reports:myaddinstance' => array(
+    'block/iomad_reports:myaddinstance' => [
         'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK
-    ),
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
 
-    'block/iomad_reports:view' => array(
+    'block/iomad_reports:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW,
             'clientreporter' => CAP_ALLOW,
-            'companyreporter' => CAP_ALLOW
-        ),
-    )
-);
+            'companyreporter' => CAP_ALLOW,
+        ],
+    ],
+];
 
 
