@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin tool_redocerts settings
+ *
  * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,5 +26,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
-    $ADMIN->add('root', new admin_externalpage('toolredocerts', get_string('pluginname', 'tool_redocerts'), $CFG->wwwroot.'/'.$CFG->admin.'/tool/redocerts/index.php'));
+    $ADMIN->add('root', new admin_externalpage('toolredocerts',
+                                               get_string('pluginname', 'tool_redocerts'),
+                                               $CFG->wwwroot.'/'.$CFG->admin.'/tool/redocerts/index.php'));
 }

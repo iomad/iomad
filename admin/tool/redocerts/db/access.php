@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_users
+ * Capabilities for tool_redocerts
+ *
+ * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,14 +25,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
+$capabilities = [
 
-    'tool/redocerts:redocertificates' => array(
+    'tool/redocerts:redocertificates' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
-);
+        ],
+    ],
+];
