@@ -225,7 +225,7 @@ final class condition_test extends \advanced_testcase {
      * @param float $grade Grade
      */
     protected static function set_grade($assignrow, $userid, $grade) {
-        $grades = array();
+        $grades = [];
         $grades[$userid] = (object)array(
                 'rawgrade' => $grade, 'userid' => $userid);
         $assignrow->cmidnumber = null;

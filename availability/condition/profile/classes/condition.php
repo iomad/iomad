@@ -364,7 +364,7 @@ class condition extends \core_availability\condition {
             // Get fields and store them indexed by shortname.
             require_once($CFG->dirroot . '/user/profile/lib.php');
             $fields = profile_get_custom_fields(true);
-            self::$customprofilefields = array();
+            self::$customprofilefields = [];
             foreach ($fields as $field) {
                 self::$customprofilefields[$field->shortname] = $field;
             }
@@ -487,7 +487,7 @@ class condition extends \core_availability\condition {
             $customfields = self::get_custom_profile_fields();
             if (!array_key_exists($this->customfield, $customfields)) {
                 // If the field isn't found, nobody matches.
-                return array();
+                return [];
             }
             $customfield = $customfields[$this->customfield];
 
@@ -510,7 +510,7 @@ class condition extends \core_availability\condition {
         }
 
         // Filter the user list.
-        $result = array();
+        $result = [];
         foreach ($users as $id => $user) {
             // Get value for user.
             if (array_key_exists($id, $values)) {
@@ -547,7 +547,7 @@ class condition extends \core_availability\condition {
             $field2 = $field;
         }
 
-        $params = array();
+        $params = [];
         switch($this->operator) {
             case self::OP_CONTAINS:
                 $sql = $DB->sql_like($field, self::unique_sql_parameter(
@@ -607,11 +607,11 @@ class condition extends \core_availability\condition {
             $customfields = self::get_custom_profile_fields();
             if (!array_key_exists($this->customfield, $customfields)) {
                 // If the field isn't found, nobody matches.
-                return array('SELECT id FROM {user} WHERE 0 = 1', array());
+                return array('SELECT id FROM {user} WHERE 0 = 1', []);
             }
             $customfield = $customfields[$this->customfield];
 
-            $mainparams = array();
+            $mainparams = [];
             $tablesql = "LEFT JOIN {user_info_data} ud ON ud.fieldid = " .
                     self::unique_sql_parameter($mainparams, $customfield->id) .
                     " AND ud.userid = userids.id";

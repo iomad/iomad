@@ -84,7 +84,7 @@ class condition_test extends \advanced_testcase {
         $this->assertTrue($cond->is_available(false, $info, true, $user->id));
 
         // What about an 'any trainingevent' condition?
-        $cond = new condition((object)array());
+        $cond = new condition((object)[]);
         $this->assertTrue($cond->is_available(false, $info, true, $user->id));
         $this->assertFalse($cond->is_available(true, $info, true, $user->id));
         $information = $cond->get_description(false, true, $info);
@@ -139,7 +139,7 @@ class condition_test extends \advanced_testcase {
         $structure->type = 'trainingevent';
         $this->assertEquals($structure, $cond->save());
 
-        $structure = (object)array();
+        $structure = (object)[];
         $cond = new condition($structure);
         $structure->type = 'trainingevent';
         $this->assertEquals($structure, $cond->save());
@@ -175,7 +175,7 @@ class condition_test extends \advanced_testcase {
         $teacher = $generator->create_user();
         $generator->enrol_user($teacher->id, $course->id, $roleids['editingteacher']);
         $allusers = array($teacher->id => $teacher);
-        $students = array();
+        $students = [];
         for ($i = 0; $i < 3; $i++) {
             $student = $generator->create_user();
             $students[$i] = $student;
@@ -197,7 +197,7 @@ class condition_test extends \advanced_testcase {
 
         // Test 'any trainingevent' condition.
         $checker = new \core_availability\capability_checker($info->get_context());
-        $cond = new condition((object)array());
+        $cond = new condition((object)[]);
         $result = array_keys($cond->filter_user_list($allusers, false, $info, $checker));
         ksort($result);
         $expected = array($teacher->id, $students[1]->id, $students[2]->id);
