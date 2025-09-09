@@ -18,12 +18,12 @@
  * Synchronise plans from template learning paths.
  *
  * @package    block_iomad_learningpath
- * @copyright  2024 Derick Turner
+ * @copyright  2024e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_learningpath\task;
-defined('MOODLE_INTERNAL') || die();
 
 use core_competency\api;
 use core_competency\template_learningpath;

@@ -18,20 +18,38 @@
  * Utility class for learning path block
  *
  * @package    block_iomad_learningpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_learningpath;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Class definition
+ */
 class path {
 
+    /**
+     * Class companyid variable
+     *
+     * @var int $companyid
+     */
     protected $companyid;
 
+    /**
+     * Class context variable
+     *
+     * @var context $context
+     */
     protected $context;
 
+    /**
+     * Class constructor function
+     *
+     * @param int $companyid
+     * @param context $context
+     */
     public function __construct($companyid, $context) {
         $this->companyid = $companyid;
         $this->context = $context;
@@ -39,13 +57,14 @@ class path {
 
     /**
      * Get list of courses in path
+     *
      * @param int $pathid
      * @return [array, int/null]
      */
     public function get_courselist($pathid, $groupid, $sequenced = false) {
         global $DB;
 
-        // Calculate overall progress for group
+        // Calculate overall progress for group.
         $cumulativeprogress = 0;
         $completioncoursecount = 0;
 
@@ -59,7 +78,7 @@ class path {
         // Handle sequencing if required.
         $first = true;
 
-        // Spot of processing
+        // Spot of processing...
         foreach ($courses as $course) {
             $course->link = new \moodle_url('/course/view.php', ['id' => $course->courseid]);
             $course->imageurl = $this->get_course_image_url($course->courseid);
@@ -88,7 +107,7 @@ class path {
                 $completioncoursecount++;
             }
 
-            // Round course progress percent
+            // Round course progress percent.
             $course->progresspercent = round($course->progresspercent);
 
             // Stash the previous course in case we need it.
@@ -98,7 +117,7 @@ class path {
             }
         }
 
-        // Calculate overall progress for group
+        // Calculate overall progress for group.
         if ($completioncoursecount) {
             $groupprogress = round($cumulativeprogress / $completioncoursecount);
         } else {
@@ -110,13 +129,14 @@ class path {
 
     /**
      * Get groups for path adding courselist
+     *
      * @param int $pathid
      * @return array
      */
     protected function get_groups($pathid) {
         global $DB;
 
-        // Calculate overall progress for path
+        // Calculate overall progress for path.
         $cumulativeprogress = 0;
         $completiongroupcount = 0;
 
@@ -131,7 +151,7 @@ class path {
             }
         }
 
-        // Calcultate overall progress for path
+        // Calcultate overall progress for path.
         if ($completiongroupcount) {
             $pathprogress = round($cumulativeprogress / $completiongroupcount);
         } else {
@@ -141,10 +161,10 @@ class path {
         return [$groups, $pathprogress];
     }
 
-
     /**
      * Get available learning paths for user
-     * and details of courses attached to them
+     * and details of courses attached to them.
+     *
      * @param int $userid
      * @return array
      */
@@ -159,7 +179,7 @@ class path {
             ORDER BY lp.name ASC';
         $paths = $DB->get_records_sql($sql, ['userid' => $userid, 'companyid' => $this->companyid]);
 
-        // Add url for image and courses array
+        // Add url for image and courses array.
         foreach ($paths as $path) {
             $path->imageurl = $this->get_path_image_url($path->id);
             list($groups, $pathprogress) = $this->get_groups($path->id);
@@ -171,7 +191,8 @@ class path {
     }
 
     /**
-     * Get path image url
+     * Get path image url.
+     *
      * @param int $pathid
      * @return mixed url or false if no image
      */
@@ -207,7 +228,8 @@ class path {
     }
 
     /**
-     * Get course image url
+     * Get course image url.
+     *
      * @param int $courseid
      * @return mixed url or false if no image
      */
@@ -228,5 +250,4 @@ class path {
         // No image defined, so...
         return $OUTPUT->image_url('courseimage', 'block_iomad_learningpath')->out();
     }
-
 }

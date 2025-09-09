@@ -18,26 +18,27 @@
  * Language strings for learning path block
  *
  * @package    block_iomad_learningpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['addlearningpaths'] = 'Add learningpaths';
+$string['addlearningpathstosync'] = 'Add learning paths to sync';
+$string['assignlearningpaths'] = 'Assign learning paths';
 $string['coursedepends'] = 'Complete {$a} first';
 $string['entercourse'] = 'Enter course';
 $string['iomad_learningpath:addinstance'] = 'Add learning path block';
 $string['iomad_learningpath:myaddinstance'] = 'Add learning path block to Moodle Dashboard';
+$string['learningpathssyncedtotemplate'] = 'Learning paths synced to this learning plan template';
 $string['nocompletion'] = 'No progress data yet';
 $string['nopathprogress'] = 'No progress data yet';
 $string['nopaths'] = 'You have no learning paths';
 $string['open'] = 'Open';
 $string['pluginname'] = 'Learning paths';
 $string['returntopath'] = 'Return to learning paths';
-$string['learningpathssyncedtotemplate'] = 'Learning paths synced to this learning plan template';
-$string['addlearningpaths'] = 'Add learningpaths';
 $string['selectlearningpathstosync'] = 'Select learning paths to sync';
 $string['stopsyncinglearningpath'] = 'Stop syncing learning path';
-$string['templatelearningpathnotsyncedwhilehidden'] = 'Learning path will not be synchronised while this template is hidden.'; 
-$string['templatelearningpathnotsyncedwhileduedateispassed'] = 'Learning paths will not be synchronised if the template\'s due date has passed.';
-$string['assignlearningpaths'] = 'Assign learning paths';
 $string['syncplanslearningpaths'] = 'Sync plans from learning plan template learning paths';
-$string['addlearningpathstosync'] = 'Add learning paths to sync';
+$string['templatelearningpathnotsyncedwhileduedateispassed'] = 'Learning paths will not be synchronised if the template\'s due date has passed.';
+$string['templatelearningpathnotsyncedwhilehidden'] = 'Learning path will not be synchronised while this template is hidden.';
