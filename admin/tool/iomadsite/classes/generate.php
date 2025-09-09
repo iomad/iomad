@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Gnerate site class
+ * Generate site class
  *
  * @package tool_iomadsite
- * @copyright 2018 Howard Miller
+ * @copyright 2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Howard Miller
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -30,8 +31,16 @@ require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
+/**
+ * Generate class definition.
+ */
 class generate {
 
+    /**
+     * Companynames array
+     *
+     * @var array
+     */
     protected $companynames = [
         'Acme' => 'Acme Corporation',
         'Globex' => 'Globex Corporation',
@@ -43,6 +52,11 @@ class generate {
         'Massive' => 'Massive Dynamic',
     ];
 
+    /**
+     * Company suffixes array.
+     *
+     * @var array
+     */
     protected $companysuffixes = [
         'Entertainment',
         'Systems',
@@ -76,6 +90,11 @@ class generate {
         'Digital',
     ];
 
+    /**
+     * City names array
+     *
+     * @var array
+     */
     protected $citynames = [
         'Angel Grove',
         'Cabot Cove',
@@ -95,6 +114,11 @@ class generate {
         'Waterdeep',
     ];
 
+    /**
+     * Course name start array
+     *
+     * @var array
+     */
     protected $coursepre = [
         'Counter',
         'Audiology',
@@ -121,6 +145,11 @@ class generate {
         'Ward',
     ];
 
+    /**
+     * Course name end array
+     *
+     * @var array
+     */
     protected $coursepost = [
         'Social Sciences',
         'Literature',
@@ -155,6 +184,11 @@ class generate {
         'Spellcasting',
     ];
 
+    /**
+     * Course extra words array
+     *
+     * @var array
+     */
     protected $courseextra = [
         'Advanced',
         'Further',
@@ -167,12 +201,30 @@ class generate {
         'Studies in',
     ];
 
+    /**
+     * List of firstnames
+     *
+     * @var array
+     */
     protected $firstnames;
 
+    /**
+     * List of lastnames
+     *
+     * @var array
+     */
     protected $lastnames;
 
+    /**
+     * License index
+     *
+     * @var int
+     */
     protected $licenseindex = 1;
 
+    /**
+     * Class constrictor function
+     */
     public function __construct() {
         global $CFG;
 
@@ -184,17 +236,18 @@ class generate {
 
     /**
      * Make course name
-     * @return array(shortname, fullname) 
+     *
+     * @return array(shortname, fullname)
      */
     protected function invent_coursename() {
- 
-        if (rand(0,10) < 4) {
-            $extra = $this->courseextra[array_rand($this->courseextra,1)] . ' ';
+
+        if (rand(0, 10) < 4) {
+            $extra = $this->courseextra[array_rand($this->courseextra, 1)] . ' ';
         } else {
             $extra = '';
         }
-        $coursepre = $this->coursepre[array_rand($this->coursepre,1)];
-        $coursepost = $this->coursepost[array_rand($this->coursepost,1)];
+        $coursepre = $this->coursepre[array_rand($this->coursepre, 1)];
+        $coursepost = $this->coursepost[array_rand($this->coursepost, 1)];
         $fullname = $extra . $coursepre . ' ' . $coursepost;
         $shortname = substr($coursepre, 0, 1) . substr($coursepost, 0, 1) . rand(10000, 99999);
 
@@ -203,6 +256,7 @@ class generate {
 
     /**
      * Make company category
+     *
      * @param string $fullname
      * @return int category id
      */
@@ -224,6 +278,7 @@ class generate {
 
     /**
      * Make profile for this company
+     *
      * @param string $shortname
      * @return int profile id
      */
@@ -240,8 +295,9 @@ class generate {
 
     /**
      * Create company record
+     *
      * @param string $shortname
-     * @param string $fullname 
+     * @param string $fullname
      * @return object record
      */
     protected function company_record($shortname, $fullname) {
@@ -250,7 +306,7 @@ class generate {
         $company = new \stdClass();
         $company->name = $fullname;
         $company->shortname = $shortname;
-        $company->city = $this->citynames[array_rand($this->citynames,1)];
+        $company->city = $this->citynames[array_rand($this->citynames, 1)];
         $company->country = 'GB';
         $company->maildisplay = 0;
         $company->mailformat = 1;
@@ -283,16 +339,17 @@ class generate {
 
     /**
      * Add random courses to a company
+     *
      * @param object $company
      */
     public function courses($company) {
 
         // Iomad company object.
         $comp = new \company($company->id);
-        
-        // Add a random number of courses
+
+        // Add a random number of courses.
         $howmany = rand(10, 25);
-        for ($i=0; $i < $howmany; $i++) {
+        for ($i = 0; $i < $howmany; $i++) {
             list($shortname, $fullname) = $this->invent_coursename();
             $data = new \stdClass();
             $data->fullname = $fullname;
@@ -300,16 +357,17 @@ class generate {
             $data->category = $company->category;
             $course = create_course($data);
             $comp->add_course($course, 0, true);
-           
+
             mtrace("Created course '$fullname'");
 
-            // Add some users
+            // Add some users.
             $this->users($company, $shortname);
         }
     }
 
     /**
      * Create batch of licenses for company
+     *
      * @param int $companyid
      *
      */
@@ -317,14 +375,14 @@ class generate {
         global $DB;
 
         $numberoflicenses = rand(10, 30);
-        for ($i=0; $i < $numberoflicenses; $i++) {
+        for ($i = 0; $i < $numberoflicenses; $i++) {
             $licenseid = $this->create_license($companyid);
         }
     }
 
     /**
      * Create random license
-     * 
+     *
      * @param int $companyid
      * @return int id
      */
@@ -350,15 +408,16 @@ class generate {
 
     /**
      * Create random user
+     *
      * @param int $companyid
      * @param int $courseid;
      */
     protected function create_user($companyid, $courseid) {
         $firstname = $this->firstnames[array_rand($this->firstnames, 1)];
         $lastname = $this->lastnames[array_rand($this->lastnames, 1)];
-        $email = $firstname . '.' . $lastname . '.' . rand(1000,9999) . '@example.com';
-        
-        // data object for user details
+        $email = $firstname . '.' . $lastname . '.' . rand(1000, 9999) . '@example.com';
+
+        // Data object for user details.
         $data = new \stdClass;
         $data->firstname = $firstname;
         $data->lastname = $lastname;
@@ -375,6 +434,7 @@ class generate {
 
     /**
      * Create users for course
+     *
      * @param object $company
      * @param string $shortname (of course)
      */
@@ -383,7 +443,7 @@ class generate {
 
         $course = $DB->get_record('course', ['shortname' => $shortname], '*', MUST_EXIST);
         $howmany = rand(10, 40);
-        for ($i=1; $i < $howmany; $i++) {
+        for ($i = 1; $i < $howmany; $i++) {
             $this->create_user($company->id, $course->id);
         }
     }
@@ -404,5 +464,4 @@ class generate {
             $this->courses($company);
         }
     }
-
 }

@@ -19,12 +19,11 @@
  *
  * @package    tool_iomadsite
  * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace tool_iomadsite\privacy;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Privacy Subsystem for tool_iomadsite implementing null_provider.
@@ -40,7 +39,7 @@ class provider implements \core_privacy\local\metadata\null_provider {
      *
      * @return  string
      */
-    public static function get_reason() : string {
+    public static function get_reason(): string {
         return 'privacy:metadata';
     }
 }

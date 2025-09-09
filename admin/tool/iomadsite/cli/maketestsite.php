@@ -18,7 +18,8 @@
  * CLI interface for creating an Iomad test site.
  *
  * @package tool_iomadsite
- * @copyright 2019 Howard Miller
+ * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -30,29 +31,30 @@ require_once($CFG->libdir. '/clilib.php');
 
 // CLI options.
 list($options, $unrecognized) = cli_get_params(
-    array(
+    [
         'help' => false,
         'size' => false,
         'fixeddataset' => false,
         'filesizelimit' => false,
         'bypasscheck' => false,
-        'quiet' => false
-    ),
-    array(
-        'h' => 'help'
-    )
+        'quiet' => false,
+    ],
+    [
+        'h' => 'help',
+    ],
 );
 
 // Display help.
 if (!empty($options['help'])) {
     echo "
-Utility to generate test data for an Iomad site. 
+Utility to generate test data for an Iomad site.
 
 Not for use on live sites; only normally works if debugging is set to DEVELOPER
 level.
 
 Options:
---size           Size of the generated site, this value affects the number of courses and their size. Accepted values: XS, S, M, L, XL, or XXL (required)
+--size           Size of the generated site, this value affects the number of courses
+                 and their size. Accepted values: XS, S, M, L, XL, or XXL (required)
 --fixeddataset   Use a fixed data set instead of randomly generated data
 --filesizelimit  Limits the size of the generated files to the specified bytes
 --bypasscheck    Bypasses the developer-mode check (be careful!)
@@ -71,11 +73,6 @@ Example from Moodle root directory:
 if (empty($options['bypasscheck']) && !$CFG->debugdeveloper) {
     cli_error(get_string('error_notdebugging', 'tool_generator'));
 }
-
-// Get options.
-//$sizename = $options['size'];
-//$fixeddataset = $options['fixeddataset'];
-//$filesizelimit = $options['filesizelimit'];
 
 // Switch to admin user account.
 \core\session\manager::set_user(get_admin());
