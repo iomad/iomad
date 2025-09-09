@@ -18,18 +18,34 @@
  * Iomad learning path
  *
  * @package   block_iomad_learningpath
- * @copyright 2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright 2025 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Howard Miller (howardsmiller@gmail.com)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Iomad learning path
+ *
+ * @package   block_iomad_learningpath
+ * @copyright 2025 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class block_iomad_learningpath extends block_base {
 
-    function init() {
+    /**
+     * Initialisation function.
+     *
+     * @return void
+     */
+    public function init() {
         $this->title = get_string('pluginname', 'block_iomad_learningpath');
     }
 
+    /**
+     * Where can we see this block?
+     *
+     * @return void
+     */
     public function applicable_formats() {
         return [
             'all' => false,
@@ -39,15 +55,25 @@ class block_iomad_learningpath extends block_base {
             'course-view-social' => false,
             'mod' => false,
             'my' => true,
-            'mod-quiz' => false
+            'mod-quiz' => false,
         ];
     }
 
+    /**
+     * Function to prevent multiple instances.
+     *
+     * @return void
+     */
     public function instance_allow_multiple() {
         return false;
     }
 
-    function get_content () {
+    /**
+     * Function to get the block main content.
+     *
+     * @return void
+     */
+    public function get_content() {
         global $USER;
 
         if ($this->content !== null) {
@@ -70,15 +96,15 @@ class block_iomad_learningpath extends block_base {
             return null;
         }
 
-        // Javascript
+        // Javascript.
         $this->page->requires->js_call_amd('block_iomad_learningpath/path', 'init');
 
         // Render block.
         $renderable = new \block_iomad_learningpath\output\main($userpaths);
         $renderer = $this->page->get_renderer('block_iomad_learningpath');
         $this->content = new stdClass();
-        $this->content->items = array();
-        $this->content->icons = array();
+        $this->content->items = [];
+        $this->content->icons = [];
         $this->content->footer = '';
 
         $this->content = new stdClass();

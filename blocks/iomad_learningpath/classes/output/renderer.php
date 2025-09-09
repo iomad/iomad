@@ -17,18 +17,19 @@
 /**
  * Renderer class for Iomad Learning Paths
  *
- * @package    block_iomad_learninpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @package    block_iomad_learningpath
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 namespace block_iomad_learningpath\output;
-
-defined('MOODLE_INTERNAL') || die();
 
 use plugin_renderer_base;
 
+/**
+ * Block IOMAD learningpaths output renerer class.
+ */
 class renderer extends plugin_renderer_base {
 
     /**
