@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Version information
+ *
  * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
-$plugin->version   = 2019051441; // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017050500; // Requires this Moodle version
-$plugin->component = 'tool_redocerts'; // Full name of the plugin (used for diagnostics)
+$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name.
+$plugin->version   = 2019051441; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2017050500; // Requires this Moodle version.
+$plugin->component = 'tool_redocerts'; // Full name of the plugin (used for diagnostics).
 $plugin->dependencies = ['local_iomad' => 2023042702];
 $plugin->supported = [401, 401];
 $plugin->maturity = MATURITY_STABLE;

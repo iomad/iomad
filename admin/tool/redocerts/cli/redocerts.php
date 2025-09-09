@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Command line script for tool_redocerts
+ *
  * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -45,7 +47,7 @@ Example:
 ";
 
 list($options, $unrecognized) = cli_get_params(
-    array(
+    [
         'userid'  => 0,
         'courseid' => 0,
         'companyid' => 0,
@@ -53,10 +55,10 @@ list($options, $unrecognized) = cli_get_params(
         'fromtimestamp' => null,
         'totimestamp' => null,
         'help'    => false,
-    ),
-    array(
+    ],
+    [
         'h' => 'help',
-    )
+    ],
 );
 
 if ($options['help']) {
@@ -69,7 +71,7 @@ foreach ($options as $key => $value) {
 }
 
 // Build the SQL.
-$usersql = array();
+$usersql = [];
 if (!empty($userid)) {
     $usersql[] = " lit.userid = $userid ";
 }
@@ -93,28 +95,43 @@ if (!empty($usersql)) {
 } else {
     $extrasql = "";
 }
-// delete the initial records
-$oldrecords = $DB->get_records_sql("SELECT lit.* from {local_iomad_track} lit JOIN {course} c ON (c.id = lit.courseid) join {user} u on (lit.userid = u.id and u.deleted = 0 )$extrasql order by lit.id asc");
+// Delete the initial records.
+$oldrecords = $DB->get_records_sql("SELECT lit.*
+                                    FROM {local_iomad_track} lit
+                                    JOIN {course} c ON (c.id = lit.courseid)
+                                    JOIN {user} u ON (lit.userid = u.id and u.deleted = 0 )
+                                    $extrasql
+                                    ORDER BY lit.id ASC");
 
 $total = count($oldrecords);
 $count = 1;
 foreach ($oldrecords as $track) {
-mtrace ("clearing id $track->id - " . $count . " of " . $total);
-    if ($cert = $DB->get_record('local_iomad_track_certs', array('trackid' => $track->id))) {
-mtrace("deleting track record id $track->id");
-        $DB->delete_records('local_iomad_track_certs', array('id' => $cert->id));
+    mtrace ("clearing id $track->id - " . $count . " of " . $total);
+
+    if ($cert = $DB->get_record('local_iomad_track_certs', ['trackid' => $track->id])) {
+        mtrace("deleting track record id $track->id");
+        $DB->delete_records('local_iomad_track_certs', ['id' => $cert->id]);
     }
-    if ($file = $DB->get_record_sql("SELECT * FROM {files} WHERE component= :component and itemid = :itemid and filename != '.'", array('component' => 'local_iomad_track', 'itemid' => $track->id))) {
-        $filedir1 = substr($file->contenthash,0,2);
-        $filedir2 = substr($file->contenthash,2,2);
+
+    if ($file = $DB->get_record_sql("SELECT *
+                                     FROM {files}
+                                     WHERE component= :component
+                                     AND itemid = :itemid
+                                     AND filename != '.'",
+                                    ['component' => 'local_iomad_track', 'itemid' => $track->id])) {
+        $filedir1 = substr($file->contenthash, 0, 2);
+        $filedir2 = substr($file->contenthash, 2, 2);
         $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
-mtrace("removing filename $filepath");
+
+        mtrace("removing filename $filepath");
         unlink($filepath);
     }
-    $DB->delete_records('files', array('itemid' => $track->id, 'component' => 'local_iomad_track'));
-mtrace ("adding Certificate");
+
+    $DB->delete_records('files', ['itemid' => $track->id, 'component' => 'local_iomad_track']);
+
+    mtrace ("adding Certificate");
     xmldb_local_iomad_track_record_certificates($track->courseid, $track->userid, $track->id, true, false);
 
-$count++;
+    $count++;
 }
 
