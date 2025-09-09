@@ -70,7 +70,7 @@ class frontend extends \core_availability\frontend {
             $jsarray[] = (object) ['id' => $id,
                                    'name' => format_string($name, true, ['context' => $context])];
         }
-        return [jsarray];
+        return [$jsarray];
     }
 
     /**
