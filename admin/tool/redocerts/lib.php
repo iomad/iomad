@@ -15,27 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * tool_redocerts default library file
+ *
  * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
-
 /**
  * Gets whether database transactions are allowed.
- * @global moodle_database $DB
+ *
  * @return bool true if transactions are allowed. false otherwise.
  */
-function do_redocerts($user = 0, $course = 0, $company = 0, $idnumber = 0, $fromdate = null, $todate = null, $userid = 0, $courseid = 0, $companyid = 0) {
+function do_redocerts($user = 0,
+                      $course = 0,
+                      $company = 0,
+                      $idnumber = 0,
+                      $fromdate = null,
+                      $todate = null,
+                      $userid = 0,
+                      $courseid = 0,
+                      $companyid = 0) {
     global $DB, $CFG;
 
     require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 
     // Build the SQL.
-    $usersql = array();
+    $usersql = [];
     if (!empty($user)) {
         $usersql[] = " lit.userid = $user ";
     }
@@ -68,8 +75,12 @@ function do_redocerts($user = 0, $course = 0, $company = 0, $idnumber = 0, $from
     } else {
         $extrasql = " WHERE lit.timecompleted > 0 ";
     }
-    // delete the initial records
-    $oldrecords = $DB->get_records_sql("SELECT lit.* from {local_iomad_track} lit JOIN {course} c ON (c.id = lit.courseid) join {user} u on (lit.userid = u.id and u.deleted = 0 ) $extrasql order by lit.id asc");
+    // Delete the initial records.
+    $oldrecords = $DB->get_records_sql("SELECT lit.*
+                                        FROM {local_iomad_track} lit
+                                        JOIN {course} c ON (c.id = lit.courseid)
+                                        JOIN {user} u ON (lit.userid = u.id AND u.deleted = 0 )
+                                        $extrasql ORDER BY lit.id ASC");
 
     $total = count($oldrecords);
     $count = 1;

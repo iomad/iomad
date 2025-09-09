@@ -15,27 +15,35 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_users
+ * IOMAD menu definition for tool_redocerts
+ *
+ * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * IOMAD menu definition for tool_redocerts
+ *
+ * @package   tool_redocerts
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 function tool_redocerts_menu() {
 
-        return array(
-            'redocerts' => array(
-                'category' => 'CourseAdmin',
-                'tab' => 3,
-                'name' => get_string('pluginname', 'tool_redocerts'),
-                'url' => '/admin/tool/redocerts/index.php',
-                'cap' => 'tool/redocerts:redocertificates',
-                'icondefault' => 'report',
-                'style' => 'report',
-                'icon' => 'fa-file-signature',
-                'iconsmall' => 'fa-arrow-rotate-right',
-            ),
-        );
+    return [
+        'redocerts' => [
+        'category' => 'CourseAdmin',
+        'tab' => 3,
+        'name' => get_string('pluginname', 'tool_redocerts'),
+        'url' => '/admin/tool/redocerts/index.php',
+        'cap' => 'tool/redocerts:redocertificates',
+        'icondefault' => 'report',
+        'style' => 'report',
+        'icon' => 'fa-file-signature',
+        'iconsmall' => 'fa-arrow-rotate-right',
+        ],
+    ];
 }

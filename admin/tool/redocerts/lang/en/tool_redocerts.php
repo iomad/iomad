@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin strings
+ *
  * @package   tool_redocerts
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -29,12 +31,12 @@ $string['fromdate'] = 'Completion from date';
 $string['idnumber'] = 'From tracking id number';
 $string['notifyfinished'] = '...finished';
 $string['pageheader'] = 'Recreate stored certificates';
-$string['privacy:metadata'] = 'Admin tool redo certs doesn\'t store any user details';
 $string['pluginname'] = 'Recreate stored certificates';
+$string['privacy:metadata'] = 'Admin tool redo certs doesn\'t store any user details';
 $string['recreatingcertificate'] = 'Recreating Certificate - ';
-$string['redocerts:redocertificates'] = 'Regenerate stored user certificates for a course'; 
-$string['searchusers'] = 'Select a user';
-$string['searchcourses'] = 'Select a course';
+$string['redocerts:redocertificates'] = 'Regenerate stored user certificates for a course';
 $string['searchcompanies'] = 'Select a company';
+$string['searchcourses'] = 'Select a course';
+$string['searchusers'] = 'Select a user';
 $string['todate'] = 'Completion to date';
 $string['userid'] = 'User ID';
