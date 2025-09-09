@@ -18,7 +18,8 @@
  * Development data generator.
  *
  * @package    tool_iomadsite
- * @copyright  2018 Howard Miller
+ * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +30,7 @@ require_once($CFG->libdir . '/adminlib.php');
 // Initialise page and check permissions.
 admin_externalpage_setup('toolgeneratorcourse');
 
-// params
+// Params.
 $action = optional_param('action', '', PARAM_ALPHA);
 
 // Start page.
@@ -39,7 +40,8 @@ echo $OUTPUT->heading(get_string('makesite', 'tool_iomadsite'));
 // Information message.
 $context = context_system::instance();
 echo $OUTPUT->box(format_text(get_string('explanation', 'tool_iomadsite'),
-        FORMAT_MARKDOWN, array('context' => $context)));
+                  FORMAT_MARKDOWN,
+                  ['context' => $context]));
 
 // Check debugging is set to DEVELOPER.
 if (!debugging('', DEBUG_DEVELOPER)) {
@@ -48,7 +50,7 @@ if (!debugging('', DEBUG_DEVELOPER)) {
     exit;
 }
 
-// Do stuffs
+// Do stuffs.
 if ($action == 'generate') {
 
     core_php_time_limit::raise(3600);
@@ -57,7 +59,7 @@ if ($action == 'generate') {
 
 } else {
 
-    // Go ahead button
+    // Go ahead button.
     $url = new moodle_url('/admin/tool/iomadsite/index.php', ['action' => 'generate']);
     echo $OUTPUT->single_button($url, get_string('doit', 'tool_iomadsite'));
 }

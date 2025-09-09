@@ -18,13 +18,14 @@
  * Lots of first names
  *
  * @package tool_iomadsite
- * @copyright 2018 Howard Miller
+ * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$firstnames = array(
+$firstnames = [
 'Alison',
 'Arthur',
 'Ana',
@@ -180,7 +181,8 @@ $firstnames = array(
 'Sachiko',
 'Mieko',
 'Toshie',
-'Junko');
+'Junko',
+];
 
 
 

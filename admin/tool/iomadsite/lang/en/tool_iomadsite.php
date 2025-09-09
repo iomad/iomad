@@ -18,13 +18,14 @@
  * Language strings.
  *
  * @package tool_iomadsite
- * @copyright 2018 Howard Miller
+ * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['explanation'] = 'Tool generates fake data for an IOMAD site. It can only be run by the administrator in Debugging mode. This 
-    is only for test sites. It will completely destroy an existing site.';
 $string['doit'] = 'Ok. Go ahead!';
+$string['explanation'] = 'Tool generates fake data for an IOMAD site. It can only be run by the administrator in Debugging mode. This
+    is only for test sites. It will completely destroy an existing site.';
 $string['makesite'] = 'Make IOMAD fake development site';
 $string['notdebugging'] = 'Developer debugging mode is required to run this tool';
 $string['pluginname'] = 'IOMAD development data generator';

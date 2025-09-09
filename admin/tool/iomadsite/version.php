@@ -18,13 +18,14 @@
  * Version details.
  *
  * @package tool_iomadsite
- * @copyright 2018 Howard Miller
+ * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
+$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name.
 $plugin->version = 2018031041;
 $plugin->requires = 2017051500;
 $plugin->component = 'tool_iomadsite';
