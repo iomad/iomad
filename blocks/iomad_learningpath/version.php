@@ -18,13 +18,14 @@
  * Version file for block_iomad_learningpath
  *
  * @package    block_iomad_learningpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.4.10 (Build: 20250811)'; // Human-friendly version name
+$plugin->release  = '4.4.10 (Build: 20250811)'; // Human-friendly version name.
 $plugin->version  = 2024091044;
 $plugin->requires = 2024042200;   // Requires this Moodle version.
 $plugin->component  = 'block_iomad_learningpath';

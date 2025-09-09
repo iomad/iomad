@@ -18,13 +18,12 @@
  * Class containing data for my overview block.
  *
  * @package    block_iomad_learningpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_iomad_learningpath\output;
-
-defined('MOODLE_INTERNAL') || die();
 
 use renderable;
 use renderer_base;
@@ -36,8 +35,18 @@ use templatable;
  */
 class main implements renderable, templatable {
 
+    /**
+     * Class variables
+     *
+     * @var object $userpaths
+     */
     protected $userpaths;
 
+    /**
+     * Main class constructor
+     *
+     * @param object $userpaths
+     */
     public function __construct($userpaths) {
         $this->userpaths = $userpaths;
     }

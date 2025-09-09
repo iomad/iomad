@@ -16,16 +16,16 @@
 
 /**
  * Task definition for block_iomad_company_admin.
+ * @copyright 2024 e-Learn Design Ltd. https://www.e-learndesign.co.uk
  * @author    Derick Turner
- * @copyright Derick Turner 2024
  * @package   block_iomad_learningpath
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-    array(
+$tasks = [
+    [
         'classname' => '\block_iomad_learningpath\task\sync_plans_from_template_learningpaths_task',
         'blocking' => 0,
         'minute' => '*',
@@ -33,7 +33,7 @@ $tasks = array(
         'day' => '*',
         'month' => '*',
         'dayofweek' => '*',
-        'disabled' => 0
-    )
-);
+        'disabled' => 0,
+    ],
+];
 

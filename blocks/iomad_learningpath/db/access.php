@@ -18,29 +18,32 @@
  * Capabilities for learning path block
  *
  * @package    block_iomad_learningpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_learningpath:myaddinstance' => array(
+$capabilities = [
+
+    'block/iomad_learningpath:myaddinstance' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'user' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'moodle/my:manageblocks'
-    ),
+        'archetypes' => [
+            'user' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'moodle/my:manageblocks',
+    ],
 
-    'block/iomad_learningpath:addinstance' => array(
+    'block/iomad_learningpath:addinstance' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'moodle/site:manageblocks'
-    ),
-);
+            'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'moodle/site:manageblocks',
+    ],
+];
 
