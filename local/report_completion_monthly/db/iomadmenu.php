@@ -15,27 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD menu definition
+ *
  * @package   local_report_completion_monthly
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Define the menu structure used for the IOMAD dashboard.
+ *
+ * @return array
+ */
 function local_report_completion_monthly_menu() {
 
-        return array(
-            'completionmonthly' => array(
-                'category' => 'Reports',
-                'tab' => 8,
-                'name' => get_string('pluginname', 'local_report_completion_monthly'),
-                'url' => '/local/report_completion_monthly/index.php',
-                'cap' => 'local/report_completion_monthly:view',
-                'icondefault' => 'report',
-                'style' => 'report',
-                'icon' => 'fa-calendar-check', // 'fa-check-square-o',
-                'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+    return [
+        'completionmonthly' => [
+        'category' => 'Reports',
+        'tab' => 8,
+        'name' => get_string('pluginname', 'local_report_completion_monthly'),
+        'url' => '/local/report_completion_monthly/index.php',
+        'cap' => 'local/report_completion_monthly:view',
+        'icondefault' => 'report',
+        'style' => 'report',
+        'icon' => 'fa-calendar-check',
+        'iconsmall' => 'fa-bar-chart-o',
+        ],
+    ];
 }

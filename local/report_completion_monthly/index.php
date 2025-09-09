@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Main plugin page
+ *
  * @package   local_report_completion_monthly
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -41,7 +43,7 @@ $toraw = optional_param_array('comptoraw', null, PARAM_INT);
 $yearfrom = optional_param_array('fromarray', null, PARAM_INT);
 $yearto = optional_param_array('toarray', null, PARAM_INT);
 
-$params = array();
+$params = [];
 
 if ($sort) {
     $params['sort'] = $sort;
@@ -141,7 +143,7 @@ foreach ($customfields as $customfield) {
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
@@ -175,8 +177,10 @@ $PAGE->navbar->add($linktext, $linkurl);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
+// Parameter is name of proper select form element followed by 1=submit its form.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
+                             'init',
+                             ['deptid', 1, optional_param('deptid', 0, PARAM_INT)]);
 
 echo $output->header();
 
@@ -191,10 +195,10 @@ $parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Get the company additional optional user parameter names.
-$fieldnames = array();
+$fieldnames = [];
 if ($category = company::get_category($companyid)) {
     // Get field names from company category.
-    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+    if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
         foreach ($fields as $field) {
             $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
             ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.
@@ -206,7 +210,7 @@ if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
                                                  SELECT profileid FROM {company})")) {
     foreach ($categories as $category) {
-        if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+        if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
                 $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
                 ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.
@@ -223,7 +227,7 @@ $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
 if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-    $userlevels = array($parentlevel->id => $parentlevel->id);
+    $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
 }
@@ -268,7 +272,11 @@ if (!empty($usedfields)) {
         } else {
             $fieldsql = "value = :fieldsearchvalue AND fieldid = :fieldid";
         }
-        $foundfields[] = $DB->get_records_sql("SELECT instanceid FROM {customfield_data} WHERE $fieldsql", ['fieldsearchvalue' => $fieldsearchvalue, 'fieldid' => $fieldid]);
+        $foundfields[] = $DB->get_records_sql("SELECT instanceid
+                                               FROM {customfield_data}
+                                               WHERE $fieldsql",
+                                              ['fieldsearchvalue' => $fieldsearchvalue,
+                                               'fieldid' => $fieldid]);
     }
 
     // Sort the keys to be unique.
@@ -293,10 +301,10 @@ $courselist = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_c
                                     ORDER BY c.fullname", $coursesearchparams);
 
 
-// Set up the filter forms
+// Set up the filter forms.
 $params['yearonly'] = true;
 $mform = new \local_iomad\forms\date_search_form($baseurl, $params);
-$mform->set_data(array('departmentid' => $departmentid));
+$mform->set_data(['departmentid' => $departmentid]);
 $options = $params;
 $options['compfromraw'] = $from;
 $options['comptoraw'] = $to;
@@ -307,15 +315,15 @@ $coursesform = new \local_iomad\forms\course_search_form($baseurl, $params);
 
 // Display the tree selector thing.
 echo $output->display_tree_selector($company, $parentlevel, $linkurl, $params, $departmentid);
-echo html_writer::start_tag('div', array('class' => 'iomadclear controlitems', 'style' => 'padding-top: 5px;'));
+echo html_writer::start_tag('div', ['class' => 'iomadclear controlitems', 'style' => 'padding-top: 5px;']);
 
 // Display the course selector.
-echo html_writer::start_tag('div', array('class' => 'iomadcoursesearchform'));
+echo html_writer::start_tag('div', ['class' => 'iomadcoursesearchform']);
 $coursesform->display();
 echo html_writer::end_tag('div');
 
 // Display the user filter form.
-echo html_writer::start_tag('div', array('class' => 'iomaddatesearchform'));
+echo html_writer::start_tag('div', ['class' => 'iomaddatesearchform']);
 $mform->display();
 echo html_writer::end_tag('div');
 
@@ -337,7 +345,7 @@ $showdepartments = company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND cu.departmentid IN (" . implode(',', array_keys($showdepartments)) . ")";
 
-// all companies?
+// All companies?
 if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {company_users}
@@ -347,7 +355,7 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
     $companysql = "";
 }
 
-// Filter courses dependant on the input to the course name search
+// Filter courses dependant on the input to the course name search.
 $courseids = array_map(fn($i)=> $i->courseid, $courselist);
 if ($courseid != 1) {
     $coursesql = " AND lit.courseid = :courseid AND lit.courseid IN (" . join(',', array_keys($courseids)) . ") ";
@@ -368,19 +376,26 @@ if (!empty($compto)) {
 
 // Set up the initial SQL for the form.
 $selectsql = "DISTINCT lit.id,lit.timecompleted";
-$fromsql = "{user} u JOIN {local_iomad_track} lit ON (u.id = lit.userid) JOIN {company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)";
-$wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid AND lit.timecompleted IS NOT NULL $departmentsql $companysql $coursesql $timesql";
-$sqlparams = array('companyid' => $companyid, 'courseid' => $courseid) + $searchinfo->searchparams;
+$fromsql = "{user} u
+            JOIN {local_iomad_track} lit ON (u.id = lit.userid)
+            JOIN {company_users} cu ON (u.id = cu.userid AND lit.userid = cu.userid AND lit.companyid = cu.companyid)";
+$wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid
+            AND lit.timecompleted IS NOT NULL
+            $departmentsql
+            $companysql
+            $coursesql
+            $timesql";
+$sqlparams = ['companyid' => $companyid, 'courseid' => $courseid] + $searchinfo->searchparams;
 
 // Get the full list of completions.
 $results = $DB->get_records_sql("SELECT $selectsql FROM $fromsql WHERE $wheresql", $sqlparams);
 
 // Set up some defaults.
-$seriesarray = array();
+$seriesarray = [];
 // Get the calendar type used - see MDL-18375.
 $calendartype = \core_calendar\type_factory::get_calendar_instance();
 $dateformat = $calendartype->get_date_order();
-$montharray = array("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12");
+$montharray = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 $monthstringarray = array_values($dateformat['month']);
 
 // Work through the results.
@@ -391,8 +406,8 @@ foreach ($results as $result) {
 
     // Do we have something recorded for this month?
     if (empty($seriesarray[$year])) {
-        //if not set it up.
-        $seriesarray[$year] = array();
+        // If not set it up.
+        $seriesarray[$year] = [];
     }
     // If there isn't already an entry it becomes == 1.
     if (empty($seriesarray[$year][$month])) {
@@ -402,12 +417,12 @@ foreach ($results as $result) {
         $seriesarray[$year][$month]++;
     }
 }
-// sort this by date.
+// Sort this by date.
 ksort($seriesarray);
 
 // Create any missing months as the chart needs them..
 foreach (array_keys($seriesarray) as $year) {
-    foreach($montharray as $month) {
+    foreach ($montharray as $month) {
         if (empty($seriesarray[$year][$month])) {
             $seriesarray[$year][$month] = 0;
         }

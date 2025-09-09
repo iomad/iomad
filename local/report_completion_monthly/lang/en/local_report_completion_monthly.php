@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Language strings
  * @package   local_report_completion_monthly
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,10 +23,10 @@
  */
 
 $string['blocktitle'] = 'Completion report by month';
+$string['numtotal'] = 'Total completions';
 $string['pluginname'] = 'Completion report by month';
 $string['privacy:metadata'] = 'The \'Local Completion report by month report\' only shows data stored in other locations.';
-$string['report_completion_monthly_title'] = 'Completion report by month';
 $string['report_completion_monthly:view'] = 'View the \'Completion report by month\' report';
+$string['report_completion_monthly_title'] = 'Completion report by month';
 $string['repuserlicallocation'] = 'Completion report by month';
 $string['totalallocate'] = 'Number of completions';
-$string['numtotal'] = 'Total completions';
