@@ -18,11 +18,10 @@
  * Iomadsite tool functions.
  *
  * @package    tool_iomadsite
- * @copyright  Howard Miller
+ * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
+ * @author     Howard Miller
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Files support.
@@ -38,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param array $options additional options affecting the file serving
  * @return void The file is sent along with it's headers
  */
-function tool_iomadsite_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+function tool_iomadsite_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []]) {
 
     // Only for admins or CLI.
     if (!defined('CLI_SCRIPT') && !is_siteadmin()) {
