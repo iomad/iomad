@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Strings for local_report_license_usage
+ *
  * @package   local_report_license_usage
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,13 +24,13 @@
  */
 
 $string['blocktitle'] = 'License Allocations Report';
+$string['numnet'] = 'Net allocations';
+$string['numstart'] = 'Previously allocated';
+$string['numtotal'] = 'Total allocated';
 $string['pluginname'] = 'License Allocations Report';
 $string['privacy:metadata'] = 'The \'Local IOMAD license allocations report\' only shows data stored in other locations.';
-$string['report_license_usage_title'] = 'License allocations report';
 $string['report_license_usage:view'] = 'View the license allocations report';
+$string['report_license_usage_title'] = 'License allocations report';
 $string['repuserlicallocation'] = 'License allocations report';
 $string['totalallocate'] = 'Number of allocations';
 $string['totalunallocate'] = 'Number of unallocations';
-$string['numstart'] = 'Previously allocated';
-$string['numnet'] = 'Net allocations';
-$string['numtotal'] = 'Total allocated';

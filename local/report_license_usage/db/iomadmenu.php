@@ -15,27 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD menu definition for IOMAD dashboard.
+ *
  * @package   local_report_license_usage
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Function to define the IOMAD dashboard menu item
+ *
+ * @return void
+ */
 function local_report_license_usage_menu() {
 
-        return array(
-            'licenseusage' => array(
-                'category' => 'Reports',
-                'tab' => 8,
-                'name' => get_string('pluginname', 'local_report_license_usage'),
-                'url' => '/local/report_license_usage/index.php',
-                'cap' => 'local/report_license_usage:view',
-                'icondefault' => 'report',
-                'style' => 'report',
-                'icon' => 'fa-legal',
-                'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+    return [
+        'licenseusage' => [
+            'category' => 'Reports',
+            'tab' => 8,
+            'name' => get_string('pluginname', 'local_report_license_usage'),
+            'url' => '/local/report_license_usage/index.php',
+            'cap' => 'local/report_license_usage:view',
+            'icondefault' => 'report',
+            'style' => 'report',
+            'icon' => 'fa-legal',
+            'iconsmall' => 'fa-bar-chart-o',
+        ],
+    ];
 }
