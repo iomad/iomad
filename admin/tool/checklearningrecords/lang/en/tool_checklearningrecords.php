@@ -17,15 +17,14 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['brokenlicenses'] = 'Number of records with broken license information : {$a}';
 $string['brokencompletions'] = 'Number of records with broken completion information : {$a}';
+$string['brokenlicenses'] = 'Number of records with broken license information : {$a}';
 $string['checklearningrecordstask'] = 'Check learning records adhoc task';
 $string['companyid'] = 'Company ID';
 $string['courseid'] = 'Course ID';
@@ -35,10 +34,10 @@ $string['idnumber'] = 'From tracking id number';
 $string['missingcompletions'] = 'Number of records which are completed but not recorded : {$a}';
 $string['notifyfinished'] = '...finished';
 $string['pageheader'] = 'Check stored learning records';
-$string['privacy:metadata'] = 'Admin tool check stored learning records doesn\'t store any user details';
 $string['pluginname'] = 'Check stored learning records';
-$string['searchusers'] = 'Select a user';
-$string['searchcourses'] = 'Select a course';
+$string['privacy:metadata'] = 'Admin tool check stored learning records doesn\'t store any user details';
 $string['searchcompanies'] = 'Select a company';
+$string['searchcourses'] = 'Select a course';
+$string['searchusers'] = 'Select a user';
 $string['todate'] = 'Completion to date';
 $string['userid'] = 'User ID';

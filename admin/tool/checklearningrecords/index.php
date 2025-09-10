@@ -17,8 +17,7 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -39,7 +38,7 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('pageheader', 'tool_checklearningrecords'));
 
-// Get the incomplete license records
+// Get the incomplete license records.
 $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                         WHERE
                                         (licenseid > 0
@@ -49,7 +48,7 @@ $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                          AND licenseallocated > 0
                                          AND licensename != 'HISTORIC')");
 
-// Get the incomplete completion records
+// Get the incomplete completion records.
 $brokencompletions = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                            WHERE
                                            (timecompleted > 0
@@ -61,8 +60,11 @@ $brokencompletions = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                            (timestarted > 0
                                             AND timeenrolled IS NULL)");
 
-// Get the incomplete completion records
-$missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id as ccid,cc.timeenrolled AS cctimeenrolled, cc.timestarted AS cctimestarted, cc.timecompleted AS cctimecompleted
+// Get the incomplete completion records.
+$missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id AS ccid,
+                                                   cc.timeenrolled AS cctimeenrolled,
+                                                   cc.timestarted AS cctimestarted,
+                                                   cc.timecompleted AS cctimecompleted
                                             FROM {local_iomad_track} lit
                                             JOIN {course_completions} cc
                                             ON (lit.userid = cc.userid AND lit.courseid = cc.course)
@@ -71,7 +73,10 @@ $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id as ccid,cc.timeen
                                             AND lit.timecompleted IS NULL
                                             AND lit.timestarted > 0");
 
-$form = new tool_checklearningrecords_form($PAGE->url, count($brokenlicenses), count($brokencompletions), count($missingcompletions));
+$form = new tool_checklearningrecords_form($PAGE->url,
+                                           count($brokenlicenses),
+                                           count($brokencompletions),
+                                           count($missingcompletions));
 
 if (!$data = $form->get_data()) {
     $form->display();
@@ -88,7 +93,7 @@ if (!empty($brokencompletions)) {
 }
 
 if (!empty($brokenlicenses)) {
-    // Get the incomplete completion records
+    // Get the incomplete completion records.
     $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                             WHERE
                                             (licenseid > 0
@@ -103,8 +108,11 @@ if (!empty($brokenlicenses)) {
 }
 
 if (!empty($missingcompletions)) {
-    // Get the incomplete completion records
-    $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id as ccid,cc.timeenrolled AS cctimeenrolled, cc.timestarted AS cctimestarted, cc.timecompleted AS cctimecompleted
+    // Get the incomplete completion records.
+    $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id AS ccid,
+                                                       cc.timeenrolled AS cctimeenrolled,
+                                                       cc.timestarted AS cctimestarted,
+                                                       cc.timecompleted AS cctimecompleted
                                                 FROM {local_iomad_track} lit
                                                 JOIN {course_completions} cc
                                                 ON (lit.userid = cc.userid AND lit.courseid = cc.course)
@@ -129,10 +137,9 @@ foreach ($expirycourses as $expirycourse) {
                   SET timeexpires = timecompleted + :offset
                   WHERE courseid = :courseid
                   AND timecompleted > 0",
-                  array('courseid' => $expirycourse->courseid,
-                        'offset' => $offset));
+                 ['courseid' => $expirycourse->courseid,
+                  'offset' => $offset]);
 }
-
 
 // Course caches are now rebuilt on the fly.
 
