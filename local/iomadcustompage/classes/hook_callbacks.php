@@ -26,7 +26,7 @@ use moodle_url;
 /**
  * Allows the plugin to perform action based on hook callback.
  *
- * @package    tool_policy
+ * @package    local_iomadcustompage
  * @copyright  2024 BitAscii Solutions <bitascii.dev@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

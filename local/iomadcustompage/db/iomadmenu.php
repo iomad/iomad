@@ -15,28 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_users
+ * IOMAD custompage IOMAD dashboard menu item
+ *
+ * @package   local_iomadcustompage
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Get the IOMAD menu settings.
+ *
+ * @return void
+ */
 function local_iomadcustompage_menu() {
 
-        return array(
-            'iomadcustompage' => array(
-                'category' => 'CompanyAdmin',
-                'tab' => 1,
-                'name' => get_string('pluginname', 'local_iomadcustompage'),
-                'url' => '/local/iomadcustompage/index.php',
-		// 'cap' => 'local/report_users:redocertificates',
-                'cap' => 'local/iomadcustompage:view',
-                'icondefault' => 'report',
-                'style' => 'report',
-                'icon' => 'fa-scroll',
-                'iconsmall' => 'fa-square-plus',
-            ),
-        );
+    return [
+        'iomadcustompage' => [
+            'category' => 'CompanyAdmin',
+            'tab' => 1,
+            'name' => get_string('pluginname', 'local_iomadcustompage'),
+            'url' => '/local/iomadcustompage/index.php',
+            'cap' => 'local/iomadcustompage:view',
+            'icondefault' => 'report',
+            'style' => 'report',
+            'icon' => 'fa-scroll',
+            'iconsmall' => 'fa-square-plus',
+        ],
+    ];
 }

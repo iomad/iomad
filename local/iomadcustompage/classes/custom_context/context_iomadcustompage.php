@@ -117,14 +117,14 @@ class context_iomadcustompage extends context {
                     $parentcontext = self::instance($iomadcustompage->parent);
                     $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $parentcontext->path);
                 } else {
-                    // IOMAD
-                    $PATH = '/' . SYSCONTEXTID;
+                    // IOMAD!
+                    $path = '/' . SYSCONTEXTID;
                     $companyid = \iomad::get_my_companyid(context_system::instance());
                     if ($companyid > 0) {
                         $companycontext = \core\context\company::instance($companyid);
-                        $PATH = $companycontext->path;
+                        $path = $companycontext->path;
                     }
-                    $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $PATH, 0);
+                    $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $path, 0);
                 }
             }
         }

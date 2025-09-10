@@ -55,8 +55,9 @@ class audience {
     }
 
     /**
-     * Returns list of iomadcustompages IDs that the specified user can access, based on audience configuration. This can be expensive if the
-     * site has lots of pages, with lots of audiences, so we cache the result for the duration of the users session
+     * Returns list of iomadcustompages IDs that the specified user can access, based on audience configuration.
+     * This can be expensive if the site has lots of pages, with lots of audiences, so we cache the result for the duration
+     * of the users session
      *
      * @param int|null $userid User ID to check, or the current user if omitted
      * @return int[]
@@ -182,7 +183,7 @@ class audience {
 
         if ($context === null) {
             $context = context_system::instance();
-            // IOMAD
+            // IOMAD!
             $companyid = iomad::get_my_companyid($context);
             if ($companyid > 0) {
                 $context = \core\context\company::instance($companyid);

@@ -57,7 +57,7 @@ class permission {
 
         if ($context === null) {
             $context = context_system::instance();
-            // IOMAD
+            // IOMAD!
             $companyid = iomad::get_my_companyid($context);
             if ($companyid > 0) {
                 $context = \core\context\company::instance($companyid);
@@ -96,10 +96,6 @@ class permission {
             return true;
         }
 
-        //if (self::can_edit_page($page, $userid)) {
-            //return true;
-        //}
-
         $pages = audience::user_pages_list($userid);
         if (in_array($page->get('id'), $pages)) {
             return true;
@@ -136,7 +132,7 @@ class permission {
         // to other users, they must have the specific 'editall' capability.
         $userid = $userid ?: (int) $USER->id;
 
-        // IOMAD
+        // IOMAD!
         $companyid = iomad::get_my_companyid(context_system::instance());
         if ($companyid > 0) {
             $context = \core\context\company::instance($companyid);
