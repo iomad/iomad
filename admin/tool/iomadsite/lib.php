@@ -37,7 +37,7 @@
  * @param array $options additional options affecting the file serving
  * @return void The file is sent along with it's headers
  */
-function tool_iomadsite_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []]) {
+function tool_iomadsite_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
 
     // Only for admins or CLI.
     if (!defined('CLI_SCRIPT') && !is_siteadmin()) {
