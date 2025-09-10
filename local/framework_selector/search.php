@@ -15,15 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Search page
+ *
  * @package   local_framework_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   standard Moodle framework_selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/local/framework_selector/lib.php');
+
+require_login();
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url('/local/framework_selector/search.php');
@@ -90,4 +93,4 @@ foreach ($frameworks as &$group) {
     }
 }
 
-echo json_encode(array('results' => $frameworks));
+echo json_encode(['results' => $frameworks]);
