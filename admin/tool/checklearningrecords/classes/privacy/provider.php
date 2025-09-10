@@ -17,8 +17,7 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,12 +25,11 @@
 
 namespace tool_checklearningrecords\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for tool_checklearningrecords implementing null_provider.
  *
- * @copyright  2018 Zig Tan <zig@moodle.com>
+ * @copyright  2020 E-Learn Design https://www.e-learndesign
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements \core_privacy\local\metadata\null_provider {
@@ -42,7 +40,7 @@ class provider implements \core_privacy\local\metadata\null_provider {
      *
      * @return  string
      */
-    public static function get_reason() : string {
+    public static function get_reason(): string {
         return 'privacy:metadata';
     }
 }

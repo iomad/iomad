@@ -17,8 +17,7 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,7 +32,24 @@ require_once("$CFG->libdir/formslib.php");
  */
 class tool_checklearningrecords_form extends moodleform {
 
-    function __construct($actionurl, $brokenlicenses, $brokencompletions, $missingcompletions) {
+    /** @var int of broken licenses */
+    public $brokenlicenses = 0;
+
+    /** @var int of broken completions */
+    public $brokencompletions = 0;
+
+    /** @var int of missing completions */
+    public $missingcompletions = 0;
+
+    /**
+     * Class constructor
+     *
+     * @param /moodle_url $actionurl
+     * @param int $brokenlicenses
+     * @param int $brokencompletions
+     * @param int $missingcompletions
+     */
+    public function __construct($actionurl, $brokenlicenses, $brokencompletions, $missingcompletions) {
         $this->brokenlicenses = $brokenlicenses;
         $this->brokencompletions = $brokencompletions;
         $this->missingcompletions = $missingcompletions;
@@ -41,14 +57,27 @@ class tool_checklearningrecords_form extends moodleform {
         parent::__construct($actionurl);
     }
 
-    function definition() {
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
         $mform = $this->_form;
 
         $mform->addElement('header', '', get_string('pluginname', 'tool_checklearningrecords'));
 
-        $mform->addElement('static', 'brokenlicenses', get_string('brokenlicenses', 'tool_checklearningrecords', $this->brokenlicenses));
-        $mform->addElement('static', 'brokencompletions', get_string('brokencompletions', 'tool_checklearningrecords', $this->brokencompletions));
-        $mform->addElement('static', 'missingcompletions', get_string('missingcompletions', 'tool_checklearningrecords', $this->missingcompletions));
+        $mform->addElement('static',
+                           'brokenlicenses',
+                           get_string('brokenlicenses', 'tool_checklearningrecords', $this->brokenlicenses));
+        $mform->addElement('static',
+                           'brokencompletions',
+                           get_string('brokencompletions',
+                           'tool_checklearningrecords',
+                           $this->brokencompletions));
+        $mform->addElement('static',
+                           'missingcompletions',
+                           get_string('missingcompletions', 'tool_checklearningrecords', $this->missingcompletions));
 
         $this->add_action_buttons(false, get_string('doit', 'tool_checklearningrecords'));
     }

@@ -17,34 +17,32 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Attempt to fix broken license LIT records.
- * 
+ *
  */
 function do_fixbrokenlicenses($brokenlicenses) {
     global $DB, $CFG;
 
     require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 
-    $fixed = array();
-    $stillbroken = array();
+    $fixed = [];
+    $stillbroken = [];
 
     foreach ($brokenlicenses as $brokenlicense) {
         // Check what is broken.
         if (empty($brokenlicense->licenseallocated)) {
             if ($licenseallocation = $DB->get_record('companylicense_users',
-                                                     array('userid' => $brokenlicense->userid,
-                                                          'licensecourseid' => $brokenlicense->courseid,
-                                                          'timecompleted' => $brokenlicense->timecompleted))) {
+                                                     ['userid' => $brokenlicense->userid,
+                                                      'licensecourseid' => $brokenlicense->courseid,
+                                                      'timecompleted' => $brokenlicense->timecompleted])) {
                 if (!empty($licenseallocation->issuedate)) {
                     $brokenlicense->licenseallocated = $licenseallocation->issuedate;
                 } else {
@@ -58,25 +56,25 @@ function do_fixbrokenlicenses($brokenlicenses) {
         }
         if (empty($brokenlicense->licenseid) || empty($brokenlicense->licensename)) {
             if (!empty($licenseallocation)) {
-                if ($licenserec = $DB->get_record('companylicense', array('id' => $licenseallocation->licenseid))) {
+                if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseallocation->licenseid])) {
                     $brokenlicense->licenseid = $licenseallocation->licenseid;
                     $brokenlicense->licensename = $licenserec->name;
                 }
             } else {
                 if (!empty($brokenlicense->licenseid)) {
-                    if ($licenserec = $DB->get_record('companylicense', array('id' => $licenseallocation->licenseid))) {
+                    if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseallocation->licenseid])) {
                         $brokenlicense->licenseid = $licenseallocation->licenseid;
                         $brokenlicense->licensename = $licenserec->name;
                     }
                 } else {
                     if (!empty($brokenlicense->licenseallocated)) {
                         if ($licenseallocation = $DB->get_record('companylicense_users',
-                                                                  array('userid' => $brokenlicense->userid,
-                                                                  'licensecourseid' => $brokenlicense->courseid,
-                                                                  'timecompleted' => $brokenlicense->timecompleted,
-                                                                  'issuedate' => $brokenlicense->issuedate))) {
+                                                                ['userid' => $brokenlicense->userid,
+                                                                 'licensecourseid' => $brokenlicense->courseid,
+                                                                 'timecompleted' => $brokenlicense->timecompleted,
+                                                                 'issuedate' => $brokenlicense->issuedate])) {
 
-                            if ($licenserec = $DB->get_record('companylicense', array('id' => $licenseallocation->licenseid))) {
+                            if ($licenserec = $DB->get_record('companylicense', ['id' => $licenseallocation->licenseid])) {
                                 $brokenlicense->licenseid = $licenseallocation->licenseid;
                                 $brokenlicense->licensename = $licenserec->name;
                             }
@@ -103,22 +101,22 @@ function do_fixbrokenlicenses($brokenlicenses) {
 
 /**
  * Attempt to fix broken completion LIT records.
- * 
+ *
  */
 function do_fixbrokencompletions($brokencompletions) {
     global $DB, $CFG;
 
     require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 
-    $fixed = array();
-    $broken = array();
+    $fixed = [];
+    $broken = [];
 
     foreach ($brokencompletions as $brokencompletion) {
         // Check what is broken.
         // Try and get the completion record.
-        if ($comprecord = $DB->get_record('course_completions', array('userid' => $brokencompletion->userid,
-                                                                      'course' => $brokencompletion->courseid,
-                                                                      'timecompleted' => $brokencompletion->timecompleted))) {
+        if ($comprecord = $DB->get_record('course_completions', ['userid' => $brokencompletion->userid,
+                                                                 'course' => $brokencompletion->courseid,
+                                                                 'timecompleted' => $brokencompletion->timecompleted])) {
             $brokencompletion->timestarted = $comprecord->timestarted;
             $brokencompletion->timecompleted = $comprecord->timecompleted;
             if (!empty($comprecord->timeenrolled)) {
@@ -130,8 +128,8 @@ function do_fixbrokencompletions($brokencompletions) {
                                                  WHERE ue.userid = :userid
                                                  AND e.courseid = :courseid
                                                  AND e.status = 0",
-                                                 array('userid' => $brokencompletion->userid,
-                                                       'courseid' => $brokencompletion->courseid))) {
+                                                 ['userid' => $brokencompletion->userid,
+                                                  'courseid' => $brokencompletion->courseid])) {
                     $brokencompletion->timeenrolled = $enrolrec->timestart;
                 } else {
                     if (!empty($brokencompletion->timestarted)) {
@@ -145,14 +143,15 @@ function do_fixbrokencompletions($brokencompletions) {
                                                  WHERE ue.userid = :userid
                                                  AND e.courseid = :courseid
                                                  AND e.status = 0",
-                                                 array('userid' => $brokencompletion->userid,
-                                                       'courseid' => $brokencompletion->courseid))) {
-                    if ($enrolrec->timestart < $brokencompletion->timecompleted || $enrolrec->timestart < $brokencompletion->timestarted) {
-                        $brokencompletion->timeenrolled = $enrolrec->timestart;
-                    }
-                    if ($brokencompletion->timestarted == 0 ) {
-                        $brokencompletion->timestarted = $enrolrec->timestart;
-                    }
+                                                 ['userid' => $brokencompletion->userid,
+                                                  'courseid' => $brokencompletion->courseid])) {
+                if ($enrolrec->timestart < $brokencompletion->timecompleted ||
+                    $enrolrec->timestart < $brokencompletion->timestarted) {
+                    $brokencompletion->timeenrolled = $enrolrec->timestart;
+                }
+                if ($brokencompletion->timestarted == 0 ) {
+                    $brokencompletion->timestarted = $enrolrec->timestart;
+                }
             } else {
                 if (!empty($brokencompletion->timeenrolled) && empty($brokencompletion->timestarted)) {
                     $brokencompletion->timestarted = $brokencompletion->timeenrolled;
@@ -163,8 +162,8 @@ function do_fixbrokencompletions($brokencompletions) {
             }
         }
         if (!empty($brokencompletion->timestarted) && !empty($brokencompletion->timeenrolled)) {
-           $DB->update_record('local_iomad_track', $brokencompletion);
-           $fixed[$brokencompletion->id] = $brokencompletion;
+            $DB->update_record('local_iomad_track', $brokencompletion);
+            $fixed[$brokencompletion->id] = $brokencompletion;
         } else {
             $broken[$brokencompletion->id] = $brokencompletion;
         }
@@ -180,24 +179,24 @@ function do_fixbrokencompletions($brokencompletions) {
 
 /**
  * Attempt to fix missing completion LIT records.
- * 
+ *
  */
 function do_fixmissingcompletions($missingcompletions) {
     global $DB, $CFG;
 
     require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 
-    $fixed = array();
-    $broken = array();
+    $fixed = [];
+    $broken = [];
 
     foreach ($missingcompletions as $missingcompletion) {
-        $event = \core\event\course_completed::create(array(
-                                                            'objectid' => $missingcompletion->ccid,
-                                                            'relateduserid' => $missingcompletion->userid,
-                                                            'context' => context_course::instance($missingcompletion->courseid),
-                                                            'courseid' => $missingcompletion->courseid,
-                                                            'other' => array('relateduserid' => $missingcompletion->userid)
-                                                        ));
+        $event = \core\event\course_completed::create([
+                                                       'objectid' => $missingcompletion->ccid,
+                                                       'relateduserid' => $missingcompletion->userid,
+                                                       'context' => context_course::instance($missingcompletion->courseid),
+                                                       'courseid' => $missingcompletion->courseid,
+                                                       'other' => ['relateduserid' => $missingcompletion->userid],
+                                                        ]);
         $event->trigger();
 
     }
