@@ -26,8 +26,10 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    $settings->add(new admin_setting_configcheckbox('block_iomad_html_allowcssclasses', get_string('allowadditionalcssclasses', 'block_iomad_html'),
-                       get_string('configallowadditionalcssclasses', 'block_iomad_html'), 0));
+    $settings->add(new admin_setting_configcheckbox('block_iomad_html_allowcssclasses',
+                                                    get_string('allowadditionalcssclasses', 'block_iomad_html'),
+                                                    get_string('configallowadditionalcssclasses', 'block_iomad_html'),
+                                                    0));
 }
 
 

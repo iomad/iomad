@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Backup functions
  * @package    block_iomad_html
  * @subpackage backup-moodle2
  * @author    Derick Turner - based on the standard Moodle HTML block
@@ -30,22 +31,48 @@
  */
 class backup_iomad_html_block_task extends backup_block_task {
 
+    /**
+     * define the backup settings
+     *
+     * @return void
+     */
     protected function define_my_settings() {
     }
 
+    /**
+     * Define the backup steps
+     *
+     * @return void
+     */
     protected function define_my_steps() {
     }
 
+    /**
+     * Get the areas where files could be uploaded
+     *
+     * @return void
+     */
     public function get_fileareas() {
-        return array('content');
+        return ['content'];
     }
 
+    /**
+     * Get the attributes which need encoding
+     *
+     * @return void
+     */
     public function get_configdata_encoded_attributes() {
-        return array('text'); // We need to encode some attrs in configdata
+        return ['text']; // We need to encode some attrs in configdata.
     }
 
-    static public function encode_content_links($content) {
-        return $content; // No special encoding of links
+    /**
+     * Encode any links
+     *
+     * @param text $content
+     * @return void
+     */
+    public static function encode_content_links($content) {
+        return $content; // No special encoding of links.
     }
 }
 
