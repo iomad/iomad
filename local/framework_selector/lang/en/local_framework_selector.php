@@ -15,31 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin strings
+ *
  * @package   local_framework_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   standard Moodle framework_selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Strings for component 'local_framework_selector', language 'en'
- */
-
-$string['frameworkselectortoomany'] = 'framework_selector got more than one selected framework, even though multi-select is false';
 $string['cannotcallusgetselectedframework'] = 'You cannot call framework_selector::get_selected_framework if multi-select is true';
 $string['clear'] = 'Clear';
-$string['searchoptions'] = 'Search options';
-$string['frameworkselectorpreserveselected'] = 'Keep selected frameworks, even if they no longer match the search';
 $string['frameworkselectorautoselectunique'] = 'If only one framework matches the search, select it automatically';
+$string['frameworkselectorpreserveselected'] = 'Keep selected frameworks, even if they no longer match the search';
 $string['frameworkselectorsearchanywhere'] = 'Match the search text anywhere in the framework\'s name';
-$string['toomanyframeworksmatchsearch'] = 'Too many frameworks ({$a->count}) match \'{$a->search}\'';
-$string['pleasesearchmore'] = 'Please search some more';
-$string['toomanyframeworkstoshow'] = 'Too many frameworks ({$a}) to show';
-$string['pleaseusesearch'] = 'Please use the search';
+$string['frameworkselectortoomany'] = 'framework_selector got more than one selected framework, even though multi-select is false';
 $string['nomatchingframeworks'] = 'No frameworks match \'{$a}\'';
 $string['none'] = 'None';
+$string['pleasesearchmore'] = 'Please search some more';
+$string['pleaseusesearch'] = 'Please use the search';
 $string['pluginname'] = 'Framework selectors';
 $string['previouslyselectedframeworks'] = 'Previously selected frameworks not matching \'{$a}\'';
 $string['privacy:metadata'] = 'The IOMAD Local framework selector plugin only shows data stored in other locations.';
 $string['search'] = 'Search';
+$string['searchoptions'] = 'Search options';
+$string['toomanyframeworksmatchsearch'] = 'Too many frameworks ({$a->count}) match \'{$a->search}\'';
+$string['toomanyframeworkstoshow'] = 'Too many frameworks ({$a}) to show';

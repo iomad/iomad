@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * local framework selector default library file
+ *
  * @package   local_framework_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   standard Moodle framework_selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -39,45 +40,47 @@ abstract class framework_selector_base {
     protected $name;
     /** @var array Extra fields to search on and return in addition to firstname and lastname. */
     protected $extrafields;
-    /** @var boolean Whether the conrol should allow selection of many frameworks, or just one. */
+    /** @var bool Whether the conrol should allow selection of many frameworks, or just one. */
     protected $multiselect = true;
     /** @var int The height this control should have, in rows. */
     protected $rows = FRAMEWORK_SELECTOR_DEFAULT_ROWS;
     /** @var array A list of frameworkids that should not be returned by this control. */
-    protected $exclude = array();
+    protected $exclude = [];
     /** @var array|null A list of the frameworks who are selected. */
     protected $selected = null;
-    /** @var boolean When the search changes, do we keep previously selected options that do
+    /** @var bool When the search changes, do we keep previously selected options that do
      * not match the new search term? */
     protected $preserveselected = false;
-    /** @var boolean If only one framework matches the search, should we select them automatically. */
+    /** @var bool If only one framework matches the search, should we select them automatically. */
     protected $autoselectunique = false;
-    /** @var boolean When searching, do we only match the starts of fields (better performance)
+    /** @var bool When searching, do we only match the starts of fields (better performance)
      * or do we match occurrences anywhere? */
     protected $searchanywhere = false;
     /** @var mixed This is used by get selected frameworks */
     protected $validatingframeworkids = null;
-
+    /** @var mixed file */
     protected $file = null;
+    /** @var int selected ID */
     protected $selectedid = 0;
 
-    //defines the base required fields for this selector.
-    protected $requiredfields = array('id', 'fullname');
+    /** @var array the base required fields for this selector */
+    protected $requiredfields = ['id', 'fullname'];
 
-    /**  @var boolean Used to ensure we only output the search options for one framework selector on
+    /**  @var bool Used to ensure we only output the search options for one framework selector on
      * each page. */
     private static $searchoptionsoutput = false;
 
     /** @var array JavaScript YUI3 Module definition */
-    protected static $jsmodule = array(
+    protected static $jsmodule = [
                 'name' => 'framework_selector',
                 'fullpath' => '/local/framework_selector/module.js',
-                'requires'  => array('node', 'event-custom', 'datasource', 'json'),
-                'strings' => array(
-                    array('previouslyselectedframeworks', 'local_framework_selector', '%%SEARCHTERM%%'),
-                    array('nomatchingframeworks', 'local_framework_selector', '%%SEARCHTERM%%'),
-                    array('none')
-                ));
+                'requires'  => ['node', 'event-custom', 'datasource', 'json'],
+                'strings' => [
+                              ['previouslyselectedframeworks', 'local_framework_selector', '%%SEARCHTERM%%'],
+                              ['nomatchingframeworks', 'local_framework_selector', '%%SEARCHTERM%%'],
+                              ['none'],
+                            ],
+                        ];
 
     // Public API.
 
@@ -89,7 +92,7 @@ abstract class framework_selector_base {
      * You must be able to clone a frameworkselector by doing
      * new get_class($us)($us->get_name(), $us->get_options());
      */
-    public function __construct($name, $options = array()) {
+    public function __construct($name, $options = []) {
         global $CFG, $PAGE;
 
         // Initialise member variables from constructor arguments.
@@ -99,7 +102,7 @@ abstract class framework_selector_base {
         } else if (!empty($CFG->extraframeworkselectorfields)) {
             $this->extrafields = explode(',', $CFG->extraframeworkselectorfields);
         } else {
-            $this->extrafields = array();
+            $this->extrafields = [];
         }
         if (isset($options['exclude']) && is_array($options['exclude'])) {
             $this->exclude = $options['exclude'];
@@ -140,10 +143,12 @@ abstract class framework_selector_base {
      * Clear the list of excluded framework ids.
      */
     public function clear_exclusions() {
-        $exclude = array();
+        $exclude = [];
     }
 
     /**
+     * Get the excluded entries
+     *
      * @return array the list of framework ids that this control will not select.
      */
     public function get_exclusions() {
@@ -151,9 +156,11 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get the currently selected frameworks
+     *
      * @return array of framework objects. The frameworks that were selected. This is a
      * more sophisticated version of
-     * optional_param($this->name, array(), PARAM_INTEGER) that validates the
+     * optional_param($this->name, [], PARAM_INTEGER) that validates the
      * returned list of ids against the rules for this framework selector.
      */
     public function get_selected_frameworks() {
@@ -166,6 +173,7 @@ abstract class framework_selector_base {
 
     /**
      * Convenience method for when multiselect is false (throws an exception if not).
+     *
      * @return object the selected framework object, or null if none.
      */
     public function get_selected_framework() {
@@ -194,6 +202,7 @@ abstract class framework_selector_base {
 
     /**
      * Output this framework_selector as HTML.
+     *
      * @param boolean $return if true, return the HTML as a string instead of outputting it.
      * @return mixed if $return is true, returns the HTML as a string, otherwise returns nothing.
      */
@@ -245,7 +254,7 @@ abstract class framework_selector_base {
             $output .= print_collapsible_region_end(true);
 
             $PAGE->requires->js_init_call('M.local_framework_selector.init_framework_selector_options_tracker',
-                                          array(), false, self::$jsmodule);
+                                         [], false, self::$jsmodule);
             self::$searchoptionsoutput = true;
         }
         $output .= "</div>\n</div>\n\n";
@@ -271,6 +280,8 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get the rows
+     *
      * @return integer the height this control will be displayed, in rows.
      */
     public function get_rows() {
@@ -287,6 +298,8 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get selector multiselect value
+     *
      * @return boolean whether this control will allow selection of more than one framework.
      */
     public function is_multiselect() {
@@ -294,6 +307,8 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get the selector name
+     *
      * @return string the id/name that this control will have in the HTML.
      */
     public function get_name() {
@@ -339,7 +354,7 @@ abstract class framework_selector_base {
      *      that is true, then that option will be displayed greyed out, and
      *      will not be returned by get_selected_frameworks.
      */
-    public abstract function find_frameworks($search);
+    abstract public function find_frameworks($search);
 
     /**
      *
@@ -348,22 +363,24 @@ abstract class framework_selector_base {
      * @return array the options needed to recreate this framework_selector.
      */
     protected function get_options() {
-        return array(
+        return [
             'class' => get_class($this),
             'name' => $this->name,
             'exclude' => $this->exclude,
             'extrafields' => $this->extrafields,
             'multiselect' => $this->multiselect,
             'file' => $this->file,
-            'selectedid' => $this->selectedid
-        );
+            'selectedid' => $this->selectedid,
+        ];
     }
 
     // Inner workings.
 
     /**
-     * @return boolean if true, we are validating a list of selected frameworks,
-     *      rather than preparing a list of uesrs to choose from.
+     * Check if we are validating a list of selected frameworks,
+     * rather than preparing a list of users to choose from.
+     *
+     * @return boolean
      */
     protected function is_validating() {
         return !is_null($this->validatingframeworkids);
@@ -380,14 +397,14 @@ abstract class framework_selector_base {
         if (!$this->multiselect) {
             $frameworkids = optional_param($this->name, null, PARAM_INTEGER);
             if (empty($frameworkids)) {
-                return array();
+                return[];
             } else {
-                $frameworkids = array($frameworkids);
+                $frameworkids = [$frameworkids];
             }
         } else {
-            $frameworkids = optional_param_array($this->name, array(), PARAM_INTEGER);
+            $frameworkids = optional_param_array($this->name, [], PARAM_INTEGER);
             if (empty($frameworkids)) {
-                return array();
+                return[];
             }
         }
 
@@ -397,7 +414,7 @@ abstract class framework_selector_base {
         $this->validatingframeworkids = null;
 
         // Aggregate the resulting list back into a single one.
-        $frameworks = array();
+        $frameworks = [];
         foreach ($groupedframeworks as $group) {
             foreach ($group as $framework) {
                 if (!isset($frameworks[$framework->id]) && empty($framework->disabled)
@@ -416,6 +433,8 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get the SQL for the required fields
+     *
      * @param string $u the table alias for the framework table in the query being
      *      built. May be ''.
      * @return string fragment of SQL to go in the select list of the query.
@@ -436,6 +455,8 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get the SQL used when searching
+     *
      * @param string $search the text to search for.
      * @param string $u the table alias for the framework table in the query being
      *      built. May be ''.
@@ -445,8 +466,8 @@ abstract class framework_selector_base {
      */
     protected function search_sql($search, $cf = '') {
         global $DB, $CFG;
-        $params = array();
-        $tests = array();
+        $params = [];
+        $tests = [];
 
         if (!empty($cf)) {
             $cf .= '.';
@@ -454,7 +475,7 @@ abstract class framework_selector_base {
 
         // If we have a $search string, put a field LIKE '$search%' condition on each field.
         if ($search) {
-            $conditions = array();
+            $conditions = [];
             $conditions[] = $cf . 'shortname';
             foreach ($this->extrafields as $field) {
                 $conditions[] = $field;
@@ -494,7 +515,7 @@ abstract class framework_selector_base {
         }
 
         // Combing the conditions and return.
-        return array(implode(' AND ', $tests), $params);
+        return [implode(' AND ', $tests), $params];
     }
 
     /**
@@ -511,13 +532,13 @@ abstract class framework_selector_base {
             $a = new stdClass;
             $a->count = $count;
             $a->search = $search;
-            return array(get_string('toomanyframeworksmatchsearch', 'local_framework_selector',
-                    $a) => array(), get_string('pleasesearchmore', 'local_framework_selector')
-                     => array());
+            return [get_string('toomanyframeworksmatchsearch', 'local_framework_selector',
+                    $a) => [], get_string('pleasesearchmore', 'local_framework_selector')
+                     => []];
         } else {
-            return array(get_string('toomanyframeworkstoshow', 'local_framework_selector',
-                         $count) => array(),
-                    get_string('pleaseusesearch', 'local_framework_selector') => array());
+            return [get_string('toomanyframeworkstoshow', 'local_framework_selector',
+                         $count) => [],
+                    get_string('pleaseusesearch', 'local_framework_selector') => []];
         }
     }
 
@@ -540,16 +561,16 @@ abstract class framework_selector_base {
         $select = false;
         if (empty($groupedframeworks)) {
             if (!empty($search)) {
-                $groupedframeworks = array(get_string('nomatchingframeworks', 'local_framework_selector',
-                $search) => array());
+                $groupedframeworks = [get_string('nomatchingframeworks', 'local_framework_selector',
+                                      $search) => []];
             } else {
-                $groupedframeworks = array(get_string('none') => array());
+                $groupedframeworks = [get_string('none') => []];
             }
         } else if ($this->autoselectunique && count($groupedframeworks) == 1 &&
                 count(reset($groupedframeworks)) == 1) {
             $select = true;
             if (!$this->multiselect) {
-                $this->selected = array();
+                $this->selected = [];
             }
         }
 
@@ -609,9 +630,9 @@ abstract class framework_selector_base {
      * @return string a string representation of the framework.
      */
     public function output_framework($framework) {
-        $bits = array(
-            $framework->shortname
-        );
+        $bits = [
+            $framework->shortname,
+        ];
         foreach ($this->extrafields as $field) {
             $bits[] = $framework->$field;
         }
@@ -619,15 +640,18 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Get the search button caption.
+     *
      * @return string the caption for the search button.
      */
     protected function search_button_caption() {
         return get_string('search');
     }
 
-    // Initialise one of the option checkboxes, either from
-    // the request, or failing that from the user_preferences table, or
-    // finally from the given default.
+    /** Initialise one of the option checkboxes, either from
+     * the request, or failing that from the user_preferences table, or
+     * finally from the given default.
+     */
     private function initialise_option($name, $default) {
         $param = optional_param($name, null, PARAM_BOOL);
         if (is_null($param)) {
@@ -638,7 +662,14 @@ abstract class framework_selector_base {
         }
     }
 
-    // Output one of the options checkboxes.
+    /**
+     * Output one of the options checkboxes.
+     *
+     * @param string $name
+     * @param bool $on
+     * @param string $label
+     * @return string
+     */
     private function option_checkbox($name, $on, $label) {
         if ($on) {
             $checked = ' checked="checked"';
@@ -657,6 +688,8 @@ abstract class framework_selector_base {
     }
 
     /**
+     * Initialise the select javascript
+     *
      * @param boolean $optiontracker if true, initialise JavaScript for updating the user prefs.
      * @return any HTML needed here.
      */
@@ -671,7 +704,7 @@ abstract class framework_selector_base {
 
         // Initialise the selector.
         $PAGE->requires->js_init_call('M.local_framework_selector.init_framework_selector',
-                                       array($this->name, $hash, $this->extrafields, $search),
+                                       [$this->name, $hash, $this->extrafields, $search],
                                        false, self::$jsmodule);
         return $output;
     }
