@@ -65,10 +65,10 @@ class companyrep {
         global $DB;
 
         // Create "empty" array.
-        $companylist = [);
+        $companylist = [];
 
         // Get the companies they manage.
-        $managedcompanies = [);
+        $managedcompanies = [];
         if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance()) &&
             $managers = $DB->get_records_sql("SELECT *
                                               FROM {company_users}
@@ -104,7 +104,7 @@ class companyrep {
 
             // If managers found then only allow selected companies.
             if (!empty($managedcompanies)) {
-                if (!in_[$company->id, $managedcompanies)) {
+                if (!in_array($company->id, $managedcompanies)) {
                     continue;
                 }
             }
@@ -159,7 +159,7 @@ class companyrep {
 
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
-            $users = [);
+            $users = [];
             if ($companyusers = $DB->get_records('company_users', ['companyid' => $company->id])) {
                 foreach ($companyusers as $companyuser) {
                     if ($user = $DB->get_record( 'user', ['id' => $companyuser->userid])) {
@@ -185,7 +185,7 @@ class companyrep {
         // Iterate over companies adding their managers.
         foreach ($companies as $company) {
             $courses = [];
-            if ($companycourses = $DB->get_records( 'company_course', ['companyid' => $company->id))) {
+            if ($companycourses = $DB->get_records( 'company_course', ['companyid' => $company->id])) {
                 foreach ($companycourses as $companycourse) {
                     if ($course = $DB->get_record( 'course', ['id' => $companycourse->courseid])) {
                         $courses[$course->id] = $course;
