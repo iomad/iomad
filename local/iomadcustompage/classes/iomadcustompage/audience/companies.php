@@ -36,29 +36,33 @@ use iomad;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class companies extends base {
-  /**
-   * Adds audience's elements to the given mform
-   *
-   * @param MoodleQuickForm $mform The form to add elements to
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Adds audience's elements to the given mform
+     *
+     * @param MoodleQuickForm $mform The form to add elements to
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function get_config_form(MoodleQuickForm $mform): void {
-        
+
         $companies = $companylist = company::get_companies_select(false);
 
-        $mform->addElement('autocomplete', 'companies', get_string('selectacompany', 'block_iomad_company_admin'), $companies, ['multiple' => true]);
+        $mform->addElement('autocomplete',
+                           'companies',
+                           get_string('selectacompany', 'block_iomad_company_admin'),
+                           $companies,
+                           ['multiple' => true]);
         $mform->addRule('companies', null, 'required', null, 'client');
     }
 
-  /**
-   * Helps to build SQL to retrieve users that matches the current audience
-   *
-   * @param string $usertablealias
-   * @return array array of three elements [$join, $where, $params]
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Helps to build SQL to retrieve users that matches the current audience
+     *
+     * @param string $usertablealias
+     * @return array array of three elements [$join, $where, $params]
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function get_sql(string $usertablealias): array {
         global $DB;
 
@@ -75,22 +79,22 @@ class companies extends base {
         return [$join, $where, $inparams];
     }
 
-  /**
-   * Return user friendly name of this audience type
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Return user friendly name of this audience type
+     *
+     * @return string
+     * @throws coding_exception
+     */
     public function get_name(): string {
         return get_string('hascompany', 'block_iomad_company_admin');
     }
 
-  /**
-   * Return the description for the audience.
-   *
-   * @return string
-   * @throws dml_exception
-   */
+    /**
+     * Return the description for the audience.
+     *
+     * @return string
+     * @throws dml_exception
+     */
     public function get_description(): string {
         global $DB;
         $companyids = $this->get_configdata()['companies'];
@@ -99,12 +103,12 @@ class companies extends base {
         return $this->format_description_for_multiselect(array_values($companies));
     }
 
-  /**
-   * If the current user is able to add this audience.
-   *
-   * @return bool
-   * @throws dml_exception
-   */
+    /**
+     * If the current user is able to add this audience.
+     *
+     * @return bool
+     * @throws dml_exception
+     */
     public function user_can_add(): bool {
         // Check if user is able to see any companies.
         $companies = company::get_companies_select(false);
@@ -118,13 +122,13 @@ class companies extends base {
         return true;
     }
 
-  /**
-   * If the current user is able to edit this audience.
-   *
-   * @return bool
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * If the current user is able to edit this audience.
+     *
+     * @return bool
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function user_can_edit(): bool {
         global $DB, $USER;
 

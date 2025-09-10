@@ -32,7 +32,7 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 $pageid = required_param('id', PARAM_INT);
 $context = context_iomadcustompage::instance($pageid);
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid(context_system::instance());
 if ($companyid > 0) {
     $companycontext = \core\context\company::instance($companyid);
