@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Main page for the report.
+ *
  * @package   local_report_license_usage
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -38,7 +40,7 @@ $licenseid    = optional_param('licenseid', 0, PARAM_INTEGER);
 $fromraw = optional_param_array('compfromraw', null, PARAM_INT);
 $toraw = optional_param_array('comptoraw', null, PARAM_INT);
 
-$params = array();
+$params = [];
 
 if ($sort) {
     $params['sort'] = $sort;
@@ -92,7 +94,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
@@ -126,8 +128,10 @@ $PAGE->navbar->add($linktext, $linkurl);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
+// Parameter is name of proper select form element followed by 1=submit its form.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
+                             'init',
+                             ['deptid', 1, optional_param('deptid', 0, PARAM_INT)]);
 
 echo $output->header();
 
@@ -142,10 +146,10 @@ $parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Get the company additional optional user parameter names.
-$fieldnames = array();
+$fieldnames = [];
 if ($category = company::get_category($companyid)) {
     // Get field names from company category.
-    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+    if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
         foreach ($fields as $field) {
             $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
             ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.
@@ -157,7 +161,7 @@ if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                                                 WHERE id NOT IN (
                                                  SELECT profileid FROM {company})")) {
     foreach ($categories as $category) {
-        if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+        if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
                 $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
                 ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.
@@ -174,7 +178,7 @@ $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
 if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-    $userlevels = array($parentlevel->id => $parentlevel->id);
+    $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
 }
@@ -184,13 +188,19 @@ if ($departmentid == 0 ) {
 }
 
 // Get the appropriate list of licenses.
-$licenselist = array();
-$licenses = $DB->get_records('companylicense', array('companyid' => $companyid), 'expirydate DESC', 'id,name,startdate,expirydate');
+$licenselist = [];
+$licenses = $DB->get_records('companylicense', ['companyid' => $companyid], 'expirydate DESC', 'id,name,startdate,expirydate');
 foreach ($licenses as $license) {
     if ($license->expirydate < time()) {
-        $licenselist[$license->id] = $license->name . " (" . get_string('licenseexpired', 'block_iomad_company_admin', userdate($license->expirydate, $CFG->iomad_date_format)) . ")";
+        $licenselist[$license->id] = $license->name . " (" .
+                                     get_string('licenseexpired',
+                                                'block_iomad_company_admin',
+                                                userdate($license->expirydate, $CFG->iomad_date_format)) . ")";
     } else if ($license->startdate > time()) {
-        $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format)) . ")";
+        $licenselist[$license->id] = $license->name . " (" .
+                                     get_string('licensevalidfrom',
+                                                'block_iomad_company_admin',
+                                                userdate($license->startdate, $CFG->iomad_date_format)) . ")";
     } else {
         $licenselist[$license->id] = $license->name;
     }
@@ -201,11 +211,11 @@ $selecturl = new moodle_url('/local/report_license_usage/index.php', $selectpara
 $select = new single_select($selecturl, 'licenseid', $licenselist, $licenseid);
 $select->label = get_string('licenseselect', 'block_iomad_company_admin');
 $select->formid = 'chooselicense';
-$licenseselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_license_selector'));
+$licenseselectoutput = html_writer::tag('div', $output->render($select), ['id' => 'iomad_license_selector']);
 
 // Set up the filter form.
 $mform = new \local_iomad\forms\date_search_form($baseurl, $params);
-$mform->set_data(array('departmentid' => $departmentid));
+$mform->set_data(['departmentid' => $departmentid]);
 $options = $params;
 $options['compfromraw'] = $from;
 $options['comptoraw'] = $to;
@@ -214,8 +224,8 @@ $mform->get_data();
 
 // Display the tree selector thing.
 echo $output->display_tree_selector($company, $parentlevel, $linkurl, $params, $departmentid);
-echo html_writer::start_tag('div', array('class' => 'iomadclear', 'style' => 'padding-top: 5px;'));
-echo html_writer::start_tag('div', array('class' => 'reportform', 'style' => 'display: inline-flex;'));
+echo html_writer::start_tag('div', ['class' => 'iomadclear', 'style' => 'padding-top: 5px;']);
+echo html_writer::start_tag('div', ['class' => 'reportform', 'style' => 'display: inline-flex;']);
 
 if (empty($licenselist)) {
     echo html_writer::end_tag('div');
@@ -248,7 +258,7 @@ if (empty($CFG->loginhttps)) {
 $returnurl = $CFG->wwwroot."/local/report_license_usage/index.php";
 
 // Get the license information.
-$license = $DB->get_record('companylicense', array('id' => $licenseid));
+$license = $DB->get_record('companylicense', ['id' => $licenseid]);
 
 // Get the full company tree as we may need it.
 $topcompanyid = $company->get_topcompanyid();
@@ -256,7 +266,7 @@ $topcompany = new company($topcompanyid);
 $companytree = $topcompany->get_child_companies_recursive();
 $parentcompanies = $company->get_parent_companies_recursive();
 
-// Deal with parent company managers
+// Deal with parent company managers.
 if (!empty($parentcompanies)) {
     $userfilter = " AND id NOT IN (
                      SELECT userid FROM {company_users}
@@ -326,14 +336,14 @@ if (!empty($userrecords)) {
     // Deal with search strings.
     $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch . $userfilter);
 } else {
-    $userrecords = array();
+    $userrecords = [];
 }
 
 $userlist = "";
 if (!empty($userrecords)) {
     $userlist = " u.id in (". implode(',', array_values($userrecords)).") ";
 }
-// Set the chart defaults
+// Set the chart defaults.
 $numstart = 0;
 $net = 0;
 $numunallocations = 0;
@@ -348,25 +358,25 @@ if (!empty($userlist)) {
                                                       AND licenseid = :licenseid
                                                       AND issuedate < :fromtime
                                                       AND userid IN (" . $departmentids . ")",
-                                                      array('licenseid' => $licenseid,
-                                                            'fromtime' => $from));
+                                                      ['licenseid' => $licenseid,
+                                                       'fromtime' => $from]);
             $numunallocations = $DB->count_records_sql("SELECT COUNT(id) FROM {local_report_user_lic_allocs}
                                                         WHERE action = 0
                                                         AND licenseid = :licenseid
                                                         AND issuedate < :fromtime
                                                         AND userid IN (" . $departmentids . ")",
-                                                        array('licenseid' => $licenseid,
-                                                              'fromtime' => $from));
+                                                        ['licenseid' => $licenseid,
+                                                         'fromtime' => $from]);
             $numstart = $numallocations - $numunallocations;
         } else {
-            $coursecount = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
+            $coursecount = $DB->count_records('companylicense_courses', ['licenseid' => $licenseid]);
             $allocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
                                                  WHERE action = 1
                                                  AND license = :licenseid
                                                  AND issuedate < :fromtime
                                                  AND userid IN (" . $departmentids . ")",
-                                                 array('licenseid' => $licenseid,
-                                                       'fromtime' => $from));
+                                                 ['licenseid' => $licenseid,
+                                                  'fromtime' => $from]);
 
             $numallocations = $allocations / $coursecount;
             $unallocations = $DB->get_records_sql("SELECT * FROM {local_report_user_lic_allocs}
@@ -374,8 +384,8 @@ if (!empty($userlist)) {
                                                    AND licenseid = :licenseid
                                                    AND issuedate < :fromtime
                                                    AND userid IN (" . $departmentids . ")",
-                                                   array('licenseid' => $licenseid,
-                                                         'fromtime' => $from));
+                                                   ['licenseid' => $licenseid,
+                                                    'fromtime' => $from]);
 
             $numunallocations = $unallocations / $coursecount;
             $numstart = $numallocations - $numunallocations;
@@ -383,7 +393,7 @@ if (!empty($userlist)) {
     } else {
         $numstart = 0;
     }
-    $sqlparams = array('licenseid' => $licenseid);
+    $sqlparams = ['licenseid' => $licenseid];
     $timesql = "";
     if (!empty($from)) {
         $timesql = " AND issuedate > :from ";
@@ -408,7 +418,7 @@ if (!empty($userlist)) {
                                                     AND userid IN (" . $departmentids . ")",
                                                     $sqlparams);
     } else {
-        $coursecount = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
+        $coursecount = $DB->count_records('companylicense_courses', ['licenseid' => $licenseid]);
         $allocations = $DB->count_records_sql("SELECT count(id) FROM {local_report_user_lic_allocs}
                                              WHERE action = 1
                                              AND licenseid = :licenseid
@@ -431,19 +441,22 @@ if (!empty($userlist)) {
 // Display the current license overview.
 $table = new html_table();
 $table->id = 'LicenseOverviewTable';
-$table->head = array (get_string('licensename', 'block_iomad_company_admin'),
-                      get_string('licenseallocated', 'block_iomad_company_admin'),
-                      get_string('licenses', 'block_iomad_company_admin'),
-                      get_string('userlicenseused', 'block_iomad_company_admin'));
-$table->align = array ("left", "center", "center", "center");
-$licenseused = $DB->count_records('companylicense_users', array('licenseid' => $license->id, 'isusing' => 1));
+$table->head = [get_string('licensename', 'block_iomad_company_admin'),
+                get_string('licenseallocated', 'block_iomad_company_admin'),
+                get_string('licenses', 'block_iomad_company_admin'),
+                get_string('userlicenseused', 'block_iomad_company_admin')];
+$table->align = ["left", "center", "center", "center"];
+$licenseused = $DB->count_records('companylicense_users', ['licenseid' => $license->id, 'isusing' => 1]);
 if (!empty($license->program)) {
-    $weighting = $DB->count_records('companylicense_courses', array('licenseid' => $licenseid));
+    $weighting = $DB->count_records('companylicense_courses', ['licenseid' => $licenseid]);
 } else {
     $weighting = 1;
 }
 
-$table->data[] = array('name' => $license->name, 'allocated' => $license->allocation / $weighting, 'remaining' => ($license->allocation - $license->used) / $weighting, 'used' => $licenseused / $weighting);
+$table->data[] = ['name' => $license->name,
+                  'allocated' => $license->allocation / $weighting,
+                  'remaining' => ($license->allocation - $license->used) / $weighting,
+                  'used' => $licenseused / $weighting];
 
 echo html_writer::table($table);
 
