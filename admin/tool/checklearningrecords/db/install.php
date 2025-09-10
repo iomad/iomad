@@ -24,14 +24,15 @@
  *
  */
 
-defined('MOODLE_INTERNAL') || die;
-
+/**
+ * Function to run the check task on install.
+ *
+ * @return void
+ */
 function xmldb_tool_checklearningrecords_install() {
     global $CFG;
 
     // Fire off the adhoc task to fix the license records.
     $task = new tool_checklearningrecords\task\checklearningrecordstask();
     \core\task\manager::queue_adhoc_task($task, true);
-
-
 }

@@ -17,8 +17,7 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name
+$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
 $plugin->version  = 2025041450;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
-$plugin->component = 'tool_checklearningrecords'; // Full name of the plugin (used for diagnostics)
+$plugin->component = 'tool_checklearningrecords';
 $plugin->dependencies = ['local_iomad' => 2025041400];
 $plugin->supported = [500, 500];
 $plugin->maturity = MATURITY_STABLE;

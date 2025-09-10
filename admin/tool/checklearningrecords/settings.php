@@ -17,8 +17,7 @@
 /**
  * Strings for component 'tool_checklearningrecords', language 'en', branch 'MOODLE_22_STABLE'
  *
- * @package    tool
- * @subpackage checklearningrecords
+ * @package    tool_checklearningrecords
  * @copyright  2020 E-Learn Design https://www.e-learndesign
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,5 +26,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
-    $ADMIN->add('root', new admin_externalpage('toolchecklearningrecords', get_string('pluginname', 'tool_checklearningrecords'), $CFG->wwwroot.'/'.$CFG->admin.'/tool/checklearningrecords/index.php'));
+    $ADMIN->add('root', new admin_externalpage('toolchecklearningrecords',
+                                                get_string('pluginname', 'tool_checklearningrecords'),
+                                                $CFG->wwwroot.'/'.$CFG->admin.'/tool/checklearningrecords/index.php'));
 }

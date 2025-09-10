@@ -24,10 +24,11 @@
  */
 namespace tool_checklearningrecords\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 
+/**
+ * Adhoc class definition
+ */
 class checklearningrecordstask extends adhoc_task {
 
     /**
@@ -47,7 +48,7 @@ class checklearningrecordstask extends adhoc_task {
 
         require_once(__DIR__.'/../../lib.php');
 
-        // Get the incomplete completion records
+        // Get the incomplete completion records.
         $brokencompletions = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                    WHERE
                                                    (timecompleted > 0
@@ -61,7 +62,7 @@ class checklearningrecordstask extends adhoc_task {
 
         do_fixbrokencompletions($brokencompletions);
 
-        // Get the incomplete license records
+        // Get the incomplete license records.
         $brokenlicenses = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                 WHERE
                                                 (licenseid > 0
@@ -73,8 +74,11 @@ class checklearningrecordstask extends adhoc_task {
 
         do_fixbrokenlicenses($brokenlicenses);
 
-        // Get the incomplete completion records
-        $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id as ccid,cc.timeenrolled AS cctimeenrolled, cc.timestarted AS cctimestarted, cc.timecompleted AS cctimecompleted
+        // Get the incomplete completion records.
+        $missingcompletions = $DB->get_records_sql("SELECT lit.*,cc.id AS ccid,
+                                                           cc.timeenrolled AS cctimeenrolled,
+                                                           cc.timestarted AS cctimestarted,
+                                                           cc.timecompleted AS cctimecompleted
                                                     FROM {local_iomad_track} lit
                                                     JOIN {course_completions} cc
                                                     ON (lit.userid = cc.userid AND lit.courseid = cc.course)
@@ -96,8 +100,8 @@ class checklearningrecordstask extends adhoc_task {
                           SET timeexpires = timecompleted + :offset
                           WHERE courseid = :courseid
                           AND timecompleted > 0",
-                          array('courseid' => $expirycourse->courseid,
-                         'offset' => $offset));
+                         ['courseid' => $expirycourse->courseid,
+                          'offset' => $offset]);
         }
     }
 
