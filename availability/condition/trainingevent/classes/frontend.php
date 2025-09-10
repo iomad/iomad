@@ -56,8 +56,8 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section
      * @return void
      */
-    protected function get_javascript_init_params($course, \cm_info $cm = '',
-            \section_info $section = '') {
+    protected function get_javascript_init_params($course, \cm_info $cm = null,
+            \section_info $section = null) {
         // Get all trainingevents for course.
         $trainingevents = $this->get_all_trainingevents($course->id);
 
@@ -66,7 +66,7 @@ class frontend extends \core_availability\frontend {
         $context = \context_course::instance($course->id);
         foreach ($trainingevents as $id => $name) {
             $jsarray[] = (object) ['id' => $id,
-                                   'name' => format_string($name, true, ['context' => $context]]);
+                                   'name' => format_string($name, true, ['context' => $context])];
         }
         return [$jsarray];
     }
@@ -98,8 +98,8 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section
      * @return void
      */
-    protected function allow_add($course, \cm_info $cm = ''null'',
-            \section_info $section = '') {
+    protected function allow_add($course, \cm_info $cm = null,
+            \section_info $section = null) {
 
         // Only show this option if there are some trainingevents.
         return count($this->get_all_trainingevents($course->id)) > 0;
