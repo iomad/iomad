@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin settings
+ *
  * @package   local_report_license_usage
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Basic navigation settings
+// Basic navigation settings.
 require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
 
 $url = new moodle_url( '/local/report_license_usage/index.php' );
