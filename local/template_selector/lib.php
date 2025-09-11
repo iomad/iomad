@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Default plugin library
+ *
  * @package   local_template_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   Standard Moodle template selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -39,45 +40,46 @@ abstract class template_selector_base {
     protected $name;
     /** @var array Extra fields to search on and return in addition to firstname and lastname. */
     protected $extrafields;
-    /** @var boolean Whether the conrol should allow selection of many templates, or just one. */
+    /** @var bool Whether the conrol should allow selection of many templates, or just one. */
     protected $multiselect = true;
     /** @var int The height this control should have, in rows. */
     protected $rows = TEMPLATE_SELECTOR_DEFAULT_ROWS;
     /** @var array A list of templateids that should not be returned by this control. */
-    protected $exclude = array();
+    protected $exclude = [];
     /** @var array|null A list of the templates who are selected. */
     protected $selected = null;
-    /** @var boolean When the search changes, do we keep previously selected options that do
+    /** @var bool When the search changes, do we keep previously selected options that do
      * not match the new search term? */
     protected $preserveselected = false;
-    /** @var boolean If only one template matches the search, should we select them automatically. */
+    /** @var bool If only one template matches the search, should we select them automatically. */
     protected $autoselectunique = false;
-    /** @var boolean When searching, do we only match the starts of fields (better performance)
+    /** @var bool When searching, do we only match the starts of fields (better performance)
      * or do we match occurrences anywhere? */
     protected $searchanywhere = false;
     /** @var mixed This is used by get selected templates */
     protected $validatingtemplateids = null;
-
+    /** @var object file */
     protected $file = null;
+    /** @var int selected line */
     protected $selectedid = 0;
 
-    //defines the base required fields for this selector.
-    protected $requiredfields = array('id', 'fullname');
+    /** @var array Defines the base required fields for this selector. */
+    protected $requiredfields = ['id', 'fullname'];
 
-    /**  @var boolean Used to ensure we only output the search options for one template selector on
+    /**  @var bool Used to ensure we only output the search options for one template selector on
      * each page. */
     private static $searchoptionsoutput = false;
 
     /** @var array JavaScript YUI3 Module definition */
-    protected static $jsmodule = array(
+    protected static $jsmodule = [
                 'name' => 'template_selector',
                 'fullpath' => '/local/template_selector/module.js',
-                'requires'  => array('node', 'event-custom', 'datasource', 'json'),
-                'strings' => array(
-                    array('previouslyselectedtemplates', 'local_template_selector', '%%SEARCHTERM%%'),
-                    array('nomatchingtemplates', 'local_template_selector', '%%SEARCHTERM%%'),
-                    array('none')
-                ));
+                'requires'  => ['node', 'event-custom', 'datasource', 'json'],
+                'strings' => [
+                    ['previouslyselectedtemplates', 'local_template_selector', '%%SEARCHTERM%%'],
+                    ['nomatchingtemplates', 'local_template_selector', '%%SEARCHTERM%%'],
+                    ['none'],
+                ]];
 
     // Public API.
 
@@ -88,7 +90,7 @@ abstract class template_selector_base {
      * @param array $options other options needed to construct this selector.
      * You must be able to clone a templateselector by doing
      */
-    public function __construct($name, $options = array()) {
+    public function __construct($name, $options = []) {
         global $CFG, $PAGE;
 
         // Initialise member variables from constructor arguments.
@@ -98,7 +100,7 @@ abstract class template_selector_base {
         } else if (!empty($CFG->extratemplateselectorfields)) {
             $this->extrafields = explode(',', $CFG->extratemplateselectorfields);
         } else {
-            $this->extrafields = array();
+            $this->extrafields = [];
         }
         if (isset($options['exclude']) && is_array($options['exclude'])) {
             $this->exclude = $options['exclude'];
@@ -139,10 +141,12 @@ abstract class template_selector_base {
      * Clear the list of excluded template ids.
      */
     public function clear_exclusions() {
-        $exclude = array();
+        $exclude = [];
     }
 
     /**
+     * Get the lost of exclusions
+     *
      * @return array the list of template ids that this control will not select.
      */
     public function get_exclusions() {
@@ -150,9 +154,11 @@ abstract class template_selector_base {
     }
 
     /**
+     * Get the list of selected templates.
+     *
      * @return array of template objects. The templates that were selected. This is a
      * more sophisticated version of
-     * optional_param($this->name, array(), PARAM_INTEGER) that validates the
+     * optional_param($this->name, [], PARAM_INTEGER) that validates the
      * returned list of ids against the rules for this template selector.
      */
     public function get_selected_templates() {
@@ -244,7 +250,7 @@ abstract class template_selector_base {
             $output .= print_collapsible_region_end(true);
 
             $PAGE->requires->js_init_call('M.local_template_selector.init_template_selector_options_tracker',
-                                          array(), false, self::$jsmodule);
+                                          [], false, self::$jsmodule);
             self::$searchoptionsoutput = true;
         }
         $output .= "</div>\n</div>\n\n";
@@ -270,6 +276,8 @@ abstract class template_selector_base {
     }
 
     /**
+     * Get the available rows.
+     *
      * @return integer the height this control will be displayed, in rows.
      */
     public function get_rows() {
@@ -286,6 +294,8 @@ abstract class template_selector_base {
     }
 
     /**
+     * Get the multiselect value
+     *
      * @return boolean whether this control will allow selection of more than one template.
      */
     public function is_multiselect() {
@@ -293,6 +303,8 @@ abstract class template_selector_base {
     }
 
     /**
+     * Get the name of the selector
+     *
      * @return string the id/name that this control will have in the HTML.
      */
     public function get_name() {
@@ -338,7 +350,7 @@ abstract class template_selector_base {
      *      that is true, then that option will be displayed greyed out, and
      *      will not be returned by get_selected_templates.
      */
-    public abstract function find_templates($search);
+    abstract public function find_templates($search);
 
     /**
      *
@@ -347,22 +359,23 @@ abstract class template_selector_base {
      * @return array the options needed to recreate this template_selector.
      */
     protected function get_options() {
-        return array(
+        return[
             'class' => get_class($this),
             'name' => $this->name,
             'exclude' => $this->exclude,
             'extrafields' => $this->extrafields,
             'multiselect' => $this->multiselect,
             'file' => $this->file,
-            'selectedid' => $this->selectedid
-        );
+            'selectedid' => $this->selectedid,
+        ];
     }
 
     // Inner workings.
 
     /**
-     * @return boolean if true, we are validating a list of selected templates,
-     *      rather than preparing a list of uesrs to choose from.
+     * Are we are validating a list of selected templates,
+     * rather than preparing a list of uesrs to choose from?
+     * @return boolean if true,
      */
     protected function is_validating() {
         return !is_null($this->validatingtemplateids);
@@ -379,14 +392,14 @@ abstract class template_selector_base {
         if (!$this->multiselect) {
             $templateids = optional_param($this->name, null, PARAM_INTEGER);
             if (empty($templateids)) {
-                return array();
+                return [];
             } else {
-                $templateids = array($templateids);
+                $templateids = [$templateids];
             }
         } else {
-            $templateids = optional_param_array($this->name, array(), PARAM_INTEGER);
+            $templateids = optional_param_array($this->name, [], PARAM_INTEGER);
             if (empty($templateids)) {
-                return array();
+                return [];
             }
         }
 
@@ -396,7 +409,7 @@ abstract class template_selector_base {
         $this->validatingtemplateids = null;
 
         // Aggregate the resulting list back into a single one.
-        $templates = array();
+        $templates = [];
         foreach ($groupedtemplates as $group) {
             foreach ($group as $template) {
                 if (!isset($templates[$template->id]) && empty($template->disabled)
@@ -415,6 +428,8 @@ abstract class template_selector_base {
     }
 
     /**
+     * Generate the SQL for the list of fields.
+     *
      * @return string fragment of SQL to go in the select list of the query.
      */
     protected function required_fields_sql($ct = '') {
@@ -433,6 +448,8 @@ abstract class template_selector_base {
     }
 
     /**
+     * Generate the SQL for searching
+     *
      * @param string $search the text to search for.
      * @return array an array with two elements, a fragment of SQL to go in the
      *      where clause the query, and an array containing any required parameters.
@@ -440,8 +457,8 @@ abstract class template_selector_base {
      */
     protected function search_sql($search, $ct = '') {
         global $DB, $CFG;
-        $params = array();
-        $tests = array();
+        $params = [];
+        $tests = [];
 
         if (!empty($ct)) {
             $ct .= '.';
@@ -449,7 +466,7 @@ abstract class template_selector_base {
 
         // If we have a $search string, put a field LIKE '$search%' condition on each field.
         if ($search) {
-            $conditions = array();
+            $conditions = [];
             $conditions[] = $ct . 'shortname';
             foreach ($this->extrafields as $field) {
                 $conditions[] = $field;
@@ -489,7 +506,7 @@ abstract class template_selector_base {
         }
 
         // Combing the conditions and return.
-        return array(implode(' AND ', $tests), $params);
+        return [implode(' AND ', $tests), $params];
     }
 
     /**
@@ -506,13 +523,13 @@ abstract class template_selector_base {
             $a = new stdClass;
             $a->count = $count;
             $a->search = $search;
-            return array(get_string('toomanytemplatesmatchsearch', 'local_template_selector',
-                    $a) => array(), get_string('pleasesearchmore', 'local_template_selector')
-                     => array());
+            return [get_string('toomanytemplatesmatchsearch', 'local_template_selector',
+                    $a) => [], get_string('pleasesearchmore', 'local_template_selector')
+                     => []];
         } else {
-            return array(get_string('toomanytemplatestoshow', 'local_template_selector',
-                         $count) => array(),
-                    get_string('pleaseusesearch', 'local_template_selector') => array());
+            return [get_string('toomanytemplatestoshow', 'local_template_selector',
+                         $count) => [],
+                    get_string('pleaseusesearch', 'local_template_selector') => []];
         }
     }
 
@@ -535,16 +552,16 @@ abstract class template_selector_base {
         $select = false;
         if (empty($groupedtemplates)) {
             if (!empty($search)) {
-                $groupedtemplates = array(get_string('nomatchingtemplates', 'local_template_selector',
-                $search) => array());
+                $groupedtemplates = [get_string('nomatchingtemplates', 'local_template_selector',
+                                     $search) => []];
             } else {
-                $groupedtemplates = array(get_string('none') => array());
+                $groupedtemplates = [get_string('none') => []];
             }
         } else if ($this->autoselectunique && count($groupedtemplates) == 1 &&
                 count(reset($groupedtemplates)) == 1) {
             $select = true;
             if (!$this->multiselect) {
-                $this->selected = array();
+                $this->selected = [];
             }
         }
 
@@ -604,9 +621,9 @@ abstract class template_selector_base {
      * @return string a string representation of the template.
      */
     public function output_template($template) {
-        $bits = array(
-            $template->shortname
-        );
+        $bits = [
+            $template->shortname,
+        ];
         foreach ($this->extrafields as $field) {
             $bits[] = $template->$field;
         }
@@ -614,15 +631,18 @@ abstract class template_selector_base {
     }
 
     /**
+     * Get the Search button caption
+     *
      * @return string the caption for the search button.
      */
     protected function search_button_caption() {
         return get_string('search');
     }
 
-    // Initialise one of the option checkboxes, either from
-    // the request, or failing that from the user_preferences table, or
-    // finally from the given default.
+    /** Initialise one of the option checkboxes, either from
+     * the request, or failing that from the user_preferences table, or
+     * finally from the given default.
+     */
     private function initialise_option($name, $default) {
         $param = optional_param($name, null, PARAM_BOOL);
         if (is_null($param)) {
@@ -633,7 +653,9 @@ abstract class template_selector_base {
         }
     }
 
-    // Output one of the options checkboxes.
+    /**
+     * Output one of the options checkboxes.
+     */
     private function option_checkbox($name, $on, $label) {
         if ($on) {
             $checked = ' checked="checked"';
@@ -652,6 +674,8 @@ abstract class template_selector_base {
     }
 
     /**
+     * Set up the search javascript.
+     *
      * @param boolean $optiontracker if true, initialise JavaScript for updating the user prefs.
      * @return any HTML needed here.
      */
@@ -666,7 +690,7 @@ abstract class template_selector_base {
 
         // Initialise the selector.
         $PAGE->requires->js_init_call('M.local_template_selector.init_template_selector',
-                                       array($this->name, $hash, $this->extrafields, $search),
+                                       [$this->name, $hash, $this->extrafields, $search],
                                        false, self::$jsmodule);
         return $output;
     }

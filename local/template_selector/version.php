@@ -15,14 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Version info
  * @package   local_template_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   Standard Moodle template selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
 $plugin->version  = 2025041450;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
 $plugin->component  = 'local_template_selector';

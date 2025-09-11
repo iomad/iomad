@@ -15,31 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin strings
+ *
  * @package   local_template_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   Standard Moodle template selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Strings for component 'local_template_selector', language 'en'
- */
-
-$string['templateselectortoomany'] = 'template_selector got more than one selected template, even though multi-select is false';
 $string['cannotcallusgetselectedtemplate'] = 'You cannot call template_selector::get_selected_template if multi-select is true';
 $string['clear'] = 'Clear';
-$string['searchoptions'] = 'Search options';
-$string['templateselectorpreserveselected'] = 'Keep selected templates, even if they no longer match the search';
-$string['templateselectorautoselectunique'] = 'If only one template matches the search, select it automatically';
-$string['templateselectorsearchanywhere'] = 'Match the search text anywhere in the template\'s name';
-$string['toomanytemplatesmatchsearch'] = 'Too many templates ({$a->count}) match \'{$a->search}\'';
-$string['pleasesearchmore'] = 'Please search some more';
-$string['toomanytemplatestoshow'] = 'Too many templates ({$a}) to show';
-$string['pleaseusesearch'] = 'Please use the search';
 $string['nomatchingtemplates'] = 'No templates match \'{$a}\'';
 $string['none'] = 'None';
+$string['pleasesearchmore'] = 'Please search some more';
+$string['pleaseusesearch'] = 'Please use the search';
 $string['pluginname'] = 'Template Selectors';
 $string['previouslyselectedtemplates'] = 'Previously selected templates not matching \'{$a}\'';
 $string['privacy:metadata'] = 'The \'Local IOMAD Template selectors\' plugin only shows data stored in other locations.';
 $string['search'] = 'Search';
+$string['searchoptions'] = 'Search options';
+$string['templateselectorautoselectunique'] = 'If only one template matches the search, select it automatically';
+$string['templateselectorpreserveselected'] = 'Keep selected templates, even if they no longer match the search';
+$string['templateselectorsearchanywhere'] = 'Match the search text anywhere in the template\'s name';
+$string['templateselectortoomany'] = 'template_selector got more than one selected template, even though multi-select is false';
+$string['toomanytemplatesmatchsearch'] = 'Too many templates ({$a->count}) match \'{$a->search}\'';
+$string['toomanytemplatestoshow'] = 'Too many templates ({$a}) to show';
