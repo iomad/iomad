@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Callback landing page.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -43,5 +45,8 @@ if (confirm_sesskey()) {
     $DB->set_field('local_iomad_oidc_sync', 'approved', $approved, ['companyid' => $companyid]);
 }
 
-redirect($CFG->wwwroot . '/local/iomad_oidc_sync/index.php', get_string('approvalset', 'local_iomad_oidc_sync'), null, \core\output\notification::NOTIFY_SUCCESS);
+redirect($CFG->wwwroot . '/local/iomad_oidc_sync/index.php',
+         get_string('approvalset', 'local_iomad_oidc_sync'),
+         null,
+         \core\output\notification::NOTIFY_SUCCESS);
 die;

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Handle authorisation for using the MS Graph functions.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -45,7 +47,7 @@ if (empty($oidcsyncrec->tenantnameorguid) || !confirm_sesskey()) {
     throw new \moodle_exception('configerror', 'local_iomad_oidc_sync');
 }
 
-// Build the redirect URL
+// Build the redirect URL.
 $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
 $redirecturi = get_config('auth_iomadoidc', 'redirecturi' . $postfix);
 $approvelink = new moodle_url('https://login.microsoftonline.com/' . $oidcsyncrec->tenantnameorguid . '/v2.0/adminconsent',

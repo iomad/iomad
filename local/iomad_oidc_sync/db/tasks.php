@@ -15,8 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin defined tasks
+ *
  * @package   local_iomad_oidc_sync
- * @category  tasks
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
  * Based on code provided by Jacob Kindle @ Cofense https://cofense.com/
@@ -33,6 +34,6 @@ $tasks = [
         'hour' => '0',
         'day' => '*',
         'month' => '*',
-        'dayofweek' => '*'
+        'dayofweek' => '*',
     ],
 ];

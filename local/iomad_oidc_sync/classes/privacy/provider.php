@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin privacy provider class.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -23,8 +25,6 @@
  */
 
 namespace local_iomad_oidc_sync\privacy;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Privacy Subsystem for local_iomad_oidc_sync implementing null_provider.
@@ -41,7 +41,7 @@ class provider implements \core_privacy\local\metadata\null_provider {
      *
      * @return  string
      */
-    public static function get_reason() : string {
+    public static function get_reason(): string {
         return 'privacy:metadata';
     }
 }

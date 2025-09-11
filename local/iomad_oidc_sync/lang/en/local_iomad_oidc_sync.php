@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin language strings
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -26,19 +28,19 @@
  * Strings for component 'local_iomad_oidc_sync', language 'en'
  */
 
-$string['pluginname'] = 'IOMAD OIDC sync';
-$string['privacy:metadata'] = 'The IOMAD OIDC sync plugin only shows data stored in other locations.';
-$string['iomad_oidc_sync:view'] = 'View the IOMAD OIDC sync status';
-$string['iomad_oidc_sync:manage'] = 'Manage IOMAD OIDC sync settings';
 $string['agreeconsent'] = 'Consent';
 $string['approvalset'] = 'Approval of IOMAD OIDC sync granted successfully';
+$string['boilerplate'] = 'To set up the OIDC sync tasks you must first provide your TENANTNAME or GUID and then click on the appoval link.  Once you have approved, if the connection is not showing as green, click on the red-cross to check.';
 $string['configerror'] = 'Invalid configuration detected.';
 $string['configlogs'] = 'Config logs';
 $string['consent_title'] = 'IOMAD OIDC sync company consent';
 $string['consentlink'] = 'Submit consent with Microsoft';
+$string['iomad_oidc_sync:manage'] = 'Manage IOMAD OIDC sync settings';
+$string['iomad_oidc_sync:view'] = 'View the IOMAD OIDC sync status';
 $string['loglink'] = 'View Config log';
 $string['oidc_sync_task'] = 'IOMAD OIDC sync task';
-$string['boilerplate'] = 'To set up the OIDC sync tasks you must first provide your TENANTNAME or GUID and then click on the appoval link.  Once you have approved, if the connection is not showing as green, click on the red-cross to check.'; 
+$string['pluginname'] = 'IOMAD OIDC sync';
+$string['privacy:metadata'] = 'The IOMAD OIDC sync plugin only shows data stored in other locations.';
 $string['settenantnameorguid'] = 'Set the Tenant name or GUID';
 $string['syncgroupid'] = 'Optional object ID of the group to be synchronised”';
 $string['tenantnameorguid'] = 'Tenant name or GUID';

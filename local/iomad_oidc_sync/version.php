@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin version information.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -22,7 +24,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
 $plugin->version  = 2024122350;   // The (date) version of this plugin.
 $plugin->requires = 2019052000;   // Requires this Moodle version.
 $plugin->component  = 'local_iomad_oidc_sync';

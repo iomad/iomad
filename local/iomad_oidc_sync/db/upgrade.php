@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin upgrade scripts.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -31,13 +33,16 @@
  * was complex due to us wanting to remvoe the outmoded blocks that this
  * block was going to replace.
  *
- * @global moodle_database $DB
  * @param int $oldversion
  * @param object $block
  */
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Plugin upgrade function.
+ *
+ * @param int $oldversion
+ * @return void
+ */
 function xmldb_local_iomad_oidc_sync_upgrade($oldversion) {
     global $CFG, $DB;
 

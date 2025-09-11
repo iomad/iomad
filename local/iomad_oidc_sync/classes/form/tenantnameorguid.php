@@ -22,7 +22,7 @@
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
- 
+
 namespace local_iomad_oidc_sync\form;
 
 use context;
@@ -101,14 +101,14 @@ class tenantnameorguid extends dynamic_form {
             'tenantnameorguid' => $companyrec->tenantnameorguid,
             'oldname' => $oldname,
             'companyid' => $companyrec->companyid,
-            'errors' => ''
+            'errors' => '',
         ];
     }
 
     /**
      * Define the form
      */
-    public function definition () {
+    public function definition() {
         global $CFG;
 
         $mform = $this->_form;
@@ -182,7 +182,10 @@ class tenantnameorguid extends dynamic_form {
         $context = $this->get_context_for_dynamic_submission();
         if (!\iomad::has_capability('local/iomad_oidc_sync:manage', $context)) {
             $returnurl = new moodle_url($CFG->wwwroot . '/local/iomad_oidc_sync/index.php');
-            throw new moodle_exception('nopermissions', '', $returnurl->out(), get_string('iomad_oidc_sync:manage', 'local_iomad_oidc_sync'));
+            throw new moodle_exception('nopermissions',
+                                       '',
+                                       $returnurl->out(),
+                                       get_string('iomad_oidc_sync:manage', 'local_iomad_oidc_sync'));
         }
     }
 
@@ -191,7 +194,7 @@ class tenantnameorguid extends dynamic_form {
      *
      * @return context
      */
-    protected function get_context_for_dynamic_submission(): context {      
+    protected function get_context_for_dynamic_submission(): context {
         global $CFG;
 
         $systemcontext = context_system::instance();

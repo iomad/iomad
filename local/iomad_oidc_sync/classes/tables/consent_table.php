@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Consent table
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -24,17 +26,20 @@
 
 namespace local_iomad_oidc_sync\tables;
 
-use \table_sql;
-use \moodle_url;
-use \company;
-use \iomad;
-use \html_writer;
-use \context_system;
+use table_sql;
+use moodle_url;
+use company;
+use iomad;
+use html_writer;
+use context_system;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * Table class definition
+ */
 class consent_table extends table_sql {
 
     /**
@@ -69,15 +74,13 @@ class consent_table extends table_sql {
             $tenantnameorguid = 'organizations';
         }
 
-
         // Create the consent link.
         $adminconsenturl = "https://login.microsoftonline.com/" . $tenantnameorguid .
                            "/v2.0/adminconsent?client_id=" . $clientid .
-                           "&scope=https://graph.microsoft.com/.default&redirect_uri=" . $redirecturi; //.
-                           //"&state=" . $company->id;
-        return "<a class='btn btn-primary' href='" . $adminconsenturl . "' target='_self'>" . get_string('agreeconsent', 'local_iomad_oidc_sync') . "</a>";
+                           "&scope=https://graph.microsoft.com/.default&redirect_uri=" . $redirecturi;
+        return "<a class='btn btn-primary' href='" . $adminconsenturl . "' target='_self'>" .
+                get_string('agreeconsent', 'local_iomad_oidc_sync') . "</a>";
     }
-
 
     /**
      * Generate the consent button
@@ -165,12 +168,14 @@ class consent_table extends table_sql {
             if ($canmanage) {
                 $return .= html_writer::start_tag('a', ['href' => $checklink]);
             }
-            $return .= $OUTPUT->pix_icon('no', get_string('no'), 'tool_oauth2', ['class' => 'approveicon', 'data-approveicon' . $row->id => $row->id]);
+            $return .= $OUTPUT->pix_icon('no', get_string('no'), 'tool_oauth2', ['class' => 'approveicon',
+                                                                                 'data-approveicon' . $row->id => $row->id]);
             if ($canmanage) {
                 $return .= html_writer::end_tag('a');
             }
         } else {
-            $return .= $OUTPUT->pix_icon('yes', get_string('yes'), 'tool_oauth2', ['class' => 'approveicon', 'data-approveicon' . $row->id => $row->id]);
+            $return .= $OUTPUT->pix_icon('yes', get_string('yes'), 'tool_oauth2', ['class' => 'approveicon',
+                                                                                   'data-approveicon' . $row->id => $row->id]);
         }
 
         if (empty($row->enabled)) {
@@ -188,7 +193,7 @@ class consent_table extends table_sql {
                                          'aria-label' => get_string('enable')]);
             if ($enabled) {
                 if ($canmanage) {
-                    $return .= html_writer::end_tag('a'); 
+                    $return .= html_writer::end_tag('a');
                 }
             }
         } else {
@@ -206,7 +211,7 @@ class consent_table extends table_sql {
                                          'aria-label' => get_string('disable')]);
             if ($enabled) {
                 if ($canmanage) {
-                    $return .= html_writer::end_tag('a'); 
+                    $return .= html_writer::end_tag('a');
                 }
             }
         }

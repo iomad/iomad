@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Main plugin class
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -28,6 +30,9 @@ use company;
 use company_user;
 use iomad;
 
+/**
+ * Class definition
+ */
 class oidc_sync {
 
     /**
@@ -65,7 +70,7 @@ class oidc_sync {
                             // Process these individually.
                             $companyusers = self::get_users($accesstoken, $companydomain->domain, $company->syncgroupid);
 
-                            // Did we find any
+                            // Did we find any?
                             if (!empty($companyusers)) {
                                 // Add them to the big list of users to be processed.
                                 $users = array_merge(array_values($users), array_values($companyusers));
@@ -100,7 +105,11 @@ class oidc_sync {
         // Set up the SQL.
         $selectsql = "c.*, lios.useroption, lios.tenantnameorguid, lios.syncgroupid, lios.unsuspendonsync";
         $fromsql = "{company} c JOIN {config_plugins} cp JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid)";
-        $wheresql = "lios.approved = 1 AND lios.enabled = 1 AND cp.plugin = 'auth_iomadoidc' AND cp.name = CONCAT('clientid_', c.id) AND cp.value !=''";
+        $wheresql = "lios.approved = 1
+                     AND lios.enabled = 1
+                     AND cp.plugin = 'auth_iomadoidc'
+                     AND cp.name = CONCAT('clientid_', c.id)
+                     AND cp.value !=''";
 
         // Get the records.
         $companies = $DB->get_records_sql("SELECT $selectsql FROM $fromsql WHERE $wheresql");
@@ -120,7 +129,7 @@ class oidc_sync {
         $authplugin = get_auth_plugin('iomadoidc');
         $userfields = $authplugin->userfields;
 
-        // get all of the profile field categories.
+        // Get all of the profile field categories.
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
         $customfields = [];
         if (!empty($profilecategories)) {
@@ -147,11 +156,17 @@ class oidc_sync {
         }
 
         // Get the mappings for the client.
-        $firstnamename = !empty(get_config('auth_iomadoidc', 'field_map_firstname' . $postfix)) ? get_config('auth_iomadoidc', 'field_map_firstname' . $postfix) : get_config('auth_iomadoidc', 'field_map_firstname');
-        $lastnamename = !empty(get_config('auth_iomadoidc', 'field_map_lastname' . $postfix)) ? get_config('auth_iomadoidc', 'field_map_lastname' . $postfix) : get_config('auth_iomadoidc', 'field_map_lastname');
-        $emailname = !empty(get_config('auth_iomadoidc', 'field_map_email' . $postfix)) ? get_config('auth_iomadoidc', 'field_map_email' . $postfix) : get_config('auth_iomadoidc', 'field_map_email');
+        $firstnamename = !empty(get_config('auth_iomadoidc', 'field_map_firstname' . $postfix)) ?
+                                get_config('auth_iomadoidc', 'field_map_firstname' . $postfix) :
+                                get_config('auth_iomadoidc', 'field_map_firstname');
+        $lastnamename = !empty(get_config('auth_iomadoidc', 'field_map_lastname' . $postfix)) ?
+                               get_config('auth_iomadoidc', 'field_map_lastname' . $postfix) :
+                               get_config('auth_iomadoidc', 'field_map_lastname');
+        $emailname = !empty(get_config('auth_iomadoidc', 'field_map_email' . $postfix)) ?
+                            get_config('auth_iomadoidc', 'field_map_email' . $postfix) :
+                            get_config('auth_iomadoidc', 'field_map_email');
 
-        //Start the list of users we are keeping, if needed later.
+        // Start the list of users we are keeping, if needed later.
         $foundusers = [];
 
         mtrace("Processing " . count($users) . " users from OIDC connection");
@@ -172,8 +187,8 @@ class oidc_sync {
             // Only want to add new users.
             if (!$founduser = $DB->get_record('user', (array) $userrec)) {
                 if (!$company->check_usercount(1)) {
-                   $hitlimit = true;
-                   continue;
+                    $hitlimit = true;
+                    continue;
                 }
                 if ($CFG->debug > DEBUG_NONE) {
                     mtrace("Creating user $userrec->username");
@@ -204,7 +219,7 @@ class oidc_sync {
                 }
                 $userrec->id = $userid;
 
-                // Save custom profile fields data and fire teh creation
+                // Save custom profile fields data and fire the creation.
                 foreach ($mappedfields as $profilefield => $mapping) {
                     if (!empty($adduser[$mapping])) {
                         $userrec->$profilefield = $adduser[$mapping];
@@ -291,45 +306,46 @@ class oidc_sync {
      *
      **/
     private static function get_accesstoken($tenantid, $clientid, $clientsecret) {
-        $scope = 'https://graph.microsoft.com/.default'; // Using .default to request the static list of permissions defined in the app registration
+        // Using .default to request the static list of permissions defined in the app registration.
+        $scope = 'https://graph.microsoft.com/.default';
         $tokenurl = "https://login.microsoftonline.com/" . $tenantid . "/oauth2/v2.0/token";
 
-        // Prepare the POST fields
+        // Prepare the POST fields.
         $fields = [
             'client_id' => $clientid,
             'scope' => $scope,
             'client_secret' => $clientsecret,
-            'grant_type' => 'client_credentials', // Indicates the Client Credentials flow
+            'grant_type' => 'client_credentials', // Indicates the Client Credentials flow.
         ];
 
-        // Initialize cURL session
+        // Initialize cURL session.
         $curl = curl_init();
 
-        // Set cURL options
+        // Set cURL options.
         curl_setopt_array($curl, [
             CURLOPT_URL => $tokenurl,
-            CURLOPT_HTTPHEADER => array('Content-Type: application/x-www-form-urlencoded'),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query($fields, '', '&'),
             CURLOPT_VERBOSE => true,
             CURLOPT_RETURNTRANSFER => true,
         ]);
 
-        // Execute the cURL session and capture the response
+        // Execute the cURL session and capture the response.
         $response = curl_exec($curl);
         $error = curl_error($curl);
 
-        // Close cURL session
+        // Close cURL session.
         curl_close($curl);
 
-        // Check for errors or process the response
+        // Check for errors or process the response.
         if ($error) {
             mtrace("error getting access token");
         } else {
-            // Decode the response
+            // Decode the response.
             $responsearray = json_decode($response, true);
             if (!empty($responsearray['access_token'])) {
-        	    return $responsearray['access_token'];
+                return $responsearray['access_token'];
             } else {
                 mtrace("no access token was returned");
                 return false;
@@ -346,7 +362,7 @@ class oidc_sync {
 
         $userlist = [];
 
-        // Get the correct URL for the Microsoft Graph API call to list users
+        // Get the correct URL for the Microsoft Graph API call to list users.
         if (empty($syncgroupid)) {
             $graphurl = 'https://graph.microsoft.com/v1.0/users?$top=500';
         } else {
@@ -358,16 +374,16 @@ class oidc_sync {
             $graphurl .= '&$filter=endswith(mail,\'@' . $domain .'\')&$count=true';
         }
 
-        // Setup the HTTP headers
+        // Setup the HTTP headers.
         $headers = [
             "Authorization: Bearer $accesstoken",
             "Content-Type: application/json",
-            "ConsistencyLevel: eventual"
+            "ConsistencyLevel: eventual",
         ];
 
         $process = true;
         while ($process) {
-            // Initialize a cURL session
+            // Initialize a cURL session.
             $curl = curl_init();
 
             curl_setopt_array($curl, [
@@ -376,7 +392,7 @@ class oidc_sync {
                 CURLOPT_RETURNTRANSFER => true,
             ]);
 
-            // Execute the cURL session and capture the response
+            // Execute the cURL session and capture the response.
             $response = curl_exec($curl);
             $error = curl_error($curl);
             curl_close($curl);
@@ -385,15 +401,15 @@ class oidc_sync {
                 mtrace("Error getting users code - $error");
                 $process = false;
             } else {
-                // Decode the response
-                $responseArray = json_decode($response, true);
-                if (isset($responseArray['error'])) {
-                    mtrace("Response error - " . $responseArray['error']['code'] . ": " . $responseArray['error']['message']);
+                // Decode the response.
+                $responsearray = json_decode($response, true);
+                if (isset($responsearray['error'])) {
+                    mtrace("Response error - " . $responsearray['error']['code'] . ": " . $responsearray['error']['message']);
                     $process = false;
-                } else if (isset($responseArray['value'])) {
-                    $userlist = array_merge(array_values($userlist), array_values($responseArray['value']));
-                    if (isset($responseArray['@odata.nextLink'])) {
-                        $graphurl = $responseArray['@odata.nextLink'];
+                } else if (isset($responsearray['value'])) {
+                    $userlist = array_merge(array_values($userlist), array_values($responsearray['value']));
+                    if (isset($responsearray['@odata.nextLink'])) {
+                        $graphurl = $responsearray['@odata.nextLink'];
                     }
                 } else {
                     $process = false;

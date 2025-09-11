@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Task to get remote OIDC users and process them.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -24,6 +26,9 @@
 
 namespace local_iomad_oidc_sync\task;
 
+/**
+ * Class definition.
+ */
 class oidc_sync_task extends \core\task\scheduled_task {
 
     /**

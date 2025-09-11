@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Main plugin page.
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -39,7 +41,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $company = new company($companyid);
 
@@ -145,13 +147,15 @@ $table->define_baseurl($url);
 $table->define_columns($columns);
 $table->define_headers($headers);
 
-// Display the page
+// Display the page.
 echo $OUTPUT->header();
 
-echo html_writer::tag('div', html_writer::tag('p', get_string('boilerplate', 'local_iomad_oidc_sync')), ['class' => 'local_iomad_oidc_boilerplate']);
+echo html_writer::tag('div',
+                      html_writer::tag('p', get_string('boilerplate', 'local_iomad_oidc_sync')),
+                      ['class' => 'local_iomad_oidc_boilerplate']);
 
-echo html_writer::div('','',['data-region' => 'loadform']);
+echo html_writer::div('', '', ['data-region' => 'loadform']);
 
-$table->out(30,true);
+$table->out(30, true);
 
 echo $OUTPUT->footer();

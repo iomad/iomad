@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin capabilities
+ *
  * @package   local_iomad_oidc_sync
  * @copyright 2024 Derick Turner
  * @author    Derick Turner
@@ -22,30 +24,32 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 // Need to add this or you get warning in the roles pages.
 global $CFG;
 
 $contextlevel = CONTEXT_COMPANY;
 
-$capabilities = array(
+$capabilities = [
 
-    'local/iomad_oidc_sync:view' => array(
+    'local/iomad_oidc_sync:view' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => $contextlevel,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
+        ],
+    ],
 
-    'local/iomad_oidc_sync:manage' => array(
+    'local/iomad_oidc_sync:manage' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => $contextlevel,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW,
-        ),
-    )
-);
+        ],
+    ],
+];
