@@ -15,15 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Search page
+ *
  * @package   local_template_selector
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
- * @basedon   Standard Moodle template selector
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/local/template_selector/lib.php');
+
+require_login();
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url('/local/template_selector/search.php');
@@ -90,4 +93,4 @@ foreach ($templates as &$group) {
     }
 }
 
-echo json_encode(array('results' => $templates));
+echo json_encode(['results' => $templates]);
