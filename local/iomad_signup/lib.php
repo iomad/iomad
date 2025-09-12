@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin default library
+ *
  * @package   local_iomad_signup
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -33,9 +35,9 @@ require_once($CFG->dirroot.'/local/iomad/lib/company.php');
 function local_iomad_signup_user_created($user) {
     global $CFG, $DB;
 
-    // check if we already have the user object
+    // Check if we already have the user object.
     if (is_int($user) || is_string($user)) {
-        $user = $DB->get_record('user', array('id' => $user), '*', MUST_EXIST);
+        $user = $DB->get_record('user', ['id' => $user], '*', MUST_EXIST);
     }
 
     // If the user is already in a company then we do nothing more
@@ -60,7 +62,13 @@ function local_iomad_signup_user_created($user) {
 
         // Do we have a company department profile field?
         $autodepartmentid = $company->get_auto_department($user);
-        company::upsert_company_user($user->id, $userrecord->companyid, $autodepartmentid, $userrecord->managertype, $userrecord->educator, false, true);
+        company::upsert_company_user($user->id,
+                                     $userrecord->companyid,
+                                     $autodepartmentid,
+                                     $userrecord->managertype,
+                                     $userrecord->educator,
+                                     false,
+                                     true);
 
         return true;
     }
@@ -70,20 +78,21 @@ function local_iomad_signup_user_created($user) {
         return true;
     }
 
-    // If not 'email' auth then we are not interested
-    if (empty($CFG->local_iomad_signup_auth) || !in_array($user->auth, explode(',', $CFG->local_iomad_signup_auth))) {
+    // If not 'email' auth then we are not interested.
+    if (empty($CFG->local_iomad_signup_auth) ||
+        !in_array($user->auth, explode(',', $CFG->local_iomad_signup_auth))) {
         return true;
     }
 
-    //  Check if user is already in a company.
-    //  E.g. if this has already been handled.
+    // Check if user is already in a company.
+    // E.g. if this has already been handled.
     if (!$company = company::by_userid($user->id, true)) {
 
-        // Get context
+        // Get context.
         $context = context_system::instance();
         $found = false;
 
-        // check if we have a company id from the URL or SESSION.
+        // Check if we have a company id from the URL or SESSION.
         $companyid = iomad::get_my_companyid($context, false);
         if (!empty($companyid)) {
             $company = new company($companyid);
@@ -93,7 +102,10 @@ function local_iomad_signup_user_created($user) {
         if (!$found) {
             // Check if we have a domain already for this users email address.
             list($dump, $emaildomain) = explode('@', $user->email);
-            if ($domaininfo = $DB->get_record_sql("SELECT * FROM {company_domains} WHERE " . $DB->sql_compare_text('domain') . " = '" . $DB->sql_compare_text($emaildomain)."'")) {
+            if ($domaininfo = $DB->get_record_sql("SELECT * FROM {company_domains}
+                                                   WHERE " . $DB->sql_compare_text('domain') .
+                                                   " = '" .
+                                                   $DB->sql_compare_text($emaildomain)."'")) {
                 // Get company.
                 $company = new company($domaininfo->companyid);
                 $found = true;
@@ -112,10 +124,10 @@ function local_iomad_signup_user_created($user) {
             // Do we have a company department profile field?
             $autodepartmentid = $company->get_auto_department($user);
 
-            // assign the user to the company.
+            // Assign the user to the company.
             $company->assign_user_to_company($user->id, $autodepartmentid);
 
-            // Deal with company defaults
+            // Deal with company defaults.
             $defaults = $company->get_user_defaults();
             foreach ($defaults as $index => $value) {
                 $user->$index = $value;
@@ -125,15 +137,15 @@ function local_iomad_signup_user_created($user) {
             profile_save_data($user);
 
             // Force the company theme in case it's not already been done.
-            $DB->set_field('user', 'theme', $company->get_theme(), array('id' => $user->id));
+            $DB->set_field('user', 'theme', $company->get_theme(), ['id' => $user->id]);
         }
 
         // Do we have a role to assign?
         if (!empty($CFG->local_iomad_signup_role)) {
-            // Get role
-            if ($role = $DB->get_record('role', array('id' => $CFG->local_iomad_signup_role), '*', MUST_EXIST)) {
+            // Get role.
+            if ($role = $DB->get_record('role', ['id' => $CFG->local_iomad_signup_role], '*', MUST_EXIST)) {
 
-                // assign the user to the role
+                // Assign the user to the role.
                 role_assign($role->id, $user->id, $context->id);
             }
         }

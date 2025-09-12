@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observer for local iomad plugin.
+ * Event observer for local iomad_signup plugin.
  *
- * @package    local_iomad
+ * @package    local_iomad_signup
  * @copyright  2016 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,6 +27,10 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/iomad_signup/lib.php');
 
+/**
+ * Observer class definition.
+ *
+ */
 class local_iomad_signup_observer {
 
     /**
