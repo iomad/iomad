@@ -45,7 +45,7 @@ class page {
     public static function create_page(stdClass $data): page_model {
         $data->name = trim($data->name);
         $data->title = trim($data->title);
-        $pagepersistent = manager::create_page_persistent($data);
+        $pagepersistent = manager::create_pagepersistent($data);
         $pageid = $pagepersistent->get('id');
         $context = context_iomadcustompage::instance($pageid);
         $data->id = $pageid;

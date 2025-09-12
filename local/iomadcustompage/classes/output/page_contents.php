@@ -39,14 +39,14 @@ class page_contents implements renderable, templatable {
      * page persistent
      * @var page
      */
-    private $page_persistent;
+    private $pagepersistent;
 
     /**
      * constructor
      * @param page $pagepersistent
      */
     public function __construct(page $pagepersistent) {
-        $this->page_persistent = $pagepersistent;
+        $this->pagepersistent = $pagepersistent;
     }
 
     /**
@@ -59,7 +59,7 @@ class page_contents implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         global $DB;
         // Get the blocks in the page.
-        $pagecontext = $this->page_persistent->get_context();
+        $pagecontext = $this->pagepersistent->get_context();
         $instances = $DB->get_recordset('block_instances', ['parentcontextid' => $pagecontext->id]);
         $blocksinstances = [];
         $blocksinstances['nocontents'] = true;

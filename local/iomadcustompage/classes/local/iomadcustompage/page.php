@@ -24,7 +24,7 @@
 
 namespace local_iomadcustompage\local\iomadcustompage;
 
-use local_iomadcustompage\local\models\page as page_persistent;
+use local_iomadcustompage\local\models\page as pagepersistent;
 use local_iomadcustompage\output\page_contents;
 use local_iomadcustompage\output\page_deatils;
 use local_iomadcustompage\local\helpers\page as page_helper;
@@ -35,23 +35,23 @@ use stdClass;
  * iomadcustompage class to representing a page
  */
 class page {
-    /** @var page $page_persistent Page persistent */
-    private $page_persistent;
+    /** @var page $pagepersistent Page persistent */
+    private $pagepersistent;
     /**
      * Returns persistent class used when initialising this page
      *
      * @return page
      */
-    public function __construct(page_persistent $page) {
-        $this->page_persistent = $page;
+    public function __construct(pagepersistent $page) {
+        $this->pagepersistent = $page;
     }
 
     /**
      * page persistent getter
-     * @return page_persistent
+     * @return pagepersistent
      */
-    final public function get_page_persistent(): page_persistent {
-        return $this->page_persistent;
+    final public function get_pagepersistent(): pagepersistent {
+        return $this->pagepersistent;
     }
 
     /**
@@ -63,7 +63,7 @@ class page {
 
         /** @var \local_iomadcustompage\output\renderer $renderer */
         $renderer = $PAGE->get_renderer('local_iomadcustompage');
-        $pagedetails = new page_deatils($this->get_page_persistent());
+        $pagedetails = new page_deatils($this->get_pagepersistent());
 
         return $renderer->render($pagedetails);
     }
@@ -76,7 +76,7 @@ class page {
     public function content_output() {
         global $PAGE;
         $renderer = $PAGE->get_renderer('local_iomadcustompage');
-        $pagecontents = new page_contents($this->get_page_persistent());
+        $pagecontents = new page_contents($this->get_pagepersistent());
         return $renderer->render($pagecontents);
     }
 
@@ -90,6 +90,6 @@ class page {
         // We need to delete the audiences of this page.
         // We need to clear up the context of this page with blocks.
         // All the above-mentioned will be handled by page model before_delete hook.
-        return page_helper::delete_page((int)$this->page_persistent->get('id'));
+        return page_helper::delete_page((int)$this->pagepersistent->get('id'));
     }
 }

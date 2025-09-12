@@ -28,7 +28,7 @@ define('CONTEXT_CUSTOMPAGE', 75);
 
 use core\output\inplace_editable;
 use local_iomadcustompage\form\audience;
-use local_iomadcustompage\local\models\page as page_persistent;
+use local_iomadcustompage\local\models\page as pagepersistent;
 use local_iomadcustompage\manager;
 use local_iomadcustompage\output\audience_heading_editable;
 use local_iomadcustompage\output\page_name_editable;
@@ -115,7 +115,7 @@ function local_iomadcustompage_extend_navigation(global_navigation $nav) {
     $pages = audience_helper::user_pages_list($userid);
 
     foreach ($pages as $pageid) {
-        $iomadcustompage = page_persistent::get_record(['id' => (int)$pageid]);
+        $iomadcustompage = pagepersistent::get_record(['id' => (int)$pageid]);
         $pagename = $iomadcustompage->get_formatted_name();
         $pagetitle = $iomadcustompage->get_formatted_title();
         if (!$pagetitle) {

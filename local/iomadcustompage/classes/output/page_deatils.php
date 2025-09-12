@@ -37,14 +37,14 @@ class page_deatils implements renderable, templatable {
     /**
      * @var page
      */
-    private $page_persistent;
+    private $pagepersistent;
 
     /**
      * constructor
      * @param page $pagepersistent
      */
     public function __construct(page $pagepersistent) {
-        $this->page_persistent = $pagepersistent;
+        $this->pagepersistent = $pagepersistent;
     }
     /**
      * export for template
@@ -56,8 +56,8 @@ class page_deatils implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         $data = new stdClass();
-        $data->name = $this->page_persistent->get_formatted_name();
-        $data->title = $this->page_persistent->get_formatted_title();
+        $data->name = $this->pagepersistent->get_formatted_name();
+        $data->title = $this->pagepersistent->get_formatted_title();
         return $data;
     }
 }

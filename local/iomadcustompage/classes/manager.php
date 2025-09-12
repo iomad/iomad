@@ -45,7 +45,7 @@ class manager {
      * @param stdClass $pagedata
      * @return page
      */
-    public static function create_page_persistent(stdClass $pagedata): page {
+    public static function create_pagepersistent(stdClass $pagedata): page {
         return (new page(0, $pagedata))->create();
     }
 }

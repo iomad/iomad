@@ -23,7 +23,7 @@
  */
 
 namespace local_iomadcustompage\factories;
-use local_iomadcustompage\local\models\page as page_persistent;
+use local_iomadcustompage\local\models\page as pagepersistent;
 use local_iomadcustompage\local\iomadcustompage\page;
 
 /**
@@ -36,7 +36,7 @@ class page_factory {
      * @return page
      */
     public static function create(int $pageid) {
-        $pagepersistent = new page_persistent($pageid);
+        $pagepersistent = new pagepersistent($pageid);
         return new page($pagepersistent);
     }
 }
