@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin event definitions
+ *
  * @package   local_iomad_signup
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,11 +26,11 @@
 defined('MOODLE_INTERNAL') || die;
 
 // List of observers.
-$observers = array(
+$observers = [
 
-    array(
+    [
         'eventname'   => '\core\event\user_created',
         'callback'    => 'local_iomad_signup_observer::user_created',
         'internal'    => false,
-    ),
-);
+    ],
+];

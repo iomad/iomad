@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin settings definitions
+ *
  * @package   local_iomad_signup
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,7 +27,7 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig && !empty($USER->id)) {
 
-    // Basic navigation settings
+    // Basic navigation settings.
     require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
 
     $settings = new admin_settingpage('local_iomad_signup', get_string('pluginname', 'local_iomad_signup'));
@@ -67,24 +69,28 @@ if ($hassiteconfig && !empty($USER->id)) {
     );
 
     $siteauths = get_enabled_auth_plugins();
-    $siteautharray = array();
+    $siteautharray = [];
     foreach ($siteauths as $siteauth) {
         if ($siteauth != 'manual') {
             $siteautharray[$siteauth] = $siteauth;
         }
     }
 
-    // Add the available auth methods. IF, there are companies defined
-    $sitecompanies = $DB->get_records_menu('company', array(), 'name', 'id,name');
+    // Add the available auth methods. IF, there are companies defined.
+    $sitecompanies = $DB->get_records_menu('company', [], 'name', 'id,name');
     if ($sitecompanies) {
-        $settings->add(new admin_setting_configmulticheckbox('local_iomad_signup_auth', get_string('authenticationtypes', 'local_iomad_signup'), get_string('authenticationtypes_desc', 'local_iomad_signup'), array(),$siteautharray));
+        $settings->add(new admin_setting_configmulticheckbox('local_iomad_signup_auth',
+                                                              get_string('authenticationtypes', 'local_iomad_signup'),
+                                                              get_string('authenticationtypes_desc', 'local_iomad_signup'),
+                                                              [],
+                                                              $siteautharray));
 
-        $siteroles = $DB->get_records_menu('role', array(), 'id', 'id,shortname');
-        $availableroles = array('0' => 'none') + $siteroles;
+        $siteroles = $DB->get_records_menu('role', [], 'id', 'id,shortname');
+        $availableroles = ['0' => 'none'] + $siteroles;
         $settings->add(new admin_setting_configselect('local_iomad_signup_role', get_string('role', 'local_iomad_signup'),
                            get_string('configrole', 'local_iomad_signup'), 0, $availableroles));
 
-        $availablecompanies = array('0' => 'none') + $sitecompanies;
+        $availablecompanies = ['0' => 'none'] + $sitecompanies;
         $settings->add(new admin_setting_configselect('local_iomad_signup_company', get_string('company', 'local_iomad_signup'),
                            get_string('configcompany', 'local_iomad_signup'), 0, $availablecompanies));
     } else {

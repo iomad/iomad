@@ -15,18 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin settings
+ *
  * @package   local_iomad_signup
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * local_iomad_signup settings
+ */
 class local_iomad_settings extends block_base {
+    /**
+     * Initialisation function
+     *
+     * @return void
+     */
     public function init() {
         $this->title = get_string('pluginname', 'local_iomad_settings');
 
     }
 
+    /**
+     * Do we hide the block header?
+     *
+     * @return void
+     */
     public function hide_header() {
         return true;
     }

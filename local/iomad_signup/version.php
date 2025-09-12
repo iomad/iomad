@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin version info
+ *
  * @package   local_iomad_signup
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
+defined('MOODLE_INTERNAL') || die;
+
+$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name.
 $plugin->component  = 'local_iomad_signup';
 $plugin->version  = 2016090341;   // The (date) version of this plugin.
 $plugin->requires = 2019052000;   // Requires this Moodle version.
