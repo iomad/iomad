@@ -29,9 +29,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['admindirname'] = 'Admin katalogi';
-$string['availablelangs'] = 'Mavjud til paketlari';
-$string['dataroot'] = 'Ma’lumotlar katalogi';
-$string['dbprefix'] = 'Jadvallar prefiksi';
-$string['dirroot'] = 'Moodle katalogi';
-$string['installation'] = 'O\'rnatish';
+$string['cannotcreatedboninstall'] = '<p>Ma\'lumotlar bazasini yaratib bo\'lmadi.</p>
+<p>Ko\'rsatilgan ma\'lumotlar bazasi mavjud emas va berilgan foydalanuvchida uni yaratish huquqi yo\'q.</p>
+<p>Sayt administratori ma\'lumotlar bazasi konfiguratsiyasini tekshirishi kerak.</p>';
+$string['cannotcreatelangdir'] = 'Til katalogini yaratib bo\'lmadi';
+$string['cannotcreatetempdir'] = 'Vaqtinchalik jildni yaratib bo‘lmadi';
+$string['cannotdownloadcomponents'] = 'Komponentlarni yuklab olib bo\'lmadi';
+$string['cannotdownloadzipfile'] = 'ZIP faylini yuklab olib bo\'lmadi';
+$string['cannotfindcomponent'] = 'Komponentni topib bo\'lmadi';
