@@ -6,6 +6,8 @@
   processIsolation="false"
   backupGlobals="false"
   cacheResult="false"
+  failOnDeprecation="true"
+  failOnWarning="true"
   stopOnError="false"
   stopOnFailure="false"
   stopOnIncomplete="false"
@@ -27,6 +29,10 @@
     <!--<const name="TEST_EXTERNAL_FILES_HTTPS_URL" value="https://download.moodle.org/unittest"/>
         uncomment and alter to fetch external test files from alternative location-->
   </php>
+
+  <extensions>
+    <bootstrap class="core\tests\phpunit\moodle_extension"/>
+  </extensions>
 
   <!--All core suites need to be manually added here-->
 

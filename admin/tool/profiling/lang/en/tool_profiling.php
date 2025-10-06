@@ -31,6 +31,7 @@ $string['cannotfindanyrunforurl'] = 'Sorry, cannot find any profiling run for th
 $string['cannotfindanyrunforrunid'] = 'Sorry, cannot find the \'{$a}\' profiling run';
 $string['comment'] = 'Comment';
 $string['cputime'] = 'CPU time';
+$string['detailview'] = 'Summary of run';
 $string['differencesbetween2runsof'] = 'Differences between 2 runs of {$a}';
 $string['executiontime'] = 'Execution time';
 $string['export'] = 'Export';

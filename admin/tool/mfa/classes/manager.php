@@ -52,7 +52,7 @@ class manager {
         ],
         'tool_mfa' => [
             'guidance',
-        ]
+        ],
     ];
 
     /**
@@ -463,6 +463,21 @@ class manager {
             $url = new \moodle_url($url);
         }
 
+        // Admin not setup.
+        if (!empty($CFG->adminsetuppending)) {
+            return self::NO_REDIRECT;
+        }
+
+        // Honor prevent_redirect.
+        if ($preventredirect) {
+            return self::NO_REDIRECT;
+        }
+
+        // Login as.
+        if (\core\session\manager::is_loggedinas()) {
+            return self::NO_REDIRECT;
+        }
+
         // Check for pluginfile.php urls.
         $pluginfileurl = new \moodle_url('/pluginfile.php');
         if ($url->compare($pluginfileurl)) {
@@ -507,22 +522,6 @@ class manager {
             }
         }
 
-        // Admin not setup.
-        if (!empty($CFG->adminsetuppending)) {
-            return self::NO_REDIRECT;
-        }
-
-        // Initial installation.
-        // We get this for free from get_plugins_with_function.
-
-        // Upgrade check.
-        // We get this for free from get_plugins_with_function.
-
-        // Honor prevent_redirect.
-        if ($preventredirect) {
-            return self::NO_REDIRECT;
-        }
-
         // User not properly setup.
         if (user_not_fully_set_up($USER)) {
             return self::NO_REDIRECT;
@@ -535,11 +534,6 @@ class manager {
 
         // Forced password changes.
         if (get_user_preferences('auth_forcepasswordchange')) {
-            return self::NO_REDIRECT;
-        }
-
-        // Login as.
-        if (\core\session\manager::is_loggedinas()) {
             return self::NO_REDIRECT;
         }
 
@@ -560,11 +554,8 @@ class manager {
         }
 
         // WS/AJAX check.
+        // Prevents any potential bypassing of multi-factor authentication.
         if (WS_SERVER || AJAX_SCRIPT) {
-            if (isset($SESSION->mfa_pending) && !empty($SESSION->mfa_pending)) {
-                // Allow AJAX and WS, but never from auth.php.
-                return self::NO_REDIRECT;
-            }
             return self::REDIRECT_EXCEPTION;
         }
 

@@ -50,8 +50,12 @@ final class geoip_test extends \advanced_testcase {
      * @param   string  $ip The IP to test
      */
     public function test_ip($ip): void {
+        global $CFG;
+        if (!defined('TEST_GEOIP_APIKEY') || empty(TEST_GEOIP_APIKEY)) {
+            $this->markTestSkipped('External geo tests are disabled.');
+        }
         $this->resetAfterTest();
-
+        $CFG->geopluginapikey = TEST_GEOIP_APIKEY;
         $this->setup_geoip2file();
 
         // Note: The results we get from the iplookup tests are beyond our control.

@@ -347,7 +347,7 @@ class block_activity_results extends block_base {
 
                 $rank = 0;
                 if (!empty($best)) {
-                    $this->content->text .= '<table class="grades"><caption class="pb-0"><h6>';
+                    $this->content->text .= '<table class="grades table-reboot"><caption class="pb-0"><h6>';
                     if ($numbest == 1) {
                         $this->content->text .= get_string('bestgroupgrade', 'block_activity_results');
                     } else {
@@ -403,7 +403,7 @@ class block_activity_results extends block_base {
                 $rank = 0;
                 if (!empty($worst)) {
                     $worst = array_reverse($worst, true);
-                    $this->content->text .= '<table class="grades"><caption class="pb-0"><h6>';
+                    $this->content->text .= '<table class="grades table-reboot"><caption class="pb-0"><h6>';
                     if ($numworst == 1) {
                         $this->content->text .= get_string('worstgroupgrade', 'block_activity_results');
                     } else {
@@ -540,7 +540,7 @@ class block_activity_results extends block_base {
 
                 $rank = 0;
                 if (!empty($best)) {
-                    $this->content->text .= '<table class="grades"><caption class="pb-0"><h6>';
+                    $this->content->text .= '<table class="table-reboot grades"><caption class="pb-0"><h6>';
                     if ($numbest == 1) {
                         $this->content->text .= get_string('bestgrade', 'block_activity_results');
                     } else {
@@ -607,7 +607,7 @@ class block_activity_results extends block_base {
                 $rank = 0;
                 if (!empty($worst)) {
                     $worst = array_reverse($worst, true);
-                    $this->content->text .= '<table class="grades"><caption class="pb-0"><h6>';
+                    $this->content->text .= '<table class="table-reboot grades"><caption class="pb-0"><h6>';
                     if ($numbest == 1) {
                         $this->content->text .= get_string('worstgrade', 'block_activity_results');
                     } else {

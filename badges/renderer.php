@@ -151,12 +151,17 @@ class core_badges_renderer extends plugin_renderer_base {
                     'value' => $this->output->larrow() . ' ' . get_string('award', 'badges'),
                     'class' => 'actionbutton btn btn-secondary')
                 );
-        $actioncell->text .= html_writer::empty_tag('input', array(
+        if (has_capability('moodle/badges:revokebadge', $this->page->context)) {
+            $actioncell->text .= html_writer::empty_tag(
+                'input',
+                [
                     'type' => 'submit',
                     'name' => 'revoke',
                     'value' => get_string('revoke', 'badges') . ' ' . $this->output->rarrow(),
-                    'class' => 'actionbutton btn btn-secondary')
-                );
+                    'class' => 'actionbutton btn btn-secondary',
+                ]
+            );
+        }
         $actioncell->text .= html_writer::end_tag('div', array());
         $actioncell->attributes['class'] = 'actions';
         $potentialcell = new html_table_cell();
@@ -164,7 +169,7 @@ class core_badges_renderer extends plugin_renderer_base {
         $potentialcell->attributes['class'] = 'potential';
 
         $table = new html_table();
-        $table->attributes['class'] = 'recipienttable boxaligncenter';
+        $table->attributes['class'] = 'recipienttable table-reboot';
         $table->data = array(new html_table_row(array($existingcell, $actioncell, $potentialcell)));
         $output .= html_writer::table($table);
 
@@ -195,12 +200,22 @@ class core_badges_renderer extends plugin_renderer_base {
         $display .= $this->heading(get_string('issuerdetails', 'badges'), 3);
         $dl = array();
         $dl[get_string('issuername', 'badges')] = $badge->issuername;
-        $dl[get_string('contact', 'badges')] = html_writer::tag('a', $badge->issuercontact, array('href' => 'mailto:' . $badge->issuercontact));
-        $dl[get_string('issuerurl', 'badges')] = html_writer::tag(
-            'a',
-            $badge->issuerurl,
-            ['href' => $badge->issuerurl, 'target' => '_blank'],
-        );
+        $dl[get_string('contact', 'badges')] = '';
+        if (trim($badge->issuercontact)) {
+            $dl[get_string('contact', 'badges')] = html_writer::tag(
+                'a',
+                $badge->issuercontact,
+                ['href' => 'mailto:' . $badge->issuercontact],
+            );
+        }
+        $dl[get_string('issuerurl', 'badges')] = '';
+        if (trim($badge->issuerurl)) {
+            $dl[get_string('issuerurl', 'badges')] = html_writer::tag(
+                'a',
+                $badge->issuerurl,
+                ['href' => $badge->issuerurl, 'target' => '_blank'],
+            );
+        }
         $display .= $this->definition_list($dl);
 
         // Issuance details if any.

@@ -3791,14 +3791,14 @@ function course_get_user_navigation_options($context, $course = null) {
  * This function also handles the frontpage settings.
  *
  * @param  stdClass $course  course object (for frontpage it should be a clone of $SITE)
- * @param  stdClass $context context object (course context)
+ * @param  context_course $context context object (course context)
  * @return stdClass          the administration options in a course and their availability status
  * @since  Moodle 3.2
  */
 function course_get_user_administration_options($course, $context) {
     global $CFG;
+
     $isfrontpage = $course->id == SITEID;
-    $completionenabled = $CFG->enablecompletion && $course->enablecompletion;
     $hascompletionoptions = count(core_completion\manager::get_available_completion_options($course->id)) > 0;
     $options = new stdClass;
     $options->update = has_capability('moodle/course:update', $context);
@@ -3813,7 +3813,7 @@ function course_get_user_administration_options($course, $context) {
     $options->files = ($course->legacyfiles == 2 && has_capability('moodle/course:managefiles', $context));
 
     if (!$isfrontpage) {
-        $options->tags = has_capability('moodle/course:tag', $context);
+        $options->tags = core_tag_tag::is_enabled('core', 'course') && has_capability('moodle/course:tag', $context);
         $options->gradebook = has_capability('moodle/grade:manage', $context);
         $options->outcomes = !empty($CFG->enableoutcomes) && has_capability('moodle/course:update', $context);
         $options->badges = !empty($CFG->enablebadges);
@@ -4843,6 +4843,8 @@ function course_output_fragment_new_base_form($args) {
  *
  * @param array $args the fragment arguments
  * @return string the course overview fragment
+ *
+ * @throws require_login_exception
  */
 function course_output_fragment_course_overview($args) {
     global $PAGE;
@@ -4852,7 +4854,10 @@ function course_output_fragment_course_overview($args) {
     $modname = $args['modname'];
     $course = get_course($args['courseid']);
     $context = context_course::instance($course->id, MUST_EXIST);
-    can_access_course($course);
+
+    if (!can_access_course($course, null, '', true)) {
+        throw new require_login_exception('Course is not available');
+    }
 
     // Some plugins may have a list view event.
     $eventclassname = 'mod_' . $modname . '\\event\\course_module_instance_list_viewed';
