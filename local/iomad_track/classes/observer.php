@@ -533,10 +533,23 @@ class observer {
         $timeenrolled = $event->timecreated;
         $modifiedtime = $event->timecreated;
 
-        // Is this course a license course?
-        if ($DB->get_record('iomad_courses', array('courseid' => $courseid, 'licensed' => 1))) {
-            // Ignore it we capture a different event for those.
-            return true;
+        // If the enrolment method is enabled and isn't license then proceed with the rest of the method
+        if (!$DB->get_record_sql('SELECT * FROM {enrol} e
+                                  JOIN {course} c ON e.courseid = c.id
+                                  WHERE e.courseid = :courseid
+                                  AND e.status = 0
+                                  AND e.enrol = :enrol
+                                  AND e.enrol != :license',
+                                 ['courseid' => $event->courseid,
+                                  'enrol' => $event->other['enrol'],
+                                  'license' => 'license'])) {
+
+            // Is this course a license course?
+            if ($DB->get_record('iomad_courses', ['courseid' => $courseid, 'licensed' => 1])) {
+
+                // Ignore it we capture a different event for those.
+                return true;
+            }
         }
 
         // Check if there is already an entry for this.
