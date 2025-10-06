@@ -19,12 +19,12 @@ declare(strict_types=1);
 namespace local_iomadcustompage\local\audiences;
 
 use coding_exception;
-use core\output\notification;
 use core_plugin_manager;
-use local_iomadcustompage\local\models\audience;
-use local_iomadcustompage\page_access_exception;
 use MoodleQuickForm;
 use stdClass;
+use core\output\notification;
+use local_iomadcustompage\local\models\audience;
+use local_iomadcustompage\page_access_exception;
 
 /**
  * Audience base class
@@ -46,14 +46,13 @@ abstract class base {
     protected function __construct() {
     }
 
-  /**
-   * Loads an existing instance of audience with persistent
-   *
-   * @param int $id
-   * @param null|stdClass $record
-   * @return self|null
-   * @throws coding_exception
-   */
+    /**
+     * Loads an existing instance of audience with persistent
+     *
+     * @param int $id
+     * @param null|stdClass $record
+     * @return self|null
+     */
     final public static function instance(int $id = 0, ?stdClass $record = null): ?self {
         $persistent = new audience($id, $record);
         // Needed for get_audience_types() method.
@@ -73,14 +72,13 @@ abstract class base {
         return $instance;
     }
 
-  /**
-   * Creates a new audience and saves it to database
-   *
-   * @param int $pageid
-   * @param array $configdata
-   * @return self
-   * @throws coding_exception
-   */
+    /**
+     * Creates a new audience and saves it to database
+     *
+     * @param int $pageid
+     * @param array $configdata
+     * @return self
+     */
     final public static function create(int $pageid, array $configdata): self {
         $record = new stdClass();
         $record->pageid = $pageid;
@@ -102,12 +100,11 @@ abstract class base {
      */
     abstract public function get_sql(string $usertablealias): array;
 
-  /**
-   * Returns string for audience category.
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Returns string for audience category.
+     *
+     * @return string
+     */
     final public function get_category(): string {
         [$component] = explode('\\', get_class($this));
 
@@ -160,15 +157,13 @@ abstract class base {
      */
     abstract public function get_description(): string;
 
-  /**
-   * Helper to format descriptions for audience types that may contain many selected elements, limiting number show according
-   * to {@see MULTI_SELECT_LIMIT} constant value
-   *
-   * @param array $elements
-   * @return string
-   * @throws \core\exception\coding_exception
-   * @throws coding_exception
-   */
+    /**
+     * Helper to format descriptions for audience types that may contain many selected elements, limiting number show according
+     * to {@see MULTI_SELECT_LIMIT} constant value
+     *
+     * @param array $elements
+     * @return string
+     */
     protected function format_description_for_multiselect(array $elements): string {
         global $OUTPUT;
 
@@ -214,22 +209,20 @@ abstract class base {
         return [];
     }
 
-  /**
-   * Returns configdata as an associative array
-   *
-   * @return array decoded configdata
-   * @throws coding_exception
-   */
+    /**
+     * Returns configdata as an associative array
+     *
+     * @return array decoded configdata
+     */
     final public function get_configdata(): array {
         return json_decode($this->audience->get('configdata'), true);
     }
 
-  /**
-   * Update configdata in audience persistent
-   *
-   * @param array $configdata
-   * @throws coding_exception
-   */
+    /**
+     * Update configdata in audience persistent
+     *
+     * @param array $configdata
+     */
     final public function update_configdata(array $configdata): void {
         $this->audience->set('configdata', json_encode($configdata));
         $this->audience->save();

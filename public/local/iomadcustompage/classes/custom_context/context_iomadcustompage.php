@@ -25,6 +25,7 @@ use dml_transaction_exception;
 use moodle_url;
 use stdClass;
 
+
 /**
  *  context_iomadcustompage.php description here.
  *
@@ -47,26 +48,22 @@ class context_iomadcustompage extends context {
         }
     }
 
-  /**
-   * Returns human readable context level name.
-   *
-   * @return string the human-readable context level name.
-   * @throws coding_exception
-   */
+    /**
+     * Returns human readable context level name.
+     * @return string the human-readable context level name.
+     */
     public static function get_level_name() {
         return get_string('iomadcustompage', 'local_iomadcustompage');
     }
 
-  /**
-   * Returns human readable context identifier.
-   *
-   * @param bool $withprefix
-   * @param bool $short
-   * @param bool $escape
-   * @return string the human-readable context name.
-   * @throws dml_exception
-   * @throws coding_exception
-   */
+    /**
+     * Returns human readable context identifier.
+     *
+     * @param true $withprefix
+     * @param false $short
+     * @param true $escape
+     * @return string the human-readable context name.
+     */
     public function get_context_name($withprefix = true, $short = false, $escape = true) {
         global $DB;
 
@@ -80,23 +77,21 @@ class context_iomadcustompage extends context {
         return $name;
     }
 
-  /**
-   * Returns the most relevant URL for this context.
-   *
-   * @return moodle_url
-   * @throws moodle_exception
-   */
+    /**
+     * Returns the most relevant URL for this context.
+     *
+     * @return moodle_url
+     */
     public function get_url() {
         return new moodle_url('/local/iomadcustompage/index.php', ['pageid' => $this->_instanceid]);
     }
 
-  /**
-   * Returns an array of relevant context capability records.
-   *
-   * @param string $sort
-   * @return array
-   * @throws dml_exception
-   */
+    /**
+     * Returns array of relevant context capability records.
+     *
+     * @param string $sort
+     * @return array
+     */
     public function get_capabilities(string $sort = self::DEFAULT_CAPABILITY_SORT) {
         global $DB;
 
@@ -106,16 +101,14 @@ class context_iomadcustompage extends context {
         ], $sort);
     }
 
-  /**
-   * Returns iomadcustompage context instance.
-   *
-   * @param int $pageid id from {local_iomadcustompages} table
-   * @param int $strictness
-   * @return context|bool context instance
-   * @throws coding_exception
-   * @throws dml_exception
-   */
-    public static function instance(int $pageid, int $strictness = MUST_EXIST) {
+    /**
+     * Returns iomadcustompage context instance.
+     *
+     * @param int $pageid id from {iomadcustompages} table
+     * @param int $strictness
+     * @return context|bool context instance
+     */
+    public static function instance(int $pageid, $strictness = MUST_EXIST) {
         global $DB;
 
         if ($context = context::cache_get(CONTEXT_CUSTOMPAGE, $pageid)) {
@@ -135,7 +128,7 @@ class context_iomadcustompage extends context {
                         $companycontext = \core\context\company::instance($companyid);
                         $path = $companycontext->path;
                     }
-                    $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $path);
+                    $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $path, 0);
                 }
             }
         }
@@ -149,13 +142,12 @@ class context_iomadcustompage extends context {
         return false;
     }
 
-  /**
-   * Returns immediate child contexts of pages and all sub-pages,
-   * children of sub-pages are not returned.
-   *
-   * @return array
-   * @throws dml_exception
-   */
+    /**
+     * Returns immediate child contexts of pages and all sub-pages,
+     * children of sub-pages are not returned.
+     *
+     * @return array
+     */
     public function get_child_contexts() {
         global $DB;
 
@@ -178,12 +170,9 @@ class context_iomadcustompage extends context {
         return $result;
     }
 
-  /**
-   * Creates context level instances for custom pages that do not yet have an associated context record.
-   *
-   * @return void
-   * @throws dml_exception If a database operation fails.
-   */
+    /**
+     * Create missing context instances at tenant context level
+     */
     protected static function create_level_instances() {
         global $DB;
 
@@ -213,14 +202,11 @@ class context_iomadcustompage extends context {
              ";
     }
 
-  /**
-   * Rebuild context paths and depths at iomadcustompage context level.
-   *
-   * @param bool $force
-   * @throws \core\exception\coding_exception
-   * @throws dml_transaction_exception
-   * @throws dml_exception
-   */
+    /**
+     * Rebuild context paths and depths at iomadcustompage context level.
+     *
+     * @param bool $force
+     */
     protected static function build_paths($force) {
         global $DB;
 
@@ -237,30 +223,29 @@ class context_iomadcustompage extends context {
 
             $base = '/'.SYSCONTEXTID;
 
-            // Normal top-level pages.
-            // This will be used when we allow creating hierarchical iomadcustompages. For now we only have flat ones
-            //$sql = "UPDATE {context}
-            //           SET depth=2,
-            //               path=".$DB->sql_concat("'$base/'", 'id')."
-            //         WHERE contextlevel=".CONTEXT_CUSTOMPAGE."
-            //               AND EXISTS (SELECT 'x'
-            //                             FROM {local_iomadcustompages} sp
-            //                            WHERE sp.id = {context}.instanceid AND sp.depth=1)
-            //               $emptyclause";
-            //$DB->execute($sql);
+            // Normal top level pages.
+            // This will be used when we allow creating hierarchical custompages. For now we only have flat ones
+            /*
+            $sql = "UPDATE {context}
+                       SET depth=2,
+                           path=".$DB->sql_concat("'$base/'", 'id')."
+                     WHERE contextlevel=".CONTEXT_CUSTOMPAGE."
+                           AND EXISTS (SELECT 'x'
+                                         FROM {local_iomadcustompages} sp
+                                        WHERE sp.id = {context}.instanceid AND sp.depth=1)
+                           $emptyclause";
+            $DB->execute($sql);
+            */
 
             // Deeper pages - one query per depthlevel.
-            // This will be used when we allow creating hierarchical iomadcustompages. For now we only have flat ones, so hardcoding max depth to 2
-            //$maxdepth = $DB->get_field_sql("SELECT MAX(depth) FROM {local_iomadcustompages}");
-            $maxdepth = 2;
-            $syscontextid = context_system::instance()->id;
+            $maxdepth = $DB->get_field_sql("SELECT MAX(depth) FROM {iomadcustompages}");
             for ($n = 2; $n <= $maxdepth; $n++) {
                 $sql = "INSERT INTO {context_temp} (id, path, depth, locked)
                         SELECT ctx.id, ".$DB->sql_concat('pctx.path', "'/'", 'ctx.id').", pctx.depth+1, ctx.locked
                           FROM {context} ctx
                           JOIN {local_iomadcustompages} sp
-                            ON (sp.id = ctx.instanceid AND ctx.contextlevel = ".CONTEXT_CUSTOMPAGE.")
-                          JOIN {context} pctx ON (pctx.instanceid = $syscontextid AND pctx.contextlevel = ".CONTEXT_SYSTEM.")
+                            ON (sp.id = ctx.instanceid AND ctx.contextlevel = ".CONTEXT_CUSTOMPAGE." AND sp.depth = $n)
+                          JOIN {context} pctx ON (pctx.instanceid = sp.parent AND pctx.contextlevel = ".CONTEXT_CUSTOMPAGE.")
                          WHERE pctx.path IS NOT NULL AND pctx.depth > 0
                                $ctxemptyclause";
                 $trans = $DB->start_delegated_transaction();
@@ -269,6 +254,7 @@ class context_iomadcustompage extends context {
                 context::merge_context_temp_table();
                 $DB->delete_records('context_temp');
                 $trans->allow_commit();
+
             }
         }
     }

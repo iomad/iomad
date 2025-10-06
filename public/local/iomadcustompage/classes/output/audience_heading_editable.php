@@ -20,14 +20,14 @@ namespace local_iomadcustompage\output;
 
 use coding_exception;
 use core\invalid_persistent_exception;
-use core\output\inplace_editable;
 use core_external;
 use core_external\restricted_context_exception;
 use invalid_parameter_exception;
+// use local_custompage\page_access_exception;
+use core\output\inplace_editable;
+use local_iomadcustompage\permission;
 use local_iomadcustompage\local\audiences\base;
 use local_iomadcustompage\local\models\audience;
-use local_iomadcustompage\page_access_exception;
-use local_iomadcustompage\permission;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -42,13 +42,12 @@ require_once("{$CFG->libdir}/external/externallib.php");
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class audience_heading_editable extends inplace_editable {
-  /**
-   * Class constructor
-   *
-   * @param int $audienceid
-   * @param audience|null $audience
-   * @throws coding_exception
-   */
+    /**
+     * Class constructor
+     *
+     * @param int $audienceid
+     * @param audience|null $audience
+     */
     public function __construct(int $audienceid, ?audience $audience = null) {
         if ($audience === null) {
             $audience = new audience($audienceid);
@@ -77,18 +76,13 @@ class audience_heading_editable extends inplace_editable {
         );
     }
 
-  /**
-   * Update audience persistent and return self, called from inplace_editable callback
-   *
-   * @param int $audienceid
-   * @param string $value
-   * @return self
-   * @throws invalid_persistent_exception
-   * @throws invalid_parameter_exception
-   * @throws page_access_exception
-   * @throws coding_exception
-   * @throws restricted_context_exception
-   */
+    /**
+     * Update audience persistent and return self, called from inplace_editable callback
+     *
+     * @param int $audienceid
+     * @param string $value
+     * @return self
+     */
     public static function update(int $audienceid, string $value): self {
         $audience = new audience($audienceid);
 
