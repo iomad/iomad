@@ -49,13 +49,8 @@ class block_iomad_learningpath extends block_base {
     public function applicable_formats() {
         return [
             'all' => false,
-            'site' => false,
-            'site-index' => false,
-            'course-view' => false,
-            'course-view-social' => false,
-            'mod' => false,
             'my' => true,
-            'mod-quiz' => false,
+            'local-iomadcustompage' => true,
         ];
     }
 
