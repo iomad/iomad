@@ -1,0 +1,129 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_message/message_drawer_view_conversation_header_content_type_private
+
+    This template will render the header content of the conversation page in
+    the message message drawer.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * All data attributes are required
+
+    Context variables required for this template:
+    * userid The logged in user id
+    * urls The URLs for the popover
+
+    Example context (json):
+    {}
+
+}}
+
+<div class="d-flex align-items-center">
+    {{#showrouteback}}
+        <div class="align-self-stretch" >
+            <a class="h-100 me-2 d-flex align-items-center" href="#" data-route-back role="button">
+                {{> core_message/message_drawer_icon_back }}
+            </a>
+        </div>
+    {{/showrouteback}}
+    <div class="d-flex text-truncate">
+        <a class="d-flex text-truncate text-decoration-none" href="#" data-action="view-contact" role="button">
+            {{#imageurl}}
+                <div class="d-flex align-items-center">
+                    <img
+                        class="rounded-circle"
+                        src="{{{.}}}"
+                        alt="{{name}}"
+                        aria-hidden="true"
+                        style="height: 38px"
+                    >
+                </div>
+            {{/imageurl}}
+            <div class="w-100 text-truncate ms-2">
+                <div class="d-flex">
+                    <strong class="m-0 text-truncate">{{name}}</strong>
+                    <span
+                        class="{{^isfavourite}}hidden{{/isfavourite}} ms-1 text-primary"
+                        data-region="favourite-icon-container"
+                    >
+                        {{#pix}} i/star-rating, core, {{#str}} favourites, core {{/str}} {{/pix}}
+                    </span>
+                    <span
+                        class="{{^ismuted}}hidden{{/ismuted}} ms-1 text-primary"
+                        data-region="muted-icon-container"
+                    >
+                        {{#pix}} i/muted, core, {{#str}} mutedconversation, core_message {{/str}} {{/pix}}
+                    </span>
+                </div>
+                {{#showonlinestatus}}
+                    <p class="m-0 fw-light text-truncate">
+                        {{#isonline}}{{#str}} loggedin, core_message {{/str}}{{/isonline}}
+                        {{^isonline}}{{#str}} loggedoff, core_message {{/str}}{{/isonline}}
+                    </p>
+                {{/showonlinestatus}}
+            </div>
+        </a>
+    </div>
+    <div class="ms-auto dropdown">
+        <button id="conversation-actions-menu-button" class="btn btn-icon" type="button"
+        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+        aria-label="{{#str}} conversationactions, core_message {{/str}}" aria-controls="conversation-actions-menu">
+            {{#pix}} i/moremenu, core {{/pix}}
+        </button>
+        <div id="conversation-actions-menu" class="dropdown-menu float-end" role="menu"
+        aria-labelledby="conversation-actions-menu-button">
+            <a class="dropdown-item" href="#" data-action="view-contact" role="menuitem">
+                {{#str}} info, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#isfavourite}}hidden{{/isfavourite}} {{^showfavourite}}hidden{{/showfavourite}}" href="#"
+            data-action="confirm-favourite" role="menuitem">
+                {{#str}} addtofavourites, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^isfavourite}}hidden{{/isfavourite}} {{^showfavourite}}hidden{{/showfavourite}}" href="#"
+            data-action="confirm-unfavourite" role="menuitem">
+                {{#str}} removefromfavourites, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#isblocked}}hidden{{/isblocked}}" href="#" data-action="request-block" role="menuitem">
+                {{#str}} blockuser, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^isblocked}}hidden{{/isblocked}}" href="#" data-action="request-unblock" role="menuitem">
+                {{#str}} unblockuser, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{#ismuted}}hidden{{/ismuted}}" href="#" data-action="confirm-mute" role="menuitem">
+                {{#str}} muteconversation, core_message {{/str}}
+            </a>
+            <a class="dropdown-item {{^ismuted}}hidden{{/ismuted}}" href="#" data-action="confirm-unmute" role="menuitem">
+                {{#str}} unmuteconversation, core_message {{/str}}
+            </a>
+            <a class="dropdown-item" href="#" data-action="request-delete-conversation" role="menuitem">
+                {{#str}} deleteconversation, core_message {{/str}}
+            </a>
+            {{#cancreatecontact}}
+            <a class="dropdown-item {{#iscontact}}hidden{{/iscontact}}" href="#" data-action="request-add-contact" role="menuitem">
+                {{#str}} addtoyourcontacts, core_message {{/str}}
+            </a>
+            {{/cancreatecontact}}
+            <a class="dropdown-item {{^iscontact}}hidden{{/iscontact}}" href="#" data-action="request-remove-contact"
+            role="menuitem">
+                {{#str}} removefromyourcontacts, core_message {{/str}}
+            </a>
+        </div>
+    </div>
+</div>

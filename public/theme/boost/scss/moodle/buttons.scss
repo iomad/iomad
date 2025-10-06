@@ -1,0 +1,165 @@
+/**
+ * File buttons.scss.
+ * Contains styles for buttons.
+ */
+
+.singlebutton {
+    display: inline-block;
+
+    + .singlebutton {
+        margin-left: $spacer * 0.5;
+    }
+}
+
+.continuebutton {
+    text-align: center;
+}
+
+p.arrow_button {
+    margin-top: 5em;
+    text-align: center;
+}
+
+#addcontrols {
+    // This is displayed in a column between 2 20 row multi-selects. This should be just short of half way.
+    margin-top: 8 * $line-height-base * $font-size-base;
+    text-align: center;
+    margin-bottom: 3em;
+
+    label {
+        display: inline;
+    }
+}
+
+#addcontrols,
+#removecontrols {
+    input {
+        width: 100%;
+        margin: auto;
+    }
+}
+
+.btn-lineup {
+    margin: 0 0 10px 5px;
+}
+
+/* Small buttons should have the same border-radius as the normal buttons. */
+.btn-sm,
+.btn-group-sm > .btn {
+    --bs-btn-border-radius: var(--#{$prefix}border-radius);
+}
+
+/**
+ * Focus styles to improve Bootstrap default contrast.
+ */
+
+@mixin button-focus($background, $innershadow) {
+    &:focus-visible,
+    &.focus {
+        outline: $btn-focus-width solid darken($background, 40%);
+        box-shadow: inset 0 0 0 2px $innershadow;
+    }
+}
+
+.btn {
+    @include button-focus($secondary, $white);
+}
+
+@each $color, $value in $theme-colors {
+    .btn-#{$color} {
+        @include button-focus($value, $white);
+    }
+}
+
+@each $color, $value in $theme-colors {
+    .btn-outline-#{$color} {
+        @include button-focus($value, $gray-800);
+    }
+}
+
+/**
+ * Icon buttons.
+ */
+
+.btn-icon {
+    --#{$prefix}btn-hover-bg: var(--#{$prefix}secondary-bg);
+    --#{$prefix}btn-border-radius: #{$btn-icon-border-radius};
+    --#{$prefix}btn-padding-x: 0;
+    --#{$prefix}btn-padding-y: 0;
+    --#{$prefix}btn-font-size: #{$icon-height};
+    height: calc(#{$icon-height} + 1rem);
+    width: calc(#{$icon-height} + 1rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    @include button-focus($secondary, $white);
+    .icon {
+        margin: 0;
+    }
+    @each $size, $length in $iconsizes {
+        &.icon-size-#{$size} {
+            height: calc(#{$length} + 1rem);
+            width: calc(#{$length} + 1rem);
+            --#{$prefix}btn-font-size: #{$length};
+            --#{$prefix}btn-line-height: #{$length};
+        }
+    }
+}
+
+/* Specific styles for the collapse/expand buttons. */
+.btn-icon.icons-collapse-expand {
+    color: $primary;
+    background-color: $primary-light-background;
+    &:hover {
+        outline: 2px solid $primary;
+    }
+    @include button-focus($primary-bg-subtle, $white);
+}
+
+/**
+ * Subtle buttons.
+ */
+
+@each $color, $value in $theme-colors {
+    .btn-subtle-#{$color} {
+        --#{$prefix}btn-font-weight: #{$font-weight-medium};
+        --#{$prefix}btn-color: var(--#{$prefix}#{$color}-text-emphasis);
+        --#{$prefix}btn-bg: var(--#{$prefix}#{$color}-bg-subtle);
+        --#{$prefix}btn-active-color: var(--#{$prefix}#{$color}-text-emphasis);
+        --#{$prefix}btn-active-bg: var(--#{$prefix}#{$color}-bg-subtle);
+        --#{$prefix}btn-hover-color: #{color-contrast($value)};
+        --#{$prefix}btn-hover-bg: var(--#{$prefix}#{$color});
+        --#{$prefix}btn-focus-shadow-rgb: #{to-rgb($value)};
+        @include button-focus($value, $white);
+    }
+}
+.btn-subtle-body {
+    --#{$prefix}btn-font-weight: #{$font-weight-medium};
+    --#{$prefix}btn-color: var(--#{$prefix}body-color);
+    --#{$prefix}btn-bg: transparent;
+    --#{$prefix}btn-border-color: var(--#{$prefix}border-color);
+    --#{$prefix}btn-hover-color: #{color-contrast($gray-600)};
+    --#{$prefix}btn-hover-bg: var(--#{$prefix}gray-600);
+    --#{$prefix}btn-focus-shadow-rgb: #{to-rgb($gray-600)};
+    @include button-focus($gray-600, $white);
+}
+
+/*
+ * Add content buttons.
+ */
+
+.btn-add-content {
+    @include border-radius();
+    border: map-get($border-widths, 2) dashed $border-color;
+    color: $primary;
+    background-color: $body-bg;
+    font-size: $font-size-sm;
+    font-weight: bold;
+    &:hover,
+    &:focus {
+        background-color: $primary-light-background;
+        border-style: solid;
+        border-color: $primary;
+        color: $primary;
+    }
+}

@@ -1,0 +1,14 @@
+/* Hide the first dropdown-divider if no filter option element is listed before it.
+   This can happen for some subset configurations of the block_myoverview course filter. */
+.block_myoverview button#groupingdropdown + .dropdown-menu li:first-of-type.dropdown-divider:first-of-type {
+    display: none;
+}
+.block_myoverview .whitebutton .btn-secondary {
+    background: white;
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+
+.page-mycourses .block_myoverview .block-controls {
+    display: none;
+}

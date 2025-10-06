@@ -1,0 +1,214 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+declare(strict_types=1);
+
+use core\{clock, di};
+use core_reportbuilder\manager;
+use core_reportbuilder\local\audiences\base as audience_base;
+use core_reportbuilder\local\helpers\report as helper;
+use core_reportbuilder\local\models\{column, filter, report, schedule};
+use core_reportbuilder\local\schedules\base as schedule_base;
+
+/**
+ * Report builder test generator
+ *
+ * @package     core_reportbuilder
+ * @copyright   2021 Paul Holden <paulh@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class core_reportbuilder_generator extends component_generator_base {
+
+    /**
+     * Create report
+     *
+     * @param array|stdClass $record
+     * @return report
+     * @throws coding_exception
+     */
+    public function create_report($record): report {
+        $record = (array) $record;
+
+        if (!array_key_exists('name', $record)) {
+            throw new coding_exception('Record must contain \'name\' property');
+        }
+        if (!array_key_exists('source', $record)) {
+            throw new coding_exception('Record must contain \'source\' property');
+        }
+
+        // Report tags.
+        $tags = $record['tags'] ?? '';
+        if (!is_array($tags)) {
+            $record['tags'] = preg_split('/\s*,\s*/', $tags, -1, PREG_SPLIT_NO_EMPTY);
+        }
+
+        // Include default setup unless specifically disabled in passed record.
+        $default = (bool) ($record['default'] ?? true);
+
+        // Report custom fields.
+        \core_reportbuilder\customfield\report_handler::create()->instance_form_before_set_data((object)$record);
+
+        // If setting up default report, purge caches to ensure any default attributes are always loaded in tests.
+        $report = helper::create_report((object) $record, $default);
+        if ($default) {
+            manager::reset_caches();
+        }
+
+        return $report;
+    }
+
+    /**
+     * Create report column
+     *
+     * @param array|stdClass $record
+     * @return column
+     * @throws coding_exception
+     */
+    public function create_column($record): column {
+        $record = (array) $record;
+
+        if (!array_key_exists('reportid', $record)) {
+            throw new coding_exception('Record must contain \'reportid\' property');
+        }
+        if (!array_key_exists('uniqueidentifier', $record)) {
+            throw new coding_exception('Record must contain \'uniqueidentifier\' property');
+        }
+
+        $column = helper::add_report_column($record['reportid'], $record['uniqueidentifier']);
+
+        // Update additional record properties.
+        unset($record['reportid'], $record['uniqueidentifier']);
+        if ($properties = column::properties_filter((object) $record)) {
+            $column->set_many($properties)->update();
+        }
+
+        return $column;
+    }
+
+    /**
+     * Create report filter
+     *
+     * @param array|stdClass $record
+     * @return filter
+     * @throws coding_exception
+     */
+    public function create_filter($record): filter {
+        $record = (array) $record;
+
+        if (!array_key_exists('reportid', $record)) {
+            throw new coding_exception('Record must contain \'reportid\' property');
+        }
+        if (!array_key_exists('uniqueidentifier', $record)) {
+            throw new coding_exception('Record must contain \'uniqueidentifier\' property');
+        }
+
+        $filter = helper::add_report_filter($record['reportid'], $record['uniqueidentifier']);
+
+        // Update additional record properties.
+        unset($record['reportid'], $record['uniqueidentifier']);
+        if ($properties = filter::properties_filter((object) $record)) {
+            $filter->set_many($properties)->update();
+        }
+
+        return $filter;
+    }
+
+    /**
+     * Create report condition
+     *
+     * @param array|stdClass $record
+     * @return filter
+     * @throws coding_exception
+     */
+    public function create_condition($record): filter {
+        $record = (array) $record;
+
+        if (!array_key_exists('reportid', $record)) {
+            throw new coding_exception('Record must contain \'reportid\' property');
+        }
+        if (!array_key_exists('uniqueidentifier', $record)) {
+            throw new coding_exception('Record must contain \'uniqueidentifier\' property');
+        }
+
+        $condition = helper::add_report_condition($record['reportid'], $record['uniqueidentifier']);
+
+        // Update additional record properties.
+        unset($record['reportid'], $record['uniqueidentifier']);
+        if ($properties = filter::properties_filter((object) $record)) {
+            $condition->set_many($properties)->update();
+        }
+
+        return $condition;
+    }
+
+    /**
+     * Create report audience
+     *
+     * @param array|stdClass $record
+     * @return audience_base
+     * @throws coding_exception
+     */
+    public function create_audience($record): audience_base {
+        $record = (array) $record;
+
+        // Required properties.
+        if (!array_key_exists('reportid', $record)) {
+            throw new coding_exception('Record must contain \'reportid\' property');
+        }
+        if (!array_key_exists('configdata', $record)) {
+            throw new coding_exception('Record must contain \'configdata\' property');
+        }
+
+        // Default to all users if not specified, for convenience.
+        /** @var audience_base $classname */
+        $classname = $record['classname'] ?? \core_reportbuilder\reportbuilder\audience\allusers::class;
+
+        return $classname::create($record['reportid'], $record['configdata']);
+    }
+
+    /**
+     * Create report schedule
+     *
+     * @param array|stdClass $record
+     * @return schedule
+     * @throws coding_exception
+     */
+    public function create_schedule($record): schedule {
+        $record = (array) $record;
+
+        // Required properties.
+        if (!array_key_exists('reportid', $record)) {
+            throw new coding_exception('Record must contain \'reportid\' property');
+        }
+        if (!array_key_exists('name', $record)) {
+            throw new coding_exception('Record must contain \'name\' property');
+        }
+
+        // Optional properties.
+        if (!array_key_exists('format', $record)) {
+            $record['format'] = 'csv';
+        }
+        if (!array_key_exists('timescheduled', $record)) {
+            $record['timescheduled'] = usergetmidnight(di::get(clock::class)->time() + DAYSECS);
+        }
+
+        // Default to message schedule if not specified, for convenience.
+        /** @var schedule_base $classname */
+        $classname = $record['classname'] ?? \core_reportbuilder\reportbuilder\schedule\message::class;
+
+        return $classname::create((object) $record)->get_persistent();
+    }
+}

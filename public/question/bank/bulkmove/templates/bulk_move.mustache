@@ -1,0 +1,112 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template qbank_bulkmove/bulk_move
+
+    Template for qbank_bulkmove/modal_question_bank_bulkmove
+
+    Example context (json):
+{
+    "bank": [
+        {
+            "name": "Question bank 1",
+            "modid": "2",
+            "contextid": 2,
+            "coursenamebankname": "c1 - Question bank 1",
+            "cminfo": {},
+            "questioncategories": [
+            ]
+        }
+    ],
+    "categories": {
+        "categories": [
+            {
+                "value": "0",
+                "disabled": true,
+                "label": "Bank name 1"
+            },
+            {
+                "value": "123,456",
+                "selected": true,
+                "label": "Category 1"
+            },
+            {
+                "value": "124,456",
+                "label": "Category 2"
+            }
+        ]
+    },
+    "save": {
+        "id": "single_button669e368d496707",
+        "formid": null,
+        "method": "post",
+        "url": "#",
+        "label": "Move questions",
+        "classes": "singlebutton",
+        "disabled": false,
+        "tooltip": null,
+        "type": "primary",
+        "attributes": [
+            {
+                "name": "data-action",
+                "value": "bulkmovesave"
+            },
+            {
+                "name": "disabled",
+                "value": "disabled"
+            }
+        ],
+        "params": [
+            {
+                "name": "sesskey",
+                "value": "abcde12345"
+            }
+        ],
+        "actions": [],
+        "hasactions": false
+    },
+    "contextid": 1000
+}
+}}
+
+<div class="search-banks">
+    <h5>{{#str}}questionbank, question{{/str}}</h5>
+    <label for="searchbanks" class="visually-hidden">{{#str}}questionbank, question{{/str}}</label>
+    <select
+        class="form-select bulk-move d-none"
+        id="searchbanks"
+        data-contextid="{{contextid}}"
+        data-requiredcapabilities='["add"]'
+    >
+        {{#bank}}
+            <option value="{{modid}}">{{{coursenamebankname}}}</option>
+        {{/bank}}
+    </select>
+</div>
+<div class="search-categories mt-3">
+    <h5>{{#str}}questioncategories, question{{/str}}</h5>
+    {{#categories}}
+        {{> core_question/question_category_selector }}
+    {{/categories}}
+    <div id="searchcatwarning" class="d-none">{{#str}}warning, qbank_bulkmove{{/str}}</div>
+</div>
+
+{{#save}}
+    <div class="move-questions mt-3">
+        {{>core/single_button}}
+    </div>
+{{/save}}

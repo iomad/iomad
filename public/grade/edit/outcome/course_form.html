@@ -1,0 +1,67 @@
+<?php $maxlength=70; ?>
+
+<form action="course.php" method="post">
+<div>
+<table class="courseoutcomes table-reboot">
+    <tr>
+        <td>
+            <label for="removeoutcomes"><?php print_string('outcomescourse', 'grades'); ?></label>
+            <br />
+            <select id="removeoutcomes" size="20" name="removeoutcomes[]" multiple="multiple" class="form-control input-block-level">
+            <?php
+            if ($co_standard_notused) {
+                echo '<optgroup label="'.get_string('outcomescoursenotused', 'grades').'">';
+                foreach ($co_standard_notused as $outcome) {
+                    echo '<option value="'.$outcome->id.'">'.shorten_text($outcome->get_name(), $maxlength).'</option>';
+                }
+                echo '</optgroup>';
+            }
+            if ($co_standard_used) {
+                echo '<optgroup label="'.get_string('outcomescourseused', 'grades').'">';
+                foreach ($co_standard_used as $outcome) {
+                    echo '<option value="'.$outcome->id.'">'.shorten_text($outcome->get_name(), $maxlength).'</option>';
+                }
+                echo '</optgroup>';
+            }
+            if ($co_custom) {
+                echo '<optgroup label="'.get_string('outcomescoursecustom', 'grades').'">';
+                foreach ($co_custom as $outcome) {
+                    echo '<option value="'.$outcome->id.'">'.shorten_text($outcome->get_name(), $maxlength).'</option>';
+                }
+                echo '</optgroup>';
+            }
+            ?>
+            </select>
+        </td>
+        <?php
+        if (has_capability('moodle/grade:manageoutcomes', $context)) {
+        ?>
+        <td class="ps-3 pe-3">
+            <div class="my-3">
+                <input name="add" class="btn btn-secondary" id="add" type="submit" value="<?php echo $OUTPUT->larrow() . ' ' .
+                    get_string('add'); ?>" title="<?php print_string('add'); ?>" />
+            </div>
+            <div class="my-3">
+                <input name="remove" class="btn btn-secondary" id="remove" type="submit" value="<?php echo get_string('remove') .
+                    ' ' . $OUTPUT->rarrow(); ?>" title="<?php print_string('remove'); ?>" />
+            </div>
+        </td>
+        <?php } ?>
+        <td>
+            <label for="addoutcomes"><?php print_string('outcomesstandardavailable', 'grades'); ?></label>
+            <br />
+            <select id="addoutcomes" size="20" name="addoutcomes[]" multiple="multiple" class="form-control input-block-level">
+
+            <?php
+            foreach ($standardoutcomes as $outcome) {
+                echo '<option value="'.$outcome->id.'">'.shorten_text($outcome->get_name(), $maxlength).'</option>';
+            }
+            ?>
+            </select>
+        </td>
+    </tr>
+</table>
+<input name="id" type="hidden" value="<?php echo $courseid?>"/>
+<input type="hidden" name="sesskey" value="<?php echo sesskey() ?>" />
+</div>
+</form>

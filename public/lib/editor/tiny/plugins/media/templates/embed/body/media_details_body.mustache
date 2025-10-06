@@ -1,0 +1,215 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tiny_media/embed/body/media_details_body
+
+    Media preview body template.
+
+    Example context (json):
+    {
+        "isLink": true,
+        "isVideo": true,
+        "isAudioTag": true,
+        "isVideoTag": true,
+        "elementid": "id",
+        "media" : {
+            "poster": "link/to/poster",
+            "title": "media name/title",
+            "isUpdating": true,
+            "controls": true,
+            "autoplay": false,
+            "muted": false,
+            "loop": false,
+            "width": "1200",
+            "height": "800"
+        }
+    }
+
+}}
+<div id="tiny-media-details-body" class="d-none">
+    <div class="container">
+        <div class="row">
+            <div class="tiny_media_properties_col col-lg-5 tiny_media_source tiny_media_poster_source">
+                <div class="mb-2">
+                    <div>
+                        <label class="fw-bold" for="{{elementid}}_tiny_media_title_entry">{{#str}} entertitle, tiny_media {{/str}}</label>
+                        <div class="input-group-append mt-2">
+                            <input
+                                class="tiny_media_title_entry form-control"
+                                type="text"
+                                id="{{elementid}}_tiny_media_title_entry"
+                                size="32"
+                                placeholder="{{#str}} mediatitle, tiny_media {{/str}}"
+                                {{#media.title}}value="{{media.title}}"{{/media.title}}
+                            >
+                        </div>
+                    </div>
+                    {{#isVideo}}
+                        <div class="video-thumbnail">
+                            <div class="input-group-append mt-2">
+                                <button class="btn btn-primary upload-custom-thumbnail" type="button">
+                                    {{#media.poster}}
+                                        {{#str}} changethumbnail, tiny_media {{/str}}
+                                    {{/media.poster}}
+                                    {{^media.poster}}
+                                        {{#str}} uploadthumbnail, tiny_media {{/str}}
+                                    {{/media.poster}}
+                                </button>
+                            </div>
+                            {{#media.poster}}
+                                <div class="input-group-append mt-2">
+                                    <button class="btn btn-secondary delete-custom-thumbnail" type="button">{{#str}} deleteembeddedthumbnail, tiny_media {{/str}}</button>
+                                </div>
+                            {{/media.poster}}
+                        </div>
+                    {{/isVideo}}
+                    <hr>
+                </div>
+                {{#showControl}}
+                    {{#isVideo}}
+                        <div class="media-size-properties">
+                            <div class="fw-bold">{{#str}} mediasize, tiny_media {{/str}}</div>
+                            <div class="mt-2 mb-1">
+                                <div class="btn-group" role="group" aria-label="{{#str}} mediasize, tiny_media{{/str}}">
+                                    <button class="btn btn-outline-primary media-original-size-toggle">{{#str}} sizeoriginal, tiny_media {{/str}}</button>
+                                    <button class="btn btn-outline-primary media-custom-size-toggle">{{#str}} sizecustom, tiny_media {{/str}}</button>
+                                </div>
+                            </div>
+                            <div class="mt-2 tiny_media_properties">
+                                <div class="d-flex justify-content-start">
+                                    <div class="flex-item me-2 col-5">
+                                        <div>
+                                            <label for="{{elementid}}_tiny_media_width_entry">{{#str}} width, tiny_media {{/str}}</label>
+                                            <div class="d-flex align-items-start">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    class="tiny_media_width_entry form-control input-mini me-1 w-100"
+                                                    id="{{elementid}}_tiny_media_width_entry"
+                                                    value="{{media.width}}"
+                                                >
+                                                <span class="mt-1">px</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-item me-1 col-5">
+                                        <div>
+                                            <label for="{{elementid}}_tiny_media_height_entry">{{#str}} height, tiny_media {{/str}}</label>
+                                            <div class="d-flex align-items-start">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    class="tiny_media_height_entry form-control input-mini me-1 w-100"
+                                                    id="{{elementid}}_tiny_media_height_entry"
+                                                    value="{{media.height}}"
+                                                >
+                                                <span class="mt-1">px</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tiny_image_customhelpicon flex-item ms-1">
+                                        {{#isLink}}
+                                            {{#linkcustomsizehelpicon}}
+                                                {{> core/help_icon }}
+                                            {{/linkcustomsizehelpicon}}
+                                        {{/isLink}}
+                                        {{^isLink}}
+                                            {{#customsizehelpicon}}
+                                                {{> core/help_icon }}
+                                            {{/customsizehelpicon}}
+                                        {{/isLink}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                    {{/isVideo}}
+                    <div class="fw-bold">{{#str}} playbacksettings, tiny_media {{/str}}</div>
+                    <div class="row mt-1">
+                        <div class="col-6">
+                            <div class="input-group-append">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input tiny_media_controls"
+                                    id="vadvancedsettings_media-controls-toggle"
+                                    {{#isNewFileOrLinkUpload}}checked{{/isNewFileOrLinkUpload}}
+                                    {{#media.controls}}checked{{/media.controls}}
+                                >
+                                <label class="form-check-label" for="vadvancedsettings_media-controls-toggle">
+                                    {{#str}} controls, tiny_media {{/str}}
+                                </label>
+                            </div>
+                            <div class="input-group-append mt-2">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input tiny_media_autoplay"
+                                    id="vadvancedsettings_media-autoplay-toggle"
+                                    {{#media.autoplay}}checked{{/media.autoplay}}
+                                >
+                                <label class="form-check-label" for="vadvancedsettings_media-autoplay-toggle">
+                                    {{#str}} autoplay, tiny_media {{/str}}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group-append">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input tiny_media_mute"
+                                    id="vadvancedsettings_media-mute-toggle"
+                                    {{#media.muted}}checked{{/media.muted}}
+                                >
+                                <label class="form-check-label" for="vadvancedsettings_media-mute-toggle">
+                                    {{#str}} mute, tiny_media {{/str}}
+                                </label>
+                            </div>
+                            <div class="input-group-append mt-2">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input tiny_media_loop"
+                                    id="vadvancedsettings_media-loop-toggle"
+                                    {{#media.loop}}checked{{/media.loop}}
+                                >
+                                <label class="form-check-label" for="vadvancedsettings_media-loop-toggle">
+                                    {{#str}} loop, tiny_media {{/str}}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    {{^isLink}}
+                        <hr>
+                        <a data-action="show-subtitle-caption" href="#">{{#str}} subtitlesandcaptions, tiny_media {{/str}}</a>
+                    {{/isLink}}
+                {{/showControl}}
+            </div>
+            <div class="col-lg-7 p-0">
+                <div class="tiny_media_preview_box border rounded">
+                    <button class="btn btn-secondary rounded-circle tiny_media_delete_icon" tabindex="0" title="{{#str}} deletemedia, tiny_media {{/str}}">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                    <div id="media-filter-preview-container" class="w-100 text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tiny-media-subtitle-caption-body" class="d-none">
+    <div class="container">
+        {{> tiny_media/embed/insert_media_subtitle_caption }}
+    </div>
+</div>

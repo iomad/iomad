@@ -1,0 +1,260 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_analytics/models_list
+
+    Template for models list.
+
+    Classes required for JS:
+    * The list od models wrapped within a id="predictionmodelslist" element.
+
+    Data attributes required for JS:
+    * [data-widget="toggle"] indicates the clickable element for expanding/collapsing
+      the list of indicators used by the given model.
+    * [data-model-name="..."] should be provided by an element wrapping the model's actions menu
+      and contain the plain text name of the model.
+
+    Context variables required for this template:
+    * models: array - list of models to display
+        - id: int - model unique identifier
+        - modelname: string - name of the model
+        - name: object - data for the inplace editable element template
+        - target: string - name of the target associated with the model
+        - targetclass: string - fully qualified name of the target class
+        - targethelp: object - data for the help tooltip template
+        - enabled: bool - is the model enabled
+        - indicatorsnum: int - number of indicators
+        - indicators: array - list of indicators used by the model
+            + name: string - name of the indicator
+            + help: object - data for the help tooltip template
+        - insights: object - data for the single select template
+        - noinsights: string - text to display instead of insights
+    * warnings: array - list of data for notification warning template
+    * infos: array - list of data for notification info template
+    * createmodelurl: string - URL to create a new model
+    * importmodelurl: string - URL to import a model
+
+    Example context (json):
+    {
+        "models": [
+            {
+                "id": 11,
+                "modelname": "Prevent devs at risk",
+                "name": {
+                    "component": "local_analyticsdemo",
+                    "itemtype": "modelname",
+                    "itemid": 42,
+                    "displayvalue": "Prevent devs at risk",
+                    "value": ""
+                },
+                "target": "Prevent devs at risk",
+                "targetclass": "\\local_analyticsdemo\\analytics\\target\\dev_risk",
+                "targethelp": {
+                    "title": "Help with Prevent devs at risk",
+                    "text": "This target blah blah ...",
+                    "url": "http://example.org/help",
+                    "linktext": "",
+                    "icon": {
+                        "extraclasses": "",
+                        "attributes": [
+                            {"name": "src", "value": "../../../pix/help.svg"},
+                            {"name": "alt", "value": "Help icon"}
+                        ]
+                    }
+                },
+                "enabled": 1,
+                "indicatorsnum": 2,
+                "indicators": [
+                    {
+                        "name": "Indicator 1",
+                        "help": {
+                            "text": "This indicator blah blah ...",
+                            "title": "Help with Indicator 1",
+                            "url": "http://example.org/help",
+                            "linktext": "",
+                            "icon": {
+                                "extraclasses": "",
+                                "attributes": [
+                                    {"name": "src", "value": "../../../pix/help.svg"},
+                                    {"name": "alt", "value": "Help icon"}
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "Indicator 2",
+                        "help": {
+                            "text": "This indicator blah blah ...",
+                            "title": "Help with Indicator 2",
+                            "url": "http://example.org/help",
+                            "linktext": "",
+                            "icon": {
+                                "extraclasses": "",
+                                "attributes": [
+                                    {"name": "src", "value": "../../../pix/help.svg"},
+                                    {"name": "alt", "value": "Help icon"}
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "timesplitting": "Quarters",
+                "timesplittinghelp": {
+                    "text": "This time splitting methof blah blah ...",
+                    "title": "Help with Quarters",
+                    "url": "http://example.org/help",
+                    "linktext": "",
+                    "icon": {
+                        "extraclasses": "",
+                        "attributes": [
+                            {"name": "src", "value": "../../../pix/help.svg"},
+                            {"name": "alt", "value": "Help icon"}
+                        ]
+                    }
+                },
+                "noinsights": "No insights available yet"
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Be ware, this is just an example!"
+            }
+        ],
+        "createmodelurl": "#",
+        "importmodelurl": "#"
+    }
+}}
+
+{{#warnings}}
+    {{> core/notification_warning}}
+{{/warnings}}
+{{#infos}}
+    {{> core/notification_info}}
+{{/infos}}
+
+<div class="box">
+    <div class="top-nav d-flex">
+        {{#newmodelmenu}}
+        {{>core/action_menu}}
+        {{/newmodelmenu}}
+    </div>
+    <table id="predictionmodelslist" class="table generaltable">
+        <caption>{{#str}}analyticmodels, tool_analytics{{/str}}</caption>
+        <thead>
+            <tr>
+                <th scope="col">{{#str}}modelname, tool_analytics{{/str}}</th>
+                <th scope="col">{{#str}}enabled, tool_analytics{{/str}}</th>
+                <th scope="col">{{#str}}indicators, tool_analytics{{/str}}</th>
+                <th scope="col">{{#str}}modeltimesplitting, tool_analytics{{/str}}</th>
+                <th scope="col">{{#str}}insights, tool_analytics{{/str}}</th>
+                <th scope="col">{{#str}}actions{{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{#models}}
+            <tr data-model-name="{{modelname}}">
+                <td>
+                    {{#name}}
+                        <span class="model-name">{{>core/inplace_editable}}</span>
+                    {{/name}}
+                    <div>
+                        <small class="target-class">{{targetclass}}</small>
+                        {{#targethelp}}
+                            {{>core/help_icon}}
+                        {{/targethelp}}
+                    </div>
+                </td>
+                <td>
+                    {{#enabled}}
+                        {{#pix}}i/checked, core, {{#str}}yes{{/str}}{{/pix}}
+                    {{/enabled}}
+                    {{^enabled}}
+                        {{#str}}no{{/str}}
+                    {{/enabled}}
+                </td>
+                <td>
+                    <a data-widget="toggle"
+                           title="{{#str}} clicktohideshow {{/str}}"
+                           aria-expanded="false"
+                           aria-controls="indicators-{{id}}"
+                           role="button"
+                           href="">
+                        {{#str}} indicatorsnum, tool_analytics, {{indicatorsnum}} {{/str}}
+                    </a>
+                    <ul class="hidden" id="indicators-{{id}}">
+                    {{#indicators}}
+                        <li>
+                            {{name}}
+                            {{#help}}
+                                {{>core/help_icon}}
+                            {{/help}}
+                        </li>
+                    {{/indicators}}
+                    </ul>
+                </td>
+                <td>
+                    {{#timesplitting}}
+                        {{timesplitting}}
+                        {{#timesplittinghelp}}
+                            {{>core/help_icon}}
+                        {{/timesplittinghelp}}
+                    {{/timesplitting}}
+                    {{^timesplitting}}
+                        {{#str}}notdefined, tool_analytics{{/str}}
+                        {{#timesplittinghelp}}
+                            {{>core/help_icon}}
+                        {{/timesplittinghelp}}
+                    {{/timesplitting}}
+                </td>
+                <td>
+                    {{! models_list renderer is responsible of sending one or the other}}
+                    {{#insights}}
+                        {{> core/single_select }}
+                    {{/insights}}
+                    {{#noinsights}}
+                        {{.}}
+                    {{/noinsights}}
+                </td>
+                <td>
+                    {{#actions}}
+                        {{> core/action_menu}}
+                    {{/actions}}
+                </td>
+            </tr>
+        {{/models}}
+        </tbody>
+    </table>
+</div>
+{{#js}}
+require(['jquery'], function($) {
+
+    // Toggle the visibility of the indicators list.
+    $('#predictionmodelslist').on('click', '[data-widget="toggle"]', function(e) {
+        e.preventDefault();
+        var toggle = $(e.currentTarget);
+        var listid = toggle.attr('aria-controls');
+
+        $(document.getElementById(listid)).toggle();
+
+        if (toggle.attr('aria-expanded') == 'false') {
+            toggle.attr('aria-expanded', 'true');
+        } else {
+            toggle.attr('aria-expanded', 'false');
+        }
+    });
+});
+{{/js}}

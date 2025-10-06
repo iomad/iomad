@@ -1,0 +1,57 @@
+/**
+ * Dropdown menu Moodle specific styles.
+ */
+
+// Make links in a menu clickable anywhere in the row.
+.dropdown-item {
+    a {
+        display: block;
+        width: 100%;
+        color: $body-color;
+    }
+    &.active,
+    &:active,
+    &:hover,
+    &:focus,
+    &:focus-within {
+        a {
+            color: $dropdown-link-active-color;
+        }
+    }
+    &[aria-current="true"],
+    &[aria-selected="true"] {
+        position: relative;
+        display: flex;
+        align-items: center;
+        &:before {
+            font: var(--fa-font-solid);
+            content: fa-content($fa-var-check);
+            position: absolute;
+            left: 0.4rem;
+            font-size: 0.7rem;
+        }
+    }
+}
+
+.dropdown-menu {
+    width: fit-content;
+    &:has(.dropdown-item-active) {
+        .dropdown-item {
+            // Make space for active item indicator.
+            padding-left: map-get($spacers, 4);
+        }
+    }
+}
+
+// Add dropdown menu items styles for each theme color mantainning default hover colour for contrast.
+@each $color, $value in $theme-colors {
+    .dropdown-item {
+        &:hover,
+        &:focus {
+            &.text-#{$color},
+            a.text-#{$color} {
+                color: $dropdown-link-hover-color !important; /* stylelint-disable-line declaration-no-important */
+            }
+        }
+    }
+}

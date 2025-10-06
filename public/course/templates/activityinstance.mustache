@@ -1,0 +1,69 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_course/activityinstance
+
+    Activity completion selector.
+
+    Example context (json):
+    {
+        "activities": [{
+            "cmid": "4",
+            "modname": "Test activity",
+            "icon": "https://raw.githubusercontent.com/moodle/moodle/master/mod/feedback/pix/monologo.svg",
+            "completionstatus": {
+                "string": "Manual",
+                "icon": "https://raw.githubusercontent.com/moodle/moodle/master/pix/i/completion-manual-enabled.png"
+            }
+        }]
+    }
+}}
+{{#activities}}
+<div class="row mb-1">
+    <div class="activityinstance col-6">
+        <div class="mod-indent-outer"></div>
+        <div class="d-flex align-items-center align-self-start gap-3 mb-2">
+            {{#canmanage}}
+            <label class="accesshide" for="selectactivity_{{cmid}}">{{#str}}select, completion{{/str}} {{modname}}</label>
+            <input type="checkbox" id="selectactivity_{{cmid}}" name="cmid[]" data-section="{{sectionnumber}}" value="{{cmid}}" aria-label="{{#str}}checkactivity, completion, {{{modname}}}{{/str}}">
+            {{/canmanage}}
+            <a href="{{url}}" class="d-flex gap-2 justify-content-center align-items-center">
+                {{#activityicon}}
+                    {{> core_course/activity_icon}}
+                {{/activityicon}}
+                {{^activityicon}}
+                    <img src="{{icon}}" class="activityicon" alt="">
+                {{/activityicon}}
+                <span class="instancename">{{{modname}}}</span>
+            </a>
+        </div>
+    </div>
+    <div class="activity-completionstatus col-6 d-flex align-items-start gap-1" id="completionstatus_{{cmid}}">
+        <div>
+            {{#completionstatus.icon}}
+                {{{completionstatus.icon}}}
+            {{/completionstatus.icon}}
+            {{^completionstatus.icon}}
+                <span class="me-4">&nbsp;</span>
+            {{/completionstatus.icon}}
+        </div>
+        <div>
+            <span class="text-muted muted">{{{completionstatus.string}}}</span>
+        </div>
+    </div>
+</div>
+{{/activities}}

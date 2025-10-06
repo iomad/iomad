@@ -1,0 +1,43 @@
+{{< core_form/element-template }}
+    {{$label}}
+        {{^element.hiddenlabel}}
+            <p id="{{element.id}}_label" class="mb-0 word-break" aria-hidden="true">
+                {{{label}}}
+            </p>
+        {{/element.hiddenlabel}}
+    {{/label}}
+    {{$element}}
+        {{#label}}
+            <fieldset class="w-100 m-0 p-0 border-0">
+                <legend class="visually-hidden">{{{label}}}</legend>
+                <div class="d-flex flex-wrap align-items-center">
+                {{#element.elements}}
+                    {{{separator}}}
+                    {{{html}}}
+                {{/element.elements}}
+                </div>
+            </fieldset>
+        {{/label}}
+        {{^label}}
+            <div class="w-100 m-0 p-0 border-0">
+                <div class="d-flex flex-wrap align-items-center">
+                {{#element.elements}}
+                    {{{separator}}}
+                    {{{html}}}
+                {{/element.elements}}
+                </div>
+            </div>
+        {{/label}}
+    {{/element}}
+{{/ core_form/element-template }}
+{{#js}}
+require(['jquery'], function($) {
+    $('#{{element.id}}_label').css('cursor', 'default');
+    $('#{{element.id}}_label').click(function() {
+        $('#{{element.id}}, [data-groupname="{{element.name}}"]')
+            .find('button, a, input:not([type="hidden"]), select, textarea, [tabindex]')
+            .filter(':not([disabled]):not([tabindex="0"]):not([tabindex="-1"])')
+            .first().focus();
+    });
+});
+{{/js}}

@@ -1,0 +1,38 @@
+/* Imitate mobile grid for activity card. */
+.block_social_activities .activity-item .activity-grid {
+    grid-template-columns: min-content 1fr min-content min-content min-content;
+    grid-template-rows: 1fr repeat(4, min-content);
+    grid-template-areas:
+        "icon          name          actions"
+        "visibility    visibility    visibility"
+        "dates         dates         dates"
+        "completion    completion    completion"
+        "altcontent    altcontent    altcontent"
+        "afterlink     afterlink     afterlink"
+        "availability  availability  availability";
+}
+
+.block_social_activities .activity-item .activity-grid.noname-grid {
+    grid-template-columns: 1fr min-content;
+    grid-template-areas:
+        "actions"
+        "visibility"
+        "altcontent"
+        "groupmode"
+        "afterlink"
+        "completion"
+        "availability";
+}
+
+.block_social_activities .activity-item .activity-grid.noname-grid .activity-actions {
+    justify-self: end;
+}
+
+/* Hide extra edit elements in block space. */
+.block_social_activities .activity-groupmode-info {
+    display: none;
+}
+
+.block_social_activities .inplaceeditable.inplaceeditingon input {
+    width: 100%;
+}

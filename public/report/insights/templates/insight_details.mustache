@@ -1,0 +1,151 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template report_insights/insight_details
+
+    Actions panel at the bottom of the assignment grading UI.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+        "contextid": 123,
+        "modelid": 321,
+        "insightname": "Best insight ever",
+        "timecreated": "Thursday, 5 October 2017, 4:16 PM",
+        "timerange": "Monday, 4 September 2017, 6:00 PM to Thursday, 5 October 2017, 12:00 AM",
+        "sampleimage": "<a href=\"#\">Link</a>",
+        "sampledescription": "Sample description",
+        "actions": [
+            {
+                "classes": "",
+                "primary": {
+                    "items": [{"rawhtml": "<p>View details</p>"}]
+                },
+                "secondary": {
+                    "items": [{"rawhtml": "<p>Not useful</p>"}]
+                }
+            }
+        ],
+        "style": "success",
+        "outcomeicon": {
+            "attributes": [
+                {"name": "src", "value": "https://moodle.org/logo/moodle-logo.svg" }
+            ]
+        },
+        "predictiondisplayvalue": "This dev will understand it",
+        "calculations": [
+            {
+                "style": "success",
+                "outcomeicon": {
+                    "attributes": [
+                        {"name": "src", "value": "https://moodle.org/logo/moodle-logo.svg" }
+                    ]
+                },
+                "name": "Indicator 1",
+                "displayvalue": "yes"
+            }, {
+                "style": "info",
+                "name": "Indicator 2",
+                "displayvalue": "20%"
+            }, {
+                "style": "",
+                "name": "Indicator 2",
+                "displayvalue": "20%"
+            }, {
+                "style": "warning",
+                "name": "Indicator 2",
+                "displayvalue": "20%"
+            }, {
+                "style": "danger",
+                "name": "Indicator 2",
+                "displayvalue": "20%"
+            }
+        ]
+    }
+}}
+
+<div class="insight-container" data-context-id="{{contextid}}" data-model-id="{{modelid}}">
+
+    <h2 class="mb-2">{{insightname}}</h2>
+
+    {{{insightdescription}}}
+
+    {{> report_insights/bulk_actions }}
+
+    <table class="table generaltable insights-list mt-3">
+        {{#showpredictionheading}}
+            <caption>
+                {{#str}}prediction, report_insights{{/str}}:
+                <span class="{{#style}}table-{{style}}{{/style}}">
+                    {{#outcomeicon}}
+                        {{> core/pix_icon}}
+                    {{/outcomeicon}}
+                    {{predictiondisplayvalue}}
+                </span>
+            </caption>
+        {{/showpredictionheading}}
+        <thead>
+            <tr class="d-flex">
+                <th scope="col" class="col-1{{^bulkactions}} hidden{{/bulkactions}}">{{{hiddencheckboxtoggleall}}}</th>
+                <th scope="col" class="col-8">{{#str}}description{{/str}}</th>
+                <th scope="col" class="col-3{{^actions}} hidden{{/actions}}">{{#str}}actions{{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{> report_insights/insight}}
+        </tbody>
+    </table>
+
+    <table class="table generaltable prediction-timedetails">
+        <caption>{{#str}}predictiondetails, report_insights{{/str}}</caption>
+        <tbody>
+            <tr>
+                <th scope="row">{{#str}}timecreated, report_insights{{/str}}</td>
+                <td>{{timecreated}}</td>
+            </tr>
+            {{#timerange}}
+                <tr>
+                    <th scope="row">{{#str}}timerange, report_insights{{/str}}</td>
+                    <td>{{.}}</td>
+                </tr>
+            {{/timerange}}
+        </tbody>
+    </table>
+    <table class="table generaltable prediction-calculations">
+        <caption>{{#str}}indicators, report_insights{{/str}}</caption>
+        <tbody>
+        {{#calculations}}
+            <tr>
+                <th scope="row" class="{{#style}}table-{{style}}{{/style}}">{{name}}</td>
+                <td class="{{#style}}table-{{style}}{{/style}}">{{#outcomeicon}}{{> core/pix_icon}}{{/outcomeicon}} {{displayvalue}} {{#outcomehelp}}{{> core/help_icon}}{{/outcomehelp}}</td>
+            </tr>
+        {{/calculations}}
+        </tbody>
+    </table>
+    {{#nocalculations}}
+        {{> core/notification_info}}
+    {{/nocalculations}}
+
+</div>

@@ -1,0 +1,88 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_quiz/question_slot
+
+    This template renders the question slot content.
+
+    Example context (json):
+    {
+        "slotid": "1",
+        "canbeedited": true,
+        "checkbox": "<input id='selectquestion-1' name='selectquestion[]' type='checkbox' class='select-multiple-checkbox'>",
+        "questionnumber": "<span class='slotnumber'><span class='accesshide'>Question</span> 1</span>",
+        "questionname": "This is a test question",
+        "questionicons": "<i class='icon fa fa-search-plus fa-fw' title='Preview question'></i>",
+        "questiondependencyicon": "<span class='question_dependency_wrapper question_dependency_cannot_depend'></span>",
+        "versionselection": true,
+        "draftversion": false,
+        "bankname": "Question bank 1",
+        "issharedbank": true,
+        "bankurl": "http://example.com/question/edit.php?cmid=1&cat=1%2C1",
+        "versionoptions": [],
+        "versionoption": [
+            {
+                "versionid": 0,
+                "version": 0,
+                "versionvalue": "Always latest",
+                "selected": true
+            },
+            {
+                "versionid": "1",
+                "version": "1",
+                "questionid": "1",
+                "selected": false,
+                "versionvalue": "v1 (latest)"
+            }
+        ]
+    }
+}}
+
+<div class="mod-indent-outer" id="mod-indent-outer-slot-{{slotid}}">
+    {{{checkbox}}}
+    {{{questionnumber}}}
+    <div class="mod-indent"></div>
+    <div class="activityinstance">
+        <div>{{{questionname}}}</div>
+        {{#issharedbank}}
+            <div class="sharedbank">
+                {{#bankurl}}
+                    <a href="{{bankurl}}">
+                {{/bankurl}}
+                    <span class="badge bg-primary text-light ms-2 mt-1">{{{bankname}}}</span>
+                {{#bankurl}}
+                    </a>
+                {{/bankurl}}
+            </div>
+        {{/issharedbank}}
+    </div>
+    <div class="actions">
+        {{#versionselection}}
+            <label for="version-{{slotid}}" class="visually-hidden">{{#str}}question_version, question{{/str}}</label>
+            <select id="version-{{slotid}}" name="version" class="form-select me-2 version-selection"
+            data-action="mod_quiz-select_slot" data-slot-id="{{slotid}}">
+                {{#versionoption}}
+                    <option value="{{version}}" {{#selected}}selected="selected"{{/selected}}>{{versionvalue}}</option>
+                {{/versionoption}}
+            </select>
+        {{/versionselection}}
+        {{{questionicons}}}
+    </div>
+    {{#canbeedited}}
+        {{{questiondependencyicon}}}
+    {{/canbeedited}}
+</div>
+{{#draftversion}}
+<div class="alert alert-danger" role="alert">{{#str}}questiondraftwillnotwork, mod_quiz{{/str}}</div>
+{{/draftversion}}

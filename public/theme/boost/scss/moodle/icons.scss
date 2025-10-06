@@ -1,0 +1,283 @@
+// The only class we need for icons is .icon
+// Standardize the size, padding and alignment for all icons in Moodle.
+
+// Size of default icons.
+$icon-width: 20px;
+$icon-height: 16px;
+// Size of medium icons.
+$icon-medium-width: 40px;
+$icon-medium-height: 32px;
+// Size of big icons.
+$icon-big-width: 80px;
+$icon-big-height: 64px;
+// Size of icon boxes.
+$icon-box-width: 60px;
+$icon-box-height: 48px;
+
+// stylelint-disable
+$iconsizes: () !default;
+$iconsizes: map-merge((
+  0: 0,
+  1: ($icon-height * .25),
+  2: ($icon-height * .5),
+  3: $icon-height,
+  4: ($icon-height * 1.5),
+  5: ($icon-height * 2),
+  6: ($icon-height * 2.5),
+  7: ($icon-height * 3)
+), $iconsizes);
+$iconwidthsizes: () !default;
+$iconwidthsizes: map-merge((
+  0: 0,
+  1: ($icon-width * .25),
+  2: ($icon-width * .5),
+  3: $icon-width,
+  4: ($icon-width * 1.5),
+  5: ($icon-width * 2),
+  6: ($icon-width * 2.5),
+  7: ($icon-width * 3)
+), $iconwidthsizes);
+
+// stylelint-enable
+
+// This mixin change an icon color using filters.
+// The code is adapted from https://jsfiddle.net/Tegos/3fchp0qm/ example.
+@mixin recolor-icon($color: #000, $opacity: 1) {
+    // Extracting the color component using / 255 is deprecated in Sass.
+    // However, the alternative of using math.div is not working in moodle yet.
+    // The workaround to extract the color component is multiply by 1/255 as float.
+    $r: red($color) * 0.00392156862745098;
+    $g: green($color) * 0.00392156862745098;
+    $b: blue($color) * 0.00392156862745098;
+    $a: $opacity;
+    $svg-filter-id: "recolor";
+
+    $svg-url: 'data:image/svg+xml;utf8,' +
+        '<svg xmlns="http://www.w3.org/2000/svg">' +
+        '<filter id="#{$svg-filter-id}" color-interpolation-filters="sRGB">' +
+        '<feColorMatrix type="matrix" values="' +
+        '0 0 0 0 #{$r} ' +
+        '0 0 0 0 #{$g} ' +
+        '0 0 0 0 #{$b} ' +
+        '0 0 0 #{$a} 0 ' +
+        '"/>' +
+        '</filter>' +
+        '</svg>' +
+        '##{$svg-filter-id}';
+
+    filter: url($svg-url);
+}
+
+.icon {
+    max-width: map-get($iconwidthsizes, 4);
+    max-height: map-get($iconsizes, 4);
+    margin: 0 map-get($spacers, 2) 0 0;
+    padding: 0;
+    box-sizing: content-box;
+
+    &.spacer {
+        margin-right: 0;
+    }
+
+    &.iconsize-medium {
+        font-size: $icon-medium-height;
+        width: $icon-medium-width;
+        height: $icon-medium-height;
+        max-width: $icon-medium-width;
+        max-height: $icon-medium-height;
+    }
+
+    &.iconsize-big {
+        width: $icon-big-width;
+        height: $icon-big-height;
+        max-width: $icon-big-width;
+        max-height: $icon-big-height;
+        font-size: $icon-big-height;
+    }
+
+    &.emoticon {
+        width: map-get($iconsizes, 3);
+        height: map-get($iconsizes, 3);
+    }
+}
+
+// Force size for the SVG icons.
+img.icon {
+    width: 20px;
+    height: 16px;
+}
+
+.navbar-dark a .icon {
+    color: $navbar-dark-color !important; /* stylelint-disable-line declaration-no-important */
+}
+
+.action-menu-item a:first-of-type > .icon {
+    margin-left: 0.5rem;
+}
+
+// YUI 2 Tree View icons must not have a margin left.
+.ygtvcell .icon {
+    margin-left: 0 !important; /* stylelint-disable-line declaration-no-important */
+}
+
+// In the navigation, tree icons should not have margins.
+.block_navigation,
+.block_settings {
+    .tree_item .icon {
+        margin-left: 0;
+    }
+}
+
+[data-action=toggle-drawer] .icon {
+    margin: 0;
+}
+
+// Apply in special cases where the default icons styles does not work properly. Eg file picker buttons.
+.icon-no-spacing a > .icon {
+    margin: 0;
+}
+
+.icon-no-margin {
+    .icon {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+}
+
+.icon-large > .icon {
+    width: ($icon-width * 2);
+    height: ($icon-height * 2);
+}
+
+@each $size, $length in $iconsizes {
+    .icon-size-#{$size} {
+        .icon {
+            height: $length !important; /* stylelint-disable-line declaration-no-important */
+            width: map-get($iconwidthsizes, $size) !important; /* stylelint-disable-line declaration-no-important */
+            max-height: $length !important; /* stylelint-disable-line declaration-no-important */
+            max-width: map-get($iconwidthsizes, $size) !important; /* stylelint-disable-line declaration-no-important */
+            font-size: $length !important; /* stylelint-disable-line declaration-no-important */
+        }
+    }
+}
+
+.helplink .icon {
+    margin-left: 0.5rem;
+}
+
+.icons-collapse-expand {
+    display: flex;
+    align-items: center;
+    .expanded-icon {
+        display: flex;
+        align-items: center;
+    }
+
+    .collapsed-icon {
+        display: none;
+    }
+
+    &.collapsed {
+        .expanded-icon {
+            display: none;
+        }
+
+        .collapsed-icon {
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+.icon-box {
+    width: $icon-box-width;
+    height: $icon-box-height;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background-color: $gray-100;
+    border-radius: 12px;
+    padding: 0.7rem;
+
+    .icon {
+        margin: 0;
+        height: $icon-medium-width;
+        width: $icon-medium-height;
+    }
+}
+
+.icon-circle {
+    display: inline-block;
+    background-color: darken($gray-400, 4%);
+    border-radius: 50%;
+    padding: 1.3rem;
+
+    .icon {
+        margin: 0;
+        text-align: center;
+        max-width: unset;
+        max-height: unset;
+        color: $black;
+    }
+
+    &.reversed {
+        background-color: darken($gray-400, 8%);
+        .icon {
+            color: $white;
+        }
+    }
+}
+
+/*
+ * Activity icons
+ */
+
+.activityiconcontainer {
+    width: $activity-iconcontainer-width;
+    height: $activity-iconcontainer-height;
+    max-width: $activity-iconcontainer-width;
+    max-height: $activity-iconcontainer-height;
+    &.small {
+        width: $activity-iconcontainer-width - 10px;
+        height: $activity-iconcontainer-height - 10px;
+        max-width: $activity-iconcontainer-width - 10px;
+        max-height: $activity-iconcontainer-height - 10px;
+    }
+    &.smaller {
+        width: $activity-iconcontainer-width - 20px;
+        height: $activity-iconcontainer-height - 20px;
+        max-width: $activity-iconcontainer-width - 20px;
+        max-height: $activity-iconcontainer-height - 20px;
+    }
+    .activityicon,
+    .icon {
+        margin: 0;
+        font-size: inherit;
+        width: inherit;
+        height: inherit;
+        max-width: inherit;
+        max-height: inherit;
+    }
+}
+
+@each $type, $value in $activity-icon-colors {
+    .activityiconcontainer.#{$type} {
+        &:not(.isbranded) {
+            .activityicon,
+            .icon {
+                &:not(.nofilter) {
+                    @include recolor-icon($value, 1);
+                }
+            }
+        }
+    }
+}
+
+// Make activtity colours available for custom modules.
+:root {
+    @each $type, $value in $activity-icon-colors {
+        --activity#{$type}: #{$value};
+    }
+}

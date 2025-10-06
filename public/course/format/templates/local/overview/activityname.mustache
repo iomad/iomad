@@ -1,0 +1,60 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_courseformat/local/overview/activityname
+
+    The course overview activity name cell.
+
+    Example context (json):
+    {
+        "activityname": "Activity name",
+        "activityurl": "http://moodle.com",
+        "sectiontitle": "Section title",
+        "visible": true,
+        "stealth": false,
+        "nogroupserror": false
+    }
+}}
+<div class="d-flex flex-column">
+    <div class="fw-bold">
+        <a href="{{activityurl}}" class="activityname">{{{activityname}}}</a>
+    </div>
+    {{#sectiontitle}}
+    <div class="small">
+        {{sectiontitle}}
+    </div>
+    {{/sectiontitle}}
+    <div class="ms-2">
+        {{#hidden}}
+        <span class="badge rounded-pill text-bg-secondary fw-normal">
+            {{#pix}}i/show, core{{/pix}}
+            {{#str}}hiddenfromstudents{{/str}}
+        </span>
+        {{/hidden}}
+        {{#stealth}}
+        <span class="badge rounded-pill text-bg-secondary fw-normal">
+            {{#pix}}t/stealth, core{{/pix}}
+            {{#str}}hiddenoncoursepage{{/str}}
+        </span>
+        {{/stealth}}
+    </div>
+    {{#nogroupserror}}
+    <div class="text-danger-emphasis small">
+        {{#pix}}e/cancel_solid_circle, moodle, {{#str}}overview_nogroups_title,course{{/str}}{{/pix}}{{#str}}overview_nogroups_error,course{{/str}}
+    </div>
+    {{/nogroupserror}}
+</div>

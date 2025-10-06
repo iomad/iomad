@@ -6,6 +6,7 @@
         ],
         "aiprovider": [
             "azureai",
+            "deepseek",
             "ollama",
             "openai"
         ],
@@ -92,7 +93,6 @@
             "recentlyaccesseditems",
             "rss_client",
             "search_forums",
-            "section_links",
             "selfcompletion",
             "settings",
             "site_main_menu",
@@ -640,7 +640,8 @@
             "messages",
             "mnet_hosts",
             "participants",
-            "quiz_results"
+            "quiz_results",
+            "section_links"
         ],
         "cachestore": [
             "memcache",
