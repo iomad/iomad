@@ -24,10 +24,10 @@ use core\output\inplace_editable;
 use core_external;
 use core_external\restricted_context_exception;
 use html_writer;
-use invalid_parameter_exception;
 use local_iomadcustompage\local\models\page;
-use local_iomadcustompage\page_access_exception;
 use local_iomadcustompage\permission;
+use invalid_parameter_exception;
+// use local_custompage\page_access_exception;
 use moodle_exception;
 use moodle_url;
 
@@ -50,8 +50,8 @@ class page_title_editable extends inplace_editable {
      * @param int $pageid
      * @param page|null $page The page persistent, note that in addition to id/name properties being present we also
      *      require the following to be correctly set in order to perform permission checks: contextid/usercreated
-     * @throws coding_exception
-     * @throws moodle_exception
+     * @throws \coding_exception
+     * @throws \moodle_exception
      */
     public function __construct(int $pageid, ?page $page = null) {
         if ($page === null) {
@@ -77,19 +77,13 @@ class page_title_editable extends inplace_editable {
         );
     }
 
-  /**
-   * Update page persistent and return self, called from inplace_editable callback
-   *
-   * @param int $pageid
-   * @param string $value
-   * @return self
-   * @throws invalid_persistent_exception
-   * @throws invalid_parameter_exception
-   * @throws page_access_exception
-   * @throws coding_exception
-   * @throws restricted_context_exception
-   * @throws moodle_exception
-   */
+    /**
+     * Update page persistent and return self, called from inplace_editable callback
+     *
+     * @param int $pageid
+     * @param string $value
+     * @return self
+     */
     public static function update(int $pageid, string $value): self {
         $page = new page($pageid);
 

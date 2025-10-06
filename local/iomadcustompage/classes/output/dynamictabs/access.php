@@ -22,11 +22,12 @@ use coding_exception;
 use context_system;
 use core\output\dynamic_tabs\base;
 use core_reportbuilder\exception\source_invalid_exception;
+use local_iomadcustompage\local\models\page;
+use local_iomadcustompage\reportbuilder\local\systemreports\page_access_list;
+use local_iomadcustompage\permission;
 use core_reportbuilder\system_report_factory;
 use dml_exception;
-use local_iomadcustompage\local\models\page;
-use local_iomadcustompage\permission;
-use local_iomadcustompage\reportbuilder\local\systemreports\page_access_list;
+use local_iomadcustompage\custom_context\context_iomadcustompage;
 use renderer_base;
 
 /**
@@ -37,14 +38,12 @@ use renderer_base;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class access extends base {
-  /**
-   * Export this for use in a mustache template context.
-   *
-   * @param renderer_base $output
-   * @return array
-   * @throws source_invalid_exception
-   * @throws dml_exception
-   */
+    /**
+     * Export this for use in a mustache template context.
+     *
+     * @param renderer_base $output
+     * @return array
+     */
     public function export_for_template(renderer_base $output): array {
         $report = system_report_factory::create(
             page_access_list::class,
@@ -58,12 +57,11 @@ class access extends base {
         return $data;
     }
 
-  /**
-   * The label to be displayed on the tab
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * The label to be displayed on the tab
+     *
+     * @return string
+     */
     public function get_tab_label(): string {
         return get_string('access', 'core_reportbuilder');
     }

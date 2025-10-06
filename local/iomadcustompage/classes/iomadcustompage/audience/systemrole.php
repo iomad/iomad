@@ -20,9 +20,9 @@ namespace local_iomadcustompage\iomadcustompage\audience;
 
 use coding_exception;
 use context_system;
+use local_iomadcustompage\local\audiences\base;
 use core_reportbuilder\local\helpers\database;
 use dml_exception;
-use local_iomadcustompage\local\audiences\base;
 use MoodleQuickForm;
 
 /**
@@ -33,13 +33,11 @@ use MoodleQuickForm;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class systemrole extends base {
-  /**
-   * Adds audience's elements to the given mform
-   *
-   * @param MoodleQuickForm $mform The form to add elements to
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Adds audience's elements to the given mform
+     *
+     * @param MoodleQuickForm $mform The form to add elements to
+     */
     public function get_config_form(MoodleQuickForm $mform): void {
         $roles = get_assignable_roles(context_system::instance(), ROLENAME_ALIAS);
 
@@ -47,14 +45,12 @@ class systemrole extends base {
         $mform->addRule('roles', null, 'required', null, 'client');
     }
 
-  /**
-   * Helps to build SQL to retrieve users that matches the current audience
-   *
-   * @param string $usertablealias
-   * @return array array of three elements [$join, $where, $params]
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * Helps to build SQL to retrieve users that matches the current audience
+     *
+     * @param string $usertablealias
+     * @return array array of three elements [$join, $where, $params]
+     */
     public function get_sql(string $usertablealias): array {
         global $DB;
 
@@ -75,22 +71,20 @@ class systemrole extends base {
         return [$join, $where, $inparams + [$paramcontextid => context_system::instance()->id]];
     }
 
-  /**
-   * Return user friendly name of this audience type
-   *
-   * @return string
-   * @throws coding_exception
-   */
+    /**
+     * Return user friendly name of this audience type
+     *
+     * @return string
+     */
     public function get_name(): string {
         return get_string('hassystemrole', 'core_reportbuilder');
     }
 
-  /**
-   * Return the description for the audience.
-   *
-   * @return string
-   * @throws dml_exception
-   */
+    /**
+     * Return the description for the audience.
+     *
+     * @return string
+     */
     public function get_description(): string {
         global $DB;
         $rolesids = $this->get_configdata()['roles'];
@@ -99,12 +93,11 @@ class systemrole extends base {
         return $this->format_description_for_multiselect($rolesfixed);
     }
 
-  /**
-   * If the current user is able to add this audience.
-   *
-   * @return bool
-   * @throws dml_exception
-   */
+    /**
+     * If the current user is able to add this audience.
+     *
+     * @return bool
+     */
     public function user_can_add(): bool {
         // Check if user is able to assign any role from the system context.
         $roles = get_assignable_roles(context_system::instance(), ROLENAME_ALIAS);
@@ -115,13 +108,11 @@ class systemrole extends base {
         return true;
     }
 
-  /**
-   * If the current user is able to edit this audience.
-   *
-   * @return bool
-   * @throws coding_exception
-   * @throws dml_exception
-   */
+    /**
+     * If the current user is able to edit this audience.
+     *
+     * @return bool
+     */
     public function user_can_edit(): bool {
         global $DB;
 
