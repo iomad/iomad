@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.1.20 (Build: 20250811)'; // Human-friendly version name
+$plugin->release  = '4.1.21 (Build: 20251006)'; // Human-friendly version name
 $plugin->component  = 'enrol_license';
 $plugin->version = 2022100641;
 $plugin->requires = 2019052000;  // Requires this Moodle version.
