@@ -62,14 +62,10 @@ class block_mycourses extends block_base {
 
     // my moodle can only have SITEID and it's redundant here, so take it away
     public function applicable_formats() {
-        return array('all' => false,
-                     'site' => false,
-                     'site-index' => false,
-                     'course-view' => false, 
-                     'course-view-social' => false,
-                     'mod' => false,
-                     'my' => true,
-                     'mod-quiz' => false);
+        return ['all' => false,
+                'my' => true,
+                'local-iomadcustompage' => true,
+               ];
     }
 
     public function instance_allow_multiple() {
