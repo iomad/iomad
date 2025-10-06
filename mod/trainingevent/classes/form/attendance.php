@@ -133,7 +133,7 @@ class attendance extends dynamic_form {
      * @return array
      */
     public function process_dynamic_submission(): array {
-        global $DB, $USER, $COURSE;
+        global $CFG, $DB, $USER, $COURSE;
 
         require_once($CFG->dirroot .'/mod/trainingevent/lib.php');
 
