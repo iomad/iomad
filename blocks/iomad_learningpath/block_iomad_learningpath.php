@@ -60,7 +60,7 @@ class block_iomad_learningpath extends block_base {
      * @return void
      */
     public function instance_allow_multiple() {
-        return false;
+        return true;
     }
 
     /**
