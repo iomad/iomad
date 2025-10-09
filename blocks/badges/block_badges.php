@@ -50,6 +50,7 @@ class block_badges extends block_base {
                 'site-index' => true,
                 'course-view' => true,
                 'mod' => false,
+                'local-iomadcustompage' => true,
                 'my' => true
         );
     }
