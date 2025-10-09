@@ -69,7 +69,7 @@ class block_mycourses extends block_base {
     }
 
     public function instance_allow_multiple() {
-        return false;
+        return true;
     }
 
     function has_config() {return true;}
