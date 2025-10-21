@@ -37,11 +37,13 @@ use lang_string;
  */
 class iomadcustompages extends base {
     /**
-     * default table alias getter
+     * default tables getter
      * @return string[]
      */
-    protected function get_default_table_aliases(): array {
-        return ['local_iomadcustompages' => 'cp'];
+    protected function get_default_tables(): array {
+        return [
+                'local_iomadcustompages',
+               ];
     }
     /**
      * entity title getter
