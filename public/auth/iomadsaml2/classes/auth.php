@@ -244,9 +244,14 @@ class auth extends \auth_plugin_base {
         }
 
         // IOMAD
-        if (file_exists($this->get_saml2_directory() . '/' . md5($url) . '.idp.xml')) {
+        // Check for file with postfix first (when company is selected).
+        if (!empty($this->postfix) && file_exists($this->get_saml2_directory() . '/' . md5($url) . $this->postfix . '.idp.xml')) {
+            $filename = md5($url) . $this->postfix . '.idp.xml';
+        } else if (file_exists($this->get_saml2_directory() . '/' . md5($url) . '.idp.xml')) {
+            // Fall back to file without postfix - if it exists.
             $filename = md5($url) . '.idp.xml';
         } else {
+            // If neither exists, use the appropriate filename for creation.
             $filename = md5($url) . $this->postfix . '.idp.xml';
         }
 
