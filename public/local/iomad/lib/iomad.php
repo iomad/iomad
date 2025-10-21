@@ -494,11 +494,22 @@ class iomad {
         }
 
         // Get all of the categories of open shared courses.
-        $sharedcourses = $DB->get_records_sql("SELECT distinct c.category
+        $sharedcourses = [];
+        if ($sharedcategories = $DB->get_records_sql("SELECT distinct cc.path
                                                FROM {course} c
+                                               JON {course_categories} cc ON (c.category = cc.id)
                                                JOIN {iomad_courses} ic ON (c.id = ic.courseid)
                                                WHERE ic.shared = 1",
-                                               []);
+                                               [])) {
+            foreach ($sharedcategories as $sharedcategory) {
+                $sharedpaths = explode('/', $sharedcategory->path);
+                foreach ($sharedpaths as $sharedpath) {
+                    if (!empty($sharedpath)) {
+                        $sharedcourses[$sharedpath] = $sharedpath;
+                    }
+                }
+            }
+        }
 
         // Set up the return array;
         $iomadcategories = array();
