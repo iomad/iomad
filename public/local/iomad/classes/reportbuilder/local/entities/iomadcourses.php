@@ -48,10 +48,10 @@ class iomadcourses extends base {
      *
      * @return array
      */
-    protected function get_default_table_aliases(): array {
+    protected function get_default_tables(): array {
         return [
-            'iomadcourses' => 'iomadc',
-            'context' => 'iomadcctx',
+            'iomadcourses',
+            'context',
         ];
     }
 

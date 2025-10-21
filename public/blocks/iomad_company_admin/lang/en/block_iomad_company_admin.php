@@ -146,6 +146,7 @@ $string['compfromraw'] = 'Start date';
 $string['comptoraw'] = 'End date';
 $string['couldnotdeletecourse'] = 'Course could not be deleted';
 $string['couldnotremovecoursefromcompany'] = 'Course could not be removed from the company';
+$string['coursecleared'] = 'Course cleared';
 $string['currcompanyframeworks'] = 'Assigned frameworks';
 $string['currcompanyframeworksmatching'] = 'Assigned frameworks matching\'{$a}\'';
 $string['companyfavicon'] = 'Company favicon';

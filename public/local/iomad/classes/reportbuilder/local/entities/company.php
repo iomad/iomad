@@ -48,10 +48,10 @@ class company extends base {
      *
      * @return array
      */
-    protected function get_default_table_aliases(): array {
+    protected function get_default_tables(): array {
         return [
-            'company' => 'cmpny',
-            'context' => 'cmpnyctx',
+            'company',
+            'context',
         ];
     }
 
