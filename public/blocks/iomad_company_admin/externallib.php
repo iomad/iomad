@@ -2936,7 +2936,7 @@ class block_iomad_company_admin_external extends external_api {
                                                         AND cu.userid = :userid",
                                                        ['companyid' => $company->id,
                                                         'userid' => $user->id]);
-            $usercompanies[$comany->id]->departments = $companydepartments; 
+            $usercompanies[$company->id]->departments = $companydepartments; 
         }
         return ['companies' => $usercompanies];
     }
