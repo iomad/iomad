@@ -29,7 +29,7 @@ require_capability('moodle/site:config', context_system::instance());
 
 $config = SimpleSAML\Configuration::getInstance();
 
-$PAGE->set_url("$CFG->httpswwwroot/auth/iomadsaml2/debug.php");
+$PAGE->set_url("$CFG->wwwroot/auth/iomadsaml2/debug.php");
 $PAGE->set_course($SITE);
 echo $OUTPUT->header();
 echo pretty_print($config);
