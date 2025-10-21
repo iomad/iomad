@@ -49,10 +49,10 @@ class companylicense extends base {
      *
      * @return array
      */
-    protected function get_default_table_aliases(): array {
+    protected function get_default_tables(): array {
         return [
-            'companylicense' => 'cmpnylic',
-            'context' => 'cmpnylicctx',
+            'companylicense',
+            'context',
         ];
     }
 
