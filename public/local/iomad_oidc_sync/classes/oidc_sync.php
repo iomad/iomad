@@ -410,6 +410,8 @@ class oidc_sync {
                     $userlist = array_merge(array_values($userlist), array_values($responsearray['value']));
                     if (isset($responsearray['@odata.nextLink'])) {
                         $graphurl = $responsearray['@odata.nextLink'];
+                    } else {
+                        $process = false;
                     }
                 } else {
                     $process = false;
