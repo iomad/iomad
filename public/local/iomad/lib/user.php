@@ -1010,8 +1010,13 @@ class company_user {
 
                 // Deal with SCORM.
                 if ($scorms = $DB->get_records('scorm', array('course' => $courseid))) {
+                    require_once($CFG->dirroot . '/mod/scorm/locallib.php');
                     foreach ($scorms as $scorm) {
-                        //$DB->delete_records('scorm_scoes_track', array('userid' => $userid, 'scormid' => $scorm->id));
+                        // Delete all SCORM tracking data for this user.
+                        scorm_delete_tracks($scorm->id, null, $userid, null);
+
+                        // Delete AICC session data.
+                        $DB->delete_records('scorm_aicc_session', array('userid' => $userid, 'scormid' => $scorm->id));
                     }
                 }
 
