@@ -29,6 +29,7 @@ namespace local_iomad_oidc_sync;
 use company;
 use company_user;
 use iomad;
+use local_iomad_signup_observer;
 
 /**
  * Class definition
@@ -43,54 +44,63 @@ class oidc_sync {
     public static function run_sync() {
         global $DB;
 
-        // Get the list of configured companies.
-        mtrace("getting the list of configured companies");
-        $oidccompanies = self::get_oidc_companies();
+        // Disable the signup handler to prevent it from interfering with company assignments.
+        // OIDC sync handles company assignment explicitly via company_user::create().
+        local_iomad_signup_observer::$disable_handler = true;
 
-        // Process them.
-        foreach ($oidccompanies as $company) {
-            mtrace("Processessing company $company->name ($company->id)");
-            $postfix = "_" . $company->id;
+        try {
+            // Get the list of configured companies.
+            mtrace("getting the list of configured companies");
+            $oidccompanies = self::get_oidc_companies();
 
-            // Get the company config.
-            $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
-            $tenantid = $company->tenantnameorguid;
-            $clientsecret = get_config('auth_iomadoidc', 'clientsecret' . $postfix);
+            // Process them.
+            foreach ($oidccompanies as $company) {
+                mtrace("Processessing company $company->name ($company->id)");
+                $postfix = "_" . $company->id;
 
-            // Is it all configured?
-            if (!empty($clientid) && !empty($tenantid) && !empty($clientsecret)) {
-                // We are good to go!
-                // Get the accesstoken.
-                if ($accesstoken = self::get_accesstoken($tenantid, $clientid, $clientsecret)) {
-                    // So far so good - get the users.
-                    // Do we have a list of email domains?
-                    if ($companydomains = $DB->get_records('company_domains', ['companyid' => $company->id])) {
-                        $users = [];
-                        foreach ($companydomains as $companydomain) {
-                            // Process these individually.
-                            $companyusers = self::get_users($accesstoken, $companydomain->domain, $company->syncgroupid);
+                // Get the company config.
+                $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
+                $tenantid = $company->tenantnameorguid;
+                $clientsecret = get_config('auth_iomadoidc', 'clientsecret' . $postfix);
 
-                            // Did we find any?
-                            if (!empty($companyusers)) {
-                                // Add them to the big list of users to be processed.
-                                $users = array_merge(array_values($users), array_values($companyusers));
+                // Is it all configured?
+                if (!empty($clientid) && !empty($tenantid) && !empty($clientsecret)) {
+                    // We are good to go!
+                    // Get the accesstoken.
+                    if ($accesstoken = self::get_accesstoken($tenantid, $clientid, $clientsecret)) {
+                        // So far so good - get the users.
+                        // Do we have a list of email domains?
+                        if ($companydomains = $DB->get_records('company_domains', ['companyid' => $company->id])) {
+                            $users = [];
+                            foreach ($companydomains as $companydomain) {
+                                // Process these individually.
+                                $companyusers = self::get_users($accesstoken, $companydomain->domain, $company->syncgroupid);
+
+                                // Did we find any?
+                                if (!empty($companyusers)) {
+                                    // Add them to the big list of users to be processed.
+                                    $users = array_merge(array_values($users), array_values($companyusers));
+                                }
                             }
+                        } else {
+                            $users = self::get_users($accesstoken, "",  $company->syncgroupid);
+                        }
+                        if (!empty($users)) {
+                            // Process them.
+                            self::process_users($company->id, $users, $company->useroption, $company->unsuspendonsync);
                         }
                     } else {
-                        $users = self::get_users($accesstoken, "",  $company->syncgroupid);
-                    }
-                    if (!empty($users)) {
-                        // Process them.
-                        self::process_users($company->id, $users, $company->useroption, $company->unsuspendonsync);
+                        mtrace("Failed getting the access token for companyID " . $company->id);
+                        $DB->set_field('local_iomad_oidc_sync', 'approved', 0, ['companyid' => $company->id]);
+                        $DB->set_field('local_iomad_oidc_sync', 'enabled', 0, ['companyid' => $company->id]);
                     }
                 } else {
-                    mtrace("Failed getting the access token for companyID " . $company->id);
-                    $DB->set_field('local_iomad_oidc_sync', 'approved', 0, ['companyid' => $company->id]);
-                    $DB->set_field('local_iomad_oidc_sync', 'enabled', 0, ['companyid' => $company->id]);
+                    mtrace("Company is not fully configured");
                 }
-            } else {
-                mtrace("Company is not fully configured");
             }
+        } finally {
+            // Always re-enable the signup handler, even if an exception occurs.
+            local_iomad_signup_observer::$disable_handler = false;
         }
     }
 
@@ -410,6 +420,8 @@ class oidc_sync {
                     $userlist = array_merge(array_values($userlist), array_values($responsearray['value']));
                     if (isset($responsearray['@odata.nextLink'])) {
                         $graphurl = $responsearray['@odata.nextLink'];
+                    } else {
+                        $process = false;
                     }
                 } else {
                     $process = false;

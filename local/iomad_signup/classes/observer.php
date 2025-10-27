@@ -34,14 +34,27 @@ require_once($CFG->dirroot.'/local/iomad_signup/lib.php');
 class local_iomad_signup_observer {
 
     /**
+     * Flag to temporarily disable the signup handler.
+     * This can be set by external processes (e.g., OIDC sync) to prevent
+     * interference with company assignments they are handling themselves.
+     *
+     * @var bool
+     */
+    public static $disable_handler = false;
+
+    /**
      * Triggered via competency_framework_created event.
      *
      * @param \core\event\user_created $event
      * @return bool true on success.
      */
     public static function user_created(\core\event\user_created $event) {
+        // Check if the handler has been temporarily disabled
+        if (self::$disable_handler) {
+            return true;
+        }
+
         local_iomad_signup_user_created($event->objectid);
         return true;
     }
-
 }

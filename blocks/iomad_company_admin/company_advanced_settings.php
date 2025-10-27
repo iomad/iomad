@@ -190,7 +190,7 @@ if (!empty($action) &&
             unset($data->action);
             unset($data->submitbutton);
             foreach ($data as $id => $value) {
-                set_config($id, $value, 'auth_iomasaml2');
+                set_config($id, $value, 'auth_iomadsaml2');
             }
             $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
         } else if ($action == 'iomadsaml') {
