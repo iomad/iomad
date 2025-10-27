@@ -582,7 +582,7 @@ function initialise_cfg() {
         // Does this match a company hostname?
         if ($DB->get_manager()->table_exists('company') &&
             ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
-            $company = new company($companyrec->id);
+            $company = new local_iomad\company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.
             $CFG->wwwroot  = $company->get_wwwroot();
@@ -680,7 +680,7 @@ function initialise_fullme() {
         // Does this match a company hostname?
         if ($DB->get_manager()->table_exists('company') &&
             ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
-            $company = new company($companyrec->id);
+            $company = new local_iomad\company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.
             $CFG->wwwroot  = $company->get_wwwroot();
@@ -730,9 +730,9 @@ function initialise_fullme() {
                 throw new moodle_exception('requirecorrectaccess', 'error', '', null,
                     'You called ' . $calledurl .', you should have called ' . $correcturl);
             }
-            require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+            
 
-            iomad::check_redirect($wwwroot, $rurl);
+            local_iomad\iomad::check_redirect($wwwroot, $rurl);
             $rfullpath = $rurl['fullpath'];
             // Check that URL is under $CFG->wwwroot.
             if (strpos($rfullpath, $wwwroot['path']) === 0) {

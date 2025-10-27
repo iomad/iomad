@@ -34,11 +34,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_completion:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_completion:view', $companycontext);
 
 // Get the details fro db
 $certificate = $DB->get_record('local_iomad_track_certs', array('id' => $id), '*', MUST_EXIST);

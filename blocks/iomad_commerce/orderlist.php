@@ -36,9 +36,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -62,7 +62,7 @@ $baseurl = new moodle_url('/blocks/iomad_commerce/orderlist.php',
 $returnurl = $baseurl;
 
 //  Check we can actually do anything on this page.
-iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
 
 $userfields = \core_user\fields::for_name()->with_identity($systemcontext)->excluding('id', 'deleted', 'firstname', 'lastname');
 $usersql = $userfields->get_sql('u');

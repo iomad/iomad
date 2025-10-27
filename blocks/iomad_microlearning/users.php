@@ -56,13 +56,13 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($companyid);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
-iomad::require_capability('block/iomad_microlearning:assign_threads', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_microlearning:assign_threads', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_microlearning/users.php');
@@ -93,7 +93,7 @@ $buttonlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
 $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
-if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);

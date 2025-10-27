@@ -85,7 +85,7 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$mycompanyid = iomad::get_my_companyid($systemcontext);
+$mycompanyid = local_iomad\iomad::get_my_companyid($systemcontext);
 
 // Is the users company set and no other company selected?
 if (empty($companyid) && !empty($mycompanyid)) {
@@ -94,18 +94,18 @@ if (empty($companyid) && !empty($mycompanyid)) {
 }
 
 $companycontext = \core\context\company::instance($mycompanyid);
-$company = new company($mycompanyid);
+$company = new local_iomad\company($mycompanyid);
 
-iomad::require_capability('block/iomad_company_admin:viewcourses', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:viewcourses', $companycontext);
 
-if (iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)
-    || iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)
+    || local_iomad\iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext)) {
     $canedit = true;
 } else {
     $canedit = false;
 }
 
-if (iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:manageallcourses', $companycontext)) {
     $caneditall = true;
 } else {
     $caneditall = false;
@@ -174,7 +174,7 @@ if (!empty($deleteid)) {
         ];
 
         // Which message are we showing?
-        if (iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)) {
+        if (local_iomad\iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)) {
             $message = get_string('deleteanddestroycoursesfull', 'block_iomad_company_admin', $course->fullname);
         } else {
             $message = get_string('deletecoursesfull', 'block_iomad_company_admin', $course->fullname);
@@ -192,7 +192,7 @@ if (!empty($deleteid)) {
         $confirmhtml .= html_writer::tag('p', $message);
         $confirmhtml .= $OUTPUT->box_end();
         $confirmhtml .= $OUTPUT->box_start('modal-footer', 'modal-footer');
-        if (iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)) {
+        if (local_iomad\iomad::has_capability('block/iomad_company_admin:destroycourses', $companycontext)) {
             $confirmhtml .= html_writer::tag('div', $OUTPUT->render($continue) . $OUTPUT->render($destroy) . $OUTPUT->render($cancel), array('class' => 'buttons'));
         } else {
             $confirmhtml .= html_writer::tag('div', $OUTPUT->render($continue) . $OUTPUT->render($cancel), array('class' => 'buttons'));
@@ -208,7 +208,7 @@ if (!empty($deleteid)) {
 }
 
 // Hide/show courses.
-if(!empty($hideid) && iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {    
+if(!empty($hideid) && local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {    
     if (!$course = $DB->get_record('course', array('id' => $hideid))) {
         throw new moodle_exception('invalidcourse');
     }
@@ -218,7 +218,7 @@ if(!empty($hideid) && iomad::has_capability('block/iomad_company_admin:managecou
         course_change_visibility($course->id, false);
     }
 }
-if(!empty($showid) && iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
+if(!empty($showid) && local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
     if (!$course = $DB->get_record('course', array('id' => $showid))) {
         throw new moodle_exception('invalidcourse');
     } 
@@ -230,7 +230,7 @@ if(!empty($showid) && iomad::has_capability('block/iomad_company_admin:managecou
 }
 
 // Delegate/remove courses.
-if(!empty($delegateid) && iomad::has_capability('block/iomad_company_admin:delegatecourse', $companycontext)) {    
+if(!empty($delegateid) && local_iomad\iomad::has_capability('block/iomad_company_admin:delegatecourse', $companycontext)) {    
     if (!$course = $DB->get_record('course', ['id' => $delegateid])) {
         throw new moodle_exception('invalidcourse');
     }
@@ -240,7 +240,7 @@ if(!empty($delegateid) && iomad::has_capability('block/iomad_company_admin:deleg
         $company->remove_control_of_course($delegateid);
     } 
 }
-if(!empty($showid) && iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
+if(!empty($showid) && local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
     if (!$course = $DB->get_record('course', ['id' => $showid])) {
         throw new moodle_exception('invalidcourse');
     } 
@@ -252,7 +252,7 @@ if(!empty($showid) && iomad::has_capability('block/iomad_company_admin:managecou
 }
 
 // Clone courses.
-if(!empty($cloneid) && iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext)) {    
+if(!empty($cloneid) && local_iomad\iomad::has_capability('block/iomad_company_admin:createcourse', $companycontext)) {    
     if ((!$clonecourse = $DB->get_record('course', ['id' => $cloneid])) ||
          ! $DB->get_record('company_created_courses', ['companyid' => $companyid, 'courseid' => $cloneid])) {
         throw new moodle_exception('invalidcourse');
@@ -326,7 +326,7 @@ $mform->set_data($params);
 echo $OUTPUT->header();
 
 // Get the list of companies and display it as a drop down select..
-$companyids = company::get_companies_select(false);
+$companyids = local_iomad\company::get_companies_select(false);
 if ($caneditall) {
     $companyids = [
             '-1' => get_string('nocompany', 'block_iomad_company_admin'),
@@ -404,7 +404,7 @@ $sqlparams = $params;
 // Set up the headers for the table.
 $tableheaders = [];
 $tablecolumns = [];
-if (iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
     $tableheaders[] = get_string('company', 'block_iomad_company_admin');
     $tablecolumns[] = 'company';
 }
@@ -433,7 +433,7 @@ if (!empty($companyid) && $companyid != "-1") {
     $tablecolumns[] = 'autoenrol';
 }
 // Is the user a company manager? If not show course sharing details, otherwise keep these hidden
-if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $tableheaders[] = get_string('shared', 'block_iomad_company_admin')  . $OUTPUT->help_icon('shared', 'block_iomad_company_admin');
     $tablecolumns[] = 'shared';	
 }

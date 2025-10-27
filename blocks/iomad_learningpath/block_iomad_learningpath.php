@@ -82,7 +82,7 @@ class block_iomad_learningpath extends block_base {
 
         // IOMAD stuff.
         $sitecontext = context_system::instance();
-        $companyid = iomad::get_my_companyid($sitecontext, false);
+        $companyid = local_iomad\iomad::get_my_companyid($sitecontext, false);
         $path = new \block_iomad_learningpath\path($companyid, $sitecontext);
         $userpaths = $path->get_user_paths($USER->id);
 

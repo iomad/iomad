@@ -21,16 +21,13 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../../config.php');
-require_once(dirname(__FILE__) . '/company.php');
-require_once(dirname(__FILE__) . '/iomad.php');
+namespace local_iomad;
 
-require_once($CFG->dirroot.'/user/lib.php');
-require_once($CFG->dirroot.'/user/profile/lib.php');
-require_once($CFG->dirroot.'/local/email/lib.php');
-require_once($CFG->dirroot.'/user/filters/lib.php');
-require_once($CFG->dirroot.'/lib/formslib.php');
-require_once($CFG->dirroot.'/group/lib.php');
+use context_system;
+use moodle_url;
+
+global $CFG;
+require_once($CFG->libdir.'/formslib.php');
 
 class company_user {
 
@@ -419,7 +416,7 @@ class company_user {
             $today = time();
         }
 
-        $manualcache  = array(); // Cache of used manual enrol plugins in each course.
+        $manualcache  = []; // Cache of used manual enrol plugins in each course.
 
         // We use only manual enrol plugin here, if it is disabled no enrol is done.
         if (enrol_is_enabled('manual')) {
@@ -501,7 +498,7 @@ class company_user {
                                 $DB->set_field('local_iomad_track', 'completedstop', 1, ['id' => $completedrecord->id]);
                             }
                             // Clear them from the course.
-                            company_user::delete_user_course($user->id, $courseid, 'autodelete');
+                            local_iomad\local_iomad\company_user::delete_user_course($user->id, $courseid, 'autodelete');
 
                             // Then re-enrol them.
                             $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today, $timeend, ENROL_USER_ACTIVE);
@@ -736,7 +733,7 @@ class company_user {
                     $headers = serialize(array("Cc:".$USER->email));
                 }
             } else {
-                $company = new stdclass();
+                $company = (object) [];
                 $headers = serialize(array("Cc:".$USER->email));
             }
             $user->newpassword = $temppassword;
@@ -1229,7 +1226,7 @@ class company_user {
 
         // Generate the new token.
         $generatedtoken = md5(uniqid(rand(),1));
-        $newtoken = new stdclass();
+        $newtoken = (object) [];
         $newtoken->userid = $USER->id;
         $newtoken->token = $generatedtoken;
         $newtoken->expires = time() + $CFG->commerce_externalshop_link_timeout;
@@ -1351,24 +1348,5 @@ class company_user {
         if ($dashboardurl = $company->get_dashboard_url()) {
             redirect ($dashboardurl);
         }
-    }
-}
-/**
- * course search form used on the Iomad pages.
- *
- */
-class iomad_company_search_form extends moodleform {
-    protected $params = array();
-
-    public function definition() {
-        global $CFG, $DB, $USER, $SESSION;
-
-        $mform =& $this->_form;
-
-        $searcharray = array();
-        $searcharray[] = $mform->createElement('text', 'search');
-        $searcharray[] = $mform->createElement('submit', 'searchbutton', get_string('search'));
-        $mform->addGroup($searcharray, 'searcharray', '', ' ', false);
-        $mform->setType('search', PARAM_CLEAN);
     }
 }

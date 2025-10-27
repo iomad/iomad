@@ -26,7 +26,7 @@
 use core\exception\moodle_exception;
 
 // IOMAD
-require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+
 
 
 /**
@@ -262,7 +262,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         }
 
         // IOMAD - dont show categories which a user can't see.
-        $companycategories = iomad::iomad_filter_categories([$id => $id]);
+        $companycategories = local_iomad\iomad::iomad_filter_categories([$id => $id]);
         if (empty($companycategories)) {
             return null;
         }
@@ -1615,14 +1615,14 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $ids = $coursecatcache->get($cachekey);
         // IOMAD: only use cache if allowed.
         $systemcontext = \context_system::instance();
-        $companyid = iomad::get_my_companyid($systemcontext, false);
+        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
 
-        if (iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext) && $ids !== false) {
+        if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext) && $ids !== false) {
             // We already cached last search result.
             $ids = array_slice($ids, $offset, $limit);
             $courses = array();
@@ -1656,7 +1656,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
             // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
-                $courses = iomad::iomad_filter_courses($courses);
+                $courses = local_iomad\iomad::iomad_filter_courses($courses);
             }
 
             return $courses;
@@ -1697,7 +1697,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
             // IOMAD: strip out courses user shouldn't see.
             if (!PHPUNIT_TEST) {
-                $courselist = iomad::iomad_filter_courses($courselist);
+                $courselist = local_iomad\iomad::iomad_filter_courses($courselist);
             }
 
             $coursecatcache->set($cachekey, array_keys($courselist));
@@ -1791,7 +1791,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // IOMAD - Filter the result.
         if (!PHPUNIT_TEST) {
-            $courses = iomad::iomad_filter_courses($courses);
+            $courses = local_iomad\iomad::iomad_filter_courses($courses);
         }
 
         return $courses;
@@ -1824,7 +1824,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
             // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
-                $courses = iomad::iomad_filter_courses($courses);
+                $courses = local_iomad\iomad::iomad_filter_courses($courses);
             }
 
             $cnt = count($courses);
@@ -1918,7 +1918,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
             // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
-                $courses = iomad::iomad_filter_courses($courses);
+                $courses = local_iomad\iomad::iomad_filter_courses($courses);
             }
 
             return $courses;
@@ -1971,7 +1971,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // IOMAD - Filter the result.
         if (!PHPUNIT_TEST) {
-            $courses = iomad::iomad_filter_courses($courses);
+            $courses = local_iomad\iomad::iomad_filter_courses($courses);
         }
 
         return $courses;
@@ -2795,7 +2795,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // IOMAD :  Filter the list of categories.
         if (!is_siteadmin() and !during_initial_install()) {
-            $names = iomad::iomad_filter_categories($names);
+            $names = local_iomad\iomad::iomad_filter_categories($names);
         }
 
         return $names;
@@ -3307,13 +3307,13 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // IOMAD
         $systemcontext = \context_system::instance();
-        $companyid = iomad::get_my_companyid($systemcontext, false);
+        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
-        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
+        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
             return null;
         }
 

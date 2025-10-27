@@ -31,11 +31,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/iomad_learningpath:manage', $companycontext);
+local_iomad\iomad::require_capability('local/iomad_learningpath:manage', $companycontext);
 
 // Parameters
 $id = optional_param('id', 0, PARAM_INT);
@@ -51,7 +51,7 @@ $output = $PAGE->get_renderer('local_iomad_learningpath');
 // IOMAD stuff
 $companypaths = new local_iomad_learningpath\companypaths($companyid, $systemcontext);
 $paths = $companypaths->get_paths();
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 $PAGE->set_heading(get_string('pathcompany', 'local_iomad_learningpath', $company->get_name()));
 
 // Attempt to locate path

@@ -26,7 +26,7 @@ use lbuchs\WebAuthn\WebAuthnException;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 use context_system;
-use iomad;
+use local_iomad\iomad;
 
 /**
  * WebAuthn factor class.
@@ -61,7 +61,7 @@ class factor extends object_factor_base {
         $this->webauthn = new WebAuthn($SITE->fullname, $this->rpid);
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {

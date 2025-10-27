@@ -57,7 +57,7 @@ abstract class company_user_selector_base extends user_selector_base {
             $this->courseid = $options['courseid'];
         }
         if (empty($options['departmentid'])) {
-            $parentdepartment = company::get_company_parentnode($this->companyid);
+            $parentdepartment = local_iomad\company::get_company_parentnode($this->companyid);
             $this->departmentid = $parentdepartment->id;
         } else {
             $this->departmentid = $options['departmentid'];
@@ -77,7 +77,7 @@ abstract class company_user_selector_base extends user_selector_base {
             $profileid = optional_param($name . '_profilefieldid', 0, PARAM_INT);
         }
         $this->profilefieldid = $profileid;
-        $this->company = new company($this->companyid);
+        $this->company = new local_iomad\company($this->companyid);
 
         parent::__construct($name, $options);
     }
@@ -489,7 +489,7 @@ class current_company_course_user_selector extends company_user_selector_base {
         }
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
             $departmentsql = " AND cu.departmentid in (".implode(',', array_keys($departmentlist)).")";
@@ -687,11 +687,11 @@ class potential_company_course_user_selector extends company_user_selector_base 
         global $CFG, $DB;
 
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
+        $topcompany = new local_iomad\company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -702,7 +702,7 @@ class potential_company_course_user_selector extends company_user_selector_base 
         $params['profilesearch'] = "%{$search}%";
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
             $departmentsql = " AND cu.departmentid IN (".implode(',', array_keys($departmentlist)).")";
@@ -845,11 +845,11 @@ class potential_department_user_selector extends company_user_selector_base {
     public function find_users($search) {
         global $CFG, $DB, $USER;
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
+        $topcompany = new local_iomad\company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -1011,11 +1011,11 @@ class current_department_user_selector extends company_user_selector_base {
     public function find_users($search) {
         global $CFG, $DB, $USER;
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
+        $topcompany = new local_iomad\company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -1214,12 +1214,12 @@ class potential_license_user_selector extends company_user_selector_base {
                 $departments = $DB->get_records_sql($sql);
                 $shareddepartment = array();
                 if ($shared) {
-                    if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+                    if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
                         // Need to add the top level department.
-                        $shareddepartment = company::get_company_parentnode($this->companyid);
+                        $shareddepartment = local_iomad\company::get_company_parentnode($this->companyid);
                         $departments = $departments + array($shareddepartment->id => $shareddepartment->id);
                     } else {
-                        $company = new company($this->companyid);
+                        $company = new local_iomad\company($this->companyid);
                         $shareddepartment = $company->get_userlevel($USER);
                         $departments = $departments + array($shareddepartment->id => $shareddepartment->id);
                     }
@@ -1263,11 +1263,11 @@ class potential_license_user_selector extends company_user_selector_base {
         }
 
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
+        $topcompany = new local_iomad\company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -1277,7 +1277,7 @@ class potential_license_user_selector extends company_user_selector_base {
 
         $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u').', u.email ';
         $countfields = 'SELECT COUNT(1)';
-        $myusers = company::get_my_users($this->companyid);
+        $myusers = local_iomad\company::get_my_users($this->companyid);
 
         // are we dealing with an educator license?
         if ($this->license->type > 1) {
@@ -1686,7 +1686,7 @@ class current_company_group_user_selector extends company_user_selector_base {
         $params['licgroupid'] = $this->groupid;
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
             $departmentsql = " AND cu.departmentid in (".implode(',', array_keys($departmentlist)).")";
@@ -1758,11 +1758,11 @@ class potential_company_group_user_selector extends company_user_selector_base {
     public function find_users($search) {
         global $CFG, $DB;
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
+        $topcompany = new local_iomad\company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -1775,7 +1775,7 @@ class potential_company_group_user_selector extends company_user_selector_base {
         $params['licgroupid'] = $this->groupid;
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
             $departmentsql = " AND cu.departmentid IN (".implode(',', array_keys($departmentlist)).")";
@@ -1871,7 +1871,7 @@ class current_company_thread_user_selector extends company_user_selector_base {
         $params['groupid'] = $this->groupid;
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
             $departmentsql = " AND cu.departmentid in (".implode(',', array_keys($departmentlist)).")";
@@ -1968,11 +1968,11 @@ class potential_company_thread_user_selector extends company_user_selector_base 
         global $CFG, $DB;
 
         $companyrec = $DB->get_record('company', array('id' => $this->companyid));
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
+        $topcompany = new local_iomad\company($topcompanyid);
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -1982,7 +1982,7 @@ class potential_company_thread_user_selector extends company_user_selector_base 
         $params['threadid'] = $this->threadid;
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentlist)) {
             $departmentsql = " AND cu.departmentid IN (".implode(',', array_keys($departmentlist)).")";

@@ -27,7 +27,7 @@ namespace block_iomad_commerce\tables;
 // Add required dependancies
 use \table_sql;
 use \moodle_url;
-use \iomad;
+use local_iomad\iomad;
 use \context_system;
 
 // Ensure that it is loaded in Moodle else die

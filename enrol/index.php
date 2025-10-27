@@ -41,7 +41,7 @@ if (!isloggedin()) {
 }
 
 // Check if we can see this course.
-if (!iomad::iomad_check_course($id)) {
+if (!local_iomad\iomad::iomad_check_course($id)) {
 	$id = 0;
 }
 

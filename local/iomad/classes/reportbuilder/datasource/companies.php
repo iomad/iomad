@@ -45,7 +45,7 @@ class companies extends datasource {
      * Initialise report
      */
     protected function initialise(): void {
-        $companyentity = new company();
+        $companyentity = new local_iomad\company();
         $companyalias = $companyentity->get_table_alias('company');
 
         $this->set_main_table('company', $companyalias);

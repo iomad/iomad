@@ -33,12 +33,12 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 // Can I do this?
-iomad::require_capability('block/iomad_approve_access:approve', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_approve_access:approve', $companycontext);
 
 $PAGE->set_context($companycontext);
 $baseurl = new moodle_url('/blocks/iomad_approve_access/approve.php');
@@ -139,8 +139,8 @@ if ($data = $callform->get_data()) {
 
                         if ($event->approvaltype == 3) {
                             // Get the company managers for this user.
-                            $usercompany = company::get_company_byuserid($result->userid);
-                            $company = new company($usercompany->id);
+                            $usercompany = local_iomad\company::get_company_byuserid($result->userid);
+                            $company = new local_iomad\company($usercompany->id);
 
                             // Add other details too.
                             $course = $DB->get_record('course', array('id' => $event->course));
@@ -202,8 +202,8 @@ if ($data = $callform->get_data()) {
                             $senddenied = true;
                         } else {
                             // Get the company managers for this user.
-                            $usercompany = company::get_company_byuserid($result->userid);
-                            $company = new company($usercompany->id);
+                            $usercompany = local_iomad\company::get_company_byuserid($result->userid);
+                            $company = new local_iomad\company($usercompany->id);
 
                             // Add other details too.
                             $course = $DB->get_record('course', array('id' => $event->course));

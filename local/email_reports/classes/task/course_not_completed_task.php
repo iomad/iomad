@@ -90,7 +90,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
             }
 
             // Deal with parent companies as we only want users in this company.
-            $companyobj = new company($company->id);
+            $companyobj = new local_iomad\company($company->id);
             if ($parentslist = $companyobj->get_parent_companies_recursive()) {
                 if ($DB->get_records_sql("SELECT userid FROM {company_users}
                                           WHERE managertype = 1
@@ -176,7 +176,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
 
             // Send the supervisor email too.
             mtrace("Sending completion warning email to $user->email supervisor");
-            company::send_supervisor_warning_email($user, $course);
+            local_iomad\company::send_supervisor_warning_email($user, $course);
 
             // Do we have a value for the template repeat?
             if (!empty($templateinfo->repeatvalue)) {

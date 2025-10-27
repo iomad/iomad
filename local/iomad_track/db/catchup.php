@@ -92,7 +92,7 @@ foreach ($comprecords as $comprec) {
         } else {
             $finalgrade = 0;
         }
-        $company = company::by_userid($user->id);
+        $company = local_iomad\company::by_userid($user->id);
         $companyrec = $DB->get_record('company', array('id' => $company->id));
         $department = $DB->get_record_sql("SELECT d.* from {department} d JOIN {company_users} cu ON (d.id = cu.departmentid) WHERE cu.companyid = :companyid AND cu.userid = :userid", array('companyid' => $companyrec->id, 'userid' => $user->id));
 

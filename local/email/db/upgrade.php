@@ -276,7 +276,7 @@ function xmldb_local_email_upgrade($oldversion) {
         $emails = $DB->get_recordset('email', [], '', 'id, userid');
 
         foreach ($emails as $email) {
-            $company = company::by_userid($email->userid);
+            $company = local_iomad\company::by_userid($email->userid);
             if (!empty($company->id)) {
                 $DB->set_field('email','companyid', $company->id, array('id' => $email->id));
             }

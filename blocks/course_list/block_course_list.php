@@ -87,7 +87,7 @@ class block_course_list extends block_list {
 
                 // IOMAD - filter out categories.
                 if (!is_siteadmin()) {
-                    $categories = iomad::iomad_filter_categories($categories);
+                    $categories = local_iomad\iomad::iomad_filter_categories($categories);
                 } else {
                     $categories = $categories;
                 }

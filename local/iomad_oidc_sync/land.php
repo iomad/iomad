@@ -39,7 +39,7 @@ if ($CFG->branch > 402) {
     $companycontext = \core\context\company::instance($companyid);
 }
 
-iomad::require_capability('local/iomad_oidc_sync:manage', $companycontext);
+local_iomad\iomad::require_capability('local/iomad_oidc_sync:manage', $companycontext);
 
 if (confirm_sesskey()) {
     $DB->set_field('local_iomad_oidc_sync', 'approved', $approved, ['companyid' => $companyid]);

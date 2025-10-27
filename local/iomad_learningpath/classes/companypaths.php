@@ -27,7 +27,7 @@ namespace local_iomad_learningpath;
 
 defined('MOODLE_INTERNAL') || die();
 
-use company;
+use local_iomad\company;
 
 class companypaths {
 
@@ -44,7 +44,7 @@ class companypaths {
     public function __construct($companyid, $context) {
         $this->context = $context;
         $this->companyid = $companyid;
-        $this->company = new \company($companyid);
+        $this->company = new company($companyid);
     }
 
     /**

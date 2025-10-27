@@ -804,7 +804,7 @@ class core_course_renderer extends plugin_renderer_base {
 
         // IOMAD:  Filter out unwanted categories
         if (!is_siteadmin()) {
-            $subcategories = iomad::iomad_filter_categories($subcategories);
+            $subcategories = local_iomad\iomad::iomad_filter_categories($subcategories);
         }
 
         //$totalcount = $coursecat->get_children_count();
@@ -1385,7 +1385,7 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         //  IOMAD - deal with licensed courses
-        iomad::iomad_add_license_courses($courses);
+        local_iomad\iomad::iomad_add_license_courses($courses);
 
         if (!empty($courses) || !empty($rcourses) || !empty($rhosts)) {
 

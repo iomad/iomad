@@ -51,7 +51,7 @@ $PAGE->navbar->add(get_string('checkout', 'block_iomad_commerce'));
 $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'init');
 
 $data = clone $USER;
-$companyid = iomad::get_my_companyid(context_system::instance());
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
 $companyrec = $DB->get_record('company', ['id' => $companyid]);
 
 $data->company = $companyrec->name;

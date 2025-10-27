@@ -26,7 +26,7 @@ namespace block_iomad_microlearning\forms;
 defined('MOODLE_INTERNAL') || die;
 
 use \company_moodleform;
-use \company;
+use local_iomad\company;
 use \microlearning;
 
 class microlearning_threads_form extends company_moodleform {
@@ -41,7 +41,7 @@ class microlearning_threads_form extends company_moodleform {
         global $DB, $USER;
         $this->departmentid = $departmentid;
         $this->selectedcompany = $companyid;
-        $this->company = new \company($companyid);
+        $this->company = new company($companyid);
         $this->context = $context;
         $this->selectedthread = $selectedthread;
         $this->threads = \microlearning::get_menu_threads($companyid);

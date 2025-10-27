@@ -67,7 +67,7 @@ class page_managedocs_list implements renderable, templatable {
      * @param int $iomadpolicyid when specified only archived versions of this iomadpolicy will be displayed.
      */
     public function __construct($iomadpolicyid = null, $companyonly = false) {
-        $this->companylist = company::get_companies_select(false);
+        $this->companylist = local_iomad\company::get_companies_select(false);
         $this->iomadpolicyid = $iomadpolicyid;
         $this->companyonly = $companyonly;
         $this->returnurl = new moodle_url('/admin/tool/iomadpolicy/managedocs.php');
@@ -113,10 +113,10 @@ class page_managedocs_list implements renderable, templatable {
 
         // Deal with the companyid.
         $systemcontext = context_system::instance();
-        if (iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+        if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
             $companyid = -1;
         } else {
-            $companyid = iomad::get_my_companyid($systemcontext, false);
+            $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
         }
 
         // List all policies. Display current and all draft versions of each iomadpolicy in this list.

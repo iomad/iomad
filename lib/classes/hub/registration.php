@@ -517,7 +517,7 @@ class registration {
         }
 
         // Register IOMAD site.
-        iomad::register_site($params);
+        local_iomad\iomad::register_site($params);
 
         $SESSION->registrationredirect = $returnurl;
         redirect($url);

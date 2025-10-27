@@ -36,11 +36,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
 
 $urlparams = array('companyid' => $companyid);
 if ($returnurl) {
@@ -78,12 +78,12 @@ $coursesform = new \block_iomad_company_admin\forms\company_users_course_form($f
 echo $OUTPUT->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
 // Check the userid is valid.
-if (!company::check_valid_user($companyid, $userid, $departmentid)) {
+if (!local_iomad\company::check_valid_user($companyid, $userid, $departmentid)) {
     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 

@@ -76,7 +76,7 @@ if (empty($USER->profile['company'])) {
         $companyid = $DB->insert_record('company', $company);
 
         // Set up default department.
-        company::initialise_departments($companyid);
+        local_iomad\company::initialise_departments($companyid);
         $company->id = $companyid;
 
         //  Set up a profiles field category for this company.
@@ -102,8 +102,8 @@ if (empty($USER->profile['company'])) {
     // Add user to default company department.
     $USER->profile_field_company = $company->shortname;
     profile_save_data($USER);
-    $companydepartment = company::get_company_parentnode($company->id);
-    company::assign_user_to_department($companydepartment->id, $USER->id);
+    $companydepartment = local_iomad\company::get_company_parentnode($company->id);
+    local_iomad\company::assign_user_to_department($companydepartment->id, $USER->id);
 }
 
 if ($invoice->status == \block_iomad_commerce\helper::INVOICESTATUS_PAID) {

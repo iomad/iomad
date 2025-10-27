@@ -40,15 +40,15 @@ if ($chosencompanyid > 0) {
     $reportcompanyid = $chosencompanyid;
 } else if ($chosencompanyid == -1) {
     $reportcompanyid = 0;
-    $companyid = iomad::get_my_companyid($systemcontext);
+    $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 } else {
-    $companyid = iomad::get_my_companyid($systemcontext);
+    $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
     $reportcompanyid = $companyid;
 }
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_companies:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_companies:view', $companycontext);
 
 // Url stuff.
 $url = new moodle_url('/local/report_companies/index.php', ['companyid' => $companyid]);

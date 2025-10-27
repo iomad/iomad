@@ -24,14 +24,14 @@
 namespace block_iomad_company_admin\forms;
 
 use \moodleform;
-use \company;
-use \iomad;
 use \context_system;
-use \company_user;
 use EmailTemplate;
 use \potential_company_course_user_selector;
 use \current_company_course_user_selector;
 use \stdclass;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_course_users_form extends moodleform {
     protected $context = null;

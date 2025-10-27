@@ -25,8 +25,8 @@ require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+
+
 
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/user_selectors.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/course_selectors.php');
@@ -43,13 +43,13 @@ abstract class company_moodleform extends moodleform {
     public function add_company_selector ($required=true) {
         $mform =& $this->_form;
 
-        if ( company_user::is_company_user() ) {
-            $mform->addElement('hidden', 'companyid', company_user::companyid());
+        if ( local_iomad\local_iomad\company_user::is_company_user() ) {
+            $mform->addElement('hidden', 'companyid', local_iomad\local_iomad\company_user::companyid());
         } else {
-            $companies = company::get_companies_rs();
+            $companies = local_iomad\company::get_companies_rs();
             $companyoptions = array('' => get_string('selectacompany', 'block_iomad_company_admin'));
             foreach ($companies as $company) {
-                if ( company_user::can_see_company( $company->shortname ) ) {
+                if ( local_iomad\local_iomad\company_user::can_see_company( $company->shortname ) ) {
                     $companyoptions[$company->id] = $company->name;
                 }
             }
@@ -76,7 +76,7 @@ abstract class company_moodleform extends moodleform {
         $mform =& $this->_form;
 
         // Course selector.
-        if ( $this->selectedcompany || company_user::is_company_user() ) {
+        if ( $this->selectedcompany || local_iomad\local_iomad\company_user::is_company_user() ) {
             $courseselector = new current_company_course_selector('courses', array('companyid' => $this->selectedcompany,
                                                                                    'multiselect' => $multiselect,
                                                                                    'departmentid' => $this->departmentid));
@@ -173,7 +173,7 @@ class company_select_form extends company_moodleform {
     public function definition() {
         global $PAGE, $USER;
 
-        if ( !company_user::is_company_user() ) {
+        if ( !local_iomad\company_user::is_company_user() ) {
             $mform =& $this->_form;
 
             // Then show the fields about where this block appears.
@@ -300,7 +300,7 @@ function block_iomad_company_admin_render_navbar_output(\renderer_base $renderer
     $output = '';
 
     // Add the notifications popover.
-    if ($companyinfo = \company_user::add_user_popup_selector()) {
+    if ($companyinfo = \local_iomad\company_user::add_user_popup_selector()) {
         $output .= $renderer->render_from_template('block_iomad_company_admin/company_info_popover', $companyinfo);
     }
 

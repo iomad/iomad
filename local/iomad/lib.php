@@ -53,7 +53,7 @@ function local_iomad_pre_course_delete($course) {
         $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
         // Does the license have any courses left?
         if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
-            company::update_license_usage($courselicense->licenseid);
+            local_iomad\company::update_license_usage($courselicense->licenseid);
         } else {
             // Delete the license.  It no longer is valid.
             $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));

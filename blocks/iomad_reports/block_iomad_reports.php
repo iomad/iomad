@@ -63,7 +63,7 @@ class block_iomad_reports extends block_base {
             return $this->content;
         }
 
-        if (!iomad::has_capability('block/iomad_reports:view', $this->context)) {
+        if (!local_iomad\iomad::has_capability('block/iomad_reports:view', $this->context)) {
             return $this->content;
         }
 
@@ -72,7 +72,7 @@ class block_iomad_reports extends block_base {
         $this->content->text = '<h3>'.get_string('pluginname', 'block_iomad_reports')."</h3>\n";
 
         // If no selected company then no report options to be shown.
-        if (!iomad::get_my_companyid(context_system::instance(), false)) {
+        if (!local_iomad\iomad::get_my_companyid(context_system::instance(), false)) {
             $this->content->text .= '<div class="alert alert-warning">' .
                                     get_string('nocompanyselected', 'block_iomad_reports') .
                                     '</div>';
@@ -85,7 +85,7 @@ class block_iomad_reports extends block_base {
         // Loop over reports.
         $this->content->text .= '<div class="iomadlink_container clearfix">';
         foreach ($reports as $report) {
-            if (iomad::has_capability("local/$report:view", $this->context)) {
+            if (local_iomad\iomad::has_capability("local/$report:view", $this->context)) {
                 $imgsrc = $OUTPUT->image_url('logo', "local_$report");
                 $url = new moodle_url("/local/$report/index.php");
                 $name = get_string( 'pluginname', "local_$report" );

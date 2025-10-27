@@ -42,7 +42,7 @@ class tag_name_editable extends \core\output\inplace_editable {
      */
     public function __construct($companyid, $shoptag) {
         // Check the user has the correct permissions
-        $capability = iomad::has_capability('block/iomad_commerce:manage_tags', \core\context\company::instance($companyid));
+        $capability = local_iomad\iomad::has_capability('block/iomad_commerce:manage_tags', \core\context\company::instance($companyid));
         // Define variables used in other functions
         $this->edithint = get_string('xshoptag', 'block_iomad_commerce', $shoptag->tag);
         $this->editlabel = get_string('xshoptag', 'block_iomad_commerce', $shoptag->tag);
@@ -83,14 +83,14 @@ class tag_name_editable extends \core\output\inplace_editable {
         $newvalue = clean_param($newvalue, PARAM_NOTAGS);
 
         // Get the current company id for the user
-        $companyid = iomad::get_my_companyid($context, true);
+        $companyid = local_iomad\iomad::get_my_companyid($context, true);
 
         // Define the context
         $context = \core\context\company::instance($companyid);
         // Check if the user has permissions to access this
         core_external::validate_context($context);
         // Check the user has the correct capability
-        iomad::require_capability('block/iomad_commerce:manage_tags', $context);
+        local_iomad\iomad::require_capability('block/iomad_commerce:manage_tags', $context);
 
         // Check the record to be updated exists in the shoptag table and is within the users current company
         if (!$DB->record_exists('shoptag', ['id' => $itemid, 'companyid' => $companyid])) {

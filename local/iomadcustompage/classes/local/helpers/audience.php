@@ -186,7 +186,7 @@ class audience {
         if ($context === null) {
             $context = context_system::instance();
             // IOMAD!
-            $companyid = iomad::get_my_companyid($context);
+            $companyid = local_iomad\iomad::get_my_companyid($context);
             if ($companyid > 0) {
                 $context = \core\context\company::instance($companyid);
             }

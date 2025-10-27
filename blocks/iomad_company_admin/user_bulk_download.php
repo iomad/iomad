@@ -36,11 +36,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:user_upload', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:user_upload', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -60,10 +60,10 @@ $PAGE->set_heading($linktext);
 $return = $CFG->wwwroot.'/'.$CFG->admin.'/user/user_bulk.php';
 
 // Deal with the departments.
-$parentlevel = company::get_company_parentnode($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
-if (iomad::has_capability('block/iomad_company_admin:edit_all_departments',$companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments',$companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
@@ -121,7 +121,7 @@ if ($format) {
     $departmentusers = array();
     $userlevels = $company->get_userlevel($USER);
     foreach ($userlevels as $userlevelid => $userlevel) {
-        $departmentusers = company::get_recursive_department_users($userlevelid);
+        $departmentusers = local_iomad\company::get_recursive_department_users($userlevelid);
     }
     if (count($departmentusers) > 0) {
         $departmentids = "";

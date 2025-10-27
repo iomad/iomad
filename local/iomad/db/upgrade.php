@@ -787,7 +787,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                     foreach ($companymanagers as $companymanager) {
                         if ($user = $DB->get_record('user', array('id' => $companymanager->userid,
                                                                   'deleted' => 0))) {
-                            company_user::enrol($user, array($companycourse->courseid),
+                            local_iomad\local_iomad\company_user::enrol($user, array($companycourse->courseid),
                                                              $companycourse->companyid,
                                                              $companycoursenoneditorid);
                         }
@@ -803,10 +803,10 @@ function xmldb_local_iomad_upgrade($oldversion) {
                             array('id' => $companymanager->userid, 'deleted' => 0))) {
                             if ($companymanager->departmentmanager) {
                                 // Lowly department manager, no more than that.
-                                company_user::enrol($user, array($companycourse->courseid),
+                                local_iomad\local_iomad\company_user::enrol($user, array($companycourse->courseid),
                                 $companycourse->companyid, $companycoursenoneditorid);
                             } else {
-                                company_user::enrol($user, array($companycourse->courseid),
+                                local_iomad\local_iomad\company_user::enrol($user, array($companycourse->courseid),
                                 $companycourse->companyid, $companycourseeditorid);
                             }
                         }
@@ -1839,7 +1839,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
                 // Does the license have any courses left?
                 if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
-                    company::update_license_usage($courselicense->licenseid);
+                    local_iomad\company::update_license_usage($courselicense->licenseid);
                 } else {
                     // Delete the license.  It no longer is valid.
                     $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
@@ -1929,7 +1929,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
             // Update usage of affected licenses.
             foreach ($licenses as $license) {
-                company::update_license_usage($license);
+                local_iomad\company::update_license_usage($license);
             }
         }
 
@@ -2135,7 +2135,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 }
                 // Deal with the erroneous users.
                 foreach ($affectedusers as $affecteduser) {
-                    company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
+                    local_iomad\company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
                 }
             } 
         }

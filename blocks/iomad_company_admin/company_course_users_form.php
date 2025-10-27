@@ -66,13 +66,13 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($companyid);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
-iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:company_course_users', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -101,7 +101,7 @@ $coursesform->set_data(array('selectedcourses' => $selectedcourses, 'courses' =>
 $usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 

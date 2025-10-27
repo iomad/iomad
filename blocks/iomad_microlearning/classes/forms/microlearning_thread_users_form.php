@@ -25,12 +25,12 @@ namespace block_iomad_microlearning\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \company_moodleform;
-use \company;
+use company_moodleform;
+use local_iomad\company;
 use \microlearning;
-use \iomad;
+use local_iomad\iomad;
 
-class microlearning_thread_users_form extends \company_moodleform {
+class microlearning_thread_users_form extends company_moodleform {
     protected $companycontext = null;
     protected $selectedcompany = 0;
     protected $selectedthread = 0;
@@ -51,19 +51,19 @@ class microlearning_thread_users_form extends \company_moodleform {
         $this->selectedcompany = $companyid;
         $this->selectedthread = $threadid;
         $this->companycontext = $context;
-        $company = new \company($this->selectedcompany);
+        $company = new company($this->selectedcompany);
         $this->company = $company;
-        $this->parentlevel = \company::get_company_parentnode($company->id);
+        $this->parentlevel = company::get_company_parentnode($company->id);
         $this->companydepartment = $this->parentlevel->id;
 
-        if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $this->companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $this->companycontext)) {
             $userhierarchylevel = $this->parentlevel->id;
         } else {
             $userlevel = $company->get_userlevel($USER);
             $userhierarchylevel = key($userlevel);
         }
 
-        $this->subhierarchieslist = \company::get_all_subdepartments($userhierarchylevel);
+        $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
         if ($departmentid == 0 ) {
             $this->departmentid = $userhierarchylevel;
         } else {
@@ -143,7 +143,7 @@ class microlearning_thread_users_form extends \company_moodleform {
         }
 
         $thread = $DB->get_record('microlearning_thread', array('id' => $this->thread->id));
-        $company = new \company($this->selectedcompany);
+        $company = new company($this->selectedcompany);
         $mform->addElement('header', 'header',
                             get_string('company_users_for', 'block_iomad_microlearning',
                             format_string($thread->name, true, 1) ));
@@ -213,7 +213,7 @@ class microlearning_thread_users_form extends \company_moodleform {
                     $allow = true;
 
                     // Check the userid is valid.
-                    if (!\company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
+                    if (!company::check_valid_user($this->selectedcompany, $adduser->id, $this->departmentid)) {
                         throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
                     }
 
@@ -253,7 +253,7 @@ class microlearning_thread_users_form extends \company_moodleform {
 
                 foreach ($userstounassign as $removeuser) {
                     // Check the userid is valid.
-                    if (!\company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
+                    if (!company::check_valid_user($this->selectedcompany, $removeuser->id, $this->departmentid)) {
                         throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
                     }
 

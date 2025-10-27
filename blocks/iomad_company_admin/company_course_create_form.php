@@ -38,11 +38,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:createcourse', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:createcourse', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -148,7 +148,7 @@ if ($mform->is_cancelled()) {
     }
 
     // Associate the company with the course.
-    $company = new company($companyid);
+    $company = new local_iomad\company($companyid);
     // Check if we are a company manager.
     if ($data->selfenrol != 2 && $DB->get_record('company_users', array('companyid' => $companyid,
                                                    'userid' => $USER->id,

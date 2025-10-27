@@ -74,7 +74,7 @@ if (!empty($SESSION->signupuserinothercompany) || $userclashed) {
         die;
     } else {
         // User decided to add this account to the current company.
-        $company = new company($wantedcompanyid);
+        $company = new local_iomad\company($wantedcompanyid);
         $company->assign_user_to_company($SESSION->clasheduserid);
         unset($SESSION->clasheduserid);
         redirect(new moodle_url('/login/index.php'),

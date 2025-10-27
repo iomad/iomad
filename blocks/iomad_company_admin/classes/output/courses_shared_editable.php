@@ -61,7 +61,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
     public function __construct($company, $companycontext, $course, $currentvalue) {
 
         // Check capabilities to get editable value.
-        $editable = iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
+        $editable = local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
 
         // Invent an itemid.
         $itemid = $company->id . ':' . $course->courseid;
@@ -112,7 +112,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
         list($companyid, $courseid) = explode(':', $itemid, 2);
 
         $companyid = clean_param($companyid, PARAM_INT);
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $courseid = clean_param($courseid, PARAM_INT);
         $shared = json_decode($newvalue);
         $shared = clean_param($shared, PARAM_INT);
@@ -122,7 +122,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
         core_external::validate_context($companycontext);
 
         // Check permissions.
-        iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
         if (!$courserec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
@@ -151,7 +151,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
                         $sharingrecord->companyid = $companycourse->companyid;
                         $DB->insert_record('company_shared_courses', $sharingrecord);
                     }
-                    company::company_users_to_company_course_group($companycourse->companyid, $courseid);
+                    local_iomad\company::company_users_to_company_course_group($companycourse->companyid, $courseid);
                 }
             }
         } else if ($shared == 0 and $previousshared != 0) { // Turning sharing off.
@@ -173,7 +173,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
                         continue;
                     }
                     $count ++;
-                    company::unenrol_company_from_course($companygroup->companyid, $courseid);
+                    local_iomad\company::unenrol_company_from_course($companygroup->companyid, $courseid);
                 }
             }
         } else {

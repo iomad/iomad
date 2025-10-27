@@ -49,7 +49,7 @@ class template_edit_form extends moodleform {
         $this->templaterecord = $templaterecord;
         $this->companyid = $companyid;
         $this->templatesetid = $templatesetid;
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $this->companymanagers = $company->get_managers_select();
         $this->multiplecompanymanagers = $this->companymanagers;
         unset($this->multiplecompanymanagers[0]);
@@ -63,7 +63,7 @@ class template_edit_form extends moodleform {
         global $CFG, $PAGE, $DB;
 
         $context = context_system::instance();
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         $mform =& $this->_form;
 

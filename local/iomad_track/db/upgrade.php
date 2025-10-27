@@ -78,7 +78,7 @@ mtrace("companies/departments start " . time());
         // Get the user company and departments.
         $users = $DB->get_records_sql("SELECT DISTINCT userid FROM {local_iomad_track}");
         foreach ($users as $user) {
-            if ($usercompany = company::by_userid($user->userid)) {
+            if ($usercompany = local_iomad\company::by_userid($user->userid)) {
                 if ($usercompanyrec = $DB->get_record('company', array('id' => $usercompany->id))) {
                     $DB->set_field('local_iomad_track', 'companyid', $usercompanyrec->id, array('userid' => $user->userid));
                 }

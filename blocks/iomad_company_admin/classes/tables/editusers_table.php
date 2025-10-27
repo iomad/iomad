@@ -29,9 +29,9 @@ use \table_sql;
 use \moodle_url;
 use \action_menu_link_secondary;
 use \action_menu;
-use \iomad;
+use local_iomad\iomad;
 use \html_writer;
-use \company;
+use local_iomad\company;
 use \context_system;
 use \context_user;
 

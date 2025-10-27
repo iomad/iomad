@@ -38,12 +38,12 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 $postfix = "_$companyid";
 
-iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);
 
 $linktext = get_string('companyadvanced', 'block_iomad_company_admin');
 
@@ -62,11 +62,11 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->set_heading($linktext);
 
 // Check our capabilities.
-$candoiomadoidc = iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
-$candoiomadsaml2 = iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
-$candoiomadoidcsync = iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
-$candopolicies = iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
-$candomfa = iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
+$candoiomadoidc = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
+$candoiomadsaml2 = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
+$candoiomadoidcsync = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
+$candopolicies = local_iomad\iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
+$candomfa = local_iomad\iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
 $candomfa = false;
 
 // Check if all of the modules are installed.

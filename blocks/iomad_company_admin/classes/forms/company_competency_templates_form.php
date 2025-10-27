@@ -24,13 +24,13 @@
 namespace block_iomad_company_admin\forms;
 
 use \moodleform;
-use \company;
-use \company_user;
-use \iomad;
 use \potential_company_templates_selector;
 use \current_company_templates_selector;
 use \context_system;
 use \stdclass;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_competency_templates_form extends moodleform {
     protected $context = null;

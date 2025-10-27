@@ -129,11 +129,11 @@ class course_not_started_task extends \core\task\scheduled_task {
 
                             // Passed all checks, send the email.
                             mtrace("Sending not started warning email to $userrec->email");
-                            EmailTemplate::send('course_not_started_warning', array('user' => $userrec, 'course' => $courserec, 'company' => new company($companyrec->id)));
+                            EmailTemplate::send('course_not_started_warning', array('user' => $userrec, 'course' => $courserec, 'company' => new local_iomad\company($companyrec->id)));
 
                             // Send the supervisor email too.
                             mtrace("Sending not started warning email to $userrec->email supervisor");
-                            company::send_supervisor_not_started_warning_email($userrec, $courserec);
+                            local_iomad\company::send_supervisor_not_started_warning_email($userrec, $courserec);
 
                             // Do we have a value for the template repeat?
                             if (!empty($templateinfo->repeatvalue)) {

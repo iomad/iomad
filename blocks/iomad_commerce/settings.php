@@ -39,7 +39,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 
 if ($ADMIN->fulltree) {
 

@@ -30,7 +30,7 @@ use templatable;
 use core_completion\progress;
 use core_course_renderer;
 use moodle_url;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 require_once($CFG->dirroot . '/blocks/mycourses/locallib.php');

@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . "/local/iomad/lib/company.php");
+
 
 /**
  * Default block class.
@@ -74,7 +74,7 @@ class block_iomad_company_selector extends block_base {
         }
 
         // Only display if you have the correct capability.
-        if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
             return;
         }
 
@@ -99,7 +99,7 @@ class block_iomad_company_selector extends block_base {
         if (!empty($SESSION->currenteditingcompany)) {
             $selectedcompany = $SESSION->currenteditingcompany;
         } else if (!empty($USER->profile->company)) {
-            $usercompany = company::by_userid($USER->id);
+            $usercompany = local_iomad\company::by_userid($USER->id);
             $selectedcompany = $usercompany->id;
         } else {
             $selectedcompany = "";
@@ -107,13 +107,13 @@ class block_iomad_company_selector extends block_base {
 
         // Get the company name if set.
         if (!empty($selectedcompany)) {
-            $companyname = company::get_companyname_byid($selectedcompany);
+            $companyname = local_iomad\company::get_companyname_byid($selectedcompany);
         } else {
             $companyname = "";
         }
 
         // Get a list of companies.
-        $companylist = company::get_companies_select();
+        $companylist = local_iomad\company::get_companies_select();
         $select = new single_select(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'),
                                                    'company',
                                                    $companylist,

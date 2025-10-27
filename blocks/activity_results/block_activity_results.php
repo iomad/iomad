@@ -202,7 +202,7 @@ class block_activity_results extends block_base {
         }
 
         // IOMAD - Get the user's company details.
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         // Get the grades for this activity.
         $sql = 'SELECT * FROM {grade_grades}
                  WHERE itemid = ? AND finalgrade is not NULL

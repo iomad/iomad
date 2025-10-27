@@ -64,14 +64,14 @@ class block_iomad_link extends block_base {
 
         // Only display if you have the correct capability.
         $systemcontext = \context_system::instance();
-        $companyid = iomad::get_my_companyid($systemcontext, false);
+        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid) && $companyid > 0) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
 
-        if (!iomad::has_capability('block/iomad_link:view', $companycontext)) {
+        if (!local_iomad\iomad::has_capability('block/iomad_link:view', $companycontext)) {
             return;
         }
 

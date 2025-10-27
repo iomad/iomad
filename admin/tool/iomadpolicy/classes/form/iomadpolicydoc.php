@@ -73,7 +73,7 @@ class iomadpolicydoc extends moodleform {
         $mform->addElement('select', 'audience', get_string('iomadpolicydocaudience', 'tool_iomadpolicy'), $options);
 
         // Get the list of companies.
-        $companylist = company::get_companies_select(false);
+        $companylist = local_iomad\company::get_companies_select(false);
         $companyselectlist = ['0' => get_string('default')] + $companylist;
         $mform->addElement('select', 'companyid', get_string('company', 'block_iomad_company_admin'), $companyselectlist);
 

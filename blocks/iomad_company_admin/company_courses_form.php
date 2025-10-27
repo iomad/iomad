@@ -34,13 +34,13 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($companyid);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
-iomad::require_capability('block/iomad_company_admin:company_course', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:company_course', $companycontext);
 
 $urlparams = array('companyid' => $companyid);
 if ($returnurl) {
@@ -62,14 +62,14 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading(get_string('company_courses_for', 'block_iomad_company_admin', $company->get_name()));
 
-if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
     $userhierarchylevel = key($userlevel);
 }
 
-$subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
+$subhierarchieslist = local_iomad\company::get_all_subdepartments($userhierarchylevel);
 if (empty($departmentid)) {
     $departmentid = $userhierarchylevel;
 }
@@ -91,7 +91,7 @@ if ($mform->is_cancelled()) {
     echo $OUTPUT->header();
 
     // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
 

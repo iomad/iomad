@@ -31,7 +31,7 @@ require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 
-iomad::require_capability('tool/redocerts:redocertificates', context_system::instance());
+local_iomad\iomad::require_capability('tool/redocerts:redocertificates', context_system::instance());
 
 require_login();
 

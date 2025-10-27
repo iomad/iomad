@@ -25,7 +25,7 @@ require_once( 'local_lib.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
 require_once( 'config.php');
 require_once( 'lib.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+
 
 $delete       = optional_param('delete', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
@@ -69,15 +69,15 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 // Check we can actually do anything on this page.
 if (empty($templatesetid)) {
-    iomad::require_capability('local/email:list', $companycontext);
+    local_iomad\iomad::require_capability('local/email:list', $companycontext);
 } else {
-    iomad::require_capability('local/email:templateset_list', $companycontext);
+    local_iomad\iomad::require_capability('local/email:templateset_list', $companycontext);
 }
 
 $email = local_email::get_templates();

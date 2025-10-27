@@ -68,7 +68,7 @@ abstract class company_course_selector_base extends course_selector_base {
                                      FROM {iomad_courses}
                                      WHERE courseid=$id
                                      AND shared = 2")) {  // Deal with closed shared courses.
-                if ($companygroup = company::get_company_group($this->companyid, $id)) {
+                if ($companygroup = local_iomad\company::get_company_group($this->companyid, $id)) {
                     if ($DB->get_records('groups_members', array('groupid' => $companygroup->id))) {
                         $courselist[ $id ]->hasenrollments = true;
                         $courselist[ $id ]->fullname = $course->fullname . "(" . $strsharedhasenrollments .")";
@@ -157,7 +157,7 @@ class current_company_course_selector extends company_course_selector_base {
         $params['departmentid'] = $this->departmentid;
         if (!empty($this->departmentid)) {
             $departmentlist = array($this->departmentid => $this->departmentid) +
-                              company::get_department_parentnodes($this->departmentid);
+                              local_iomad\company::get_department_parentnodes($this->departmentid);
         } else {
             $departmentlist = array($this->departmentid => $this->departmentid);
         }
@@ -296,7 +296,7 @@ class all_department_course_selector extends company_course_selector_base {
         $params['companyid'] = $this->companyid;
 
         // Deal with departments.
-        $departmentlist = company::get_all_subdepartments($this->departmentid);
+        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentslist)) {
             $departmentsql = "AND cc.departmentid in (".implode(',', array_keys($departmentlist)).")";
@@ -458,13 +458,13 @@ class potential_company_course_selector extends company_course_selector_base {
         // Deal with shared courses.  Cannot be added to a company in this manner.
         $sharedsql = "";
         if ($this->shared) {  // Show the shared courses.
-            if (iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
+            if (local_iomad\iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
                 $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
                                                  LEFT JOIN {iomad_courses} mic
                                                  ON (mcc.courseid = mic.courseid)
                                                  WHERE mic.shared=0 ) ";
             } else {
-                $company = new company($this->companyid);
+                $company = new local_iomad\company($this->companyid);
                 $params['parentid'] = $company->get_parentid();
                 $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
                                                  LEFT JOIN {iomad_courses} mic
@@ -474,13 +474,13 @@ class potential_company_course_selector extends company_course_selector_base {
                                              WHERE companyid = :parentid) ";
             }
         } else if ($this->partialshared) {
-            if (iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
+            if (local_iomad\iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
                 $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
                                                  LEFT JOIN {iomad_courses} mic
                                                  ON (mcc.courseid = mic.courseid)
                                                  WHERE mic.shared!=2 AND mcc.companyid != :companyid) ";
             } else {
-                $company = new company($this->companyid);
+                $company = new local_iomad\company($this->companyid);
                 $params['parentid'] = $company->get_parentid();
                 $sharedsql .= " AND c.id NOT IN (SELECT mcc.courseid FROM {company_course} mcc
                                                  LEFT JOIN {iomad_courses} mic
@@ -490,10 +490,10 @@ class potential_company_course_selector extends company_course_selector_base {
                                              WHERE companyid = :parentid) ";
             }
         } else {
-            if (iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
+            if (local_iomad\iomad::has_capability('block/iomad_company_admin:viewallsharedcourses', $companycontext)) {
                 $sharedsql .= " AND NOT EXISTS ( SELECT NULL FROM {company_course} WHERE courseid = c.id ) ";
             } else {
-                $company = new company($this->companyid);
+                $company = new local_iomad\company($this->companyid);
                 $params['parentid'] = $company->get_parentid();
                 $sharedsql .= " AND NOT EXISTS ( SELECT NULL FROM {company_course} WHERE courseid = c.id )
                                 AND c.id IN (SELECT courseid FROM {company_course}
@@ -594,7 +594,7 @@ class potential_subdepartment_course_selector extends company_course_selector_ba
         // Get appropriate department ids.
         $departmentids = array_keys(company::get_all_subdepartments($this->departmentid));
         // Check the top department.
-        $parentnode = company::get_company_parentnode($this->companyid);
+        $parentnode = local_iomad\company::get_company_parentnode($this->companyid);
         if (!empty($departmentids)) {
             if ($parentnode->id == $this->departmentid) {
                 $departmentselect = "AND cc.departmentid in (".implode(',', $departmentids).") ";
@@ -840,13 +840,13 @@ class potential_user_course_selector extends company_course_selector_base {
 
     public function find_courses($search) {
         global $CFG, $DB, $SITE;
-        require_once($CFG->dirroot.'/local/iomad/lib/company.php');
+        
 
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
         $params['siteid'] = $SITE->id;
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
         $userdepartments = $company->get_userlevel($this->user);
 
         if (!$companycourses = $DB->get_records('company_course', array('companyid' => $this->companyid), null, 'courseid')) {
@@ -856,7 +856,7 @@ class potential_user_course_selector extends company_course_selector_base {
         }
         $deptids = array();
         foreach ($userdepartments as $userdepartmentid => $userdepartment) {
-            $deptids = $deptids + company::get_recursive_department_courses($userdepartmentid);
+            $deptids = $deptids + local_iomad\company::get_recursive_department_courses($userdepartmentid);
         }
         $departmentcondition = "";
         if (!empty($deptids)) {
@@ -1006,7 +1006,7 @@ class current_user_license_course_selector extends company_course_selector_base 
 
     public function find_courses($search) {
         global $CFG, $DB, $SITE;
-        require_once($CFG->dirroot.'/local/iomad/lib/company.php');
+        
 
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
@@ -1137,8 +1137,8 @@ class current_user_license_course_selector extends company_course_selector_base 
         }
 
         // Add some additional sensible conditions.
-        if (!iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
-            !iomad::has_capability('moodle/course:viewhiddencourses', \core\context\company::instance(iomad::get_my_companyid(context_system::instance())))) {
+        if (!local_iomad\iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
+            !local_iomad\iomad::has_capability('moodle/course:viewhiddencourses', \core\context\company::instance(local_iomad\iomad::get_my_companyid(context_system::instance())))) {
             $tests[] = $u . 'visible = 1';
         }
 
@@ -1198,7 +1198,7 @@ class potential_user_license_course_selector extends company_course_selector_bas
 
     public function find_courses($search) {
         global $CFG, $DB, $SITE;
-        require_once($CFG->dirroot.'/local/iomad/lib/company.php');
+        
 
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');

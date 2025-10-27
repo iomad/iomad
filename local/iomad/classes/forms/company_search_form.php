@@ -15,11 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_emails
- * @copyright 2021 Derick Turner
+ * @package   local_iomad
+ * @copyright 2024 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_iomad\forms;
+
 defined('MOODLE_INTERNAL') || die;
 
+use moodleform;
+
+/**
+ * course search form used on the Iomad pages.
+ *
+ */
+class company_search_form extends moodleform {
+    protected $params = [];
+
+    public function definition() {
+        global $CFG, $DB, $USER, $SESSION;
+
+        $mform =& $this->_form;
+
+        $searcharray = [];
+        $searcharray[] = $mform->createElement('text', 'search');
+        $searcharray[] = $mform->createElement('submit', 'searchbutton', get_string('search'));
+        $mform->addGroup($searcharray, 'searcharray', '', ' ', false);
+        $mform->setType('search', PARAM_CLEAN);
+    }
+}

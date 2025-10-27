@@ -26,10 +26,10 @@
 namespace local_report_user_logins\tables;
 
 use \table_sql;
-use \iomad;
+use local_iomad\iomad;
 use \context_system;
 use \moodle_url;
-use \company;
+use local_iomad\company;
 use \html_writer;   
 
 defined('MOODLE_INTERNAL') || die();

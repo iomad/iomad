@@ -24,9 +24,11 @@
 namespace block_iomad_company_admin\forms;
 
 use \company_moodleform;
-use \company;
 use \context_coursecat;
 use \context_system;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class course_group_display_form extends company_moodleform {
     protected $courseid = 0;

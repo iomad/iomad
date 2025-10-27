@@ -189,7 +189,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
         }
 
         if (!empty($SESSION->currenteditingcompany)) {
-            $errors += \company_user::signup_validate_data($data, $files);
+            $errors += \local_iomad\company_user::signup_validate_data($data, $files);
             if (!empty($SESSION->signupuserinothercompany)) {
                 redirect(new moodle_url("/login/signup.php"));
                 die;

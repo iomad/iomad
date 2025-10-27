@@ -38,9 +38,9 @@ use require_login_exception;
 use moodle_exception;
 use moodle_url;
 use required_capability_exception;
-use iomad;
+use local_iomad\iomad;
 
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
 
 /**
  * Class for doing things with competency frameworks.
@@ -589,8 +589,8 @@ class api {
         /* Iomad stuff */
         // Set the companyid
         global $CFG;
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-        $companyid = \iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
        $framework->data['companyid'] = $companyid;
 
@@ -666,8 +666,8 @@ class api {
         /* Iomad stuff */
         // Set the companyid
         global $CFG;
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-        $companyid = \iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         $framework->data['companyid'] = $companyid;
 
@@ -875,9 +875,9 @@ class api {
         }
 
         // IOMAD.  Set up the user's companyid if they aren't an adamin.
-        if (!\iomad::has_capability('block/iomad_company_admin:company_view_all', $context)) {
-            $companyid = \iomad::get_my_companyid(context_system::instance());
-            $companyframeworks = \iomad::get_company_frameworkids($companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $context)) {
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $companyframeworks = iomad::get_company_frameworkids($companyid);
             if (!empty($companyframeworks)) {
                 $select .= " AND id IN (" . implode(',', array_keys($companyframeworks)) . ")";
             } else {
@@ -978,7 +978,7 @@ class api {
         }
 
         // IOMAD - add the system context back into this.
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(\context_system::instance(), false);
         if ($companyid > 0) {
             $companycontext = \core\context\company::instance($companyid);
             if (has_any_capability($hasanycapability, $companycontext)) {
@@ -1824,8 +1824,8 @@ class api {
         /* Iomad stuff */
         // Set the companyid
         global $CFG;
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-        $companyid = \iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         $template->data['companyid'] = $companyid;
 
@@ -1870,8 +1870,8 @@ class api {
         /* Iomad stuff */
         // Set the companyid
         global $CFG;
-        require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
-        $companyid = \iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         $duplicatedtemplate->data['companyid'] = $companyid;
 
@@ -2089,9 +2089,9 @@ class api {
         }
 
         // IOMAD.  Set up the user's companyid.
-        if (!\iomad::has_capability('block/iomad_company_admin:company_view_all', $context)) {
-            $companyid = \iomad::get_my_companyid(context_system::instance());
-            $companytemplates = \iomad::get_company_templateids($companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $context)) {
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $companytemplates = iomad::get_company_templateids($companyid);
             if (!empty($companytemplates)) {
                 $select .= " AND id IN (" . implode(',', array_keys($companytemplates)) . ")";
             } else {
@@ -2150,7 +2150,7 @@ class api {
              throw new required_capability_exception($context, 'moodle/competency:templateview', 'nopermissions', '');
         }
 
-        if (\iomad::has_capability('moodle/competency:templatemanage', $context)) {
+        if (iomad::has_capability('moodle/competency:templatemanage', $context)) {
             $onlyvisible = 0;
         }
 
@@ -2175,7 +2175,7 @@ class api {
              throw new required_capability_exception($context, 'moodle/competency:templateview', 'nopermissions', '');
         }
 
-        if (\iomad::has_capability('moodle/competency:templatemanage', $context)) {
+        if (iomad::has_capability('moodle/competency:templatemanage', $context)) {
             $onlyvisible = 0;
         }
 
@@ -2437,7 +2437,7 @@ class api {
 
         // Check thet the user can see this learning path.
         $context = \context_system::instance();
-        $companyid = \iomad::get_my_companyid($context, false);
+        $companyid = iomad::get_my_companyid($context, false);
         if (!iomad::has_capability('local/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
             throw new required_capability_exception($context, 'local/iomad_learningpath:manage', 'nopermissions', '');
         }
@@ -2843,7 +2843,7 @@ class api {
         // Check thet the user can see this learning path.
         $learningpath = $DB->get_record('iomad_learningpath', array('id' => $learningpathid), '*', MUST_EXIST);
         $context = \context_system::instance();
-        $companyid = \iomad::get_my_companyid($context, false);
+        $companyid = iomad::get_my_companyid($context, false);
         if (!iomad::has_capability('local/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
             throw new required_capability_exception($context, 'local/iomad_learningpath:manage', 'nopermissions', '');
         }

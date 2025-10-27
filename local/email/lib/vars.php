@@ -22,7 +22,6 @@
  */
 
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
-require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
 
 class EmailVars {
     // Objects the vars refer to.
@@ -60,7 +59,7 @@ class EmailVars {
 
         if (!isset($this->company)) {
             if (isset($user->id)) {
-                $this->company = company::by_userid($user->id);
+                $this->company = local_iomad\company::by_userid($user->id);
             }
         }
 

@@ -23,8 +23,9 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Basic navigation settings
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
+if (is_null($ADMIN->locate('iomad'))) {
+    $ADMIN->add( 'root', new admin_category( 'iomad', get_string('iomad', 'local_iomad')));
+}
 
 $url = new moodle_url( '/local/iomad_track/import.php' );
 $ADMIN->add( 'iomad', new admin_externalpage('importcompletionrecords',

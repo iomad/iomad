@@ -26,7 +26,7 @@
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib.php');
@@ -72,9 +72,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 
 
@@ -98,7 +98,7 @@ $PAGE->set_heading($linktext);
 
 // Only display if you have the correct capability, or you are not in more than one company.
 // Just display name of current company if no choice.
-if (!iomad::has_capability('block/iomad_company_admin:company_view_all',$systemcontext)) {
+if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all',$systemcontext)) {
     $companies = $DB->get_records_sql_menu("SELECT c.id, c.name
                                             FROM {company} c
                                             JOIN {company_user} cu
@@ -130,7 +130,7 @@ if ($mform->is_cancelled()) {
     $table->head = array(get_string('company', 'block_iomad_company_admin'),
                          get_string('result', 'cache'));
     foreach ($selectedcompanies as $companyid) {
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         if ($company->apply_email_templates($templatesetid)) {
             $result = get_string('success');
         } else {

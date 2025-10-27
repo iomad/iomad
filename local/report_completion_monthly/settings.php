@@ -24,10 +24,3 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Basic navigation settings.
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/report_completion_monthly/index.php' );
-$ADMIN->add('IomadReports', new admin_externalpage('repcompmonthly',
-             get_string('pluginname', 'local_report_completion_monthly'),
-             $url, 'local/report_emails:view'));

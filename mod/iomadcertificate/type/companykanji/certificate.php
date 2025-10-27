@@ -126,7 +126,7 @@ if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'ioma
 }
 
 $companyid = 0;
-if ($companyid = iomad::is_company_user($certuser)) {
+if ($companyid = local_iomad\iomad::is_company_user($certuser)) {
     if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'companycertificateseal', $companyid, 'sortorder DESC, id ASC', false)) {
         if (!count($files) < 1) {
             if (!empty($certificateseal)) {

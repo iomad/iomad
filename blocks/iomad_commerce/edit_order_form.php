@@ -39,11 +39,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {
@@ -80,7 +80,7 @@ if (empty($invoice->paymentid)) {
 }
 
 $showaccount = false;
-if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $showaccount = true;
 }
 $mform = new \block_iomad_commerce\forms\order_edit_form($PAGE->url, $invoiceid, $showaccount);

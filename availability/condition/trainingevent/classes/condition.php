@@ -86,7 +86,7 @@ class condition extends \core_availability\condition {
         $course = $info->get_course();
         $context = \context_course::instance($course->id);
         $allow = true;
-        if (!iomad::has_capability('mod/trainingevent:add', $context, $userid)) {
+        if (!local_iomad\iomad::has_capability('mod/trainingevent:add', $context, $userid)) {
             // Get all trainingevents the user is signed up to.
             $trainingevents = $DB->get_records_sql("SELECT DISTINCT trainingeventid
                                                     FROM {trainingevent_users}

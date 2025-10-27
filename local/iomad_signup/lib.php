@@ -24,7 +24,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
-require_once($CFG->dirroot.'/local/iomad/lib/company.php');
+
 
 /**
  * Event handler for 'user_created'
@@ -49,7 +49,7 @@ function local_iomad_signup_user_created($user) {
                                                ['userid' => $user->id], 0, 1)) {
 
         $userrecord = array_shift($usercompanies);
-        $company = new company($userrecord->companyid);
+        $company = new local_iomad\company($userrecord->companyid);
 
         // Deal with any auto enrolments.
         if ($CFG->local_iomad_signup_autoenrol) {
@@ -62,7 +62,7 @@ function local_iomad_signup_user_created($user) {
 
         // Do we have a company department profile field?
         $autodepartmentid = $company->get_auto_department($user);
-        company::upsert_company_user($user->id,
+        local_iomad\company::upsert_company_user($user->id,
                                      $userrecord->companyid,
                                      $autodepartmentid,
                                      $userrecord->managertype,
@@ -86,16 +86,16 @@ function local_iomad_signup_user_created($user) {
 
     // Check if user is already in a company.
     // E.g. if this has already been handled.
-    if (!$company = company::by_userid($user->id, true)) {
+    if (!$company = local_iomad\company::by_userid($user->id, true)) {
 
         // Get context.
         $context = context_system::instance();
         $found = false;
 
         // Check if we have a company id from the URL or SESSION.
-        $companyid = iomad::get_my_companyid($context, false);
+        $companyid = local_iomad\iomad::get_my_companyid($context, false);
         if (!empty($companyid)) {
-            $company = new company($companyid);
+            $company = new local_iomad\company($companyid);
             $found = true;
         }
 
@@ -107,14 +107,14 @@ function local_iomad_signup_user_created($user) {
                                                    " = '" .
                                                    $DB->sql_compare_text($emaildomain)."'")) {
                 // Get company.
-                $company = new company($domaininfo->companyid);
+                $company = new local_iomad\company($domaininfo->companyid);
                 $found = true;
             }
         }
         if (!$found && !empty($CFG->local_iomad_signup_company)) {
             // Do we have a default company to assign?
             // Get company.
-            $company = new company($CFG->local_iomad_signup_company);
+            $company = new local_iomad\company($CFG->local_iomad_signup_company);
             $found = true;
         }
         if ($found) {

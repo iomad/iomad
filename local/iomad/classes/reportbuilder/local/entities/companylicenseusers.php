@@ -32,9 +32,6 @@ use core_reportbuilder\local\report\{column, filter};
 
 defined('MOODLE_INTERNAL') or die;
 
-global $CFG;
-require_once("{$CFG->dirroot}/local/iomad/lib/iomad.php");
-
 /**
  * Company license users entity
  *

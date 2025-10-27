@@ -48,11 +48,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:edit_groups', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:edit_groups', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {
@@ -82,7 +82,7 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'ini
 
 $groupsform = new \block_iomad_company_admin\forms\company_groups_form($PAGE->url, $companycontext, $companyid, $selectedcourse);
 if (!empty($selectedcourse)) {
-    $defaultgroup = company::get_company_group($companyid, $selectedcourse);
+    $defaultgroup = local_iomad\company::get_company_group($companyid, $selectedcourse);
     $mform = new \block_iomad_company_admin\forms\course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
     $editform = new \block_iomad_company_admin\forms\group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
 }
@@ -113,7 +113,7 @@ if (!empty($selectedcourse)) {
             } else {
                 if ($groupid != $defaultgroup->id) {
                     $course = $DB->get_record('course', array('id' => $selectedcourse));
-                    company::delete_company_course_group($companyid, $course, false, $groupid);
+                    local_iomad\company::delete_company_course_group($companyid, $course, false, $groupid);
                 } else {
                     $shownotice = true;
                     $noticestring = get_string('isdefaultgroupdelete', 'block_iomad_company_admin');
@@ -141,7 +141,7 @@ if (!empty($selectedcourse)) {
                 echo $output->header();
 
                 // Check the department is valid.
-                if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+                if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
                     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
                 }
 
@@ -152,7 +152,7 @@ if (!empty($selectedcourse)) {
             } else {
                 echo $output->header();
                 // Check the department is valid.
-                if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+                if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
                     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
                 }
 
@@ -166,7 +166,7 @@ if (!empty($selectedcourse)) {
     } else if ($createdata = $editform->get_data()) {
 
         // Create or update the department.
-        company::create_company_course_group($companyid,
+        local_iomad\company::create_company_course_group($companyid,
                                              $selectedcourse,
                                              $createdata);
 
@@ -175,7 +175,7 @@ if (!empty($selectedcourse)) {
         echo $output->header();
 
         // Check the department is valid.
-        if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+        if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
             throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
         }
 
@@ -189,7 +189,7 @@ if (!empty($selectedcourse)) {
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 

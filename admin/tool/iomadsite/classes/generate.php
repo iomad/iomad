@@ -27,8 +27,8 @@ namespace tool_iomadsite;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+
+
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
@@ -428,7 +428,7 @@ class generate {
         $data->newpassword = 'Aa*12345678';
         $data->companyid = $companyid;
         $data->selectedcourses = [];
-        \company_user::create($data);
+        \local_iomad\company_user::create($data);
     }
 
     /**

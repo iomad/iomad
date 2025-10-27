@@ -17,7 +17,7 @@
 namespace core\navigation\views;
 
 use navigation_node;
-use iomad;
+use local_iomad\iomad;
 
 /**
  * Class primary.
@@ -100,14 +100,14 @@ class primary extends view {
             $companycontext = $systemcontext;
         }
 
-        if (\iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext) ||
-            \iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext) ||
-            \iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext) ||
-            \iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext) ||
-            \iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $companycontext) ||
-            \iomad::has_capability('block/iomad_commerce:admin_view', $companycontext) ||
-            \iomad::has_capability('block/iomad_microlearning:view', $companycontext) ||
-            \iomad::has_capability('block/iomad_reports:view', $companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext) ||
+            iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext) ||
+            iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext) ||
+            iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext) ||
+            iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $companycontext) ||
+            iomad::has_capability('block/iomad_commerce:admin_view', $companycontext) ||
+            iomad::has_capability('block/iomad_microlearning:view', $companycontext) ||
+            iomad::has_capability('block/iomad_reports:view', $companycontext)) {
             $this->add(get_string('dashboard', 'block_iomad_company_admin'),
                        new \moodle_url('/blocks/iomad_company_admin/index.php'),
                        self::TYPE_SITE_ADMIN,

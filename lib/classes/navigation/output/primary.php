@@ -20,6 +20,7 @@ use renderable;
 use renderer_base;
 use templatable;
 use custom_menu;
+use local_iomad\iomad;
 
 /**
  * Primary navigation renderable
@@ -115,7 +116,7 @@ class primary implements renderable, templatable {
 
         // Deal with company custom menu items.
         $custommenuitems = $CFG->custommenuitems;
-        if ($companyid = \iomad::get_my_companyid(\context_system::instance(), false)) {
+        if ($companyid = iomad::get_my_companyid(\context_system::instance(), false)) {
             if ($companyrec = $DB->get_record('company', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {
                     $custommenuitems = $companyrec->custommenuitems;

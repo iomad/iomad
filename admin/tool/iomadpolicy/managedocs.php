@@ -38,8 +38,8 @@ if ($import && has_capability('tool/iomadpolicy:managedocs', \context_system::in
     }
 }
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
+
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 
 require_login();
 

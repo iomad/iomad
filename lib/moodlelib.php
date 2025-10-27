@@ -4204,7 +4204,7 @@ function complete_user_login($user, array $extrauserinfo = []) {
     // Check that it matches the user's actual company.
     if (!empty($SESSION->currenteditingcompany)) {
         if (!company::check_valid_user($SESSION->currenteditingcompany, $USER->id)) {
-            if ($company = company::by_userid($USER->id, true)) {
+            if ($company = local_iomad\company::by_userid($USER->id, true)) {
                 if ($company->id != $SESSION->currenteditingcompany) {
                     $SESSION->currenteditingcompany = $company->id;
                     $SESSION->company = $company;
@@ -5521,7 +5521,7 @@ function get_mailer($action='get') {
         }
 
         // IOMAD - get company mailer settings if there are any.
-        company::set_company_mailer($mailer);
+        local_iomad\company::set_company_mailer($mailer);
 
         return $mailer;
     }

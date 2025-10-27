@@ -34,11 +34,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_users:addentry', $companycontext);
+local_iomad\iomad::require_capability('local/report_users:addentry', $companycontext);
 
 $linktext = get_string('user_detail_title', 'local_report_users');
 
@@ -55,7 +55,7 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linktext");
 $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
-if (iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
     $PAGE->navbar->add(get_string('pluginname', 'local_report_completion'),
                        new moodle_url($CFG->wwwroot . "/local/report_completion/index.php"));
 }

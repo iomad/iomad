@@ -144,11 +144,11 @@ foreach ($customfields as $customfield) {
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_completion_monthly:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_completion_monthly:view', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -165,7 +165,7 @@ $PAGE->set_title($linktext);
 
 // Set the page heading.
 $PAGE->set_heading($linktext);
-if (iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
     $buttoncaption = get_string('pluginname', 'local_report_completion');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php");
     $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
@@ -190,13 +190,13 @@ if (!empty($departmentid) && !company::check_valid_department($companyid, $depar
 }
 
 // Get the associated department id.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Get the company additional optional user parameter names.
 $fieldnames = [];
-if ($category = company::get_category($companyid)) {
+if ($category = local_iomad\company::get_category($companyid)) {
     // Get field names from company category.
     if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
         foreach ($fields as $field) {
@@ -226,7 +226,7 @@ $baseurl = new moodle_url(basename(__FILE__), $urlparams);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -237,15 +237,15 @@ if ($departmentid == 0 ) {
 }
 
 // Get the company additional optional user parameter names.
-$foundobj = iomad::add_user_filter_params($params, $companyid);
+$foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
 // Set up the user search parameters.
 if ($courseid == 1) {
-    $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+    $searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 } else {
-    $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, false, false);
+    $searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, false, false);
 }
 
 $allcompanycourses = $company->get_menu_courses(true, false, false, false, false);
@@ -340,8 +340,8 @@ echo html_writer::end_tag('div');
 $returnurl = $CFG->wwwroot."/local/report_completion_monthly/index.php";
 
 // Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
+$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND cu.departmentid IN (" . implode(',', array_keys($showdepartments)) . ")";
 

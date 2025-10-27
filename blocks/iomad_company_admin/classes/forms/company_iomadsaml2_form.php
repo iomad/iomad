@@ -25,8 +25,6 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
 use \moodle_url;
 use context_system;
 use auth_iomadsaml2\admin\iomadsaml2_settings;
@@ -42,6 +40,9 @@ use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 require_once($CFG->dirroot.'/auth/iomadsaml2/locallib.php');
 

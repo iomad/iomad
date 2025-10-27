@@ -17,7 +17,7 @@
 namespace tool_mfa\local\factor;
 
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 /**
@@ -59,7 +59,7 @@ abstract class object_factor_base implements object_factor {
         global $DB, $USER, $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        
         $this->companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($this->companyid) &&
             get_config('tool_mfa', 'enabled'. "_" . $this->companyid) !== false) {

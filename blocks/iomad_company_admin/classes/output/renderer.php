@@ -31,8 +31,8 @@ use html_table;
 use moodle_url;
 use single_select;
 use context_system;
-use iomad;
-use company;
+use local_iomad\iomad;
+use local_iomad\company;
 
 class renderer extends plugin_renderer_base {
 

@@ -27,7 +27,7 @@ namespace block_iomad_commerce\tables;
 
 use \table_sql;
 use \moodle_url;
-use \iomad;
+use local_iomad\iomad;
 use \html_writer;
 
 defined('MOODLE_INTERNAL') || die();

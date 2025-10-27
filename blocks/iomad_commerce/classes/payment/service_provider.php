@@ -48,8 +48,8 @@ class service_provider implements \core_payment\local\callback\service_provider 
     public static function get_payable(string $paymentarea, int $instanceid): \core_payment\local\entities\payable {
         global $CFG;
 
-        $companyid = iomad::get_my_companyid(context_system::instance());
-        $company = new company($companyid);
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
+        $company = new local_iomad\company($companyid);
         if ($paymentaccount = $company->get_payment_account()) {
             $basket = \block_iomad_commerce\helper::get_basket_by_id($instanceid);
             return new \core_payment\local\entities\payable($basket->total, $basket->currency, $paymentaccount);

@@ -79,7 +79,7 @@ class send_reminder_emails extends \core\task\scheduled_task {
                     }
 
                     // Set the company up for the emails.
-                    $company = new company($location->companyid);
+                    $company = new local_iomad\company($location->companyid);
 
                     // Get all of the users for this event.
                     $eventusers = $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,

@@ -481,8 +481,8 @@ class renderer extends \plugin_renderer_base {
         global $DB, $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";
@@ -546,8 +546,8 @@ class renderer extends \plugin_renderer_base {
         global $DB, $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";
@@ -635,8 +635,8 @@ class renderer extends \plugin_renderer_base {
         global $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";
@@ -696,8 +696,8 @@ class renderer extends \plugin_renderer_base {
         global $CFG;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
             $postfix = "_$companyid";

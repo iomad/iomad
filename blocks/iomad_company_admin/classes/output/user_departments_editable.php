@@ -74,7 +74,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         }
 
         // Check capabilities to get editable value.
-        $editable = iomad::has_capability('block/iomad_company_admin:editusers', $companycontext);
+        $editable = local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext);
 
         // Invent an itemid.
         $itemid = $company->id . ':' . $user->id;
@@ -147,7 +147,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         list($companyid, $userid) = explode(':', $itemid, 2);
 
         $companyid = clean_param($companyid, PARAM_INT);
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $userid = clean_param($userid, PARAM_INT);
         $departmentids = json_decode($newvalue);
         foreach ($departmentids as $index => $departmentid) {
@@ -159,17 +159,17 @@ class user_departments_editable extends \core\output\inplace_editable {
         core_external::validate_context($companycontext);
 
         // Check permissions.
-        iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
 
         if (!$DB->get_records('company_users', ['userid' => $userid, 'companyid' => $companyid])) {
             throw new coding_exception('User does not belong to the company');
         }
 
         // Check that all the departments belong to the company.
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $alldepartments = $DB->get_records('department', ['company' => $companyid]);
-        $parentlevel = company::get_company_parentnode($companyid);
-        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+        $parentlevel = local_iomad\company::get_company_parentnode($companyid);
+        if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
             $userlevels = array($parentlevel->id => $parentlevel->id);
         } else {
             $userlevels = $company->get_userlevel($USER);
@@ -177,10 +177,10 @@ class user_departments_editable extends \core\output\inplace_editable {
 
         $departmenttree = [];
         foreach ($userlevels as $userlevelid => $userlevel) {
-            $departmenttree[] = company::get_all_subdepartments_raw($userlevelid);
+            $departmenttree[] = local_iomad\company::get_all_subdepartments_raw($userlevelid);
         }
 
-        $assignabledepartments = company::array_flatten(company::get_department_list($departmenttree[0]));
+        $assignabledepartments = local_iomad\company::array_flatten(company::get_department_list($departmenttree[0]));
 
         $userdepartmentsbyid = $DB->get_records_sql("SELECT d.id, d.name FROM {department} d
                                                      JOIN {company_users} cu ON (d.id = cu.departmentid AND d.company = cu.companyid)
@@ -215,7 +215,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         foreach ($departmentstoprocess as $departmentid) {
             if (!isset($userdepartments[$departmentid])) {
                 // Add them.
-                company::upsert_company_user($userid, $company->id, $departmentid, $managertype, $educator, false);
+                local_iomad\company::upsert_company_user($userid, $company->id, $departmentid, $managertype, $educator, false);
                 // Keep this variable in sync.
                 $department = new \stdClass();
                 $department->id = $id;
@@ -235,7 +235,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         //  Has the user been removed from all departments?
         if (empty($userdepartments)) {
             // Assign them to the top level department.
-            company::upsert_company_user($userid, $company->id, $parentlevel->id, $managertype, $educator, false);
+            local_iomad\company::upsert_company_user($userid, $company->id, $parentlevel->id, $managertype, $educator, false);
             $departmentids[$parentlevel->id] = $parentlevel->id;
         }
 

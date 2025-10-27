@@ -120,10 +120,10 @@ class importmoodlecompletioninformation extends adhoc_task {
             if (!$currententries = $DB->get_records('local_iomad_track', array('courseid' => $courseid, 'userid' => $userid, 'timecompleted' => null))) {
                 // For some reason we don't already have a record.
                 // Get all of the user's companies
-                $mycompanies = company::get_companies_select(false, false, false);
+                $mycompanies = local_iomad\company::get_companies_select(false, false, false);
                 foreach ($mycompanies as $mycompanyid => $dump) {
                     // Get the rest of the data.
-                    $usercompany = new company($mycompanyid);
+                    $usercompany = new local_iomad\company($mycompanyid);
                     $companyrec = $DB->get_record('company', array('id' => $usercompany->id));
                     $userrec = $DB->get_record('user', array('id' => $userid));
                     $department = $DB->get_record_sql("SELECT d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid) WHERE cu.userid = :userid AND cu.companyid = :companyid", array('userid' => $userid, 'companyid' => $companyrec->id));

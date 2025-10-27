@@ -81,10 +81,10 @@ class frontend extends \core_availability\frontend {
      */
     protected function get_all_companys($courseid) {
         global $CFG;
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        
 
         if ($courseid != $this->allcompanyscourseid) {
-            $this->allcompanys = company::get_companies_select();
+            $this->allcompanys = local_iomad\company::get_companies_select();
             $this->allcompanyscourseid = $courseid;
         }
         return $this->allcompanys;

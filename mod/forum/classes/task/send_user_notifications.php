@@ -311,7 +311,7 @@ class send_user_notifications extends \core\task\adhoc_task {
                                                WHERE c.hostname IS NOT NULL
                                                AND cu.userid = :userid",
                                               ['userid' => $this->recipient->id])) {
-            $company = new company($companyrec->id);
+            $company = new local_iomad\company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.
             $CFG->wwwroot  = $company->get_wwwroot();

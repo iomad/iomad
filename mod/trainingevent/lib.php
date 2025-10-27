@@ -500,7 +500,7 @@ function trainingevent_user_attending($event) {
     }
 
     // Set the company.
-    $company = new company($event->companyid);
+    $company = new local_iomad\company($event->companyid);
 
     // Set the location time.
     $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
@@ -653,7 +653,7 @@ function trainingevent_user_removed($event) {
     }
 
     // Set the company.
-    $company = new company($event->companyid);
+    $company = new local_iomad\company($event->companyid);
 
     // Send an email as long as it hasn't already started.
     if ($trainingevent->startdatetime > $event->timecreated) {
@@ -751,8 +751,8 @@ function trainingevent_user_removed($event) {
             $course = $DB->get_record('course', ['id' => $trainingevent->course]);
             $context = context_course::instance($trainingevent->course);
             $user = $DB->get_record('user', ['id' => $waitlistuser->userid]);
-            $usercompany = new company($location->companyid);
-            $usercompany = company::by_userid($user->id);
+            $usercompany = new local_iomad\company($location->companyid);
+            $usercompany = local_iomad\company::by_userid($user->id);
 
             // Fire an event for this.
             $eventother = ['waitlisted' => 0];
@@ -818,7 +818,7 @@ function trainingevent_attendance_changed($event) {
     }
 
     // Set the company.
-    $company = new company($event->companyid);
+    $company = new local_iomad\company($event->companyid);
 
     // Add the time to the location object.
     $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
@@ -918,7 +918,7 @@ function trainingevent_attendance_changed($event) {
             $course = $DB->get_record('course', ['id' => $trainingevent->course]);
             $context = context_course::instance($trainingevent->course);
             $user = $DB->get_record('user', ['id' => $waitlistuser->userid]);
-            $usercompany = company::by_userid($user->id);
+            $usercompany = local_iomad\company::by_userid($user->id);
 
             // Fire an event for this.
             $eventother = ['waitlisted' => 0];

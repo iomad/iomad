@@ -42,7 +42,7 @@ function email_cron() {
                                         AND u.deleted = 0
                                         AND u.suspended = 0", array('now' => $now))) {
         foreach ($emails as $email) {
-            $company = new company($email->companyid);
+            $company = new local_iomad\company($email->companyid);
             $managertype = 0;
             if (strpos($email->templatename, 'manager')) {
                 $managertype = 1;
@@ -70,7 +70,7 @@ function email_cron() {
                                        ['now' => $now,
                                         'specialusers' => join (',', ['-999'])])) {
         foreach ($emails as $email) {
-            $company = new company($email->companyid);
+            $company = new local_iomad\company($email->companyid);
             $managertype = 0;
 
             // We need to stash the emails current userid as this will be converted to an object in the process of sending.
@@ -98,7 +98,7 @@ function email_cron() {
                                         ['now' => $now,
                                          'templatename' => 'company_suspended'])) {
         foreach ($emails as $email) {
-            $company = new company($email->companyid);
+            $company = new local_iomad\company($email->companyid);
             $managertype = 0;
             if (strpos($email->templatename, 'manager')) {
                 $manapegertype = 1;

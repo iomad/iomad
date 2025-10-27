@@ -41,7 +41,7 @@ if (!$canreadtemplate) {
 }
 
 // Get my company id.
-$companyid = \iomad::get_my_companyid(context_system::instance(), false);
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 
 // Set up the page.
 $url = new moodle_url('/admin/tool/lp/template_learningpaths.php', array(

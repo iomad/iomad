@@ -21,11 +21,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_iomad;
 
-require_once(dirname(__FILE__) . '/../../../config.php');
-require_once(dirname(__FILE__) . '/iomad.php');
-require_once(dirname(__FILE__) . '/user.php');
+use context_system;
+use moodle_url;
 
 class company {
 
@@ -146,7 +145,7 @@ class company {
     /**
      * Gets the types of managers available to the class
      *
-     * Returns array();
+     * Returns [];
      *
      **/
     public function get_managertypes($full = false) {
@@ -389,7 +388,7 @@ class company {
 
         // Show the hierarchy if required.
         if (!empty($CFG->iomad_show_company_structure)) {
-            $companyselect = array();
+            $companyselect = [];
             foreach ($companies as $id => $companyname) {
                 $currentcompanycontext = \core\context\company::instance($id);
                 $companyselect[$id] = $companyname;
@@ -446,7 +445,7 @@ class company {
     public function get_child_companies_recursive() {
         global $DB;
 
-        $returnarray = array();
+        $returnarray = [];
 
         $childcompanies = $this->get_child_companies();
         foreach ($childcompanies as $child) {
@@ -466,7 +465,7 @@ class company {
     public function get_parent_companies_recursive() {
         global $DB;
 
-        $returnarray = array();
+        $returnarray = [];
 
         // Check if I have a parent id.
         if ($parentid = $this->get_parentid()) {
@@ -489,7 +488,7 @@ class company {
     public function get_child_companies_select() {
         global $DB, $USER;
 
-        $companyselect = array();
+        $companyselect = [];
 
         // Get all of the child companies.
         $companies = $this->get_child_companies_recursive();
@@ -573,7 +572,7 @@ class company {
         }
 
         if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
-            $templates = $DB->get_records_menu('company_role_templates', array(), 'name', 'id,name');
+            $templates = $DB->get_records_menu('company_role_templates', [], 'name', 'id,name');
         } else {
             $templates = $DB->get_records_sql_menu("SELECT crt.id,crt.name FROM {company_role_templates} crt
                                                     JOIN {company_role_templates_ass} crta
@@ -618,7 +617,7 @@ class company {
      * Assign company role templates
      *
      **/
-    public function assign_role_templates($templates = array(), $clear = false) {
+    public function assign_role_templates($templates = [], $clear = false) {
         global $DB;
 
         // Deal with any children.
@@ -644,7 +643,7 @@ class company {
     public static function get_email_templates($companyid = 0) {
         global $DB;
 
-        $templates = $DB->get_records_menu('email_templateset', array(), 'templatesetname', 'id,templatesetname');
+        $templates = $DB->get_records_menu('email_templateset', [], 'templatesetname', 'id,templatesetname');
 
         // Add the default.
         $templates = array(0 => get_string('none')) + $templates;
@@ -744,16 +743,16 @@ class company {
                             if ($DB->record_exists('course', array('id' => $course->id))) {
                                 if (!$own) {
                                     // Not created by a company manager.
-                                    company_user::enrol($user, array($course->id), $this->id,
+                                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
                                     if ($companymanager->managertype == 2) {
                                         // Assign the department manager course access role.
-                                        company_user::enrol($user, array($course->id), $this->id,
+                                        local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
                                                             $companycoursenoneditorrole->id);
                                     } else {
                                         // Assign the company manager course access role.
-                                        company_user::enrol($user, array($course->id), $this->id,
+                                        local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
                                                             $companycourseeditorrole->id);
 
                                         // Check if this is a newly delegated course?
@@ -777,11 +776,11 @@ class company {
                             if ($DB->record_exists('course', array('id' => $course->id))) {
                                 if ($DB->record_exists('iomad_courses', array('courseid' => $course->id, 'shared' => 1))) {
                                     // Not created by a company manager.
-                                    company_user::enrol($user, array($course->id), $this->id,
+                                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
                                     // Assign the company manager course access role.
-                                    company_user::enrol($user, array($course->id), $this->id,
+                                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
                                                         $companycourseeditorrole->id);
 
                                     // Check if this is a newly delegated course?
@@ -834,7 +833,7 @@ class company {
                                                               'deleted' => 0)) ) {
                         if ($DB->record_exists('course', array('id' => $courseid))) {
                             // Not created by a company manager.
-                            company_user::enrol($user, [$courseid], $this->id,
+                            local_iomad\local_iomad\company_user::enrol($user, [$courseid], $this->id,
                                                 $companycoursenoneditorrole->id);
 
                             // Clean up old roles.
@@ -854,7 +853,7 @@ class company {
                     if ($user = $DB->get_record('user', array('id' => $educator->userid,
                                                               'deleted' => 0)) ) {
                         if ($DB->record_exists('course', array('id' => $courseid))) {
-                            company_user::enrol($user, [$courseid], $this->id,
+                            local_iomad\local_iomad\company_user::enrol($user, [$courseid], $this->id,
                                                 $companycoursenoneditorrole->id);
 
                             // Clean up old roles.
@@ -1241,7 +1240,7 @@ class company {
         }
 
         // Create the record.
-        $userrecord = array();
+        $userrecord = [];
         $userrecord['departmentid'] = $departmentid;
         $userrecord['userid'] = $userid;
         $userrecord['managertype'] = $managertype;
@@ -1379,7 +1378,7 @@ class company {
                 if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            company_user::unenrol($userid,
+                            local_iomad\local_iomad\company_user::unenrol($userid,
                                                   [$companycourse->courseid],
                                                   $companycourse->companyid);
 
@@ -1407,12 +1406,12 @@ class company {
                             if ($DB->record_exists('company_created_courses',
                                                     array('companyid' => $companycourse->companyid,
                                                           'courseid' => $companycourse->courseid))) {
-                                company_user::enrol($userid,
+                                local_iomad\local_iomad\company_user::enrol($userid,
                                                     array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycourseeditorrole->id);
                             } else {
-                                company_user::enrol($userid,
+                                local_iomad\local_iomad\company_user::enrol($userid,
                                                     array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycoursenoneditorrole->id);
@@ -1436,15 +1435,15 @@ class company {
                             if ($DB->record_exists('company_created_courses',
                                                     array ('companyid' => $companyid,
                                                            'courseid' => $companycourse->courseid))) {
-                                company_user::unenrol($userid,
+                                local_iomad\local_iomad\company_user::unenrol($userid,
                                                       array($companycourse->courseid),
                                                             $companycourse->companyid);
-                                company_user::enrol($userid, array($companycourse->courseid),
+                                local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycourseeditorrole->id);
 
                             } else {
-                                 company_user::enrol($userid, array($companycourse->courseid),
+                                 local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                      $companycourse->companyid,
                                                      $companycoursenoneditorrole->id);
                             }
@@ -1470,9 +1469,9 @@ class company {
                 if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            company_user::unenrol($userid, array($companycourse->courseid),
+                            local_iomad\local_iomad\company_user::unenrol($userid, array($companycourse->courseid),
                                                   $companycourse->companyid);
-                            company_user::enrol($userid, array($companycourse->courseid),
+                            local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                 $companycourse->companyid,
                                                 $companycoursenoneditorrole->id);
                         }
@@ -1534,15 +1533,15 @@ class company {
                                 if ($DB->record_exists('company_created_courses',
                                                         array ('companyid' => $companyid,
                                                                'courseid' => $companycourse->courseid))) {
-                                    company_user::unenrol($userid,
+                                    local_iomad\local_iomad\company_user::unenrol($userid,
                                                           array($companycourse->courseid),
                                                                 $companycourse->companyid);
-                                    company_user::enrol($userid, array($companycourse->courseid),
+                                    local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                         $companycourse->companyid,
                                                         $companycourseeditorrole->id);
 
                                 } else {
-                                     company_user::enrol($userid, array($companycourse->courseid),
+                                     local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                          $companycourse->companyid,
                                                          $companycoursenoneditorrole->id);
                                 }
@@ -1570,9 +1569,9 @@ class company {
                     if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                         foreach ($companycourses as $companycourse) {
                             if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                company_user::unenrol($userid, array($companycourse->courseid),
+                                local_iomad\local_iomad\company_user::unenrol($userid, array($companycourse->courseid),
                                                       $companycourse->companyid);
-                                company_user::enrol($userid, array($companycourse->courseid),
+                                local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycoursenoneditorrole->id);
                             }
@@ -1594,21 +1593,21 @@ class company {
                                     if ($DB->record_exists('company_created_courses',
                                                             array ('companyid' => $companyid,
                                                                    'courseid' => $companycourse->courseid))) {
-                                        company_user::unenrol($userid,
+                                        local_iomad\local_iomad\company_user::unenrol($userid,
                                                               array($companycourse->courseid),
                                                                     $companycourse->companyid);
-                                        company_user::enrol($userid, array($companycourse->courseid),
+                                        local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                             $companycourse->companyid,
                                                             $companycourseeditorrole->id);
 
                                     } else {
-                                         company_user::enrol($userid, array($companycourse->courseid),
+                                         local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                              $companycourse->companyid,
                                                              $companycoursenoneditorrole->id);
                                     }
                                 } else {
                                     if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                        company_user::unenrol($userid,
+                                        local_iomad\local_iomad\company_user::unenrol($userid,
                                                               array($companycourse->courseid),
                                                                     $companycourse->companyid);
                                     }
@@ -1648,7 +1647,7 @@ class company {
                     empty($multidepartment)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            company_user::unenrol($userid, array($companycourse->courseid),
+                            local_iomad\local_iomad\company_user::unenrol($userid, array($companycourse->courseid),
                                                   $companycourse->companyid, false);
                         }
                     }
@@ -1717,15 +1716,15 @@ class company {
                         if ($DB->record_exists('company_created_courses',
                                                 array ('companyid' => $companyid,
                                                        'courseid' => $companycourse->courseid))) {
-                            company_user::unenrol($userid,
+                            local_iomad\local_iomad\company_user::unenrol($userid,
                                                   array($companycourse->courseid),
                                                         $companycourse->companyid);
-                            company_user::enrol($userid, array($companycourse->courseid),
+                            local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                 $companycourse->companyid,
                                                 $companycourseeditorrole->id);
 
                         } else {
-                             company_user::enrol($userid, array($companycourse->courseid),
+                             local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
                                                  $companycourse->companyid,
                                                  $companycoursenoneditorrole->id);
                         }
@@ -1738,7 +1737,7 @@ class company {
                  !empty($companycourses)) {
                 foreach ($companycourses as $companycourse) {
                     if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                        company_user::unenrol($userid,
+                        local_iomad\local_iomad\company_user::unenrol($userid,
                                               array($companycourse->courseid),
                                                     $companycourse->companyid);
                     }
@@ -1813,7 +1812,7 @@ class company {
                     // Clear down the user from the courses.
                     foreach ($licrecs as $licrec) {
                         // Remove this specific record.
-                        company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
+                        local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
                     }
                 }
             }
@@ -2003,7 +2002,7 @@ class company {
     public static function initialise_departments($companyid) {
         global $DB;
         $company = $DB->get_record('company', array('id' => $companyid));
-        $parentnode = array();
+        $parentnode = [];
         $parentnode['shortname'] = $company->shortname;
         $parentnode['name'] = $company->name;
         $parentnode['company'] = $company->id;
@@ -2040,7 +2039,7 @@ class company {
 
         if (!$toplevel) {
             // Creating a new department.
-            $newdepartment = new stdclass();
+            $newdepartment = (object) [];
             $newdepartment->name = $importtree->name;
             $newdepartment->shortname = $importtree->shortname;
             $newdepartment->company = $companyid;
@@ -2097,7 +2096,7 @@ class company {
             return $userdepartments;
         } else {
             // User doesn't exist in this company.
-            return array();
+            return [];
         }
     }
 
@@ -2130,7 +2129,7 @@ class company {
             return false;
         }
 
-        $emaillist = array();
+        $emaillist = [];
         foreach(explode(',', $supervisor->data) as $testemail) {
             // Is it a valid email address?
             if (validate_email($testemail)) {
@@ -2181,7 +2180,7 @@ class company {
      * Parameters -
      *              $parent = stdclass();
      *
-     * Returns array();
+     * Returns [];
      *
      **/
     public static function get_subdepartments($parent, $ignorecurrentbranch = false) {
@@ -2211,7 +2210,7 @@ class company {
      * Parameters -
      *              $parent = stdclass();
      *
-     * Returns array();
+     * Returns [];
      *
      **/
     public static function get_subdepartments_list($parent) {
@@ -2229,12 +2228,12 @@ class company {
      *              $tree = stdclass();
      *              $path = text;
      *
-     * Returns array();
+     * Returns [];
      *
      **/
     public static function get_department_list( $tree, $path='' ) {
 
-        $flatlist = array();
+        $flatlist = [];
         if (isset($tree->id)) {
             if (!empty($path)) {
                 $flatlist[$tree->id] = $path . ' / ' . $tree->name;
@@ -2263,10 +2262,10 @@ class company {
      *              $tree = stdclass();
      *              $path = text;
      *
-     * Returns array();
+     * Returns [];
      *
      **/
-    public static function get_parents_list($tree, &$return = array()) {
+    public static function get_parents_list($tree, &$return = []) {
 
         if (isset($tree->id)) {
             $return[$tree->id] = $tree->id;
@@ -2330,7 +2329,7 @@ class company {
     public static function get_department_parentnodes($departmentid) {
         global $DB;
 
-        $parents = array();
+        $parents = [];
         while ($myparent = self::get_department_parentnode($departmentid)) {
             $parents[$myparent->id] = $myparent;
             $departmentid = $myparent->id;
@@ -2360,12 +2359,12 @@ class company {
      * Parameters -
      *              $companyid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_all_departments($company) {
 
-        $parentlist = array();
+        $parentlist = [];
         $parentnode = self::get_company_parentnode($company);
         $parentlist[$parentnode->id] = array($parentnode->id => $parentnode->name);
         $departmenttree = self::get_subdepartments($parentnode);
@@ -2381,7 +2380,7 @@ class company {
      * @return array
      */
     public static function get_all_departments_raw($companyid) {
-        $parentlist = array();
+        $parentlist = [];
         $parentnode = self::get_company_parentnode($companyid);
         $departmenttree = self::get_subdepartments($parentnode);
 
@@ -2422,10 +2421,10 @@ class company {
      * function to flatten a multi-dimension array to a single dimension array.
      *
      * Parameters -
-     *              $array = array();
-     *              &$result = array();
+     *              $array = [];
+     *              &$result = [];
      *
-     * Returns array();
+     * Returns [];
      *
      **/
     public static function array_flatten($array, &$result=null) {
@@ -2449,10 +2448,10 @@ class company {
      * function to flatten a multi-dimension array to a single dimension array.
      *
      * Parameters -
-     *              $array = array();
-     *              &$result = array();
+     *              $array = [];
+     *              &$result = [];
      *
-     * Returns array();
+     * Returns [];
      *
      **/
     public static function array_flatten_children($array, &$result=null) {
@@ -2478,7 +2477,7 @@ class company {
      * Parameters -
      *              $parentnodeid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_all_subdepartments($parentnodeid, $addchildcompanies = false) {
@@ -2492,7 +2491,7 @@ class company {
         }
 
         $parentnode = self::get_departmentbyid($parentnodeid);
-        $parentlist = array();
+        $parentlist = [];
         $parentlist[$parentnodeid] = format_string($parentnode->name, true, $options);
         $departmenttree = self::get_subdepartments($parentnode);
         if ($addchildcompanies) {
@@ -2521,14 +2520,14 @@ class company {
      * Parameters -
      *              $departmentid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_recursive_department_users($departmentid, $addchildcompanies = false) {
         global $DB;
 
         $departmentlist = self::get_all_subdepartments($departmentid, $addchildcompanies);
-        $userlist = array();
+        $userlist = [];
         foreach ($departmentlist as $id => $value) {
             $departmentusers = self::get_department_users($id);
             $userlist = $userlist + $departmentusers;
@@ -2543,14 +2542,14 @@ class company {
      *             $companyid = int;
      *             $departmentid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_my_users($companyid=0, $departmentid=0) {
         global $USER;
 
         if (empty($companyid)) {
-            return array();
+            return [];
         }
         $company = new company($companyid);
         if (empty($departmentid)) {
@@ -2562,7 +2561,7 @@ class company {
                 $departmentids = array_keys($departments);
             }
         }
-        $users = array();
+        $users = [];
         foreach ($departmentids as $departmentid) {
             $users = $users + self::get_recursive_department_users($departmentid);
         }
@@ -2634,8 +2633,8 @@ class company {
         $userdepartments = $DB->get_records('company_users', array('userid' => $userid, 'companyid' => $this->id));
 
         // Set the initial return array.
-        $managers = array();
-        $departments = array();
+        $managers = [];
+        $departments = [];
         // Get the list of parent departments.
         foreach ($userdepartments as $companyuserrec) {
             if ($userdepartment = $this->get_departmentbyid($companyuserrec->departmentid)) {
@@ -2670,10 +2669,10 @@ class company {
         global $USER;
 
         if (empty($companyid)) {
-            return array();
+            return [];
         }
         $userlist = self::get_my_users($companyid, $departmentid);
-        $users = array();
+        $users = [];
         foreach ($userlist as $user) {
             $users[] = $user->userid;
         }
@@ -2686,7 +2685,7 @@ class company {
      * Parameters -
      *              $departmentid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_department_users($departmentid) {
@@ -2697,7 +2696,7 @@ class company {
                                                  'userid,id,companyid,managertype,departmentid,suspended')) {
             return $departmentusers;
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -2712,7 +2711,7 @@ class company {
     public static function assign_user_to_department($departmentid, $userid, $managertype = 0, $ws = false) {
         global $DB;
 
-        $userrecord = array();
+        $userrecord = [];
         $userrecord['departmentid'] = $departmentid;
         $userrecord['userid'] = $userid;
 
@@ -2750,7 +2749,7 @@ class company {
     public static function create_department($departmentid, $companyid, $fullname,
                                       $shortname, $parentid=0) {
         global $DB;
-        $newdepartment = array();
+        $newdepartment = [];
         if (!empty($departmentid)) {
             if ($departmentid == $parentid) {
                 return;
@@ -2845,7 +2844,7 @@ class company {
             $company = new company($departmentrec->company);
             // Get the list of departments at and below the user assignment.
             $userhierarchylevels = $company->get_userlevel($USER);
-            $subhierarchytree = array();
+            $subhierarchytree = [];
             foreach ($userhierarchylevels as $userhierarchylevel) {
                 $subhierarchytree = $subhierarchytree + self::get_all_subdepartments($userhierarchylevel->id);
             }
@@ -2867,14 +2866,14 @@ class company {
      * Parameters -
      *              $departmentid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_recursive_department_courses($departmentid) {
         global $DB;
 
         $departmentlist = self::get_all_subdepartments($departmentid);
-        $courselist = array();
+        $courselist = [];
         foreach ($departmentlist as $id => $value) {
             $departmentcourses = self::get_department_courses($id);
             $courselist = $courselist + $departmentcourses;
@@ -2896,7 +2895,7 @@ class company {
      * Parameters -
      *              $departmentid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_department_courses($departmentid) {
@@ -2905,7 +2904,7 @@ class company {
                                                    array('departmentid' => $departmentid))) {
             return $departmentcourses;
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -2943,7 +2942,7 @@ class company {
             }
             if (!$foundcourse) {
                 // Assigning a shared course to a new company.
-                $courserecord = array();
+                $courserecord = [];
                 $courserecord['departmentid'] = $departmentid;
                 $courserecord['courseid'] = $courseid;
                 $courserecord['companyid'] = $companyid;
@@ -2954,7 +2953,7 @@ class company {
             }
         } else {
             // Assigning a new course to a company.
-            $courserecord = array();
+            $courserecord = [];
             $courserecord['departmentid'] = $departmentid;
             $courserecord['courseid'] = $courseid;
             $courserecord['companyid'] = $companyid;
@@ -2972,7 +2971,7 @@ class company {
      * Parameters -
      *              $courseid = int;
      *
-     *  Return array();
+     *  Return [];
      **/
     public static function get_departments_by_course($courseid) {
         global $DB;
@@ -2980,7 +2979,7 @@ class company {
                                                                    null, 'departmentid')) {
             return array_keys($depts);
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -2993,14 +2992,14 @@ class company {
      * Parameters -
      *              $departmentid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_recursive_departments_licenses($departmentid) {
 
         // Get all the courses for this department down.
         $courses = self::get_recursive_department_courses($departmentid);
-        $licenselist = array();
+        $licenselist = [];
         foreach ($courses as $course) {
             $courselicenses = self::get_course_licenses($course->courseid);
             $licenselist = $licenselist + $courselicenses;
@@ -3014,7 +3013,7 @@ class company {
      * Parameters -
      *              $courseid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_course_licenses($courseid) {
@@ -3023,7 +3022,7 @@ class company {
                                                                           null, 'licenseid')) {
             return $licenses;
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -3033,7 +3032,7 @@ class company {
      * Parameters -
      *              $licenseid = int;
      *
-     * Returns array()
+     * Returns []
      *
      **/
     public static function get_courses_by_license($licenseid, $visible = true) {
@@ -3063,10 +3062,10 @@ class company {
 
                 return $courses;
             } else {
-                return array();
+                return [];
             }
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -3334,7 +3333,7 @@ class company {
         // Creates a company group within a shared course.
         $company = $DB->get_record('company', array('id' => $companyid));
         if (empty($groupdata)) {
-            $data = new stdclass();
+            $data = (object) [];
             $data->timecreated  = time();
             $data->timemodified = $data->timecreated;
             $data->name = $company->shortname;
@@ -3346,7 +3345,7 @@ class company {
             $DB->set_field('groups', 'description', $groupdata->description, array('id' => $grouprecord->id));
             return $grouprecord->id;
         } else {
-            $data = new stdclass();
+            $data = (object) [];
             $data->timecreated  = time();
             $data->timemodified = $data->timecreated;
             $data->name = $company->shortname . ' - ' . $groupdata->description;
@@ -3358,7 +3357,7 @@ class company {
         $groupid = groups_create_group($data);
 
         // Create the pivot table entry.
-        $grouppivot = array();
+        $grouppivot = [];
         $grouppivot['companyid'] = $companyid;
         $grouppivot['courseid'] = $courseid;
         $grouppivot['groupid'] = $groupid;
@@ -3422,7 +3421,7 @@ class company {
                                                         'courseid' => $courseid,
                                                         'name' => $company->shortname))) {
             // Not got one, create a default.
-            $companygroup = new stdclass();
+            $companygroup = (object) [];
             $companygroup->groupid = self::create_company_course_group($companyid, $courseid);
         }
         // Get the group information.
@@ -3720,7 +3719,7 @@ class company {
                                                             'courseid' => $courseid]);
                     foreach ($usercourses as $licrec) {
                         // Remove this specific record.
-                        company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
+                        local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
                     }
                 }
             }
@@ -4128,7 +4127,7 @@ class company {
 
                 // Check if this is a licensed course.
                 if (!empty($licensecourses[$course->id])) {
-                    if ($newlicense = company_user::auto_allocate_license($user->id, $this->id, $course->id)) {
+                    if ($newlicense = local_iomad\local_iomad\company_user::auto_allocate_license($user->id, $this->id, $course->id)) {
 
                         // Create an event.
                         $eventother = array('licenseid' => $newlicense->licenseid,
@@ -4144,7 +4143,7 @@ class company {
                         $errors .= format_string($course->fullname) . " ";
                     }
                 } else {
-                    company_user::enrol($user, array($course->id), $this->id, false, false, $due);
+                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id, false, false, $due);
                 }
             }
         }
@@ -4505,7 +4504,7 @@ class company {
 
         // Set up the adhoc task to do this.
         // Fire off the adhoc task to populate this new field correctly.
-        $task = new local_iomad\task\deletecompanytask();
+        $task = new task\deletecompanytask();
         $task->set_custom_data(['companyid' => $companyid]);
         \core\task\manager::queue_adhoc_task($task, true);
 
@@ -4799,7 +4798,7 @@ class company {
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
-            company_user::suspend($userid, $usercompany->companyid);
+            local_iomad\local_iomad\company_user::suspend($userid, $usercompany->companyid);
             EmailTemplate::send('user_suspended',
                              array('company' => $company,
                                    'user' => $user));
@@ -4830,7 +4829,7 @@ class company {
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
-            company_user::suspend($userid, $usercompany->companyid);
+            local_iomad\local_iomad\company_user::suspend($userid, $usercompany->companyid);
             EmailTemplate::send('user_unsuspended',
                              array('company' => $company,
                                    'user' => $user));
@@ -5042,7 +5041,7 @@ class company {
             return;
         }
 
-        $license = new stdclass();
+        $license = (object) [];
         $license->length = $licenserecord->validlength;
         $license->valid = userdate($licenserecord->expirydate, $CFG->iomad_date_format);
         $license->startdate = userdate($licenserecord->startdate, $CFG->iomad_date_format);
@@ -5136,7 +5135,7 @@ class company {
                                 $DB->set_field('local_iomad_track', 'completedstop', 1, ['id' => $completedrecord->id]);
                             }
                             // Clear them from the course.
-                            company_user::delete_user_course($user->id, $course->id, 'autodelete');
+                            local_iomad\local_iomad\company_user::delete_user_course($user->id, $course->id, 'autodelete');
 
                             // Then re-enrol them.
                             $enrol->enrol_user($instance, $user->id, $instance->roleid, $timestart, $timeend);
@@ -5210,7 +5209,7 @@ class company {
             }
         }
 
-        $license = new stdclass();
+        $license = (object) [];
         $license->length = $licenserecord->validlength;
         $license->valid = userdate($licenserecord->expirydate, $CFG->iomad_date_format);
 
@@ -5570,11 +5569,11 @@ class company {
             foreach ($licrecs as $licrec) {
 
                 // Remove this specific record.
-                company_user::delete_user_course($userid, $courseid, $action, $licrec->id);
+                local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, $action, $licrec->id);
             }
         } else {
             // Delete them.
-            company_user::delete_user_course($userid, $courseid, $action);
+            local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, $action);
         }
 
         return true;
@@ -5614,7 +5613,7 @@ class company {
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
             foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
+                $params = (object) [];
                 $params->fullname = $course->fullname;
                 $params->firstname = $user->firstname;
                 $params->lastname = $user->lastname;
@@ -5679,7 +5678,7 @@ class company {
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
             foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
+                $params = (object) [];
                 $params->fullname = $course->fullname;
                 $params->firstname = $user->firstname;
                 $params->lastname = $user->lastname;
@@ -5743,7 +5742,7 @@ class company {
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
             foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
+                $params = (object) [];
                 $params->fullname = $course->fullname;
                 $params->firstname = $user->firstname;
                 $params->lastname = $user->lastname;

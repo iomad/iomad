@@ -25,10 +25,11 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
 use \moodle_url;
 use context_system;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_delete_form extends \company_moodleform {
     protected $haschildren;

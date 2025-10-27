@@ -43,11 +43,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:edit_departments', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:edit_departments', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {
@@ -78,10 +78,10 @@ if ($deleteid && confirm_sesskey() && $confirm == md5($deleteid)) {
     // Get the list of department ids which are to be removed..
     if (!empty($deleteid)) {
         // Check if department has already been removed.
-        if (company::check_valid_department($companyid, $deleteid)) {
+        if (local_iomad\company::check_valid_department($companyid, $deleteid)) {
             // If not delete it and its sub departments moving users to
             // $departmentid or the company parent id if not set (==0).
-            company::delete_department_recursive($deleteid, $deleteid);
+            local_iomad\company::delete_department_recursive($deleteid, $deleteid);
             redirect($linkurl);
         }
     }
@@ -98,9 +98,9 @@ if ($mform->is_cancelled()) {
     } else if (!empty($data->import)) {
         redirect(new moodle_url('/blocks/iomad_company_admin/company_department_import_form.php'));
     } else if (!empty($data->export)) {
-        $company = new company($companyid);
-        $parentlevel = company::get_company_parentnode($companyid);
-        $departmenttree = company::get_all_subdepartments_raw($parentlevel->id);
+        $company = new local_iomad\company($companyid);
+        $parentlevel = local_iomad\company::get_company_parentnode($companyid);
+        $departmenttree = local_iomad\company::get_all_subdepartments_raw($parentlevel->id);
         // create filename
         $filename = clean_filename( $company->get_shortname() . '-departments.json' );
 
@@ -115,7 +115,7 @@ if ($mform->is_cancelled()) {
         die;
     } else if (isset($data->delete)) {
         // Check the department is valid.
-        if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+        if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
             throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
         }
 
@@ -126,7 +126,7 @@ if ($mform->is_cancelled()) {
                 notice(get_string('departmentnoselect', 'block_iomad_company_admin'));
             }
 
-            if (company::get_recursive_department_users($departmentid)) {
+            if (local_iomad\company::get_recursive_department_users($departmentid)) {
                 // there are users under this department.  We can't delete them.
                 notice(get_string('cantdeletedepartment', 'block_iomad_company_admin'), $linkurl);
             } else {
@@ -146,7 +146,7 @@ if ($mform->is_cancelled()) {
             $departmentrecord = $DB->get_record('department', array('id' => $departmentid));
 
             // Check the department is valid.
-            if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+            if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
                 throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
             } else {
                 if (!empty($departmentrecord->parent)) {
@@ -170,7 +170,7 @@ $mform = new \block_iomad_company_admin\forms\department_display_form($PAGE->url
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 

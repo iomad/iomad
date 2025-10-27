@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
-require_once($CFG->dirroot.'/local/iomad/lib/user.php');
+
 
 /**
  * Settings form for the activity.
@@ -74,7 +74,7 @@ class mod_trainingevent_mod_form extends moodleform_mod {
         if (!empty($SESSION->currenteditingcompany)) {
             $params['companyid'] = $SESSION->currenteditingcompany;
         } else if (!empty($USER->company)) {
-            $params['companyid'] = company_user::companyid();
+            $params['companyid'] = local_iomad\local_iomad\company_user::companyid();
         }
 
         $choices = [];

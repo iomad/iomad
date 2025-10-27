@@ -280,11 +280,11 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
                 !company::check_valid_user($currenteditingcompany, $user->id)) {
                 // Check if the user is in multiple companies.
                 if ($DB->count_records_sql("SELECT COUNT(DISTINCT companyid) FROM {company_users} WHERE userid = :userid", ['userid' => $user->id]) == 1) {
-                    if ($mycompany = company::by_userid($user->id, true)) {
+                    if ($mycompany = local_iomad\company::by_userid($user->id, true)) {
                         $mycompanyrec = $DB->get_record('company', ['id' => $mycompany->id]);
                         if ($currenteditingcompany != $mycompany->id) {
                             if (!empty($currentcompany)) {
-                                $currentcompanyobj = new company($currentcompany->id);
+                                $currentcompanyobj = new local_iomad\company($currentcompany->id);
                                 $currentwwwroot = $currentcompanyobj->get_wwwroot();
                             } else {
                                 $currentwwwroot = $CFG->wwwroot;
@@ -314,9 +314,9 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
             if (!empty($SESSION->currenteditingcompany)) {
                 $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $SESSION->currenteditingcompany]);
             } else {
-                $mycompanyid = iomad::get_my_companyid(context_system::instance(), false);
+                $mycompanyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
                 if ($mycompanyid > 0) {
-                    $mycompany = new company($mycompanyid);
+                    $mycompany = new local_iomad\company($mycompanyid);
                     $SESSION->theme = $mycompany->get_theme();
                     $DB->set_field('company_users', 'lastused', time(), ['userid' => $user->id, 'companyid' => $mycompanyid]);
                 }

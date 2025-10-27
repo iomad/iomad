@@ -27,7 +27,7 @@ use \EmailTemplate;
 use \company;
 use \context_course;
 
-//require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+//
 
 class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
@@ -84,7 +84,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                                             'warntime' => $runtime - $course->warnnotstarted * 24 * 60 * 60]);
             foreach ($users as $user) {
                 // Get the user's company.
-                if ($company = new company($user->companyid)) {
+                if ($company = new local_iomad\company($user->companyid)) {
                     
                     // Get the company template info.
                     // Check against per company template repeat instead.

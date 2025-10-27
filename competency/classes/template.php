@@ -27,8 +27,10 @@ defined('MOODLE_INTERNAL') || die();
 use context;
 use lang_string;
 use stdClass;
+use local_iomad\company;
+use local_iomad\iomad;
 
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
 
 /**
  * Class for loading/storing learning plan templates from the DB.
@@ -116,9 +118,9 @@ class template extends persistent {
      * @return bool
      */
     public static function can_manage_context($context) {
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
-        return \iomad::has_capability('moodle/competency:templatemanage', $context) ||
-                \iomad::has_capability('moodle/competency:templatemanage', \core\context\company::instance($companyid));
+        $companyid = iomad::get_my_companyid(\context_system::instance(), false);
+        return iomad::has_capability('moodle/competency:templatemanage', $context) ||
+                iomad::has_capability('moodle/competency:templatemanage', \core\context\company::instance($companyid));
     }
 
     /**
@@ -137,9 +139,9 @@ class template extends persistent {
      * @return bool
      */
     public static function can_read_context($context) {
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
-        return \iomad::has_capability('moodle/competency:templateview', $context) || self::can_manage_context($context) ||
-               \iomad::has_capability('moodle/competency:templateview', \core\context\company::instance($companyid));
+        $companyid = iomad::get_my_companyid(\context_system::instance(), false);
+        return iomad::has_capability('moodle/competency:templateview', $context) || self::can_manage_context($context) ||
+               iomad::has_capability('moodle/competency:templateview', \core\context\company::instance($companyid));
     }
 
     /**

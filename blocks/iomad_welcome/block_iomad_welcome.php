@@ -74,7 +74,7 @@ class block_iomad_welcome extends block_base {
         }
 
         // Only display if you have the correct capability.
-        if (!iomad::has_capability('block/iomad_welcome:view', $companycontext)) {
+        if (!local_iomad\iomad::has_capability('block/iomad_welcome:view', $companycontext)) {
             return;
         }
 

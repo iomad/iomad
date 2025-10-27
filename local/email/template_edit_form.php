@@ -26,7 +26,7 @@
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
 require_once('lib.php');
 require_once('config.php');
@@ -70,11 +70,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/email:edit', $companycontext);
+local_iomad\iomad::require_capability('local/email:edit', $companycontext);
 
 if (empty($templatesetid)) {
     if (!$templaterecord = $DB->get_record_sql("SELECT et.*, ets.id AS templatestringid, ets.subject,ets.body, ets.signature, ets.lang

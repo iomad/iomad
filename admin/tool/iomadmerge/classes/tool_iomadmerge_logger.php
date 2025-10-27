@@ -77,13 +77,13 @@ class tool_iomadmerge_logger {
     public function get($filter = null, $limitfrom=0, $limitnum=0, $sort = "timemodified DESC") {
         global $DB, $USER;
 
-        if (!iomad::has_capability('block/iomad_company_admin:editallusers', context_system::instance())) {
+        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', context_system::instance())) {
             // Get the user id's which the user can see.
-            $companyid = iomad::get_my_companyid(context_system::instance());
-            $company = new company($companyid);
+            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
+            $company = new local_iomad\company($companyid);
             $departmentusers = array();
             foreach ($userlevels as $userlevelid => $userlevel) {
-                $departmentusers = $departmentusers + company::get_recursive_department_users($userlevelid);
+                $departmentusers = $departmentusers + local_iomad\company::get_recursive_department_users($userlevelid);
             }
             if (!empty($departmentusers)) {
                 $departmentids = "";

@@ -18,13 +18,14 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
 use \moodle_url;
 use \moodleform;
 use \context_system;
 use \potential_department_user_selector;
 use \current_department_user_selector;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_managers_form extends moodleform {
     protected $context = null;

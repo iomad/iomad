@@ -45,7 +45,7 @@ class companies extends base {
      */
     public function get_config_form(MoodleQuickForm $mform): void {
 
-        $companies = $companylist = company::get_companies_select(false);
+        $companies = $companylist = local_iomad\company::get_companies_select(false);
 
         $mform->addElement('autocomplete',
                            'companies',
@@ -111,7 +111,7 @@ class companies extends base {
      */
     public function user_can_add(): bool {
         // Check if user is able to see any companies.
-        $companies = company::get_companies_select(false);
+        $companies = local_iomad\company::get_companies_select(false);
         if (empty($companies)) {
             return false;
         }
@@ -134,7 +134,7 @@ class companies extends base {
 
         // Check if user can assign all saved role types on this audience instance.
         $companyids = $this->get_configdata()['companies'];
-        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
+        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
             if (!$DB->get_records_sql("SELECT id
                                        FROM {company_users}
                                        WHERE userid = :userid

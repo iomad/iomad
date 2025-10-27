@@ -43,11 +43,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:company_user_profiles', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:company_user_profiles', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -138,7 +138,7 @@ if (!empty($companyid)) {
     $categories[$company->profileid] = $profileinfo;
 } else {
     // Check if can view every company profile.
-    if (!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', $companycontext)) {
+    if (!local_iomad\iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', $companycontext)) {
         // Get the company from the users profile.
         $categories = $DB->get_records('company', array('id' => $companyid), 'sortorder ASC', 'profileid');
     } else {

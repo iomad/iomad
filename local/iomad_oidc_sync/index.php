@@ -42,15 +42,15 @@ require_login();
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
 // Set the companyid.
-$companyid = iomad::get_my_companyid($systemcontext);
-$company = new company($companyid);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+$company = new local_iomad\company($companyid);
 
 // If we are 4.3+ we use the company context for this.
 if ($CFG->branch > 402) {
     $companycontext = \core\context\company::instance($companyid);
 }
 
-iomad::require_capability('local/iomad_oidc_sync:view', $companycontext);
+local_iomad\iomad::require_capability('local/iomad_oidc_sync:view', $companycontext);
 
 if (!empty($download)) {
     $page = 0;
@@ -116,13 +116,13 @@ if (!empty($approvecompanyid) && !empty($action) && confirm_sesskey()) {
 $table = new \local_iomad_oidc_sync\tables\consent_table('iomad_oidc_sync_consent');
 
 // What companies can we see?
-if (iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
     $companysql = "";
     if (!empty($wantedcompanyid)) {
         $companysql .= " AND c.id = $wantedcompanyid";
     }
 } else {
-    $companylist = company::get_companies_select(false);
+    $companylist = local_iomad\company::get_companies_select(false);
     $companysql = " AND c.id  IN ( " . implode(',', array_keys($companylist)) . ")";
     if (!empty($wantedcompanyid)) {
         $companysql .= " AND c.id = $wantedcompanyid";

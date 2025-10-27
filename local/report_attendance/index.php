@@ -39,11 +39,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_attendance:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_attendance:view', $companycontext);
 
 // Url stuff.
 $url = new moodle_url('/local/report_attendance/index.php');
@@ -61,8 +61,8 @@ $PAGE->requires->css("/local/report_attendance/styles.css");
 $PAGE->set_heading($strcompletion);
 
 // Get the associated department id.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Work out where the user sits in the company department tree.
@@ -85,7 +85,7 @@ if (empty($dodownload)) {
     echo $OUTPUT->header();
 
     // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
 } else {
@@ -112,7 +112,7 @@ if (empty($dodownload)) {
 }
 
 // Get the department users who are on the course.
-$allowedusers = company::get_recursive_department_users($departmentid);
+$allowedusers = local_iomad\company::get_recursive_department_users($departmentid);
 $allowedlist = "";
 foreach ($allowedusers as $alloweduser) {
     if (empty($allowedlist)) {
@@ -217,7 +217,7 @@ if (!empty($courseid)) {
                                            AND userid IN ('.$allowedlist.') AND waitlisted=0')) {
             foreach ($users as $user) {
                 $fulluserdata = $DB->get_record('user', array('id' => $user->id));
-                $fulluserdata->department = company_user::get_department_name($user->id);
+                $fulluserdata->department = local_iomad\company_user::get_department_name($user->id);
                 $fullname = "$fulluserdata->firstname $fulluserdata->lastname";
                 echo "\"$fullname\", \"$fulluserdata->department\", \"$fulluserdata->email\"\n";
             }

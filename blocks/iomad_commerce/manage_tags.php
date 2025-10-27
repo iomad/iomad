@@ -37,15 +37,15 @@ $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirma
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 // Require the user to be logged in
 require_login();
 
 // Ensure that the user has the correct capability
-iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
 
 // Define the component string
 $component = 'block_iomad_commerce';
@@ -69,7 +69,7 @@ $PAGE->set_heading($title);
 // Delete a tag dependant on the value of the delete parameter passed after 
 if ($delete && confirm_sesskey()) {
     // Check the user has the correct capability to delete a shop tag
-    if (!iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
+    if (!local_iomad\iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'delete a tag');
     }
     // Check that the record exists

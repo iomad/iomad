@@ -123,11 +123,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_emails:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_emails:view', $companycontext);
 
 $fieldnames= array();
 $allfields = array();
@@ -220,8 +220,8 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
 
 // Work out department level.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // all companies?
@@ -235,7 +235,7 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
 }
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -247,7 +247,7 @@ if ($departmentid == 0 ) {
 }
 
 // Get the company additional optional user parameter names.
-$foundobj = iomad::add_user_filter_params($params, $companyid);
+$foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
@@ -318,7 +318,7 @@ $select->label = get_string('templatetype', 'local_email');
 $select->formid = 'choosetemplate';
 $templateselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_template_selector'));
 
-$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Deal with resend check.
 if ($allemails and confirm_sesskey()) {
@@ -337,8 +337,8 @@ if ($allemails and confirm_sesskey()) {
         die;
     } else {
         // Deal with where we are on the department tree.
-        $currentdepartment = company::get_departmentbyid($departmentid);
-        $showdepartments = company::get_subdepartments_list($currentdepartment);
+        $currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+        $showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
         $showdepartments[$departmentid] = $departmentid;
         $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 
@@ -407,7 +407,7 @@ if (!$table->is_downloading()) {
             echo $templateselectoutput;
             echo html_writer::end_tag('div');
 
-            if (iomad::has_capability('local/report_emails:resend', $companycontext)) {
+            if (local_iomad\iomad::has_capability('local/report_emails:resend', $companycontext)) {
                 $params['allemails'] = 'allemails';
                 $resendlink = new moodle_url('/local/report_emails/index.php', $params);
                 echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
@@ -439,8 +439,8 @@ if (!$table->is_downloading()) {
 }
 
 // Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
+$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 

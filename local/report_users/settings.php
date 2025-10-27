@@ -23,10 +23,3 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Basic navigation settings
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/report_users/index.php' );
-$ADMIN->add('IomadReports', new admin_externalpage('repusercompletion',
-             get_string('repusercompletion', 'local_report_users'),
-             $url, 'local/report_users:view'));

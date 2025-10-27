@@ -25,14 +25,15 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
 use \moodle_url;
 use \moodleform;
 use \context_system;
 use \context_coursecat;
 use \DateTime;
 use \core_course;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class course_edit_form extends moodleform {
     protected $title = '';

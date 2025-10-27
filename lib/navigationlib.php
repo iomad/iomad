@@ -34,7 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 define('NAVIGATION_CACHE_NAME', 'navigation');
 define('NAVIGATION_SITE_ADMIN_CACHE_NAME', 'navigationsiteadmin');
 
-require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+
 
 /**
  * This class is used to represent a node in a navigation tree
@@ -1812,8 +1812,8 @@ class global_navigation extends navigation_node {
             if (!isloggedin()) {
                 return array();
             }
-            if (iomad::is_company_user()) {
-                $companyid = iomad::get_my_companyid(context_system::instance());
+            if (local_iomad\iomad::is_company_user()) {
+                $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
                                    SELECT courseid FROM {company_course}
                                    WHERE companyid = $companyid)
@@ -1954,8 +1954,8 @@ class global_navigation extends navigation_node {
         } else {
             // Prepare the SQL to load the courses and their contexts
             // IOMAD addition.
-            if (iomad::is_company_user()) {
-                $companyid = iomad::get_my_companyid(context_system::instance());
+            if (local_iomad\iomad::is_company_user()) {
+                $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
                 $sharedsql = " AND ( c.id IN (
                                    SELECT courseid FROM {company_course}
                                    WHERE companyid = $companyid)
@@ -2102,7 +2102,7 @@ class global_navigation extends navigation_node {
 
         // IOMAD - Filter out the unwanted categories
         if (!is_siteadmin()) {
-            $categoriesiomad = iomad::iomad_filter_categories($categoriesrs);
+            $categoriesiomad = local_iomad\iomad::iomad_filter_categories($categoriesrs);
         } else {
             $categoriesiomad = $categoriesrs;
         }
@@ -3466,7 +3466,7 @@ class global_navigation extends navigation_node {
         $courses = enrol_get_my_courses('*');
 
         // IOMAD - filter out the courses not within the current company
-        $courses = iomad::iomad_filter_courses($courses);
+        $courses = local_iomad\iomad::iomad_filter_courses($courses);
 
         $flatnavcourses = [];
 
@@ -3761,8 +3761,8 @@ class global_navigation_for_ajax extends global_navigation {
             $limit = (int)$CFG->navcourselimit;
         }
 
-        if (iomad::is_company_user()) {
-            $companyid = iomad::get_my_companyid(context_system::instance());
+        if (local_iomad\iomad::is_company_user()) {
+            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
             $sharedsql = " AND ( cc.id IN (
                                SELECT category FROM {company}
                                WHERE id = $companyid)) ";

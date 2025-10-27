@@ -99,9 +99,9 @@ class page_viewdoc implements renderable, templatable {
         global $USER;
 
         // Get the companyid.
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
-            $company = new company($companyid);
+            $company = new local_iomad\company($companyid);
         } else {
             $company = (object) ['id' => 0];
         }

@@ -32,7 +32,7 @@ use auth_iomadoidc\utils;
 use core_user;
 use moodle_exception;
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 defined('MOODLE_INTERNAL') || die();
@@ -59,7 +59,7 @@ class base {
     public function __construct() {
         global $CFG;
 
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
             $this->postfix = "_$companyid";

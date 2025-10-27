@@ -49,15 +49,15 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_user_logins:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_user_logins:view', $companycontext);
 
 // Are we showing any child companies?
 $canseechildren = false;
-if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
     $canseechildren = true;
 }
 
@@ -135,12 +135,12 @@ if ($logintoraw) {
 }
 
 // Set the companyid
-if ($viewchildren && $canseechildren && !empty($departmentid) && company::can_manage_department($departmentid)) {
+if ($viewchildren && $canseechildren && !empty($departmentid) && local_iomad\company::can_manage_department($departmentid)) {
     $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
     $realcompanyid = $companyid;
     $companyid = $departmentrec->company;
     $realcompany = $company;
-    $selectedcompany = new company($companyid);
+    $selectedcompany = new local_iomad\company($companyid);
 } else {
     $realcompanyid = $companyid;
     $realcompany = $company;
@@ -246,11 +246,11 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
 
 // Work out department level.
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 if ($viewchildren && $canseechildren) {
-    $parentlevel = company::get_company_parentnode($realcompany->id);
+    $parentlevel = local_iomad\company::get_company_parentnode($realcompany->id);
 } else {
-    $parentlevel = company::get_company_parentnode($company->id);
+    $parentlevel = local_iomad\company::get_company_parentnode($company->id);
 }
 $companydepartment = $parentlevel->id;
 
@@ -281,7 +281,7 @@ if (!$showsummary && $canseechildren && $viewchildren && $haschildren) {
 }
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -293,7 +293,7 @@ if ($departmentid == 0 ) {
 }
 if (!$showsummary) {
     // Get the company additional optional user parameter names.
-    $foundobj = iomad::add_user_filter_params($params, $companyid);
+    $foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
     $idlist = $foundobj->idlist;
     $foundfields = $foundobj->foundfields;
 }
@@ -328,7 +328,7 @@ if (!$showsummary && !empty($CFG->iomad_report_fields)) {
 
 if (!$showsummary) {
     // Get the appropriate list of departments.
-    $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+    $searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
     // Create data for form.
     $customdata = null;
@@ -346,8 +346,8 @@ if (!$showsummary) {
 // If it's userlisting
 if (!$showsummary) {
     // Deal with where we are on the department tree.
-    $currentdepartment = company::get_departmentbyid($departmentid);
-    $showdepartments = company::get_subdepartments_list($currentdepartment);
+    $currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+    $showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
     $showdepartments[$departmentid] = $departmentid;
     $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 

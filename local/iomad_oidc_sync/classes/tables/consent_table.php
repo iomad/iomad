@@ -63,7 +63,7 @@ class consent_table extends table_sql {
         $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
 
         // Get the company URL.
-        $company = new company($row->id);
+        $company = new local_iomad\company($row->id);
         $wwwroot = $company->get_wwwroot();
 
         // Set up the bit for the consent link.
@@ -92,7 +92,7 @@ class consent_table extends table_sql {
 
         $enabled = !empty($row->tenantnameorguid);
         $clientid = get_config('auth_iomadoidc', 'clientid_' . $row->id);
-        $canmanage = iomad::has_capability('local/iomad_oidc_sync:manage', $companycontext);
+        $canmanage = local_iomad\iomad::has_capability('local/iomad_oidc_sync:manage', $companycontext);
 
         $extraclass = "";
         if (!$enabled) {

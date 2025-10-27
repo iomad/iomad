@@ -60,7 +60,7 @@ class courses_license_editable extends \core\output\inplace_editable {
     public function __construct($company, $companycontext, $course, $currentvalue, $hidelicensed = false) {
 
         // Check capabilities to get editable value.
-        $editable = iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
+        $editable = local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
 
         // Invent an itemid.
         $itemid = $company->id . ':' . $course->courseid;
@@ -116,7 +116,7 @@ class courses_license_editable extends \core\output\inplace_editable {
         list($companyid, $courseid) = explode(':', $itemid, 2);
 
         $companyid = clean_param($companyid, PARAM_INT);
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $courseid = clean_param($courseid, PARAM_INT);
         $licensed = json_decode($newvalue);
         $licensed = clean_param($licensed, PARAM_INT);
@@ -126,7 +126,7 @@ class courses_license_editable extends \core\output\inplace_editable {
         core_external::validate_context($companycontext);
 
         // Check permissions.
-        iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
         if (!$courserec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');

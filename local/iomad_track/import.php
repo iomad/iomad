@@ -46,11 +46,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/iomad_track:importfrommoodle', $companycontext);
+local_iomad\iomad::require_capability('local/iomad_track:importfrommoodle', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {
@@ -249,7 +249,7 @@ if (!empty($fileimport)) {
                         continue;
                     } else {
                         $completionrec->companyid = $usercompany->id;
-                        $company = new company($usercompany->id);
+                        $company = new local_iomad\company($usercompany->id);
                         $upt->track('company', $usercompany->name);
                     }
                 }

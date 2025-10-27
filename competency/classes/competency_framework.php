@@ -30,7 +30,7 @@ use lang_string;
 use stdClass;
 
 require_once($CFG->libdir . '/grade/grade_scale.php');
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
+
 
 /**
  * Class for loading/storing competency frameworks from the DB.

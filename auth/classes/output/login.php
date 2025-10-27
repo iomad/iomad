@@ -31,7 +31,7 @@ use renderable;
 use renderer_base;
 use stdClass;
 use templatable;
-use iomad;
+use local_iomad\iomad;
 
 /**
  * Login renderable class.
@@ -91,7 +91,7 @@ class login implements renderable, templatable {
         global $CFG, $OUTPUT, $PAGE;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
             $postfix = "_$companyid";

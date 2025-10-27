@@ -95,11 +95,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_license_usage:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_license_usage:view', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -116,7 +116,7 @@ $PAGE->set_title($linktext);
 
 // Set the page heading.
 $PAGE->set_heading($linktext);
-if (iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
     $buttoncaption = get_string('pluginname', 'local_report_completion');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php");
     $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
@@ -141,13 +141,13 @@ if (!empty($departmentid) && !company::check_valid_department($companyid, $depar
 }
 
 // Get the associated department id.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Get the company additional optional user parameter names.
 $fieldnames = [];
-if ($category = company::get_category($companyid)) {
+if ($category = local_iomad\company::get_category($companyid)) {
     // Get field names from company category.
     if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
         foreach ($fields as $field) {
@@ -177,7 +177,7 @@ $baseurl = new moodle_url(basename(__FILE__), $urlparams);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -262,7 +262,7 @@ $license = $DB->get_record('companylicense', ['id' => $licenseid]);
 
 // Get the full company tree as we may need it.
 $topcompanyid = $company->get_topcompanyid();
-$topcompany = new company($topcompanyid);
+$topcompany = new local_iomad\company($topcompanyid);
 $companytree = $topcompany->get_child_companies_recursive();
 $parentcompanies = $company->get_parent_companies_recursive();
 
@@ -289,7 +289,7 @@ $dbsort = "";
 $sqlsearch = "id!='-1' AND id NOT IN (" . $CFG->siteadmins . ") $userfilter";
 
 // Get department users.
-$departmentusers = company::get_recursive_department_users($departmentid);
+$departmentusers = local_iomad\company::get_recursive_department_users($departmentid);
 if ( count($departmentusers) > 0 ) {
     $departmentids = "";
     foreach ($departmentusers as $departmentuser) {
@@ -314,7 +314,7 @@ $userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch);
 // Check we havent looked and discounted everyone.
 if (!empty($userrecords)) {
     // Get users company association.
-    $departmentusers = company::get_recursive_department_users($departmentid);
+    $departmentusers = local_iomad\company::get_recursive_department_users($departmentid);
     $sqlsearch = "id!='-1' $userfilter";
     if ( count($departmentusers) > 0 ) {
         $departmentids = "";

@@ -34,8 +34,8 @@ require_capability('moodle/site:config', context_system::instance());
 $returnurl = get_local_referer(false);
 
 // IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
+
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";
 } else {
@@ -81,7 +81,7 @@ switch ($action) {
             \tool_mfa\manager::set_factor_config([$enabledname => 1], 'factor_' . $factor);
             \tool_mfa\manager::do_factor_action($factor, $action);
             if (!empty($postfix)) {
-                company::update_plugin('factor_' . $factor, $postfix);
+                local_iomad\company::update_plugin('factor_' . $factor, $postfix);
             }
 
             core_plugin_manager::reset_caches();

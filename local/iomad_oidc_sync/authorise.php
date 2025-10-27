@@ -39,7 +39,7 @@ if ($CFG->branch > 402) {
     $companycontext = \core\context\company::instance($companyid);
 }
 
-iomad::require_capability('local/iomad_oidc_sync:manage', $companycontext);
+local_iomad\iomad::require_capability('local/iomad_oidc_sync:manage', $companycontext);
 
 $postfix = "_$companyid";
 $oidcsyncrec = $DB->get_record('local_iomad_oidc_sync', ['companyid' => $companyid], '*', MUST_EXIST);

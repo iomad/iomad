@@ -47,7 +47,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
      */
     public function __construct($companyid, $shoptagid, $itemsusedby, $assignableitems, $name) {
         // Check the user has the correct permissions
-        $capability = iomad::has_capability('block/iomad_commerce:manage_tags', \core\context\company::instance($companyid));
+        $capability = local_iomad\iomad::has_capability('block/iomad_commerce:manage_tags', \core\context\company::instance($companyid));
         // Define variables used in other functions
         $this->assignableitems = $assignableitems;
         $this->edithint = get_string('xshopitems', 'block_iomad_commerce', $name);
@@ -99,14 +99,14 @@ class course_shoptag_editable extends \core\output\inplace_editable {
         $itemid = array_map(fn($v) => clean_param($v, PARAM_INT), json_decode($newvalue));
 
         // Define the company id
-        $companyid = iomad::get_my_companyid($context, true);
+        $companyid = local_iomad\iomad::get_my_companyid($context, true);
 
         // Define the context
         $context = \core\context\company::instance($companyid);
         // Check if the user has permissions to access this
         core_external::validate_context($context);
         // Check the user has the correct capability
-        iomad::require_capability('block/iomad_commerce:manage_tags', $context);
+        local_iomad\iomad::require_capability('block/iomad_commerce:manage_tags', $context);
 
         // Prevent SQL injection
         $sql = '';

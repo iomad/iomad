@@ -34,8 +34,8 @@ use stdClass;
 use tool_iomadpolicy\event\acceptance_created;
 use tool_iomadpolicy\event\acceptance_updated;
 use user_picture;
-use iomad;
-use company;
+use local_iomad\iomad;
+use local_iomad\company;
 
 defined('MOODLE_INTERNAL') || die();
 

@@ -47,7 +47,7 @@ class logins_table extends table_sql {
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
         $userurl = '/local/report_users/userdisplay.php';
 
-        if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', $companycontext)) {
+        if (!$this->is_downloading() && local_iomad\iomad::has_capability('local/report_users:view', $companycontext)) {
             return "<a href='".
                     new moodle_url($userurl, ['userid' => $row->id]).
                     "'>$name</a>";

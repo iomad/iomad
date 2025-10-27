@@ -45,7 +45,7 @@ class company_users_course_completions extends datasource {
      * Initialise report
      */
     protected function initialise(): void {
-        $companyentity = new company();
+        $companyentity = new local_iomad\company();
         $companyalias = $companyentity->get_table_alias('company');
 
 

@@ -34,11 +34,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_microlearning:edit_nuggets', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_microlearning:edit_nuggets', $companycontext);
 
 $nuggetlist = new moodle_url('/blocks/iomad_microlearning/nuggets.php', array('threadid' => $threadid));
 

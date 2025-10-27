@@ -68,11 +68,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:manageframeworks', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:manageframeworks', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/iomad_frameworks_form.php');
@@ -116,7 +116,7 @@ if (!empty($update)) {
                         $sharingrecord->companyid = $companyframework->companyid;
                         $DB->insert_record('company_shared_frameworks', $sharingrecord);
                     }
-                    company::company_users_to_company_framework_group($companyframework->companyid, $frameworkid);
+                    local_iomad\company::company_users_to_company_framework_group($companyframework->companyid, $frameworkid);
                 }
             } else if ($shared == 0 and $previousshared != 0) { // Turning sharing off.
                 $frameworkinfo = $DB->get_record('framework', array('id' => $frameworkid));
@@ -137,7 +137,7 @@ if (!empty($update)) {
                             continue;
                         }
                         $count ++;
-                        company::unenrol_company_from_framework($companygroup->companyid, $frameworkid);
+                        local_iomad\company::unenrol_company_from_framework($companygroup->companyid, $frameworkid);
                     }
                 }
             } else {  // Changing from open sharing to closed sharing.

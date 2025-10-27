@@ -27,7 +27,7 @@ use \EmailTemplate;
 use \company;
 use \context_course;
 
-//require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+//
 
 class company_license_expiring_task extends \core\task\scheduled_task {
 
@@ -62,7 +62,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
                                            'warn' => $runtime + 30 * 24 * 60 * 60]);
         // Process any we found.
         foreach ($licenses as $license) {
-            $company = new company($license->companyid);
+            $company = new local_iomad\company($license->companyid);
             $companyusql = "";
             $companysql = "";
 

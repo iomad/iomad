@@ -51,7 +51,7 @@ $PAGE->set_heading('');
 $PAGE->requires->js_call_amd('local_iomadcustompage/pages_list', 'init');
 
 $context = $systemcontext;
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 if ($companyid > 0) {
     $context = \core\context\company::instance($companyid);
 }

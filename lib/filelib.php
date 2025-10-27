@@ -497,7 +497,7 @@ function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $fil
         $options['forcehttps'] = false;
     }
     
-    //$baseurl = company::get_relativeurl("{$CFG->wwwroot}/{$file}");
+    //$baseurl = local_iomad\company::get_relativeurl("{$CFG->wwwroot}/{$file}");
     $baseurl = "{$CFG->wwwroot}/{$file}";
     if (!empty($options['includetoken'])) {
         $userid = $options['includetoken'] === true ? $USER->id : $options['includetoken'];
@@ -505,7 +505,7 @@ function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $fil
         $finalfile = basename($file);
         $tokenfile = "token{$finalfile}";
         $file = substr($file, 0, strlen($file) - strlen($finalfile)) . $tokenfile;
-        //$baseurl = company::get_relativeurl("{$CFG->wwwroot}/{$file}");
+        //$baseurl = local_iomad\company::get_relativeurl("{$CFG->wwwroot}/{$file}");
         $baseurl = "{$CFG->wwwroot}/{$file}";
 
         if (!$CFG->slasharguments) {

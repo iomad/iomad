@@ -30,7 +30,7 @@ use context_system;
 use EmailTemplate;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+
 require_once($CFG->dirroot . '/local/email/lib.php');
 require_once($CFG->dirroot . '/local/iomad_learningpath/classes/companypaths.php');
 
@@ -115,7 +115,7 @@ class processor {
             if (!empty($paths) || $licensecoursecount > 0) {
                 $assignpaths = [];
                 // Get the company id
-                $companyid = iomad::get_my_companyid(context_system::instance());
+                $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
                 // Get name for company license.
                 $company = $DB->get_record('company', ['id' => $companyid]);
                 $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), $CFG->iomad_date_format);
@@ -183,7 +183,7 @@ class processor {
                     foreach ($pathcourseenrol as $pathcourse) {
                         if (!$DB->get_record('iomad_courses', ['courseid' => $pathcourse, 'licensed' => 1])) {
                             // Enrol user into course.
-                            company_user::enrol($invoice->userid, [$pathcourse]);
+                            local_iomad\local_iomad\company_user::enrol($invoice->userid, [$pathcourse]);
                         }
                     }
                 }
@@ -228,7 +228,7 @@ class processor {
                     if (!$DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
 
                         // Enrol user into course.
-                        company_user::enrol($invoice->userid, array($course->courseid));
+                        local_iomad\local_iomad\company_user::enrol($invoice->userid, array($course->courseid));
                     }
                 }
             }
@@ -264,7 +264,7 @@ class processor {
         $transaction = $DB->start_delegated_transaction();
         try {
             // Get name for company license.
-            $companyid = iomad::get_my_companyid(context_system::instance());
+            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
             $company = $DB->get_record('company', ['id' => $companyid]);
             $item = $DB->get_record('course_shopsettings', ['id' => $invoiceitem->invoiceableitemid]);
             $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $item->id]);

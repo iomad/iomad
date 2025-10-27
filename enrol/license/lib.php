@@ -266,7 +266,7 @@ class enrol_license_plugin extends enrol_plugin {
         }
 
         // Set the companyid
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 
         // Get the license information.
         $sql = "SELECT * from {companylicense} cl, {companylicense_users} clu
@@ -330,7 +330,7 @@ class enrol_license_plugin extends enrol_plugin {
                     AND clu.licensecourseid = :courseid";
             if (!$license = $DB->get_record_sql($sql, array('userid' => $USER->id, 'courseid' => $instance->courseid))) {
                 // Set the companyid
-                $companyid = iomad::get_my_companyid(context_system::instance(), false);
+                $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 
                 $blanketsql = "SELECT cl.* FROM {companylicense} cl
                                JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)

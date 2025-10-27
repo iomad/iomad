@@ -15,11 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_report_emails
- * @copyright 2021 Derick Turner
- * @author    Derick Turner
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * This file contains mappings for classes that have been renamed.
+ *
+ * @package mod_quiz
+ * @copyright 2022 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
+$renamedclasses = [
+    'iomad' => 'local_iomad\iomad',
+    'company' => 'local_iomad\company',
+    'company_user' => 'local_iomad\company_user',
+];

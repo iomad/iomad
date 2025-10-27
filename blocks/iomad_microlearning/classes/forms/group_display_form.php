@@ -43,7 +43,7 @@ class group_display_form extends moodleform {
         $this->selectedcompany = $companyid;
         $syscontext = context_system::instance();
 
-        $this->company = new company($this->selectedcompany);
+        $this->company = new local_iomad\company($this->selectedcompany);
         $this->groupid = $groupid;
         $this->syscontext = $systemcontext;
         $this->companycontext = $companycontext;
@@ -92,12 +92,12 @@ class group_display_form extends moodleform {
                                 get_string('editdepartments', 'block_iomad_company_admin'));
             $buttonarray[] = $mform->createElement('submit', 'delete',
                                 get_string('deletedepartment', 'block_iomad_company_admin'));
-            if (iomad::has_capability('block/iomad_company_admin:export_departments', $this->companycontext)) {
+            if (local_iomad\iomad::has_capability('block/iomad_company_admin:export_departments', $this->companycontext)) {
                 $buttonarray[] = $mform->createElement('submit', 'export',
                                         get_string('exportdepartment', 'block_iomad_company_admin'));
             }
         } else {
-            if (iomad::has_capability('block/iomad_company_admin:import_departments', $this->companycontext)) {
+            if (local_iomad\iomad::has_capability('block/iomad_company_admin:import_departments', $this->companycontext)) {
                 $buttonarray[] = $mform->createElement('submit', 'import',
                                         get_string('importdepartment', 'block_iomad_company_admin'));
             }

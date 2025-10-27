@@ -33,7 +33,7 @@ $pageid = required_param('id', PARAM_INT);
 $context = context_iomadcustompage::instance($pageid);
 
 // Set the companyid.
-$companyid = iomad::get_my_companyid(context_system::instance());
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
 if ($companyid > 0) {
     $companycontext = \core\context\company::instance($companyid);
 }

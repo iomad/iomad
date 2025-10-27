@@ -112,7 +112,7 @@ class deletecompanytask extends adhoc_task {
                                        WHERE companyid = :companyid",
                                        ['companyid' => $companyrec->id]);
         foreach ($users as $user) {
-            company_user::delete($user->userid, $companyrec->id);
+            local_iomad\local_iomad\company_user::delete($user->userid, $companyrec->id);
         }
         // Blanket deletion.
         $DB->delete_records('company_users', ['companyid' => $companyrec->id]);

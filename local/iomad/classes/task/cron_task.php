@@ -41,7 +41,7 @@ class cron_task extends \core\task\scheduled_task {
         global $DB, $CFG;
 
         // We need company stuff.
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        
 
         $runtime = time();
         // Are we copying Company to institution?
@@ -194,7 +194,7 @@ class cron_task extends \core\task\scheduled_task {
                                 $DB->set_field('local_iomad_track', 'coursecleared', 1, ['id' => $litrec->id]);
                             } else {
                                 mtrace("Auto clearing userid $litrec->userid from courseid $litrec->courseid with record id $litrec->id");
-                                \company_user::delete_user_course($litrec->userid, $litrec->courseid, 'autodelete', $litrec->id);
+                                \local_iomad\company_user::delete_user_course($litrec->userid, $litrec->courseid, 'autodelete', $litrec->id);
                             }
                         } else {
                             mtrace("Removing unused license for userid $litrec->userid from courseid $litrec->courseid");

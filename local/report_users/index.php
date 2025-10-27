@@ -79,15 +79,15 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_users:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_users:view', $companycontext);
 
 // Are we showing any child companies?
 $canseechildren = false;
-if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
     $canseechildren = true;
 }
 if (!$canseechildren) {
@@ -131,12 +131,12 @@ if (!empty($departmentid)) {
 }
 
 // Get the associated department id.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -282,14 +282,14 @@ if (!empty($CFG->iomad_report_fields)) {
 }
 
 // Deal with the form searching.
-$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Set up the table.
 $table = new \local_report_users\tables\users_table('user_report_logins');
 
 // Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
+$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 

@@ -63,7 +63,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
         foreach ($companies as $company) {
 
             // Deal with parent companies as we only want manager of this company.
-            $companyobj = new company($company->id);
+            $companyobj = new local_iomad\company($company->id);
             if ($parentslist = $companyobj->get_parent_companies_recursive()) {
                 $companyusql = " AND u.id NOT IN (
                                 SELECT userid FROM {company_users}
@@ -102,7 +102,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                 }
 
                 // Get their users.
-                $departmentusers = company::get_recursive_department_users($manager->departmentid);
+                $departmentusers = local_iomad\company::get_recursive_department_users($manager->departmentid);
                 $departmentids = "";
                 foreach ($departmentusers as $departmentuser) {
                     if (!empty($departmentids)) {

@@ -21,7 +21,11 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
+namespace local_iomad;
+
+use company;
+use company_user;
+use iomad;
 
 /**
  * helper class to minimize duplicate code
@@ -95,7 +99,7 @@ class blockpage {
      * Sets up the page
      *
      * Paramters -
-     *             $urlparams = array().
+     *             $urlparams = [].
      *
      **/
     public function setup($urlparams=null) {
@@ -106,7 +110,7 @@ class blockpage {
 
         // Make sure a company user can not retrieve pages for other companies.
         $companyid = optional_param('companyid', 0, PARAM_INTEGER);
-        if ($companyid && !company_user::can_see_company($companyid)) {
+        if ($companyid && !local_iomad\company_user::can_see_company($companyid)) {
             throw new Exception(self::get_string('notallowedtoaccessothercompaniesdata'));
         }
 

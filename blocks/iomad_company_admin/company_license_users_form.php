@@ -40,11 +40,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:allocate_licenses', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:allocate_licenses', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -69,7 +69,7 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 'mform1', $departmentid));
 
 //  Check the license is valid for this company.
-if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
+if (!empty($licenseid) && !local_iomad\company::check_valid_company_license($companyid, $licenseid)) {
     throw new moodle_exception('invalidcompanylicense', 'block_iomad_company_admin');
 }
 
@@ -82,11 +82,11 @@ if ($courseid) {
 }
 
 // Get the top level department.
-$parentlevel = company::get_company_parentnode($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($companyid);
 
 $availablewarning = '';
 $licenselist = array();
-if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
     // Get all the licenses.
     $licenses = $DB->get_records('companylicense', array('companyid' => $companyid), 'expirydate DESC', 'id,name,startdate,expirydate');
@@ -106,7 +106,7 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $com
 } else {
     $userlevel = $company->get_userlevel($USER);
     $userhierarchylevel = key($userlevel);
-    if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+    if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
         $alllicenses = true;
     } else {
         $alllicenses = false;;
@@ -139,12 +139,12 @@ $usersform = new block_iomad_company_admin\forms\company_license_users_form($PAG
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
 //  Check the license is valid for this company.
-if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
+if (!empty($licenseid) && !local_iomad\company::check_valid_company_license($companyid, $licenseid)) {
     throw new moodle_exception('invalidcompanylicense', 'block_iomad_company_admin');
 }
 

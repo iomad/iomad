@@ -68,11 +68,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$mycompany = new company($companyid);
+$mycompany = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:managetemplates', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:managetemplates', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/iomad_templates_form.php');

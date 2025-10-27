@@ -71,13 +71,13 @@ if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroom
 }
 
 // Get my company info.
-$companyid = iomad::get_my_companyid($systemcontext);
-$company = new company($companyid);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+$company = new local_iomad\company($companyid);
 
 // Have we been sent a userid?
 if (!empty($userid)) {
     // If so - also get the user's company.
-    $usercompany = company::by_userid($userid);
+    $usercompany = local_iomad\company::by_userid($userid);
 }
 
 // Page stuff.
@@ -88,7 +88,7 @@ $PAGE->set_context($context);
 $PAGE->requires->js_call_amd('mod_trainingevent/attendance', 'init');
 
 // Get the associated department id.
-$parentlevel = company::get_company_parentnode($company->id);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 if (!empty($trainingevent->coursecapacity)) {
     $maxcapacity = $trainingevent->coursecapacity;
@@ -582,7 +582,7 @@ if (!empty($buttonstring)) {
 // Output the attendees.
 if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)) {
     // Get the associated department id.
-    $parentlevel = company::get_company_parentnode($company->id);
+    $parentlevel = local_iomad\company::get_company_parentnode($company->id);
     $companydepartment = $parentlevel->id;
 
     if (has_capability('block/iomad_company_admin:edit_all_departments', $systemcontext)) {
@@ -593,7 +593,7 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
     }
     $departmentid = $userhierarchylevel;
 
-    $allowedusers = company::get_recursive_department_users($departmentid);
+    $allowedusers = local_iomad\company::get_recursive_department_users($departmentid);
     $allowedlist = '0';
     foreach ($allowedusers as $alloweduser) {
         if ($allowedlist == '0') {

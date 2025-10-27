@@ -41,11 +41,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:edit_departments', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:edit_departments', $companycontext);
 
 $departmentlist = new moodle_url('/blocks/iomad_company_admin/company_departments.php', array('deptid' => $departmentid));
 
@@ -72,7 +72,7 @@ if ($moveid && confirm_sesskey() && $confirm == md5($moveid)) {
     $movefullname = required_param('movefullname', PARAM_MULTILANG);
     $moveshortname = required_param('movefullname', PARAM_MULTILANG);
     $moveparent = required_param('moveparent', PARAM_INT);
-    company::create_department($moveid,
+    local_iomad\company::create_department($moveid,
                                $companyid,
                                $movefullname,
                                $moveshortname,
@@ -107,7 +107,7 @@ if ($editform->is_cancelled()) {
     $current = $DB->get_record('department', array('id' => $createdata->departmentid));
     if (empty($current)) {
         // We are creating a new department.
-        company::create_department($createdata->departmentid,
+        local_iomad\company::create_department($createdata->departmentid,
                                    $companyid,
                                    $createdata->fullname,
                                    $createdata->shortname,
@@ -115,7 +115,7 @@ if ($editform->is_cancelled()) {
         $redirectmessage = get_string('departmentcreatedok', 'block_iomad_company_admin');
     } else if ($current->parent == $createdata->deptid) {
         // Not moving, just saving it.
-        company::create_department($createdata->departmentid,
+        local_iomad\company::create_department($createdata->departmentid,
                                    $companyid,
                                    $createdata->fullname,
                                    $createdata->shortname,
@@ -147,7 +147,7 @@ if ($editform->is_cancelled()) {
 
     echo $output->header();
     // Check the department is valid.
-    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+    if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
 

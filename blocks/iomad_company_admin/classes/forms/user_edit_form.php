@@ -25,10 +25,11 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \company;
-use \iomad;
 use core_user;
 use core_text;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 //class user_edit_form extends company_moodleform {
 class user_edit_form extends \moodleform {
@@ -65,7 +66,7 @@ class user_edit_form extends \moodleform {
         $systemcontext = \context_system::instance();
         $departmenttree = array();
 
-        if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $this->companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $this->companycontext)) {
             $userhierarchylevel = $parentlevel->id;
             $userlevels = array($parentlevel->id => $parentlevel->id);
         } else {
@@ -73,8 +74,8 @@ class user_edit_form extends \moodleform {
             $userhierarchylevel = key($userlevels);
         }
         foreach ($userlevels as $userlevelid => $userlevel) {
-            $this->subhierarchieslist = $this->subhierarchieslist + \company::get_all_subdepartments($userlevelid);
-            $departmenttree[] = \company::get_all_subdepartments_raw($userlevelid);
+            $this->subhierarchieslist = $this->subhierarchieslist + company::get_all_subdepartments($userlevelid);
+            $departmenttree[] = company::get_all_subdepartments_raw($userlevelid);
         }
         $this->treehtml = $output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
 
@@ -231,7 +232,7 @@ class user_edit_form extends \moodleform {
         }
 
         // Deal with licenses.
-        if (\iomad::has_capability('block/iomad_company_admin:allocate_licenses', $this->companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $this->companycontext)) {
             $mform->addElement('header', 'licenses', get_string('assignlicenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
                                                    WHERE expirydate >= :timestamp

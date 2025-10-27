@@ -27,9 +27,9 @@ use moodle_url;
 use html_writer;
 use html_table;
 use DirectoryIterator;
-use company;
-use iomad;
-use company_user;
+use local_iomad\company;
+use local_iomad\company_user;
+use local_iomad\iomad;
 use context_system;
 
 require_once(dirname(__FILE__) . '/../../../config.php');

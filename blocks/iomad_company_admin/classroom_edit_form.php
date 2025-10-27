@@ -26,7 +26,7 @@
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib.php');
 
@@ -38,9 +38,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 $urlparams = array('id' => $classroomid);
 if ($returnurl) {
@@ -56,7 +56,7 @@ if ($classroomid) {
     $editoroptions['subdirs'] = file_area_contains_subdirs($companycontext, 'classroom', 'description', 0);
 
     $classroomrecord = (object) $DB->get_record('classroom', array('id' => $classroomid), '*', MUST_EXIST);
-    iomad::require_capability('block/iomad_company_admin:classrooms_edit', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_company_admin:classrooms_edit', $companycontext);
     $classroomrecord = file_prepare_standard_editor($classroomrecord, 'description', $editoroptions, $companycontext, 'block_iomad_company_admin', 'classroom_description', 0);
 
     $title = 'classrooms_edit';
@@ -66,7 +66,7 @@ if ($classroomid) {
     $isadding = true;
     $classroomid = 0;
     $classroomrecord = new stdClass;
-    iomad::require_capability('block/iomad_company_admin:classrooms_add', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_company_admin:classrooms_add', $companycontext);
 
     $title = 'classrooms_add';
 }

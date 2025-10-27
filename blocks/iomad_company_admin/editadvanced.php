@@ -43,7 +43,7 @@ if ($id !== $USER->id) {
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext =  \core\context\company::instance($companyid);
 
 // Correct the navbar .
@@ -66,7 +66,7 @@ $PAGE->navbar->add($listtext, $listurl);
 
 if ($id == -1) {
     // Creating new user.
-    iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
     $user = new stdclass();
     $user->id = -1;
     $user->auth = 'manual';
@@ -74,11 +74,11 @@ if ($id == -1) {
     $user->deleted = 0;
 } else {
     // Editing existing user.
-    iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
     if (!$user = $DB->get_record('user', array('id' => $id))) {
         throw new moodle_exception('invaliduserid');
     }
-    if (!company::check_canedit_user($companyid, $id)) {
+    if (!local_iomad\company::check_canedit_user($companyid, $id)) {
         throw new moodle_exception('invaliduserid');
     }
 }
@@ -307,8 +307,8 @@ if ($user->id == -1 or ($user->id != $USER->id)) {
     $userfullname     = fullname($user, true);
 
     $link = null;
-    if (iomad::has_capability('moodle/course:viewparticipants', $systemcontext) ||
-        iomad::has_capability('moodle/site:viewparticipants', $systemcontext)) {
+    if (local_iomad\iomad::has_capability('moodle/course:viewparticipants', $systemcontext) ||
+        local_iomad\iomad::has_capability('moodle/site:viewparticipants', $systemcontext)) {
         $link = new moodle_url("/user/index.php", array('id' => $course->id));
     }
     $PAGE->navbar->add($strparticipants, $link);

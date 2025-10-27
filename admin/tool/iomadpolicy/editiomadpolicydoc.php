@@ -38,8 +38,8 @@ $moveup = optional_param('moveup', null, PARAM_INT);
 $movedown = optional_param('movedown', null, PARAM_INT);
 $companyonly = optional_param('companyonly', false, PARAM_BOOL);
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-$companyid = iomad::get_my_companyid(context_system::instance(), false);
+
+$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
 if ($companyonly && !empty($companyid)) {
     $companycontext = \core\context\company::instance($companyid);
     $PAGE->set_url(new moodle_url($CFG->wwwroot . '/admin/tool/iomadpolicy/managedocs.php', ['companyonly' => $companyonly]));

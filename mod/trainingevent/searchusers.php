@@ -74,7 +74,7 @@ if (!$trainingevent = $DB->get_record('trainingevent', ['id' => $eventid])) {
 }
 
 $systemcontext = context_system::instance();
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
 
 if (!$cm = get_coursemodule_from_instance('trainingevent', $trainingevent->id, $trainingevent->course)) {
@@ -168,8 +168,8 @@ if (empty($trainingevent->coursecapacity)) {
 $attending = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id, 'waitlisted' => 0]);
 
 // Get the associated department id.
-$company = new company($location->companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($location->companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Check the department is valid.
@@ -290,7 +290,7 @@ foreach ($columns as $column) {
 $coursecontext = context_course::instance($trainingevent->course);
 if (!has_capability('mod/trainingevent:viewallattendees', $coursecontext)) {
     // Get department users.
-    $departmentusers = company::get_recursive_department_users($departmentid);
+    $departmentusers = local_iomad\company::get_recursive_department_users($departmentid);
     if ( count($departmentusers) > 0 ) {
         $departmentids = "";
         foreach ($departmentusers as $departmentuser) {

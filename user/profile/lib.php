@@ -526,14 +526,14 @@ class profile_field_base {
         }
 
         // IOMAD: is this a company manager and can they edit this user.
-        $companyid = iomad::get_my_companyid($systemcontext, false);
+        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
 
-        if ((company::check_can_manage($this->userid) || empty($this->userid)) && iomad::has_capability('block/iomad_company_admin:user_create', $companycontext)) {
+        if ((company::check_can_manage($this->userid) || empty($this->userid)) && local_iomad\iomad::has_capability('block/iomad_company_admin:user_create', $companycontext)) {
             return true;
         }
 
@@ -676,8 +676,8 @@ function profile_get_user_fields_with_data(int $userid): array {
 
     // IOMAD - Filter the categories
     if ($DB->get_manager()->table_exists('company')) {
-        if(!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
-            $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if(!local_iomad\iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
+            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
             $sql .= " WHERE (uif.categoryid IN (
                       SELECT profileid FROM {company} where id = :companyid)
                       OR uif.categoryid IN (
@@ -735,8 +735,8 @@ function profile_definition(MoodleQuickForm $mform, int $userid = 0): void {
     $categories = profile_get_user_fields_with_data_by_category($userid);
 
     // IOMAD - Filter categories which only apply to this company.
-    if(!iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
-        $categories = iomad::iomad_filter_profile_categories($categories, $userid);
+    if(!local_iomad\iomad::has_capability('block/iomad_company_admin:allcompany_user_profiles', context_system::instance())){
+        $categories = local_iomad\iomad::iomad_filter_profile_categories($categories, $userid);
     }
 
     foreach ($categories as $categoryid => $fields) {

@@ -128,7 +128,7 @@ class condition extends \core_availability\condition {
             // a database query. To save queries, get all companys for course at
             // once in a static cache.
             if (!array_key_exists($this->companyid, self::$companynames)) {
-                $allcompanys = company::get_companies_select();
+                $allcompanys = local_iomad\company::get_companies_select();
                 foreach ($allcompanys as $id => $name) {
                     self::$companynames[$id] = $name;
                 }

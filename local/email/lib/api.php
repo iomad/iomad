@@ -23,7 +23,6 @@
 
 require_once(dirname(__FILE__) . '/../local_lib.php');
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
-require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
 
 class EmailTemplate {
     protected $user = null;
@@ -94,7 +93,7 @@ class EmailTemplate {
                 return true;
             }
             //Is the template enabled for the company?
-            $company = new company($emailtemplate->company->id);
+            $company = new local_iomad\company($emailtemplate->company->id);
             $managertype = 0;
             if (strpos($templatename, 'manager')) {
                 $managertype = 1;
@@ -124,7 +123,7 @@ class EmailTemplate {
     public static function send_to_all_users_in_department($departmentid, $templatename, $options = array()) {
         global $DB;
 
-        $users = company::get_recursive_department_users($departmentid);
+        $users = local_iomad\company::get_recursive_department_users($departmentid);
         $useroptions = array_map('self::getuseroption', $users);
         $result = self::send($templatename, $options, $useroptions);
         if ($result === true) {
@@ -212,8 +211,8 @@ class EmailTemplate {
         // Get it by another means.
         if (empty($this->company)) {
             // Otherwise use the creating users company.
-            $companyid = iomad::get_my_companyid(context_system::instance(), false);
-            $this->company = new company($companyid);
+            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+            $this->company = new local_iomad\company($companyid);
         }
 
         $this->course = $this->get_course($course);
@@ -439,7 +438,7 @@ class EmailTemplate {
         global $USER, $CFG, $DB;
 
         $supportuser = new stdclass();
-        $company = new company($email->companyid);
+        $company = new local_iomad\company($email->companyid);
 
         // Is this a special to id?
         if ($email->userid == -999) {
@@ -624,7 +623,7 @@ class EmailTemplate {
                 // Do we send to external supervisors as well?
                 if (empty($template->disabledsupervisor)) {
                     // Get the users supervisors.
-                    if ($supervisors = company::get_usersupervisor($email->userid)) {
+                    if ($supervisors = local_iomad\company::get_usersupervisor($email->userid)) {
                         foreach ($supervisors as $supervisor) {
                             if (!self::email_direct($supervisor,
                                                     $supportuser,
@@ -655,7 +654,7 @@ class EmailTemplate {
         $supportuser = new stdclass();
         $subject = $this->subject();
         $body = $this->body();
-        $company = new company($this->companyid);
+        $company = new local_iomad\company($this->companyid);
 
         if (isset($this->emailfrom)) {
             $supportuser = self::get_user($this->emailfrom);
@@ -799,9 +798,9 @@ class EmailTemplate {
             $supportuser->customheaders = '';
         }
         // Do we have a supervisor?
-        if ($supervisoremails = company::get_usersupervisor($this->user->id)) {
+        if ($supervisoremails = local_iomad\company::get_usersupervisor($this->user->id)) {
             $mail = get_mailer();
-            company::set_company_mailer($mail, $this->companyid);
+            local_iomad\company::set_company_mailer($mail, $this->companyid);
 
             foreach ($supervisoremails as $supervisoremail) {
                 if (empty($CFG->divertallemailsto)) {
@@ -842,7 +841,7 @@ class EmailTemplate {
         global $USER, $CFG;
 
         $mail = get_mailer();
-        company::set_company_mailer($mail, $companyid);
+        local_iomad\company::set_company_mailer($mail, $companyid);
 
         if (!empty($supportuser->customheaders['From'])) {
             $mail->From = $supportuser->customheaders['From'];
@@ -1065,7 +1064,7 @@ class EmailTemplate {
     private static function get_sender($user) {
 
         // Get the user's company.
-        if ($usercompany = company::get_company_byuserid($user->id)) {
+        if ($usercompany = local_iomad\company::get_company_byuserid($user->id)) {
             // Is there a default contact userid?
             if (isset($usercompany->defaultcontactid)) {
                 $returnid = $usercompany->defaultcontactid;

@@ -21,9 +21,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->dirroot.'/local/iomad/lib/company.php');
-require_once($CFG->dirroot.'/local/iomad/lib/user.php');
-require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+
+
+
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once($CFG->dirroot.'/mod/trainingevent/lib.php');
 
@@ -38,7 +38,7 @@ class iomad_approve_access {
         global $CFG, $DB, $USER;
 
         // Do we have a companyid?
-        if (!$companyid = iomad::get_my_companyid(context_system::instance(), false)) {
+        if (!$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false)) {
             return false;
         }
 
@@ -74,7 +74,7 @@ class iomad_approve_access {
         if ($approvaltype == 'both' || $approvaltype == 'manager') {
 
             // then get the list of users I am responsible for.
-            $myuserids = company::get_my_users_list($companyid);
+            $myuserids = local_iomad\company::get_my_users_list($companyid);
             if (!empty($myuserids) && $DB->get_records_sql("SELECT beae.* FROM {block_iomad_approve_access} beae
                                                    RIGHT JOIN {trainingevent} cc ON cc.id=beae.activityid
                                                    AND cc.approvaltype in (1,3)
@@ -90,7 +90,7 @@ class iomad_approve_access {
         if ($approvaltype == 'both' || $approvaltype == 'company') {
 
             // then get the list of users I am responsible for.
-            $myuserids = company::get_my_users_list($companyid);
+            $myuserids = local_iomad\company::get_my_users_list($companyid);
             if (!empty($myuserids) && $DB->get_records_sql("SELECT beae.* FROM {block_iomad_approve_access} beae
                                       RIGHT JOIN {trainingevent} cc ON cc.id=beae.activityid
                                       WHERE beae.companyid=:companyid
@@ -120,7 +120,7 @@ class iomad_approve_access {
         global $CFG, $DB, $USER;
 
         // Do we have a companyid?
-        if (!$companyid = iomad::get_my_companyid(context_system::instance(), false)) {
+        if (!$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false)) {
             return false;
         }
 
@@ -154,7 +154,7 @@ class iomad_approve_access {
         }
 
         // Get the list of users I am responsible for.
-        $myuserids = company::get_my_users_list($companyid);
+        $myuserids = local_iomad\company::get_my_users_list($companyid);
         if (!empty($myuserids)) {
             if ($approvaltype == 'manager') {
                 //  Need to deal with departments here.
@@ -336,7 +336,7 @@ class iomad_approve_access {
         }
 
         // Set the company.
-        $company = new company($event->companyid);
+        $company = new local_iomad\company($event->companyid);
 
         // What type of request is it?
         $approvaltype = $event->other['approvaltype'];
@@ -417,7 +417,7 @@ class iomad_approve_access {
         }
 
         // Set the company.
-        $company = new company($event->companyid);
+        $company = new local_iomad\company($event->companyid);
 
         // What type of request is it?
         $approvaltype = $event->other['approvaltype'];
