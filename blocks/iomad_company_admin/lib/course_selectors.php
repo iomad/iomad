@@ -440,7 +440,10 @@ class potential_company_course_selector extends company_course_selector_base {
     }
 
     public function find_courses($search) {
-        global $CFG, $DB, $SITE, $companycontext;
+        global $CFG, $DB, $SITE;
+
+        $companycontext = \core\context\company::instance($this->companyid);
+
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
