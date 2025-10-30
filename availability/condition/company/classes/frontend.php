@@ -25,7 +25,7 @@
 
 namespace availability_company;
 
-use company;
+use local_iomad\company;
 
 /**
  * Front-end class.
@@ -84,7 +84,7 @@ class frontend extends \core_availability\frontend {
         
 
         if ($courseid != $this->allcompanyscourseid) {
-            $this->allcompanys = local_iomad\company::get_companies_select();
+            $this->allcompanys = company::get_companies_select();
             $this->allcompanyscourseid = $courseid;
         }
         return $this->allcompanys;

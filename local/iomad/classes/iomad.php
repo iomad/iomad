@@ -27,6 +27,7 @@ use moodleform;
 use context;
 use context_system;
 use moodle_url;
+use cache;
 
 class iomad {
 

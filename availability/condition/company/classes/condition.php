@@ -25,8 +25,9 @@
 
 namespace availability_company;
 
-use iomad;
-use company;
+use local_iomad\iomad;
+use local_iomad\company;
+use context_course;
 
 /**
  * Condition main class.
@@ -86,7 +87,7 @@ class condition extends \core_availability\condition {
         global $DB;
 
         $course = $info->get_course();
-        $context = \context_course::instance($course->id);
+        $context = context_course::instance($course->id);
         $allow = false;
 
         // Get all companys the user belongs to.
@@ -128,7 +129,7 @@ class condition extends \core_availability\condition {
             // a database query. To save queries, get all companys for course at
             // once in a static cache.
             if (!array_key_exists($this->companyid, self::$companynames)) {
-                $allcompanys = local_iomad\company::get_companies_select();
+                $allcompanys = company::get_companies_select();
                 foreach ($allcompanys as $id => $name) {
                     self::$companynames[$id] = $name;
                 }
