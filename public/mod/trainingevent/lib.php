@@ -594,9 +594,6 @@ function trainingevent_user_attending($event) {
         }
     }
 
-    // Reset the module cache.
-    course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
-
     // Is the event exclusive?
     if (empty($trainingevent->isexclusive)) {
         return;
@@ -615,6 +612,10 @@ function trainingevent_user_attending($event) {
                                                                'userid' => $user->id]);
         }
     }
+
+    // Reset the module cache.
+    course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
+
     return;
 }
 
@@ -706,15 +707,10 @@ function trainingevent_user_removed($event) {
         }
     }
 
-    // Reset the module cache.
-    course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
-
     // Is anyone on the waiting list?
     $waitlistusers = $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                               'waitlisted' => 1], 'id ASC');
-    if (empty($waitlistusers)) {
-        return;
-    } else {
+    if (!empty($waitlistusers)) {
         // Check if there is space.
         $attending = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                                 'waitlisted' => 0,
@@ -757,15 +753,20 @@ function trainingevent_user_removed($event) {
             // Fire an event for this.
             $eventother = ['waitlisted' => 0];
             $modulecontext = context_module::instance($event->contextinstanceid);
-            $moodleevent = \mod_trainingevent\event\user_attending::create(['context' => $modulecontext,
+            $moodleevent = \mod_trainingevent\event\user_attending::create([
+                                                                            'context' => $modulecontext,
                                                                             'userid' => $user->id,
                                                                             'objectid' => $trainingevent->id,
                                                                             'companyid' => $usercompany->id,
                                                                             'courseid' => $trainingevent->course,
-                                                                            'other' => $eventother]);
+                                                                            'other' => $eventother,
+                                                                           ]);
             $moodleevent->trigger();
         }
     }
+
+    // Reset the module cache.
+    course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
 
     return;
 }
@@ -871,17 +872,11 @@ function trainingevent_attendance_changed($event) {
         }
     }
 
-    // Reset the module caches.
-    course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
-    course_modinfo::purge_course_modules_cache($course->id, [$chosencm->id]);
-
      // Is anyone on the waiting list?
     $waitlistusers = $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                               'approved' => 1,
                                                               'waitlisted' => 1], 'id ASC');
-    if (empty($waitlistusers)) {
-        return;
-    } else {
+    if (!empty($waitlistusers)) {
         // Check if there is space.
         $attending = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                                 'waitlisted' => 0,
@@ -930,6 +925,42 @@ function trainingevent_attendance_changed($event) {
                                                                             'courseid' => $trainingevent->course,
                                                                             'other' => $eventother]);
             $moodleevent->trigger();
+        }
+    }
+
+    // Reset the module caches.
+    course_modinfo::purge_course_modules_cache($course->id, [$cm->id]);
+    course_modinfo::purge_course_modules_cache($course->id, [$chosencm->id]);
+
+    return;
+}
+
+/**
+ * Processes anything else that needs to happen when the user_enrolment_deleted event is fired.
+ *
+ */
+function trainingevent_user_enrolment_deleted($event) {
+    global $DB, $CFG;
+
+    // Has the user signed up to any training event in any way?
+    if ($trainingevents = $DB->get_records_sql("SELECT t.* FROM {trainingevent} t
+                                                JOIN {trainingevent_users} tu ON (t.id = tu.trainingeventid)
+                                                WHERE t.course =: courseid
+                                                AND tu.userid = :userid",
+                                               ['courseid' => $event->courseid,
+                                                'userid' => $event->relateduserid])) {
+
+        // Process these.
+        foreach ($trainingevents as $trainingevent) {
+
+            // Fire an event to remove them from the training event.
+            $event = \mod_trainingevent\event\user_removed::create(['context' => $event->context,
+                                                                    'userid' => $event->userid,
+                                                                    'relateduserid' => $event->relateduserid,
+                                                                    'objectid' => $trainingevent->id,
+                                                                    'courseid' => $event->courseid,
+                                                                    'companyid' => $event->companyid,
+                                                                    ]);
         }
     }
 

@@ -62,4 +62,10 @@ $observers = [
         'internal'    => false,
     ],
 
+    [
+        'eventname'   => '\core\event\user_enrolment_deleted',
+        'callback'    => 'mod_trainingevent_observer::user_enrolment_deleted',
+        'internal'    => false,
+    ],
+
 ];
