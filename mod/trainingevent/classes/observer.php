@@ -89,4 +89,15 @@ class mod_trainingevent_observer {
         trainingevent_course_module_completion_updated($event);
         return true;
     }
+
+    /**
+     * Triggered via core::user_enrolment_deleted event.
+     *
+     * @param \core\event\user_enrolment_deleted $event
+     * @return bool true on success.
+     */
+    public static function user_enrolment_deleted($event) {
+        trainingevent_user_enrolment_deleted($event);
+        return true;
+    }
 }
