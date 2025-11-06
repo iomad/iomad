@@ -302,7 +302,7 @@ function xmldb_trainingevent_upgrade($oldversion) {
         // Handle any training event signups for users where they are either no longer enrolled
         // or their enrolment start time is after the end time of a training event they are signed up
         // to.
-        if ($userevents = $DB->get_records_sql("SELECT DISTINCT tu.*, t.startdatetime,ue.timesart FROM {trainingevent_users} tu
+        if ($userevents = $DB->get_records_sql("SELECT DISTINCT tu.*, t.startdatetime,ue.timestart FROM {trainingevent_users} tu
                                                 JOIN {trainingevent} t ON (tu.trainingeventid = t.id)
                                                 JOIN {enrol} e ON (e.courseid = t.course AND e.status = 0)
                                                 LEFT JOIN {user_enrolments} ue ON (ue.enrolid = e.id AND ue.userid = tu.userid)")) {
