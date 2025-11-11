@@ -64,24 +64,24 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                                          AND c.visible = 1
                                          AND t.startdatetime > :time",
                                          ['time' => $runtime]);
-        foreach ($courses as $course) {       
+        foreach ($courses as $course) {
             // Get all of the users on the course who are not already signed up for an event or waiting list.
-            $users = $DB->get_records_sql("SELECT DISTINCT u.*,lit.companyid FROM {user} u
+            $users = $DB->get_records_sql("SELECT DISTINCT concat(u.id, concat('-', lit.companyid)) AS rowid,u.*,lit.companyid
+                                           FROM {user} u
                                            JOIN {user_enrolments} ue ON (ue.userid = u.id)
-                                           JOIN {enrol} e ON (ue.enrolid = e.id)
-                                           JOIN {trainingevent} t ON (e.courseid = t.course)
-                                           JOIN {classroom} v ON (t.classroomid = v.id)
+                                           JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
                                            JOIN {local_iomad_track} lit
                                              ON (e.courseid = lit.courseid
-                                                 AND t.course = lit.courseid
                                                  AND ue.userid = lit.userid
                                                  AND ue.timestart = lit.timeenrolled)
-                                           LEFT JOIN {trainingevent_users} tu ON (u.id = tu.userid AND ue.userid = tu.userid AND t.id = tu.trainingeventid)
                                            WHERE e.courseid = :courseid
                                            AND ue.timestart < :warntime
-                                           AND tu.userid IS NULL",
-                                           ['courseid' => $course->id,
-                                            'warntime' => $runtime - $course->warnnotstarted * 24 * 60 * 60]);
+                                           AND u.id NOT IN (
+                                             SELECT tu.userid FROM {trainingevent_users} tu
+                                             JOIN {trainingevent} t ON (tu.trainingeventid = t.id AND t.course = e.courseid)
+                                           )",
+                                          ['courseid' => $course->id,
+                                           'warntime' => $runtime - $course->warnnotstarted * 24 * 60 * 60]);
             foreach ($users as $user) {
                 // Get the user's company.
                 if ($company = new local_iomad\company($user->companyid)) {
@@ -143,7 +143,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                     // Passed all checks, send the email.
                     mtrace("Sending trainingevent not selected email to $user->email");
                     EmailTemplate::send('trainingevent_not_selected', array('user' => $user, 'course' => $course, 'company' => $company));
-                    
+
                 }
             }
 
