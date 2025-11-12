@@ -15,19 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version info
- * @package   local_framework_selector
+ * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_iomad\framework_selector;
 
-$plugin->release  = '4.5.7 (Build: 20251006)'; // Human-friendly version name.
-$plugin->version  = 2024100745;   // The (date) version of this plugin.
-$plugin->requires = 2024100700;   // Requires this Moodle version.
-$plugin->component  = 'local_framework_selector';
-$plugin->dependencies = ['local_iomad' => 2024090401];
-$plugin->supported = [405, 405];
-$plugin->maturity = MATURITY_STABLE;
+/**
+ * base class for selecting frameworks of a company
+ */
+abstract class company_base extends base {
+
+    protected $companyid;
+
+    //overridden to include the sortorder field
+    protected $requiredfields = array('id', 'shortname');
+
+    public function __construct($name, $options) {
+        $this->companyid  = $options['companyid'];
+        parent::__construct($name, $options);
+    }
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['companyid'] = $this->companyid;
+        $options['file']    = 'local/iomad/classes/framework_selector/company_base.php';
+        return $options;
+    }
+}
