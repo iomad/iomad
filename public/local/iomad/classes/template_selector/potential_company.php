@@ -21,115 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../../local/template_selector/lib.php');
+namespace local_iomad\template_selector;
 
-/**
- * base class for selecting templates of a company
- */
-abstract class company_template_selector_base extends template_selector_base {
-
-    protected $companyid;
-
-    //overridden to include the sortorder field
-    protected $requiredfields = array('id', 'shortname');
-
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib/template_selectors.php';
-        return $options;
-    }
-}
-
-class current_company_templates_selector extends company_template_selector_base {
-    /**
-     * Company templates
-     * @param <type> $search
-     * @return array
-     */
-    protected $shared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-
-        // Default for shared is true.
-        if (isset($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
-            $this->shared = true;
-        }
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib/template_selectors.php';
-        $options['shared'] = $this->shared;
-        return $options;
-    }
-
-    public function find_templates($search) {
-        global $CFG, $DB;
-        // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
-        list($wherecondition, $params) = $this->search_sql($search, 'ct');
-        $params['companyid'] = $this->companyid;
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('ct');
-        $countfields = 'SELECT COUNT(1)';
-
-
-        // Deal with shared templates.
-        if ($this->shared) {
-            $sharedsql = " FROM {competency_template} ct
-                           INNER JOIN {iomad_templates} it
-                           ON ct.id=it.templateid
-                           WHERE it.shared = 1";
-        } else {
-            $sharedsql = " FROM {competency_template} ct WHERE 1 = 2";
-        }
-
-        $sql = " FROM {competency_template} ct
-                INNER JOIN {company_comp_templates} cct ON (ct.id = cct.templateid AND cct.companyid = :companyid)
-                WHERE $wherecondition";
-
-        $order = ' ORDER BY ct.shortname ASC';
-
-        if (!$this->is_validating()) {
-            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
-                                     $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount >  $CFG->iomad_max_select_templates) {
-                return $this->too_many_results($search, $potentialmemberscount);
-            }
-        }
-
-        $availabletemplates = $DB->get_records_sql($fields . $sql . $order, $params) +
-                            $DB->get_records_sql($fields . $sharedsql . $order, $params);
-
-        if (empty($availabletemplates)) {
-            return array();
-        }
-
-        // Set up empty return.
-        $templatearray = array();
-        if (!empty($availabletemplates)) {
-            if ($search) {
-                $groupname = get_string('currcompanytemplatesmatching', 'block_iomad_company_admin', $search);
-            } else {
-                $groupname = get_string('currcompanytemplates', 'block_iomad_company_admin');
-            }
-            $templatearray[$groupname] = $availabletemplates;
-        }
-
-        return $templatearray;
-    }
-}
-
-
-class potential_company_templates_selector extends company_template_selector_base {
+class potential_company extends company_base {
     /**
      * Potential company manager templates
      * @param <type> $search
@@ -156,7 +50,7 @@ class potential_company_templates_selector extends company_template_selector_bas
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib/template_selectors.php';
+        $options['file']    = 'local/iomad/classes/template_selector/potential_company.php';
         $options['shared'] = $this->shared;
         $options['partialshared'] = $this->partialshared;
         return $options;

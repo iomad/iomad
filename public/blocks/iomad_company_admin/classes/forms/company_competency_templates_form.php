@@ -23,14 +23,14 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \company_user;
-use \iomad;
-use \potential_company_templates_selector;
-use \current_company_templates_selector;
-use \context_system;
-use \stdclass;
+use moodleform;
+use context_system;
+use stdclass;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
+use local_iomad\template_selector\potential_company;
+use local_iomad\template_selector\current_company;
 
 class company_competency_templates_form extends moodleform {
     protected $context = null;
@@ -52,9 +52,9 @@ class company_competency_templates_form extends moodleform {
                          'companyid' => $this->selectedcompany,
                          'shared' => false,
                          'partialshared' => true);
-        $this->potentialtemplates = new potential_company_templates_selector('potentialtemplates',
+        $this->potentialtemplates = new potential_company('potentialtemplates',
                                                                          $options);
-        $this->currenttemplates = new current_company_templates_selector('currenttemplates', $options);
+        $this->currenttemplates = new current_company('currenttemplates', $options);
 
         parent::__construct($actionurl);
     }

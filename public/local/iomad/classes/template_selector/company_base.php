@@ -15,15 +15,38 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version info
- * @package   local_template_selector
+ * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_iomad\template_selector;
 
+/**
+ * base class for selecting templates of a company
+ */
+abstract class company_base extends base {
+
+    protected $companyid;
+
+    //overridden to include the sortorder field
+    protected $requiredfields = array('id', 'shortname');
+
+    public function __construct($name, $options) {
+        $this->companyid  = $options['companyid'];
+        parent::__construct($name, $options);
+    }
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['companyid'] = $this->companyid;
+        $options['file']    = 'local/iomad/classes/template_selector/company_base.php';
+        return $options;
+    }
+}
+
+<<<<<<<< HEAD:public/local/template_selector/version.php
 $plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
 $plugin->version  = 2025041450;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
@@ -31,3 +54,5 @@ $plugin->component  = 'local_template_selector';
 $plugin->dependencies = ['local_iomad' => 2025041400];
 $plugin->supported = [500, 500];
 $plugin->maturity = MATURITY_STABLE;
+========
+>>>>>>>> 6910099ab08 (IOMAD: Migrate local selector plugins to local_iomad autoload classes - local_template_selector - #2524):local/iomad/classes/template_selector/company_base.php

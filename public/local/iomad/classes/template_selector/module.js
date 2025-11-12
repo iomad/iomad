@@ -5,15 +5,15 @@
  */
 
 // Define the core_template namespace if it has not already been defined
-M.local_template_selector = M.local_template_selector || {};
+M.local_iomad_template_selector = M.local_iomad_template_selector || {};
 // Define a template selectors array for against the cure_template namespace
-M.local_template_selector.template_selectors = [];
+M.local_iomad_template_selector.template_selectors = [];
 /**
  * Retrieves an instantiated template selector or null if there isn't one by the requested name
  * @param {string} name The name of the selector to retrieve
  * @return bool
  */
-M.local_template_selector.get_template_selector = function (name) {
+M.local_iomad_template_selector.get_template_selector = function (name) {
     return this.template_selectors[name] || null;
 };
 
@@ -26,7 +26,7 @@ M.local_template_selector.get_template_selector = function (name) {
  * @param {array} extrafields extra fields we are displaying for each template in addition to fullname.
  * @param {string} lastsearch The last search that took place
  */
-M.local_template_selector.init_template_selector = function (Y, name, hash, extrafields, lastsearch) {
+M.local_iomad_template_selector.init_template_selector = function (Y, name, hash, extrafields, lastsearch) {
     // Creates a new template_selector object
     var template_selector = {
         /** This id/name used for this control in the HTML. */
@@ -139,7 +139,7 @@ M.local_template_selector.init_template_selector = function (Y, name, hash, extr
                 return;
             }
 
-            Y.io(M.cfg.wwwroot + '/local/template_selector/search.php', {
+            Y.io(M.cfg.wwwroot + '/local/iomad/classes/template_selector/search.php', {
                 method: 'POST',
                 data: 'selectorid=' + hash + '&sesskey=' + M.cfg.sesskey + '&search=' + value + '&templateselector_searchanywhere=' + this.get_option('searchanywhere'),
                 on: {
@@ -175,7 +175,7 @@ M.local_template_selector.init_template_selector = function (Y, name, hash, extr
 
             // If we are in developer debug mode, output a link to help debug the failure.
             if (M.cfg.developerdebug) {
-                this.searchfield.insert(Y.Node.create('<a href="' + M.cfg.wwwroot + '/local/template_selector/search.php?selectorid=' +
+                this.searchfield.insert(Y.Node.create('<a href="' + M.cfg.wwwroot + '/local/iomad/classes/template_selector/search.php?selectorid=' +
                                                        hash + '&sesskey=' + M.cfg.sesskey + '&search=' + this.get_search_text() +
                                                       '&debug=1">Ajax call failed. Click here to try the search call directly.</a>'));
             }
@@ -209,13 +209,13 @@ M.local_template_selector.init_template_selector = function (Y, name, hash, extr
                 count++;
             }
             if (!count) {
-                var searchstr = (this.lastsearch != '')?this.insert_search_into_str(M.str.local_template_selector.nomatchingtemplates, this.lastsearch):M.str.moodle.none;
+                var searchstr = (this.lastsearch != '')?this.insert_search_into_str(M.str.local_iomad_template_selector.nomatchingtemplates, this.lastsearch):M.str.moodle.none;
                 this.output_group(searchstr, {}, selectedtemplates, true)
             }
 
             // If there were previously selected templates who do not match the search, show them too.
             if (this.get_option('preserveselected') && selectedtemplates) {
-                this.output_group(this.insert_search_into_str(M.str.local_template_selector.previouslyselectedtemplates, this.lastsearch), selectedtemplates, true, false);
+                this.output_group(this.insert_search_into_str(M.str.local_iomad_template_selector.previouslyselectedtemplates, this.lastsearch), selectedtemplates, true, false);
             }
             this.handle_selection_change();
         },
@@ -324,7 +324,7 @@ M.local_template_selector.init_template_selector = function (Y, name, hash, extr
  * @param {YUI} Y
  * @return Tracker object
  */
-M.local_template_selector.init_template_selector_options_tracker = function(Y) {
+M.local_iomad_template_selector.init_template_selector_options_tracker = function(Y) {
     // Create a template selector options tracker
     var template_selector_options_tracker = {
         /**

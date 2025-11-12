@@ -17,11 +17,15 @@
 /**
  * Default plugin library
  *
- * @package   local_template_selector
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace local_iomad\template_selector;
+
+use moodle_exception;
 
 /**
  * The default size of a template selector.
@@ -29,13 +33,13 @@
 define('TEMPLATE_SELECTOR_DEFAULT_ROWS', 20);
 
 /**
- * Base class for template selectors.
+ * Base class for local IOMAD template selectors.
  *
  * In your theme, you must give each template-selector a defined width. If the
  * template selector has name="myid", then the div myid_wrapper must have a width
  * specified.
  */
-abstract class template_selector_base {
+abstract class base {
     /** @var string The control name (and id) in the HTML. */
     protected $name;
     /** @var array Extra fields to search on and return in addition to firstname and lastname. */
@@ -73,11 +77,11 @@ abstract class template_selector_base {
     /** @var array JavaScript YUI3 Module definition */
     protected static $jsmodule = [
                 'name' => 'template_selector',
-                'fullpath' => '/local/template_selector/module.js',
+                'fullpath' => '/local/iomad/classes/template_selector/module.js',
                 'requires'  => ['node', 'event-custom', 'datasource', 'json'],
                 'strings' => [
-                    ['previouslyselectedtemplates', 'local_template_selector', '%%SEARCHTERM%%'],
-                    ['nomatchingtemplates', 'local_template_selector', '%%SEARCHTERM%%'],
+                    ['previouslyselectedtemplates', 'local_iomad', '%%SEARCHTERM%%'],
+                    ['nomatchingtemplates', 'local_iomad', '%%SEARCHTERM%%'],
                     ['none'],
                 ]];
 
@@ -175,7 +179,7 @@ abstract class template_selector_base {
      */
     public function get_selected_template() {
         if ($this->multiselect) {
-            throw new moodle_exception('cannotcallusgetselectedtemplate', 'local_template_selector');
+            throw new moodle_exception('cannotcallusgetselectedtemplate', 'local_iomad');
         }
         $templates = $this->get_selected_templates();
         if (count($templates) == 1) {
@@ -183,7 +187,7 @@ abstract class template_selector_base {
         } else if (count($templates) == 0) {
             return null;
         } else {
-            throw new moodle_exception('templateselectortoomany', 'local_template_selector');
+            throw new moodle_exception('templateselectortoomany', 'local_iomad');
         }
     }
 
@@ -239,17 +243,17 @@ abstract class template_selector_base {
         $optionsoutput = false;
         if (!self::$searchoptionsoutput) {
             $output .= print_collapsible_region_start('', 'templateselector_options',
-                    get_string('searchoptions', 'local_template_selector'),
+                    get_string('searchoptions', 'local_iomad'),
                                'templateselector_optionscollapsed', true, true);
             $output .= $this->option_checkbox('preserveselected', $this->preserveselected,
-                    get_string('templateselectorpreserveselected', 'local_template_selector'));
+                    get_string('templateselectorpreserveselected', 'local_iomad'));
             $output .= $this->option_checkbox('autoselectunique', $this->autoselectunique,
-                    get_string('templateselectorautoselectunique', 'local_template_selector'));
+                    get_string('templateselectorautoselectunique', 'local_iomad'));
             $output .= $this->option_checkbox('searchanywhere', $this->searchanywhere,
-                    get_string('templateselectorsearchanywhere', 'local_template_selector'));
+                    get_string('templateselectorsearchanywhere', 'local_iomad'));
             $output .= print_collapsible_region_end(true);
 
-            $PAGE->requires->js_init_call('M.local_template_selector.init_template_selector_options_tracker',
+            $PAGE->requires->js_init_call('M.local_iomad_template_selector.init_template_selector_options_tracker',
                                           [], false, self::$jsmodule);
             self::$searchoptionsoutput = true;
         }
@@ -520,16 +524,16 @@ abstract class template_selector_base {
      */
     protected function too_many_results($search, $count) {
         if ($search) {
-            $a = new stdClass;
+            $a = (object) [];
             $a->count = $count;
             $a->search = $search;
-            return [get_string('toomanytemplatesmatchsearch', 'local_template_selector',
-                    $a) => [], get_string('pleasesearchmore', 'local_template_selector')
+            return [get_string('toomanytemplatesmatchsearch', 'local_iomad',
+                    $a) => [], get_string('pleasesearchmore', 'local_iomad')
                      => []];
         } else {
-            return [get_string('toomanytemplatestoshow', 'local_template_selector',
+            return [get_string('toomanytemplatestoshow', 'local_iomad',
                          $count) => [],
-                    get_string('pleaseusesearch', 'local_template_selector') => []];
+                    get_string('pleaseusesearch', 'local_iomad') => []];
         }
     }
 
@@ -552,7 +556,7 @@ abstract class template_selector_base {
         $select = false;
         if (empty($groupedtemplates)) {
             if (!empty($search)) {
-                $groupedtemplates = [get_string('nomatchingtemplates', 'local_template_selector',
+                $groupedtemplates = [get_string('nomatchingtemplates', 'local_iomad',
                                      $search) => []];
             } else {
                 $groupedtemplates = [get_string('none') => []];
@@ -573,7 +577,7 @@ abstract class template_selector_base {
         // If there were previously selected templates who do not match the search, show them too.
         if ($this->preserveselected && !empty($this->selected)) {
             $output .= $this->output_optgroup(get_string('previouslyselectedtemplates',
-                       'local_template_selector', $search), $this->selected, true);
+                       'local_iomad', $search), $this->selected, true);
         }
 
         // This method trashes $this->selected, so clear the cache so it is
@@ -689,7 +693,7 @@ abstract class template_selector_base {
         $USER->templateselectors[$hash] = $options;
 
         // Initialise the selector.
-        $PAGE->requires->js_init_call('M.local_template_selector.init_template_selector',
+        $PAGE->requires->js_init_call('M.local_iomad_template_selector.init_template_selector',
                                        [$this->name, $hash, $this->extrafields, $search],
                                        false, self::$jsmodule);
         return $output;
