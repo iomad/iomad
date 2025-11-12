@@ -17,19 +17,18 @@
 /**
  * Search page
  *
- * @package   local_framework_selector
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->dirroot . '/local/framework_selector/lib.php');
+require_once(dirname(__FILE__) . '/../../../../config.php');
 
 require_login();
 
 $PAGE->set_context(context_system::instance());
-$PAGE->set_url('/local/framework_selector/search.php');
+$PAGE->set_url('/local/iomad/classes/framework_selector/search.php');
 
 // In developer debug mode, when there is a debug=1 in the URL send as plain text
 // for easier debugging.

@@ -21,114 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../../local/framework_selector/lib.php');
+namespace local_iomad\framework_selector;
 
-/**
- * base class for selecting frameworks of a company
- */
-abstract class company_framework_selector_base extends framework_selector_base {
-
-    protected $companyid;
-
-    //overridden to include the sortorder field
-    protected $requiredfields = array('id', 'shortname');
-
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib/framework_selectors.php';
-        return $options;
-    }
-}
-
-class current_company_frameworks_selector extends company_framework_selector_base {
-    /**
-     * Company frameworks
-     * @param <type> $search
-     * @return array
-     */
-    protected $shared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-
-        // Default for shared is true.
-        if (isset($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
-            $this->shared = true;
-        }
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib/framework_selectors.php';
-        $options['shared'] = $this->shared;
-        return $options;
-    }
-
-    public function find_frameworks($search) {
-        global $CFG, $DB;
-        // By default wherecondition retrieves all frameworks except the deleted, not confirmed and guest.
-        list($wherecondition, $params) = $this->search_sql($search, 'cf');
-        $params['companyid'] = $this->companyid;
-        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('cf');
-        $countfields = 'SELECT COUNT(1)';
-
-
-        // Deal with shared frameworks.
-        if ($this->shared) {
-            $sharedsql = " FROM {competency_framework} cf
-                           INNER JOIN {iomad_frameworks} if
-                           ON cf.id=if.frameworkid
-                           WHERE if.shared = 1";
-        } else {
-            $sharedsql = " FROM {competency_framework} cf WHERE 1 = 2";
-        }
-        $sql = " FROM {competency_framework} cf
-                INNER JOIN {company_comp_frameworks} ccf ON (cf.id = ccf.frameworkid AND ccf.companyid = :companyid)
-                WHERE $wherecondition";
-
-        $order = ' ORDER BY cf.shortname ASC';
-
-        if (!$this->is_validating()) {
-            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
-                                     $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_frameworks) {
-                return $this->too_many_results($search, $potentialmemberscount);
-            }
-        }
-
-        $availableframeworks = $DB->get_records_sql($fields . $sql . $order, $params) +
-                            $DB->get_records_sql($fields . $sharedsql . $order, $params);
-
-        if (empty($availableframeworks)) {
-            return array();
-        }
-
-        // Set up empty return.
-        $frameworkarray = array();
-        if (!empty($availableframeworks)) {
-            if ($search) {
-                $groupname = get_string('currcompanyframeworksmatching', 'block_iomad_company_admin', $search);
-            } else {
-                $groupname = get_string('currcompanyframeworks', 'block_iomad_company_admin');
-            }
-            $frameworkarray[$groupname] = $availableframeworks;
-        }
-
-        return $frameworkarray;
-    }
-}
-
-
-class potential_company_frameworks_selector extends company_framework_selector_base {
+class potential_company extends company_base {
     /**
      * Potential company manager frameworks
      * @param <type> $search
@@ -155,7 +50,7 @@ class potential_company_frameworks_selector extends company_framework_selector_b
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib/framework_selectors.php';
+        $options['file']    = 'local/iomad/classes/framework_selector/potential_company.php';
         $options['shared'] = $this->shared;
         $options['partialshared'] = $this->partialshared;
         return $options;

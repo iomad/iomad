@@ -23,11 +23,13 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \potential_company_frameworks_selector;
-use \current_company_frameworks_selector;
-use \context_system;
+use moodleform;
+use local_iomad\framework_selector\potential_company;
+use local_iomad\framework_selector\current_company;
+use context_system;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_frameworks_form extends moodleform {
     protected $context = null;
@@ -48,9 +50,9 @@ class company_frameworks_form extends moodleform {
                          'companyid' => $this->selectedcompany,
                          'shared' => false,
                          'partialshared' => true);
-        $this->potentialframeworks = new potential_company_frameworks_selector('potentialframeworks',
+        $this->potentialframeworks = new potential_company('potentialframeworks',
                                                                          $options);
-        $this->currentframeworks = new current_company_frameworks_selector('currentframeworks', $options);
+        $this->currentframeworks = new current_company('currentframeworks', $options);
 
         parent::__construct($actionurl);
     }

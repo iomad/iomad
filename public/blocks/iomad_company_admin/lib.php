@@ -25,13 +25,8 @@ require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/formslib.php');
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
-
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/user_selectors.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/course_selectors.php');
-require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/template_selectors.php');
-require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/framework_selectors.php');
 
 /**
  * moodleform subclass that includes simple method for adding company select box

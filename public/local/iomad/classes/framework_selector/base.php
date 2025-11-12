@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * local framework selector default library file
+ * local_iomad framework_selector base class
  *
- * @package   local_framework_selector
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace local_iomad\framework_selector;
+
+use moodle_exception;
 
 /**
  * The default size of a framework selector.
@@ -35,7 +39,7 @@ define('FRAMEWORK_SELECTOR_DEFAULT_ROWS', 20);
  * framework selector has name="myid", then the div myid_wrapper must have a width
  * specified.
  */
-abstract class framework_selector_base {
+abstract class base {
     /** @var string The control name (and id) in the HTML. */
     protected $name;
     /** @var array Extra fields to search on and return in addition to firstname and lastname. */
@@ -73,11 +77,11 @@ abstract class framework_selector_base {
     /** @var array JavaScript YUI3 Module definition */
     protected static $jsmodule = [
                 'name' => 'framework_selector',
-                'fullpath' => '/local/framework_selector/module.js',
+                'fullpath' => '/local/iomad/classes/framework_selector/module.js',
                 'requires'  => ['node', 'event-custom', 'datasource', 'json'],
                 'strings' => [
-                              ['previouslyselectedframeworks', 'local_framework_selector', '%%SEARCHTERM%%'],
-                              ['nomatchingframeworks', 'local_framework_selector', '%%SEARCHTERM%%'],
+                              ['previouslyselectedframeworks', 'local_iomad', '%%SEARCHTERM%%'],
+                              ['nomatchingframeworks', 'local_iomad', '%%SEARCHTERM%%'],
                               ['none'],
                             ],
                         ];
@@ -178,7 +182,7 @@ abstract class framework_selector_base {
      */
     public function get_selected_framework() {
         if ($this->multiselect) {
-            throw new moodle_exception('cannotcallusgetselectedframework', 'local_framework_selector');
+            throw new moodle_exception('cannotcallusgetselectedframework', 'local_iomad');
         }
         $frameworks = $this->get_selected_frameworks();
         if (count($frameworks) == 1) {
@@ -186,7 +190,7 @@ abstract class framework_selector_base {
         } else if (count($frameworks) == 0) {
             return null;
         } else {
-            throw new moodle_exception('frameworkselectortoomany', 'local_framework_selector');
+            throw new moodle_exception('frameworkselectortoomany', 'local_iomad');
         }
     }
 
@@ -243,14 +247,14 @@ abstract class framework_selector_base {
         $optionsoutput = false;
         if (!self::$searchoptionsoutput) {
             $output .= print_collapsible_region_start('', 'frameworkselector_options',
-                    get_string('searchoptions', 'local_framework_selector'),
+                    get_string('searchoptions', 'local_iomad'),
                                'frameworkselector_optionscollapsed', true, true);
             $output .= $this->option_checkbox('preserveselected', $this->preserveselected,
-                    get_string('frameworkselectorpreserveselected', 'local_framework_selector'));
+                    get_string('frameworkselectorpreserveselected', 'local_iomad'));
             $output .= $this->option_checkbox('autoselectunique', $this->autoselectunique,
-                    get_string('frameworkselectorautoselectunique', 'local_framework_selector'));
+                    get_string('frameworkselectorautoselectunique', 'local_iomad'));
             $output .= $this->option_checkbox('searchanywhere', $this->searchanywhere,
-                    get_string('frameworkselectorsearchanywhere', 'local_framework_selector'));
+                    get_string('frameworkselectorsearchanywhere', 'local_iomad'));
             $output .= print_collapsible_region_end(true);
 
             $PAGE->requires->js_init_call('M.local_framework_selector.init_framework_selector_options_tracker',
@@ -529,16 +533,16 @@ abstract class framework_selector_base {
      */
     protected function too_many_results($search, $count) {
         if ($search) {
-            $a = new stdClass;
+            $a = (object) [];
             $a->count = $count;
             $a->search = $search;
-            return [get_string('toomanyframeworksmatchsearch', 'local_framework_selector',
-                    $a) => [], get_string('pleasesearchmore', 'local_framework_selector')
+            return [get_string('toomanyframeworksmatchsearch', 'local_iomad',
+                    $a) => [], get_string('pleasesearchmore', 'local_iomad')
                      => []];
         } else {
-            return [get_string('toomanyframeworkstoshow', 'local_framework_selector',
+            return [get_string('toomanyframeworkstoshow', 'local_iomad',
                          $count) => [],
-                    get_string('pleaseusesearch', 'local_framework_selector') => []];
+                    get_string('pleaseusesearch', 'local_iomad') => []];
         }
     }
 
@@ -561,7 +565,7 @@ abstract class framework_selector_base {
         $select = false;
         if (empty($groupedframeworks)) {
             if (!empty($search)) {
-                $groupedframeworks = [get_string('nomatchingframeworks', 'local_framework_selector',
+                $groupedframeworks = [get_string('nomatchingframeworks', 'local_iomad',
                                       $search) => []];
             } else {
                 $groupedframeworks = [get_string('none') => []];
@@ -582,7 +586,7 @@ abstract class framework_selector_base {
         // If there were previously selected frameworks who do not match the search, show them too.
         if ($this->preserveselected && !empty($this->selected)) {
             $output .= $this->output_optgroup(get_string('previouslyselectedframeworks',
-                       'local_framework_selector', $search), $this->selected, true);
+                       'local_iomad', $search), $this->selected, true);
         }
 
         // This method trashes $this->selected, so clear the cache so it is

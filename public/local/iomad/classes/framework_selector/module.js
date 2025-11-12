@@ -139,7 +139,7 @@ M.local_framework_selector.init_framework_selector = function (Y, name, hash, ex
                 return;
             }
 
-            Y.io(M.cfg.wwwroot + '/local/framework_selector/search.php', {
+            Y.io(M.cfg.wwwroot + '/local/iomad/classes/framework_selector/search.php', {
                 method: 'POST',
                 data: 'selectorid=' + hash + '&sesskey=' + M.cfg.sesskey + '&search=' + value + '&frameworkselector_searchanywhere=' + this.get_option('searchanywhere'),
                 on: {
@@ -175,7 +175,7 @@ M.local_framework_selector.init_framework_selector = function (Y, name, hash, ex
 
             // If we are in developer debug mode, output a link to help debug the failure.
             if (M.cfg.developerdebug) {
-                this.searchfield.insert(Y.Node.create('<a href="' + M.cfg.wwwroot + '/local/framework_selector/search.php?selectorid=' +
+                this.searchfield.insert(Y.Node.create('<a href="' + M.cfg.wwwroot + '/local/iomad/classes/framework_selector/search.php?selectorid=' +
                                                        hash + '&sesskey=' + M.cfg.sesskey + '&search=' + this.get_search_text() +
                                                       '&debug=1">Ajax call failed. Click here to try the search call directly.</a>'));
             }
