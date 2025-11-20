@@ -54,9 +54,12 @@
     </ion-item-divider>
     <ion-card>
         <ion-list>
-            <ion-select (ionChange)="updateContent({page: $event})" interface="popover" class="mycourseselector">
+            <ion-select label="<%selectlabel%>"
+                        (ionChange)="updateContent({page: $event.target.value})"
+                        interface="popover"
+                        class="mycourseselector">
                 <%#pages%>
-                <ion-option value="<%value%>"<%#selected%> selected<%/selected%>><%label%></ion-option>
+                <ion-select-option value="<%value%>"<%#selected%> selected<%/selected%>><%label%></ion-select-option>
                 <%/pages%>
             </ion-select>
             <%#pagecontent.courses%>
