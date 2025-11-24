@@ -49,6 +49,17 @@ class context_iomadcustompage extends context {
     }
 
     /**
+     * Returns short context name.
+     *
+     * @since Moodle 4.2
+     *
+     * @return string
+     */
+    public static function get_short_name(): string {
+        return 'iomadcustompage';
+    }
+
+    /**
      * Returns human readable context level name.
      * @return string the human-readable context level name.
      */
