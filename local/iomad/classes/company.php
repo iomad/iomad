@@ -23,7 +23,11 @@
 
 namespace local_iomad;
 
+use cache;
+use cache_helper;
+use context_course;
 use context_system;
+use course_enrolment_manager;
 use moodle_url;
 
 class company {
@@ -743,16 +747,16 @@ class company {
                             if ($DB->record_exists('course', array('id' => $course->id))) {
                                 if (!$own) {
                                     // Not created by a company manager.
-                                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
+                                    company_user::enrol($user, array($course->id), $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
                                     if ($companymanager->managertype == 2) {
                                         // Assign the department manager course access role.
-                                        local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
+                                        company_user::enrol($user, array($course->id), $this->id,
                                                             $companycoursenoneditorrole->id);
                                     } else {
                                         // Assign the company manager course access role.
-                                        local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
+                                        company_user::enrol($user, array($course->id), $this->id,
                                                             $companycourseeditorrole->id);
 
                                         // Check if this is a newly delegated course?
@@ -776,11 +780,11 @@ class company {
                             if ($DB->record_exists('course', array('id' => $course->id))) {
                                 if ($DB->record_exists('iomad_courses', array('courseid' => $course->id, 'shared' => 1))) {
                                     // Not created by a company manager.
-                                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
+                                    company_user::enrol($user, array($course->id), $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
                                     // Assign the company manager course access role.
-                                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id,
+                                    company_user::enrol($user, array($course->id), $this->id,
                                                         $companycourseeditorrole->id);
 
                                     // Check if this is a newly delegated course?
@@ -833,7 +837,7 @@ class company {
                                                               'deleted' => 0)) ) {
                         if ($DB->record_exists('course', array('id' => $courseid))) {
                             // Not created by a company manager.
-                            local_iomad\local_iomad\company_user::enrol($user, [$courseid], $this->id,
+                            company_user::enrol($user, [$courseid], $this->id,
                                                 $companycoursenoneditorrole->id);
 
                             // Clean up old roles.
@@ -853,7 +857,7 @@ class company {
                     if ($user = $DB->get_record('user', array('id' => $educator->userid,
                                                               'deleted' => 0)) ) {
                         if ($DB->record_exists('course', array('id' => $courseid))) {
-                            local_iomad\local_iomad\company_user::enrol($user, [$courseid], $this->id,
+                            company_user::enrol($user, [$courseid], $this->id,
                                                 $companycoursenoneditorrole->id);
 
                             // Clean up old roles.
@@ -1378,7 +1382,7 @@ class company {
                 if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            local_iomad\local_iomad\company_user::unenrol($userid,
+                            company_user::unenrol($userid,
                                                   [$companycourse->courseid],
                                                   $companycourse->companyid);
 
@@ -1406,12 +1410,12 @@ class company {
                             if ($DB->record_exists('company_created_courses',
                                                     array('companyid' => $companycourse->companyid,
                                                           'courseid' => $companycourse->courseid))) {
-                                local_iomad\local_iomad\company_user::enrol($userid,
+                                company_user::enrol($userid,
                                                     array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycourseeditorrole->id);
                             } else {
-                                local_iomad\local_iomad\company_user::enrol($userid,
+                                company_user::enrol($userid,
                                                     array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycoursenoneditorrole->id);
@@ -1435,15 +1439,15 @@ class company {
                             if ($DB->record_exists('company_created_courses',
                                                     array ('companyid' => $companyid,
                                                            'courseid' => $companycourse->courseid))) {
-                                local_iomad\local_iomad\company_user::unenrol($userid,
+                                company_user::unenrol($userid,
                                                       array($companycourse->courseid),
                                                             $companycourse->companyid);
-                                local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                company_user::enrol($userid, array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycourseeditorrole->id);
 
                             } else {
-                                 local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                 company_user::enrol($userid, array($companycourse->courseid),
                                                      $companycourse->companyid,
                                                      $companycoursenoneditorrole->id);
                             }
@@ -1469,9 +1473,9 @@ class company {
                 if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            local_iomad\local_iomad\company_user::unenrol($userid, array($companycourse->courseid),
+                            company_user::unenrol($userid, array($companycourse->courseid),
                                                   $companycourse->companyid);
-                            local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                            company_user::enrol($userid, array($companycourse->courseid),
                                                 $companycourse->companyid,
                                                 $companycoursenoneditorrole->id);
                         }
@@ -1533,15 +1537,15 @@ class company {
                                 if ($DB->record_exists('company_created_courses',
                                                         array ('companyid' => $companyid,
                                                                'courseid' => $companycourse->courseid))) {
-                                    local_iomad\local_iomad\company_user::unenrol($userid,
+                                    company_user::unenrol($userid,
                                                           array($companycourse->courseid),
                                                                 $companycourse->companyid);
-                                    local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                    company_user::enrol($userid, array($companycourse->courseid),
                                                         $companycourse->companyid,
                                                         $companycourseeditorrole->id);
 
                                 } else {
-                                     local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                     company_user::enrol($userid, array($companycourse->courseid),
                                                          $companycourse->companyid,
                                                          $companycoursenoneditorrole->id);
                                 }
@@ -1569,9 +1573,9 @@ class company {
                     if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                         foreach ($companycourses as $companycourse) {
                             if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                local_iomad\local_iomad\company_user::unenrol($userid, array($companycourse->courseid),
+                                company_user::unenrol($userid, array($companycourse->courseid),
                                                       $companycourse->companyid);
-                                local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                company_user::enrol($userid, array($companycourse->courseid),
                                                     $companycourse->companyid,
                                                     $companycoursenoneditorrole->id);
                             }
@@ -1593,21 +1597,21 @@ class company {
                                     if ($DB->record_exists('company_created_courses',
                                                             array ('companyid' => $companyid,
                                                                    'courseid' => $companycourse->courseid))) {
-                                        local_iomad\local_iomad\company_user::unenrol($userid,
+                                        company_user::unenrol($userid,
                                                               array($companycourse->courseid),
                                                                     $companycourse->companyid);
-                                        local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                        company_user::enrol($userid, array($companycourse->courseid),
                                                             $companycourse->companyid,
                                                             $companycourseeditorrole->id);
 
                                     } else {
-                                         local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                                         company_user::enrol($userid, array($companycourse->courseid),
                                                              $companycourse->companyid,
                                                              $companycoursenoneditorrole->id);
                                     }
                                 } else {
                                     if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                                        local_iomad\local_iomad\company_user::unenrol($userid,
+                                        company_user::unenrol($userid,
                                                               array($companycourse->courseid),
                                                                     $companycourse->companyid);
                                     }
@@ -1647,7 +1651,7 @@ class company {
                     empty($multidepartment)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                            local_iomad\local_iomad\company_user::unenrol($userid, array($companycourse->courseid),
+                            company_user::unenrol($userid, array($companycourse->courseid),
                                                   $companycourse->companyid, false);
                         }
                     }
@@ -1716,15 +1720,15 @@ class company {
                         if ($DB->record_exists('company_created_courses',
                                                 array ('companyid' => $companyid,
                                                        'courseid' => $companycourse->courseid))) {
-                            local_iomad\local_iomad\company_user::unenrol($userid,
+                            company_user::unenrol($userid,
                                                   array($companycourse->courseid),
                                                         $companycourse->companyid);
-                            local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                            company_user::enrol($userid, array($companycourse->courseid),
                                                 $companycourse->companyid,
                                                 $companycourseeditorrole->id);
 
                         } else {
-                             local_iomad\local_iomad\company_user::enrol($userid, array($companycourse->courseid),
+                             company_user::enrol($userid, array($companycourse->courseid),
                                                  $companycourse->companyid,
                                                  $companycoursenoneditorrole->id);
                         }
@@ -1737,7 +1741,7 @@ class company {
                  !empty($companycourses)) {
                 foreach ($companycourses as $companycourse) {
                     if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
-                        local_iomad\local_iomad\company_user::unenrol($userid,
+                        company_user::unenrol($userid,
                                               array($companycourse->courseid),
                                                     $companycourse->companyid);
                     }
@@ -1812,7 +1816,7 @@ class company {
                     // Clear down the user from the courses.
                     foreach ($licrecs as $licrec) {
                         // Remove this specific record.
-                        local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
+                        company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
                     }
                 }
             }
@@ -3719,7 +3723,7 @@ class company {
                                                             'courseid' => $courseid]);
                     foreach ($usercourses as $licrec) {
                         // Remove this specific record.
-                        local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
+                        company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
                     }
                 }
             }
@@ -4127,7 +4131,7 @@ class company {
 
                 // Check if this is a licensed course.
                 if (!empty($licensecourses[$course->id])) {
-                    if ($newlicense = local_iomad\local_iomad\company_user::auto_allocate_license($user->id, $this->id, $course->id)) {
+                    if ($newlicense = company_user::auto_allocate_license($user->id, $this->id, $course->id)) {
 
                         // Create an event.
                         $eventother = array('licenseid' => $newlicense->licenseid,
@@ -4143,7 +4147,7 @@ class company {
                         $errors .= format_string($course->fullname) . " ";
                     }
                 } else {
-                    local_iomad\local_iomad\company_user::enrol($user, array($course->id), $this->id, false, false, $due);
+                    company_user::enrol($user, array($course->id), $this->id, false, false, $due);
                 }
             }
         }
@@ -4798,7 +4802,7 @@ class company {
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
-            local_iomad\local_iomad\company_user::suspend($userid, $usercompany->companyid);
+            company_user::suspend($userid, $usercompany->companyid);
             EmailTemplate::send('user_suspended',
                              array('company' => $company,
                                    'user' => $user));
@@ -4829,7 +4833,7 @@ class company {
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
-            local_iomad\local_iomad\company_user::suspend($userid, $usercompany->companyid);
+            company_user::suspend($userid, $usercompany->companyid);
             EmailTemplate::send('user_unsuspended',
                              array('company' => $company,
                                    'user' => $user));
@@ -5135,7 +5139,7 @@ class company {
                                 $DB->set_field('local_iomad_track', 'completedstop', 1, ['id' => $completedrecord->id]);
                             }
                             // Clear them from the course.
-                            local_iomad\local_iomad\company_user::delete_user_course($user->id, $course->id, 'autodelete');
+                            company_user::delete_user_course($user->id, $course->id, 'autodelete');
 
                             // Then re-enrol them.
                             $enrol->enrol_user($instance, $user->id, $instance->roleid, $timestart, $timeend);
@@ -5569,11 +5573,11 @@ class company {
             foreach ($licrecs as $licrec) {
 
                 // Remove this specific record.
-                local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, $action, $licrec->id);
+                company_user::delete_user_course($userid, $courseid, $action, $licrec->id);
             }
         } else {
             // Delete them.
-            local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, $action);
+            company_user::delete_user_course($userid, $courseid, $action);
         }
 
         return true;

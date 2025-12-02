@@ -24,7 +24,7 @@
 
 define('AJAX_SCRIPT', true);
 
-require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../../../../config.php');
 require_once($CFG->dirroot . '/user/selector/lib.php');
 
 $PAGE->set_context(context_system::instance());
@@ -39,6 +39,9 @@ require_sesskey();
 // Get the search parameter.
 $search = required_param('search', PARAM_RAW);
 $profilefieldid = optional_param('profilefieldid', 0, PARAM_INT);
+
+error_log("Search = $search");
+error_log("Profilefieldid = $profilefieldid");
 
 // Get and validate the selectorid parameter.
 $selectorhash = required_param('selectorid', PARAM_ALPHANUM);

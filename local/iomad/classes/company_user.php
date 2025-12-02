@@ -24,7 +24,9 @@
 namespace local_iomad;
 
 use context_system;
+use context_course;
 use moodle_url;
+use cache;
 
 global $CFG;
 require_once($CFG->libdir.'/formslib.php');
