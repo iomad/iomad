@@ -26,22 +26,11 @@ namespace local_iomad\user_selector;
 use local_iomad\company;
 
 class potential_course extends company_base {
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-        $this->subdepartments = $options['subdepartments'];
-        $this->parentdepartmentid = $options['parentdepartmentid'];
-        parent::__construct($name, $options);
-    }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['courseid'] = $this->courseid;
-        $options['departmentid'] = $this->departmentid;
-        $options['subdepartments'] = $this->subdepartments;
-        $options['parentdepartmentid'] = $this->parentdepartmentid;
         $options['file']    = 'local/iomad/classes/user_selector/potential_course.php';
+
         return $options;
     }
 

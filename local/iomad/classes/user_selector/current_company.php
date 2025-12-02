@@ -23,8 +23,6 @@
 
 namespace local_iomad\user_selector;
 
-use local_iomad\company;
-
 class current_company extends company_base {
 
     protected function get_options() {
@@ -78,4 +76,3 @@ class current_company extends company_base {
         return array($groupname => $availableusers);
     }
 }
-

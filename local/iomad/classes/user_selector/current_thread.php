@@ -30,26 +30,18 @@ class current_thread extends company_base {
     protected $groupid;
 
     public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->threadid = $options['threadid'];
-        $this->groupid = $options['groupid'];
-        $this->departmentid = $options['departmentid'];
+        $this->threadid = !empty($options['threadid']) ? $options['threadid'] : 0;
+        $this->groupid = !empty($options['groupid']) ? $options['groupid'] : 0;
 
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
         $options['threadid'] = $this->threadid;
-        $options['departmentid'] = $this->departmentid;
-        $options['subdepartments'] = $this->subdepartments;
-        $options['parentdepartmentid'] = $this->parentdepartmentid;
         $options['groupid'] = $this->groupid;
-        $options['selectedcourses'] = $this->selectedcourses;
-        $options['courses'] = $this->courses;
-        $options['multiselect'] = $this->multiselect;
         $options['file']    = 'local/iomad/classes/user_selector/current_thread.php';
+
         return $options;
     }
 
@@ -133,4 +125,3 @@ class current_thread extends company_base {
         return array($groupname => $availableusers);
     }
 }
-

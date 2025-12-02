@@ -30,23 +30,15 @@ class current_department extends company_base {
     protected $roletype;
     protected $showothermanagers;
 
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['file']    = 'local/iomad/classes/user_selector/current_department.php';
-
-        return $options;
-    }
-
     /**
      * Company users enrolled into the selected company course
      * @param <type> $search
      * @return array
      */
     public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-        $this->roletype = $options['roletype'];
-        $this->showothermanagers = $options['showothermanagers'];
+        $this->roletype = !empty($options['roletype']) ? $options['roletype'] : 0;
+        $this->showothermanagers = !empty($options['showothermanagers']) ? $options['showothermanagers'] : 0;
+
         parent::__construct($name, $options);
     }
 
@@ -55,11 +47,12 @@ class current_department extends company_base {
         $options['roletype'] = $this->roletype;
         $options['showothermanagers'] = $this->showothermanagers;
         $options['file']    = 'local/iomad/classes/user_selector/current_department.php';
+
         return $options;
     }
 
     protected function get_department_user_ids() {
-        global $CFG, $DB;
+        global $DB;
         if (!isset( $this->departmentid) ) {
             return array();
         } else {
@@ -74,13 +67,11 @@ class current_department extends company_base {
 
     public function find_users($search) {
         global $CFG, $DB, $USER;
-        $companyrec = $DB->get_record('company', array('id' => $this->companyid));
+
         $company = new company($this->companyid);
 
         // Get the full company tree as we may need it.
         $topcompanyid = $company->get_topcompanyid();
-        $topcompany = new company($topcompanyid);
-        $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
@@ -158,4 +149,3 @@ class current_department extends company_base {
         return array($groupname => $availableusers);
     }
 }
-

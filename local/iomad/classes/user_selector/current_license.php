@@ -23,49 +23,37 @@
 
 namespace local_iomad\user_selector;
 
-use local_iomad\company;
-
 class current_license extends company_base {
+
+    protected $license;
+
     /**
      * Company users enrolled into the selected company course
      * @param <type> $search
      * @return array
      */
     public function __construct($name, $options) {
-        global $CFG, $DB;
-
-        $this->companyid  = $options['companyid'];
-        $this->licenseid = $options['licenseid'];
-        $this->departmentid = $options['departmentid'];
-        $this->subdepartments = $options['subdepartments'];
-        $this->parentdepartmentid = $options['parentdepartmentid'];
-        $this->program = $options['program'];
-        $this->multiselect = $options['multiselect'];
-        $this->selectedcourses = $options['selectedcourses'];
-        $this->courses = $options['courses'];
-        unset($this->courses[0]);
-        $this->license = $DB->get_record('companylicense', array('id' => $this->licenseid));
+        global $DB;
 
         parent::__construct($name, $options);
+
+        if (!empty($this->licenseid)) {
+            $this->license = $DB->get_record('companylicense', array('id' => $this->licenseid));
+        } else {
+            $this->license = [];
+        }
+        unset($this->courses[0]);
     }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['licenseid'] = $this->licenseid;
-        $options['departmentid'] = $this->departmentid;
-        $options['subdepartments'] = $this->subdepartments;
-        $options['parentdepartmentid'] = $this->parentdepartmentid;
-        $options['program'] = $this->program;
-        $options['selectedcourses'] = $this->selectedcourses;
-        $options['courses'] = $this->courses;
-        $options['multiselect'] = $this->multiselect;
         $options['file']    = 'local/iomad/classes/user_selector/current_license.php';
+
         return $options;
     }
 
     protected function get_license_user_ids() {
-        global $CFG, $DB;
+        global $DB;
 
         if (!isset( $this->licenseid) ) {
             return array();
@@ -320,4 +308,3 @@ class current_license extends company_base {
         return $users;
     }
 }
-
