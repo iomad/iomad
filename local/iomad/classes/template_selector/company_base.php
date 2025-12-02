@@ -29,20 +29,25 @@ namespace local_iomad\template_selector;
 abstract class company_base extends base {
 
     protected $companyid;
+    protected $shared;
+    protected $partialshared = false;
 
     //overridden to include the sortorder field
     protected $requiredfields = array('id', 'shortname');
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
+        $this->shared  = $options['shared'];
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
+        $options['shared'] = $this->shared;
         $options['file']    = 'local/iomad/classes/template_selector/company_base.php';
+
         return $options;
     }
 }
-

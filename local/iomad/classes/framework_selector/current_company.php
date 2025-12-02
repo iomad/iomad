@@ -24,32 +24,18 @@
 namespace local_iomad\framework_selector;
 
 class current_company extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/framework_selector/current_company.php';
+        return $options;
+    }
+
     /**
      * Company frameworks
      * @param <type> $search
      * @return array
      */
-    protected $shared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-
-        // Default for shared is true.
-        if (isset($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
-            $this->shared = true;
-        }
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/framework_selector/current_company.php';
-        $options['shared'] = $this->shared;
-        return $options;
-    }
-
     public function find_frameworks($search) {
         global $CFG, $DB;
         // By default wherecondition retrieves all frameworks except the deleted, not confirmed and guest.

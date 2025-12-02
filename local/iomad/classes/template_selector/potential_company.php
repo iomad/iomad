@@ -24,38 +24,30 @@
 namespace local_iomad\template_selector;
 
 class potential_company extends company_base {
-    /**
-     * Potential company manager templates
-     * @param <type> $search
-     * @return array
-     */
-    protected $shared;
-    protected $partialshared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
 
-        if (!empty($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
+        public function __construct($name, $options) {
+        // Shared default is false.
+        if (empty($options['shared'])) {
             $this->shared = false;
-        }
-        if (!empty($options['partialshared'])) {
-            $this->partialshared = $options['partialshared'];
         } else {
-            $this->partialshared = false;
+            $this->shared = $options['shared'];
         }
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
         $options['file']    = 'local/iomad/classes/template_selector/potential_company.php';
-        $options['shared'] = $this->shared;
-        $options['partialshared'] = $this->partialshared;
+
         return $options;
     }
 
+    /**
+     * Potential company manager templates
+     * @param <type> $search
+     * @return array
+     */
     public function find_templates($search) {
         global $CFG, $DB, $SITE;
         // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
@@ -113,4 +105,3 @@ class potential_company extends company_base {
         return array($groupname => $availabletemplates);
     }
 }
-

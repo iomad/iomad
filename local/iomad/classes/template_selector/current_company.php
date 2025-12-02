@@ -24,32 +24,30 @@
 namespace local_iomad\template_selector;
 
 class current_company extends company_base {
-    /**
-     * Company templates
-     * @param <type> $search
-     * @return array
-     */
-    protected $shared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
 
-        // Default for shared is true.
-        if (isset($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
+    public function __construct($name, $options) {
+        // Shared default is true.
+        if (empty($options['shared'])) {
             $this->shared = true;
+        } else {
+            $this->shared = $options['shared'];
         }
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
         $options['file']    = 'local/iomad/classes/template_selector/current_company.php';
-        $options['shared'] = $this->shared;
+
         return $options;
     }
 
+    /**
+     * Company templates
+     * @param <type> $search
+     * @return array
+     */
     public function find_templates($search) {
         global $CFG, $DB;
         // By default wherecondition retrieves all templates except the deleted, not confirmed and guest.
@@ -104,4 +102,3 @@ class current_company extends company_base {
         return $templatearray;
     }
 }
-
