@@ -29,6 +29,8 @@ use \moodle_url;
 use local_iomad\company;
 use local_iomad\iomad;
 use local_iomad\company_user;
+use local_iomad\user_selector\potential_license;
+use local_iomad\user_selector\current_license;
 
 class company_license_users_form extends \moodleform {
     protected $context = null;
@@ -128,10 +130,10 @@ class company_license_users_form extends \moodleform {
                              'courses' => $this->courseselect,
                              'multiselect' => true);
             if (empty($this->potentialusers)) {
-                $this->potentialusers = new \potential_license_user_selector('potentialcourseusers', $options);
+                $this->potentialusers = new potential_license('potentialcourseusers', $options);
             }
             if (empty($this->currentusers)) {
-                $this->currentusers = new \current_license_user_selector('currentlyenrolledusers', $options);
+                $this->currentusers = new current_license('currentlyenrolledusers', $options);
             }
         } else {
             return;

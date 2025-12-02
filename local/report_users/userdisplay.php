@@ -300,7 +300,7 @@ if (!empty($action)) {
                 }
             }
         } else if ($action != 'trackonly') {
-            local_iomad\local_iomad\company_user::delete_user_course($userid, $courseid, $action, $rowid);
+            local_iomad\company_user::delete_user_course($userid, $courseid, $action, $rowid);
             redirect(new moodle_url('/local/report_users/userdisplay.php', array('userid' => $userid)),
                      get_string($action . "_successful", 'local_report_users'),
                      null,

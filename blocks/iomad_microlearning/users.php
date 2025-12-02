@@ -106,7 +106,7 @@ $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
@@ -160,7 +160,7 @@ if ($threadsform->is_cancelled() || $usersform->is_cancelled() ||
                     echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php',
                                                 ['threadid' => $thread->id]),
                                                 get_string('learningnuggets', 'block_iomad_microlearning'));
-    
+
                     echo $output->footer();
                     die;
                 }

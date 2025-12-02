@@ -29,6 +29,8 @@ use company_moodleform;
 use local_iomad\company;
 use \microlearning;
 use local_iomad\iomad;
+use local_iomad\user_selector\current_thread;
+use local_iomad\user_selector\potential_thread;
 
 class microlearning_thread_users_form extends company_moodleform {
     protected $companycontext = null;
@@ -91,11 +93,11 @@ class microlearning_thread_users_form extends company_moodleform {
                              'parentdepartmentid' => $this->parentlevel,
                              'class' => 'potential_company_thread_user_selector');
             if (empty($this->potentialusers)) {
-                $this->potentialusers = new \potential_company_thread_user_selector('potentialthreadusers', $options);
+                $this->potentialusers = new potential_thread('potentialthreadusers', $options);
             }
             $options['class'] = 'current_company_thread_user_selector';
             if (empty($this->currentusers)) {
-                $this->currentusers = new \current_company_thread_user_selector('currentlyenrolledusers', $options);
+                $this->currentusers = new current_thread('currentlyenrolledusers', $options);
             }
         } else {
             return;
