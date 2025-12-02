@@ -35,22 +35,19 @@ use user_selector_base;
  */
 abstract class company_base extends user_selector_base {
 
+    protected $allusers = false;
+    protected $company;
     protected $companyid;
     protected $courseid;
-    protected $departmentid;
     protected $courses;
-    protected $company;
-    protected $selectedcourses;
-    protected $searchoptionsoutput = false;
-    protected $profilefieldid = 0;
-    protected $allusers = false;
-    protected $subdepartments;
-    protected $parentdepartmentid;
-    protected $licenseid;
-    protected $program;
-    protected $multiselect;
+    protected $departmentid;
     protected $license;
-
+    protected $licenseid;
+    protected $parentdepartment;
+    protected $profilefieldid = 0;
+    protected $program;
+    protected $selectedcourses;
+    protected $subdepartments;
 
     /** @var array JavaScript YUI3 Module definition */
     protected static $jsmodule = array(
@@ -64,26 +61,20 @@ abstract class company_base extends user_selector_base {
                 ));
 
     public function __construct($name, $options) {
-        global $DB;
 
+        $this->allusers = !empty($options['allusers']) ? $options['allusers'] : false;
         $this->companyid  = $options['companyid'];
-        if (isset ( $options['courseid']) ) {
-            $this->courseid = $options['courseid'];
-        }
+        $this->courses = !empty($options['courses']) ? $options['courses'] : [];
+        $this->courseid = !empty($options['courseid']) ? $options['courseid'] : 0;
+        $this->parentdepartment = !empty($options['parentdepartment']) ? $options['parentdepartment'] : 0;
+        $this->licenseid = !empty($options['licenseid']) ? $options['licenseid'] : 0;
+        $this->program = !empty($options['program']) ? $options['program'] : 0;
+        $this->selectedcourses = !empty($options['selectedcourses']) ? $options['selectedcourses'] : [];
         if (empty($options['departmentid'])) {
             $parentdepartment = company::get_company_parentnode($this->companyid);
             $this->departmentid = $parentdepartment->id;
         } else {
             $this->departmentid = $options['departmentid'];
-        }
-        if (!empty($options['courses'])) {
-            $this->courses = $options['courses'];
-        }
-        if (!empty($options['selectedcourses'])) {
-            $this->selectedcourses = $options['selectedcourses'];
-        }
-        if (!empty($options['allusers'])) {
-            $this->allusers = $options['allusers'];
         }
         if (!empty($options['profilefieldid'])) {
             $profileid = $options['profilefieldid'];
@@ -92,38 +83,32 @@ abstract class company_base extends user_selector_base {
         }
         $this->profilefieldid = $profileid;
         $this->company = new company($this->companyid);
+        $this->subdepartments = company::get_all_subdepartments($this->departmentid);
 
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/user_selector/company_base.php';
+        $options['allusers'] = $this->allusers;
+        $options['company'] = $this->company;
         $options['companyid'] = $this->companyid;
-        $options['file']    = 'blocks/iomad_company_admin/lib.php';
-        if (!empty($this->courses)) {
-            $options['courses'] = $this->courses;
-        }
-        if (!empty($this->selectedcourses)) {
-            $options['selectedcourses'] = $this->selectedcourses;
-        }
-        if (!empty($this->deparmentid)) {
-            $options['departmentid'] = $this->departmentid;
-        }
-        if (!empty($this->courseid)) {
-            $options['courseid'] = $this->courseid;
-        }
-        if (!empty($this->groupid)) {
-            $options['groupid'] = $this->groupid;
-        }
-        if (!empty($this->allusers)) {
-            $options['allusers'] = $this->allusers;
-        }
+        $options['courseid'] = $this->courseid;
+        $options['courses'] = $this->courses;
+        $options['departmentid'] = $this->departmentid;
+        $options['licenseid'] = $this->licenseid;
+        $options['parentdepartment'] = $this->parentdepartment;
+        $options['profilefieldid'] = $this->profilefieldid;
+        $options['program'] = $this->program;
+        $options['selectedcourses'] = $this->selectedcourses;
+        $options['subdepartments'] = $this->subdepartments;
 
         return $options;
     }
 
     protected function get_course_user_ids() {
-        global $CFG, $DB, $PAGE;
+        global $DB, $PAGE;
         if (!isset( $this->courseid) ) {
             return array();
         } else {
@@ -161,7 +146,6 @@ abstract class company_base extends user_selector_base {
         }
     }
 
-
     /**
      * Initialises JS for this control.
      *
@@ -169,7 +153,7 @@ abstract class company_base extends user_selector_base {
      * @return string any HTML needed here.
      */
     protected function initialise_javascript($search) {
-        global $USER, $PAGE, $OUTPUT;
+        global $USER, $PAGE;
         $output = '';
 
         // Put the options into the session, to allow search.php to respond to the ajax requests.
@@ -194,7 +178,7 @@ abstract class company_base extends user_selector_base {
      * @return mixed if $return is true, returns the HTML as a string, otherwise returns nothing.
      */
     public function display($return = false) {
-        global $PAGE, $DB;
+        global $DB;
 
         // Get the list of requested users.
         $search = optional_param($this->name . '_searchtext', '', PARAM_RAW);
@@ -262,6 +246,4 @@ abstract class company_base extends user_selector_base {
             echo $output;
         }
     }
-
 }
-

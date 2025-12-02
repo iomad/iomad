@@ -23,17 +23,12 @@
 
 namespace local_iomad\user_selector;
 
-use local_iomad\company;
-
 class potential_manager extends company_base {
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['departmentid'] = $this->departmentid;
-        $options['subdepartments'] = $this->subdepartments;
-        $options['parentdepartmentid'] = $this->parentdepartmentid;
         $options['file']    = 'local/iomad/user_selector/potential_manager.php';
+
         return $options;
     }
     /**
@@ -81,4 +76,3 @@ class potential_manager extends company_base {
         return array($groupname => $availableusers);
     }
 }
-

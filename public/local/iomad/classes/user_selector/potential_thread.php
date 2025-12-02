@@ -26,27 +26,22 @@ namespace local_iomad\user_selector;
 use local_iomad\company;
 
 class potential_thread extends company_base {
-    protected $threadid;
     protected $groupid;
+    protected $threadid;
 
     public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->threadid  = $options['threadid'];
-        $this->departmentid = $options['departmentid'];
-        $this->subdepartments = $options['subdepartments'];
-        $this->parentdepartmentid = $options['parentdepartmentid'];
+        $this->threadid = !empty($options['threadid']) ? $options['threadid'] : 0;
+        $this->groupid = !empty($options['groupid']) ? $options['groupid'] : 0;
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['threadid'] = $this->threadid;
         $options['groupid'] = $this->groupid;
-        $options['departmentid'] = $this->departmentid;
-        $options['subdepartments'] = $this->subdepartments;
-        $options['parentdepartmentid'] = $this->parentdepartmentid;
         $options['file']    = 'local/iomad/classes/user_selector/potential_thread.php';
+        $options['threadid'] = $this->threadid;
+
         return $options;
     }
 
@@ -136,4 +131,3 @@ class potential_thread extends company_base {
         return array($groupname => $availableusers);
     }
 }
-

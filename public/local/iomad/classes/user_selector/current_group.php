@@ -30,10 +30,7 @@ class current_group extends company_base {
     protected $groupid;
 
     public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->courseid = $options['courseid'];
-        $this->departmentid = $options['departmentid'];
-        $this->groupid = $options['groupid'];
+        $this->groupid = !empty($options['groupid']) ? $options['groupid'] : 0;
 
         parent::__construct($name, $options);
     }
@@ -42,6 +39,7 @@ class current_group extends company_base {
         $options = parent::get_options();
         $options['groupid'] = $this->groupid;
         $options['file']    = 'local/iomad/classes/user_selector/current_group.php';
+        
         return $options;
     }
 
@@ -113,4 +111,3 @@ class current_group extends company_base {
         return array($groupname => $availableusers);
     }
 }
-

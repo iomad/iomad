@@ -31,8 +31,9 @@ class potential_department extends company_base {
     protected $showothermanagers;
 
     public function __construct($name, $options) {
-        $this->roletype = $options['roletype'];
-        $this->showothermanagers = $options['showothermanagers'];
+        $this->roletype = !empty($options['roletype']) ? $options['roletype'] : 0;
+        $this->showothermanagers = !empty($options['showothermanagers']) ? $options['showothermanagers'] : false;
+        
         parent::__construct($name, $options);
     }
 
@@ -139,13 +140,13 @@ class potential_department extends company_base {
         } else {
             // Normal staff allocations.
             unset($this->subdepartments[$this->departmentid]);
-            if ($this->departmentid == $this->parentdepartmentid->id) {
+            if ($this->departmentid == $this->parentdepartment->id) {
                 $deptids = implode(',', array_keys($this->subdepartments));
             } else {
                 if (!empty($this->subdepartments)) {
-                    $deptids = $this->parentdepartmentid->id .','.implode(',', array_keys($this->subdepartments));
+                    $deptids = $this->parentdepartment->id .','.implode(',', array_keys($this->subdepartments));
                 } else {
-                    $deptids = $this->parentdepartmentid->id;
+                    $deptids = $this->parentdepartment->id;
                 }
             }
         }

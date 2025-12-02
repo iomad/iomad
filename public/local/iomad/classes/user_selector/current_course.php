@@ -26,6 +26,14 @@ namespace local_iomad\user_selector;
 use local_iomad\company;
 
 class current_course extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/user_selector/current_course.php';
+
+        return $options;
+    }
+
     /**
      * Company users enrolled into the selected company course
      * @param <type> $search
@@ -188,4 +196,3 @@ class current_course extends company_base {
         return $output;
     }
 }
-
