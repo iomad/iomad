@@ -38,18 +38,24 @@ $plugin->maturity = MATURITY_STABLE;
 abstract class company_base extends base {
 
     protected $companyid;
+    protected $shared;
+    protected $partialshared;
 
     //overridden to include the sortorder field
     protected $requiredfields = array('id', 'shortname');
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
+        $this->shared = $options['shared'];
+        $this->partialshared = $options['partialshared'];
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
+        $options['shared'] = $this->shared;
         $options['file']    = 'local/iomad/classes/framework_selector/company_base.php';
         return $options;
     }

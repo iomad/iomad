@@ -24,38 +24,18 @@
 namespace local_iomad\framework_selector;
 
 class potential_company extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/framework_selector/potential_company.php';
+        return $options;
+    }
+
     /**
      * Potential company manager frameworks
      * @param <type> $search
      * @return array
      */
-    protected $shared;
-    protected $partialshared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-
-        if (!empty($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
-            $this->shared = false;
-        }
-        if (!empty($options['partialshared'])) {
-            $this->partialshared = $options['partialshared'];
-        } else {
-            $this->partialshared = false;
-        }
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/framework_selector/potential_company.php';
-        $options['shared'] = $this->shared;
-        $options['partialshared'] = $this->partialshared;
-        return $options;
-    }
-
     public function find_frameworks($search) {
         global $CFG, $DB, $SITE;
         // By default wherecondition retrieves all frameworks except the deleted, not confirmed and guest.
@@ -115,4 +95,3 @@ class potential_company extends company_base {
         return array($groupname => $availableframeworks);
     }
 }
-

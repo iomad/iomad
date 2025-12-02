@@ -29,30 +29,25 @@ namespace local_iomad\template_selector;
 abstract class company_base extends base {
 
     protected $companyid;
+    protected $shared;
+    protected $partialshared = false;
 
     //overridden to include the sortorder field
     protected $requiredfields = array('id', 'shortname');
 
     public function __construct($name, $options) {
         $this->companyid  = $options['companyid'];
+        $this->shared  = $options['shared'];
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
+        $options['shared'] = $this->shared;
         $options['file']    = 'local/iomad/classes/template_selector/company_base.php';
+
         return $options;
     }
 }
-
-<<<<<<<< HEAD:public/local/template_selector/version.php
-$plugin->release  = '5.0.2 (Build: 20250811)';    // Human-friendly version name.
-$plugin->version  = 2025041450;   // The (date) version of this plugin.
-$plugin->requires = 2025041400;   // Requires this Moodle version.
-$plugin->component  = 'local_template_selector';
-$plugin->dependencies = ['local_iomad' => 2025041400];
-$plugin->supported = [500, 500];
-$plugin->maturity = MATURITY_STABLE;
-========
->>>>>>>> 6910099ab08 (IOMAD: Migrate local selector plugins to local_iomad autoload classes - local_template_selector - #2524):local/iomad/classes/template_selector/company_base.php
