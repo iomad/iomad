@@ -26,20 +26,12 @@ namespace local_iomad\course_selector;
 use local_iomad\company;
 
 class potential_user_license extends company_base {
-    /**
-     * Potential company manager courses
-     * @param <type> $search
-     * @return array
-     */
-    protected $user;
-    protected $licenseid;
+
     protected $license;
+
     public function __construct($name, $options) {
         global $CFG, $DB;
 
-        $this->companyid  = $options['companyid'];
-        $this->user = $options['user'];
-        $this->licenseid = $options['licenseid'];
         $this->license = $DB->get_record('companylicense', array('id' => $this->licenseid));
 
         parent::__construct($name, $options);
@@ -47,13 +39,16 @@ class potential_user_license extends company_base {
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
         $options['file']    = 'local/iomad/classes/course_selectori/potential_user_license.php';
-        $options['user'] = $this->user;
-        $options['licenseid'] = $this->licenseid;
+
         return $options;
     }
 
+    /**
+     * Potential company manager courses
+     * @param <type> $search
+     * @return array
+     */
     public function find_courses($search) {
         global $CFG, $DB, $SITE;
 
@@ -114,4 +109,3 @@ class potential_user_license extends company_base {
         return array($groupname => $availablecourses);
     }
 }
-

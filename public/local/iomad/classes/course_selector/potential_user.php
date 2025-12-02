@@ -26,47 +26,22 @@ namespace local_iomad\course_selector;
 use local_iomad\company;
 
 class potential_user extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/course_selector/potential_user.php';
+
+        return $options;
+    }
+
     /**
      * Potential company manager courses
      * @param <type> $search
      * @return array
      */
-    protected $user;
-    protected $licenses;
-    protected $shared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->user = $options['user'];
-        // Default for licenses = false.
-        if (isset($options['licenses'])) {
-            $this->licenses = true;
-        } else {
-            $this->licenses = false;
-        }
-
-        // Default for shared is false.
-        if (isset($options['shared'])) {
-            $this->shared = true;
-        } else {
-            $this->shared = false;
-        }
-
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/course_selector/potential_user.php';
-        $options['user'] = $this->user;
-        $options['licenses'] = $this->licenses;
-        $options['shared'] = $this->shared;
-        return $options;
-    }
-
     public function find_courses($search) {
         global $CFG, $DB, $SITE;
-        
+
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
         $params['companyid'] = $this->companyid;
@@ -155,7 +130,7 @@ class potential_user extends company_base {
                                $currentcoursesql";
                 $partialsharedsql = " FROM {course} c
                                       WHERE $wherecondition
-                                      AND c.id IN 
+                                      AND c.id IN
                                          (SELECT pc.courseid FROM {iomad_courses} pc
                                           INNER JOIN {company_shared_courses} csc ON pc.courseid=csc.courseid
                                           WHERE pc.shared=2 AND pc.licensed = 0 AND csc.companyid = :companyid)

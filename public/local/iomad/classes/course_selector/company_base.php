@@ -33,19 +33,48 @@ abstract class company_base extends base {
 
     protected $companyid;
     protected $hasenrollments = false;
+    protected $departmentid;
+    protected $licenses;
+    protected $shared = false;
+    protected $showopenshared;
+    protected $partialshared;
+    protected $user;
+    protected $licenseid;
+    protected $parentid;
+
 
     //overridden to include the sortorder field
     protected $requiredfields = array('id', 'fullname', 'sortorder');
 
     public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
+        $this->companyid = $options['companyid'];
+        $this->hasenrollments = $options['hasenrolments'];
+        $this->departmentid = $options['departmentid'];
+        $this->licenses = $options['licenses'];
+        $this->licenseid = $options['licenseid'];
+        $this->shared = $options['shared'];
+        $this->partialshared = $options['partialshared'];
+        $this->showopenshared = $options['showopenshared'];
+        $this->user = $options['user'];
+        $this->parentid = $options['parentid'];
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
         $options['companyid'] = $this->companyid;
+        $options['departmentid'] = $this->departmentid;
+        $options['parentid'] = $this->parentid;
+        $options['hasenrollments'] = $this->hasenrollments;
+        $options['licenses'] = $this->licenses;
+        $options['licenseid'] = $this->licenseid;
+        $options['shared'] = $this->shared;
+        $options['showopenshared'] = $this->showopenshared;
+        $options['partialshared'] = $this->partialshared;
+        $options['user'] = $this->user;
         $options['file']    = 'local/iomad/classes/course_selector/company_base.php';
+
         return $options;
     }
 
@@ -113,4 +142,3 @@ abstract class company_base extends base {
         }
     }
 }
-
