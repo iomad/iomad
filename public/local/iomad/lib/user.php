@@ -25,12 +25,13 @@ require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/company.php');
 require_once(dirname(__FILE__) . '/iomad.php');
 
-require_once($CFG->dirroot.'/user/lib.php');
-require_once($CFG->dirroot.'/user/profile/lib.php');
-require_once($CFG->dirroot.'/local/email/lib.php');
-require_once($CFG->dirroot.'/user/filters/lib.php');
-require_once($CFG->dirroot.'/lib/formslib.php');
-require_once($CFG->dirroot.'/group/lib.php');
+use context_system;
+use context_course;
+use moodle_url;
+use cache;
+
+global $CFG;
+require_once($CFG->libdir.'/formslib.php');
 
 class company_user {
 

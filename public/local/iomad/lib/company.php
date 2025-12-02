@@ -23,9 +23,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(dirname(__FILE__) . '/../../../config.php');
-require_once(dirname(__FILE__) . '/iomad.php');
-require_once(dirname(__FILE__) . '/user.php');
+use cache;
+use cache_helper;
+use context_course;
+use context_system;
+use course_enrolment_manager;
+use moodle_url;
 
 class company {
 
