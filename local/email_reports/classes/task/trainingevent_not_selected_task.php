@@ -24,7 +24,7 @@
 namespace local_email_reports\task;
 
 use \EmailTemplate;
-use \company;
+use local_iomad\company;
 use \context_course;
 
 //
@@ -84,8 +84,8 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                                            'warntime' => $runtime - $course->warnnotstarted * 24 * 60 * 60]);
             foreach ($users as $user) {
                 // Get the user's company.
-                if ($company = new local_iomad\company($user->companyid)) {
-                    
+                if ($company = new company($user->companyid)) {
+
                     // Get the company template info.
                     // Check against per company template repeat instead.
                     if ($templateinfo = $DB->get_record('email_template', array('companyid' => $company->id, 'name' => 'trainingevent_not_selected'))) {
