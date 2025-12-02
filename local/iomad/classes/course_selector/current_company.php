@@ -26,43 +26,19 @@ namespace local_iomad\course_selector;
 use local_iomad\company;
 
 class current_company extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/course_selector/current_company.php';
+
+        return $options;
+    }
+
     /**
      * Company courses
      * @param <type> $search
      * @return array
      */
-    protected $departmentid;
-    protected $licenses;
-    protected $shared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-
-        // Default for licenses is false.
-        if (isset($options['licenses'])) {
-            $this->licenses = true;
-        } else {
-            $this->licenses = false;
-        }
-        // Default for shared is true.
-        if (isset($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
-            $this->shared = true;
-        }
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/course_selector/current_company.php';
-        $options['departmentid'] = $this->departmentid;
-        $options['licenses'] = $this->licenses;
-        $options['shared'] = $this->shared;
-        return $options;
-    }
-
     public function find_courses($search) {
         global $CFG, $DB;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
@@ -177,4 +153,3 @@ class current_company extends company_base {
         return $coursearray;
     }
 }
-

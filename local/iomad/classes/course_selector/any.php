@@ -27,6 +27,14 @@ namespace local_iomad\course_selector;
  * Selector for any course
  */
 class any extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/course_selector/any.php';
+
+        return $options;
+    }
+
     /**
      * Any courses
      * @param <type> $search
@@ -68,4 +76,3 @@ class any extends company_base {
         return array($groupname => $availablecourses);
     }
 }
-

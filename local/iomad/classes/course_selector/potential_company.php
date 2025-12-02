@@ -27,40 +27,19 @@ use local_iomad\iomad;
 use local_iomad\company;
 
 class potential_company extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/course_selector/potential_company.php';
+
+        return $options;
+    }
+
     /**
      * Potential company manager courses
      * @param <type> $search
      * @return array
      */
-    protected $departmentid;
-    protected $shared;
-    protected $partialshared;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-        if (!empty($options['shared'])) {
-            $this->shared = $options['shared'];
-        } else {
-            $this->shared = false;
-        }
-        if (!empty($options['partialshared'])) {
-            $this->partialshared = $options['partialshared'];
-        } else {
-            $this->partialshared = false;
-        }
-        parent::__construct($name, $options);
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/course_selector/potential_company.php';
-        $options['departmentid'] = $this->departmentid;
-        $options['partialshared'] = $this->partialshared;
-        $options['shared'] = $this->shared;
-        return $options;
-    }
-
     public function find_courses($search) {
         global $CFG, $DB, $SITE, $companycontext;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
@@ -174,4 +153,3 @@ class potential_company extends company_base {
         return array($groupname => $availablecourses);
     }
 }
-

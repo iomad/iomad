@@ -24,30 +24,25 @@
 namespace local_iomad\course_selector;
 
 class all_department extends company_base {
-    /**
-     * Company courses
-     * @param <type> $search
-     * @return array
-     */
+
     public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-        $this->license = $options['license'];
-        $this->parentid = $options['parentid'];
         $this->selected = array(2,3);
+
         parent::__construct($name, $options);
     }
 
     protected function get_options() {
         $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
         $options['file']    = 'local/iomad/classes/course_selector/all_department.php';
-        $options['departmentid'] = $this->departmentid;
-        $options['license'] = $this->license;
-        $options['parentid'] = $this->parentid;
+
         return $options;
     }
 
+    /**
+     * Company courses
+     * @param <type> $search
+     * @return array
+     */
     public function find_courses($search) {
         global $CFG, $DB;
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
@@ -162,4 +157,3 @@ class all_department extends company_base {
         return $coursearray;
     }
 }
-

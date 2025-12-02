@@ -29,43 +29,21 @@ use context_course;
 use context_system;
 
 class current_user_license extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/course_selector/current_user_license.php';
+
+        return $options;
+    }
+
     /**
      * Company courses
      * @param <type> $search
      * @return array
      */
-    protected $departmentid;
-    protected $user;
-    protected $licenseid;
-    protected $licenses;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-        $this->user = $options['user'];
-        $this->licenseid = $options['licenseid'];
-
-        if (isset($options['licenses'])) {
-            $this->licenses = true;
-        } else {
-            $this->licenses = false;
-        }
-        parent::__construct($name, $options);
-
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/course_selector/current_user_license.php';
-        $options['departmentid'] = $this->departmentid;
-        $options['licenses'] = $this->licenses;
-        $options['user'] = $this->user;
-        return $options;
-    }
-
     public function find_courses($search) {
         global $CFG, $DB, $SITE;
-        
 
         // By default wherecondition retrieves all courses except the deleted, not confirmed and guest.
         list($wherecondition, $params) = $this->search_sql($search, 'c');
@@ -225,4 +203,3 @@ class current_user_license extends company_base {
         return array(implode(' AND ', $tests), $params);
     }
 }
-

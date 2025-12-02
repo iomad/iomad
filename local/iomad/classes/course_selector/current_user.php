@@ -24,38 +24,19 @@
 namespace local_iomad\course_selector;
 
 class current_user extends company_base {
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['file']    = 'local/iomad/classes/course_selector/current_user.php';
+
+        return $options;
+    }
+
     /**
      * Company courses
      * @param <type> $search
      * @return array
      */
-    protected $departmentid;
-    protected $user;
-    protected $licenses;
-    public function __construct($name, $options) {
-        $this->companyid  = $options['companyid'];
-        $this->departmentid = $options['departmentid'];
-        $this->user = $options['user'];
-
-        if (isset($options['licenses'])) {
-            $this->licenses = true;
-        } else {
-            $this->licenses = false;
-        }
-        parent::__construct($name, $options);
-
-    }
-
-    protected function get_options() {
-        $options = parent::get_options();
-        $options['companyid'] = $this->companyid;
-        $options['file']    = 'local/iomad/classes/course_selector/current_user.php';
-        $options['departmentid'] = $this->departmentid;
-        $options['licenses'] = $this->licenses;
-        $options['user'] = $this->user;
-        return $options;
-    }
-
     public function find_courses($search) {
         global $DB;
 
@@ -71,7 +52,7 @@ class current_user extends company_base {
         $params['companyid'] = $this->companyid;
 
         // Get the list of courses.
-        $coursearray = $DB->get_records_sql("SELECT DISTINCT c.* 
+        $coursearray = $DB->get_records_sql("SELECT DISTINCT c.*
                                              FROM {course} c
                                              JOIN {enrol} e ON (c.id = e.courseid)
                                              JOIN {user_enrolments} ue ON (e.id = ue.enrolid)
@@ -103,4 +84,3 @@ class current_user extends company_base {
         }
     }
 }
-
