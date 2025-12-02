@@ -71,7 +71,7 @@ class company_managers_form extends moodleform {
                          'departmentid' => $departmentid,
                          'roletype' => $this->roletype,
                          'subdepartments' => $this->subhierarchieslist,
-                         'parentdepartmentid' => $parentlevel,
+                         'parentdepartment' => $parentlevel,
                          'showothermanagers' => $this->showothermanagers);
         $this->potentialusers = new potential_department_user_selector('potentialmanagers', $options);
         $this->currentusers = new current_department_user_selector('currentmanagers', $options);
@@ -188,7 +188,7 @@ class company_managers_form extends moodleform {
                     // Do the actual work.
                     company::upsert_company_user($adduser->id, $this->selectedcompany, $departmentid, $roletype, $educator, false, $moving);
                     // Check if the user is in any other department
-                    if ($otherdepartments = $DB->get_records_sql('SELECT departmentid FROM {company_users} 
+                    if ($otherdepartments = $DB->get_records_sql('SELECT departmentid FROM {company_users}
                                               WHERE userid = :userid AND departmentid != :departmentid AND companyid = :companyid',
                                               ['userid' => $adduser->id, 'departmentid' => $departmentid, 'companyid' => $this->selectedcompany])) {
                         foreach ($otherdepartments as $otherdepart) {

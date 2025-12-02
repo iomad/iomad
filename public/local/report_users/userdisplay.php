@@ -58,19 +58,19 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_users:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_users:view', $companycontext);
 
 // Deal with edit buttons.
 if ($edit != -1) {
     $USER->editing = $edit;
 }
-if (!iomad::has_capability('local/report_users:redocertificates', $companycontext) ||
-    !iomad::has_capability('local/report_users:deleteentriesfull', $companycontext) ||
-    !iomad::has_capability('local/report_users:updateentries', $companycontext)) {
+if (!local_iomad\iomad::has_capability('local/report_users:redocertificates', $companycontext) ||
+    !local_iomad\iomad::has_capability('local/report_users:deleteentriesfull', $companycontext) ||
+    !local_iomad\iomad::has_capability('local/report_users:updateentries', $companycontext)) {
     $USER->editing = false;
 }
 
@@ -98,12 +98,12 @@ $PAGE->set_heading(get_string('userdetails', 'local_report_users').
           $userinfo->firstname." ".
           $userinfo->lastname. " (".$userinfo->email.")");
 $buttons = "";
-if (iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
     $buttoncaption = get_string('pluginname', 'local_report_completion');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php");
     $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 }
-if (iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
     $buttoncaption = get_string('downloadcertificates', 'block_iomad_company_admin');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php", ['certcourses' => '0', 'certusers' => $userid, 'action' => 'downloadcerts', 'sesskey' => sesskey()]);
     $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
@@ -120,7 +120,7 @@ $data = data_submitted();
 if (!empty($data)) {
     if (!empty($data->redo_selected_certificates) && !empty($data->redo_certificates)) {
         if (!empty($confirm) && confirm_sesskey()) {
-            iomad::require_capability('local/report_users:redocertificates', $companycontext);
+            local_iomad\iomad::require_capability('local/report_users:redocertificates', $companycontext);
             echo $OUTPUT->header();
             foreach($data->redo_certificates as $redocertificate) {
                 if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
@@ -135,7 +135,7 @@ if (!empty($data)) {
             echo $OUTPUT->footer();
             die;
         } else {
-            iomad::require_capability('local/report_users:redocertificates', $companycontext);
+            local_iomad\iomad::require_capability('local/report_users:redocertificates', $companycontext);
             $param_array = array('userid' => $userid,
                                  'confirm' => true,
                                  'redo_selected_certificates' => $data->redo_selected_certificates,
@@ -156,7 +156,7 @@ if (!empty($data)) {
         }
     } else if (!empty($data->purge_selected_entries) && !empty($data->purge_entries)) {
         if (!empty($confirm) && confirm_sesskey()) {
-            iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
+            local_iomad\iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
             echo $OUTPUT->header();
             foreach($data->purge_entries as $rowid) {
                 local_iomad_track_delete_entry($rowid, true);
@@ -167,7 +167,7 @@ if (!empty($data)) {
             echo $OUTPUT->footer();
             die;
         } else {
-            iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
+            local_iomad\iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
             $param_array = array('userid' => $userid,
                                  'confirm' => true,
                                  'purge_selected_entries' => $data->purge_selected_entries,
@@ -185,7 +185,7 @@ if (!empty($data)) {
             die;
         }
     } else {
-        iomad::require_capability('local/report_users:updateentries', $companycontext);
+        local_iomad\iomad::require_capability('local/report_users:updateentries', $companycontext);
         if (!empty($data->licenseallocated)) {
             $data->licenseallocated = clean_param_array($data->licenseallocated, PARAM_INT, true);
         }
@@ -277,7 +277,7 @@ if (!empty($data)) {
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Check the userid is valid.
-if (!company::check_valid_user($companyid, $userid)) {
+if (!local_iomad\company::check_valid_user($companyid, $userid)) {
     throw new moodle_exception('invaliduser', 'block_iomad_company_management');
 }
 
@@ -300,7 +300,7 @@ if (!empty($action)) {
                 }
             }
         } else if ($action != 'trackonly') {
-            company_user::delete_user_course($userid, $courseid, $action, $rowid);
+            local_iomad\company_user::delete_user_course($userid, $courseid, $action, $rowid);
             redirect(new moodle_url('/local/report_users/userdisplay.php', array('userid' => $userid)),
                      get_string($action . "_successful", 'local_report_users'),
                      null,
@@ -372,8 +372,8 @@ if (!$table->is_downloading()) {
     }
 
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-        if ((iomad::has_capability('block/iomad_company_admin:company_course_users', $companycontext)
-             or iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
+        if ((local_iomad\iomad::has_capability('block/iomad_company_admin:company_course_users', $companycontext)
+             or local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
              and ($userid == $USER->id or $userid != $mainadmin->id)
              and !is_mnet_remote_user($userinfo)) {
             $url = new moodle_url('/blocks/iomad_company_admin/company_users_course_form.php',
@@ -383,8 +383,8 @@ if (!$table->is_downloading()) {
             echo html_writer::end_tag('div');
         }
 
-        if ((iomad::has_capability('block/iomad_company_admin:company_license_users', $companycontext)
-             or iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
+        if ((local_iomad\iomad::has_capability('block/iomad_company_admin:company_license_users', $companycontext)
+             or local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
              and ($userid == $USER->id or $userid != $mainadmin->id)
              and !is_mnet_remote_user($userinfo)) {
             $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_users_licenses_form.php',

@@ -94,4 +94,13 @@ $string['nomatchingframeworks'] = 'No frameworks match \'{$a}\'';
 $string['previouslyselectedframeworks'] = 'Previously selected frameworks not matching \'{$a}\'';
 $string['toomanyframeworksmatchsearch'] = 'Too many frameworks ({$a->count}) match \'{$a->search}\'';
 $string['toomanyframeworkstoshow'] = 'Too many frameworks ({$a}) to show';
+$string['cannotcallusgetselectedcourse'] = 'You cannot call course_selector::get_selected_course if multi-select is true';
+$string['courseselectorautoselectunique'] = 'If only one course matches the search, select it automatically';
+$string['courseselectorpreserveselected'] = 'Keep selected courses, even if they no longer match the search';
+$string['courseselectorsearchanywhere'] = 'Match the search text anywhere in the course\'s name';
+$string['courseselectortoomany'] = 'course_selector got more than one selected course, even though multi-select is false';
+$string['nomatchingcourses'] = 'No courses match \'{$a}\'';
+$string['previouslyselectedcourses'] = 'Previously selected courses not matching \'{$a}\'';
+$string['toomanycoursesmatchsearch'] = 'Too many courses ({$a->count}) match \'{$a->search}\'';
+$string['toomanycoursestoshow'] = 'Too many courses ({$a}) to show';
 

@@ -23,14 +23,14 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \company_user;
-use \iomad;
-use \potential_user_license_course_selector;
-use \current_user_license_course_selector;
-use \context_system;
-use \context_course;
+use moodleform;
+use local_iomad\course_selector\potential_user_license;
+use local_iomad\course_selector\current_user_license;
+use context_system;
+use context_course;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_users_licenses_form extends moodleform {
     protected $context = null;
@@ -98,10 +98,10 @@ class company_users_licenses_form extends moodleform {
                              'licenseid' => $this->licenseid,
                              'shared' => true);
             if (! $this->potentialcourses) {
-                $this->potentialcourses = new potential_user_license_course_selector('potentialusercourses', $options);
+                $this->potentialcourses = new potential_user_license('potentialusercourses', $options);
             }
             if (! $this->currentcourses) {
-                $this->currentcourses = new current_user_license_course_selector('currentcourses', $options);
+                $this->currentcourses = new current_user_license('currentcourses', $options);
             }
         } else {
             return;

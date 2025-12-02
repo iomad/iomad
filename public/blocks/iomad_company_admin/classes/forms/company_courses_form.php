@@ -23,14 +23,15 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \iomad;
-use \potential_company_course_selector;
-use \current_company_course_selector;
-use \context_system;
-use \stdclass;
-use \course_enrolment_manager;
+use moodleform;
+use local_iomad\course_selector\potential_company;
+use local_iomad\course_selector\current_company;
+use context_system;
+use stdclass;
+use course_enrolment_manager;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_courses_form extends moodleform {
     protected $context = null;
@@ -55,9 +56,9 @@ class company_courses_form extends moodleform {
                          'shared' => false,
                          'licenses' => true,
                          'partialshared' => true);
-        $this->potentialcourses = new potential_company_course_selector('potentialcourses',
+        $this->potentialcourses = new potential_company('potentialcourses',
                                                                          $options);
-        $this->currentcourses = new current_company_course_selector('currentcourses', $options);
+        $this->currentcourses = new current_company('currentcourses', $options);
 
         parent::__construct($actionurl);
     }

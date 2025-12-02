@@ -23,15 +23,14 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \iomad;
-use \context_system;
-use \company_user;
+use moodleform;
+use context_system;
 use EmailTemplate;
-use \potential_company_course_user_selector;
-use \current_company_course_user_selector;
-use \stdclass;
+use local_iomad\user_selector\potential_course;
+use local_iomad\user_selector\current_course;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_course_users_form extends moodleform {
     protected $context = null;
@@ -97,13 +96,13 @@ class company_course_users_form extends moodleform {
                              'departmentid' => $this->departmentid,
                              'subdepartments' => $this->subhierarchieslist,
                              'parentdepartmentid' => $this->parentlevel,
-                             'class' => 'potential_company_course_user_selector');
+                             'class' => 'local_iomad\user_selector\potential_course');
             if (empty($this->potentialusers)) {
-                $this->potentialusers = new potential_company_course_user_selector('potentialcourseusers', $options);
+                $this->potentialusers = new potential_course('potentialcourseusers', $options);
             }
-            $options['class'] = 'current_company_course_user_selector';
+            $options['class'] = 'local_iomad\user_selector\current_course';
             if (empty($this->currentusers)) {
-                $this->currentusers = new current_company_course_user_selector('currentlyenrolledusers', $options);
+                $this->currentusers = new current_course('currentlyenrolledusers', $options);
             }
         } else {
             return;
@@ -152,7 +151,7 @@ class company_course_users_form extends moodleform {
                 $course = $DB->get_record('course', array('id' => $courseid));
             }
         } else {
-            $course = new stdclass();
+            $course = (object) [];
             $namestring = $company->get('name');
             $course->fullname = $namestring;
             $course->id = 0;

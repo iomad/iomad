@@ -23,15 +23,15 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \company_user;
-use \iomad;
-use \EmailTemplate;
-use \potential_user_course_selector;
-use \current_user_course_selector;
-use \context_system;
-use \stdclass;
+use moodleform;
+use EmailTemplate;
+use local_iomad\course_selector\potential_user;
+use local_iomad\course_selector\current_user;
+use context_system;
+use stdclass;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_users_course_form extends moodleform {
     protected $context = null;
@@ -88,10 +88,10 @@ class company_users_course_form extends moodleform {
                              'parentdepartmentid' => $this->parentlevel,
                              'shared' => true);
             if (! $this->potentialcourses) {
-                $this->potentialcourses = new potential_user_course_selector('potentialusercourses', $options);
+                $this->potentialcourses = new potential_user('potentialusercourses', $options);
             }
             if (! $this->currentcourses) {
-                $this->currentcourses = new current_user_course_selector('currentcourses', $options);
+                $this->currentcourses = new current_user('currentcourses', $options);
             }
         } else {
             return;
