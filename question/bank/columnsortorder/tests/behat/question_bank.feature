@@ -123,7 +123,7 @@ Feature: Set question bank column order and size
     And I apply question bank filter "Category" with value "Question category 1"
     And "Comments" "qbank_columnsortorder > column header" should appear before "Question" "qbank_columnsortorder > column header"
     When I hover "Comments" "qbank_columnsortorder > column header"
-    And I drag "Comments" "qbank_columnsortorder > column move handle" and I drop it in "Status" "qbank_columnsortorder > column header"
+    And I drag "Move column 'Comments'" "button" and I drop it in "Status" "qbank_columnsortorder > column header"
     Then "Comments" "qbank_columnsortorder > column header" should appear after "Question" "qbank_columnsortorder > column header"
     And I reload the page
     And "Comments" "qbank_columnsortorder > column header" should appear after "Question" "qbank_columnsortorder > column header"
@@ -139,6 +139,7 @@ Feature: Set question bank column order and size
     And "Create a new question" "button" should exist
     # Really, we are just checking the question bank displayed without errors.
 
+  @core_customfield
   Scenario: Deleting a custom field which a user had removed from his preferences
     Given the following "custom field categories" exist:
       | name              | component          | area     | itemid |
@@ -156,7 +157,7 @@ Feature: Set question bank column order and size
     # Delete a question custom field.
     And I log in as "admin"
     And I navigate to "Plugins > Question bank plugins > Question custom fields" in site administration
-    And I click on "Delete" "link" in the "Field 1" "table_row"
+    And I press "Delete custom field: Field 1"
     And I click on "Yes" "button" in the "Confirm" "dialogue"
     And I am on the "Test quiz Q001" "mod_quiz > question bank" page logged in as "teacher1"
     And I apply question bank filter "Category" with value "Question category 1"
