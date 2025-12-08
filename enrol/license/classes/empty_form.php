@@ -29,6 +29,14 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/formslib.php');
 
+/**
+ * Empty enrol_license form class.
+ *
+ * @package enrol_license
+ * @copyright  2019 E-Learn Design Ltd. http://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class enrol_license_empty_form extends moodleform {
 
     /**
