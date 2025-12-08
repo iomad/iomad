@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.4.11 (Build: 20251006)'; // Human-friendly version name.
+$plugin->release  = '4.4.12 (Build: 20251208)'; // Human-friendly version name.
 $plugin->version  = 2024042244;   // The (date) version of this plugin.
 $plugin->requires = 2024042200;   // Requires this Moodle version.
 $plugin->component  = 'local_course_selector';
