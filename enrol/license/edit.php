@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Edit license enrolment page.
+ *
  * @package   enrol_license
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -27,16 +29,17 @@ require_once('edit_form.php');
 $courseid   = required_param('courseid', PARAM_INT);
 $instanceid = optional_param('id', 0, PARAM_INT); // Instanceid.
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
 $context = context_course::instance($course->id, MUST_EXIST);
 
 require_login($course);
 require_capability('enrol/license:config', $context);
 
-$PAGE->set_url('/enrol/license/edit.php', array('courseid' => $course->id, 'id' => $instanceid));
+$PAGE->set_url('/enrol/license/edit.php', ['courseid' => $course->id,
+                                           'id' => $instanceid]);
 $PAGE->set_pagelayout('admin');
 
-$return = new moodle_url('/enrol/instances.php', array('id' => $course->id));
+$return = new moodle_url('/enrol/instances.php', ['id' => $course->id]);
 if (!enrol_is_enabled('license')) {
     redirect($return);
 }
@@ -44,19 +47,19 @@ if (!enrol_is_enabled('license')) {
 $plugin = enrol_get_plugin('license');
 
 if ($instanceid) {
-    $instance = $DB->get_record('enrol', array('courseid' => $course->id,
-                                               'enrol' => 'license',
-                                               'id' => $instanceid), '*', MUST_EXIST);
+    $instance = $DB->get_record('enrol', ['courseid' => $course->id,
+                                          'enrol' => 'license',
+                                          'id' => $instanceid], '*', MUST_EXIST);
 } else {
     require_capability('moodle/course:enrolconfig', $context);
     // No instance yet, we have to add new instance.
-    navigation_node::override_active_url(new moodle_url('/enrol/instances.php', array('id' => $course->id)));
+    navigation_node::override_active_url(new moodle_url('/enrol/instances.php', ['id' => $course->id]));
     $instance = new stdClass();
     $instance->id       = null;
     $instance->courseid = $course->id;
 }
 
-$mform = new enrol_license_edit_form(null, array($instance, $plugin, $context));
+$mform = new enrol_license_edit_form(null, [$instance, $plugin, $context]);
 
 if ($mform->is_cancelled()) {
     redirect($return);
@@ -79,18 +82,20 @@ if ($mform->is_cancelled()) {
         $DB->update_record('enrol', $instance);
 
     } else {
-        $fields = array('status' => $data->status,
-                        'name' => $data->name,
-                        'password' => null,
-                        'customint1' => 0,
-                        'customint2' => $data->customint2,
-                        'customint3' => 0,
-                        'customint4' => $data->customint4,
-                        'customtext1' => $data->customtext1,
-                        'roleid' => $data->roleid,
-                        'enrolperiod' => 0,
-                        'enrolstartdate' => 0,
-                        'enrolenddate' => 0);
+        $fields = [
+                    'status' => $data->status,
+                    'name' => $data->name,
+                    'password' => null,
+                    'customint1' => 0,
+                    'customint2' => $data->customint2,
+                    'customint3' => 0,
+                    'customint4' => $data->customint4,
+                    'customtext1' => $data->customtext1,
+                    'roleid' => $data->roleid,
+                    'enrolperiod' => 0,
+                    'enrolstartdate' => 0,
+                    'enrolenddate' => 0,
+                  ];
         $plugin->add_instance($course, $fields);
     }
 
