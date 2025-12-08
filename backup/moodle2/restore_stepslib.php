@@ -5553,7 +5553,7 @@ class restore_move_module_questions_categories extends restore_execution_step {
                 // From 3.5 onwards, all question categories should be a child of a special category called the "top" category.
                 $info = backup_controller_dbops::decode_backup_temp_info($modulecat->info);
                 if ($after35 && empty($info->parent)) {
-                    $oldtopid = $modulecat->newitemid;
+                    $oldtopid = $modulecat->itemid;
                     $modulecat->newitemid = $top->id;
                 } else {
                     $cat = new stdClass();
@@ -6449,15 +6449,15 @@ trait restore_question_set_reference_data_trait {
         ) {
             $newcategoryid = $this->get_mappingid('question_category', $oldcategoryid);
             $filtercondition['filter']['category']['values'][0] = $newcategoryid;
-        }
 
-        if ($context = $this->get_mappingid('context', $data->questionscontextid)) {
-            $data->questionscontextid = $context;
-        } else {
-            $this->log('question_set_reference with old id ' . $data->id .
-                ' referenced question context ' . $data->questionscontextid .
-                ' which was not included in the backup. Therefore, this has been ' .
-                ' restored with the old questionscontextid.', backup::LOG_WARNING);
+            if ($context = $this->get_mappingid('context', $data->questionscontextid)) {
+                $data->questionscontextid = $context;
+            } else {
+                $this->log('question_set_reference with old id ' . $data->id .
+                    ' referenced question context ' . $data->questionscontextid .
+                    ' which was not included in the backup. Therefore, this has been ' .
+                    ' restored with the old questionscontextid.', backup::LOG_WARNING);
+            }
         }
 
         $filtercondition['cat'] = implode(',', [

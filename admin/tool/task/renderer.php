@@ -58,7 +58,7 @@ class tool_task_renderer extends plugin_renderer_base {
             get_string('nextruntime', 'tool_task'),
         ];
 
-        $table->attributes['class'] = 'admintable generaltable';
+        $table->attributes['class'] = 'admintable generaltable table table-hover';
         $table->colclasses = [];
 
         // For each task entry (row) show action buttons/logs link depending on the user permissions.
@@ -200,8 +200,9 @@ class tool_task_renderer extends plugin_renderer_base {
             });
         }
 
-        return html_writer::table($table)
-            . html_writer::div(
+        $output = html_writer::table($table);
+        if ($canruntasks) {
+            $output .= html_writer::div(
                 html_writer::link(
                     new moodle_url(
                         $adhocrunurl,
@@ -210,7 +211,10 @@ class tool_task_renderer extends plugin_renderer_base {
                     get_string('runclassname', 'tool_task')
                 ),
                 'task-runnow'
-            )
+            );
+        }
+
+        return $output
             . html_writer::div(
                 html_writer::link(
                     new moodle_url(
@@ -259,7 +263,7 @@ class tool_task_renderer extends plugin_renderer_base {
             get_string('actions','tool_task'),
         ];
 
-        $table->attributes['class'] = 'generaltable';
+        $table->attributes['class'] = 'generaltable table table-hover';
         $table->colclasses = [];
 
         // For each task entry (row) show action buttons/logs link depending on the user permissions.
@@ -384,7 +388,7 @@ class tool_task_renderer extends plugin_renderer_base {
             get_string('default', 'tool_task'),
         ];
 
-        $table->attributes['class'] = 'admintable generaltable';
+        $table->attributes['class'] = 'admintable generaltable table table-hover';
         $table->colclasses = [];
 
         if (!$showloglink) {

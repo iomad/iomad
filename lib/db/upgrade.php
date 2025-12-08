@@ -1862,5 +1862,37 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025041401.10);
     }
 
+    if ($oldversion < 2025041403.05) {
+        // Remove any orphaned competency evidence records (pointing to non-existing contexts).
+        $DB->delete_records_select('competency_evidence', 'NOT EXISTS (
+            SELECT ctx.id FROM {context} ctx WHERE ctx.id = {competency_evidence}.contextid
+        )');
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025041403.05);
+    }
+
+    if ($oldversion < 2025041403.11) {
+        // Define index hashcode (not unique) to be added to question_response_analysis.
+        $table = new xmldb_table('question_response_analysis');
+        $index = new xmldb_index('hashcode', XMLDB_INDEX_NOTUNIQUE, ['hashcode']);
+
+        // Conditionally launch add index hashcode.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define index hashcode (not unique) to be added to question_statistics.
+        $table = new xmldb_table('question_statistics');
+        $index = new xmldb_index('hashcode', XMLDB_INDEX_NOTUNIQUE, ['hashcode']);
+
+        // Conditionally launch add index hashcode.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025041403.11);
+    }
+
     return true;
 }

@@ -1416,8 +1416,14 @@ function question_extend_settings_navigation(navigation_node $navigationnode, $c
 
     $iscourse = $context->contextlevel === CONTEXT_COURSE;
 
-    if ($iscourse) {
-        $params = ['courseid' => $context->instanceid];
+    if ($iscourse && has_capability('moodle/course:manageactivities', $context)) {
+        return $navigationnode->add(
+            get_string('questionbank_plural', 'question'),
+            new moodle_url($baseurl, ['courseid' => $context->instanceid]),
+            navigation_node::TYPE_CONTAINER,
+            null,
+            'questionbank'
+        );
     } else if ($context->contextlevel == CONTEXT_MODULE) {
         $params = ['cmid' => $context->instanceid];
     } else {
@@ -1428,8 +1434,13 @@ function question_extend_settings_navigation(navigation_node $navigationnode, $c
         $params['cat'] = $cat;
     }
 
-    $questionnode = $navigationnode->add(get_string($iscourse ? 'questionbank_plural' : 'questionbank', 'question'),
-            new moodle_url($baseurl, $params), navigation_node::TYPE_CONTAINER, null, 'questionbank');
+    $questionnode = $navigationnode->add(
+        get_string('questionbank', 'question'),
+        new moodle_url($baseurl, $params),
+        navigation_node::TYPE_CONTAINER,
+        null,
+        'questionbank'
+    );
 
     $corenavigations = [
             'questions' => [
@@ -1814,7 +1825,7 @@ function question_page_type_list($pagetype, $parentcontext, $currentcontext): ar
         'question-export' => get_string('page-question-export', 'question'),
         'question-import' => get_string('page-question-import', 'question')
     ];
-    if ($currentcontext->contextlevel == CONTEXT_COURSE) {
+    if ($currentcontext && $currentcontext->contextlevel == CONTEXT_COURSE) {
         require_once($CFG->dirroot . '/course/lib.php');
         return array_merge(course_page_type_list($pagetype, $parentcontext, $currentcontext), $types);
     } else {

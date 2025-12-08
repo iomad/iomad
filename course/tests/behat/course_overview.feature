@@ -109,6 +109,7 @@ Feature: Users can access the course activities overview page
       | url             | C1     | Activity 18 |
       | wiki            | C1     | Activity 19 |
       | workshop        | C1     | Activity 20 |
+      | qbank           | C1     | Activity 21 |
     Given I am on the "Course 1" "course > activities" page logged in as "teacher1"
     And I should see "Assignments" in the "assign_overview_collapsible" "region"
     And I should see "Choices" in the "choice_overview_collapsible" "region"
@@ -124,6 +125,9 @@ Feature: Users can access the course activities overview page
     And I should see "Workshops" in the "workshop_overview_collapsible" "region"
     # All resources are grouped.
     And I should see "Resources" in the "resource_overview_collapsible" "region"
+    # Qbanks and labels are not shown.
+    And I should not see "Labels" in the "course-overview-page" "region"
+    And I should not see "Question banks" in the "course-overview-page" "region"
 
   @javascript
   Scenario: The resources overview is loaded at the moment the section is expanded via Ajax
@@ -314,6 +318,17 @@ Feature: Users can access the course activities overview page
     When I am on the "Course 1" "course > activities > assign" page logged in as "teacher1"
     Then I should not see "span" in the "assign_overview_collapsible" "region"
 
+  Scenario: Section name is properly filtered and rendered
+    Given the following config values are set as admin:
+      | formatstringstriptags | 0 |
+    And I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I click on "Edit settings" "link" in the "Section 1" "core_courseformat > Section actions menu"
+    And I set the field "Section name" to "<span class='filter_mathjaxloader_equation'>Announcements$$(a+b)=2$$<span class='nolink'>$$(a+b)=2$$</span></span>"
+    And I press "Save changes"
+    When I am on the "Course 1" "course > activities > assign" page
+    Then I should not see "span" in the "assign_overview_collapsible" "region"
+
   Scenario: Not gradable activities don't show any Grade colum in the activity overview
 #   Create an activity non-gradable from the creation.
     Given the following "activities" exist:
@@ -344,3 +359,18 @@ Feature: Users can access the course activities overview page
     And I am on the "Course 1" "course > activities > assign" page logged in as "student1"
     And I should not see "-" in the "Test assignment name" "table_row"
     And I should see "-" in the "Not gradable" "table_row"
+
+  @javascript
+  Scenario: Hidden section name is not shown in the activity overview for students
+    Given I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I hide section "1"
+    # Make stealth the activity to guarantee the students can see it.
+    And I open "Test assignment name" actions menu
+    And I choose "Availability > Make available but don't show on course page" in the open action menu
+    # Teacher should see the section name.
+    When I am on the "Course 1" "course > activities > assign" page
+    Then I should see "Section 1" in the "Test assignment name" "table_row"
+    # Student should not see the section name.
+    But I am on the "Course 1" "course > activities > assign" page logged in as "student1"
+    And I should not see "Section 1" in the "Test assignment name" "table_row"

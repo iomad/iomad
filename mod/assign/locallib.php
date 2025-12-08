@@ -556,7 +556,16 @@ class assign {
                 $nextpageparams['action'] = 'view';
             }
         } else if ($action == 'addattempt') {
-            $this->process_add_attempt(required_param('userid', PARAM_INT));
+            $userid = false;
+            if ($this->is_blind_marking()) {
+                $blindid = optional_param('blindid', 0, PARAM_INT);
+                $userid = $this->get_user_id_for_uniqueid($blindid);
+            }
+            // Userid is required, if not found by blindid.
+            if (!$userid) {
+                $userid = required_param('userid', PARAM_INT);
+            }
+            $this->process_add_attempt($userid);
             $action = 'redirect';
             $nextpageparams['action'] = 'grading';
         } else if ($action == 'reverttodraft') {
@@ -705,7 +714,7 @@ class assign {
         } else if ($action == 'viewbatchmarkingallocation') {
             $o .= $this->view_batch_markingallocation();
         } else if ($action == 'viewsubmitforgradingerror') {
-            $o .= $this->view_error_page(get_string('submitforgrading', 'assign'), $notices);
+            $o .= $this->view_notices(get_string('submitforgrading', 'assign'), $notices);
         } else if ($action == 'fixrescalednullgrades') {
             $o .= $this->view_fix_rescaled_null_grades();
         } else {
@@ -3110,7 +3119,14 @@ class assign {
 
         $users = optional_param('userid', 0, PARAM_INT);
         if (!$users) {
-            $users = required_param('selectedusers', PARAM_SEQUENCE);
+            if ($this->is_blind_marking()) {
+                $blindid = optional_param('blindid', 0, PARAM_INT);
+                $users = $this->get_user_id_for_uniqueid($blindid);
+            }
+            // We need users, if not found by blindid.
+            if (!$users) {
+                $users = required_param('selectedusers', PARAM_SEQUENCE);
+            }
         }
         $userlist = explode(',', $users);
 
@@ -4325,7 +4341,29 @@ class assign {
     protected function view_remove_submission_confirm() {
         global $USER;
 
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $userid = optional_param('userid', 0, PARAM_INT);
+        $blindid = optional_param('blindid', 0, PARAM_INT);
+
+        // Construct the base URL parameters for the confirm and cancel actions.
+        $urlparams = [
+            'id' => $this->get_course_module()->id,
+            'action' => 'removesubmission',
+            'sesskey' => sesskey(),
+        ];
+
+        // Determine the correct user ID.
+        if ($userid) {
+            // Real user ID was explicitly provided.
+            $urlparams['userid'] = $userid;
+        } elseif ($this->is_blind_marking() && $blindid) {
+            // Blind marking is in use. Resolve anonymized (blind) ID to the real user ID to obtain the user object later.
+            $userid = $this->get_user_id_for_uniqueid($blindid);
+            $urlparams['blindid'] = $blindid;
+        } else {
+            // Default to the currently logged-in user (e.g. user deleting their own submission scenario).
+            $userid = $USER->id;
+            $urlparams['userid'] = $userid;
+        }
 
         if (!$this->can_edit_submission($userid, $USER->id)) {
             throw new \moodle_exception('nopermission');
@@ -4339,10 +4377,6 @@ class assign {
                                     $this->get_course_module()->id);
         $o .= $this->get_renderer()->render($header);
 
-        $urlparams = array('id' => $this->get_course_module()->id,
-                           'action' => 'removesubmission',
-                           'userid' => $userid,
-                           'sesskey' => sesskey());
         $confirmurl = new moodle_url('/mod/assign/view.php', $urlparams);
 
         $urlparams = array('id' => $this->get_course_module()->id,
@@ -4654,7 +4688,7 @@ class assign {
         $userid = optional_param('userid', 0, PARAM_INT);
         $blindid = optional_param('blindid', 0, PARAM_INT);
 
-        if (!$userid && $blindid) {
+        if ($this->is_blind_marking() && !$userid && $blindid) {
             $userid = $this->get_user_id_for_uniqueid($blindid);
         }
 
@@ -4791,7 +4825,17 @@ class assign {
         $o = '';
         require_once($CFG->dirroot . '/mod/assign/submission_form.php');
         // Need submit permission to submit an assignment.
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $userid = optional_param('userid', 0, PARAM_INT);
+        $blindid = optional_param('blindid', 0, PARAM_INT);
+
+        if ($this->is_blind_marking() && !$userid && $blindid) {
+            $userid = $this->get_user_id_for_uniqueid($blindid);
+        }
+        // If no userid specified, default to current user.
+        if (!$userid) {
+            $userid = $USER->id;
+        }
+
         $user = $DB->get_record('user', array('id'=>$userid), '*', MUST_EXIST);
         $timelimitenabled = get_config('assign', 'enabletimelimit');
 
@@ -6344,8 +6388,10 @@ class assign {
         }
 
         if ($userid == $graderid) {
-            if ($this->submissions_open($userid) &&
-                    has_capability('mod/assign:submit', $this->context, $graderid)) {
+            if (
+                $this->submissions_open($userid)
+                && has_capability('mod/assign:submit', $this->context, $graderid, false)
+            ) {
                 // User can edit their own submission.
                 return true;
             } else {
@@ -6888,14 +6934,27 @@ class assign {
     /**
      * A students submission is submitted for grading by a teacher.
      *
+     * @param moodleform|null $mform If validation failed when submitting this form - this is the moodleform.
+     *               It can be null.
+     * @param array $notices Receives error messages to display on an error condition.
      * @return bool
      */
-    protected function process_submit_other_for_grading($mform, $notices) {
+    protected function process_submit_other_for_grading($mform, &$notices) {
         global $USER, $CFG;
 
         require_sesskey();
 
-        $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $userid = optional_param('userid', 0, PARAM_INT);
+        $blindid = optional_param('blindid', 0, PARAM_INT);
+
+        if ($this->is_blind_marking() && !$userid && $blindid) {
+            $userid = $this->get_user_id_for_uniqueid($blindid);
+        }
+
+        // If no userid specified, default to current user.
+        if (!$userid) {
+            $userid = $USER->id;
+        }
 
         if (!$this->submissions_open($userid)) {
             $notices[] = get_string('submissionsclosed', 'assign');
@@ -6911,9 +6970,10 @@ class assign {
      *
      * @param moodleform|null $mform If validation failed when submitting this form - this is the moodleform.
      *               It can be null.
+     * @param array $notices Receives error messages to display on an error condition.
      * @return bool Return false if the validation fails. This affects which page is displayed next.
      */
-    protected function process_submit_for_grading($mform, $notices) {
+    protected function process_submit_for_grading($mform, &$notices) {
         global $CFG;
 
         require_once($CFG->dirroot . '/mod/assign/submissionconfirmform.php');
@@ -8331,7 +8391,15 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            if ($this->is_blind_marking()) {
+                $blindid = optional_param('blindid', 0, PARAM_INT);
+                $userid = $this->get_user_id_for_uniqueid($blindid);
+            }
+
+            // Userid is required, if not found by blindid.
+            if (!$userid) {
+                $userid = required_param('userid', PARAM_INT);
+            }
         }
 
         return $this->remove_submission($userid);
@@ -8348,7 +8416,17 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            if ($this->is_blind_marking()) {
+                $blindid = optional_param('blindid', 0, PARAM_INT);
+                if ($blindid) {
+                    $userid = $this->get_user_id_for_uniqueid($blindid);
+                }
+            }
+
+            // Userid is required, if not found by blindid.
+            if (!$userid) {
+                $userid = required_param('userid', PARAM_INT);
+            }
         }
 
         return $this->revert_to_draft($userid);
@@ -8519,7 +8597,17 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            if ($this->is_blind_marking()) {
+                $blindid = optional_param('blindid', 0, PARAM_INT);
+                if ($blindid) {
+                    $userid = $this->get_user_id_for_uniqueid($blindid);
+                }
+            }
+
+            // Userid is required, if not found by blindid.
+            if (!$userid) {
+                $userid = required_param('userid', PARAM_INT);
+            }
         }
 
         return $this->lock_submission($userid);
@@ -8568,7 +8656,17 @@ class assign {
         require_sesskey();
 
         if (!$userid) {
-            $userid = required_param('userid', PARAM_INT);
+            if ($this->is_blind_marking()) {
+                $blindid = optional_param('blindid', 0, PARAM_INT);
+                if ($blindid) {
+                    $userid = $this->get_user_id_for_uniqueid($blindid);
+                }
+            }
+
+            // Userid is required, if not found by blindid.
+            if (!$userid) {
+                $userid = required_param('userid', PARAM_INT);
+            }
         }
 
         return $this->unlock_submission($userid);

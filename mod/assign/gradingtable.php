@@ -109,7 +109,7 @@ class assign_grading_table extends table_sql implements renderable {
         $this->define_baseurl($url);
 
         // Do some business - then set the sql.
-        $currentgroup = groups_get_activity_group($assignment->get_course_module(), true);
+        $currentgroup = groups_get_activity_group($assignment->get_course_module(), true, participationonly: false);
 
         if ($rowoffset) {
             $this->rownum = $rowoffset - 1;
@@ -1162,12 +1162,22 @@ class assign_grading_table extends table_sql implements renderable {
             );
             $caneditsubmission = $this->assignment->can_edit_submission($row->id, $USER->id);
 
-            $baseactionurl = new moodle_url('/mod/assign/view.php', [
-                'id' => $this->assignment->get_course_module()->id,
-                'userid' => $row->id,
-                'sesskey' => sesskey(),
-                'page' => $this->currpage,
-            ]);
+            $urlparams = [
+                 'id' => $this->assignment->get_course_module()->id,
+                 'sesskey' => sesskey(),
+                 'page' => $this->currpage,
+            ];
+
+            if ($this->assignment->is_blind_marking()) {
+                if (empty($row->recordid)) {
+                    $row->recordid = $this->assignment->get_uniqueid_for_user($row->userid);
+                }
+                $urlparams['blindid'] = $row->recordid;
+            } else {
+                $urlparams['userid'] = $row->userid;
+            }
+
+            $baseactionurl = new moodle_url('/mod/assign/view.php', $urlparams);
 
             $menu = new action_menu();
             $menu->set_owner_selector('.gradingtable-actionmenu');

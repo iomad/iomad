@@ -110,6 +110,9 @@ class MoodleExcelWorkbook {
     public function close() {
         global $CFG;
 
+        // If this file was requested from a form, then mark download as complete.
+        \core_form\util::form_download_complete();
+
         foreach ($this->objspreadsheet->getAllSheets() as $sheet) {
             $sheet->setSelectedCells('A1');
         }
@@ -204,6 +207,7 @@ class MoodleExcelWorksheet {
         $col += 1;
 
         $celladdress = CellAddress::fromColumnAndRow($col, $row + 1);
+        $str = \core\dataformat::escape_spreadsheet_formula($str);
 
         $this->worksheet->getStyle($celladdress)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
         $this->worksheet->getCell($celladdress)->setValueExplicit($str, DataType::TYPE_STRING);

@@ -212,7 +212,7 @@ class core_renderer extends renderer_base {
             $hook->add_html(
                 html_writer::empty_tag('meta', [
                     'http-equiv' => 'refresh',
-                    'content' => $this->page->periodicrefreshdelay . ';url=' . $this->page->url->out(),
+                    'content' => $this->page->periodicrefreshdelay . ';url=' . $this->page->url->out(false),
                 ]),
             );
         }
@@ -651,8 +651,8 @@ class core_renderer extends renderer_base {
             $fullname = fullname($USER);
             // Since Moodle 2.0 this link always goes to the public profile page (not the course profile page)
             if ($withlinks) {
-                $linktitle = get_string('viewprofile');
-                $username = "<a href=\"$CFG->wwwroot/user/profile.php?id=$USER->id\" title=\"$linktitle\">$fullname</a>";
+                $userurl = new moodle_url('/user/profile.php', ['id' => $USER->id]);
+                $username = html_writer::link($userurl, $fullname);
             } else {
                 $username = $fullname;
             }
@@ -1942,8 +1942,7 @@ class core_renderer extends renderer_base {
             $newwindowicon = $this->pix_icon(
                 'i/externallink',
                 get_string('opensinnewwindow'),
-                'moodle',
-                ['class' => 'fa fa-externallink fa-fw']
+                attributes: ['class' => 'ms-1'],
             );
         }
 

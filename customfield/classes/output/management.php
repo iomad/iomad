@@ -76,11 +76,12 @@ class management implements renderable, templatable {
         $categories = $this->handler->get_categories_with_fields();
 
         $categoriesarray = array();
-
+        $fieldscount = 0;
         foreach ($categories as $category) {
 
             $categoryarray = array();
             $categoryarray['id'] = $category->get('id');
+            $categoryarray['name'] = $category->get_formatted_name();
             $categoryarray['nameeditable'] = $output->render(api::get_category_inplace_editable($category, true));
             $categoryarray['movetitle'] = get_string('movecategory', 'core_customfield',
                 $category->get_formatted_name());
@@ -97,6 +98,7 @@ class management implements renderable, templatable {
                 $fieldarray['movetitle'] = get_string('movefield', 'core_customfield', $fieldname);
 
                 $categoryarray['fields'][] = $fieldarray;
+                $fieldscount++;
             }
 
             $menu = new \action_menu();
@@ -116,6 +118,9 @@ class management implements renderable, templatable {
         }
 
         $data->categories = $categoriesarray;
+        $data->canmovecategories = count($data->categories) > 1;
+        // Can move fields if there are more than one field or if there are multiple categories.
+        $data->canmovefields = $fieldscount > 1 || $data->canmovecategories;
 
         if (empty($data->categories)) {
             $data->nocategories = get_string('nocategories', 'core_customfield');
