@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Capabilities for enrol_license
+ *
  * @package   enrol_license
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,43 +25,43 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
+$capabilities = [
 
-    'enrol/license:config' => array(
+    'enrol/license:config' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'enrol/license:manage' => array(
+    'enrol/license:manage' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'enrol/license:unenrolself' => array(
+    'enrol/license:unenrolself' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
             'student' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-    'enrol/license:unenrol' => array(
+    'enrol/license:unenrol' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-        )
-    ),
+        ],
+    ],
 
-);
+];

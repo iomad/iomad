@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * License enrol local library.
+ *
  * @package   enrol_license
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -25,9 +27,26 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/formslib.php");
 
+/**
+ * Main enrol form
+ *
+ * @package   enrol_license
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class enrol_license_enrol_form extends moodleform {
+
+    /** Instance
+     * @var object
+     */
     protected $instance;
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         $mform = $this->_form;
         $instance = $this->_customdata;
@@ -51,6 +70,13 @@ class enrol_license_enrol_form extends moodleform {
         $mform->setDefault('instance', $instance->id);
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB, $CFG;
 
@@ -60,7 +86,7 @@ class enrol_license_enrol_form extends moodleform {
         if ($instance->password) {
             if ($data['enrolpassword'] !== $instance->password) {
                 if ($instance->customint1) {
-                    $groups = $DB->get_records('groups', array('courseid' => $instance->courseid), 'id ASC', 'id, enrolmentkey');
+                    $groups = $DB->get_records('groups', ['courseid' => $instance->courseid], 'id ASC', 'id, enrolmentkey');
                     $found = false;
                     foreach ($groups as $group) {
                         if (empty($group->enrolmentkey)) {

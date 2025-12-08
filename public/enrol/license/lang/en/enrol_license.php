@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * License enrolment language strings
+ *
  * @package   enrol_license
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -29,17 +31,21 @@ $string['enrolenddate'] = 'End date';
 $string['enrolenddaterror'] = 'Enrolment end date cannot be earlier than start date';
 $string['enrolme'] = 'Click here to start this course';
 $string['enrolperiod'] = 'Enrolment period';
-$string['enrolperiod_desc'] = 'Default length of the enrolment period (in seconds).'; // TODO: fixme!
+$string['enrolperiod_desc'] = 'Default length of the enrolment period (in seconds).';
 $string['enrolstartdate'] = 'Start date';
 $string['groupkey'] = 'Use group enrolment keys';
 $string['groupkey_desc'] = 'Use group enrolment keys by default.';
 $string['groupkey_help'] = 'In addition to restricting access to the course to only those who know the key, use of a group enrolment key means users are automatically added to the group when they enrol in the course.
 
 To use a group enrolment key, an enrolment key must be specified in the course settings as well as the group enrolment key in the group settings.';
+$string['license:config'] = 'Configure license enrol instances';
+$string['license:manage'] = 'Manage enrolled users';
+$string['license:unenrol'] = 'Unenrol users from course';
+$string['license:unenrollicense'] = 'Unenrol license from the course';
+$string['license:unenrolself'] = 'User can unenrol themselves';
 $string['licensecrontask'] = 'Enrol license scheduled task';
 $string['licensenolongervalid'] = 'Your license for this course is no longer valid';
 $string['licensenotyetvalid'] = 'Your access to this course will be available on {$a}';
-$string['license:unenrolself'] = 'User can unenrol themselves';
 $string['longtimenosee'] = 'Unenrol inactive after';
 $string['longtimenosee_help'] = 'If users haven\'t accessed a course for a long time, then they are automatically unenrolled. This parameter specifies that time limit.  This is sepearate to the enrolement time which is set by license itself.';
 $string['maxenrolled'] = 'Max enrolled users';
@@ -61,10 +67,6 @@ $string['privacy:metadata'] = 'The LIcense enrolment plugin only shows data stor
 $string['requirepassword'] = 'Require enrolment key';
 $string['requirepassword_desc'] = 'Require enrolment key in new courses and prevent removing of enrolment key from existing courses.';
 $string['role'] = 'Assign role';
-$string['license:config'] = 'Configure license enrol instances';
-$string['license:manage'] = 'Manage enrolled users';
-$string['license:unenrol'] = 'Unenrol users from course';
-$string['license:unenrollicense'] = 'Unenrol license from the course';
 $string['sendcoursewelcomemessage'] = 'Send course welcome message';
 $string['sendcoursewelcomemessage_help'] = 'If enabled, users receive a welcome message via email when they license-enrol in a course.';
 $string['showhint'] = 'Show hint';

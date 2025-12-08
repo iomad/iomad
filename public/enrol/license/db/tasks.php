@@ -25,14 +25,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-    array(
+$tasks = [
+    [
         'classname' => 'enrol_license\task\cron_task',
         'blocking' => 0,
         'minute' => '10',
         'hour' => '*',
         'day' => '*',
         'month' => '*',
-        'dayofweek' => '*'
-    )
-);
+        'dayofweek' => '*',
+    ],
+];

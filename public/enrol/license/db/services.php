@@ -24,22 +24,24 @@
  * @since     Moodle 3.7
  */
 
-$functions = array(
-    'enrol_license_get_instance_info' => array(
+defined('MOODLE_INTERNAL') || die();
+
+$functions = [
+    'enrol_license_get_instance_info' => [
         'classname'   => 'enrol_license_external',
         'methodname'  => 'get_instance_info',
         'classpath'   => 'enrol/license/externallib.php',
         'description' => 'License enrolment instance information.',
         'type'        => 'read',
-        'services'    => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
+        'services'    => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
 
-    'enrol_license_enrol_user' => array(
+    'enrol_license_enrol_user' => [
         'classname'   => 'enrol_license_external',
         'methodname'  => 'enrol_user',
         'classpath'   => 'enrol/license/externallib.php',
         'description' => 'License enrol the current user in the given course.',
         'type'        => 'write',
-        'services'    => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    )
-);
+        'services'    => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+];
