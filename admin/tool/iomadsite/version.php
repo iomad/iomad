@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '5.0.3 (Build: 20251006)';    // Human-friendly version name.
+$plugin->release  = '5.0.4 (Build: 20251208)';    // Human-friendly version name.
 $plugin->version  = 2025041450;   // The (date) version of this plugin.
 $plugin->requires = 2025041400;   // Requires this Moodle version.
 $plugin->component = 'tool_iomadsite';
