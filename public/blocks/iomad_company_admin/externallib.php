@@ -788,16 +788,16 @@ class block_iomad_company_admin_external extends external_api {
         require_capability('block/iomad_company_admin:viewcourses', $context);
 
         // Validate the criteria and retrieve the users.
-        $params = $params['criteria'][0]; 
+        $params = $params['criteria'][0];
         $courses = array();
         $warnings = array();
         $sqlparams = array();
         $sql = ' company != 0 ';
 
         if (!empty($params['companyid'])) {
-            $companies = $DB->get_records('company', ['id' => $params['companyid']], 'id', 'id,name,shortname,code,address,city,region,postcode,country,custom1,custom2,custom3'); 
+            $companies = $DB->get_records('company', ['id' => $params['companyid']], 'id', 'id,name,shortname,code,address,city,region,postcode,country,custom1,custom2,custom3');
         } else {
-            $companies = $DB->get_records('company', ['suspended' => 0], 'id', 'id,name,shortname,code,address,city,region,postcode,country,custom1,custom2,custom3'); 
+            $companies = $DB->get_records('company', ['suspended' => 0], 'id', 'id,name,shortname,code,address,city,region,postcode,country,custom1,custom2,custom3');
         }
 
         foreach ($companies as $companyid => $company) {
@@ -1262,7 +1262,7 @@ class block_iomad_company_admin_external extends external_api {
             'users' => array_values($departmentinfo),
         );
 
-     return $result; 
+     return $result;
     }
 
    /**
@@ -2357,7 +2357,7 @@ class block_iomad_company_admin_external extends external_api {
      * @since Moodle 2.2
      */
     public static function enrol_users($enrolments) {
-        global $DB, $CFG;
+        global $DB, $CFG, $SESSION;
 
         require_once($CFG->libdir . '/enrollib.php');
 
@@ -2416,6 +2416,12 @@ class block_iomad_company_admin_external extends external_api {
                 // Company will be the company the course is allocated to.
                 $companydetails = reset($companycourses);
                 $company = new company($companydetails->companyid);
+            }
+
+            // Set the $SESSION value for this company so it can be populated in events
+            // as this may not be already set.
+            if (empty($SESSION->currenteditingcompany)) {
+                $SESSION->currenteditingcompany = $company->id;
             }
 
             // Is the user already in this company?
@@ -2936,7 +2942,7 @@ class block_iomad_company_admin_external extends external_api {
                                                         AND cu.userid = :userid",
                                                        ['companyid' => $company->id,
                                                         'userid' => $user->id]);
-            $usercompanies[$company->id]->departments = $companydepartments; 
+            $usercompanies[$company->id]->departments = $companydepartments;
         }
         return ['companies' => $usercompanies];
     }
