@@ -658,22 +658,24 @@ class enrol_license_plugin extends enrol_plugin {
             foreach ($userids as $user) {
                 mtrace("dealing with user $user->userid");
                 // Get the license details.
-                $license = (array) $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing,
-                                                        lu.timecompleted, lu.score, lu.result
-                                                        FROM {companylicense_users} lu
-                                                        JOIN {companylicense_courses} lc ON (
-                                                            lu.licensecourseid = lc.courseid
-                                                            AND lu.licenseid = lc.licenseid
-                                                        )
-                                                        WHERE lu.userid = :userid
-                                                        AND lc.courseid = :courseid
-                                                        AND lu.timecompleted IS NULL",
-                                                       ['userid' => $user->userid,
-                                                        'courseid' => $user->courseid]);
+                $license = (object) [];
+                if ($license = $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing,
+                                                    lu.timecompleted, lu.score, lu.result
+                                                    FROM {companylicense_users} lu
+                                                    JOIN {companylicense_courses} lc ON (
+                                                        lu.licensecourseid = lc.courseid
+                                                        AND lu.licenseid = lc.licenseid
+                                                    )
+                                                    WHERE lu.userid = :userid
+                                                    AND lc.courseid = :courseid
+                                                    AND lu.timecompleted IS NULL",
+                                                   ['userid' => $user->userid,
+                                                    'courseid' => $user->courseid])) {
 
-                // Tell the system the license is finished with.
-                $license['timecompleted'] = $runtime;
-                $DB->update_record('companylicense_users', $license);
+                    // Tell the system the license is finished with.
+                    $license->timecompleted = $runtime;
+                    $DB->update_record('companylicense_users', (array) $license);
+                }
 
                 // Get the grade item details.
                 if ($gradeitems = $DB->get_records_sql("SELECT gg.id, gg.finalgrade, gg.feedback, gi.itemtype
@@ -687,18 +689,18 @@ class enrol_license_plugin extends enrol_plugin {
                     mtrace("removing grade items from course $user->courseid");
                     foreach ($gradeitems as $gradeitem) {
                         if ($gradeitem->itemtype == 'course' ) {
-                            $license['score'] = $gradeitem->finalgrade;
-                            $license['result'] = $gradeitem->feedback;
+                            $license->score = $gradeitem->finalgrade;
+                            $license->result = $gradeitem->feedback;
                         }
 
                         $DB->delete_records('grade_grades', ['id' => $gradeitem->id]);
                     }
                 }
 
-                if (!empty($license['id'])) {
+                if (!empty($license->id)) {
                     // Update the user license information.
-                    mtrace("updating license ".$license['id']." for user ".$user->userid);
-                    $DB->update_record('companylicense_users', $license);
+                    mtrace("updating license " . $license->id . " for user ".$user->userid);
+                    $DB->update_record('companylicense_users', (array) $license);
                 }
 
                 // Delete any completion data.
