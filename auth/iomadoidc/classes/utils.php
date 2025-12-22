@@ -139,7 +139,17 @@ class utils {
      * @param null $debugdata
      */
     public static function debug($message, $where = '', $debugdata = null) {
-        $debugmode = (bool)get_config('auth_iomadoidc', 'debugmode' . $this->postfix);
+        global $CFG;
+
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
+
+        $debugmode = (bool)get_config('auth_iomadoidc', 'debugmode' . $postfix);
         if ($debugmode === true) {
             $backtrace = debug_backtrace();
             $otherdata = [
@@ -181,7 +191,17 @@ class utils {
      * @return string|bool cert path if exists otherwise false
      */
     public static function get_certpath() {
-        $clientcertfile = get_config('auth_iomadoidc', 'clientcertfile' . $this->postfix);
+        global $CFG;
+
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
+
+        $clientcertfile = get_config('auth_iomadoidc', 'clientcertfile' . $postfix);
         $certlocation = self::get_openssl_internal_path();
         $certfile = "$certlocation/$clientcertfile";
 
@@ -198,7 +218,17 @@ class utils {
      * @return string|bool key path if exists otherwise false
      */
     public static function get_keypath() {
-        $clientprivatekeyfile = get_config('auth_iomadoidc', 'clientprivatekeyfile' . $this->postfix);
+        global $CFG;
+
+        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        if (!empty($companyid)) {
+            $postfix = "_$companyid";
+        } else {
+            $postfix = "";
+        }
+
+        $clientprivatekeyfile = get_config('auth_iomadoidc', 'clientprivatekeyfile' . $postfix);
         $keylocation = self::get_openssl_internal_path();
         $keyfile = "$keylocation/$clientprivatekeyfile";
 
