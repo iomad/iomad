@@ -91,7 +91,7 @@ if (empty($templatesetid)) {
     if (!$templaterecord = $DB->get_record_sql("SELECT et.*, ets.id AS templatestringid, ets.subject,ets.body, ets.signature, ets.lang
                                                 FROM {email_templateset_templates} et
                                                 JOIN {email_templateset_template_strings} ets
-                                                ON (et.id = ets.templateid)
+                                                ON (et.id = ets.templatesetid)
                                                 WHERE et.id = :id
                                                 AND ets.lang = :lang",
                                                ['id' => $templateid,
