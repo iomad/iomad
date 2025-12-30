@@ -15,20 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
 use \EmailTemplate;
-use \company;
-use \context_course;
 
-//
-
+/**
+ * Company license expiring scheduled task
+ */
 class company_license_expiring_task extends \core\task\scheduled_task {
 
     /**
@@ -37,7 +36,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('company_license_expiring_task', 'local_email_reports');
+        return get_string('company_license_expiring_task', 'local_iomad');
     }
 
     /**
@@ -48,8 +47,6 @@ class company_license_expiring_task extends \core\task\scheduled_task {
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
-        $dayofweek = date('w', $runtime) + 1;
 
         mtrace("Running email report company license expiring task at ".date('d M Y h:i:s', $runtime));
 
@@ -63,15 +60,10 @@ class company_license_expiring_task extends \core\task\scheduled_task {
         // Process any we found.
         foreach ($licenses as $license) {
             $company = new local_iomad\company($license->companyid);
-            $companyusql = "";
             $companysql = "";
 
             // Only want company managers not parent company managers.
             if ($parentslist = $company->get_parent_companies_recursive()) {
-                $companyusql = " AND u.id NOT IN (
-                                SELECT userid FROM {company_users}
-                                WHERE managertype = 1
-                                AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
                 $companysql = " AND userid NOT IN (
                                 SELECT userid FROM {company_users}
                                 WHERE managertype = 1
@@ -85,17 +77,20 @@ class company_license_expiring_task extends \core\task\scheduled_task {
                                               ['companyid' => $company->id]);
             foreach ($managers as $manager) {
                 if ($user = $DB->get_record('user', ['id' => $manager->userid, 'deleted' => 0, 'suspended' => 0])) {
+
                     // Format copy only to retain original value
                     $licenseemail = clone $license;
                     $licenseemail->expirydate =  userdate($license->expirydate, $CFG->iomad_date_format);
+
                     // Passed all checks, send the email.
                     mtrace("Sending license pool expiring email to $user->email");
-                    EmailTemplate::send('licensepoolexpiring', array('user' => $user, 'license' => $licenseemail, 'company' => $company));
+                    EmailTemplate::send('licensepoolexpiring', ['user' => $user,
+                                                                'license' => $licenseemail,
+                                                                'company' => $company]);
                 }
             }
         }
 
         mtrace("email report company license expiring task completed at " . date('d M Y h:i:s', time()));
     }
-
 }
