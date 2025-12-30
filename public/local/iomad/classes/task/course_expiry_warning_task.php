@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
 use \EmailTemplate;
-use \company;
 use \context_course;
 
+/**
+ * Course expiry warning email schedule task
+ */
 class course_expiry_warning_task extends \core\task\scheduled_task {
 
     /**
@@ -35,22 +37,18 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('course_expiry_warning_task', 'local_email_reports');
+        return get_string('course_expiry_warning_task', 'local_iomad');
     }
 
     /**
      * Run email course_expiry_warning_task.
      */
     public function execute() {
-        global $DB, $CFG;
+        global $DB;
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
         $dayofweek = date('w', $runtime) + 1;
-
-        // We only want the student role.
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
 
         mtrace("Running email report course expiry warning task at ".date('d M Y h:i:s', $runtime));
 
@@ -60,6 +58,7 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
 
         // Deal with users.
         foreach ($expirycourses as $expirycourse) {
+
             mtrace("Dealing with course id $expirycourse->courseid");
             $targettime = $expirycourse->warnexpire * 86400;
             $expiredsql = "SELECT lit.*, c.name AS companyname, u.firstname,u.lastname,u.username,u.email,u.lang
@@ -87,38 +86,42 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                                                            'targettime' => $targettime,
                                                            'runtime' => $runtime]);
 
+            // Process all of the users.
             foreach ($allusers as $compuser) {
                 mtrace("Dealing with user id $compuser->userid");
-                if (!$user = $DB->get_record('user', array('id' => $compuser->userid))) {
+
+                // Do some sanity checking.
+                if (!$user = $DB->get_record('user', ['id' => $compuser->userid])) {
                     continue;
                 }
-                if (!$course = $DB->get_record('course', array('id' => $compuser->courseid))) {
+                if (!$course = $DB->get_record('course', ['id' => $compuser->courseid])) {
                     continue;
                 }
-                if (!$company = $DB->get_record('company', array('id' => $compuser->companyid))) {
+                if (!$company = $DB->get_record('company', ['id' => $compuser->companyid])) {
                     continue;
                 }
 
                 // Deal with parent companies as we only want users in this company.
                 $companyobj = new company($company->id);
                 if ($parentslist = $companyobj->get_parent_companies_recursive()) {
+
+                    // Is this a parent company manager?
                     if ($DB->get_records_sql("SELECT userid FROM {company_users}
                                               WHERE managertype = 1
                                               AND companyid IN (" . implode(',', array_keys($parentslist)) .")
                                               AND userid = :userid",
-                                              array('userid' => $compuser->userid))) {
+                                              ['userid' => $compuser->userid])) {
                         continue;
-
                     }
                 }
 
                 // Expire the user from the course.
                 mtrace("Expiring $user->id from course id $course->id as a student");
-                $event = \block_iomad_company_admin\event\user_course_expired::create(array('context' => context_course::instance($course->id),
-                                                                                            'courseid' => $course->id,
-                                                                                            'objectid' => $course->id,
-                                                                                            'companyid' => $company->id,
-                                                                                            'userid' => $user->id));
+                $event = \block_iomad_company_admin\event\user_course_expired::create(['context' => context_course::instance($course->id),
+                                                                                       'courseid' => $course->id,
+                                                                                       'objectid' => $course->id,
+                                                                                       'companyid' => $company->id,
+                                                                                       'userid' => $user->id]);
                 $event->trigger();
                 $compuser->coursecleared = true;
 
@@ -127,13 +130,14 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
 
                 // Get the company template info.
                 // Check against per company template repeat instead.
-                if ($templateinfo = $DB->get_record('email_template', array('companyid' => $company->id, 'name' => 'expiry_warn_user'))) {
+                if ($templateinfo = $DB->get_record('email_template', ['companyid' => $company->id, 'name' => 'expiry_warn_user'])) {
+
                     // Check if its the correct day, if not continue.
                     if (!empty($templateinfo->repeatday) && $templateinfo->repeatday != 99 && $templateinfo->repeatday != $dayofweek - 1) {
                         continue;
                     }
 
-                    // otherwise set the notifyperiod
+                    // Otherwise set the notifyperiod.
                     if ($templateinfo->repeatperiod == 0) {
                         $notifyperiod = "";
                     } else if ($templateinfo->repeatperiod == 99) {
@@ -143,15 +147,15 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                         $notifyperiod = "AND sent < $notifytime";
                     }
                 } else {
-                    // use the default notify period.
+                    // Use the default notify period.
                     $notifytime = $runtime - $expirycourse->notifyperiod * 86400;
                     $notifyperiod = "AND sent < $notifytime";
                 }
 
                 // Check if we have sent any emails and if they are within the period.
-                if ($DB->count_records('email', array('userid' => $compuser->userid,
-                                                      'courseid' => $compuser->courseid,
-                                                      'templatename' => 'expiry_warn_user')) > 0) {
+                if ($DB->count_records('email', ['userid' => $compuser->userid,
+                                                 'courseid' => $compuser->courseid,
+                                                 'templatename' => 'expiry_warn_user']) > 0) {
                     if (!empty($notifyperiod)) {
                         if (!$DB->get_records_sql("SELECT id FROM {email}
                                                   WHERE userid = :userid
@@ -163,19 +167,19 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                                                      WHERE userid = :userid2
                                                      AND courseid = :courseid2
                                                      AND templatename = :templatename2)",
-                                                  array('userid' => $compuser->userid,
-                                                        'courseid' => $compuser->courseid,
-                                                        'templatename' => 'expiry_warn_user',
-                                                        'userid2' => $compuser->userid,
-                                                        'courseid2' => $compuser->courseid,
-                                                        'templatename2' => 'expiry_warn_user'))) {
+                                                  ['userid' => $compuser->userid,
+                                                   'courseid' => $compuser->courseid,
+                                                   'templatename' => 'expiry_warn_user',
+                                                   'userid2' => $compuser->userid,
+                                                   'courseid2' => $compuser->courseid,
+                                                   'templatename2' => 'expiry_warn_user'])) {
                             continue;
                         }
                     }
                 }
 
                 mtrace("Sending expiry warning email to $user->email");
-                EmailTemplate::send('expiry_warn_user', array('course' => $course, 'user' => $user, 'company' => $companyobj));
+                EmailTemplate::send('expiry_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
 
                 // Send the supervisor email too.
                 mtrace("Sending supervisor warning email for $user->email");
@@ -188,10 +192,10 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                                                          AND courseid = :courseid
                                                          AND templatename = :templatename
                                                          AND modifiedtime > :timesent",
-                                                         array('userid' => $compuser->userid,
-                                                               'courseid' => $compuser->courseid,
-                                                               'templatename' => $templateinfo->name,
-                                                               'timesent' => $compuser->timecompleted));
+                                                         ['userid' => $compuser->userid,
+                                                          'courseid' => $compuser->courseid,
+                                                          'templatename' => $templateinfo->name,
+                                                          'timesent' => $compuser->timecompleted]);
                     if ($sentcount >= $templateinfo->repeatvalue) {
                         $compuser->expiredstop = 1;
                         $compuser->modifiedtime = $runtime;
@@ -222,19 +226,19 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                                               WHERE co.visible = 1
                                               AND lit.courseid = :courseid
                                               AND lit.timecompleted + :expiretime < :runtime",
-                                              array('courseid' => $completionexpirecourse->courseid,
-                                                    'expiretime' => $expiretime,
-                                                    'runtime' => $runtime));
+                                              ['courseid' => $completionexpirecourse->courseid,
+                                               'expiretime' => $expiretime,
+                                               'runtime' => $runtime]);
 
             //  Cycle through any found users.
             foreach ($userlist as $founduser) {
                 if (!$DB->get_records('local_iomad_track', array('userid' => $founduser->userid, 'courseid' => $founduser->courseid, 'timecompleted' => null))) {
                     // Expire the user from the course.
                     mtrace("expiring user $founduser->userid from course $founduser->courseid");
-                    $event = \block_iomad_company_admin\event\user_course_expired::create(array('context' => context_course::instance($founduser->courseid),
-                                                                                                'courseid' => $founduser->courseid,
-                                                                                                'objectid' => $founduser->courseid,
-                                                                                                'userid' => $founduser->userid));
+                    $event = \block_iomad_company_admin\event\user_course_expired::create(['context' => context_course::instance($founduser->courseid),
+                                                                                           'courseid' => $founduser->courseid,
+                                                                                           'objectid' => $founduser->courseid,
+                                                                                           'userid' => $founduser->userid]);
                     $event->trigger();
                 }
             }

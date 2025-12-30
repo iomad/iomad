@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
-use \EmailTemplate;
-use \company;
-use \context_course;
+use EmailTemplate;
+use local_iomad\company;
 
+/**
+ * Manager completion email scheduled task
+ */
 class manager_completion_digest_task extends \core\task\scheduled_task {
 
     /**
@@ -35,7 +37,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('manager_completion_digest_task', 'local_email_reports');
+        return get_string('manager_completion_digest_task', 'local_iomad');
     }
 
     /**
@@ -46,11 +48,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
         $dayofweek = date('w', $runtime) + 1;
-
-        // We only want the student role.
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
 
         mtrace("Running email report manager completion digest task at ".date('d M Y h:i:s', $runtime));
 
@@ -59,7 +57,7 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
         $companies = $DB->get_records_sql("SELECT id FROM {company}
                                            WHERE managerdigestday = :dayofweek
                                            AND managernotify in (2,3)",
-                                           array('dayofweek' => $dayofweek));
+                                           ['dayofweek' => $dayofweek]);
         foreach ($companies as $company) {
 
             // Deal with parent companies as we only want manager of this company.
@@ -78,12 +76,14 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                 $companysql = "";
             }
 
+            // Get the list of managers.
             $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                               WHERE companyid = :companyid
                                               AND managertype != 0
-                                              $companysql", array('companyid' => $company->id));
+                                              $companysql",
+                                              ['companyid' => $company->id]);
             foreach ($managers as $manager) {
-                // Deparment managers dont get reports on company manager users.
+                // Department managers dont get reports on company manager users.
                 if ($manager->managertype == 2) {
                     $departmentmanager = true;
                 } else {
@@ -96,8 +96,8 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                                           AND userid IN (
                                           SELECT userid FROM {company_users}
                                           WHERE managertype = 1
-                                          AND companyid IN (" . implode(',', array_keys($parentslist)) ."))
-                                          ", array('userid' => $manager->userid))) {
+                                          AND companyid IN (" . implode(',', array_keys($parentslist)) ."))",
+                                          ['userid' => $manager->userid])) {
                     continue;
                 }
 
@@ -130,7 +130,8 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                                                       AND cc.userid != :managerid
                                                       $companyusql
                                                       AND cc.timecompleted > :weekago",
-                                                      array('managerid' => $manager->userid, 'weekago' => $runtime - (60 * 60 * 24 * 7)));
+                                                      ['managerid' => $manager->userid,
+                                                       'weekago' => $runtime - (60 * 60 * 24 * 7)]);
 
                 $summary = "<table><tr><th>" . get_string('firstname') . "</th>" .
                            "<th>" . get_string('lastname') . "</th>" .
@@ -140,14 +141,16 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                            "<th>" . get_string('completed', 'local_report_completion') ."</th></tr>";
                 $foundusers = false;
                 foreach ($managerusers as $manageruser) {
-                    if (!$user = $DB->get_record('user', array('id' => $manageruser->userid))) {
+                    if (!$user = $DB->get_record('user', ['id' => $manageruser->userid])) {
                         continue;
                     }
 
-                    if (!$course = $DB->get_record('course', array('id' => $manageruser->courseid))) {
+                    if (!$course = $DB->get_record('course', ['id' => $manageruser->courseid])) {
                         continue;
                     }
-                    if ($departmentmanager && $DB->get_record('company_users', array('companyid' => $company->id, 'managertype' => 1, 'userid' => $manageruser->userid))) {
+                    if ($departmentmanager && $DB->get_record('company_users', ['companyid' => $company->id,
+                                                                                'managertype' => 1,
+                                                                                'userid' => $manageruser->userid])) {
                         continue;
                     }
 
@@ -172,12 +175,14 @@ class manager_completion_digest_task extends \core\task\scheduled_task {
                 }
                 $summary .= "</table>";
 
-                if ($foundusers && $user = $DB->get_record('user', array('id' => $manager->userid))) {
+                if ($foundusers && $user = $DB->get_record('user', ['id' => $manager->userid])) {
                     $course = (object) [];
                     $course->reporttext = $summary;
                     $course->id = 0;
                     mtrace("Sending completion summary report to $user->email");
-                    EmailTemplate::send('completion_digest_manager', array('user' => $user, 'course' => $course, 'company' => $companyobj));
+                    EmailTemplate::send('completion_digest_manager', ['user' => $user,
+                                                                      'course' => $course,
+                                                                      'company' => $companyobj]);
                 }
             }
         }

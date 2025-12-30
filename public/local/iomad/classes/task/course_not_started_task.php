@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
-use \EmailTemplate;
-use \company;
-use \context_course;
+use EmailTemplate;
+use local_iomad\company;
 
+/**
+ * Course not started email scheduled task
+ */
 class course_not_started_task extends \core\task\scheduled_task {
 
     /**
@@ -35,22 +37,18 @@ class course_not_started_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('course_not_started_task', 'local_email_reports');
+        return get_string('course_not_started_task', 'local_iomad');
     }
 
     /**
      * Run email course_not_started_task.
      */
     public function execute() {
-        global $DB, $CFG;
+        global $DB;
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
         $dayofweek = date('w', $runtime) + 1;
-
-        // We only want the student role.
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
 
         mtrace("Running email report course not started task at ".date('d M Y h:i:s', $runtime));
 
@@ -59,8 +57,11 @@ class course_not_started_task extends \core\task\scheduled_task {
                                                        JOIN {course} co ON (ic.courseid = co.id)
                                                        WHERE warnnotstarted != 0
                                                        AND co.visible = 1");
+        // Process all of the found courses.
         foreach ($warnnotstartedcourses as $warnnotstartedcourse) {
             $checktime = time() - $warnnotstartedcourse->warnnotstarted * 60 * 60 *24;
+
+            // Get all of the users for this course.
             $warnnotstartedusers = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                                        WHERE courseid = :courseid
                                                        AND notstartedstop = 0
@@ -73,20 +74,27 @@ class course_not_started_task extends \core\task\scheduled_task {
                                                            AND licenseallocated < :time2
                                                            AND licenseallocated IS NOT NULL)
                                                        )",
-                                                       array('time1' => $checktime, 'time2' => $checktime, 'courseid' => $warnnotstartedcourse->courseid));
+                                                       ['time1' => $checktime,
+                                                        'time2' => $checktime,
+                                                        'courseid' => $warnnotstartedcourse->courseid]);
+
+            // Process the users.
             foreach ($warnnotstartedusers as $notstarteduser) {
-                if ($userrec = $DB->get_record('user', array('id' => $notstarteduser->userid, 'suspended' => 0, 'deleted' => 0))) {
-                    if ($courserec = $DB->get_record('course', array('id' => $notstarteduser->courseid))) {
-                        if ($companyrec = $DB->get_record('company', array('id' => $notstarteduser->companyid))) {
+                if ($userrec = $DB->get_record('user', ['id' => $notstarteduser->userid, 'suspended' => 0, 'deleted' => 0])) {
+                    if ($courserec = $DB->get_record('course', ['id' => $notstarteduser->courseid])) {
+                        if ($companyrec = $DB->get_record('company', ['id' => $notstarteduser->companyid])) {
                             // Get the company template info.
                             // Check against per company template repeat instead.
-                            if ($templateinfo = $DB->get_record('email_template', array('companyid' => $notstarteduser->companyid, 'name' => 'course_not_started_warning'))) {
+                            if ($templateinfo = $DB->get_record('email_template', ['companyid' => $notstarteduser->companyid,
+                                                                                   'name' => 'course_not_started_warning'])) {
                                 // Check if its the correct day, if not continue.
-                                if (!empty($templateinfo->repeatday) && $templateinfo->repeatday != 99 && $templateinfo->repeatday != $dayofweek - 1) {
+                                if (!empty($templateinfo->repeatday) &&
+                                    $templateinfo->repeatday != 99 &&
+                                    $templateinfo->repeatday != $dayofweek - 1) {
                                     continue;
                                 }
 
-                                // otherwise set the notifyperiod
+                                // Otherwise set the notifyperiod.
                                 if ($templateinfo->repeatperiod == 0) {
                                     $notifyperiod = "";
                                 } else if ($templateinfo->repeatperiod == 99) {
@@ -96,15 +104,15 @@ class course_not_started_task extends \core\task\scheduled_task {
                                     $notifyperiod = " AND sent <  $notifytime";
                                 }
                             } else {
-                                // use the default notify period.
+                                // Use the default notify period.
                                 $notifytime = $runtime - $warnnotstartedcourse->notifyperiod * 86400;
                                 $notifyperiod = " AND sent < $notifytime";
                             }
 
                             // Check if we have sent any emails and if they are within the period.
-                            if ($DB->count_records('email', array('userid' => $notstarteduser->userid,
-                                                                  'courseid' => $notstarteduser->courseid,
-                                                                  'templatename' => 'course_not_started_warning')) > 0) {
+                            if ($DB->count_records('email', ['userid' => $notstarteduser->userid,
+                                                             'courseid' => $notstarteduser->courseid,
+                                                             'templatename' => 'course_not_started_warning']) > 0) {
                                 if (!empty($notifyperiod)) {
                                     if (!$DB->get_records_sql("SELECT id FROM {email}
                                                               WHERE userid = :userid
@@ -116,12 +124,12 @@ class course_not_started_task extends \core\task\scheduled_task {
                                                                  WHERE userid = :userid2
                                                                  AND courseid = :courseid2
                                                                  AND templatename = :templatename2)",
-                                                              array('userid' => $notstarteduser->userid,
-                                                                    'courseid' => $notstarteduser->courseid,
-                                                                    'templatename' => 'course_not_started_warning',
-                                                                    'userid2' => $notstarteduser->userid,
-                                                                    'courseid2' => $notstarteduser->courseid,
-                                                                    'templatename2' => 'course_not_started_warning'))) {
+                                                              ['userid' => $notstarteduser->userid,
+                                                               'courseid' => $notstarteduser->courseid,
+                                                               'templatename' => 'course_not_started_warning',
+                                                               'userid2' => $notstarteduser->userid,
+                                                               'courseid2' => $notstarteduser->courseid,
+                                                               'templatename2' => 'course_not_started_warning'])) {
                                         continue;
                                     }
                                 }
@@ -129,7 +137,13 @@ class course_not_started_task extends \core\task\scheduled_task {
 
                             // Passed all checks, send the email.
                             mtrace("Sending not started warning email to $userrec->email");
+<<<<<<<< HEAD:public/local/email_reports/classes/task/course_not_started_task.php
                             EmailTemplate::send('course_not_started_warning', array('user' => $userrec, 'course' => $courserec, 'company' => new company($companyrec->id)));
+========
+                            EmailTemplate::send('course_not_started_warning', ['user' => $userrec,
+                                                                               'course' => $courserec,
+                                                                               'company' => new company($companyrec->id)]);
+>>>>>>>> 5bb589760bb (IOMAD: Migrate local/email_reports to local/iomad tasks - #2524):public/local/iomad/classes/task/course_not_started_task.php
 
                             // Send the supervisor email too.
                             mtrace("Sending not started warning email to $userrec->email supervisor");
@@ -142,10 +156,10 @@ class course_not_started_task extends \core\task\scheduled_task {
                                                                      AND courseid = :courseid
                                                                      AND templatename = :templatename
                                                                      AND modifiedtime > :timesent",
-                                                                     array('userid' => $notstarteduser->userid,
-                                                                           'courseid' => $notstarteduser->courseid,
-                                                                           'templatename' => $templateinfo->name,
-                                                                           'timesent' => $notstarteduser->timeenrolled));
+                                                                     ['userid' => $notstarteduser->userid,
+                                                                      'courseid' => $notstarteduser->courseid,
+                                                                      'templatename' => $templateinfo->name,
+                                                                      'timesent' => $notstarteduser->timeenrolled]);
                                 if ($sentcount >= $templateinfo->repeatvalue) {
                                     $notstarteduser->notstartedstop = 1;
                                     $notstarteduser->modifiedtime = $runtime;

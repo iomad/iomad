@@ -15,18 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
 use \EmailTemplate;
-use \company;
-use \context_course;
 
+/**
+ * Course not completed email scheduled task
+ */
 class course_not_completed_task extends \core\task\scheduled_task {
 
     /**
@@ -35,22 +36,21 @@ class course_not_completed_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('course_not_completed_task', 'local_email_reports');
+        return get_string('course_not_completed_task', 'local_iomad');
     }
 
     /**
      * Run email cron.
      */
     public function execute() {
-        global $DB, $CFG;
+        global $DB;
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
         $dayofweek = date('w', $runtime) + 1;
 
         // We only want the student role.
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
+        $studentrole = $DB->get_record('role', ['shortname' => 'student']);
 
         mtrace("Running email report course not completed task at ".date('d M Y h:i:s', $runtime));
 
@@ -74,18 +74,22 @@ class course_not_completed_task extends \core\task\scheduled_task {
         // Email all of the users.
         $allusers = $DB->get_records_sql($notcompletedsql);
 
-        $periods = array(1 => " day",
-                         2 => " week",
-                         3 => " fortnight",
-                         4 => " month");
+        // Define the available periods used.
+        $periods = [1 => " day",
+                    2 => " week",
+                    3 => " fortnight",
+                    4 => " month"];
+
+        // Process the users.
         foreach ($allusers as $compuser) {
-            if (!$user = $DB->get_record('user', array('id' => $compuser->userid))) {
+            // Do some sanity checking.
+            if (!$user = $DB->get_record('user', ['id' => $compuser->userid])) {
                 continue;
             }
-            if (!$course = $DB->get_record('course', array('id' => $compuser->courseid))) {
+            if (!$course = $DB->get_record('course', ['id' => $compuser->courseid])) {
                 continue;
             }
-            if (!$company = $DB->get_record('company', array('id' => $compuser->companyid))) {
+            if (!$company = $DB->get_record('company', ['id' => $compuser->companyid])) {
                 continue;
             }
 
@@ -96,7 +100,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
                                           WHERE managertype = 1
                                           AND companyid IN (" . implode(',', array_keys($parentslist)) .")
                                           AND userid = :userid",
-                                          array('userid' => $compuser->userid))) {
+                                          ['userid' => $compuser->userid])) {
                     continue;
 
                 }
@@ -112,9 +116,9 @@ class course_not_completed_task extends \core\task\scheduled_task {
                                      AND ue.userid = :userid
                                      AND e.courseid = :courseid
                                      AND ra.roleid = :studentrole",
-                                     array('courseid' => $compuser->courseid,
-                                           'userid' => $compuser->userid,
-                                           'studentrole' => $studentrole->id))) {
+                                     ['courseid' => $compuser->courseid,
+                                      'userid' => $compuser->userid,
+                                      'studentrole' => $studentrole->id])) {
 
                 // We want to remove them from the future list.
                 $compuser->completedstop = 1;
@@ -123,15 +127,15 @@ class course_not_completed_task extends \core\task\scheduled_task {
                 continue;
             }
 
-            // get the company template info.
+            // Get the company template info.
             // Check against per company template repeat instead.
-            if ($templateinfo = $DB->get_record('email_template', array('companyid' => $compuser->companyid, 'name' => 'completion_warn_user'))) {
+            if ($templateinfo = $DB->get_record('email_template', ['companyid' => $compuser->companyid, 'name' => 'completion_warn_user'])) {
                 // Check if its the correct day, if not continue.
                 if (!empty($templateinfo->repeatday) && $templateinfo->repeatday != 99 && $templateinfo->repeatday != $dayofweek - 1) {
                     continue;
                 }
 
-                // otherwise set the notifyperiod
+                // Otherwise set the notifyperiod.
                 if ($templateinfo->repeatperiod == 0) {
                     $notifyperiod = "";
                 } else if ($templateinfo->repeatperiod == 99) {
@@ -141,15 +145,15 @@ class course_not_completed_task extends \core\task\scheduled_task {
                     $notifyperiod = "AND sent < $notifytime";
                 }
             } else {
-                // use the default notify period.
+                // Use the default notify period.
                 $notifytime = $runtime - $compuser->notifyperiod * 86400;
                 $notifyperiod = "AND sent < $notifytime";
             }
 
             // Check if we have sent any emails and if they are within the period.
-            if ($DB->count_records('email', array('userid' => $compuser->userid,
-                                                  'courseid' => $compuser->courseid,
-                                                  'templatename' => 'completion_warn_user')) > 0) {
+            if ($DB->count_records('email', ['userid' => $compuser->userid,
+                                             'courseid' => $compuser->courseid,
+                                             'templatename' => 'completion_warn_user']) > 0) {
                 if (!empty($notifyperiod)) {
                     if (!$DB->get_records_sql("SELECT id FROM {email}
                                               WHERE userid = :userid
@@ -161,18 +165,19 @@ class course_not_completed_task extends \core\task\scheduled_task {
                                                  WHERE userid = :userid2
                                                  AND courseid = :courseid2
                                                  AND templatename = :templatename2)",
-                                              array('userid' => $compuser->userid,
-                                                    'courseid' => $compuser->courseid,
-                                                    'templatename' => 'completion_warn_user',
-                                                    'userid2' => $compuser->userid,
-                                                    'courseid2' => $compuser->courseid,
-                                                    'templatename2' => 'completion_warn_user'))) {
+                                              ['userid' => $compuser->userid,
+                                               'courseid' => $compuser->courseid,
+                                               'templatename' => 'completion_warn_user',
+                                               'userid2' => $compuser->userid,
+                                               'courseid2' => $compuser->courseid,
+                                               'templatename2' => 'completion_warn_user'])) {
                         continue;
                     }
                 }
             }
+
             mtrace("Sending completion warning email to $user->email");
-            EmailTemplate::send('completion_warn_user', array('course' => $course, 'user' => $user, 'company' => $companyobj));
+            EmailTemplate::send('completion_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
 
             // Send the supervisor email too.
             mtrace("Sending completion warning email to $user->email supervisor");
@@ -185,10 +190,10 @@ class course_not_completed_task extends \core\task\scheduled_task {
                                                      AND courseid = :courseid
                                                      AND templatename = :templatename
                                                      AND modifiedtime > :timesent",
-                                                     array('userid' => $compuser->userid,
-                                                           'courseid' => $compuser->courseid,
-                                                           'templatename' => $templateinfo->name,
-                                                           'timesent' => $compuser->timestarted));
+                                                     ['userid' => $compuser->userid,
+                                                      'courseid' => $compuser->courseid,
+                                                      'templatename' => $templateinfo->name,
+                                                      'timesent' => $compuser->timestarted]);
                 if ($sentcount >= $templateinfo->repeatvalue) {
                     $compuser->completedstop = 1;
                     $compuser->modifiedtime = $runtime;
@@ -204,5 +209,4 @@ class course_not_completed_task extends \core\task\scheduled_task {
 
         mtrace("email reporting course not completed warning task completed at " . date('d M Y h:i:s', time()));
     }
-
 }

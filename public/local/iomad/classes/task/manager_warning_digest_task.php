@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
-use \EmailTemplate;
-use \company;
-use \context_course;
+use EmailTemplate;
+use local_iomad\company;
 
+/**
+ * Manager course not started warning digest email scheduled task.
+ */
 class manager_warning_digest_task extends \core\task\scheduled_task {
 
     /**
@@ -35,7 +37,7 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('manager_warning_digest_task', 'local_email_reports');
+        return get_string('manager_warning_digest_task', 'local_iomad');
     }
 
     /**
@@ -46,15 +48,11 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
         $dayofweek = date('w', $runtime) + 1;
-
-        // We only want the student role.
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
 
         mtrace("Running email report manager completion warning digest task at ".date('d M Y h:i:s', $runtime));
 
-        // Course expiry warning digest
+        // Course expiry warning digest.
         // Getting courses which have expiry settings.
         if ($warningcourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses}
                                                WHERE warncompletion > 0")) {
@@ -64,7 +62,7 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
             $companies = $DB->get_records_sql("SELECT id FROM {company}
                                                WHERE managerdigestday = :dayofweek
                                                AND managernotify IN (1,3)",
-                                               array('dayofweek' => $dayofweek));
+                                               ['dayofweek' => $dayofweek]);
 
             // Process them.
             foreach ($companies as $company) {
@@ -89,14 +87,15 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                 $managers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                   WHERE companyid = :companyid
                                                   AND managertype != 0
-                                                  $companysql", array('companyid' => $company->id));
+                                                  $companysql",
+                                                 ['companyid' => $company->id]);
 
                 // We only want to report on the users - no educators.
                 $educatorsql = "";
                 $educatoruserids = $DB->get_records_sql("SELECT DISTINCT userid FROM {company_users}
-                                                 WHERE educator = 1
-                                                 AND companyid = :companyid",
-                                                ['companyid' => $company->id]);
+                                                         WHERE educator = 1
+                                                         AND companyid = :companyid",
+                                                        ['companyid' => $company->id]);
                 if (!empty($educatoruserids)) {
                     $educatorsql = " AND lit.userid NOT IN (" . implode(',', array_keys($educatoruserids)) . ")";
                 }
@@ -117,8 +116,8 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                                               AND userid IN (
                                               SELECT userid FROM {company_users}
                                               WHERE managertype > 0
-                                              AND companyid IN (" . implode(',', array_keys($parentslist)) ."))
-                                              ", array('userid' => $manager->userid))) {
+                                              AND companyid IN (" . implode(',', array_keys($parentslist)) ."))",
+                                             ['userid' => $manager->userid])) {
                         continue;
                     }
 
@@ -139,7 +138,15 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                         $departmentusersql = " AND 1 = 2 ";
                     }
 
-                    $manageruserssql = "SELECT lit.*, c.name AS companyname, ic.notifyperiod, u.firstname,u.lastname,u.username,u.email,u.lang,ic.warncompletion * 86400 AS warningtime
+                    $manageruserssql = "SELECT lit.*,
+                                               c.name AS companyname,
+                                               ic.notifyperiod,
+                                               u.firstname,
+                                               u.lastname,
+                                               u.username,
+                                               u.email,
+                                               u.lang,
+                                               ic.warncompletion * 86400 AS warningtime
                                         FROM {local_iomad_track} lit
                                         JOIN {company} c ON (lit.companyid = c.id)
                                         JOIN {iomad_courses} ic ON (lit.courseid = ic.courseid)
@@ -172,7 +179,9 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                     $foundusers = false;
                     foreach ($managerusers as $manageruser) {
                         // Don't remprt on company managers if you are a department manager.
-                        if ($departmentmanager && $DB->get_record('company_users', array('companyid' => $company->id, 'managertype' => 1, 'userid' => $manageruser->userid))) {
+                        if ($departmentmanager && $DB->get_record('company_users', ['companyid' => $company->id,
+                                                                                    'managertype' => 1,
+                                                                                    'userid' => $manageruser->userid])) {
                             continue;
                         }
 
@@ -200,12 +209,14 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                     }
                     $summary .= "</table>";
 
-                    if ($foundusers && $user = $DB->get_record('user', array('id' => $manager->userid))) {
+                    if ($foundusers && $user = $DB->get_record('user', ['id' => $manager->userid])) {
                         $course = (object) [];
                         $course->reporttext = $summary;
                         $course->id = 0;
                         mtrace("Sending completion summary report to $user->email");
-                        EmailTemplate::send('warning_digest_manager', array('user' => $user, 'course' => $course, 'company' => $companyobj));
+                        EmailTemplate::send('warning_digest_manager', ['user' => $user,
+                                                                       'course' => $course,
+                                                                       'company' => $companyobj]);
                     }
                 }
             }

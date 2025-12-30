@@ -15,20 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local_email
+ * @package    local_iomad
  * @copyright  2022 Derick Turner
  * @author    Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_email_reports\task;
+namespace local_iomad\task;
 
 use \EmailTemplate;
+<<<<<<<< HEAD:public/local/email_reports/classes/task/trainingevent_not_selected_task.php
 use \company;
 use \context_course;
 
 //require_once($CFG->dirroot . '/local/iomad/lib/company.php');
+========
+use local_iomad\company;
+>>>>>>>> 5bb589760bb (IOMAD: Migrate local/email_reports to local/iomad tasks - #2524):public/local/iomad/classes/task/trainingevent_not_selected_task.php
 
+/**
+ * Training event not selected email scheduled task
+ */
 class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
     /**
@@ -37,7 +44,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('trainingevent_not_selected_task', 'local_email_reports');
+        return get_string('trainingevent_not_selected_task', 'local_iomad');
     }
 
     /**
@@ -48,11 +55,8 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
         // Set some defaults.
         $runtime = time();
-        $courses = array();
+        $courses = [];
         $dayofweek = date('w', $runtime) + 1;
-
-        // We only want the student role.
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
 
         mtrace("Running email report training event not selected task at ".date('d M Y h:i:s', $runtime));
 
@@ -88,13 +92,16 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
                     // Get the company template info.
                     // Check against per company template repeat instead.
-                    if ($templateinfo = $DB->get_record('email_template', array('companyid' => $company->id, 'name' => 'trainingevent_not_selected'))) {
+                    if ($templateinfo = $DB->get_record('email_template', ['companyid' => $company->id,
+                                                                           'name' => 'trainingevent_not_selected'])) {
                         // Check if its the correct day, if not continue.
-                        if (!empty($templateinfo->repeatday) && $templateinfo->repeatday != 99 && $templateinfo->repeatday != $dayofweek - 1) {
+                        if (!empty($templateinfo->repeatday) &&
+                            $templateinfo->repeatday != 99 &&
+                            $templateinfo->repeatday != $dayofweek - 1) {
                             continue;
                         }
 
-                        // otherwise set the notifyperiod
+                        // Otherwise set the notifyperiod.
                         if ($templateinfo->repeatperiod == 0) {
                             $notifyperiod = "";
                             if (!empty($course->notifyperiod)) {
@@ -115,9 +122,9 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                     }
 
                     // Check if we have sent any emails and if they are within the period.
-                    if ($DB->count_records('email', array('userid' => $user->id,
-                                                          'courseid' => $course->id,
-                                                          'templatename' => 'trainingevent_not_selected')) > 0) {
+                    if ($DB->count_records('email', ['userid' => $user->id,
+                                                     'courseid' => $course->id,
+                                                     'templatename' => 'trainingevent_not_selected']) > 0) {
                         if (!empty($notifyperiod)) {
                             if (!$DB->get_records_sql("SELECT id FROM {email}
                                                       WHERE userid = :userid
@@ -129,12 +136,12 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
                                                          WHERE userid = :userid2
                                                          AND courseid = :courseid2
                                                          AND templatename = :templatename2)",
-                                                      array('userid' => $user->id,
-                                                            'courseid' => $course->id,
-                                                            'templatename' => 'trainingevent_not_selected',
-                                                            'userid2' => $user->id,
-                                                            'courseid2' => $course->id,
-                                                            'templatename2' => 'trainingevent_not_selected'))) {
+                                                      ['userid' => $user->id,
+                                                       'courseid' => $course->id,
+                                                       'templatename' => 'trainingevent_not_selected',
+                                                       'userid2' => $user->id,
+                                                       'courseid2' => $course->id,
+                                                       'templatename2' => 'trainingevent_not_selected'])) {
                                 continue;
                             }
                         }
@@ -142,13 +149,14 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
                     // Passed all checks, send the email.
                     mtrace("Sending trainingevent not selected email to $user->email");
-                    EmailTemplate::send('trainingevent_not_selected', array('user' => $user, 'course' => $course, 'company' => $company));
-
+                    EmailTemplate::send('trainingevent_not_selected', ['user' => $user,
+                                                                       'course' => $course,
+                                                                       'company' => $company]);
                 }
             }
 
         }
+
         mtrace("email reporting training event not selected completed at " . date('d M Y h:i:s', time()));
     }
-
 }
