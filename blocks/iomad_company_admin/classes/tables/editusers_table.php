@@ -165,7 +165,7 @@ class editusers_table extends table_sql {
 
         if (empty($USER->editing) || $selectedcompanyid != $company->id) {
             $returnstr .= $this->usertypes[$row->managertype];
-            if (!empty($row->educator) && empty($CFG->iomad_autoenrol_managers)) {
+            if (!empty($row->educator) && empty(get_config('local_iomad', 'autoenrol_managers'))) {
                 $returnstr .= ",<br>" . $this->usertypes[3];
             }
 
@@ -181,7 +181,7 @@ class editusers_table extends table_sql {
             }
 
             // Set up the current value for the inplace form and display it.
-            if (empty($CFG->iomad_autoenrol_managers)) {
+            if (empty(get_config('local_iomad', 'autoenrol_managers'))) {
                 $currentvalue = ($row->managertype * 10) + $row->educator;
                 $iseducator = $DB->get_records('company_users', ['userid' => $row->id, 'companyid' => $company->id, 'educator' => 1]);
                 $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext);
@@ -252,7 +252,7 @@ class editusers_table extends table_sql {
         global $CFG;
 
         if (!empty($row->lastaccess)) {
-            return userdate($row->lastaccess, $CFG->iomad_date_format);
+            return userdate($row->lastaccess, get_config('local_iomad', 'date_format'));
         } else {
             return get_string('never');
         }
@@ -473,7 +473,7 @@ class editusers_table extends table_sql {
         if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $companycontext)) {
             $this->usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
         }
-        if (!$CFG->iomad_autoenrol_managers) {
+        if (!get_config('local_iomad', 'autoenrol_managers')) {
             $this->usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
             if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $companycontext)) {
                 $this->usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');

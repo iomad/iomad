@@ -143,7 +143,7 @@ class auth_plugin_email extends auth_plugin_base {
                 $company->assign_user_to_department($user->departmentid, $user->id);
             }
 
-            if ($CFG->local_iomad_signup_autoenrol) {
+            if (get_config('local_iomad', 'signup_autoenrol')) {
                 $company->autoenrol($user);
             }
         }

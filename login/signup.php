@@ -165,13 +165,13 @@ if ($mform_signup->is_cancelled()) {
 
 } else if ($user = $mform_signup->get_data()) {
     // Do we use the email as username?
-    if ($CFG->local_iomad_signup_useemail) {
+    if (get_config('local_iomad', 'signup_useemail')) {
         $user->username = strtolower($user->email);
     }
 
     // If we don't have a company, do we have a default one set?
-    if (empty($SESSION->company) && !empty($CFG->local_iomad_signup_company)) {
-        if ($defaultcompany = $DB->get_record('company', array('id' => $CFG->local_iomad_signup_company))) {
+    if (empty($SESSION->company) && !empty(get_config('local_iomad', 'signup_company'))) {
+        if ($defaultcompany = $DB->get_record('company', array('id' => get_config('local_iomad', 'signup_company')))) {
             $SESSION->company = $defaultcompany;
         }
     }

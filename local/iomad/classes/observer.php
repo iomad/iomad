@@ -25,8 +25,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-
-
+/**
+ * Event observer class for local iomad plugin.
+ *
+ * @package    local_iomad
+ * @copyright  2016 E-Learn Design Ltd. (http://www.e-learndesign.co.uk)
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class local_iomad_observer {
 
     /**
@@ -223,6 +229,13 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_created($event) {
+        // Do the sign up part - as this is part of this plugin too.
+        // Check if the handler has been temporarily disabled
+        if (!self::$disable_handler) {
+            local_iomad\company::signup_user_created($event->objectid);
+        }
+
+        // Do the rest of it.
         local_iomad\company::user_created($event);
         return true;
     }

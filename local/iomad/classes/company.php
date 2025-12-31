@@ -163,7 +163,7 @@ class company {
         if ($full || iomad::has_capability('block/iomad_company_admin:assign_department_manager', $companycontext)) {
             $returnarray['2'] = get_string('departmentmanager', 'block_iomad_company_admin');
         }
-        if ($full || (!$CFG->iomad_autoenrol_managers && iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext))) {
+        if ($full || (!get_config('local_iomad', 'autoenrol_managers') && iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext))) {
             $returnarray['3'] = get_string('educator', 'block_iomad_company_admin');
         }
         if ($full || iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $companycontext)) {
@@ -337,7 +337,7 @@ class company {
         if (iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
             $sqlparams = [];
             $sqlwhere = "";
-            if (!empty($CFG->iomad_show_company_structure)) {
+            if (!empty(get_config('local_iomad', 'show_company_structure'))) {
                 $sqlparams['parentid'] = 0;
                 $sqlwhere .= " AND parentid = :parentid ";
             }
@@ -367,7 +367,7 @@ class company {
                 $companiesparams['search'] = '%' . $DB->sql_like_escape($search) . '%';
             }
             // Show the hierarchy if required.
-            if (!empty($CFG->iomad_show_company_structure)) {
+            if (!empty(get_config('local_iomad', 'show_company_structure'))) {
                 $companies = $DB->get_records_sql_menu("SELECT DISTINCT c.id, CASE WHEN c.suspended=0 THEN c.name ELSE concat(c.name, ' (S)') END AS name, cu.lastused
                                                         FROM {company} c
                                                         JOIN {company_users} cu ON (c.id = cu.companyid)
@@ -391,7 +391,7 @@ class company {
         }
 
         // Show the hierarchy if required.
-        if (!empty($CFG->iomad_show_company_structure)) {
+        if (!empty(get_config('local_iomad', 'show_company_structure'))) {
             $companyselect = [];
             foreach ($companies as $id => $companyname) {
                 $currentcompanycontext = \core\context\company::instance($id);
@@ -736,7 +736,7 @@ class company {
         if (!$licensed) {
             $companycoursenoneditorrole = $DB->get_record('role', ['shortname' => 'companycoursenoneditor']);
             $companycourseeditorrole = $DB->get_record('role', ['shortname' => 'companycourseeditor']);
-            if ($CFG->iomad_autoenrol_managers) {
+            if (get_config('local_iomad', 'autoenrol_managers')) {
                 // Enrol the managers as teacher types.
                 if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                              WHERE companyid = :companyid
@@ -827,7 +827,7 @@ class company {
         $companycoursenoneditorrole = $DB->get_record('role', ['shortname' => 'companycoursenoneditor']);
         $companycourseeditorrole = $DB->get_record('role', ['shortname' => 'companycourseeditor']);
 
-        if ($CFG->iomad_autoenrol_managers) {
+        if (get_config('local_iomad', 'autoenrol_managers')) {
             // Enrol the managers as teacher types.
             if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
                                                          WHERE companyid = :companyid
@@ -1224,20 +1224,21 @@ class company {
             $departmentid = $defaultdepartment->id;
         }
 
-        // Were we passed a manager type?  Check it.
-        if ($managertype > 2) {
+        // Were we passed a valid manager type?
+        $managertypes = $this->get_managertypes(true);
+        if (empty($managertypes[$managertype])) {
             // Default is standard user.
             $managertype = 0;
         }
 
-        // if this is the only company, set the theme and any company profile info.
+        // If this is the only company, set the theme and any company profile info.
         if (!$DB->get_records('company_users', array('userid' => $userid))) {
             $DB->set_field('user', 'theme', $this->get_theme(), array('id' => $userid));
-            if (!empty($CFG->iomad_sync_institution)) {
+            if (!empty(get_config('local_iomad', 'sync_institution'))) {
                 $institution = $this->get('shortname');
                 $DB->set_field('user', 'institution', $institution, array('id' => $userid));
             }
-            if (!empty($CFG->iomad_sync_department)) {
+            if (!empty(get_config('local_iomad', 'sync_department'))) {
                 $deptrec = $DB->get_record('department', array('id' => $departmentid));
                 $DB->set_field('user', 'department', $deptrec->name, array('id' => $userid));
             }
@@ -1256,11 +1257,13 @@ class company {
         }
 
         // Moving a user.
-        if ($CFG->iomad_autoenrol_managers && $managertype > 0 ) {
+        if (get_config('local_iomad', 'autoenrol_managers') && $managertype > 0 ) {
             $educator = true;
         } else {
             $educator = false;
         }
+
+        // Did we get an error?
         if (!self::upsert_company_user($userid, $this->id, $departmentid, $managertype, $educator, $ws)) {
             if ($ws) {
                 return false;
@@ -1280,14 +1283,13 @@ class company {
         }
 
         // Deal with auto enrolments.
-        if ($CFG->local_iomad_signup_autoenrol) {
+        if (get_config('local_iomad', 'signup_autoenrol')) {
             $user->companyid = $this->id;
             $this->autoenrol($user);
         }
 
         return true;
     }
-
 
     public static function upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator=false, $ws=false, $move=false) {
         global $DB, $CFG;
@@ -1347,7 +1349,7 @@ class company {
 
         // Does the user exist in the department?
         if (!$user=$DB->get_record('company_users', $assign)) {
-            if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
+            if (($managertype == 1 || $managertype == 2) && get_config('local_iomad', 'autoenrol_managers')) {
                 $assign['educator'] = 1;
             } else {
                 $assign['educator'] = $educator;
@@ -1379,7 +1381,7 @@ class company {
                 role_unassign($companymanagerrole->id, $userid, $companycontext->id);
 
                 // Deal with course permissions.
-                if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                             company_user::unenrol($userid,
@@ -1404,7 +1406,7 @@ class company {
                                                   'companyid' => $companyid))) {
                 // We have a company manager from another company.
                 // Deal with company courses.
-                if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                             if ($DB->record_exists('company_created_courses',
@@ -1432,7 +1434,7 @@ class company {
                 role_assign($companymanagerrole->id, $userid, $companycontext->id);
 
                 // Deal with course permissions.
-                if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                             // If its a company created course then assign the editor role to the user.
@@ -1470,7 +1472,7 @@ class company {
                 role_assign($departmentmanagerrole->id, $userid, $companycontext->id);
 
                 // Deal with company course roles.
-                if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                             company_user::unenrol($userid, array($companycourse->courseid),
@@ -1511,9 +1513,9 @@ class company {
             if($user->managertype != $managertype && $managertype != 3) {
                 $s['managertype'] = $managertype;
             }
-            if (($managertype == 1 || $managertype == 2) && $CFG->iomad_autoenrol_managers) {
+            if (($managertype == 1 || $managertype == 2) && get_config('local_iomad', 'autoenrol_managers')) {
                 $s['educator'] = 1;
-            } else if ($CFG->iomad_autoenrol_managers) {
+            } else if (get_config('local_iomad', 'autoenrol_managers')) {
                 $s['educator'] = 0;
             } else if ($managertype == 3) {
                 $s['educator'] = $educator;
@@ -1530,7 +1532,7 @@ class company {
                     role_assign($companymanagerrole->id, $userid, $companycontext->id);
 
                     // Deal with course permissions.
-                    if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                    if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                         foreach ($companycourses as $companycourse) {
                             if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                 // If its a company created course then assign the editor role to the user.
@@ -1570,7 +1572,7 @@ class company {
                     role_assign($departmentmanagerrole->id, $userid, $companycontext->id);
 
                     // Deal with company course roles.
-                    if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                    if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                         foreach ($companycourses as $companycourse) {
                             if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                 company_user::unenrol($userid, array($companycourse->courseid),
@@ -1587,9 +1589,9 @@ class company {
                                        array('company' => $company,
                                              'user' => $userrec));
                     }
-                } else if ($managertype == 3 && !$CFG->iomad_autoenrol_managers) {
+                } else if ($managertype == 3 && !get_config('local_iomad', 'autoenrol_managers')) {
                     // Deal with company course roles.
-                    if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
+                    if (get_config('local_iomad', 'autoenrol_managers') && !empty($companycourses)) {
                         foreach ($companycourses as $companycourse) {
                             if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
                                 if ($educator) {
@@ -1646,7 +1648,7 @@ class company {
                                                             WHERE companyid = :companyid
                                                             AND departmentid != :departmentid',
                                                             ['companyid' => $companyid, 'departmentid' => $departmentid]);
-                if ($CFG->iomad_autoenrol_managers &&
+                if (get_config('local_iomad', 'autoenrol_managers') &&
                     !empty($companycourses) &&
                     empty($multidepartment)) {
                     foreach ($companycourses as $companycourse) {
@@ -1712,7 +1714,7 @@ class company {
                 }
             }
             if ($educator && $user->educator != 1 &&
-                 !$CFG->iomad_autoenrol_managers &&
+                 !get_config('local_iomad', 'autoenrol_managers') &&
                  !empty($companycourses)) {
                 foreach ($companycourses as $companycourse) {
                     if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
@@ -1737,7 +1739,7 @@ class company {
             }
 
             if (!$educator && $user->educator == 1 &&
-                 !$CFG->iomad_autoenrol_managers &&
+                 !get_config('local_iomad', 'autoenrol_managers') &&
                  !empty($companycourses)) {
                 foreach ($companycourses as $companycourse) {
                     if ($DB->record_exists('course', array('id' => $companycourse->courseid))) {
@@ -4113,7 +4115,7 @@ class company {
         $licensecourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} WHERE licensed = 1");
 
         // Are we also enrolling to unattached courses?
-        if (!empty($CFG->local_iomad_signup_autoenrol_unassigned)) {
+        if (!empty(get_config('local_iomad', 'signup_autoenrol_unassigned'))) {
             $unassignedcourses = $DB->get_records_sql("SELECT id AS courseid FROM {course}
                                                        WHERE id NOT IN (
                                                         SELECT courseid FROM {company_course}
@@ -4654,6 +4656,141 @@ class company {
     }
 
     /**
+     * Signup event handler for 'user_created'
+     * For specified authentication types (only), try and add this user
+     * to a company using various logic.
+     *
+     * @param mixed $user user id or user object
+     */
+    function signup_user_created($user) {
+        global $CFG, $DB;
+
+        // Check if we already have the user object.
+        if (is_int($user) || is_string($user)) {
+            $user = $DB->get_record('user', ['id' => $user], '*', MUST_EXIST);
+        }
+
+        // If the user is already in a company then we do nothing more
+        // as this came from the self sign up pages.
+        if ($usercompanies = $DB->get_records_sql("SELECT DISTINCT companyid,id
+                                                   FROM {company_users}
+                                                   WHERE userid = :userid
+                                                   ORDER BY id DESC",
+                                                   ['userid' => $user->id], 0, 1)) {
+
+            $userrecord = array_shift($usercompanies);
+            $company = new company($userrecord->companyid);
+
+            // Deal with any auto enrolments.
+            if (get_config('local_iomad', 'signup_autoenrol')) {
+                $company->autoenrol($user);
+            }
+
+            // Need to set the manager type.
+            $userrecord->managertype = 0;
+            $userrecord->educator = 0;
+
+            // Do we have a company department profile field?
+            $autodepartmentid = $company->get_auto_department($user);
+            self::upsert_company_user($user->id,
+                                      $userrecord->companyid,
+                                      $autodepartmentid,
+                                      $userrecord->managertype,
+                                      $userrecord->educator,
+                                      false,
+                                      true);
+
+            return true;
+        }
+
+        // For the rest of this the plugin needs to be enabled.
+        if (!get_config('local_iomad', 'signup_enable')) {
+            return true;
+        }
+
+        // If not 'email' auth then we are not interested.
+        if (empty(get_config('local_iomad', 'signup_auth')) ||
+            !in_array($user->auth, explode(',', get_config('local_iomad', 'signup_auth')))) {
+            return true;
+        }
+
+        // Check if user is already in a company.
+        // E.g. if this has already been handled.
+        if (!$company = company::by_userid($user->id, true)) {
+
+            // Get context.
+            $context = context_system::instance();
+            $found = false;
+
+            // Check if we have a company id from the URL or SESSION.
+            $companyid = iomad::get_my_companyid($context, false);
+            if (!empty($companyid)) {
+                $company = new company($companyid);
+                $found = true;
+            }
+
+            if (!$found) {
+                // Check if we have a domain already for this users email address.
+                list($dump, $emaildomain) = explode('@', $user->email);
+                if ($domaininfo = $DB->get_record_sql("SELECT * FROM {company_domains}
+                                                       WHERE " . $DB->sql_compare_text('domain') .
+                                                       " = '" .
+                                                       $DB->sql_compare_text($emaildomain)."'")) {
+                    // Get company.
+                    $company = new company($domaininfo->companyid);
+                    $found = true;
+                }
+            }
+            if (!$found && !empty(get_config('local_iomad', 'signup_company'))) {
+                // Do we have a default company to assign?
+                // Get company.
+                $company = new company(get_config('local_iomad', 'signup_company'));
+                $found = true;
+            }
+            if ($found) {
+                // Get the full user information for department matching.
+                profile_load_data($user);
+
+                // Do we have a company department profile field?
+                $autodepartmentid = $company->get_auto_department($user);
+
+                // Do we have a role to assign?
+                $managertype = 0;
+                if (!empty(get_config('local_iomad', 'signup_role'))) {
+                    // Get role.
+                    if ($role = $DB->get_record('role', ['id' => get_config('local_iomad', 'signup_role')], '*', MUST_EXIST)) {
+                        if ($role->shortname == 'companymanager') {
+                            $managertype = 1;
+                        } else if ($role->shortname == 'companydepartmentmanager') {
+                            $managertype = 2;
+                        } else if ($role->shortname == 'companyreporter') {
+                            $managertype = 4;
+                        }
+                    }
+                }
+
+                // Assign the user to the company.
+                $company->assign_user_to_company($user->id, $autodepartmentid, $managertype);
+
+                // Deal with company defaults.
+                $defaults = $company->get_user_defaults();
+                foreach ($defaults as $index => $value) {
+                    $user->$index = $value;
+                }
+
+                // Save the user details.
+                $DB->update_record('user', $user);
+                profile_save_data($user);
+
+                // Force the company theme in case it's not already been done.
+                $DB->set_field('user', 'theme', $company->get_theme(), ['id' => $user->id]);
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Triggered via user_created event.
      *
      * @param \core\event\user_created $event
@@ -4708,7 +4845,6 @@ class company {
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->id);
 
-
             if ($DB->get_record('company_users', array('userid'=> $user->id, 'companyid' => $usercompany->id, 'managertype' => 1))) {
                 $user->manager = 'yes';
                 $user->country = $usercompany->country;
@@ -4731,8 +4867,8 @@ class company {
         }
 
         // Check if we are assigning department by profile field.
-        if (!empty($CFG->iomad_sync_department) &&
-            $CFG->iomad_sync_department == 2) {
+        if (!empty(get_config('local_iomad', 'sync_department')) &&
+            get_config('local_iomad', 'sync_department') == 2) {
             // Check if there is a department with the name given.
             $current = $DB->count_records('department', ['company' => $company->id, 'name' => $user->department]);
             if ($current == 1) {
@@ -5047,8 +5183,8 @@ class company {
 
         $license = (object) [];
         $license->length = $licenserecord->validlength;
-        $license->valid = userdate($licenserecord->expirydate, $CFG->iomad_date_format);
-        $license->startdate = userdate($licenserecord->startdate, $CFG->iomad_date_format);
+        $license->valid = userdate($licenserecord->expirydate, get_config('local_iomad', 'date_format'));
+        $license->startdate = userdate($licenserecord->startdate, get_config('local_iomad', 'date_format'));
 
         if (!$noemail) {
         // Send out the email.
@@ -5215,7 +5351,7 @@ class company {
 
         $license = (object) [];
         $license->length = $licenserecord->validlength;
-        $license->valid = userdate($licenserecord->expirydate, $CFG->iomad_date_format);
+        $license->valid = userdate($licenserecord->expirydate, get_config('local_iomad', 'date_format'));
 
         if ($emailrecs = $DB->get_records('email', array('userid' => $user->id,
                                                          'courseid' => $course->id,

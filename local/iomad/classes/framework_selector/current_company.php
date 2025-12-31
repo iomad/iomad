@@ -63,7 +63,7 @@ class current_company extends company_base {
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
                                      $DB->count_records_sql($countfields . $sharedsql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_frameworks) {
+            if ($potentialmemberscount > get_config('local_iomad', 'max_select_frameworks')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }

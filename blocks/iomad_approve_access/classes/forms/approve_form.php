@@ -47,7 +47,7 @@ class approve_form extends moodleform {
             if (!$department) {
                 $mform->addElement('html', '* '.get_string('managernotyetapproved', 'block_iomad_approve_access'));
             }
-            $dateformat = $CFG->iomad_date_format . ", %I:%M%p";
+            $dateformat = get_config('local_iomad', 'date_format') . ", %I:%M%p";
             foreach ($results as $result) {
 
                 // Get the user info.

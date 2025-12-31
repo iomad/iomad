@@ -40,13 +40,13 @@ $timecreated  = optional_param('timecreated', 0, PARAM_CLEAN);
 $sort         = optional_param('sort', '', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);        // How many per page.
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $coursesearch = optional_param('coursesearch', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $completiontype = optional_param('completiontype', 0, PARAM_INT);
 $charttype = optional_param('charttype', '', PARAM_CLEAN);
-$showcharts = optional_param('showcharts', $CFG->iomad_showcharts, PARAM_BOOL);
+$showcharts = optional_param('showcharts', get_config('local_iomad', 'showcharts'), PARAM_BOOL);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $fromraw = optional_param_array('compfromraw', null, PARAM_INT);
 $toraw = optional_param_array('comptoraw', null, PARAM_INT);
@@ -490,7 +490,7 @@ if (!empty($action)) {
                 } else if ($action == 'revoke') {
                     echo $OUTPUT->confirm(get_string('revokeconfirm', 'local_report_users'), $confirmurl, $cancel);
                 } else if ($action == 'clear') {
-                    if (empty($CFG->iomad_autoreallocate_licenses)) {
+                    if (empty(get_config('local_iomad', 'autoreallocate_licenses'))) {
                         echo $OUTPUT->confirm(get_string('clearconfirm', 'local_report_users'), $confirmurl, $cancel);
                     } else {
                         echo $OUTPUT->confirm(get_string('clearreallocateconfirm', 'local_report_users'), $confirmurl, $cancel);
@@ -823,7 +823,7 @@ if (empty($courseid)) {
         }
     }
     $coursetable->sort_default_column = 'coursename';
-    $coursetable->out($CFG->iomad_max_list_users, true);
+    $coursetable->out(get_config('local_iomad', 'max_list_users'), true);
 
     if (!$coursetable->is_downloading()) {
         echo $output->footer();
@@ -831,9 +831,9 @@ if (empty($courseid)) {
 } else {
     // Do we have any additional reporting fields?
     $extrafields = array();
-    if (!empty($CFG->iomad_report_fields)) {
+    if (!empty(get_config('local_iomad', 'report_fields'))) {
         $companyrec = $DB->get_record('company', array('id' => $companyid));
-        foreach (explode(',', $CFG->iomad_report_fields) as $extrafield) {
+        foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
             $extrafields[$extrafield] = new stdclass();
             $extrafields[$extrafield]->name = $extrafield;
             if (strpos($extrafield, 'profile_field') !== false) {
@@ -873,7 +873,7 @@ if (empty($courseid)) {
     $completionids = [];
 
     // Get the completion information if we need it.
-    if ($table->is_downloading() && $courseid != 1 && $CFG->iomad_downloaddetails) {
+    if ($table->is_downloading() && $courseid != 1 && get_config('local_iomad', 'downloaddetails')) {
         // Get the course completion criteria.
         $info = new completion_info(get_course($courseid));
         $coursecompletioncrits = $info->get_criteria(null);
@@ -1238,7 +1238,7 @@ if (empty($courseid)) {
         echo html_writer::start_tag('div', array('class' => 'tablecontainer'));
     }
 
-    $table->out($CFG->iomad_max_list_courses, true);
+    $table->out(get_config('local_iomad', 'max_list_courses'), true);
 
     if (!$table->is_downloading()) {
         if (!empty($USER->editing)) {

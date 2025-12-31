@@ -152,7 +152,7 @@ class current_license extends company_base {
             } else {
                 $coursesql = "";
             }
-            $maxcount = $CFG->iomad_max_select_users;
+            $maxcount = get_config('local_iomad', 'max_select_users');
             $fields      = 'SELECT DISTINCT clu.id as licenseid, ' . $this->required_fields_sql('u') . ', u.email, c.fullname, clu.isusing ';
             $countfields = 'SELECT COUNT(1)';
 
@@ -173,7 +173,7 @@ class current_license extends company_base {
                      "))";
             $order = ' ORDER BY u.firstname , u.lastname, c.fullname ASC';
         } else {
-            $maxcount = $CFG->iomad_max_select_users * count($this->courses);
+            $maxcount = get_config('local_iomad', 'max_select_users') * count($this->courses);
             $fields      = 'SELECT clu.id as licenseid, ' . $this->required_fields_sql('u') . ', u.email, clu.isusing ';
             $countfields = 'SELECT COUNT(1)';
 

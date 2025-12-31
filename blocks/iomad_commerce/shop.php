@@ -29,7 +29,7 @@ require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 $sort         = optional_param('sort', 'name', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_courses, PARAM_INT);        // How many per page.
+$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_courses'), PARAM_INT);        // How many per page.
 
 // Setup the navbar.
 // Set the name for the page.

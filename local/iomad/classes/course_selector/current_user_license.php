@@ -70,7 +70,7 @@ class current_user_license extends company_base {
         $order = ' ORDER BY c.fullname ASC';
         if (!$this->is_validating()) {
             $availablememberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($availablememberscount > $CFG->iomad_max_select_courses) {
+            if ($availablememberscount > get_config('local_iomad', 'max_select_courses')) {
                 return $this->too_many_results($search, $availablememberscount);
             }
         }

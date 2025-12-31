@@ -102,7 +102,7 @@ class allocations_table extends table_sql {
 
         // Process them.
         foreach ($allocations as $allocation) {
-            $returnstr .= userdate($allocation->issuedate, $CFG->iomad_date_format) . "<br>";
+            $returnstr .= userdate($allocation->issuedate, get_config('local_iomad', 'date_format')) . "<br>";
         }
 
         if ($count > 5) {
@@ -134,7 +134,7 @@ class allocations_table extends table_sql {
 
         // Process them.
         foreach ($unallocations as $unallocation) {
-            $returnstr .= userdate($unallocation->issuedate, $CFG->iomad_date_format) . "<br>";
+            $returnstr .= userdate($unallocation->issuedate, get_config('local_iomad', 'date_format')) . "<br>";
         }
 
         if ($count > 5) {

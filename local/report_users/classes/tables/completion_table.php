@@ -70,7 +70,7 @@ class completion_table extends table_sql {
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->licenseallocated)) {
-                return format_string(userdate($row->licenseallocated, $CFG->iomad_date_format) . " (" . $row->licensename . ")");
+                return format_string(userdate($row->licenseallocated, get_config('local_iomad', 'date_format')) . " (" . $row->licensename . ")");
             } else {
                 return;
             }
@@ -92,7 +92,7 @@ class completion_table extends table_sql {
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timeenrolled)) {
-                return userdate($row->timeenrolled, $CFG->iomad_date_format);
+                return userdate($row->timeenrolled, get_config('local_iomad', 'date_format'));
             } else {
                 return;
             }
@@ -114,7 +114,7 @@ class completion_table extends table_sql {
 
         if ($this->is_downloading() || empty($USER->editing)) {
             if (!empty($row->timecompleted)) {
-                return userdate($row->timecompleted, $CFG->iomad_date_format);
+                return userdate($row->timecompleted, get_config('local_iomad', 'date_format'));
             } else {
                 return;
             }
@@ -138,7 +138,7 @@ class completion_table extends table_sql {
             return get_string('notapplicable', 'local_report_completion');
         } else {
             if (!empty($row->timeexpires)) {
-                return userdate($row->timeexpires, $CFG->iomad_date_format);
+                return userdate($row->timeexpires, get_config('local_iomad', 'date_format'));
             }
         }
     }
@@ -154,7 +154,7 @@ class completion_table extends table_sql {
         if ($icourserec = $DB->get_record_sql("SELECT * FROM {iomad_courses} WHERE courseid = :courseid AND hasgrade = 1", array('courseid' => $row->courseid))) {
             if ($this->is_downloading() || empty($USER->editing)) {
                 if (!empty($row->finalscore) && !empty($row->timeenrolled)) {
-                    return round($row->finalscore, $CFG->iomad_report_grade_places)."%";
+                    return round($row->finalscore, get_config('local_iomad', 'report_grade_places'))."%";
                 } else {
                    return;
                }
@@ -164,7 +164,7 @@ class completion_table extends table_sql {
                                                '',
                                                array('name' => 'finalscore[' . $row->id . ']',
                                                      'type' => 'number',
-                                                     'value' => round($row->finalscore, $CFG->iomad_report_grade_places),
+                                                     'value' => round($row->finalscore, get_config('local_iomad', 'report_grade_places')),
                                                      'min' => 0,
                                                      'max' => 100,
                                                      'step' => '0.01',
@@ -174,7 +174,7 @@ class completion_table extends table_sql {
                                                 '',
                                                 array('name' => 'origfinalscore[' . $row->id . ']',
                                                      'type' => 'hidden',
-                                                     'value' => round($row->finalscore, $CFG->iomad_report_grade_places),
+                                                     'value' => round($row->finalscore, get_config('local_iomad', 'report_grade_places')),
                                                      'id' => 'id_origfinalscore_' . $row->id));
                     return $return;
                 //}
@@ -340,10 +340,10 @@ class completion_table extends table_sql {
             $criteria = $completion->get_criteria();
             $complete = $completion->is_complete();
             if ($complete) {
-                $completestring = " - " . userdate($completion->timecompleted, $CFG->iomad_date_format);
+                $completestring = " - " . userdate($completion->timecompleted, get_config('local_iomad', 'date_format'));
                 $completed++;
             } else if (!empty($row->timecompleted)) {
-                $completestring = " - " . userdate($row->timecompleted, $CFG->iomad_date_format);
+                $completestring = " - " . userdate($row->timecompleted, get_config('local_iomad', 'date_format'));
                 $completed++;
             } else {
                 $completestring = " - " . get_string('no');
@@ -364,7 +364,7 @@ class completion_table extends table_sql {
                                                        'courseid' => $row->courseid,
                                                        'moduleid' => $criteria->moduleinstance])) {
                     if (!empty($gradeinfo->finalgrade) && $gradeinfo->finalgrade != 0) {
-                        $gradestring = " - " . format_string(round($gradeinfo->finalgrade/$gradeinfo->rawgrademax * 100, $CFG->iomad_report_grade_places)."%");
+                        $gradestring = " - " . format_string(round($gradeinfo->finalgrade/$gradeinfo->rawgrademax * 100, get_config('local_iomad', 'report_grade_places'))."%");
                     }
                 }
                 $tooltip .= $criteria->get_title() . " " . format_string($modinfo->name) . "$gradestring $completestring\r\n";
@@ -374,7 +374,7 @@ class completion_table extends table_sql {
         }
 
         // Add in the modified time.
-        $tooltip .= format_string(get_string('lastmodified') . " - " .userdate($row->modifiedtime, $CFG->iomad_date_format));
+        $tooltip .= format_string(get_string('lastmodified') . " - " .userdate($row->modifiedtime, get_config('local_iomad', 'date_format')));
 
         if (!empty($row->timecompleted)) {
             $progress = 100;

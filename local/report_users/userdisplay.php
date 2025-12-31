@@ -37,7 +37,7 @@ $rowid = optional_param('rowid', 0, PARAM_INT);
 $redocertificate = optional_param('redocertificate', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
-$validonly = optional_param('validonly', $CFG->iomad_hidevalidcourses, PARAM_BOOL);
+$validonly = optional_param('validonly', get_config('local_iomad', 'hidevalidcourses'), PARAM_BOOL);
 $edit = optional_param('edit', -1, PARAM_BOOL);
 
 if (!empty($USER->editing)) {
@@ -327,7 +327,7 @@ if (!empty($action)) {
             } else if ($action == 'revoke') {
                 echo $OUTPUT->confirm(get_string('revokeconfirm', 'local_report_users'), $confirmurl, $cancel);
             } else if ($action == 'clear') {
-                if (empty($CFG->iomad_autoreallocate_licenses)) {
+                if (empty(get_config('local_iomad', 'autoreallocate_licenses'))) {
                     echo $OUTPUT->confirm(get_string('clearconfirm', 'local_report_users'), $confirmurl, $cancel);
                 } else {
                     echo $OUTPUT->confirm(get_string('clearreallocateconfirm', 'local_report_users'), $confirmurl, $cancel);
@@ -534,7 +534,7 @@ if (!empty($USER->editing)) {
 if (!$table->is_downloading()) {
         echo html_writer::start_tag('div', array('class' => 'tablecontainer'));
 }
-$table->out($CFG->iomad_max_list_courses, true);
+$table->out(get_config('local_iomad', 'max_list_courses'), true);
 
 if (!$table->is_downloading()) {
     if (!empty($USER->editing)) {

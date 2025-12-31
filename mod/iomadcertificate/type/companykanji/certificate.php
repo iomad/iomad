@@ -92,7 +92,7 @@ $usewatermark = true;
 // Get the site defaults
 $sitecontext = context_system::instance();
 $fs = get_file_storage();
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'iomadcertificate_logo', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_logo', 0, 'sortorder DESC, id ASC', false)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
@@ -100,7 +100,7 @@ if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'ioma
         $seal_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_logo_');
     }
 }
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'iomadcertificate_signature', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_signature', 0, 'sortorder DESC, id ASC', false)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
@@ -108,7 +108,7 @@ if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'ioma
         $signature_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_signature_');
     }
 }
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'iomadcertificate_border', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_border', 0, 'sortorder DESC, id ASC', false)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);
@@ -116,7 +116,7 @@ if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'ioma
         $border_filename = $file->copy_content_to_temp($iomadcertificate->name, 'iomadcertificate_border_');
     }
 }
-if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad_settings', 'iomadcertificate_watermark', 0, 'sortorder DESC, id ASC', false)) {
+if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertificate_watermark', 0, 'sortorder DESC, id ASC', false)) {
     if (!count($files) < 1) {
         $file = reset($files);
         unset($files);

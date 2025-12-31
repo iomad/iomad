@@ -90,7 +90,7 @@ class current_course extends company_base {
 
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_users) {
+            if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
                 return [
                     get_string('toomanyenrolments', 'block_iomad_company_admin', $potentialmemberscount) => [],
                     get_string('pleaseusesearch') => []
