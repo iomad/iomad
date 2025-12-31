@@ -279,7 +279,7 @@ foreach ($menus as $key => $menu) {
     }
 
     // Get topic image icon
-    if (!$CFG->iomad_useicons && !empty($menu['icon'])) {
+    if (!get_config('local_iomad', 'useicons') && !empty($menu['icon'])) {
         $icon = $menu['icon'];
     } else if (!empty($menu['icondefault'])) {
         $imgsrc = $OUTPUT->image_url($menu['icondefault'], 'block_iomad_company_admin');
@@ -289,7 +289,7 @@ foreach ($menus as $key => $menu) {
     }
 
     // Get topic action icon
-    if (!$CFG->iomad_useicons && !empty($menu['iconsmall'])) {
+    if (!get_config('local_iomad', 'useicons') && !empty($menu['iconsmall'])) {
         $iconsmall = $menu['iconsmall'];
     } else {
         $iconsmall = '';

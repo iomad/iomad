@@ -125,7 +125,7 @@ class inprogress_view implements renderable, templatable {
                     $criteria = $completion->get_criteria();
                     $complete = $completion->is_complete();
                     if ($complete) {
-                        $completestring = " - " . userdate($completion->timecompleted, $CFG->iomad_date_format);
+                        $completestring = " - " . userdate($completion->timecompleted, get_config('local_iomad', 'date_format'));
                         $completed++;
                     } else {
                         $completestring = " - " . get_string('no');
@@ -146,7 +146,7 @@ class inprogress_view implements renderable, templatable {
                                                                'courseid' => $course->id,
                                                                'moduleid' => $criteria->moduleinstance])) {
                             if (!empty($gradeinfo->finalgrade) && $gradeinfo->finalgrade != 0) {
-                                $gradestring = " - " . format_string(round($gradeinfo->finalgrade/$gradeinfo->rawgrademax * 100, $CFG->iomad_report_grade_places)."%");
+                                $gradestring = " - " . format_string(round($gradeinfo->finalgrade/$gradeinfo->rawgrademax * 100, get_config('local_iomad', 'report_grade_places'))."%");
                             }
                         }
                         $tooltip .= $criteria->get_title() . " " . format_string($modinfo->name) . "$gradestring $completestring\r\n";
@@ -156,7 +156,7 @@ class inprogress_view implements renderable, templatable {
                 }
         
                 // Add in the modified time.
-                $tooltip .= format_string(get_string('lastmodified') . " - " .userdate($inprogress->modifiedtime, $CFG->iomad_date_format));
+                $tooltip .= format_string(get_string('lastmodified') . " - " .userdate($inprogress->modifiedtime, get_config('local_iomad', 'date_format')));
                 $exportedcourse->progresstooltip = $tooltip;
             }
             $inprogressview['courses'][] = $exportedcourse;

@@ -345,7 +345,7 @@ class iomad_approve_access {
         $managertype = empty($tm_ok) ? 2 : 1;
 
         // Add the time to the location object.
-        $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . ' %I:%M%p');
+        $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . ' %I:%M%p');
 
         // Create or update the record.
         if (!$userbooking = $DB->get_record('block_iomad_approve_access', ['activityid' => $trainingevent->id,
@@ -426,7 +426,7 @@ class iomad_approve_access {
         $managertype = empty($tm_ok) ? 1 : 2;
 
         // Add the time to the location object.
-        $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . ' %I:%M%p');
+        $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . ' %I:%M%p');
 
         // Create or update the record.
         if (!$userbooking = $DB->get_record('block_iomad_approve_access', ['activityid' => $trainingevent->id,

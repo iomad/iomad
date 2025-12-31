@@ -118,7 +118,7 @@ class processor {
                 $companyid = iomad::get_my_companyid(context_system::instance());
                 // Get name for company license.
                 $company = $DB->get_record('company', ['id' => $companyid]);
-                $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), $CFG->iomad_date_format);
+                $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), get_config('local_iomad', 'date_format'));
                 $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE " . $DB->sql_like('name', ":licensename"),
                                                 ['licensename' => str_replace("'", "\'", $licensename)]);
 
@@ -271,7 +271,7 @@ class processor {
             // Get learning paths
             $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $item->id]);
             // Create the name for the license
-            $licensename = $company->shortname . " [" . $item->name . "] " . userdate(time(), $CFG->iomad_date_format);
+            $licensename = $company->shortname . " [" . $item->name . "] " . userdate(time(), get_config('local_iomad', 'date_format'));
             $count = $DB->count_records_sql("SELECT COUNT(*) FROM {companylicense} WHERE " . $DB->sql_like('name', ":licensename"),
                                             ['licensename' => str_replace("'", "\'", $licensename)]);
             if ($count) {

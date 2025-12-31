@@ -172,7 +172,7 @@ class company_license_form extends \company_moodleform {
         $mform->setType('reference', PARAM_ALPHANUMEXT);
 
         if (empty($this->parentid)) {
-            if ($CFG->iomad_autoenrol_managers) {
+            if (get_config('local_iomad', 'autoenrol_managers')) {
                 $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
                                  1 => get_string('reusable', 'block_iomad_company_admin'),
                                  4 => get_string('blanket', 'block_iomad_company_admin')];
@@ -364,7 +364,7 @@ class company_license_form extends \company_moodleform {
             $errors['expirydate'] = get_string('errorinvaliddate', 'calendar');
         }
 
-        if ($CFG->iomad_autoenrol_managers && $data['type'] > 1 && $data['type'] < 4) {
+        if (get_config('local_iomad', 'autoenrol_managers') && $data['type'] > 1 && $data['type'] < 4) {
             $errors['type'] = get_string('invalid');
         }
 

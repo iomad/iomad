@@ -45,7 +45,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
         $mform = $this->_form;
 
         // Iomad
-        if ($CFG->local_iomad_signup_useemail) {
+        if (get_config('local_iomad', 'signup_useemail')) {
             $mform->addElement('html', get_string('emailasusernamehelp', 'local_iomad_signup'));
 
             $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
@@ -74,7 +74,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
         $mform->addRule('password', get_string('maximumchars', '', MAX_PASSWORD_CHARACTERS),
             'maxlength', MAX_PASSWORD_CHARACTERS, 'client');
 
-        if (!$CFG->local_iomad_signup_useemail) {
+        if (!get_config('local_iomad', 'signup_useemail')) {
             $mform->addElement('text', 'email', get_string('email'), 'maxlength="100" size="25"');
             $mform->setType('email', core_user::get_property_type('email'));
             $mform->addRule('email', get_string('missingemail'), 'required', null, 'client');
@@ -184,7 +184,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
         }
 
         // IOMAD
-        if ($CFG->local_iomad_signup_useemail) {
+        if (get_config('local_iomad', 'signup_useemail')) {
                 $data['username'] = strtolower($data['email']);
         }
 

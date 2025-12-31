@@ -122,7 +122,7 @@ class potential_company extends company_base {
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params) +
             $DB->count_records_sql($distinctcountfields . $sqldistinct, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_courses) {
+            if ($potentialmemberscount > get_config('local_iomad', 'max_select_courses')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }

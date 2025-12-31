@@ -228,7 +228,7 @@ class potential_license extends company_base {
 
         if (!$this->is_validating() && !$all) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
-            if ($potentialmemberscount > $CFG->iomad_max_select_users) {
+            if ($potentialmemberscount > get_config('local_iomad', 'max_select_users')) {
                 return $this->too_many_results($search, $potentialmemberscount);
             }
         }

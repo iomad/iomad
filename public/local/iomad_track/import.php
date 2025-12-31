@@ -212,10 +212,10 @@ if (!empty($fileimport)) {
                             $upt->track('course', $courserec->fullname);
                         } else if (strpos($key, 'time') !== false) {
                             $completionrec->$key = strtotime($value);
-                            $upt->track($key, userdate($completionrec->$key, $CFG->iomad_date_format));
+                            $upt->track($key, userdate($completionrec->$key, get_config('local_iomad', 'date_format')));
                         } else if (strpos($key, 'licenseallocated') !== false) {
                             $completionrec->$key = strtotime($value);
-                            $upt->track($key, userdate($completionrec->$key, $CFG->iomad_date_format));
+                            $upt->track($key, userdate($completionrec->$key, get_config('local_iomad', 'date_format')));
                         } else {
                             $completionrec->$key = $value;
                             if (in_array($key, $upt->columns)) {
@@ -270,11 +270,11 @@ if (!empty($fileimport)) {
                 }
                 if (empty($completionrec->timeenrolled)) {
                     $completionrec->timeenrolled = $completionrec->timecompleted;
-                    $upt->track('timeenrolled', userdate($completionrec->timeenrolled, $CFG->iomad_date_format));
+                    $upt->track('timeenrolled', userdate($completionrec->timeenrolled, get_config('local_iomad', 'date_format')));
                 }
                 if (empty($completionrec->timestarted)) {
                     $completionrec->timestarted = $completionrec->timecompleted;
-                    $upt->track('timestarted', userdate($completionrec->timestarted, $CFG->iomad_date_format));
+                    $upt->track('timestarted', userdate($completionrec->timestarted, get_config('local_iomad', 'date_format')));
                 }
                 if ($DB->get_record('iomad_courses', array('courseid' => $courserec->id, 'licensed' => 1))) {
                     if (empty($completionrec->licensename)) {
@@ -289,7 +289,7 @@ if (!empty($fileimport)) {
                 }
                 if (empty($completionrec->licenseallocated) && !empty($completionrec->licensename)) {
                     $completionrec->licenseallocated = $completionrec->timecompleted;
-                    $upt->track('licenseallocated', userdate($completionrec->timeenrolled, $CFG->iomad_date_format));
+                    $upt->track('licenseallocated', userdate($completionrec->timeenrolled, get_config('local_iomad', 'date_format')));
                 }
                 $completionrec->modifiedtime = $runtime;
                 $completionrec->coursecleared = 1;

@@ -195,12 +195,12 @@ foreach ($licenses as $license) {
         $licenselist[$license->id] = $license->name . " (" .
                                      get_string('licenseexpired',
                                                 'block_iomad_company_admin',
-                                                userdate($license->expirydate, $CFG->iomad_date_format)) . ")";
+                                                userdate($license->expirydate, get_config('local_iomad', 'date_format'))) . ")";
     } else if ($license->startdate > time()) {
         $licenselist[$license->id] = $license->name . " (" .
                                      get_string('licensevalidfrom',
                                                 'block_iomad_company_admin',
-                                                userdate($license->startdate, $CFG->iomad_date_format)) . ")";
+                                                userdate($license->startdate, get_config('local_iomad', 'date_format'))) . ")";
     } else {
         $licenselist[$license->id] = $license->name;
     }

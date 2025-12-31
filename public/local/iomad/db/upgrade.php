@@ -1759,7 +1759,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
 
         // If we were automatically enrolling managers using the old method, mark them as an educator.
-        if ($CFG->iomad_autoenrol_managers) {
+        if (get_config('local_iomad', 'autoenrol_managers')) {
             $DB->set_field_select('company_users', 'educator', 1, 'managertype != 0');
         }
 
@@ -2111,7 +2111,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
     if ($oldversion < 2019030109) {
 
         // Security issue that users may be tagged as educators when they shouldn't have been.
-        if ($CFG->iomad_autoenrol_managers) {
+        if (get_config('local_iomad', 'autoenrol_managers')) {
             // Remove any company user educator entry where not a manager.
             $affected = $DB->get_records('company_users', array('managertype' => 0, 'educator' => 1));
             foreach ($affected as $companyuser) {
@@ -2137,7 +2137,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 foreach ($affectedusers as $affecteduser) {
                     company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
                 }
-            } 
+            }
         }
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2019030109, 'local', 'iomad');
@@ -2454,7 +2454,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $companycontext = \core\context\company::instance($companymanager->companyid);
             // Assign role at company level.
             role_assign($companymanagerrole->id, $companymanager->userid, $companycontext->id);
-            // Remove role at site level. 
+            // Remove role at site level.
             role_unassign($companymanagerrole->id, $companymanager->userid, $systemcontext->id);
             $count++;
             $progressbar->update($count, $total, "Assigning company manager roles to company context -  $count/$total.");
@@ -2470,7 +2470,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $companycontext = \core\context\company::instance($departmentmanager->companyid);
             // Assign role at company level.
             role_assign($departmentmanagerrole->id, $departmentmanager->userid, $companycontext->id);
-            // Remove role at site level. 
+            // Remove role at site level.
             role_unassign($departmentmanagerrole->id, $departmentmanager->userid, $systemcontext->id);
             $count++;
             $progressbar->update($count, $total, "Assigning department manager roles to company context -  $count/$total.");
@@ -2486,7 +2486,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $companycontext = \core\context\company::instance($companyreporter->companyid);
             // Assign role at company level.
             role_assign($companyreporterrole->id, $companyreporter->userid, $companycontext->id);
-            // Remove role at site level. 
+            // Remove role at site level.
             role_unassign($companyreporterrole->id, $companyreporter->userid, $systemcontext->id);
             $count++;
             $progressbar->update($count, $total, "Assigning company report roles to company context -  $count/$total.");
@@ -2511,7 +2511,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2024022500, 'local', 'iomad');
     }
-    
+
     if ($oldversion < 2024090400) {
 
         // Define field ispublic to be added to classroom.
@@ -2597,6 +2597,66 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2025070200, 'local', 'iomad');
+    }
+
+    if ($oldversion < 2025123100) {
+        // Moving IOMAD settings from local_iomad_settings plugin using $CFG to local_iomad get_config.
+
+        // Set up the plugin config object - and copy settings over from $CFG.
+        $options = [
+            'iomad_use_email_as_username' => 'use_email_as_username',
+            'iomad_allow_username' => 'allow_username',
+            'iomad_show_company_structure' => 'show_company_structure',
+            'iomad_sync_institution' => 'sync_institution',
+            'iomad_sync_department' => 'sync_department',
+            'iomad_autoenrol_managers' => 'autoenrol_managers',
+            'iomad_autoreallocate_licenses' => 'autoreallocate_licenses',
+            'iomad_hidevalidcourses' => 'hidevalidcourses',
+            'iomad_showcharts' => 'showcharts',
+            'iomad_downloaddetails' => 'downloaddetails',
+            'iomad_useicons' => 'useicons',
+            'iomad_showcompanydropdown' => 'showcompanydropdown',
+            'iomad_emaildelay' => 'emaildelay',
+            'iomad_date_format' => 'date_format',
+            'iomad_report_fields' => 'report_fields',
+            'iomad_report_grade_places' => 'report_grade_places',
+            'iomad_max_list_users' => 'max_list_users',
+            'iomad_max_list_courses' => 'max_list_courses',
+            'iomad_max_list_templates' => 'max_list_templates',
+            'iomad_max_list_companies' => 'max_list_companies',
+            'iomad_max_list_licenses' => 'max_list_licenses',
+            'iomad_max_list_classrooms' => 'max_list_classrooms',
+            'iomad_max_list_email_templates' => 'max_list_email_templates',
+            'iomad_max_list_competencies' => 'max_list_competencies',
+            'iomad_max_list_frameworks' => 'max_list_frameworks',
+            'iomad_max_select_users' => 'max_select_users',
+            'iomad_max_select_courses' => 'max_select_courses',
+            'iomad_max_select_templates' => 'max_select_templates',
+            'iomad_max_select_frameworks' => 'max_select_frameworks',
+            'local_iomad_signup_enable' => 'signup_enable',
+            'local_iomad_signup_showinstructions' => 'signup_showinstructions',
+            'local_iomad_signup_useemail' => 'signup_useemail',
+            'local_iomad_signup_autoenrol' => 'signup_autoenrol',
+            'local_iomad_signup_autoenrol_unassigned' => 'signup_autoenrol_unassigned',
+            'local_iomad_signup_auth' => 'signup_auth',
+            'local_iomad_signup_role' => 'signup_role',
+            'local_iomad_signup_company' => 'signup_company',
+        ];
+
+        // Set up the new config.
+        foreach ($options as $key => $option) {
+            set_config($option, $CFG->$key, 'local_iomad');
+        }
+
+        // We also need to save the files for the certificate.
+        $DB->set_field('files', 'component', 'local_iomad', ['component' => 'local_iomad_settings']);
+        set_config('iomadcertificate_logo', get_config('local_iomad_settings', 'iomadcertificate_logo'), 'local_iomad');
+        set_config('iomadcertificate_signature', get_config('local_iomad_settings', 'iomadcertificate_signature'), 'local_iomad');
+        set_config('iomadcertificate_border', get_config('local_iomad_settings', 'iomadcertificate_border'), 'local_iomad');
+        set_config('iomadcertificate_watermark', get_config('local_iomad_settings', 'iomadcertificate_watermark'), 'local_iomad');
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2025123100, 'local', 'iomad');
     }
 
     return $result;

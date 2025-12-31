@@ -169,8 +169,8 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                             continue;
                         }
 
-                        $completddate = userdate($manageruser->timecompleted, $CFG->iomad_date_format) . "\n";
-                        $expiresdate = userdate($manageruser->timeexpires, $CFG->iomad_date_format) . "\n";
+                        $completddate = userdate($manageruser->timecompleted, get_config('local_iomad', 'date_format')) . "\n";
+                        $expiresdate = userdate($manageruser->timeexpires, get_config('local_iomad', 'date_format')) . "\n";
                         $foundusers = true;
 
                         // Get the user's departments.

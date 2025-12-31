@@ -170,7 +170,7 @@ class user_roles_editable extends \core\output\inplace_editable {
         $canassigneducators = iomad::has_capability('block/iomad_company_admin:assign_educator', $companycontext);
 
         // Create the rest of the list.
-        if (!$CFG->iomad_autoenrol_managers &&
+        if (!get_config('local_iomad', 'autoenrol_managers') &&
             ($iseducator || $canassigneducators)) {
             $usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
             if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $companycontext)) {

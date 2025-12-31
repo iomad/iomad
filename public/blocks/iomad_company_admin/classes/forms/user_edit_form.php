@@ -121,14 +121,14 @@ class user_edit_form extends \moodleform {
             $mform->addRule('email', $strrequired, 'required', null, 'client');
             $mform->setType('email', PARAM_EMAIL);
         }
-        if (!empty($CFG->iomad_allow_username)) {
+        if (!empty(get_config('local_iomad', 'allow_username'))) {
             $mform->addElement('text', 'username', get_string('username'), 'size="20"');
             $mform->addHelpButton('username', 'username', 'auth');
             $mform->setType('username', PARAM_RAW);
             $mform->disabledif('username', 'use_email_as_username', 'eq', 1);
         }
-        $mform->addElement('advcheckbox', 'use_email_as_username', get_string('iomad_use_email_as_username', 'local_iomad_settings'));
-        if (!empty($CFG->iomad_use_email_as_username)) {
+        $mform->addElement('advcheckbox', 'use_email_as_username', get_string('iomad_use_email_as_username', 'local_iomad'));
+        if (!empty(get_config('local_iomad', 'use_email_as_username'))) {
             $mform->setDefault('use_email_as_username', 1);
         } else {
             $mform->setDefault('use_email_as_username', 0);
@@ -191,7 +191,7 @@ class user_edit_form extends \moodleform {
             $mform->addElement('hidden', 'managertype', 0);
         }
         // Deal with the educator role.
-        if (!$CFG->iomad_autoenrol_managers) {
+        if (!get_config('local_iomad', 'autoenrol_managers')) {
             $mform->addElement('selectyesno', 'educator', get_string('assigneducator', 'block_iomad_company_admin'));
             $mform->addHelpButton('educator', 'educator', 'block_iomad_company_admin');
         } else {
@@ -337,7 +337,7 @@ class user_edit_form extends \moodleform {
         $usernew = (object)$usernew;
 
         // Check allowed characters. - We only care if we are being passed a username.
-        if (!empty($CFG->iomad_allow_username)) {
+        if (!empty(get_config('local_iomad', 'allow_username'))) {
             if (!$usernew->use_email_as_username) {
                 if (empty($usernew->username)) {
                     $errors['username'] = get_string('required');

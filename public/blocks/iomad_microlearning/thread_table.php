@@ -69,7 +69,7 @@ class block_iomad_microlearning_thread_table extends table_sql {
         global $CFG;
 
         if (!empty($row->timecreated)) {
-            return userdate($row->timecreated, $CFG->iomad_date_format);
+            return userdate($row->timecreated, get_config('local_iomad', 'date_format'));
         } else {
             return;
         }
@@ -79,7 +79,7 @@ class block_iomad_microlearning_thread_table extends table_sql {
         global $CFG;
 
         if (!empty($row->startdate)) {
-            return userdate($row->startdate, $CFG->iomad_date_format);
+            return userdate($row->startdate, get_config('local_iomad', 'date_format'));
         } else {
             return;
         }

@@ -32,7 +32,7 @@ require_once($CFG->dirroot."/lib/tablelib.php");
 $sort         = optional_param('sort', 'lastname', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);
+$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);
 $wantedcompanyid    = optional_param('companyid', 0, PARAM_INT);
 $approvecompanyid    = optional_param('approvecompanyid', 0, PARAM_INT);
 $action    = optional_param('action', '', PARAM_TEXT);

@@ -393,13 +393,13 @@ class enrol_license_plugin extends enrol_plugin {
         }
 
         if (time() < $license->startdate) {
-            $datevalue = userdate($license->startdate, $CFG->iomad_date_format);
+            $datevalue = userdate($license->startdate, get_config('local_iomad', 'date_format'));
             return get_string('licensenotyetvalid', 'enrol_license', $datevalue);
         }
 
         // Check if the user is using a learning path for the license.
         if (!company::license_ok_to_use($license->id, $instance->courseid, $USER->id)) {
-            $datevalue = userdate($license->startdate, $CFG->iomad_date_format);
+            $datevalue = userdate($license->startdate, get_config('local_iomad', 'date_format'));
             return get_string('coursenotavailableyet', 'enrol_license', $datevalue);
         }
 

@@ -120,7 +120,7 @@ if (!$table->is_downloading()) {
     echo $OUTPUT->header();
 }
 
-$table->out($CFG->iomad_max_list_users, true);
+$table->out(get_config('local_iomad', 'max_list_users'), true);
 
 if (!$table->is_downloading()) {
     echo $OUTPUT->footer();

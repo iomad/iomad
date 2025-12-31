@@ -92,7 +92,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
 
                     // Format copy only to retain original value
                     $licenseemail = clone $license;
-                    $licenseemail->expirydate =  userdate($license->expirydate, $CFG->iomad_date_format);
+                    $licenseemail->expirydate =  userdate($license->expirydate, get_config('local_iomad', 'date_format'));
 
                     // Passed all checks, send the email.
                     mtrace("Sending license pool expiring email to $user->email");

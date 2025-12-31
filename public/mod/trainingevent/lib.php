@@ -196,7 +196,7 @@ function trainingevent_get_coursemodule_info($coursemodule) {
                 $template->name = $classroom->name;
             }
         }
-        $dateformat = "$CFG->iomad_date_format %I:%M%p";
+        $dateformat = "get_config('local_iomad', 'date_format') %I:%M%p";
 
         // Define objects to be passed to the mustache file.
         $template->startdatetime = userdate($trainingevent->startdatetime, $dateformat);
@@ -503,7 +503,7 @@ function trainingevent_user_attending($event) {
     $company = new company($event->companyid);
 
     // Set the location time.
-    $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
+    $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
 
     // Is it only onto the waiting list?
     if ($sendemails &&
@@ -658,7 +658,7 @@ function trainingevent_user_removed($event) {
 
     // Send an email as long as it hasn't already started.
     if ($trainingevent->startdatetime > $event->timecreated) {
-        $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
+        $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
         if ($event->other['waitlisted']) {
             $emailtemplatename = "user_removed_from_event_waitlist";
         } else {
@@ -822,8 +822,8 @@ function trainingevent_attendance_changed($event) {
     $company = new company($event->companyid);
 
     // Add the time to the location object.
-    $location->time = userdate($trainingevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
-    $chosenlocation->time = userdate($chosenevent->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
+    $location->time = userdate($trainingevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
+    $chosenlocation->time = userdate($chosenevent->startdatetime, get_config('local_iomad', 'date_format') . " %I:%M%p");
 
     // Get the course teachers using using groups if required.
     $usergroups = groups_get_user_groups($course->id, $user->id);

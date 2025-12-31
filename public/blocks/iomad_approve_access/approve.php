@@ -47,6 +47,7 @@ $PAGE->set_pagelayout('base');
 
 // Set up some strings.
 $strmanage = get_string('approveusers', 'block_iomad_approve_access');
+$dateformat = get_config('local_iomad', 'date_format');
 
 $PAGE->set_title($strmanage);
 $PAGE->set_heading($strmanage);
@@ -147,7 +148,7 @@ if ($data = $callform->get_data()) {
                             $mymanagers = $company->get_my_managers($result->userid, 1);
                             $eventuser = $DB->get_record('user', array('id' => $result->userid));
                             $location = $DB->get_record('classroom', array('id' => $event->classroomid));
-                            $location->time = userdate($event->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
+                            $location->time = userdate($event->startdatetime, $dateformat . " %I:%M%p");
 
                             // Send the emails.
                             foreach ($mymanagers as $mymanager) {
@@ -225,7 +226,7 @@ if ($data = $callform->get_data()) {
                             if (!empty($mymanagers)) {
                                 $eventuser = $DB->get_record('user', array('id' => $result->userid));
                                 $location = $DB->get_record('classroom', array('id' => $event->classroomid));
-                                $location->time = userdate($event->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
+                                $location->time = userdate($event->startdatetime, $dateformat . " %I:%M%p");
 
                                 // Send the emails.
                                 foreach ($mymanagers as $mymanager) {
@@ -266,7 +267,7 @@ if ($data = $callform->get_data()) {
                 $DB->update_record('block_iomad_approve_access', $result, $bulk = false);
                 if ($sendemail || $senddenied) {
                     $location = $DB->get_record('classroom', array('id' => $event->classroomid));
-                    $location->time = userdate($event->startdatetime, $CFG->iomad_date_format . " %I:%M%p");
+                    $location->time = userdate($event->startdatetime, $dateformat . " %I:%M%p");
                     $approveuser = $DB->get_record('user', array('id' => $result->userid));
                     $approvecourse = $DB->get_record('course', array('id' => $result->courseid));
                     if ($sendemail) {
@@ -280,7 +281,7 @@ if ($data = $callform->get_data()) {
                         $attending = $DB->count_records('trainingevent_users', ['trainingeventid' => $event->id, 'waitlisted' => 0]);
                         if ($location->isvirtual || $attending < $maxcapacity) {
                            $waitlisted = 0;
-                        
+
                         } else if ($event->haswaitinglist) {
                             $waitlisted = 1;
                         } else {
@@ -294,7 +295,7 @@ if ($data = $callform->get_data()) {
                                                                                    'classroom' => $location));
                             //  Update the attendance at the event.
                             iomad_approve_access::register_user($approveuser, $event, $waitlisted);
-    
+
                             // Fire an event for this.
                             $moodleevent = \block_iomad_approve_access\event\request_granted::create(array('context' => context_module::instance($cmidinfo->id),
                                                                                                            'userid' => $USER->id,
@@ -302,7 +303,7 @@ if ($data = $callform->get_data()) {
                                                                                                            'objectid' => $event->id,
                                                                                                            'courseid' => $approvecourse->id));
                             $moodleevent->trigger();
-    
+
                             // Do we need to notify teachers?
                             if (!empty($event->emailteachers)) {
                                 // Are we using groups?
@@ -310,7 +311,7 @@ if ($data = $callform->get_data()) {
                                 $userteachers = [];
                                 foreach ($usergroups as $usergroup => $junk) {
                                     $userteachers = $userteachers + get_enrolled_users(context_course::instance($approvecourse->id), 'mod/trainingevent:viewattendees', $usergroup);
-                                } 
+                                }
                                 foreach ($userteachers as $userteacher) {
                                     EmailTemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
                                                                                                   'approveuser' => $approveuser,

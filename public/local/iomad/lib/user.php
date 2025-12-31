@@ -154,7 +154,7 @@ class company_user {
             if ($createpassword) {
                 set_user_preference('create_password', 1, $user->id);
                 $user->newpassword = generate_password();
-                if (!empty($CFG->iomad_email_senderisreal)) {
+                if (!empty(get_config('local_iomad', 'email_senderisreal'))) {
                     EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER, 'due' => $data->due));
                 } else if (is_siteadmin($USER->id)) {
                     EmailTemplate::send('user_create', array('user' => $user, 'due' => $data->due));
@@ -218,7 +218,7 @@ class company_user {
         }
 
         // Deal with auto enrolments.
-        if ($CFG->local_iomad_signup_autoenrol) {
+        if (get_config('local_iomad', 'signup_autoenrol')) {
             $company->autoenrol($user, $data->due);
         }
 
@@ -366,7 +366,7 @@ class company_user {
                                  ['username' => $data['username'],
                                   'email' => $data['email']])) {
             $errors['username'] = get_string('usernameexists');
-            if ($CFG->local_iomad_signup_useemail) {
+            if (get_config('local_iomad', 'signup_useemail')) {
                 $errors['email'] = get_string('emailexists');
             }
         } else if ($DB->get_records_sql("SELECT u.id FROM {user} u
@@ -376,7 +376,7 @@ class company_user {
                                         ['companyid' => $companyid,
                                          'username' => $data['username']])) {
             $errors['username'] = get_string('usernameexists');
-            if ($CFG->local_iomad_signup_useemail) {
+            if (get_config('local_iomad', 'signup_useemail')) {
                 $errors['email'] = get_string('emailexists');
             }
         } else if ($currentuserid = $DB->get_record_sql("SELECT DISTINCT u.id FROM {user} u
@@ -741,7 +741,7 @@ class company_user {
                 $headers = serialize(array("Cc:".$USER->email));
             }
             $user->newpassword = $temppassword;
-            if (!empty($CFG->iomad_email_senderisreal)) {
+            if (!empty(get_config('local_iomad', 'email_senderisreal'))) {
                 if ($reset) {
                     EmailTemplate::send('user_reset', array('user' => $user,
                                                             'company' => $company,
@@ -1128,7 +1128,7 @@ class company_user {
                         $licenserecord = $DB->get_record('companylicense', array('id' => $license->licenseid));
                         $licenserecord->used = $DB->count_records('companylicense_users', array('licenseid' => $license->licenseid));
                         $DB->update_record('companylicense', $licenserecord);
-                        if (!empty($CFG->iomad_autoreallocate_licenses)) {
+                        if (!empty(get_config('local_iomad', 'autoreallocate_licenses'))) {
                             $newlicense = $license;
                             $newlicense->isusing = 0;
                             $newlicense->issuedate = time();

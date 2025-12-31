@@ -34,7 +34,7 @@ $sort         = optional_param('sort', 'lastname', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
 // How many per page.
-$perpage      = optional_param('perpage', $CFG->iomad_max_list_users, PARAM_INT);
+$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);
 // Id of user to tweak mnet ACL (requires $access).
 $acl          = optional_param('acl', '0', PARAM_INT);
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
@@ -334,9 +334,9 @@ $returnurl = $CFG->wwwroot."/local/report_user_license_allocations/index.php";
 
 // Do we have any additional reporting fields?
 $extrafields = array();
-if (!empty($CFG->iomad_report_fields)) {
+if (!empty(get_config('local_iomad', 'report_fields'))) {
     $companyrec = $DB->get_record('company', array('id' => $companyid));
-    foreach (explode(',', $CFG->iomad_report_fields) as $extrafield) {
+    foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
         $extrafields[$extrafield] = new stdclass();
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
@@ -444,7 +444,7 @@ $table->define_baseurl($linkurl);
 $table->define_columns($columns);
 $table->define_headers($headers);
 $table->sort_default_column = 'lastname';
-$table->out($CFG->iomad_max_list_users, true);
+$table->out(get_config('local_iomad', 'max_list_users'), true);
 
 if (!$table->is_downloading()) {
     echo $output->footer();

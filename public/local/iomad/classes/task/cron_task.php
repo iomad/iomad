@@ -45,7 +45,7 @@ class cron_task extends \core\task\scheduled_task {
 
         $runtime = time();
         // Are we copying Company to institution?
-        if (!empty($CFG->iomad_sync_institution)) {
+        if (!empty(get_config('local_iomad', 'sync_institution'))) {
 
             // Get the users in multiple companies
             $multiusers = $DB->get_records_sql("SELECT userid
@@ -58,7 +58,7 @@ class cron_task extends \core\task\scheduled_task {
                 $notmultisql = " AND u.id NOT IN (" . implode(',', array_keys($multiusers)) . ")";
                 $multisql = " WHERE u.id IN (" . implode(',', array_keys($multiusers)) . ")";
             }
-            if ($CFG->iomad_sync_institution == 1) {
+            if (get_config('local_iomad', 'sync_institution') == 1) {
                 mtrace("Copying company shortnames to user institution fields\n");
 
                 // Get the users where it's wrong.
@@ -71,7 +71,7 @@ class cron_task extends \core\task\scheduled_task {
                                                $notmultisql",
                                                [], 0, 500);
 
-            } else if ($CFG->iomad_sync_institution == 2) {
+            } else if (get_config('local_iomad', 'sync_institution') == 2) {
                 mtrace("Copying company name to user institution fields\n");
 
                 // Get the users where it's wrong.
@@ -93,8 +93,8 @@ class cron_task extends \core\task\scheduled_task {
         }
 
         // Are we copying department to department?
-        if (!empty($CFG->iomad_sync_department &&
-            $CFG->iomad_sync_department == 1)) {
+        if (!empty(get_config('local_iomad', 'sync_department') &&
+            get_config('local_iomad', 'sync_department') == 1)) {
             mtrace("Copying company department name to user department fields\n");
 
             // Get the users where it's wrong.

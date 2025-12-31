@@ -171,16 +171,16 @@ class company_managers_form extends moodleform {
                         }
                     }
 
-                    if (!$CFG->iomad_autoenrol_managers && $roletype != 3) {
+                    if (!get_config('local_iomad', 'autoenrol_managers') && $roletype != 3) {
                         // We have to be mindful of educator types here.
                         if ($userrec = $DB->get_record('company_users', array('userid' => $adduser->id, 'companyid' => $this->selectedcompany, 'departmentid' => $departmentid))) {
                             $educator = $userrec->educator;
                         } else {
                             $educator = false;
                         }
-                    } else if (!$CFG->iomad_autoenrol_managers && $roletype == 3) {
+                    } else if (!get_config('local_iomad', 'autoenrol_managers') && $roletype == 3) {
                         $educator = true;
-                    } else if ($CFG->iomad_autoenrol_managers && ($roletype == 2 || $roletype == 1)) {
+                    } else if (get_config('local_iomad', 'autoenrol_managers') && ($roletype == 2 || $roletype == 1)) {
                         $educator = true;
                     } else {
                         $educator = false;
@@ -215,7 +215,7 @@ class company_managers_form extends moodleform {
 
                     // Get the current company_users record.
                     $userrec = $DB->get_record('company_users', array('userid' => $removeuser->id, 'companyid' => $this->selectedcompany, 'departmentid' => $departmentid));
-                    if (!$CFG->iomad_autoenrol_managers && $roletype != 3) {
+                    if (!get_config('local_iomad', 'autoenrol_managers') && $roletype != 3) {
                         // We have to be mindful of educator types here.
                         $userrec = $DB->get_record('company_users', array('userid' => $removeuser->id, 'companyid' => $this->selectedcompany, 'departmentid' => $departmentid));
                         $educator = $userrec->educator;

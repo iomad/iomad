@@ -165,8 +165,8 @@ class EmailTemplate {
         $this->attachment = array_key_exists('attachment', $options) ? $options['attachment'] : null;
 
         // do we have a default delay on email sending?
-        if (!empty($CFG->iomad_emaildelay)) {
-            $this->due = $this->due + $CFG->iomad_emaildelay;
+        if (!empty(get_config('local_iomad', 'emaildelay'))) {
+            $this->due = $this->due + get_config('local_iomad', 'emaildelay');
         }
 
         if (!isset($user)) {
@@ -186,7 +186,7 @@ class EmailTemplate {
         }
 
         // Set the sender to the default site one if use real sender is not true.
-        if (empty($CFG->iomad_email_senderisreal)) {
+        if (empty(get_config('local_iomad', 'email_senderisreal'))) {
             $sender = core_user::get_support_user();
         }
 

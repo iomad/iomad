@@ -92,11 +92,11 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $com
     $licenses = $DB->get_records('companylicense', array('companyid' => $companyid), 'expirydate DESC', 'id,name,startdate,expirydate');
     foreach ($licenses as $license) {
         if ($license->expirydate < time()) {
-            $licenselist[$license->id] = $license->name . " (" . get_string('licenseexpired', 'block_iomad_company_admin', userdate($license->expirydate, $CFG->iomad_date_format)) . ")";
+            $licenselist[$license->id] = $license->name . " (" . get_string('licenseexpired', 'block_iomad_company_admin', userdate($license->expirydate, get_config('local_iomad', 'date_format'))) . ")";
         } else if ($license->startdate > time()) {
-            $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format)) . ")";
+            $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate, get_config('local_iomad', 'date_format'))) . ")";
             if ($licenseid == $license->id) {
-                $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format));
+                $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', userdate($license->startdate, get_config('local_iomad', 'date_format')));
             }
         } else {
             $licenselist[$license->id] = $license->name;
@@ -117,9 +117,9 @@ if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $com
         foreach ($licenses as $license) {
             if ($alllicenses || $license->expirydate > time()) {
                 if ($license->startdate > time()) {
-                    $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate), $CFG->iomad_date_format) . ")";
+                    $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate), get_config('local_iomad', 'date_format')) . ")";
                     if ($licenseid == $license->id) {
-                        $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format));
+                        $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', userdate($license->startdate, get_config('local_iomad', 'date_format')));
                     }
                 } else {
                     $licenselist[$license->id] = $license->name;
