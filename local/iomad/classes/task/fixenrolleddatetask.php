@@ -15,19 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad track
+ * An adhoc task to fix enrolled dates in tracking table for local iomad
  *
- * @package    local_iomad_track
+ * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad_track\task;
+
+namespace local_iomad\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
+use core\rask\manager;
 
+/**
+ * An adhoc task to fix enrolled dates in tracking table for local iomad
+ *
+ * @package    local_iomad
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class fixenrolleddatetask extends adhoc_task {
 
     /**
@@ -36,7 +46,7 @@ class fixenrolleddatetask extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('fixenrolleddatetask', 'local_iomad_track');
+        return get_string('fixenrolleddatetask', 'local_iomad');
     }
 
     /**
@@ -46,18 +56,18 @@ class fixenrolleddatetask extends adhoc_task {
         global $DB;
 
         // Get all of the entries currently in course_completions.
-        $allentries = $DB->get_records('course_completions', array());
+        $allentries = $DB->get_records('course_completions');
 
         // Process them.
         foreach ($allentries as $entry) {
             // Get the enrolment record.
             if ($userenrolment = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                                 JOIN {enrol} e ON (ue.enrolid = e.id)
-                                                 WHERE ue.userid = :userid
-                                                 AND e.courseid = :courseid
-                                                 AND e.status = 0",
-                                                 array('userid' => $entry->userid,
-                                                       'courseid' => $entry->course))) {
+                                                      JOIN {enrol} e ON (ue.enrolid = e.id)
+                                                      WHERE ue.userid = :userid
+                                                      AND e.courseid = :courseid
+                                                      AND e.status = 0",
+                                                     ['userid' => $entry->userid,
+                                                      'courseid' => $entry->course])) {
                 if ($userenrolment->timestart == $userenrolment->timecreated) {
                     // Don't care about this.
                     continue;
@@ -66,7 +76,9 @@ class fixenrolleddatetask extends adhoc_task {
                     continue;
                 } else {
                     // Get the local_iomad_track record if it's wrong.
-                    if ($trackrec = $DB->get_record('local_iomad_track', array('userid' => $entry->userid, 'courseid' => $entry->course, 'timeenrolled' => $userenrolment->timestart))) {
+                    if ($trackrec = $DB->get_record('local_iomad_track', ['userid' => $entry->userid,
+                                                                          'courseid' => $entry->course,
+                                                                          'timeenrolled' => $userenrolment->timestart])) {
                         // Update both this and course_completions.
                         $trackrec->timeenrolled = $userenrolment->timecreated;
                         $DB->update_record('local_iomad_track', $trackrec);
@@ -85,7 +97,7 @@ class fixenrolleddatetask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad_track\task\fixenrolleddatetask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new fixenrolleddatetask();
+        manager::queue_adhoc_task($task, true);
     }
 }

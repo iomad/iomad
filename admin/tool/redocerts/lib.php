@@ -92,9 +92,9 @@ function do_redocerts($user = 0,
         echo html_writer::start_tag('p');
         echo get_string('clearingcertificate', 'tool_redocerts', $sumstring);
         echo html_writer::end_tag('br');
-        local_iomad_track_delete_entry($track->id);
+        local_iomad\track\track::delete_entry($track->id);
         echo (get_string('recreatingcertificate', 'tool_redocerts') . '&nbsp');
-        if (xmldb_local_iomad_track_record_certificates($track->courseid, $track->userid, $track->id, true, false)) {
+        if (local_iomad\track\track::record_certificates($track->courseid, $track->userid, $track->id, true, false)) {
             echo get_string('success');
         } else {
             echo get_string('failed', 'scorm');

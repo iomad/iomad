@@ -15,34 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   block_iomad_company_admin
+ * Completion import management form
+ *
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_iomad_track\forms;
+namespace local_iomad\forms;
 
-use \moodleform;
-use \csv_import_reader;
-use \core_text;
+use moodleform;
+use csv_import_reader;
+use core_text;
 
 /**
- * Script to let a user import departments to a particular company.
+ * Completion import management form
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class completion_import_form extends moodleform {
 
     function definition() {
         global $CFG;
 
-        // thing you have to do
+        // Set up the form.
         $mform =& $this->_form;
 
-        // header for main bit
-        $mform->addElement( 'header', 'general', get_string('completionimportfromfile','local_iomad_track'));
+        // Add the header.
+        $mform->addElement( 'header', 'general', get_string('completionimportfromfile','local_iomad'));
 
-        // file picker
+        // Add the file picker.
         $mform->addElement('filepicker', 'importfile', get_string('file'), null, array( 'accepted_types'=>'csv'));
         $mform->addRule('importfile', null, 'required');
 
@@ -63,29 +69,7 @@ class completion_import_form extends moodleform {
         $mform->addElement('select', 'encoding', get_string('encoding', 'tool_uploaduser'), $choices);
         $mform->setDefault('encoding', 'UTF-8');
 
-        // buttons
+        // Add the buttons.
         $this->add_action_buttons();
     }
 }
-
-class completion_import_form2 extends moodleform {
-
-    function definition() {
-        global $CFG;
-
-        // thing you have to do
-        $mform =& $this->_form;
-
-        // header for main bit
-        $mform->addElement( 'header', 'general', get_string('completionimportfromfile','local_iomad_track'));
-
-        $mform->addElement('hidden', 'iid');
-        $mform->setType('iid', PARAM_BOOL);
-        $mform->setType('fileimport', PARAM_BOOL);
-        $mform->addElement('hidden', 'fileimport');
-
-        // buttons
-        $this->add_action_buttons();
-    }
-}
-
