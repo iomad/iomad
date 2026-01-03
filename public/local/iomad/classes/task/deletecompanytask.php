@@ -15,23 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad
+ * An adhoc delete company task for local iomad
  *
  * @package    local_iomad
  * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace local_iomad\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
-use company;
-use company_user;
-use iomad;
-use core_course_category;
+use core\task\manager;
+use local_iomad\company_user;
+use local_iomad\track\track;
 
+/**
+ * An adhoc delete company task for local iomad
+ *
+ * @package    local_iomad
+ * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class deletecompanytask extends adhoc_task {
 
     /**
@@ -44,7 +52,7 @@ class deletecompanytask extends adhoc_task {
     }
 
     /**
-     * Run fixtracklicensestask
+     * Run deletecompanytask
      */
     public function execute() {
         global $DB, $CFG;
@@ -68,8 +76,7 @@ class deletecompanytask extends adhoc_task {
                                           ['companyid' => $companyrec->id]);
 
         foreach ($tracrecs as $tracrec) {
-            require_once($CFG->libdir . "/../local/iomad_track/lib.php");
-            \local_iomad_track_delete_entry($tracrec->id, true);
+            track::delete_entry($tracrec->id, true);
         }
 
         mtrace("dealing with all completion reports");
@@ -114,6 +121,7 @@ class deletecompanytask extends adhoc_task {
         foreach ($users as $user) {
             company_user::delete($user->userid, $companyrec->id);
         }
+
         // Blanket deletion.
         $DB->delete_records('company_users', ['companyid' => $companyrec->id]);
 
@@ -132,7 +140,7 @@ class deletecompanytask extends adhoc_task {
         foreach ($companycourses as $companycourse) {
             mtrace("deleting course ID $companycourse->courseid");
             delete_course($companycourse->courseid, false);
-        }                                                
+        }
         $DB->delete_records('company_course', ['companyid' => $companyrec->id]);
         $DB->delete_records('company_created_courses', ['companyid' => $companyrec->id]);
         $DB->delete_records('company_shared_courses', ['companyid' => $companyrec->id]);
@@ -172,7 +180,7 @@ class deletecompanytask extends adhoc_task {
         mtrace("clearing up any config");
         $DB->delete_records_select('config', $DB->sql_like('name', ":name"), ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
         $DB->delete_records_select('config_plugins', $DB->sql_like('name', ":name"), ['name' => '%' . $DB->sql_like_escape($companyrec->id)]);
-        
+
         if ($files = $DB->get_records_select('files',
                                              "component = 'core_admin' AND " . $DB->sql_like('filearea', ':filearea') . " AND filename !='.'",
                                              ['filearea' => "%" .  $DB->sql_like_escape($companyrec->id)])) {
@@ -180,7 +188,7 @@ class deletecompanytask extends adhoc_task {
             foreach ($files as $filerec) {
                 $file = $fs->get_file($filerec->contextid, $filerec->component, $filerec->filearea, $filerec->itemid, $filerec->filepath, $filerec->filename);
                 $file->delete();
-            } 
+            }
         }
     }
 
@@ -191,7 +199,7 @@ class deletecompanytask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad\task\deletecompanytask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new deletecompanytask();
+        manager::queue_adhoc_task($task, true);
     }
 }

@@ -15,19 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad track
+ * An adhoc task to save certificate files for local iomad
  *
- * @package    local_iomad_track
+ * @package    local_iomad
  * @copyright  2025 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad_track\task;
+namespace local_iomad\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
-use context_user;
+use core\task\manager;
+use local_iomad\track\track;
 
 class savecertificatetask extends adhoc_task {
 
@@ -37,7 +38,7 @@ class savecertificatetask extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('savecertificatetask', 'local_iomad_track');
+        return get_string('savecertificatetask', 'local_iomad');
     }
 
     /**
@@ -48,22 +49,22 @@ class savecertificatetask extends adhoc_task {
         $userid = $data->userid;
         $courseid = $data->courseid;
         $trackid = $data->trackid;
-        return \local_iomad_track\observer::record_certificates($courseid, $userid, $trackid, false);
+        return track::record_certificates($courseid, $userid, $trackid, false);
     }
-    
+
     /**
      * Queues the task.
      *
      */
     public static function queue_task($userid, $courseid, $trackid) {
         // Let's set up the adhoc task.
-        $task = new \local_iomad_track\task\savecertificatetask();
+        $task = new savecertificatetask();
         $task->set_custom_data(['userid' => $userid,
                                 'courseid' => $courseid,
                                 'trackid' => $trackid,
                                 ]);
         $task->set_userid($userid);
 
-        \core\task\manager::queue_adhoc_task($task, true);
+        manager::queue_adhoc_task($task, true);
     }
 }

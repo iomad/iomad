@@ -52,7 +52,6 @@ $plugin->dependencies = [
         'filter_iomad' => 2025081300,
         'local_email' => 2024111902,
         'local_iomad_learningpath' => 2024121100,
-        'local_iomad_track' => 2025050200,
         'local_report_attendance' => 2024100700,
         'local_report_companies' => 2024100700,
         'local_report_completion' => 2024100700,

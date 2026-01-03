@@ -118,7 +118,9 @@ foreach ($oldrecords as $track) {
                                      WHERE component= :component
                                      AND itemid = :itemid
                                      AND filename != '.'",
-                                    ['component' => 'local_iomad_track', 'itemid' => $track->id])) {
+                                    ['component' => 'local_iomad',
+                                     'filearea' => 'issue',
+                                     'itemid' => $track->id])) {
         $filedir1 = substr($file->contenthash, 0, 2);
         $filedir2 = substr($file->contenthash, 2, 2);
         $filepath = $CFG->dataroot . '/filedir/' . $filedir1 . '/' . $filedir2 . '/' . $file->contenthash;
@@ -127,10 +129,12 @@ foreach ($oldrecords as $track) {
         unlink($filepath);
     }
 
-    $DB->delete_records('files', ['itemid' => $track->id, 'component' => 'local_iomad_track']);
+    $DB->delete_records('files', ['itemid' => $track->id,
+                                  'filearea' => 'issue',
+                                  'component' => 'local_iomad']);
 
     mtrace ("adding Certificate");
-    xmldb_local_iomad_track_record_certificates($track->courseid, $track->userid, $track->id, true, false);
+    local_iomad\track\track::record_certificates($track->courseid, $track->userid, $track->id, true, false);
 
     $count++;
 }

@@ -125,8 +125,8 @@ if (!empty($data)) {
             foreach($data->redo_certificates as $redocertificate) {
                 if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
                     echo html_writer::start_tag('p');
-                    local_iomad_track_delete_entry($redocertificate);
-                    xmldb_local_iomad_track_record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, true, false);
+                    local_iomad\track\track::delete_entry($redocertificate);
+                    local_iomad\track\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, true, false);
                     echo html_writer::end_tag('p');
                 }
             }
@@ -159,7 +159,7 @@ if (!empty($data)) {
             local_iomad\iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
             echo $OUTPUT->header();
             foreach($data->purge_entries as $rowid) {
-                local_iomad_track_delete_entry($rowid, true);
+                local_iomad\track\track::delete_entry($rowid, true);
                 echo html_writer::tag('p', get_string('deletedtrackentry', 'block_iomad_company_admin', $rowid));
             }
             echo $OUTPUT->single_button(new moodle_url('/local/report_users/userdisplay.php',
@@ -220,8 +220,8 @@ if (!empty($data)) {
 
                     // Re-generate the certificate.
                     if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $key))) {
-                        local_iomad_track_delete_entry($key);
-                        xmldb_local_iomad_track_record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
+                        local_iomad\track\track::delete_entry($key);
+                        local_iomad\track\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
                     }
                 }
             }
@@ -264,8 +264,8 @@ if (!empty($data)) {
                         }
 
                         // Re-generate the certificate.
-                        local_iomad_track_delete_entry($key);
-                        xmldb_local_iomad_track_record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
+                        local_iomad\track\track::delete_entry($key);
+                        local_iomad\track\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
                     }
                 }
             }
@@ -286,8 +286,8 @@ if (!empty($action)) {
     if (!empty($confirm) && confirm_sesskey()) {
         if ($action == 'redocert' && !empty($redocertificate)) {
             if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
-                local_iomad_track_delete_entry($redocertificate);
-                if (xmldb_local_iomad_track_record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false)) {
+                local_iomad\track\track::delete_entry($redocertificate);
+                if (local_iomad\track\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false)) {
                     redirect(new moodle_url('/local/report_users/userdisplay.php', array('userid' => $userid)),
                              get_string($action . "_successful", 'local_report_users'),
                              null,
@@ -307,7 +307,7 @@ if (!empty($action)) {
                      \core\output\notification::NOTIFY_SUCCESS);
             die;
         } else {
-            local_iomad_track_delete_entry($rowid, true);
+            local_iomad\track\track::delete_entry($rowid, true);
         }
     } else {
         echo $OUTPUT->header();

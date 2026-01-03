@@ -15,19 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad track
+ * An adhoc fix course cleared task for local iomad
  *
- * @package    local_iomad_track
+ * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad_track\task;
+namespace local_iomad\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
+use core\task\manager;
 
+/**
+ * An adhoc fix course cleared task for local iomad
+ *
+ * @package    local_iomad
+ * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class fixcourseclearedtask extends adhoc_task {
 
     /**
@@ -36,11 +45,11 @@ class fixcourseclearedtask extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('fixcourseclearedtask', 'local_iomad_track');
+        return get_string('fixcourseclearedtask', 'local_iomad');
     }
 
     /**
-     * Run fixtracklicensestask
+     * Run fixcourseclearedtask
      */
     public function execute() {
         global $DB;
@@ -48,7 +57,7 @@ class fixcourseclearedtask extends adhoc_task {
         // Deal with the local_iomad_track entries
         $allentries = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
                                             WHERE timecompleted > 0
-                                            AND coursecleared = 0", array());
+                                            AND coursecleared = 0");
         foreach ($allentries as $entry) {
             if ($DB->count_records_sql("SELECT COUNT(id) FROM {local_iomad_track}
                                         WHERE userid = :userid
@@ -57,9 +66,9 @@ class fixcourseclearedtask extends adhoc_task {
                                          timeenrolled > :timecompleted
                                          OR timeenrolled is null
                                         )",
-                                        array('userid' => $entry->userid,
-                                              'courseid' => $entry->courseid,
-                                              'timecompleted' => $entry->timecompleted)) > 0) {
+                                       ['userid' => $entry->userid,
+                                        'courseid' => $entry->courseid,
+                                        'timecompleted' => $entry->timecompleted]) > 0) {
                 $DB->set_field('local_iomad_track', 'coursecleared', 1, array('id' => $entry->id));
                 $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $entry->id));
             } else if (!empty($entry->licenseid) && !empty($entry->licenseallocated)) {
@@ -68,9 +77,9 @@ class fixcourseclearedtask extends adhoc_task {
                                          AND licensecourseid = :courseid
                                          AND issuedate = :licenseallocated
                                          AND timecompleted > 0",
-                                         array('licenseid' => $entry->licenseid,
-                                               'courseid' => $entry->courseid,
-                                               'licenseallocated' => $entry->licenseallocated))) {
+                                        ['licenseid' => $entry->licenseid,
+                                         'courseid' => $entry->courseid,
+                                         'licenseallocated' => $entry->licenseallocated])) {
                     $DB->set_field('local_iomad_track', 'coursecleared', 1, array('id' => $entry->id));
                     $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $entry->id));
                 } else if ($licenserec = $DB->get_record_sql("SELECT id FROM {companylicense_users}
@@ -78,9 +87,9 @@ class fixcourseclearedtask extends adhoc_task {
                                                               AND licensecourseid = :courseid
                                                               AND issuedate = :licenseallocated
                                                               AND timecompleted > 0",
-                                                              array('licenseid' => $entry->licenseid,
-                                                                    'courseid' => $entry->courseid,
-                                                                    'licenseallocated' => $entry->licenseallocated))) {
+                                                            ['licenseid' => $entry->licenseid,
+                                                             'courseid' => $entry->courseid,
+                                                             'licenseallocated' => $entry->licenseallocated])) {
                     $DB->set_field('local_iomad_track', 'coursecleared', 1, array('id' => $entry->id));
                     $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $entry->id));
                     $DB->set_field('local_iomad_track', 'licenseid', $licenserec->licenseid, array('id' => $entry->id));
@@ -94,9 +103,8 @@ class fixcourseclearedtask extends adhoc_task {
      *
      */
     public static function queue_task() {
-
         // Let's set up the adhoc task.
-        $task = new \local_iomad_track\task\fixcourseclearedtask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new fixcourseclearedtask();
+        manager::queue_adhoc_task($task, true);
     }
 }

@@ -15,14 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad
+ * An adhoc import user task for local iomad
  *
  * @package    local_iomad
  * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad_track\task;
+
+namespace local_iomad\task;
 
 require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
@@ -30,7 +31,16 @@ require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
+use core\task\manager;
 
+/**
+ * An adhoc import user task for local iomad
+ *
+ * @package    local_iomad
+ * @copyright  2024 E-Learn Design https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class importusertask extends adhoc_task {
 
     /**
@@ -39,7 +49,7 @@ class importusertask extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('importuser', 'local_iomad_track');
+        return get_string('importuser', 'local_iomad');
     }
 
     /**
@@ -72,7 +82,10 @@ class importusertask extends adhoc_task {
         $params = ['companyid' => $customdata->companyid,
                    'userid' => $customdata->userid];
 
+        // Get the records.
         $comprecords = $DB->get_records_sql($sql, $params);
+
+        // Process them.
         foreach ($comprecords as $comprecord) {
             if (!empty($comprecord->licenseallocated)) {
                 $comprecord->licensename = "HISTORIC";
@@ -81,6 +94,7 @@ class importusertask extends adhoc_task {
             $comprecord->companyid = $customdata->companyid;
             $DB->insert_record('local_iomad_track', $comprecord);
         }
+
         do_redocerts($this->importuser, 0, $customdata->companyid);
     }
 
@@ -91,7 +105,7 @@ class importusertask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad\task\resetrolestask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new importusertask();
+        manager::queue_adhoc_task($task, true);
     }
 }

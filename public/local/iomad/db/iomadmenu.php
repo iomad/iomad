@@ -15,14 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   local_iomad_track
+ * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+/**
+ * Set up the IOMAD dashboard menu items for this plugin.
+ *
+ * @return array
+ */
+function local_iomad_menu() {
 
+<<<<<<<< HEAD:public/local/iomad_track/settings.php
 // Basic navigation settings
 require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
 
@@ -32,3 +38,19 @@ $ADMIN->add( 'iomad', new admin_externalpage('importcompletionrecords',
                                'local_iomad_track'),
                                $url,
                                'local/report_attendance:view'));
+========
+    return [
+        'iomad_track' => [
+            'category' => 'CourseAdmin',
+            'tab' => 3,
+            'name' => get_string('importcompletionrecords', 'local_iomad'),
+            'url' => '/local/iomad/classes/track/import.php',
+            'cap' => 'local/iomad:importtrackfrommoodle',
+            'icondefault' => 'report',
+            'style' => 'report',
+            'icon' => 'fa-bar-chart-o',
+            'iconsmall' => 'fa-upload',
+        ],
+    ];
+}
+>>>>>>>> 9c46929fd21 (IOMAD: migrate local/iomad_track to local/iomad plugin. Created a local_iomad\task\task class and updated all core code to use this for dealing with certificates - #2524):public/local/iomad/db/iomadmenu.php

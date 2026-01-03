@@ -15,18 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * An adhoc task for local Iomad track
+ * An adhoc task to fix license entries in the tracking table for local iomad
  *
- * @package    local_iomad_track
+ * @package    local_iomad
  * @copyright  2020 E-Learn Design https://www.e-learndesign.co.uk
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_iomad_track\task;
+namespace local_iomad\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
+use core\task\manager;
 
 class fixtracklicensetask extends adhoc_task {
 
@@ -36,7 +37,7 @@ class fixtracklicensetask extends adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('fixtracklicensetask', 'local_iomad_track');
+        return get_string('fixtracklicensetask', 'local_iomad');
     }
 
     /**
@@ -65,26 +66,42 @@ class fixtracklicensetask extends adhoc_task {
 
         if ($found) {
             // Sort licenses which appear to be marked as complete but are not fully marked as complete.
-            $licenses = $DB->get_records_sql("SELECT * from {companylicense_users} where timecompleted is null and score > 0");
+            $licenses = $DB->get_records_sql("SELECT *
+                                              FROM {companylicense_users}
+                                              WHERE timecompleted IS NULL
+                                              AND score > 0");
             foreach ($licenses as $license) {
                 // Do we have a a newer license allocation for this course?
-                if ($new = $DB->get_record_sql("SELECT * from {companylicense_users} where userid = :userid and licensecourseid = :licensecourseid and issuedate > :issuedate", (array) $license)) {
+                if ($new = $DB->get_record_sql("SELECT *
+                                                FROM {companylicense_users}
+                                                WHERE userid = :userid
+                                                AND licensecourseid = :licensecourseid
+                                                AND issuedate > :issuedate",
+                                                (array) $license)) {
+
+                    // Mark the license as being finished with.
                     $license->timecompleted = $new->issuedate;
                     $DB->update_record('companylicense_users', $license);
-                } else if ($DB->get_record('course_completions', array('userid' => $license->userid, 'course' => $license->licensecourseid))) {
-                    // Do nothing.
+                } else if ($DB->get_record('course_completions', ['userid' => $license->userid,
+                                                                  'course' => $license->licensecourseid])) {
+                    // Do nothing as the user is still in the course.
                 } else {
-                    if ($track = $DB->get_record('local_iomad_track', array('courseid' => $license->licensecourseid, 'userid' => $license->userid, 'licenseid' => $license->licenseid, 'licenseallocated' => $license->issuedate))) {
+                    if ($track = $DB->get_record('local_iomad_track', ['courseid' => $license->licensecourseid,
+                                                                       'userid' => $license->userid,
+                                                                       'licenseid' => $license->licenseid,
+                                                                       'licenseallocated' => $license->issuedate])) {
                         if (!empty($track->timecompleted)) {
+                            // Mark the license as being finished with.
                             $license->timecompleted = $track->timecompleted;
                             $DB->update_record('companylicense_users', $license);
-                        } else if ($DB->get_record('course_completions', array('userid' => $license->userid, 'course' => $license->licensecourseid))) {
-                            // Do nothing.
+                        } else if ($DB->get_record('course_completions', ['userid' => $license->userid,
+                                                                          'course' => $license->licensecourseid])) {
+                            // Do nothing as the user is still in the course.
                         }
                     }
                 }
             }
-            
+
         }
     }
 
@@ -95,7 +112,7 @@ class fixtracklicensetask extends adhoc_task {
     public static function queue_task() {
 
         // Let's set up the adhoc task.
-        $task = new \local_iomad_track\task\fixtracklicensetask();
-        \core\task\manager::queue_adhoc_task($task, true);
+        $task = new fixtracklicensetask();
+        manager::queue_adhoc_task($task, true);
     }
 }
