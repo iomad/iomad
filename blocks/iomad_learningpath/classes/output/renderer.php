@@ -19,7 +19,7 @@
  *
  * @package    block_iomad_learningpath
  * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
- * @author     Howard Miller (howardsmiller@gmail.com)
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -38,10 +38,64 @@ class renderer extends plugin_renderer_base {
      * @param main $main The main renderable
      * @return string HTML string
      */
-    public function render_main(main $main) {
-        return $this->render_from_template('block_iomad_learningpath/main', $main->export_for_template($this));
+    public function render_main($page) {
+        $data = $page->export_for_template($this);
+        return $this->render_from_template('block_iomad_learningpath/main', $data);
     }
 
+    /**
+     * Render the learning path manage page
+     * @param manage_page $page
+     * @return string html for page
+     */
+    public function render_manage_page($page) {
+        $data = $page->export_for_template($this);
 
+        return parent::render_from_template('block_iomad_learningpath/manage_page', $data);
+    }
+
+    /**
+     * Render the learning path edit path page
+     * @param editpath_page $page
+     * @return string html for page
+     */
+    public function render_editpath_page($page) {
+        $data = $page->export_for_template($this);
+
+        return parent::render_from_template('block_iomad_learningpath/editpath_page', $data);
+    }
+
+    /**
+     * Render the learning path edit group page
+     * @param editpath_page $page
+     * @return string html for page
+     */
+    public function render_editgroup_page($page) {
+        $data = $page->export_for_template($this);
+
+        return parent::render_from_template('block_iomad_learningpath/editgroup_page', $data);
+    }
+
+    /**
+     * Render the courselist path page
+     * @param courselist_page $page
+     * @return string html for page
+     */
+    public function render_courselist_page($page) {
+        $data = $page->export_for_template($this);
+
+        return parent::render_from_template('block_iomad_learningpath/courselist_page', $data);
+    }
+
+    /**
+     * Render the students assignment
+     * @param students_page $page
+     * @return string html for page
+     */
+    public function render_students_page($page) {
+        $data = $page->export_for_template($this);
+
+        return parent::render_from_template('block_iomad_learningpath/students_page', $data);
+    }
 }
 

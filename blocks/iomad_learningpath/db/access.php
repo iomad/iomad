@@ -40,10 +40,31 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
         ],
         'clonepermissionsfrom' => 'moodle/site:manageblocks',
+    ],
+
+    'block/iomad_learningpath:view' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
+    'block/iomad_learningpath:manage' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'companydepartmentmanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+        ],
     ],
 ];
 

@@ -1,0 +1,138 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Declare web services
+ *
+ * @package    local_iomadlearninpath
+ * @copyright  2026 E-Learn Design - https://www.e-learndesign.co.uk
+ * @author     Derick Turner
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+$functions = [
+
+    'block_iomad_learningpath_activate' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'activate',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Activates / deactivates learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_getprospectivecourses' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'getprospectivecourses',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Read set of filtered courses for given company',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_addcourses' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'addcourses',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Add courses to learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_removecourses' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'removecourses',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Remove courses from learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_ordercourses' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'ordercourses',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Set sequence of courses in learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_getcourses' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'getcourses',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Read list of courses for given learning',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_deletepath' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'deletepath',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Completely delete a learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_copypath' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'copypath',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Copy a learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_getusers' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'getusers',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Get users assigned to path',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_getprospectiveusers' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'getprospectiveusers',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Get set of filtered users for given company',
+        'type' => 'read',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_addusers' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'addusers',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Add users to learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+    'block_iomad_learningpath_removeusers' => [
+        'classname' => 'block_iomad_learningpath_external',
+        'methodname' => 'removeusers',
+        'classpath' => 'blocks/iomad_learningpath/externallib.php',
+        'description' => 'Remove users from learning path',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+
+];

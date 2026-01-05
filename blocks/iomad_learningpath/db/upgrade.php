@@ -72,5 +72,23 @@ function xmldb_block_iomad_learningpath_upgrade($oldversion) {
         upgrade_block_savepoint(true, 2024082700, 'iomad_learningpath', false);
     }
 
+    if ($oldversion < 2026010500) {
+
+        // Set the list of capabilities we are changing from and to.
+        $capabilites = [
+            'local/iomad_learningpath:manage' => 'block/iomad_learningpath:manage',
+            'local/iomad_learningpath:view' => 'block/iomad_learningpath:view',
+        ];
+
+        // Update all of the capabilities for local/iomad_learningpaths to block/iomad_learningpaths.
+        foreach ($capabilites as $old => $new) {
+            $DB->set_field('role_capabilities', 'capability', $new, ['capability' => $old]);
+            $DB->set_field('company_role_restriction', 'capability', $new, ['capability' => $old]);
+            $DB->set_field('company_role_templates_caps', 'capability', $new, ['capability' => $old]);
+        }
+
+        upgrade_block_savepoint(true, 2026010500, 'iomad_learningpath', false);
+    }
+
     return true;
 }
