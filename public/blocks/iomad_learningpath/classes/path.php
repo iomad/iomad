@@ -201,7 +201,7 @@ class path {
 
         $fs = get_file_storage();
         $pic = false;
-        $files = $fs->get_area_files($this->context->id, 'local_iomad_learningpath', 'mainpicture', $pathid);
+        $files = $fs->get_area_files($this->context->id, 'block_iomad_learningpath', 'mainpicture', $pathid);
         foreach ($files as $file) {
             if ($file->is_directory()) {
                 continue;
@@ -220,7 +220,7 @@ class path {
         }
 
         if (!$pic) {
-            return $OUTPUT->image_url('learningpath', 'local_iomad_learningpath');
+            return $OUTPUT->image_url('learningpath', 'block_iomad_learningpath');
         }
 
         return \moodle_url::make_pluginfile_url($pic->get_contextid(), $pic->get_component(), $pic->get_filearea(),
