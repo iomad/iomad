@@ -2659,6 +2659,31 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025123100, 'local', 'iomad');
     }
 
+    if ($oldversion < 2026010500) {
+        // Moving local/iomad_track to local/iomad.
+
+        // Set the list of capabilities we are changing from and to.
+        $capabilites = [
+            'local/iomad_track:importfrommoodle' => 'local/iomad:importtrackfrommoodle',
+        ];
+
+        // Update all of the capabilities for local/iomad_learningpaths to block/iomad_learningpaths.
+        foreach ($capabilites as $old => $new) {
+            $DB->set_field('role_capabilities', 'capability', $new, ['capability' => $old]);
+            $DB->set_field('company_role_restriction', 'capability', $new, ['capability' => $old]);
+            $DB->set_field('company_role_templates_caps', 'capability', $new, ['capability' => $old]);
+        }
+
+        // We need to deal with any saved files.
+        $DB->set_field('files', 'component', 'local_iomad', ['component' => 'local_iomad_track']);
+
+        // We need to purge the cached list of capailities here to prevent duplicate inserts.
+        purge_caches();
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2026010500, 'local', 'iomad');
+    }
+
     return $result;
 
 }
