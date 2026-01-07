@@ -40,5 +40,17 @@ function local_iomad_menu() {
             'icon' => 'fa-bar-chart-o',
             'iconsmall' => 'fa-upload',
         ],
+
+        'EmailTemplates' => [
+            'category' => 'CompanyAdmin',
+            'tab' => 1,
+            'name' => get_string('emailtemplates', 'local_iomad'),
+            'url' => '/local/iomad/template_list.php',
+            'cap' => 'local/iomad:email_list',
+            'icondefault' => 'emailtemplates',
+            'style' => 'company',
+            'icon' => 'fa-inbox',
+            'iconsmall' => 'fa-gear',
+        ],
     ];
 }

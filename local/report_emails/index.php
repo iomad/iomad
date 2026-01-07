@@ -24,7 +24,6 @@
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
-require_once($CFG->dirroot."/local/email/local_lib.php");
 
 // Params.
 $participant = optional_param('participant', 0, PARAM_INT);
@@ -301,11 +300,11 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 
 // Get the appropriate list of email templates.
 $templateslist = array(0 => get_string('all'));
-$templates = local_email::get_templates();
+$templates = local_iomad\email::get_templates();
 $templatenames = array();
 foreach (array_keys($templates) as $templatename) {
     $templateslist[] = $templatename;
-    $templatenames[$templatename] = get_string($templatename .'_name', 'local_email');
+    $templatenames[$templatename] = get_string($templatename .'_name', 'local_iomad');
 }
 // Make the names nice.
 uasort($templatenames, 'email_template_sort');
@@ -314,7 +313,7 @@ $templatenames = array('0' => get_string('all')) + $templatenames;
 $selectparams = $params;
 $selecturl = new moodle_url('/local/report_emails/index.php', $selectparams);
 $select = new single_select($selecturl, 'templateid', $templatenames, $templateid);
-$select->label = get_string('templatetype', 'local_email');
+$select->label = get_string('templatetype', 'local_iomad');
 $select->formid = 'choosetemplate';
 $templateselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_template_selector'));
 
@@ -491,8 +490,8 @@ if (!empty($extrafields)) {
 }
 
 // And final the rest of the form headers.
-$headers[] = get_string('emailtemplatename', 'local_email');
-$headers[] = get_string('subject', 'local_email');
+$headers[] = get_string('emailtemplatename', 'local_iomad');
+$headers[] = get_string('subject', 'local_iomad');
 $headers[] = get_string('course');
 $headers[] = get_string('sender', 'local_report_emails');
 $headers[] = get_string('created', 'local_report_emails');

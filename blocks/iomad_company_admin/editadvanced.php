@@ -208,7 +208,7 @@ if ($usernew = $userform->get_data()) {
                 if (!$authplugin->user_update_password($usernew, $usernew->newpassword)) {
                     throw new moodle_exception('cannotupdatepasswordonextauth', '', '', $usernew->auth);
                 } else {
-                    EmailTemplate::send('password_update', array('user' => $usernew));
+                    local_iomad/emailtemplate::send('password_update', array('user' => $usernew));
                 }
             }
         }

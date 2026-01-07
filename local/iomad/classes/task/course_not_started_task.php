@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use EmailTemplate;
+use local_iomad\emailtemplate;
 use local_iomad\company;
 
 /**
@@ -137,7 +137,7 @@ class course_not_started_task extends \core\task\scheduled_task {
 
                             // Passed all checks, send the email.
                             mtrace("Sending not started warning email to $userrec->email");
-                            EmailTemplate::send('course_not_started_warning', ['user' => $userrec,
+                            emailtemplate::send('course_not_started_warning', ['user' => $userrec,
                                                                                'course' => $courserec,
                                                                                'company' => new company($companyrec->id)]);
 

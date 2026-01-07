@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use \EmailTemplate;
+use local_iomad\emailtemplate;
 
 /**
  * Course not completed email scheduled task
@@ -177,7 +177,7 @@ class course_not_completed_task extends \core\task\scheduled_task {
             }
 
             mtrace("Sending completion warning email to $user->email");
-            EmailTemplate::send('completion_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
+            emailtemplate::send('completion_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
 
             // Send the supervisor email too.
             mtrace("Sending completion warning email to $user->email supervisor");

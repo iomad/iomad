@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use \EmailTemplate;
+use local_iomad\emailtemplate;
 
 /**
  * Company license expiring scheduled task
@@ -84,7 +84,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
 
                     // Passed all checks, send the email.
                     mtrace("Sending license pool expiring email to $user->email");
-                    EmailTemplate::send('licensepoolexpiring', ['user' => $user,
+                    emailtemplate::send('licensepoolexpiring', ['user' => $user,
                                                                 'license' => $licenseemail,
                                                                 'company' => $company]);
                 }

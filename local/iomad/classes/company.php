@@ -1461,7 +1461,7 @@ class company {
                                                         array('userid' => $userid));
                 if ($companycount == 0) {
                     // Fire an email for this.
-                    EmailTemplate::send('user_promoted',
+                    emailtemplate::send('user_promoted',
                                    array('company' => $company,
                                          'user' => $userrec));
                 }
@@ -1491,7 +1491,7 @@ class company {
                                                         array('userid' => $userid));
                 if ($companycount == 0) {
                     // Fire an email for this.
-                    EmailTemplate::send('user_promoted',
+                    emailtemplate::send('user_promoted',
                                    array('company' => $company,
                                          'user' => $userrec));
                 }
@@ -1560,7 +1560,7 @@ class company {
                                                                 array('userid' => $userid));
                         if ($companycount == 0) {
                             // Fire an email for this.
-                            EmailTemplate::send('user_promoted',
+                            emailtemplate::send('user_promoted',
                                            array('company' => $company,
                                                  'user' => $userrec));
                         }
@@ -1585,7 +1585,7 @@ class company {
                     }
                     if ($user->managertype == 0) {
                         // Fire an email for this.
-                        EmailTemplate::send('user_promoted',
+                        emailtemplate::send('user_promoted',
                                        array('company' => $company,
                                              'user' => $userrec));
                     }
@@ -1703,7 +1703,7 @@ class company {
                                                   array('userid' => $userid));
                     if ($companycount == 1) {
                         // Fire an email for this.
-                        EmailTemplate::send('admin_deleted',
+                        emailtemplate::send('admin_deleted',
                                        array('company' => $company,
                                              'user' => $userrec));
                     }
@@ -4419,7 +4419,7 @@ class company {
         $managers = $DB->get_records('company_users', array('companyid' => $companyid, 'managertype' => 1));
         foreach ($managers as $manager) {
             $user = $DB->get_record('user', array('id' => $manager->userid));
-            EmailTemplate::send('company_suspended',
+            emailtemplate::send('company_suspended',
                                  array('company' => $suspendcompany,
                                        'user' => $user));
         }
@@ -4449,7 +4449,7 @@ class company {
         $managers = $DB->get_records('company_users', array('companyid' => $companyid, 'managertype' => 1));
         foreach ($managers as $manager) {
             $user = $DB->get_record('user', array('id' => $manager->userid));
-            EmailTemplate::send('company_unsuspended',
+            emailtemplate::send('company_unsuspended',
                                  array('company' => $suspendcompany,
                                        'user' => $user));
         }
@@ -4642,11 +4642,11 @@ class company {
                         }
                     }
                     if (!$complete) {
-                        EmailTemplate::send('completion_course_user', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
-                        $supervisortemplate = new EmailTemplate('completion_course_supervisor', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+                        emailtemplate::send('completion_course_user', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+                        $supervisortemplate = new emailtemplate('completion_course_supervisor', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
                         $supervisortemplate->email_supervisor();
                     } else {
-                        EmailTemplate::send('user_programcompleted', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
+                        emailtemplate::send('user_programcompleted', array('course' => $course, 'user' => $user, 'company' => $company, 'attachment' => $attachment));
                     }
                 }
             }
@@ -4939,7 +4939,7 @@ class company {
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
             company_user::suspend($userid, $usercompany->companyid);
-            EmailTemplate::send('user_suspended',
+            emailtemplate::send('user_suspended',
                              array('company' => $company,
                                    'user' => $user));
         }
@@ -4970,7 +4970,7 @@ class company {
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
             company_user::suspend($userid, $usercompany->companyid);
-            EmailTemplate::send('user_unsuspended',
+            emailtemplate::send('user_unsuspended',
                              array('company' => $company,
                                    'user' => $user));
         }
@@ -5077,7 +5077,7 @@ class company {
             $company->unassign_user_from_company($userid);
 
             $user = $DB->get_record('user', array('id' => $userid));
-            EmailTemplate::send('user_deleted',
+            emailtemplate::send('user_deleted',
                                  array('company' => $company,
                                        'user' => $user));
         }
@@ -5189,7 +5189,7 @@ class company {
         if (!$noemail) {
         // Send out the email.
             $company = new company($licenserecord->companyid);
-            EmailTemplate::send('license_allocated', array('course' => $course,
+            emailtemplate::send('license_allocated', array('course' => $course,
                                                            'company' => $company,
                                                            'user' => $user,
                                                            'due' => $duedate,
@@ -5212,7 +5212,7 @@ class company {
                                                          AND cu.managertype =1",
                                                         ['companyid' => $company->id])) {
                 foreach ($companymanagers as $companymanager) {
-                    EmailTemplate::send('licensepoolwarning', array('course' => $course,
+                    emailtemplate::send('licensepoolwarning', array('course' => $course,
                                                                     'company' => $company,
                                                                     'user' => $companymanager,
                                                                     'license' => $license));
@@ -5363,7 +5363,7 @@ class company {
             }
         } else {
             // Send out the email.
-            EmailTemplate::send('license_removed', array('course' => $course,
+            emailtemplate::send('license_removed', array('course' => $course,
                                                          'user' => $user,
                                                          'license' => $license));
 
@@ -5408,7 +5408,7 @@ class company {
         $managers = $company->get_managers();
         foreach ($managers as $manager) {
             // Fire the email.
-            EmailTemplate::send('company_licenseassigned', array('user' => $manager, 'company' => $company));
+            emailtemplate::send('company_licenseassigned', array('user' => $manager, 'company' => $company));
 
         }
 
@@ -5743,7 +5743,7 @@ class company {
 
         $companyinfo = self::get_company_byuserid($user->id);
         $company = new company($companyinfo->id);
-        $template = new EmailTemplate('completion_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
+        $template = new emailtemplate('completion_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('completion_warn_supervisor', 2)) {
@@ -5808,7 +5808,7 @@ class company {
 
         $companyinfo = self::get_company_byuserid($user->id);
         $company = new company($companyinfo->id);
-        $template = new EmailTemplate('course_not_started_warning', array('course' => $course, 'user' => $user, 'company' => $company));
+        $template = new emailtemplate('course_not_started_warning', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('course_not_started_warning', 2)) {
@@ -5872,7 +5872,7 @@ class company {
 
         $companyinfo = self::get_company_byuserid($user->id);
         $company = new company($companyinfo->id);
-        $supervisortemplate = new EmailTemplate('completion_expiry_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
+        $supervisortemplate = new emailtemplate('completion_expiry_warn_supervisor', array('course' => $course, 'user' => $user, 'company' => $company));
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('completion_expiry_warn_supervisor', 2)) {

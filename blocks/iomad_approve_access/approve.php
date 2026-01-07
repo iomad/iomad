@@ -153,7 +153,7 @@ if ($data = $callform->get_data()) {
                             // Send the emails.
                             foreach ($mymanagers as $mymanager) {
                                 if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                    EmailTemplate::send('course_classroom_approval', array('course' => $course,
+                                    local_iomad/emailtemplate::send('course_classroom_approval', array('course' => $course,
                                                                                            'event' => $event,
                                                                                            'user' => $manageruser,
                                                                                            'approveuser' => $eventuser,
@@ -231,7 +231,7 @@ if ($data = $callform->get_data()) {
                                 // Send the emails.
                                 foreach ($mymanagers as $mymanager) {
                                     if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                        EmailTemplate::send('course_classroom_manager_denied', array('course' => $course,
+                                        local_iomad/emailtemplate::send('course_classroom_manager_denied', array('course' => $course,
                                                                                                'event' => $event,
                                                                                                'user' => $USER,
                                                                                                'approveuser' => $eventuser,
@@ -288,7 +288,7 @@ if ($data = $callform->get_data()) {
                             $cancontinue = false;
                         }
                         if ($cancontinue) {
-                            EmailTemplate::send('course_classroom_approved', array('course' => $approvecourse,
+                            local_iomad/emailtemplate::send('course_classroom_approved', array('course' => $approvecourse,
                                                                                    'event' => $event,
                                                                                    'user' => $approveuser,
                                                                                    'company' => $company,
@@ -313,7 +313,7 @@ if ($data = $callform->get_data()) {
                                     $userteachers = $userteachers + get_enrolled_users(context_course::instance($approvecourse->id), 'mod/trainingevent:viewattendees', $usergroup);
                                 }
                                 foreach ($userteachers as $userteacher) {
-                                    EmailTemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
+                                    local_iomad/emailtemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
                                                                                                   'approveuser' => $approveuser,
                                                                                                   'user' => $userteacher,
                                                                                                   'classroom' => $location,
@@ -328,7 +328,7 @@ if ($data = $callform->get_data()) {
 
                         }
                     } else if ($senddenied) {
-                        EmailTemplate::send('course_classroom_denied', array('course' => $approvecourse,
+                        local_iomad/emailtemplate::send('course_classroom_denied', array('course' => $approvecourse,
                                                                              'event' => $event,
                                                                              'user' => $approveuser,
                                                                              'company' => $company,

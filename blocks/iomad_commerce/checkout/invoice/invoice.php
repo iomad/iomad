@@ -80,11 +80,11 @@ class invoice extends payment_provider {
             }
 
             if ($user = $DB->get_record('user',  array('id' => $basket->userid))) {
-                EmailTemplate::send('invoice_ordercomplete', array('user' => $user, 'invoice' => $basket, 'sender' => $shopadmin));
+                local_iomad/emailtemplate::send('invoice_ordercomplete', array('user' => $user, 'invoice' => $basket, 'sender' => $shopadmin));
 
                 // Notify shop admin.
                 if (isset($CFG->commerce_admin_email)) {
-                    EmailTemplate::send('invoice_ordercomplete_admin', array('user' => $shopadmin,
+                    local_iomad/emailtemplate::send('invoice_ordercomplete_admin', array('user' => $shopadmin,
                                                                              'invoice' => $basket,
                                                                              'sender' => $shopadmin));
                 }

@@ -2588,7 +2588,9 @@ function xmldb_local_iomad_upgrade($oldversion) {
         }
 
         // Clear down SYSTEM roles from the company role restrictions and templates tables.
-        $noncompanyroles = $DB->get_records_sql("SELECT id FROM {role} WHERE shortname not in ('companymanager', 'companydepartmentmanager', 'companyreporter')");
+        $noncompanyroles = $DB->get_records_sql("SELECT id FROM {role}
+                                                 WHERE shortname NOT IN
+                                                 ('companymanager', 'companydepartmentmanager', 'companyreporter')");
 
         foreach ($noncompanyroles as $role) {
             $DB->delete_records('company_role_templates_caps', ['roleid' => $role->id]);
@@ -2646,6 +2648,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // Set up the new config.
         foreach ($options as $key => $option) {
             set_config($option, $CFG->$key, 'local_iomad');
+            unset_config($key);
         }
 
         // We also need to save the files for the certificate.
@@ -2654,6 +2657,23 @@ function xmldb_local_iomad_upgrade($oldversion) {
         set_config('iomadcertificate_signature', get_config('local_iomad_settings', 'iomadcertificate_signature'), 'local_iomad');
         set_config('iomadcertificate_border', get_config('local_iomad_settings', 'iomadcertificate_border'), 'local_iomad');
         set_config('iomadcertificate_watermark', get_config('local_iomad_settings', 'iomadcertificate_watermark'), 'local_iomad');
+
+        // Deal with any scheduled tasks for the components we've merged.
+        $scheduledtasks = [
+            '\\local_email_reports\\task\\course_not_started_task' => '\\local_iomad\\task\\course_not_started_task',
+            '\\local_email_reports\\task\\course_not_completed_task' => '\\local_iomad\\task\\course_not_completed_task',
+            '\\local_email_reports\\task\\course_expiry_warning_task' => '\\local_iomad\\task\\course_expiry_warning_task',
+            '\\local_email_reports\\task\\manager_completion_digest_task' => '\\local_iomad\\task\\manager_completion_digest_task',
+            '\\local_email_reports\\task\\manager_expiring_digest_task' => '\\local_iomad\\task\\manager_expiring_digest_task',
+            '\\local_email_reports\\task\\manager_warning_digest_task' => '\\local_iomad\\task\\manager_warning_digest_task',
+            '\\local_email_reports\\task\\trainingevent_not_selected_task' => '\\local_iomad\\task\\trainingevent_not_selected_task',
+            '\\local_email_reports\\task\\company_license_expiring_task' => '\\local_iomad\\task\\company_license_expiring_task',
+        ];
+
+        $DB->set_field('task_scheduled', 'component', 'local_iomad', ['component' => 'local_email_reports']);
+        foreach ($scheduledtasks as $old => $new) {
+            $DB->set_field('task_scheduled', 'classname', $new, ['classname' => $old]);
+        }
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2025123100, 'local', 'iomad');
@@ -2677,13 +2697,75 @@ function xmldb_local_iomad_upgrade($oldversion) {
         // We need to deal with any saved files.
         $DB->set_field('files', 'component', 'local_iomad', ['component' => 'local_iomad_track']);
 
-        // We need to purge the cached list of capailities here to prevent duplicate inserts.
-        purge_caches();
+        // Deal with any ad-hoc tasks for the components we've merged.
+        $adhoctasks = [
+            '\\local_iomad_track\\task\\fixcertificatetask' => '\\local_iomad\\task\\fixcertificatetask',
+            '\\local_iomad_track\\task\\fixcourseclearedtask' => '\\local_iomad\\task\\fixcourseclearedtask',
+            '\\local_iomad_track\\task\\fixenrolleddatetask' => '\\local_iomad\\task\\fixenrolleddatetask',
+            '\\local_iomad_track\\task\\fixtracklicensetask' => '\\local_iomad\\task\\fixtracklicensetask',
+            '\\local_iomad_track\\task\\importmoodlecompletioninformation' => '\\local_iomad\\task\\importmoodlecompletioninformation',
+            '\\local_iomad_track\\task\\importusertask' => '\\local_iomad\\task\\importusertask',
+            '\\local_iomad_track\\task\\savecertificatetask' => '\\local_iomad\\task\\savecertificatetask',
+        ];
+
+        $DB->set_field('task_adhoc', 'component', 'local_iomad', ['component' => 'local_email_reports']);
+        foreach ($adhoctasks as $old => $new) {
+            $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
+        }
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2026010500, 'local', 'iomad');
     }
 
-    return $result;
+    if ($oldversion < 2026010600) {
+        // Moving local/email to local/iomad.
 
+        // Set the list of capabilities we are changing from and to.
+        $capabilites = [
+            'local/email:list' => 'local/iomad:email_list',
+            'local/email:edit' => 'local/iomad:email_edit',
+            'local/email:delete' => 'local/iomad:email_delete',
+            'local/email:add' => 'local/iomad:email_add',
+            'local/email:send' => 'local/iomad:email_send',
+            'local/email:templateset_list' => 'local/iomad:email_templateset_list',
+        ];
+
+        // Update all of the capabilities for local/iomad_learningpaths to block/iomad_learningpaths.
+        foreach ($capabilites as $old => $new) {
+            $DB->set_field('role_capabilities', 'capability', $new, ['capability' => $old]);
+            $DB->set_field('company_role_restriction', 'capability', $new, ['capability' => $old]);
+            $DB->set_field('company_role_templates_caps', 'capability', $new, ['capability' => $old]);
+        }
+
+        // We also need to save any files for the emails.
+        $DB->set_field('files', 'component', 'local_iomad', ['component' => 'local_email']);
+
+        // Deal with any scheduled tasks for the components we've merged.
+        $scheduledtasks = [
+            '\\local_email\\task\\cron_task' => '\\local_iomad\\task\\emailcron_task',
+            '\\local_email\\task\\refreshlangpacks' => '\\local_iomad\\task\\refreshlangpacks',
+        ];
+
+        $DB->set_field('task_scheduled', 'component', 'local_iomad', ['component' => 'local_email']);
+        foreach ($scheduledtasks as $old => $new) {
+            $DB->set_field('task_scheduled', 'classname', $new, ['classname' => $old]);
+        }
+
+        // Deal with any ad-hoc tasks for the components we've merged.
+        $adhoctasks = [
+            '\\local_email\\task\\addtemplate' => '\\local_iomad\\task\\addtemplate',
+            '\\local_email\\task\\importlangpack' => '\\local_iomad\\task\\importlangpack',
+            '\\local_email\\task\\migratetemplates' => '\\local_iomad\\task\\migratetemplates',
+        ];
+
+        $DB->set_field('task_adhoc', 'component', 'local_iomad', ['component' => 'local_email_reports']);
+        foreach ($adhoctasks as $old => $new) {
+            $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2026010600, 'local', 'iomad');
+    }
+
+    return $result;
 }

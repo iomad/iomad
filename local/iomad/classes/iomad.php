@@ -28,6 +28,7 @@ use context;
 use context_system;
 use moodle_url;
 use cache;
+use required_capability_exception;
 
 class iomad {
 

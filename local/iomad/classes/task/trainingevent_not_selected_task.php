@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use \EmailTemplate;
+use local_iomad\emailtemplate;
 use local_iomad\company;
 
 /**
@@ -142,7 +142,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
                     // Passed all checks, send the email.
                     mtrace("Sending trainingevent not selected email to $user->email");
-                    EmailTemplate::send('trainingevent_not_selected', ['user' => $user,
+                    emailtemplate::send('trainingevent_not_selected', ['user' => $user,
                                                                        'course' => $course,
                                                                        'company' => $company]);
                 }
