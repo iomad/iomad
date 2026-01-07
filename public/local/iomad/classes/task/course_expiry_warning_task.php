@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use \EmailTemplate;
+use local_iomad\emailtemplate;
 use \context_course;
 
 /**
@@ -179,7 +179,7 @@ class course_expiry_warning_task extends \core\task\scheduled_task {
                 }
 
                 mtrace("Sending expiry warning email to $user->email");
-                EmailTemplate::send('expiry_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
+                emailtemplate::send('expiry_warn_user', ['course' => $course, 'user' => $user, 'company' => $companyobj]);
 
                 // Send the supervisor email too.
                 mtrace("Sending supervisor warning email for $user->email");

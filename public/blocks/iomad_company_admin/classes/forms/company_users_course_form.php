@@ -24,7 +24,7 @@
 namespace block_iomad_company_admin\forms;
 
 use moodleform;
-use EmailTemplate;
+use local_iomad\emailtemplate;
 use local_iomad\course_selector\potential_user;
 use local_iomad\course_selector\current_user;
 use context_system;
@@ -174,7 +174,7 @@ class company_users_course_form extends moodleform {
                             $duedate = 0;
                         }
                         company_user::enrol($this->user, array($addcourse->id), $this->selectedcompany, false, false, $duedate);
-                        EmailTemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user, 'due' => $duedate));
+                        local_iomad/emailtemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user, 'due' => $duedate));
                     }
                 }
 

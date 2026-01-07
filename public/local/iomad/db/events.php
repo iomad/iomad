@@ -206,4 +206,16 @@ $observers = [
         'callback' => 'local_iomad\observer::user_updated',
         'internal' => false,
     ],
+
+    [
+     'eventname' => 'tool_langimport\event\langpack_removed',
+     'callback' => 'local_iomad\observer::langpack_removed',
+     'internal' => false,
+    ],
+
+    [
+     'eventname' => 'tool_langimport\event\langpack_imported',
+     'callback' => 'local_iomad\observer::langpack_imported',
+     'internal' => false,
+    ],
 ];

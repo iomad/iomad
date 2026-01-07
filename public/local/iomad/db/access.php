@@ -31,4 +31,54 @@ $capabilities = [
             'manager' => CAP_ALLOW
         ],
     ],
+
+    'local/iomad:email_list' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
+    'local/iomad:email_edit' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'companymanager' => CAP_ALLOW,
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
+    'local/iomad:email_delete' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
+    'local/iomad:email_add' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
+    'local/iomad:email_send' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
+
+    'local/iomad:email_templateset_list' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW
+        ],
+    ],
 ];

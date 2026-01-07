@@ -130,7 +130,7 @@ if ($mform->is_cancelled()) {
         company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
         foreach ($data->currentcourses as $courseid) {
             $course = $DB->get_record('course', array('id' => $courseid));
-            EmailTemplate::send('user_added_to_course',
+            local_iomad/emailtemplate::send('user_added_to_course',
                                 ['course' => $course,
                                  'user' => $userdata,
                                  'due' => $data->due]);

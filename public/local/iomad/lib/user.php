@@ -155,11 +155,11 @@ class company_user {
                 set_user_preference('create_password', 1, $user->id);
                 $user->newpassword = generate_password();
                 if (!empty(get_config('local_iomad', 'email_senderisreal'))) {
-                    EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER, 'due' => $data->due));
+                    emailtemplate::send('user_create', array('user' => $user, 'sender' => $USER, 'due' => $data->due));
                 } else if (is_siteadmin($USER->id)) {
-                    EmailTemplate::send('user_create', array('user' => $user, 'due' => $data->due));
+                    emailtemplate::send('user_create', array('user' => $user, 'due' => $data->due));
                 } else {
-                    EmailTemplate::send('user_create',
+                    emailtemplate::send('user_create',
                                          array('user' => $user,
                                                'due' => $data->due,
                                                'headers' => $headers));
@@ -743,28 +743,28 @@ class company_user {
             $user->newpassword = $temppassword;
             if (!empty(get_config('local_iomad', 'email_senderisreal'))) {
                 if ($reset) {
-                    EmailTemplate::send('user_reset', array('user' => $user,
+                    emailtemplate::send('user_reset', array('user' => $user,
                                                             'company' => $company,
                                                             'sender' => $USER,
                                                             'due' => $due));
                 } else {
-                    EmailTemplate::send('user_create', array('user' => $user, 'sender' => $USER));
+                    emailtemplate::send('user_create', array('user' => $user, 'sender' => $USER));
                 }
             } else if (is_siteadmin($USER->id)) {
                 if ($reset) {
-                    EmailTemplate::send('user_reset', array('user' => $user, 'company' => $company));
+                    emailtemplate::send('user_reset', array('user' => $user, 'company' => $company));
                 } else {
-                    EmailTemplate::send('user_create', array('user' => $user, 'due' => $due));
+                    emailtemplate::send('user_create', array('user' => $user, 'due' => $due));
                 }
             } else {
                 if ($reset) {
-                    EmailTemplate::send('user_reset',
+                    emailtemplate::send('user_reset',
                                          array('user' => $user,
                                          'due' => $due,
                                          'company' => $company,
                                          'headers' => $headers));
                 } else {
-                    EmailTemplate::send('user_create',
+                    emailtemplate::send('user_create',
                                          array('user' => $user,
                                          'headers' => $headers));
                 }

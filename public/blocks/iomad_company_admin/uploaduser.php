@@ -1060,7 +1060,7 @@ if (!empty($cancelled)) {
                     company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
                     $coursecontext = context_course::instance($ccache[$shortname]->id);
                     $courserec = $DB->get_record('course', ['id' => $ccache[$shortname]->id]);
-                    EmailTemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
+                    local_iomad/emailtemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
 
                     // find group to add to
                     if (!empty($user->{'group'.$i})) {
@@ -1180,7 +1180,7 @@ if (!empty($cancelled)) {
                 company_user::enrol($user, $courseids, $companyid);
                 foreach ($courseids as $courseid) {
                     $emailcourse = $DB->get_record('course', ['id' => $courseid]);
-                    EmailTemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
+                    local_iomad/emailtemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
                 }
             }
 

@@ -23,15 +23,8 @@
 
 namespace local_iomad\task;
 
-use \EmailTemplate;
-<<<<<<<< HEAD:public/local/email_reports/classes/task/trainingevent_not_selected_task.php
-use \company;
-use \context_course;
-
-//require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-========
+use local_iomad\emailtemplate;
 use local_iomad\company;
->>>>>>>> 5bb589760bb (IOMAD: Migrate local/email_reports to local/iomad tasks - #2524):public/local/iomad/classes/task/trainingevent_not_selected_task.php
 
 /**
  * Training event not selected email scheduled task
@@ -149,7 +142,7 @@ class trainingevent_not_selected_task extends \core\task\scheduled_task {
 
                     // Passed all checks, send the email.
                     mtrace("Sending trainingevent not selected email to $user->email");
-                    EmailTemplate::send('trainingevent_not_selected', ['user' => $user,
+                    emailtemplate::send('trainingevent_not_selected', ['user' => $user,
                                                                        'course' => $course,
                                                                        'company' => $company]);
                 }

@@ -488,5 +488,129 @@
         <INDEX NAME="trackid" UNIQUE="false" FIELDS="trackid" COMMENT="[Foreign Key, trackid, local_iomad_track, id]"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="email_template" COMMENT="Table for company email templates">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="companyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="disabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="disabledmanager" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="disabledsupervisor" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="emailto" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="user id's included in the to field"/>
+        <FIELD NAME="emailtoother" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="free text for ofther to email addresses"/>
+        <FIELD NAME="emailcc" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="userids for users who should also be ccd into the email"/>
+        <FIELD NAME="emailccother" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="free field for manual cc addresses"/>
+        <FIELD NAME="emailfrom" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="user id of user the email is sent from"/>
+        <FIELD NAME="emailfromother" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="manual email address the email is from"/>
+        <FIELD NAME="emailreplyto" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="reply to user id email address"/>
+        <FIELD NAME="emailreplytoother" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="manual reply to address"/>
+        <FIELD NAME="repeatperiod" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="the repeat period for the emails in days"/>
+        <FIELD NAME="repeatvalue" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="repeatday" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="emailfromothername" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="companyid_fk" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="email" COMMENT="emails to be processed, send or that have been sent">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="templatename" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="modifiedtime" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sent" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="varsreplaced" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="companyid" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="invoiceid" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="classroomid" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="senderid" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="User ID of the person who the email is to be sent from"/>
+        <FIELD NAME="headers" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="field to hold serialized custom headers"/>
+        <FIELD NAME="due" TYPE="int" LENGTH="20" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="This is the timestamp when the email is due to be sent."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="companyid" TYPE="foreign" FIELDS="companyid" REFTABLE="company" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="invoiceid" TYPE="foreign" FIELDS="invoiceid" REFTABLE="invoice" REFFIELDS="id"/>
+        <KEY NAME="classroomid" TYPE="foreign" FIELDS="classroomid" REFTABLE="classroom" REFFIELDS="id"/>
+        <KEY NAME="senderid" TYPE="foreign" FIELDS="senderid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="email_templateset" COMMENT="list of email template sets">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="templatesetname" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Name for the template set"/>
+        <FIELD NAME="isdefault" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="email_templateset_templates" COMMENT="email templates tied to a template set">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="templateset" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="template set foreign key"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="disabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="disabledmanager" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="disabledsupervisor" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="emailto" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailtoother" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailcc" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailccother" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailfrom" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailfromother" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailreplyto" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="emailreplytoother" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="repeatperiod" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="repeatvalue" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="repeatday" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="emailfromothername" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="templateset" TYPE="foreign" FIELDS="templateset" REFTABLE="email_templateset" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="email_template_strings" COMMENT="table to hold the language strings for the email templates.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="templateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="lang" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="subject" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="signature" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="email_templ_strings_tempid" TYPE="foreign" FIELDS="templateid" REFTABLE="email_template" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="email_templ_strings_tempidlang" UNIQUE="false" FIELDS="templateid, lang"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="email_templateset_template_strings" COMMENT="table to hold the lang strings for the email_templateset_template tables">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="templatesetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="lang" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="subject" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="signature" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="email_templset_templ_str_tempid_fk" TYPE="foreign" FIELDS="templatesetid" REFTABLE="email_templateset_templates" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="email_templset_templ_str_tempidlang" UNIQUE="false" FIELDS="templatesetid, lang"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

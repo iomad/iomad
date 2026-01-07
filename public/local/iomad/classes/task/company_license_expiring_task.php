@@ -23,14 +23,7 @@
 
 namespace local_iomad\task;
 
-use \EmailTemplate;
-<<<<<<<< HEAD:public/local/email_reports/classes/task/company_license_expiring_task.php
-use \company;
-use \context_course;
-
-//require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-========
->>>>>>>> 5bb589760bb (IOMAD: Migrate local/email_reports to local/iomad tasks - #2524):public/local/iomad/classes/task/company_license_expiring_task.php
+use local_iomad\emailtemplate;
 
 /**
  * Company license expiring scheduled task
@@ -66,12 +59,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
                                            'warn' => $runtime + 30 * 24 * 60 * 60]);
         // Process any we found.
         foreach ($licenses as $license) {
-<<<<<<<< HEAD:public/local/email_reports/classes/task/company_license_expiring_task.php
-            $company = new company($license->companyid);
-            $companyusql = "";
-========
             $company = new local_iomad\company($license->companyid);
->>>>>>>> 5bb589760bb (IOMAD: Migrate local/email_reports to local/iomad tasks - #2524):public/local/iomad/classes/task/company_license_expiring_task.php
             $companysql = "";
 
             // Only want company managers not parent company managers.
@@ -96,7 +84,7 @@ class company_license_expiring_task extends \core\task\scheduled_task {
 
                     // Passed all checks, send the email.
                     mtrace("Sending license pool expiring email to $user->email");
-                    EmailTemplate::send('licensepoolexpiring', ['user' => $user,
+                    emailtemplate::send('licensepoolexpiring', ['user' => $user,
                                                                 'license' => $licenseemail,
                                                                 'company' => $company]);
                 }

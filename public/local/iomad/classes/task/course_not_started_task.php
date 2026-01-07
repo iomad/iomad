@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use EmailTemplate;
+use local_iomad\emailtemplate;
 use local_iomad\company;
 
 /**
@@ -137,13 +137,9 @@ class course_not_started_task extends \core\task\scheduled_task {
 
                             // Passed all checks, send the email.
                             mtrace("Sending not started warning email to $userrec->email");
-<<<<<<<< HEAD:public/local/email_reports/classes/task/course_not_started_task.php
-                            EmailTemplate::send('course_not_started_warning', array('user' => $userrec, 'course' => $courserec, 'company' => new company($companyrec->id)));
-========
-                            EmailTemplate::send('course_not_started_warning', ['user' => $userrec,
+                            emailtemplate::send('course_not_started_warning', ['user' => $userrec,
                                                                                'course' => $courserec,
                                                                                'company' => new company($companyrec->id)]);
->>>>>>>> 5bb589760bb (IOMAD: Migrate local/email_reports to local/iomad tasks - #2524):public/local/iomad/classes/task/course_not_started_task.php
 
                             // Send the supervisor email too.
                             mtrace("Sending not started warning email to $userrec->email supervisor");

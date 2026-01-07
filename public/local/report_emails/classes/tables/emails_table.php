@@ -25,11 +25,9 @@
 
 namespace local_report_emails\tables;
 
-use \table_sql;
-use \moodle_url;
-use \iomad;
-use \context_system;
-
+use table_sql;
+use moodle_url;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -65,7 +63,7 @@ class emails_table extends table_sql {
     public function col_templatename($row) {
         global $CFG, $DB;
 
-        return get_string($row->templatename. '_name', 'local_email');
+        return get_string($row->templatename. '_name', 'local_iomad');
     }
 
     /**

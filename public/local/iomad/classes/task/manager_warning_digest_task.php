@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use EmailTemplate;
+use local_iomad\emailtemplate;
 use local_iomad\company;
 
 /**
@@ -214,7 +214,7 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
                         $course->reporttext = $summary;
                         $course->id = 0;
                         mtrace("Sending completion summary report to $user->email");
-                        EmailTemplate::send('warning_digest_manager', ['user' => $user,
+                        emailtemplate::send('warning_digest_manager', ['user' => $user,
                                                                        'course' => $course,
                                                                        'company' => $companyobj]);
                     }

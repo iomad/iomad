@@ -21,11 +21,14 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../../config.php');
-require_once(dirname(__FILE__) . '/company.php');
-require_once(dirname(__FILE__) . '/user.php');
+namespace local_iomad;
 
-require_once($CFG->dirroot.'/lib/formslib.php');
+use moodleform;
+use context;
+use context_system;
+use moodle_url;
+use cache;
+use required_capability_exception;
 
 class iomad {
 
@@ -313,7 +316,7 @@ class iomad {
     /**
      * Add license courses to the list of my courses
      *
-     * Parameters - &$mycourses = array();
+     * Parameters - &$mycourses = [];
      *
      **/
     public static function iomad_add_license_courses(&$mycourses) {
@@ -334,7 +337,7 @@ class iomad {
     /**
      * Add shared courses to the list of courses
      *
-     * Parameters - &$courses = array();
+     * Parameters - &$courses = [];
      *
      **/
     public static function iomad_add_shared_courses(&$courses) {
@@ -392,7 +395,7 @@ class iomad {
             $user->company = company::get_company_byuserid($userid);
         }
 
-        $iomadcategories = array();
+        $iomadcategories = [];
         foreach ($categories as $id => $category) {
 
             // Try to find category in company list.
@@ -512,7 +515,7 @@ class iomad {
         }
 
         // Set up the return array;
-        $iomadcategories = array();
+        $iomadcategories = [];
 
         // Process the passed categories.
         foreach ($categories as $id => $category) {
@@ -565,7 +568,7 @@ class iomad {
 
         $mycompanyid = self::get_my_companyid($contextsystem);
 
-        $iomadcourses = array();
+        $iomadcourses = [];
         foreach ($courses as $id => $course) {
             // Try to find category in company list.
             if ($DB->get_record( 'company_course', array('courseid' => $id,
@@ -684,7 +687,7 @@ class iomad {
         $companyframeworks = $DB->get_records('company_comp_frameworks', array('companyid' => $companyid));
         $closedsharedframeworks = $DB->get_records('company_shared_frameworks', array('companyid' => $companyid));
         $opensharedframeworks = $DB->get_records('iomad_frameworks', array('shared' => 1));
-        $return = array();
+        $return = [];
         foreach($companyframeworks as $framework) {
             $return[$framework->frameworkid] = $framework->frameworkid;
         }
@@ -710,7 +713,7 @@ class iomad {
         $companytemplates = $DB->get_records('company_comp_templates', array('companyid' => $companyid));
         $closedsharedtemplates = $DB->get_records('company_shared_templates', array('companyid' => $companyid));
         $opensharedtemplates = $DB->get_records('iomad_templates', array('shared' => 1));
-        $return = array();
+        $return = [];
         foreach($companytemplates as $template) {
             $return[$template->templateid] = $template->templateid;
         }
@@ -796,7 +799,7 @@ class iomad {
             $company = new company($companyid);
 
             $companycourses = $company->get_menu_courses(true, false, false, false, false, true);
-        
+
             // Check if the passed courseid is in the list.
             if (!empty($companycourses[$courseid])) {
 
@@ -869,8 +872,8 @@ class iomad {
                            'licenseunallocatedto',
                            );
         //  Get the company additional optional user parameter names.
-        $fieldnames = array();
-        $idlist = array();
+        $fieldnames = [];
+        $idlist = [];
         $foundfields = false;
 
         if ($companyinfo = $DB->get_record('company', array('id' => $companyid))) {
@@ -902,9 +905,9 @@ class iomad {
 
         // Deal with the user optional profile search.
         if (!empty($fieldnames)) {
-            $fieldids = array();
+            $fieldids = [];
             foreach ($fieldnames as $id => $fieldname) {
-                $paramarray = array();
+                $paramarray = [];
                 if ($fields[$id]->datatype == "menu" ) {
                     $paramarray = explode("\n", $fields[$id]->param1);
                     if (${$fieldname} == "-1") {
@@ -941,7 +944,7 @@ class iomad {
                 }
             }
         }
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
         $returnobj->foundfields = $foundfields;
         $returnobj->idlist = $idlist;
 
@@ -951,13 +954,13 @@ class iomad {
     /**
      * Get a list of users provided a list of parameters
      *
-     * Parameters - &$params = array();
-     *              $idlist = array();
+     * Parameters - &$params = [];
+     *              $idlist = [];
      *              $sort = text;
      *              $dir = text;
      *              $departmentid = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_user_sqlsearch($params, $idlist='', $sort = "", $dir="ASC", $departmentid=0, $nogrades=false, $allcourse=false) {
         global $DB, $CFG;
@@ -978,10 +981,10 @@ class iomad {
             $sqlsearch .= " AND u.suspended = 0";
         }
 
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
 
         // Deal with search strings.
-        $searchparams = array();
+        $searchparams = [];
         if (!empty($idlist)) {
             $sqlsearch .= " AND u.id IN (".implode(',', array_keys($idlist)).") ";
         }
@@ -1146,7 +1149,7 @@ class iomad {
      * Parameters - $departmentid = int;
      *              $courseid = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_course_summary_info($departmentid, $courseid=0, $showsuspended=1) {
         global $DB;
@@ -1180,18 +1183,18 @@ class iomad {
         $DB->execute($tempcreatesql);
 
         // All or one course?
-        $courses = array();
+        $courses = [];
         if (!empty($courseid)) {
-            $courses[$courseid] = new stdclass();
+            $courses[$courseid] = (object) [];
             $courses[$courseid]->id = $courseid;
         } else {
             $courses = company::get_recursive_department_courses($departmentid);
         }
 
         // Process them!
-        $returnarr = array();
+        $returnarr = [];
         foreach ($courses as $course) {
-            $courseobj = new stdclass();
+            $courseobj = (object) [];
             $courseobj->id = $course->courseid;
             $courseobj->numenrolled = $DB->count_records_sql("SELECT COUNT(cc.id) FROM {course_completions} cc
                                                    JOIN {".$temptablename."} tt ON (cc.userid = tt.userid)
@@ -1259,12 +1262,12 @@ class iomad {
      *              $page = int;
      *              $perpade = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_user_course_completion_data($searchinfo, $courseid, $page=0, $perpage=0, $completiontype=0) {
         global $DB;
 
-        $completiondata = new stdclass();
+        $completiondata = (object) [];
 
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 
@@ -1319,7 +1322,7 @@ class iomad {
         $countusers = $DB->get_records_sql($countsql.$fromsql, $searchinfo->searchparams);
         $numusers = count($countusers);
 
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
         $returnobj->users = $users;
         $returnobj->totalcount = $numusers;
 
@@ -1335,12 +1338,12 @@ class iomad {
      *              $page = int;
      *              $perpade = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_all_user_course_completion_data($searchinfo, $page=0, $perpage=0, $completiontype=0) {
         global $DB;
 
-        $completiondata = new stdclass();
+        $completiondata = (object) [];
 
         // Create a temporary table to hold the userids.
         $temptablename = 'tmp_'.uniqid();
@@ -1398,7 +1401,7 @@ class iomad {
             }
         }
 
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
         $returnobj->users = $users;
         $returnobj->totalcount = $numusers;
 
@@ -1410,13 +1413,13 @@ class iomad {
     /**
      * Get a list of users provided a list of parameters
      *
-     * Parameters - &$params = array();
-     *              $idlist = array();
+     * Parameters - &$params = [];
+     *              $idlist = [];
      *              $sort = text;
      *              $dir = text;
      *              $departmentid = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_user_license_sqlsearch($params, $idlist='', $sort='lastname', $dir='ASC', $departmentid=null, $licenses=false) {
         global $DB, $CFG;
@@ -1442,10 +1445,10 @@ class iomad {
             $sqlsearch .= " AND u.suspended = 0";
         }
 
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
 
         // Deal with search strings.
-        $searchparams = array();
+        $searchparams = [];
         if (!empty($idlist)) {
             $sqlsearch .= " AND u.id IN (".implode(',', array_keys($idlist)).") ";
         }
@@ -1499,7 +1502,7 @@ class iomad {
      * Parameters - $departmentid = int;
      *              $courseid = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_course_license_summary_info($departmentid, $courseid=0, $showsuspended=false) {
         global $DB;
@@ -1533,18 +1536,18 @@ class iomad {
         $DB->execute($tempcreatesql);
 
         // All or one course?
-        $courses = array();
+        $courses = [];
         if (!empty($courseid)) {
-            $courses[$courseid] = new stdclass();
+            $courses[$courseid] = (object) [];
             $courses[$courseid]->id = $courseid;
         } else {
             $courses = company::get_recursive_department_courses($departmentid);
         }
 
         // Process them!
-        $returnarr = array();
+        $returnarr = [];
         foreach ($courses as $course) {
-            $courseobj = new stdclass();
+            $courseobj = (object) [];
             $courseobj->id = $course->courseid;
             $timestamp = time();
             $courseobj->numlicenses = $DB->count_records_sql("SELECT COUNT(clu.id) FROM {companylicense_users} clu
@@ -1580,12 +1583,12 @@ class iomad {
      *              $page = int;
      *              $perpade = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_all_user_course_license_data($searchinfo, $page=0, $perpage=0, $completiontype=0, $showsuspended = false, $showused = false) {
         global $DB;
 
-        $completiondata = new stdclass();
+        $completiondata = (object) [];
 
         // Create a temporary table to hold the userids.
         $temptablename = 'tmp_'.uniqid();
@@ -1654,7 +1657,7 @@ class iomad {
         $countusers = $DB->get_records_sql($countsql.$fromsql, $searchinfo->searchparams);
         $numusers = count($countusers);
 
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
         $returnobj->users = $users;
         $returnobj->totalcount = $numusers;
 
@@ -1667,7 +1670,7 @@ class iomad {
                            $search='', $firstinitial='', $lastinitial='', $extraselect='', array $extraparams = null) {
         global $DB;
 
-        $params = array();
+        $params = [];
 
         if (!empty($search)) {
             $search = trim($search);
@@ -1703,12 +1706,12 @@ class iomad {
      *              $page = int;
      *              $perpade = int;
      *
-     * Return array();
+     * Return [];
      **/
     public static function get_user_course_license_data($searchinfo, $courseid, $page=0, $perpage=0, $completiontype=0, $showsuspended = false, $showused = false) {
         global $DB;
 
-        $completiondata = new stdclass();
+        $completiondata = (object) [];
 
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 
@@ -1765,7 +1768,7 @@ class iomad {
         $countusers = $DB->get_records_sql($countsql.$fromsql, $searchinfo->searchparams);
         $numusers = count($countusers);
 
-        $returnobj = new stdclass();
+        $returnobj = (object) [];
         $returnobj->users = $users;
         $returnobj->totalcount = $numusers;
 
@@ -1796,7 +1799,7 @@ class iomad {
             $paths[] = $path;
         }
 
-        $roles = array();
+        $roles = [];
         $switchedrole = false;
 
         // Find out if role switched
@@ -1976,18 +1979,21 @@ class iomad {
      }
 }
 
+global $CFG;
+require_once($CFG->libdir.'/formslib.php');
+
 /**
  * Company Filter form used on the Iomad pages.
  *
  */
-class iomad_company_filter_form extends moodleform {
+class iomad_company_filter_form extends \moodleform {
     protected $companyid;
 
     public function definition() {
         global $CFG, $DB, $USER, $SESSION;
 
         $mform =& $this->_form;
-        $filtergroup = array();
+        $filtergroup = [];
         $mform->addElement('header', '', format_string(get_string('companysearchfields', 'local_iomad')));
         $mform->addElement('text', 'name', get_string('companynamefilter', 'local_iomad'), 'size="20"');
         $mform->addElement('text', 'city', get_string('companycityfilter', 'local_iomad'), 'size="20"');

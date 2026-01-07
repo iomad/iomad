@@ -53,6 +53,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_created($event) {
+        local_iomad\emailtemplate::company_created($event);
         local_iomad\company::company_created($event);
         return true;
     }
@@ -376,6 +377,28 @@ class local_iomad_observer {
      */
     public static function custompage_deleted($event) {
         local_iomad\company::custompage_deleted($event);
+        return true;
+    }
+
+    /**
+     * Triggered via tool_langimport\event::langpack_imported event.
+     *
+     * @param \tool_langimport\event\langpack_imported $event
+     * @return bool true on success.
+     */
+    public static function langpack_imported($event) {
+        local_iomad\emailtemplate::langpack_imported($event);
+        return true;
+    }
+
+    /**
+     * Triggered via tool_langimport\event::langpack_removed event.
+     *
+     * @param \tool_langimport\event\langpack_removed $event
+     * @return bool true on success.
+     */
+    public static function langpack_removed($event) {
+        local_iomad\emailtemplate::langpack_removed($event);
         return true;
     }
 }

@@ -27,7 +27,7 @@ use company;
 use company_user;
 use core_user;
 use context_system;
-use EmailTemplate;
+use local_iomad\emailtemplate;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');
@@ -380,8 +380,8 @@ class processor {
         }
 
         if ($user = $DB->get_record('user',  array('id' => $invoice->userid))) {
-            EmailTemplate::send('invoice_ordercomplete', ['user' => $user, 'invoice' => $invoice, 'sender' => $shopadmin]);
-            EmailTemplate::send('invoice_ordercomplete_admin', ['user' => $shopadmin, 'invoice' => $invoice]);
+            local_iomad/emailtemplate::send('invoice_ordercomplete', ['user' => $user, 'invoice' => $invoice, 'sender' => $shopadmin]);
+            local_iomad/emailtemplate::send('invoice_ordercomplete_admin', ['user' => $shopadmin, 'invoice' => $invoice]);
         }
     }
 }

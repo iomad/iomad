@@ -24,7 +24,7 @@
  */
 namespace mod_trainingevent\task;
 use company;
-use EmailTemplate;
+use local_iomad\emailtemplate;
 
 /**
  * Send reminder emails Task
@@ -95,7 +95,7 @@ class send_reminder_emails extends \core\task\scheduled_task {
                     // Send the reminders.
                     foreach ($eventusers as $eventuser) {
                         if ($user = $DB->get_record('user', ['id' => $eventuser->userid, 'suspended' => 0, 'deleted' => 0])) {
-                            EmailTemplate::send('user_signed_up_for_event_reminder', ['course' => $course,
+                            local_iomad/emailtemplate::send('user_signed_up_for_event_reminder', ['course' => $course,
                                                                                       'user' => $user,
                                                                                       'classroom' => $location,
                                                                                       'company' => $company,

@@ -51,6 +51,18 @@ $ADMIN->add( 'iomad', new admin_externalpage('importcompletionrecords',
             'icon' => 'fa-bar-chart-o',
             'iconsmall' => 'fa-upload',
         ],
+
+        'EmailTemplates' => [
+            'category' => 'CompanyAdmin',
+            'tab' => 1,
+            'name' => get_string('emailtemplates', 'local_iomad'),
+            'url' => '/local/iomad/template_list.php',
+            'cap' => 'local/iomad:email_list',
+            'icondefault' => 'emailtemplates',
+            'style' => 'company',
+            'icon' => 'fa-inbox',
+            'iconsmall' => 'fa-gear',
+        ],
     ];
 }
 >>>>>>>> 9c46929fd21 (IOMAD: migrate local/iomad_track to local/iomad plugin. Created a local_iomad\task\task class and updated all core code to use this for dealing with certificates - #2524):public/local/iomad/db/iomadmenu.php
