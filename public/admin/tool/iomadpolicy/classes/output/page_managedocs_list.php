@@ -39,8 +39,8 @@ use renderer_base;
 use single_button;
 use templatable;
 use tool_iomadpolicy\iomadpolicy_version;
-use company;
-use iomad;
+use local_iomad\company;
+use local_iomad\iomad;
 use context_system;
 
 /**

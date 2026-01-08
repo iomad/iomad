@@ -34,8 +34,9 @@ use stdClass;
 use tool_iomadpolicy\event\acceptance_created;
 use tool_iomadpolicy\event\acceptance_updated;
 use user_picture;
-use iomad;
-use company;
+use local_iomad\iomad;
+use local_iomad\company;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -113,8 +114,6 @@ class api {
 
         $versionfields = iomadpolicy_version::get_sql_fields('v', 'v_');
 
-        $params = [];
-
         $sql = "SELECT d.id, d.currentversionid, d.sortorder, d.companyid, $versionfields ";
 
         if ($countacceptances) {
@@ -122,9 +121,8 @@ class api {
         }
 
         // Deal with the company id.
-        if (!has_capability('tool/iomadpolicy:managedocs', context_system::instance())) {
-            $companysql = " AND d.companyid = :companyid";
-            $params = ['companyid' => $companyid];
+        if ($companyid != -1) {
+            $companysql = "AND d.companyid = :companyid";
         } else {
             $companysql = "";
         }
@@ -141,6 +139,8 @@ class api {
         }
 
         $sql .= " WHERE v.id IS NOT NULL $companysql";
+
+        $params = ['companyid' => $companyid];
 
         if ($ids) {
             list($idsql, $idparams) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED);
@@ -259,7 +259,7 @@ class api {
             }
         }
 
-        throw new \moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
+        throw new moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
     }
 
     /**
@@ -313,8 +313,7 @@ class api {
 
         // Get the companyid.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-
-        if ($companyid > 0) {
+        if (!empty($companyid)) {
             $company = new company($companyid);
         } else {
             $company = (object) ['id' => 0];
@@ -881,7 +880,7 @@ class api {
 
         if (!isloggedin() || isguestuser()) {
             if ($throwexception) {
-                throw new \moodle_exception('noguest');
+                throw new moodle_exception('noguest');
             } else {
                 return false;
             }
@@ -927,7 +926,7 @@ class api {
             if (static::get_agreement_optional($versionid) == iomadpolicy_version::AGREEMENT_COMPULSORY) {
                 // Compulsory policies can't be declined (that is what makes them compulsory).
                 if ($throwexception) {
-                    throw new \moodle_exception('erroriomadpolicyversioncompulsory', 'tool_iomadpolicy');
+                    throw new moodle_exception('erroriomadpolicyversioncompulsory', 'tool_iomadpolicy');
                 } else {
                     return false;
                 }
@@ -956,7 +955,7 @@ class api {
         // Guests' acceptance is not stored so there is nothing to revoke.
         if (!isloggedin() || isguestuser()) {
             if ($throwexception) {
-                throw new \moodle_exception('noguest');
+                throw new moodle_exception('noguest');
             } else {
                 return false;
             }

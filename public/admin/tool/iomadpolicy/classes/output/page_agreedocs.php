@@ -39,8 +39,8 @@ use single_button;
 use templatable;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
-use iomad;
-use company;
+use local_iomad\iomad;
+use local_iomad\company;
 
 /**
  * Represents a page for showing all the iomadpolicy documents which a user has to agree to.

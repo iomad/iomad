@@ -30,7 +30,7 @@ use html_writer;
 use moodleform;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
-use company;
+use local_iomad\company;
 
 defined('MOODLE_INTERNAL') || die();
 

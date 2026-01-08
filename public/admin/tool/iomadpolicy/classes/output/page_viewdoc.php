@@ -25,20 +25,19 @@
 
 namespace tool_iomadpolicy\output;
 
-use moodle_exception;
-use company;
-
 defined('MOODLE_INTERNAL') || die();
 
 use context_system;
 use moodle_url;
+use moodle_exception;
 use renderable;
 use renderer_base;
 use single_button;
 use templatable;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
-use iomad;
+use local_iomad\iomad;
+use local_iomad\company;
 
 /**
  * Represents a page for showing the given iomadpolicy document version.
@@ -100,7 +99,7 @@ class page_viewdoc implements renderable, templatable {
 
         // Get the companyid.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if ($companyid > 0) {
+        if (!empty($companyid)) {
             $company = new company($companyid);
         } else {
             $company = (object) ['id' => 0];
@@ -110,7 +109,7 @@ class page_viewdoc implements renderable, templatable {
             $this->iomadpolicy = api::get_iomadpolicy_version($versionid);
 
         } else {
-            $this->iomadpolicy = array_reduce(api::list_current_versions(null, $company->id), function ($carry, $current) use ($iomadpolicyid) {
+            $this->iomadpolicy = array_reduce(api::list_current_versions(null, $companyid), function ($carry, $current) use ($iomadpolicyid) {
                 if ($current->iomadpolicyid == $iomadpolicyid) {
                     return $current;
                 }
@@ -119,7 +118,7 @@ class page_viewdoc implements renderable, templatable {
         }
 
         if (empty($this->iomadpolicy)) {
-            throw new \moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
+            throw new moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
         }
     }
 
