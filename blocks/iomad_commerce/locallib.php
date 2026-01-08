@@ -63,7 +63,7 @@ class iomad_commerce {
         $response = self::docall($call, $payload, $companyid);
     }
 
-    public static function assign_user($user, $companyname = "", $companyid) {
+    public static function assign_user($user, $companyname="", $companyid=0) {
 
         $call = 'updateUser';
         if (empty($user->manager)) {
