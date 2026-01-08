@@ -391,7 +391,7 @@ if (!empty($cancelled)) {
                     $user->username = $perfexistinguser->username;
                 } else {
                     // No existing user matches, generate a new username.
-                    $user->username = local_iomad\local_iomad\company_user::generate_username($user->email);
+                    $user->username = local_iomad\company_user::generate_username($user->email);
                 }
                 $upt->track('username', $user->username);
             }
@@ -1004,7 +1004,7 @@ if (!empty($cancelled)) {
 
                 // Create the user and send the email.
                 $user->due = $duedate;
-                $user->id = local_iomad\local_iomad\company_user::create($user, $companyid);
+                $user->id = local_iomad\company_user::create($user, $companyid);
 
                 // Save the profile information.
                 profile_save_data($user);
@@ -1057,10 +1057,10 @@ if (!empty($cancelled)) {
                         }
                     }
 
-                    local_iomad\local_iomad\company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
+                    local_iomad\company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
                     $coursecontext = context_course::instance($ccache[$shortname]->id);
                     $courserec = $DB->get_record('course', ['id' => $ccache[$shortname]->id]);
-                    local_iomad/emailtemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
+                    local_iomad\emailtemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
 
                     // find group to add to
                     if (!empty($user->{'group'.$i})) {
@@ -1177,10 +1177,10 @@ if (!empty($cancelled)) {
                     }
                     $courseids[] = $selectedcourse;
                 }
-                local_iomad\local_iomad\company_user::enrol($user, $courseids, $companyid);
+                local_iomad\company_user::enrol($user, $courseids, $companyid);
                 foreach ($courseids as $courseid) {
                     $emailcourse = $DB->get_record('course', ['id' => $courseid]);
-                    local_iomad/emailtemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
+                    local_iomad\emailtemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
                 }
             }
 
@@ -1236,7 +1236,7 @@ if (!empty($cancelled)) {
 
 
             // If user was set to have password generated, generate it now, so that it can be downloaded.
-            local_iomad\local_iomad\company_user::generate_temporary_password($user, $formdata->sendnewpasswordemails);
+            local_iomad\company_user::generate_temporary_password($user, $formdata->sendnewpasswordemails);
         }
 
         if (!empty($licenserecord['program'])) {
@@ -1331,7 +1331,7 @@ while ($fields = $cir->next()) {
             $rowcols['username'] = $perfexistinguser->username;
         } else {
             // No existing user matches, generate a new username.
-            $rowcols['username'] = local_iomad\local_iomad\company_user::generate_username($rowcols['email']);
+            $rowcols['username'] = local_iomad\company_user::generate_username($rowcols['email']);
         }
     }
 

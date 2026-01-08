@@ -26,10 +26,11 @@
 
 namespace local_iomad_oidc_sync;
 
-use company;
-use company_user;
-use iomad;
+use local_iomad\company;
+use local_iomad\company_user;
+use local_iomad\iomad;
 use local_iomad_signup_observer;
+use core\event\user_updated;
 
 /**
  * Class definition
@@ -140,7 +141,7 @@ class oidc_sync {
         $userfields = $authplugin->userfields;
 
         // Get all of the profile field categories.
-        $profilecategories = local_iomad\iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
+        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
         $customfields = [];
         if (!empty($profilecategories)) {
             $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)
@@ -182,7 +183,7 @@ class oidc_sync {
         mtrace("Processing " . count($users) . " users from OIDC connection");
 
         // Need to set up the company so we can check it's ok to add new users.
-        $company = new local_iomad\company($companyid);
+        $company = new company($companyid);
         $hitlimit = false;
 
         // Process the users.
@@ -223,7 +224,7 @@ class oidc_sync {
                 if ($CFG->debug > DEBUG_NONE) {
                     mtrace("Adding as a new user");
                 }
-                if (!$userid = \local_iomad\company_user::create($userrec, $companyid)) {
+                if (!$userid = company_user::create($userrec, $companyid)) {
                     mtrace("failed to create user " . $userrec->username);
                     continue;
                 }
@@ -237,14 +238,14 @@ class oidc_sync {
                 }
 
                 profile_save_data($userrec);
-                \core\event\user_updated::create_from_userid($userid)->trigger();
+                user_updated::create_from_userid($userid)->trigger();
 
                 // Store this for later.
                 $foundusers[] = $userid;
             } else {
                 if ($founduser->suspended == 1 && $unsuspendonsync) {
                     // We want to unsuspend them.
-                    local_iomad\local_iomad\company_user::unsuspend($founduser->id, $companyid);
+                    company_user::unsuspend($founduser->id, $companyid);
                 }
 
                 // Sync the profile data.
@@ -294,7 +295,7 @@ class oidc_sync {
                         if ($CFG->debug > DEBUG_NONE) {
                             mtrace("Suspending userid $missinguser->id from companyid $companyid");
                         }
-                        local_iomad\local_iomad\company_user::suspend($missinguser->id, $companyid);
+                        company_user::suspend($missinguser->id, $companyid);
 
                     }
                 } else if ($useroption == 2) {
@@ -303,7 +304,7 @@ class oidc_sync {
                         if ($CFG->debug > DEBUG_NONE) {
                             mtrace("Deleting userid $missinguser->id from companyid $companyid");
                         }
-                        local_iomad\local_iomad\company_user::delete($missinguser->id, $companyid);
+                        company_user::delete($missinguser->id, $companyid);
                     }
                 }
             }

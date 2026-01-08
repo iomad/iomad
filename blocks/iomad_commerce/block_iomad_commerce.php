@@ -69,7 +69,7 @@ class block_iomad_commerce extends block_base {
                                    '">' . get_string('shop_login_title', 'block_iomad_commerce') . '</a></p>';
         } else if (!empty($CFG->commerce_enable_external)) {
             // Get and store a one time token.
-            $token = local_iomad\local_iomad\company_user::generate_token();
+            $token = local_iomad\company_user::generate_token();
             $configname = "commerce_externalshop_url_$companyid";
             if (empty($CFG->$configname)) {
                 $configname = "commerce_externalshop_url";

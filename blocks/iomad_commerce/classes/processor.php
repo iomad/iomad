@@ -22,12 +22,16 @@
  */
 
 namespace block_iomad_commerce;
-use iomad;
-use company;
-use company_user;
+
+use local_iomad\iomad;
+use local_iomad\company;
+use local_iomad\company_user;
 use core_user;
 use context_system;
+use context_course;
 use local_iomad\emailtemplate;
+use block_iomad_learningpaths\companypaths;
+use block_iomad_company_admin\event\user_license_assigned;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
@@ -38,9 +42,9 @@ class processor {
     public static function trigger_oncheckout($invoiceid) {
 
         self::process_all_items($invoiceid, 'oncheckout');
-        $_SESSION['Payment_Amount'] = \block_iomad_commerce\helper::get_basket_total();
+        $_SESSION['Payment_Amount'] = helper::get_basket_total();
 
-        \block_iomad_commerce\helper::create_invoice_reference($invoiceid);
+        helper::create_invoice_reference($invoiceid);
     }
 
     public static function trigger_onordercomplete($invoice) {
@@ -48,7 +52,7 @@ class processor {
 
         self::process_all_items($invoice->id, 'onordercomplete', $invoice );
         //self::trigger_invoiceitem_onordercomplete($invoice->id, 'onordercomplete', $invoice );
-        $invoice->status = \block_iomad_commerce\helper::INVOICESTATUS_PAID;
+        $invoice->status = helper::INVOICESTATUS_PAID;
         $DB->update_record('invoice', $invoice);
         self::email_invoices($invoice);
     }
@@ -115,7 +119,7 @@ class processor {
             if (!empty($paths) || $licensecoursecount > 0) {
                 $assignpaths = [];
                 // Get the company id
-                $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
+                $companyid = iomad::get_my_companyid(context_system::instance());
                 // Get name for company license.
                 $company = $DB->get_record('company', ['id' => $companyid]);
                 $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), get_config('local_iomad', 'date_format'));
@@ -171,11 +175,11 @@ class processor {
                         $eventother = array('licenseid' => $companylicenseid,
                                             'issuedate' => $runtime,
                                             'duedate' => $runtime);
-                        $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => \context_course::instance($pathcourse),
-                                                                                                    'objectid' => $licenseuserid,
-                                                                                                    'courseid' => $pathcourse,
-                                                                                                    'userid' => $invoice->userid,
-                                                                                                    'other' => $eventother));
+                        $event = user_license_assigned::create(array('context' => context_course::instance($pathcourse),
+                                                                     'objectid' => $licenseuserid,
+                                                                     'courseid' => $pathcourse,
+                                                                     'userid' => $invoice->userid,
+                                                                     'other' => $eventother));
                         $event->trigger();
                     }
                 }
@@ -183,11 +187,11 @@ class processor {
                     foreach ($pathcourseenrol as $pathcourse) {
                         if (!$DB->get_record('iomad_courses', ['courseid' => $pathcourse, 'licensed' => 1])) {
                             // Enrol user into course.
-                            local_iomad\local_iomad\company_user::enrol($invoice->userid, [$pathcourse]);
+                            company_user::enrol($invoice->userid, [$pathcourse]);
                         }
                     }
                 }
-                $companypaths = new \local_iomad_learningpath\companypaths($companyid, context_system::instance());
+                $companypaths = new companypaths($companyid, context_system::instance());
                 // Add user to path(s)
                 foreach ($paths as $path) {
                     $companypaths->add_users($path->pathid, [$invoice->userid]);
@@ -215,11 +219,11 @@ class processor {
                         $eventother = array('licenseid' => $companylicenseid,
                                             'issuedate' => $runtime,
                                             'duedate' => $runtime);
-                        $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => \context_course::instance($course->courseid),
-                                                                                                    'objectid' => $licenseuserid,
-                                                                                                    'courseid' => $course->courseid,
-                                                                                                    'userid' => $invoice->userid,
-                                                                                                    'other' => $eventother));
+                        $event = user_license_assigned::create(array('context' => context_course::instance($course->courseid),
+                                                                     'objectid' => $licenseuserid,
+                                                                     'courseid' => $course->courseid,
+                                                                     'userid' => $invoice->userid,
+                                                                     'other' => $eventother));
                         $event->trigger();
                     }
                 }
@@ -228,7 +232,7 @@ class processor {
                     if (!$DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
 
                         // Enrol user into course.
-                        local_iomad\local_iomad\company_user::enrol($invoice->userid, array($course->courseid));
+                        company_user::enrol($invoice->userid, array($course->courseid));
                     }
                 }
             }
@@ -246,7 +250,7 @@ class processor {
         global $DB;
 
         if ($ii = $DB->get_record('invoiceitem', array('id' => $invoiceitem->id), '*')) {
-            if ($block = \block_iomad_commerce\helper::get_license_block($ii->invoiceableitemid, $ii->license_allocation)) {
+            if ($block = helper::get_license_block($ii->invoiceableitemid, $ii->license_allocation)) {
                 $ii->currency = $block->currency;
                 $ii->price = $block->price;
                 $ii->license_validlength = $block->validlength;
@@ -264,7 +268,7 @@ class processor {
         $transaction = $DB->start_delegated_transaction();
         try {
             // Get name for company license.
-            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
+            $companyid = iomad::get_my_companyid(context_system::instance());
             $company = $DB->get_record('company', ['id' => $companyid]);
             $item = $DB->get_record('course_shopsettings', ['id' => $invoiceitem->invoiceableitemid]);
             $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $item->id]);
@@ -343,8 +347,8 @@ class processor {
             return;
         }
 
-        $basket = \block_iomad_commerce\helper::get_basket_by_id($invoice->id, \block_iomad_commerce\helper::INVOICESTATUS_PAID);
-        $invoice->itemized = \block_iomad_commerce\helper::get_invoice_html($basket->id, 0, 0);
+        $basket = helper::get_basket_by_id($invoice->id, helper::INVOICESTATUS_PAID);
+        $invoice->itemized = helper::get_invoice_html($basket->id, 0, 0);
 
         // Notify shop admin.
         if (isset($CFG->commerce_admin_email)) {
@@ -380,8 +384,8 @@ class processor {
         }
 
         if ($user = $DB->get_record('user',  array('id' => $invoice->userid))) {
-            local_iomad/emailtemplate::send('invoice_ordercomplete', ['user' => $user, 'invoice' => $invoice, 'sender' => $shopadmin]);
-            local_iomad/emailtemplate::send('invoice_ordercomplete_admin', ['user' => $shopadmin, 'invoice' => $invoice]);
+            emailtemplate::send('invoice_ordercomplete', ['user' => $user, 'invoice' => $invoice, 'sender' => $shopadmin]);
+            emailtemplate::send('invoice_ordercomplete_admin', ['user' => $shopadmin, 'invoice' => $invoice]);
         }
     }
 }

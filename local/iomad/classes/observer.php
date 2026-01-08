@@ -42,7 +42,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_course_updated($event) {
-        local_iomad\track\track::company_course_updated($event);
+        local_iomad\track::company_course_updated($event);
         return true;
     }
 
@@ -98,7 +98,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_license_updated($event) {
-        local_iomad\track\track::company_license_updated($event);
+        local_iomad\track::company_license_updated($event);
         local_iomad\company::company_license_updated($event);
         return true;
     }
@@ -143,7 +143,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_user_assigned($event) {
-        local_iomad\track\track::company_user_assigned($event);
+        local_iomad\track::company_user_assigned($event);
         local_iomad\company::company_user_assigned($event);
         return true;
     }
@@ -210,7 +210,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function course_completed($event) {
-        local_iomad\track\track::course_completed($event);
+        local_iomad\track::course_completed($event);
         local_iomad\company::course_completed($event);
         return true;
     }
@@ -233,7 +233,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function course_updated($event) {
-        local_iomad\track\track::course_updated($event);
+        local_iomad\track::course_updated($event);
         return true;
     }
 
@@ -244,7 +244,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_enrolment_created($event) {
-        local_iomad\track\track::user_enrolment_created($event);
+        local_iomad\track::user_enrolment_created($event);
         local_iomad\company::user_enrolment_created($event);
         return true;
     }
@@ -256,7 +256,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_enrolment_deleted($event) {
-        local_iomad\track\track::user_enrolment_deleted($event);
+        local_iomad\track::user_enrolment_deleted($event);
         return true;
     }
 
@@ -296,7 +296,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_graded($event) {
-        local_iomad\track\track::user_graded($event);
+        local_iomad\track::user_graded($event);
         return true;
     }
 
@@ -318,7 +318,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_license_assigned($event) {
-        local_iomad\track\track::user_license_assigned($event);
+        local_iomad\track::user_license_assigned($event);
         local_iomad\company::user_license_assigned($event);
         return true;
     }
@@ -330,7 +330,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_license_unassigned($event) {
-        local_iomad\track\track::user_license_unassigned($event);
+        local_iomad\track::user_license_unassigned($event);
         local_iomad\company::user_license_unassigned($event);
         return true;
     }
@@ -342,7 +342,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_license_used($event) {
-        local_iomad\track\track::user_license_used($event);
+        local_iomad\track::user_license_used($event);
         local_iomad\company::user_license_used($event);
         return true;
     }

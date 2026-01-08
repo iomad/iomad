@@ -368,7 +368,7 @@ class iomad_approve_access {
         $mymanagers = $company->get_my_managers($user->id, $managertype);
         foreach ($mymanagers as $mymanager) {
             if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                local_iomad/emailtemplate::send('course_classroom_approval', ['course' => $course,
+                local_iomad\emailtemplate::send('course_classroom_approval', ['course' => $course,
                                                                   'user' => $manageruser,
                                                                   'approveuser' => $user,
                                                                   'event' => $trainingevent,
@@ -449,7 +449,7 @@ class iomad_approve_access {
         $mymanagers = $company->get_my_managers($user->id, $managertype);
         foreach ($mymanagers as $mymanager) {
             if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                local_iomad/emailtemplate::send('course_classroom_approval', ['course' => $course,
+                local_iomad\emailtemplate::send('course_classroom_approval', ['course' => $course,
                                                                   'user' => $manageruser,
                                                                   'approveuser' => $user,
                                                                   'event' => $trainingevent,

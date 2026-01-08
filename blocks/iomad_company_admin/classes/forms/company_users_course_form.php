@@ -174,7 +174,7 @@ class company_users_course_form extends moodleform {
                             $duedate = 0;
                         }
                         company_user::enrol($this->user, array($addcourse->id), $this->selectedcompany, false, false, $duedate);
-                        local_iomad/emailtemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user, 'due' => $duedate));
+                        emailtemplate::send('user_added_to_course', array('course' => $addcourse, 'user' => $this->user, 'due' => $duedate));
                     }
                 }
 

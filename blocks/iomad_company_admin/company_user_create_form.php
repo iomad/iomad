@@ -107,7 +107,7 @@ if ($mform->is_cancelled()) {
         $departmentid = $parentdepartment->id;
     }
 
-    if (!$userid = local_iomad\local_iomad\company_user::create($data, $companyid)) {
+    if (!$userid = local_iomad\company_user::create($data, $companyid)) {
         $this->verbose("Error inserting a new user in the database!");
         if (!$this->get('ignore_errors')) {
             die();
@@ -127,10 +127,10 @@ if ($mform->is_cancelled()) {
     // Enrol the user on the courses.
     if (!empty($data->currentcourses)) {
         $userdata = $DB->get_record('user', array('id' => $userid));
-        local_iomad\local_iomad\company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
+        local_iomad\company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
         foreach ($data->currentcourses as $courseid) {
             $course = $DB->get_record('course', array('id' => $courseid));
-            local_iomad/emailtemplate::send('user_added_to_course',
+            local_iomad\emailtemplate::send('user_added_to_course',
                                 ['course' => $course,
                                  'user' => $userdata,
                                  'due' => $data->due]);

@@ -2497,7 +2497,7 @@ class block_iomad_company_admin_external extends external_api {
                     $event->trigger();
                 }
             } else {
-                local_iomad\local_iomad\company_user::enrol($user, array($enrolment['courseid']), $company->id);
+                local_iomad\company_user::enrol($user, array($enrolment['courseid']), $company->id);
             }
         }
 

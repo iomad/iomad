@@ -27,6 +27,8 @@ use context_system;
 use context_course;
 use moodle_url;
 use cache;
+use core\event\user_enrolment_created;
+use block_iomad_company_admin\event\user_license_assigned;
 
 global $CFG;
 require_once($CFG->libdir.'/formslib.php');
@@ -500,7 +502,7 @@ class company_user {
                                 $DB->set_field('local_iomad_track', 'completedstop', 1, ['id' => $completedrecord->id]);
                             }
                             // Clear them from the course.
-                            local_iomad\local_iomad\company_user::delete_user_course($user->id, $courseid, 'autodelete');
+                            company_user::delete_user_course($user->id, $courseid, 'autodelete');
 
                             // Then re-enrol them.
                             $manual->enrol_user($manualcache[$courseid], $user->id, $rid, $today, $timeend, ENROL_USER_ACTIVE);
@@ -508,10 +510,10 @@ class company_user {
 
                     role_assign($rid, $user->id, context_course::instance($courseid));
                     // Fire a duplicate enrol event so we can add it to the tracking tables.
-                    $event = \core\event\user_enrolment_created::create(
+                    $event = user_enrolment_created::create(
                              ['objectid' => $userenrolment->id,
                               'courseid' => $courseid,
-                              'context' => \context_course::instance($courseid),
+                              'context' => context_course::instance($courseid),
                               'relateduserid' => $user->id,
                               'other' => ['enrol' => 'manual']
                              ]
@@ -1138,11 +1140,11 @@ class company_user {
                                 $eventother = array('licenseid' => $licenserecord->id,
                                                     'issuedate' => time(),
                                                     'duedate' => 0);
-                                $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($courseid),
-                                                                                                              'objectid' => $licenserecord->id,
-                                                                                                              'courseid' => $courseid,
-                                                                                                              'userid' => $userid,
-                                                                                                              'other' => $eventother));
+                                $event = user_license_assigned::create(array('context' => context_course::instance($courseid),
+                                                                             'objectid' => $licenserecord->id,
+                                                                             'courseid' => $courseid,
+                                                                             'userid' => $userid,
+                                                                             'other' => $eventother));
                                 $event->trigger();
                             } else {
                                 // Can we get a newer license?
@@ -1152,11 +1154,11 @@ class company_user {
                                     $eventother = array('licenseid' => $newlicense->licenseid,
                                                         'issuedate' => time(),
                                                         'duedate' => 0);
-                                    $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($courseid),
-                                                                                                                  'objectid' => $newlicense->id,
-                                                                                                                  'courseid' => $courseid,
-                                                                                                                  'userid' => $userid,
-                                                                                                                  'other' => $eventother));
+                                    $event = user_license_assigned::create(array('context' => context_course::instance($courseid),
+                                                                                 'objectid' => $newlicense->id,
+                                                                                 'courseid' => $courseid,
+                                                                                 'userid' => $userid,
+                                                                                 'other' => $eventother));
                                     $event->trigger();
                                 }
                             }

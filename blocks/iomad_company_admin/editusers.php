@@ -308,7 +308,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually delete the user.
-        local_iomad\local_iomad\company_user::generate_temporary_password($user, true, true);
+        local_iomad\company_user::generate_temporary_password($user, true, true);
     }
 } else if ($delete and confirm_sesskey()) {              // Delete a selected user, after confirmation.
 
@@ -339,7 +339,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually delete the user.
-        local_iomad\local_iomad\company_user::delete($user->id, $companyid);
+        local_iomad\company_user::delete($user->id, $companyid);
 
         // Create an event for this.
         $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
@@ -381,7 +381,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually suspend the user.
-        local_iomad\local_iomad\company_user::suspend($user->id, $companyid);
+        local_iomad\company_user::suspend($user->id, $companyid);
 
         // Create an event for this.
         $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
@@ -430,7 +430,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually unsuspend the user.
-        local_iomad\local_iomad\company_user::unsuspend($user->id, $companyid);
+        local_iomad\company_user::unsuspend($user->id, $companyid);
 
         // Create an event for this.
         $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);

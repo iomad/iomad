@@ -1004,7 +1004,7 @@ class microlearning {
                         // Get the nugget link.
                         $nugget->url = new moodle_url($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$scheduleuser->accesskey));
                         // Fire the email.
-                        local_iomad/emailtemplate::send('microlearning_nugget_scheduled', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
+                        local_iomad\emailtemplate::send('microlearning_nugget_scheduled', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
                         $DB->set_field('microlearning_thread_user', 'message_delivered', true, array('id' => $scheduleuser->id));
                     }
                 }
@@ -1040,7 +1040,7 @@ class microlearning {
                         $nugget->name = format_text($nugget->name);
                         $nugget->url = new moodle_url($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$reminder1user->accesskey));
                         // Fire the email.
-                        local_iomad/emailtemplate::send('microlearning_nugget_reminder1', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
+                        local_iomad\emailtemplate::send('microlearning_nugget_reminder1', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
                     }
                 }
                 $DB->update_record('microlearning_thread_user', $reminder1user);
@@ -1076,7 +1076,7 @@ class microlearning {
                         $nugget->name = format_text($nugget->name);
                         $nugget->url = new moodle_url($company->get_wwwroot() . '/blocks/iomad_microlearning/land.php', array('nuggetid' => $nugget->id, 'userid' => $user->id, 'accesskey' =>$reminder2user->accesskey));
                         // Fire the email.
-                        local_iomad/emailtemplate::send('microlearning_nugget_reminder2', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
+                        local_iomad\emailtemplate::send('microlearning_nugget_reminder2', array('user' => $user, 'company' => $company, 'nugget' => $nugget));
                     }
                 }
                 $DB->update_record('microlearning_thread_user', $reminder2user);

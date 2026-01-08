@@ -510,7 +510,7 @@ function trainingevent_user_attending($event) {
         !empty($event->other['waitlisted'])) {
 
         // Send the added to waiting list email.
-        local_iomad/emailtemplate::send('user_signed_up_to_waitlist', ['course' => $course,
+        local_iomad\emailtemplate::send('user_signed_up_to_waitlist', ['course' => $course,
                                                            'user' => $user,
                                                            'classroom' => $location,
                                                            'company' => $company,
@@ -526,7 +526,7 @@ function trainingevent_user_attending($event) {
     // Send an email as long as it hasn't already started.
     if ($sendemails &&
         $trainingevent->startdatetime > $event->timecreated) {
-        local_iomad/emailtemplate::send('user_signed_up_for_event', ['course' => $course,
+        local_iomad\emailtemplate::send('user_signed_up_for_event', ['course' => $course,
                                                          'user' => $user,
                                                          'classroom' => $location,
                                                          'company' => $company,
@@ -584,7 +584,7 @@ function trainingevent_user_attending($event) {
 
             // Send an email as long as it hasn't already started.
             if ($trainingevent->startdatetime > $event->timecreated) {
-                local_iomad/emailtemplate::send('user_signed_up_for_event_teacher', ['course' => $course,
+                local_iomad\emailtemplate::send('user_signed_up_for_event_teacher', ['course' => $course,
                                                                          'approveuser' => $user,
                                                                          'user' => $userteacher,
                                                                          'classroom' => $location,
@@ -664,7 +664,7 @@ function trainingevent_user_removed($event) {
         } else {
             $emailtemplatename = "user_removed_from_event";
         }
-        local_iomad/emailtemplate::send($emailtemplatename, ['course' => $course,
+        local_iomad\emailtemplate::send($emailtemplatename, ['course' => $course,
                                                  'user' => $user,
                                                  'classroom' => $location,
                                                  'company' => $company,
@@ -697,7 +697,7 @@ function trainingevent_user_removed($event) {
 
             // Send an email as long as it hasn't already started.
             if ($trainingevent->startdatetime > $event->timecreated) {
-                local_iomad/emailtemplate::send('user_removed_from_event_teacher', ['course' => $course,
+                local_iomad\emailtemplate::send('user_removed_from_event_teacher', ['course' => $course,
                                                                         'approveuser' => $user,
                                                                         'user' => $userteacher,
                                                                         'classroom' => $location,
@@ -835,14 +835,14 @@ function trainingevent_attendance_changed($event) {
 
     // Send an email as long as it hasn't already started.
     if ($trainingevent->startdatetime > $event->timecreated) {
-        local_iomad/emailtemplate::send('user_removed_from_event', ['course' => $course,
+        local_iomad\emailtemplate::send('user_removed_from_event', ['course' => $course,
                                                         'user' => $user,
                                                         'classroom' => $location,
                                                         'company' => $company,
                                                         'event' => $trainingevent]);
         if (!empty($trainingevent->emailteachers)) {
             foreach ($userteachers as $userteacher) {
-                local_iomad/emailtemplate::send('user_removed_from_event_teacher', ['course' => $course,
+                local_iomad\emailtemplate::send('user_removed_from_event_teacher', ['course' => $course,
                                                                         'approveuser' => $user,
                                                                         'user' => $userteacher,
                                                                         'classroom' => $location,
@@ -854,7 +854,7 @@ function trainingevent_attendance_changed($event) {
 
     // Deal with the chosen event.
     if ($chosenevent->startdatetime > $event->timecreated) {
-        local_iomad/emailtemplate::send('user_signed_up_for_event', ['course' => $course,
+        local_iomad\emailtemplate::send('user_signed_up_for_event', ['course' => $course,
                                                          'user' => $user,
                                                          'classroom' => $chosenlocation,
                                                          'company' => $company,
@@ -862,7 +862,7 @@ function trainingevent_attendance_changed($event) {
 
         if (!empty($chosenevent->emailteachers)) {
             foreach ($userteachers as $userteacher) {
-                local_iomad/emailtemplate::send('user_signed_up_for_event_teacher', ['course' => $course,
+                local_iomad\emailtemplate::send('user_signed_up_for_event_teacher', ['course' => $course,
                                                                          'approveuser' => $user,
                                                                          'user' => $userteacher,
                                                                          'classroom' => $chosenlocation,

@@ -675,7 +675,7 @@ if ($mform->is_cancelled()) {
         }
 
         if (local_iomad\company_user::is_company_user()) {
-            local_iomad\local_iomad\company_user::reload_company();
+            local_iomad\company_user::reload_company();
         }
     }
 

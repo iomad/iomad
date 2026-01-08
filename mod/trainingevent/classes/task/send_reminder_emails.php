@@ -23,7 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace mod_trainingevent\task;
-use company;
+
+use local_iomad\company;
 use local_iomad\emailtemplate;
 
 /**
@@ -79,7 +80,7 @@ class send_reminder_emails extends \core\task\scheduled_task {
                     }
 
                     // Set the company up for the emails.
-                    $company = new local_iomad\company($location->companyid);
+                    $company = new company($location->companyid);
 
                     // Get all of the users for this event.
                     $eventusers = $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
@@ -95,7 +96,7 @@ class send_reminder_emails extends \core\task\scheduled_task {
                     // Send the reminders.
                     foreach ($eventusers as $eventuser) {
                         if ($user = $DB->get_record('user', ['id' => $eventuser->userid, 'suspended' => 0, 'deleted' => 0])) {
-                            local_iomad/emailtemplate::send('user_signed_up_for_event_reminder', ['course' => $course,
+                            emailtemplate::send('user_signed_up_for_event_reminder', ['course' => $course,
                                                                                       'user' => $user,
                                                                                       'classroom' => $location,
                                                                                       'company' => $company,

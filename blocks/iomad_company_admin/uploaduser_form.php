@@ -222,7 +222,7 @@ class admin_uploaduser_form2 extends company_moodleform {
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
         } else {
-            $companyid = local_iomad\local_iomad\company_user::companyid();
+            $companyid = local_iomad\company_user::companyid();
         }
 
         // Get the department list.
