@@ -100,7 +100,7 @@ class page_viewdoc implements renderable, templatable {
 
         // Get the companyid.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
+        if ($companyid > 0) {
             $company = new company($companyid);
         } else {
             $company = (object) ['id' => 0];
@@ -110,7 +110,7 @@ class page_viewdoc implements renderable, templatable {
             $this->iomadpolicy = api::get_iomadpolicy_version($versionid);
 
         } else {
-            $this->iomadpolicy = array_reduce(api::list_current_versions(null, $companyid), function ($carry, $current) use ($iomadpolicyid) {
+            $this->iomadpolicy = array_reduce(api::list_current_versions(null, $company->id), function ($carry, $current) use ($iomadpolicyid) {
                 if ($current->iomadpolicyid == $iomadpolicyid) {
                     return $current;
                 }
