@@ -135,7 +135,7 @@ class block_iomad_company_admin_external extends external_api {
             $event->trigger();
 
             // Set up default department.
-            company::initialise_departments($companyid);
+            local_iomad\company::initialise_departments($companyid);
 
             $newcompany = $DB->get_record('company', array('id' => $companyid));
             $companyinfo[] = (array)$newcompany;
@@ -157,7 +157,7 @@ class block_iomad_company_admin_external extends external_api {
             // Deal with default email template set.
             if ($emailtemplateset = $DB->get_record('email_templateset', ['isdefault' => 1])) {
 
-                $companyobj = new company($companyid);
+                $companyobj = new local_iomad\company($companyid);
                 $companyobj->apply_email_templates($emailtemplateset->id);
             }
 
@@ -801,7 +801,7 @@ class block_iomad_company_admin_external extends external_api {
         }
 
         foreach ($companies as $companyid => $company) {
-            $comp = new company($company->id);
+            $comp = new local_iomad\company($company->id);
             $companycourses = [];
             $courses = $comp->get_menu_courses($params['shared'], false, false, false);
             foreach ($courses as $courseid => $course) {
@@ -940,12 +940,12 @@ class block_iomad_company_admin_external extends external_api {
             }
 
             // Set up the company.
-            $company = new company($userrecord['companyid']);
+            $company = new local_iomad\company($userrecord['companyid']);
 
             // Did we get passed a departmentid?
             if (empty($userrecord['departmentid'])) {
                 // Get the top level department.
-                $toplevel = company::get_company_parentnode($company->id);
+                $toplevel = local_iomad\company::get_company_parentnode($company->id);
                 $userrecord['departmentid'] = $toplevel->id;
             }
 
@@ -955,7 +955,7 @@ class block_iomad_company_admin_external extends external_api {
                 $errormessage = get_string('maxuserswarning', 'block_iomad_company_admin', $maxusers);
             }
 
-            if (!company::upsert_company_user($userrecord['userid'],
+            if (!local_iomad\company::upsert_company_user($userrecord['userid'],
                                               $company->id,
                                               $userrecord['departmentid'],
                                               $userrecord['managertype'],
@@ -1057,7 +1057,7 @@ class block_iomad_company_admin_external extends external_api {
                 $succeeded = false;
                 continue;
             }
-            $company = new company($userrecord['companyid']);
+            $company = new local_iomad\company($userrecord['companyid']);
             if (!$company->assign_user_to_department($userrecord['departmentid'],
                                                      $userrecord['userid'],
                                                      $userrecord['managertype'],
@@ -1138,7 +1138,7 @@ class block_iomad_company_admin_external extends external_api {
                 $succeeded = false;
                 continue;
             }
-            $company = new company($userrecord['companyid']);
+            $company = new local_iomad\company($userrecord['companyid']);
             if (!$company->unassign_user_from_company($userrecord['userid'], true)) {
                 $succeeded = false;
             }
@@ -1319,7 +1319,7 @@ class block_iomad_company_admin_external extends external_api {
             if (!$course = $DB->get_record('course', array('id' => $courserecord['courseid']))) {
                 $succeeded = false;
             } else {
-                $company = new company($courserecord['companyid']);
+                $company = new local_iomad\company($courserecord['companyid']);
                 $company->add_course($course, $courserecord['departmentid'], $courserecord['owned'], $courserecord['licensed']);
             }
         }
@@ -1387,7 +1387,7 @@ class block_iomad_company_admin_external extends external_api {
             if (!$course = $DB->get_record('course', array('id' => $courserecord['courseid']))) {
                 $succeeded = false;
             } else {
-                company::remove_course($course, $courserecord['companyid']);
+                local_iomad\company::remove_course($course, $courserecord['companyid']);
             }
         }
 
@@ -2389,7 +2389,7 @@ class block_iomad_company_admin_external extends external_api {
                                                          JOIN {company_course} cc ON c.id = cc.companyid
                                                          WHERE cc.courseid = :courseid",
                                                          ['courseid' => $enrolment['courseid']])) {
-                if (!$company = company::by_userid($enrolment['userid'])) {
+                if (!$company = local_iomad\company::by_userid($enrolment['userid'])) {
                     continue;
                 } else {
                     $gotcompany = true;
@@ -2407,7 +2407,7 @@ class block_iomad_company_admin_external extends external_api {
                 } else {
                     // Use the first of these as the company.
                     $companydetails = reset($usercompanies);
-                    $company = new company($companydetails->companyid);
+                    $company = new local_iomad\company($companydetails->companyid);
                     $gotcompany = true;
                 }
             }
@@ -2415,7 +2415,7 @@ class block_iomad_company_admin_external extends external_api {
             if (!$gotcompany) {
                 // Company will be the company the course is allocated to.
                 $companydetails = reset($companycourses);
-                $company = new company($companydetails->companyid);
+                $company = new local_iomad\company($companydetails->companyid);
             }
 
             // Set the $SESSION value for this company so it can be populated in events
@@ -2497,7 +2497,7 @@ class block_iomad_company_admin_external extends external_api {
                     $event->trigger();
                 }
             } else {
-                company_user::enrol($user, array($enrolment['courseid']), $company->id);
+                local_iomad\company_user::enrol($user, array($enrolment['courseid']), $company->id);
             }
         }
 
@@ -2708,7 +2708,7 @@ class block_iomad_company_admin_external extends external_api {
 
         // Security.
         $context = context_system::instance();
-        iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $context);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $context);
 
         if (empty($params['templateid'])) {
 
@@ -2798,7 +2798,7 @@ class block_iomad_company_admin_external extends external_api {
 
         // Security.
         $context = context_system::instance();
-        iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $context);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:restrict_capabilities', $context);
 
         $DB->delete_records('company_role_templates_caps', ['templateid' => $params['templateid']]);
         $DB->delete_records('company_role_templates', ['id' => $params['templateid']]);
@@ -2845,7 +2845,7 @@ class block_iomad_company_admin_external extends external_api {
 
         // Security.
         $context = \core\context\company::instance($license->companyid);
-        iomad::require_capability('block/iomad_company_admin:allocate_licenses', $context);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:allocate_licenses', $context);
 
         // Get license courses (with extra)
         $sql = 'SELECT co.id AS id, co.fullname AS fullname
@@ -2924,7 +2924,7 @@ class block_iomad_company_admin_external extends external_api {
 
         // Security.
         $context = context_system::instance();
-        iomad::require_capability('block/iomad_company_admin:company_view_all', $context);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:company_view_all', $context);
 
         // Get user
         $user = $DB->get_record('user', ['id' => $params['userid']], '*', MUST_EXIST);

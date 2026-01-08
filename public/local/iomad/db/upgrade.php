@@ -787,7 +787,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                     foreach ($companymanagers as $companymanager) {
                         if ($user = $DB->get_record('user', array('id' => $companymanager->userid,
                                                                   'deleted' => 0))) {
-                            company_user::enrol($user, array($companycourse->courseid),
+                            local_iomad\company_user::enrol($user, array($companycourse->courseid),
                                                              $companycourse->companyid,
                                                              $companycoursenoneditorid);
                         }
@@ -803,10 +803,10 @@ function xmldb_local_iomad_upgrade($oldversion) {
                             array('id' => $companymanager->userid, 'deleted' => 0))) {
                             if ($companymanager->departmentmanager) {
                                 // Lowly department manager, no more than that.
-                                company_user::enrol($user, array($companycourse->courseid),
+                                local_iomad\company_user::enrol($user, array($companycourse->courseid),
                                 $companycourse->companyid, $companycoursenoneditorid);
                             } else {
-                                company_user::enrol($user, array($companycourse->courseid),
+                                local_iomad\company_user::enrol($user, array($companycourse->courseid),
                                 $companycourse->companyid, $companycourseeditorid);
                             }
                         }
@@ -1839,7 +1839,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
                 // Does the license have any courses left?
                 if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
-                    company::update_license_usage($courselicense->licenseid);
+                    local_iomad\company::update_license_usage($courselicense->licenseid);
                 } else {
                     // Delete the license.  It no longer is valid.
                     $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
@@ -1929,7 +1929,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
             // Update usage of affected licenses.
             foreach ($licenses as $license) {
-                company::update_license_usage($license);
+                local_iomad\company::update_license_usage($license);
             }
         }
 
@@ -2135,7 +2135,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 }
                 // Deal with the erroneous users.
                 foreach ($affectedusers as $affecteduser) {
-                    company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
+                    local_iomad\company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
                 }
             }
         }
@@ -2603,6 +2603,11 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
     if ($oldversion < 2025123100) {
         // Moving IOMAD settings from local_iomad_settings plugin using $CFG to local_iomad get_config.
+        mtrace("");
+        mtrace("Moving local/iomad_settings, local/iomad_signup, local/email_reports,");
+        mtrace("local/course_selector, local/framework_selector and local/template_selector");
+        mtrace("plugin code to local/iomad");
+
 
         // Set up the plugin config object - and copy settings over from $CFG.
         $options = [
@@ -2675,12 +2680,38 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $DB->set_field('task_scheduled', 'classname', $new, ['classname' => $old]);
         }
 
+        mtrace("");
+        mtrace("Uninstalling the old plugins.");
+        $oldplugins = [
+            'local_iomad_settings',
+            'local_iomad_signup',
+            'local_email_reports',
+            'local_course_selector',
+            'local_template_selector',
+            'local_framework_selector',
+        ];
+        $pluginman = core_plugin_manager::instance();
+
+        foreach ($oldplugins as $plugin) {
+            if ($pluginman->can_uninstall_plugin($plugin)) {
+                mtrace('Uninstalling: ' . $plugin);
+                $progress = new progress_trace_buffer(new text_progress_trace(), true);
+                $pluginman->uninstall_plugin($plugin, $progress);
+                $progress->finished();
+                mtrace($progress->get_buffer());
+            } else {
+                mtrace('Can not be uninstalled: ' . $plugin);
+            }
+        }
+
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2025123100, 'local', 'iomad');
     }
 
     if ($oldversion < 2026010500) {
         // Moving local/iomad_track to local/iomad.
+        mtrace("");
+        mtrace("Moving local/iomad_track plugin code to local/iomad");
 
         // Set the list of capabilities we are changing from and to.
         $capabilites = [
@@ -2713,12 +2744,33 @@ function xmldb_local_iomad_upgrade($oldversion) {
             $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
         }
 
+        mtrace("");
+        mtrace("Uninstalling the old plugins.");
+        $oldplugins = [
+            'local_iomad_track',
+        ];
+        $pluginman = core_plugin_manager::instance();
+
+        foreach ($oldplugins as $plugin) {
+            if ($pluginman->can_uninstall_plugin($plugin)) {
+                mtrace('Uninstalling: ' . $plugin);
+                $progress = new progress_trace_buffer(new text_progress_trace(), true);
+                $pluginman->uninstall_plugin($plugin, $progress);
+                $progress->finished();
+                mtrace($progress->get_buffer());
+            } else {
+                mtrace('Can not be uninstalled: ' . $plugin);
+            }
+        }
+
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2026010500, 'local', 'iomad');
     }
 
     if ($oldversion < 2026010600) {
         // Moving local/email to local/iomad.
+        mtrace("");
+        mtrace("Moving local/email plugin code to local/iomad");
 
         // Set the list of capabilities we are changing from and to.
         $capabilites = [
@@ -2761,6 +2813,25 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $DB->set_field('task_adhoc', 'component', 'local_iomad', ['component' => 'local_email_reports']);
         foreach ($adhoctasks as $old => $new) {
             $DB->set_field('task_adhoc', 'classname', $new, ['classname' => $old]);
+        }
+
+        mtrace("");
+        mtrace("Uninstalling the old plugins.");
+        $oldplugins = [
+            'local_email',
+        ];
+        $pluginman = core_plugin_manager::instance();
+
+        foreach ($oldplugins as $plugin) {
+            if ($pluginman->can_uninstall_plugin($plugin)) {
+                mtrace('Uninstalling: ' . $plugin);
+                $progress = new progress_trace_buffer(new text_progress_trace(), true);
+                $pluginman->uninstall_plugin($plugin, $progress);
+                $progress->finished();
+                mtrace($progress->get_buffer());
+            } else {
+                mtrace('Can not be uninstalled: ' . $plugin);
+            }
         }
 
         // Iomad savepoint reached.

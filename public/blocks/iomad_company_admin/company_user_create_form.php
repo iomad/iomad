@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/user/editlib.php');
 require_once('lib.php');
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
-$companyid = optional_param('companyid', company_user::companyid(), PARAM_INTEGER);
+$companyid = optional_param('companyid', local_iomad\company_user::companyid(), PARAM_INTEGER);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $createdok = optional_param('createdok', 0, PARAM_INTEGER);
 $licenseid = optional_param('licenseid', 0, PARAM_INTEGER);
@@ -43,11 +43,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:user_create', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:user_create', $companycontext);
 
 $urlparams = array('companyid' => $companyid);
 if ($returnurl) {
@@ -103,11 +103,11 @@ if ($mform->is_cancelled()) {
 
     // Company managers can't be added to a specified department.
     if ($data->managertype == 1) {
-        $parentdepartment = company::get_company_parentnode($companyid);
+        $parentdepartment = local_iomad\company::get_company_parentnode($companyid);
         $departmentid = $parentdepartment->id;
     }
 
-    if (!$userid = company_user::create($data, $companyid)) {
+    if (!$userid = local_iomad\company_user::create($data, $companyid)) {
         $this->verbose("Error inserting a new user in the database!");
         if (!$this->get('ignore_errors')) {
             die();
@@ -122,15 +122,15 @@ if ($mform->is_cancelled()) {
     \core\event\user_updated::create_from_userid($userid)->trigger();
 
     // Process any department moves or promotions.
-    company::upsert_company_user($userid, $companyid, $departmentid, $data->managertype, $data->educator, false, true);
+    local_iomad\company::upsert_company_user($userid, $companyid, $departmentid, $data->managertype, $data->educator, false, true);
 
     // Enrol the user on the courses.
     if (!empty($data->currentcourses)) {
         $userdata = $DB->get_record('user', array('id' => $userid));
-        company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
+        local_iomad\company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
         foreach ($data->currentcourses as $courseid) {
             $course = $DB->get_record('course', array('id' => $courseid));
-            local_iomad/emailtemplate::send('user_added_to_course',
+            local_iomad\emailtemplate::send('user_added_to_course',
                                 ['course' => $course,
                                  'user' => $userdata,
                                  'due' => $data->due]);
@@ -191,12 +191,12 @@ if ($mform->is_cancelled()) {
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
 // Check the userid is valid.
-if (!empty($userid) && !company::check_valid_user($companyid, $userid, $departmentid)) {
+if (!empty($userid) && !local_iomad\company::check_valid_user($companyid, $userid, $departmentid)) {
     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 

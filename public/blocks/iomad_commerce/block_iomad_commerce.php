@@ -42,7 +42,7 @@ class block_iomad_commerce extends block_base {
         // Hide the shop content if the user's company doesn't support ecommerce
         // Always show it if the user is a siteadmin
         // PWG
-        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
         $ecommerce = $DB->get_field_sql("SELECT ecommerce
                                          FROM {company} c
                                          WHERE c.id = :companyid",
@@ -69,7 +69,7 @@ class block_iomad_commerce extends block_base {
                                    '">' . get_string('shop_login_title', 'block_iomad_commerce') . '</a></p>';
         } else if (!empty($CFG->commerce_enable_external)) {
             // Get and store a one time token.
-            $token = company_user::generate_token();
+            $token = local_iomad\company_user::generate_token();
             $configname = "commerce_externalshop_url_$companyid";
             if (empty($CFG->$configname)) {
                 $configname = "commerce_externalshop_url";

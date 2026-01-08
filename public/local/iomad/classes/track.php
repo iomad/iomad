@@ -23,10 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_iomad\track;
+namespace local_iomad;
 
-use local_iomad\company;
-use local_iomad\iomad;
 use local_iomad\task\savecertificatetask;
 use context_user;
 use context_system;

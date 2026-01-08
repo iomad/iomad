@@ -73,6 +73,8 @@ function xmldb_block_iomad_learningpath_upgrade($oldversion) {
     }
 
     if ($oldversion < 2026010500) {
+        mtrace("");
+        mtrace("Moving local/iomad_learningpath plugin code to blocks/iomad_learningpath");
 
         // Set the list of capabilities we are changing from and to.
         $capabilites = [
@@ -87,6 +89,24 @@ function xmldb_block_iomad_learningpath_upgrade($oldversion) {
             $DB->set_field('company_role_templates_caps', 'capability', $new, ['capability' => $old]);
         }
 
+        mtrace("");
+        mtrace("Uninstalling the old plugins.");
+        $oldplugins = [
+            'local_iomad_learningpath',
+        ];
+        $pluginman = core_plugin_manager::instance();
+
+        foreach ($oldplugins as $plugin) {
+            if ($pluginman->can_uninstall_plugin($plugin)) {
+                mtrace('Uninstalling: ' . $plugin);
+                $progress = new progress_trace_buffer(new text_progress_trace(), true);
+                $pluginman->uninstall_plugin($plugin, $progress);
+                $progress->finished();
+                mtrace($progress->get_buffer());
+            } else {
+                mtrace('Can not be uninstalled: ' . $plugin);
+            }
+        }
         upgrade_block_savepoint(true, 2026010500, 'iomad_learningpath', false);
     }
 

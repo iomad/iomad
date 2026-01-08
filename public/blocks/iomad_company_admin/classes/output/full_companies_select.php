@@ -55,7 +55,7 @@ class full_companies_select implements renderable, templatable {
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-        $mycompanies = company_user::get_all_user_companies($this->search);
+        $mycompanies = local_iomad\company_user::get_all_user_companies($this->search);
         return $mycompanies;
     }
 

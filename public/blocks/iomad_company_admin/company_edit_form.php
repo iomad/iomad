@@ -59,10 +59,10 @@ if (!$new) {
 $child = false;
 if (!$new) {
     // Set the companyid
-    $companyid = iomad::get_my_companyid($systemcontext);
+    $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
     $companycontext =  \core\context\company::instance($companyid);
 
-    iomad::require_capability('block/iomad_company_admin:company_edit', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_company_admin:company_edit', $companycontext);
 
     $isadding = false;
     $companyrecord = $DB->get_record('company', array('id' => $companyid), '*', MUST_EXIST);
@@ -141,12 +141,12 @@ if (!$new) {
     if (!empty($parentid) || $parentchanged) {
         if (!empty($parentid)) {
             $companycontext = \core\context\company::instance($parentid);
-            iomad::require_capability('block/iomad_company_admin:company_add_child', $companycontext);
+            local_iomad\iomad::require_capability('block/iomad_company_admin:company_add_child', $companycontext);
 
             // We are adding a child company.
             $child = true;
             // Can this user manage this parentid?
-            if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
+            if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
                 !$DB->get_record('company_users', array('companyid' => $parentid, 'userid' => $USER->id, 'managertype' => 1))) {
                 throw new moodle_exception(get_string('invalidcompany', 'block_iomad_company_admin'), 'error', new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'));
                 die;
@@ -193,7 +193,7 @@ if (!$new) {
             unset($SESSION->current_editing_company_data);
         }
     } else {
-        iomad::require_capability('block/iomad_company_admin:company_add', $companycontext);
+        local_iomad\iomad::require_capability('block/iomad_company_admin:company_add', $companycontext);
     }
 }
 
@@ -479,7 +479,7 @@ if ($mform->is_cancelled()) {
 
             // We hit create.
             $companyid = $DB->insert_record('company', $data);
-            $company = new company($companyid);
+            $company = new local_iomad\company($companyid);
 
             $eventother = array('companyid' => $companyid);
 
@@ -490,7 +490,7 @@ if ($mform->is_cancelled()) {
             $event->trigger();
 
             // Set up default department.
-            company::initialise_departments($companyid);
+            local_iomad\company::initialise_departments($companyid);
             $data->id = $companyid;
 
             // Set up course category for company.
@@ -510,7 +510,7 @@ if ($mform->is_cancelled()) {
 
             // Deal with any parent company assignments.
             if (!empty($companydetails->parentid)) {
-                $company = new company($companydetails->id);
+                $company = new local_iomad\company($companydetails->id);
                 $company->assign_parent_managers($companydetails->parentid);
             }
 
@@ -559,7 +559,7 @@ if ($mform->is_cancelled()) {
             $data->paymentaccount = '';
         }
 
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $oldcompany = $DB->get_record('company', array('id' => $companyid));
         $oldtheme = $company->get_theme();
         $themechanged = $oldtheme != $data->theme;
@@ -674,14 +674,14 @@ if ($mform->is_cancelled()) {
             }
         }
 
-        if (company_user::is_company_user()) {
-            company_user::reload_company();
+        if (local_iomad\company_user::is_company_user()) {
+            local_iomad\company_user::reload_company();
         }
     }
 
     // Only do the rest of the company create stuffs if we are not re-directing back to the form on parentid change.
     if ($createcompany) {
-        $company = new company($data->id);
+        $company = new local_iomad\company($data->id);
 
         // Deal with role templates.
         if (!empty($data->roletemplate)) {
@@ -697,7 +697,7 @@ if ($mform->is_cancelled()) {
         }
 
         // Deal with email templates.
-        if (!empty($data->emailtemplate) && iomad::has_capability('local/email:edit', $companycontext)) {
+        if (!empty($data->emailtemplate) && local_iomad\iomad::has_capability('local/email:edit', $companycontext)) {
             // We need to do something with the email templates.
             $company->apply_email_templates($data->emailtemplate);
         }

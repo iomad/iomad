@@ -33,20 +33,20 @@ function test() {
                            'email' => 'testuser@somewhere.com',
                            'username' => 'testuser', 'newpassword' => 'somenewpassword');
     $sender = (object) array('firstname' => 'Test', 'Lastname' => 'User');
-    echo local_iomad/emailtemplate::send('user_create', array('user' => $user, 'course' => 2,
+    echo local_iomad\emailtemplate::send('user_create', array('user' => $user, 'course' => 2,
                              'sender' => $sender));
 
-    echo local_iomad/emailtemplate::send('user_added_to_course', array('course' => 2),
+    echo local_iomad\emailtemplate::send('user_added_to_course', array('course' => 2),
       array(array('user' => 3), array('user' => 56), array('user' => $user)));
 
     echo "<hr /><b>Email template from database</b>";
-    echo local_iomad/emailtemplate::send('user_added_to_course', array('user' => 3, 'course' => 2));
+    echo local_iomad\emailtemplate::send('user_added_to_course', array('user' => 3, 'course' => 2));
 
     echo "<hr /><b>Email to current user about current course</b>";
-    echo local_iomad/emailtemplate::send('user_added_to_course');
+    echo local_iomad\emailtemplate::send('user_added_to_course');
 
     echo "<hr/><b>Email all users in a department</b>";
-    echo local_iomad/emailtemplate::send_to_all_users_in_department(3, 'user_added_to_course',
+    echo local_iomad\emailtemplate::send_to_all_users_in_department(3, 'user_added_to_course',
                                                         array('course' => 2));
 }
 

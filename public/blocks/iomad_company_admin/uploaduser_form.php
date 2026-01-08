@@ -68,7 +68,6 @@ class admin_uploaduser_form1 extends company_moodleform {
 
 class admin_uploaduser_form2 extends company_moodleform {
     protected $courseselector = null;
-    protected $departmentid;
 
     public function definition () {
         global $CFG, $USER, $SESSION;
@@ -223,13 +222,13 @@ class admin_uploaduser_form2 extends company_moodleform {
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
         } else {
-            $companyid = company_user::companyid();
+            $companyid = local_iomad\company_user::companyid();
         }
 
         // Get the department list.
-        $company = new company($companyid);
+        $company = new local_iomad\company($companyid);
         $companymanualcourses = $company->get_menu_courses(true, true);
-        $parentlevel = company::get_company_parentnode($companyid);
+        $parentlevel = local_iomad\company::get_company_parentnode($companyid);
         $this->departmentid = $parentlevel->id;
         $mform->addElement('header', 'advanced');
         $mform->setExpanded('advanced');
@@ -248,7 +247,7 @@ class admin_uploaduser_form2 extends company_moodleform {
 
 
         // Deal with licenses.
-        if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
+        if (local_iomad\iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
             if ($foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
                                                    WHERE expirydate >= :timestamp
                                                    AND companyid = :companyid",

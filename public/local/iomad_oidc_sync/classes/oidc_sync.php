@@ -26,10 +26,11 @@
 
 namespace local_iomad_oidc_sync;
 
-use company;
-use company_user;
-use iomad;
+use local_iomad\company;
+use local_iomad\company_user;
+use local_iomad\iomad;
 use local_iomad_signup_observer;
+use core\event\user_updated;
 
 /**
  * Class definition
@@ -223,7 +224,7 @@ class oidc_sync {
                 if ($CFG->debug > DEBUG_NONE) {
                     mtrace("Adding as a new user");
                 }
-                if (!$userid = \company_user::create($userrec, $companyid)) {
+                if (!$userid = company_user::create($userrec, $companyid)) {
                     mtrace("failed to create user " . $userrec->username);
                     continue;
                 }
@@ -237,7 +238,7 @@ class oidc_sync {
                 }
 
                 profile_save_data($userrec);
-                \core\event\user_updated::create_from_userid($userid)->trigger();
+                user_updated::create_from_userid($userid)->trigger();
 
                 // Store this for later.
                 $foundusers[] = $userid;
