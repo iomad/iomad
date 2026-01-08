@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die;
 use renderable;
 use renderer_base;
 use templatable;
-use company_user;
+use local_iomad\company_user;
 
 /**
  * Class contains data for editcompanies filter/form
@@ -51,11 +51,11 @@ class full_companies_select implements renderable, templatable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
+     * @param renderer_base $output
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-        $mycompanies = local_iomad\company_user::get_all_user_companies($this->search);
+        $mycompanies = company_user::get_all_user_companies($this->search);
         return $mycompanies;
     }
 

@@ -52,7 +52,7 @@ class company_iomadoidc_mappings_form extends moodleform {
         $mapremotefields = true;
         $updateremotefields = false;
         // get all of the profile field categories.
-        $profilecategories = local_iomad\iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
+        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
         $customfields = [];
         if (!empty($profilecategories)) {
             $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)

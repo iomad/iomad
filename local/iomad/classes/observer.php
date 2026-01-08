@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_iomad;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -33,7 +35,16 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_iomad_observer {
+class observer {
+
+    /**
+     * Flag to temporarily disable the signup handler.
+     * This can be set by external processes (e.g., OIDC sync) to prevent
+     * interference with company assignments they are handling themselves.
+     *
+     * @var bool
+     */
+    public static $disable_handler = false;
 
     /**
      * Triggered via block_iomad_company_admin::company_course_updated event.
@@ -42,7 +53,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_course_updated($event) {
-        local_iomad\track::company_course_updated($event);
+        track::company_course_updated($event);
         return true;
     }
 
@@ -53,8 +64,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_created($event) {
-        local_iomad\emailtemplate::company_created($event);
-        local_iomad\company::company_created($event);
+        emailtemplate::company_created($event);
+        company::company_created($event);
         return true;
     }
 
@@ -65,7 +76,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_deleted($event) {
-        local_iomad\company::company_deleted($event);
+        company::company_deleted($event);
         return true;
     }
 
@@ -76,7 +87,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_license_created($event) {
-        local_iomad\company::company_license_created($event);
+        company::company_license_created($event);
         return true;
     }
 
@@ -87,7 +98,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_license_deleted($event) {
-        local_iomad\company::company_license_deleted($event);
+        company::company_license_deleted($event);
         return true;
     }
 
@@ -98,8 +109,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_license_updated($event) {
-        local_iomad\track::company_license_updated($event);
-        local_iomad\company::company_license_updated($event);
+        track::company_license_updated($event);
+        company::company_license_updated($event);
         return true;
     }
 
@@ -110,7 +121,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_suspended($event) {
-        local_iomad\company::company_suspended($event);
+        company::company_suspended($event);
         return true;
     }
 
@@ -121,7 +132,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_unsuspended($event) {
-        local_iomad\company::company_unsuspended($event);
+        company::company_unsuspended($event);
         return true;
     }
 
@@ -132,7 +143,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_updated($event) {
-        local_iomad\company::company_updated($event);
+        company::company_updated($event);
         return true;
     }
 
@@ -143,8 +154,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_user_assigned($event) {
-        local_iomad\track::company_user_assigned($event);
-        local_iomad\company::company_user_assigned($event);
+        track::company_user_assigned($event);
+        company::company_user_assigned($event);
         return true;
     }
 
@@ -155,7 +166,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function company_user_unassigned($event) {
-        local_iomad\company::company_user_unassigned($event);
+        company::company_user_unassigned($event);
         return true;
     }
 
@@ -166,7 +177,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function competency_framework_created(\core\event\competency_framework_created $event) {
-        local_iomad\company::competency_framework_created($event);
+        company::competency_framework_created($event);
         return true;
     }
 
@@ -177,7 +188,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function competency_framework_deleted(\core\event\competency_framework_deleted $event) {
-        local_iomad\company::competency_framework_deleted($event);
+        company::competency_framework_deleted($event);
         return true;
     }
 
@@ -188,7 +199,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function competency_template_created(\core\event\competency_template_created $event) {
-        local_iomad\company::competency_template_created($event);
+        company::competency_template_created($event);
         return true;
     }
 
@@ -199,7 +210,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function competency_template_deleted(\core\event\competency_template_deleted $event) {
-        local_iomad\company::competency_template_deleted($event);
+        company::competency_template_deleted($event);
         return true;
     }
 
@@ -210,8 +221,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function course_completed($event) {
-        local_iomad\track::course_completed($event);
-        local_iomad\company::course_completed($event);
+        track::course_completed($event);
+        company::course_completed($event);
         return true;
     }
 
@@ -222,7 +233,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_course_expired($event) {
-        local_iomad\company::user_course_expired($event);
+        company::user_course_expired($event);
         return true;
     }
 
@@ -233,7 +244,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function course_updated($event) {
-        local_iomad\track::course_updated($event);
+        track::course_updated($event);
         return true;
     }
 
@@ -244,8 +255,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_enrolment_created($event) {
-        local_iomad\track::user_enrolment_created($event);
-        local_iomad\company::user_enrolment_created($event);
+        track::user_enrolment_created($event);
+        company::user_enrolment_created($event);
         return true;
     }
 
@@ -256,7 +267,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_enrolment_deleted($event) {
-        local_iomad\track::user_enrolment_deleted($event);
+        track::user_enrolment_deleted($event);
         return true;
     }
 
@@ -267,14 +278,18 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_created($event) {
+error_log("A");
         // Do the sign up part - as this is part of this plugin too.
         // Check if the handler has been temporarily disabled
         if (!self::$disable_handler) {
-            local_iomad\company::signup_user_created($event->objectid);
+error_log("B");
+            company::signup_user_created($event->objectid);
+error_log("C");
         }
 
         // Do the rest of it.
-        local_iomad\company::user_created($event);
+        company::user_created($event);
+error_log("D");
         return true;
     }
 
@@ -285,7 +300,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_deleted($event) {
-        local_iomad\company::user_deleted($event);
+        company::user_deleted($event);
         return true;
     }
 
@@ -296,7 +311,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_graded($event) {
-        local_iomad\track::user_graded($event);
+        track::user_graded($event);
         return true;
     }
 
@@ -307,7 +322,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_updated($event) {
-        local_iomad\company::user_updated($event);
+        company::user_updated($event);
         return true;
     }
 
@@ -318,8 +333,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_license_assigned($event) {
-        local_iomad\track::user_license_assigned($event);
-        local_iomad\company::user_license_assigned($event);
+        track::user_license_assigned($event);
+        company::user_license_assigned($event);
         return true;
     }
 
@@ -330,8 +345,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_license_unassigned($event) {
-        local_iomad\track::user_license_unassigned($event);
-        local_iomad\company::user_license_unassigned($event);
+        track::user_license_unassigned($event);
+        company::user_license_unassigned($event);
         return true;
     }
 
@@ -342,8 +357,8 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_license_used($event) {
-        local_iomad\track::user_license_used($event);
-        local_iomad\company::user_license_used($event);
+        track::user_license_used($event);
+        company::user_license_used($event);
         return true;
     }
 
@@ -354,7 +369,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_suspended($event) {
-        local_iomad\company::user_suspended($event);
+        company::user_suspended($event);
         return true;
     }
 
@@ -365,7 +380,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function user_unsuspended($event) {
-        local_iomad\company::user_unsuspended($event);
+        company::user_unsuspended($event);
         return true;
     }
 
@@ -376,7 +391,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function custompage_deleted($event) {
-        local_iomad\company::custompage_deleted($event);
+        company::custompage_deleted($event);
         return true;
     }
 
@@ -387,7 +402,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function langpack_imported($event) {
-        local_iomad\emailtemplate::langpack_imported($event);
+        emailtemplate::langpack_imported($event);
         return true;
     }
 
@@ -398,7 +413,7 @@ class local_iomad_observer {
      * @return bool true on success.
      */
     public static function langpack_removed($event) {
-        local_iomad\emailtemplate::langpack_removed($event);
+        emailtemplate::langpack_removed($event);
         return true;
     }
 }

@@ -27,9 +27,12 @@ use context_course;
 use core_user;
 use core_external;
 use coding_exception;
-use company;
-use iomad;
+use local_iomad\company;
+use local_iomad\iomad;
 use cache_helper;
+use core\output\inplace_editable;
+use render_base;
+use block_iomad_company_admin\event\company_course_updated;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -44,24 +47,24 @@ class courses_shared_editable extends \core\output\inplace_editable {
     /** @var $context */
     private $context = null;
 
-    /** @var \stdClass[] $viewableroles */
+    /** @var stdClass[] $viewableroles */
     private $sharedoptions;
 
     /**
      * Constructor.
      *
-     * @param \stdClass $course The current course
+     * @param stdClass $course The current course
      * @param \context $context The course context
-     * @param \stdClass $user The current user
-     * @param \stdClass[] $courseroles The list of course roles.
-     * @param \stdClass[] $assignableroles The list of assignable roles in this course.
-     * @param \stdClass[] $profileroles The list of roles that should be visible in a users profile.
-     * @param \stdClass[] $userroles The list of user roles.
+     * @param stdClass $user The current user
+     * @param stdClass[] $courseroles The list of course roles.
+     * @param stdClass[] $assignableroles The list of assignable roles in this course.
+     * @param stdClass[] $profileroles The list of roles that should be visible in a users profile.
+     * @param stdClass[] $userroles The list of user roles.
      */
     public function __construct($company, $companycontext, $course, $currentvalue) {
 
         // Check capabilities to get editable value.
-        $editable = local_iomad\iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
+        $editable = iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext);
 
         // Invent an itemid.
         $itemid = $company->id . ':' . $course->courseid;
@@ -83,10 +86,10 @@ class courses_shared_editable extends \core\output\inplace_editable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
+     * @param renderer_base $output
      * @return array
      */
-    public function export_for_template(\renderer_base $output) {
+    public function export_for_template(renderer_base $output) {
         $value = json_decode($this->value);
 
         $this->displayvalue = format_string($this->sharedoptions[$value], true, ['context' => $this->context]);
@@ -99,7 +102,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
      *
      * @param int $itemid
      * @param mixed $newvalue
-     * @return \self
+     * @return self
      */
     public static function update($itemid, $newvalue) {
         global $DB, $CFG, $USER;
@@ -112,7 +115,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
         list($companyid, $courseid) = explode(':', $itemid, 2);
 
         $companyid = clean_param($companyid, PARAM_INT);
-        $company = new local_iomad\company($companyid);
+        $company = new company($companyid);
         $courseid = clean_param($courseid, PARAM_INT);
         $shared = json_decode($newvalue);
         $shared = clean_param($shared, PARAM_INT);
@@ -122,7 +125,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
         core_external::validate_context($companycontext);
 
         // Check permissions.
-        local_iomad\iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
+        iomad::require_capability('block/iomad_company_admin:managecourses', $companycontext);
 
         if (!$courserec = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
             throw new coding_exception('Course is not under IOMAD control');
@@ -151,7 +154,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
                         $sharingrecord->companyid = $companycourse->companyid;
                         $DB->insert_record('company_shared_courses', $sharingrecord);
                     }
-                    local_iomad\company::company_users_to_company_course_group($companycourse->companyid, $courseid);
+                    company::company_users_to_company_course_group($companycourse->companyid, $courseid);
                 }
             }
         } else if ($shared == 0 and $previousshared != 0) { // Turning sharing off.
@@ -173,7 +176,7 @@ class courses_shared_editable extends \core\output\inplace_editable {
                         continue;
                     }
                     $count ++;
-                    local_iomad\company::unenrol_company_from_course($companygroup->companyid, $courseid);
+                    company::unenrol_company_from_course($companygroup->companyid, $courseid);
                 }
             }
         } else {
@@ -194,10 +197,10 @@ class courses_shared_editable extends \core\output\inplace_editable {
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = \block_iomad_company_admin\event\company_course_updated::create(array('context' => $companycontext,
-                                                                                       'objectid' => $courseid,
-                                                                                       'userid' => $USER->id,
-                                                                                       'other' => $eventother));
+        $event = company_course_updated::create(array('context' => $companycontext,
+                                                      'objectid' => $courseid,
+                                                      'userid' => $USER->id,
+                                                      'other' => $eventother));
         $event->trigger();
 
         // Clear the caches.

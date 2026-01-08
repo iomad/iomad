@@ -29,6 +29,7 @@ use context_course;
 use context_system;
 use course_enrolment_manager;
 use moodle_url;
+use iomad_commerce;
 
 class company {
 
@@ -4662,7 +4663,7 @@ class company {
      *
      * @param mixed $user user id or user object
      */
-    function signup_user_created($user) {
+    public static function signup_user_created($user) {
         global $CFG, $DB;
 
         // Check if we already have the user object.
