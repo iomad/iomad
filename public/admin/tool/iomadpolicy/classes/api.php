@@ -113,6 +113,8 @@ class api {
 
         $versionfields = iomadpolicy_version::get_sql_fields('v', 'v_');
 
+        $params = [];
+
         $sql = "SELECT d.id, d.currentversionid, d.sortorder, d.companyid, $versionfields ";
 
         if ($countacceptances) {
@@ -120,8 +122,9 @@ class api {
         }
 
         // Deal with the company id.
-        if ($companyid != -1) {
-            $companysql = "AND d.companyid = :companyid";
+        if (!has_capability('tool/iomadpolicy:managedocs', context_system::instance())) {
+            $companysql = " AND d.companyid = :companyid";
+            $params = ['companyid' => $companyid];
         } else {
             $companysql = "";
         }
@@ -138,8 +141,6 @@ class api {
         }
 
         $sql .= " WHERE v.id IS NOT NULL $companysql";
-
-        $params = ['companyid' => $companyid];
 
         if ($ids) {
             list($idsql, $idparams) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED);
@@ -312,7 +313,8 @@ class api {
 
         // Get the companyid.
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        if (!empty($companyid)) {
+
+        if ($companyid > 0) {
             $company = new company($companyid);
         } else {
             $company = (object) ['id' => 0];
