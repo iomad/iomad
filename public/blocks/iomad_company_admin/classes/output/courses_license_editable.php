@@ -27,8 +27,11 @@ use context_course;
 use core_user;
 use core_external;
 use coding_exception;
-use company;
-use iomad;
+use local_iomad\company;
+use local_iomad\iomad;
+use renderer_base;
+use core\output\inplace_editable;
+use block_iomad_company_admin\event\company_course_updated;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -38,24 +41,24 @@ defined('MOODLE_INTERNAL') || die();
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class courses_license_editable extends \core\output\inplace_editable {
+class courses_license_editable extends inplace_editable {
 
     /** @var $context */
     private $context = null;
 
-    /** @var \stdClass[] $viewableroles */
+    /** @var stdClass[] $viewableroles */
     private $licenseoptions;
 
     /**
      * Constructor.
      *
-     * @param \stdClass $course The current course
-     * @param \context $context The course context
-     * @param \stdClass $user The current user
-     * @param \stdClass[] $courseroles The list of course roles.
-     * @param \stdClass[] $assignableroles The list of assignable roles in this course.
-     * @param \stdClass[] $profileroles The list of roles that should be visible in a users profile.
-     * @param \stdClass[] $userroles The list of user roles.
+     * @param stdClass $course The current course
+     * @param context $context The course context
+     * @param stdClass $user The current user
+     * @param stdClass[] $courseroles The list of course roles.
+     * @param stdClass[] $assignableroles The list of assignable roles in this course.
+     * @param stdClass[] $profileroles The list of roles that should be visible in a users profile.
+     * @param stdClass[] $userroles The list of user roles.
      */
     public function __construct($company, $companycontext, $course, $currentvalue, $hidelicensed = false) {
 
@@ -87,10 +90,10 @@ class courses_license_editable extends \core\output\inplace_editable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
+     * @param renderer_base $output
      * @return array
      */
-    public function export_for_template(\renderer_base $output) {
+    public function export_for_template(renderer_base $output) {
         $value = json_decode($this->value);
 
         $this->displayvalue = format_string($this->licenseoptions[$value], true, ['context' => $this->context]);
@@ -103,7 +106,7 @@ class courses_license_editable extends \core\output\inplace_editable {
      *
      * @param int $itemid
      * @param mixed $newvalue
-     * @return \self
+     * @return self
      */
     public static function update($itemid, $newvalue) {
         global $DB, $CFG, $USER;
@@ -194,10 +197,10 @@ class courses_license_editable extends \core\output\inplace_editable {
 
         // Fire an event for this.
         $eventother = ['iomadcourse' => (array) $courserec];
-        $event = \block_iomad_company_admin\event\company_course_updated::create(array('context' => $companycontext,
-                                                                                       'objectid' => $courseid,
-                                                                                       'userid' => $USER->id,
-                                                                                       'other' => $eventother));
+        $event = company_course_updated::create(array('context' => $companycontext,
+                                                      'objectid' => $courseid,
+                                                      'userid' => $USER->id,
+                                                      'other' => $eventother));
         $event->trigger();
 
         return new self($company, $companycontext, $courserec, $licensed);

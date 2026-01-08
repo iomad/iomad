@@ -27,8 +27,8 @@ use context_course;
 use core_user;
 use core_external;
 use coding_exception;
-use company;
-use iomad;
+use local_iomad\company;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 

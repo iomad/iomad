@@ -25,13 +25,14 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
+use moodle_url;
 use context_system;
 use auth_iomadsaml2\utils;
 use core_text;
 use moodleform;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_iomadsaml2_mappings_form extends moodleform {
     public function definition() {
