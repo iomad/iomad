@@ -2438,8 +2438,8 @@ class api {
         // Check thet the user can see this learning path.
         $context = \context_system::instance();
         $companyid = iomad::get_my_companyid($context, false);
-        if (!iomad::has_capability('local/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
-            throw new required_capability_exception($context, 'local/iomad_learningpath:manage', 'nopermissions', '');
+        if (!iomad::has_capability('block/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
+            throw new required_capability_exception($context, 'block/iomad_learningpath:manage', 'nopermissions', '');
         }
 
         $tpllearningpath = template_learningpath::get_relation($template->get('id'), $learningpath->id);
@@ -2844,8 +2844,8 @@ class api {
         $learningpath = $DB->get_record('iomad_learningpath', array('id' => $learningpathid), '*', MUST_EXIST);
         $context = \context_system::instance();
         $companyid = iomad::get_my_companyid($context, false);
-        if (!iomad::has_capability('local/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
-            throw new required_capability_exception($context, 'local/iomad_learningpath:manage', 'nopermissions', '');
+        if (!iomad::has_capability('block/iomad_learningpath:manage', $context) || $learningpath->company != $companyid) {
+            throw new required_capability_exception($context, 'block/iomad_learningpath:manage', 'nopermissions', '');
         }
 
         // Convert the template to a plan.
