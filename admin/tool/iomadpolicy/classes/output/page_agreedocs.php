@@ -39,8 +39,8 @@ use single_button;
 use templatable;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
-use iomad;
-use company;
+use local_iomad\iomad;
+use local_iomad\company;
 
 /**
  * Represents a page for showing all the iomadpolicy documents which a user has to agree to.
@@ -106,9 +106,9 @@ class page_agreedocs implements renderable, templatable {
         }
 
         // Get the companyid.
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
-            $company = new local_iomad\company($companyid);
+            $company = new company($companyid);
             if (!$DB->get_records('tool_iomadpolicy', ['companyid' => $company->id])) {
                 // No company specific policies so we use the default ones.
                 $company->id = 0;

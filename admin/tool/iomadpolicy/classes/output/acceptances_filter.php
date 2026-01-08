@@ -285,7 +285,7 @@ class acceptances_filter implements \templatable, \renderable {
             });
             if (!$found) {
                 // Throw exception that iomadpolicy/version is not found.
-                throw new \moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
+                throw new moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
             }
         }
     }

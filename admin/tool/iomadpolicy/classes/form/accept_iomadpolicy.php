@@ -48,10 +48,10 @@ class accept_iomadpolicy extends \moodleform {
         $mform = $this->_form;
 
         if (empty($this->_customdata['userids']) || !is_array($this->_customdata['userids'])) {
-            throw new \moodle_exception('missingparam', 'error', '', 'userids');
+            throw new moodle_exception('missingparam', 'error', '', 'userids');
         }
         if (empty($this->_customdata['versionids']) || !is_array($this->_customdata['versionids'])) {
-            throw new \moodle_exception('missingparam', '', '', 'versionids');
+            throw new moodle_exception('missingparam', '', '', 'versionids');
         }
         $action = $this->_customdata['action'];
         $userids = clean_param_array($this->_customdata['userids'], PARAM_INT);
@@ -88,7 +88,7 @@ class accept_iomadpolicy extends \moodleform {
             $mform->addElement('static', 'ack', '', get_string('declineacknowledgement', 'tool_iomadpolicy'));
             $mform->addElement('hidden', 'action', 'decline');
         } else {
-            throw new \moodle_exception('invalidaccessparameter');
+            throw new moodle_exception('invalidaccessparameter');
         }
 
         $mform->setType('action', PARAM_ALPHA);
@@ -140,7 +140,7 @@ class accept_iomadpolicy extends \moodleform {
             }
             $user = $users[$userid];
             if (isguestuser($user)) {
-                throw new \moodle_exception('noguest');
+                throw new moodle_exception('noguest');
             }
             \context_helper::preload_from_record($user);
             if ($action === 'revoke') {
@@ -167,7 +167,7 @@ class accept_iomadpolicy extends \moodleform {
         foreach ($versionids as $versionid) {
             $version = api::get_iomadpolicy_version($versionid, $policies);
             if ($version->audience == iomadpolicy_version::AUDIENCE_GUESTS) {
-                throw new \moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
+                throw new moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
             }
             $url = new \moodle_url('/admin/tool/iomadpolicy/view.php', ['versionid' => $version->id]);
             $iomadpolicyname = $version->name;

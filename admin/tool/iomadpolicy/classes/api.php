@@ -36,6 +36,7 @@ use tool_iomadpolicy\event\acceptance_updated;
 use user_picture;
 use local_iomad\iomad;
 use local_iomad\company;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -258,7 +259,7 @@ class api {
             }
         }
 
-        throw new \moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
+        throw new moodle_exception('erroriomadpolicyversionnotfound', 'tool_iomadpolicy');
     }
 
     /**
@@ -879,7 +880,7 @@ class api {
 
         if (!isloggedin() || isguestuser()) {
             if ($throwexception) {
-                throw new \moodle_exception('noguest');
+                throw new moodle_exception('noguest');
             } else {
                 return false;
             }
@@ -925,7 +926,7 @@ class api {
             if (static::get_agreement_optional($versionid) == iomadpolicy_version::AGREEMENT_COMPULSORY) {
                 // Compulsory policies can't be declined (that is what makes them compulsory).
                 if ($throwexception) {
-                    throw new \moodle_exception('erroriomadpolicyversioncompulsory', 'tool_iomadpolicy');
+                    throw new moodle_exception('erroriomadpolicyversioncompulsory', 'tool_iomadpolicy');
                 } else {
                     return false;
                 }
@@ -954,7 +955,7 @@ class api {
         // Guests' acceptance is not stored so there is nothing to revoke.
         if (!isloggedin() || isguestuser()) {
             if ($throwexception) {
-                throw new \moodle_exception('noguest');
+                throw new moodle_exception('noguest');
             } else {
                 return false;
             }
