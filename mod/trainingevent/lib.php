@@ -945,7 +945,7 @@ function trainingevent_user_enrolment_deleted($event) {
     // Has the user signed up to any training event in any way?
     if ($trainingevents = $DB->get_records_sql("SELECT t.* FROM {trainingevent} t
                                                 JOIN {trainingevent_users} tu ON (t.id = tu.trainingeventid)
-                                                WHERE t.course =: courseid
+                                                WHERE t.course = :courseid
                                                 AND tu.userid = :userid",
                                                ['courseid' => $event->courseid,
                                                 'userid' => $event->relateduserid])) {
