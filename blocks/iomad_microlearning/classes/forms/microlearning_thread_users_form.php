@@ -90,12 +90,10 @@ class microlearning_thread_users_form extends company_moodleform {
                              'groupid' => $this->groupid,
                              'departmentid' => $this->departmentid,
                              'subdepartments' => $this->subhierarchieslist,
-                             'parentdepartmentid' => $this->parentlevel,
-                             'class' => 'potential_company_thread_user_selector');
+                             'parentdepartmentid' => $this->parentlevel);
             if (empty($this->potentialusers)) {
                 $this->potentialusers = new potential_thread('potentialthreadusers', $options);
             }
-            $options['class'] = 'current_company_thread_user_selector';
             if (empty($this->currentusers)) {
                 $this->currentusers = new current_thread('currentlyenrolledusers', $options);
             }
