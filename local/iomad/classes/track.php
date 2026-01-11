@@ -915,7 +915,7 @@ class track {
      *
      * @param boolean $full remove just the saved certificate or everything.
      */
-    function delete_entry($trackid, $full = false) {
+    public static function delete_entry($trackid, $full = false) {
         global $DB, $CFG;
 
         // Do we have a recorded certificate?
@@ -955,7 +955,7 @@ class track {
      * Function to download a number of certificates in a zip file
      * and pass it to the browser.
      */
-    function download_certs($companyid = 0, $courses = [], $users = []) {
+    public static function download_certs($companyid = 0, $courses = [], $users = []) {
         global $DB, $CFG, $USER;
 
         // Set the companyid

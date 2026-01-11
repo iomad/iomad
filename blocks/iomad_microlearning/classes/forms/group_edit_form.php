@@ -31,6 +31,8 @@ class group_edit_form extends moodleform {
     protected $company = null;
     protected $deptid = 0;
     protected $output = null;
+    protected $groupid = 0;
+    protected $availablethreads = [];
 
     public function __construct($actionurl, $companyid, $groupid, $output) {
         global $CFG, $DB;

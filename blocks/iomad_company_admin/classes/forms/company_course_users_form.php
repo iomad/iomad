@@ -25,12 +25,12 @@ namespace block_iomad_company_admin\forms;
 
 use moodleform;
 use context_system;
-use local_iomad\emailtemplate;
 use local_iomad\user_selector\potential_course;
 use local_iomad\user_selector\current_course;
 use local_iomad\company;
 use local_iomad\iomad;
 use local_iomad\company_user;
+use local_iomad\emailtemplate;
 
 class company_course_users_form extends moodleform {
     protected $context = null;
@@ -281,7 +281,7 @@ class company_course_users_form extends moodleform {
                                                 0,
                                                 $data->groupid,
                                                 $duedate);
-                            local_iomad/emailtemplate::send('user_added_to_course',
+                            emailtemplate::send('user_added_to_course',
                                                  array('course' => $course,
                                                        'user' => $adduser,
                                                        'due' => $duedate));

@@ -48,15 +48,15 @@ abstract class company_base extends base {
 
     public function __construct($name, $options) {
         $this->companyid = $options['companyid'];
-        $this->hasenrollments = $options['hasenrolments'];
+        $this->hasenrollments = !empty($options['hasenrolments']) ? $options['hasenrolments'] : false;
         $this->departmentid = $options['departmentid'];
-        $this->licenses = $options['licenses'];
-        $this->licenseid = $options['licenseid'];
-        $this->shared = $options['shared'];
-        $this->partialshared = $options['partialshared'];
-        $this->showopenshared = $options['showopenshared'];
+        $this->licenses = !empty($options['licenses']) ? $options['licenses'] : [];
+        $this->licenseid = !empty($options['licenseid']) ? $options['licenseid'] : 0;
+        $this->shared = !empty($options['shared']) ? $options['shared'] : false;
+        $this->partialshared = !empty($options['partialshared']) ? $options['partialshared'] : false;
+        $this->showopenshared = !empty($options['showopenshared']) ? $options['showopenshared'] : false;
         $this->user = $options['user'];
-        $this->parentid = $options['parentid'];
+        $this->parentid = !empty($options['parentid']) ? $options['parentid'] : 0;
 
         parent::__construct($name, $options);
     }

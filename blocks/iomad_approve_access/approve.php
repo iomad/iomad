@@ -24,7 +24,6 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->libdir.'/formslib.php');
-require_once($CFG->dirroot."/local/email/lib.php");
 require_once($CFG->dirroot."/blocks/iomad_approve_access/lib.php");
 
 // Set up PAGE stuff.

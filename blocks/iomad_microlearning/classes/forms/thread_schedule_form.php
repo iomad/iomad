@@ -30,6 +30,7 @@ use \moodleform;
 class thread_schedule_form extends \moodleform {
     protected $threadid;
     protected $nuggets;
+    protected $threadinfo;
 
     public function __construct($actionurl, $threadid, $nuggets) {
         global $DB;

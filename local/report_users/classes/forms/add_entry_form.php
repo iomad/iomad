@@ -43,7 +43,7 @@ class add_entry_form extends moodleform {
         $mform->addElement('text', 'licensename', get_string('licensename', 'block_iomad_company_admin'));
         $mform->addElement('date_selector', 'timeenrolled', get_string('datestarted', 'local_report_completion'));
         $mform->addElement('date_selector', 'timecompleted', get_string('datecompleted', 'local_report_completion'));
-        $mform->addElement('text', 'finalscore', get_string('grade', 'iomadcertificategrades'));
+        $mform->addElement('text', 'finalscore', get_string('grade', 'iomadcertificate'));
         $mform->addRule('courseid', null, 'required');
         $mform->setType('finalscore', PARAM_FLOAT);
         $mform->setType('licensename', PARAM_CLEAN);

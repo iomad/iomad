@@ -22,8 +22,6 @@
  */
 
 require_once(dirname(__FILE__).'/../../config.php');
-require_once($CFG->dirroot.'/local/iomad_track/lib.php');
-require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 
 // Params.
 $userid = required_param('userid', PARAM_INT);
@@ -35,7 +33,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = core\context\company::instance($companyid);
 $company = new local_iomad\company($companyid);
 
 local_iomad\iomad::require_capability('local/report_users:addentry', $companycontext);
@@ -49,7 +47,7 @@ $baseurl = new moodle_url('/local/report_users/newentry.php', array('userid' => 
 // Print the page header.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($baseurl);
-$PAGE->set_pagelayout('report');
+$PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
@@ -65,7 +63,7 @@ $PAGE->navbar->add($linktext, $reporturl);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Check the userid is valid.
-if (!company::check_valid_user($companyid, $userid)) {
+if (!local_iomad\company::check_valid_user($companyid, $userid)) {
     throw new moodle_exception('invaliduser', 'block_iomad_company_management');
 }
 
@@ -108,7 +106,7 @@ if ($data = $mform->get_data()) {
     $trackid = $DB->insert_record('local_iomad_track', $newentry);
 
     // Create a certificate, if required.
-    local_iomad\track\track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
+    local_iomad\track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
 
     // Return success.
     redirect($returnurl,

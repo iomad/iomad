@@ -28,8 +28,8 @@ namespace local_iomad_oidc_sync\tables;
 
 use table_sql;
 use moodle_url;
-use company;
-use iomad;
+use local_iomad\company;
+use local_iomad\iomad;
 use html_writer;
 use context_system;
 
@@ -63,7 +63,7 @@ class consent_table extends table_sql {
         $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
 
         // Get the company URL.
-        $company = new local_iomad\company($row->id);
+        $company = new company($row->id);
         $wwwroot = $company->get_wwwroot();
 
         // Set up the bit for the consent link.
@@ -92,7 +92,7 @@ class consent_table extends table_sql {
 
         $enabled = !empty($row->tenantnameorguid);
         $clientid = get_config('auth_iomadoidc', 'clientid_' . $row->id);
-        $canmanage = local_iomad\iomad::has_capability('local/iomad_oidc_sync:manage', $companycontext);
+        $canmanage = iomad::has_capability('local/iomad_oidc_sync:manage', $companycontext);
 
         $extraclass = "";
         if (!$enabled) {

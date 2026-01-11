@@ -200,7 +200,7 @@ function mycourses_get_my_archive($sort = 'coursefullname', $dir = 'ASC') {
             if ($traccerts = $DB->get_records('local_iomad_track_certs', array('trackid' => $id))) {
                 foreach ($traccerts as $traccertrec) {
                     $certobj = (object) [];
-                    $certobj->certificateurl = moodle_url::make_file_url('/pluginfile.php', '/'.context_user::instance($USER->id)->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
+                    $certobj->certificateurl = moodle_url::make_file_url('/pluginfile.php', '/'.context_user::instance($USER->id)->id.'/local_iomad/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
                     $certobj->certificatename = $traccertrec->filename;
                     $myarchive[$id]->certificates[] = $certobj;
                 }

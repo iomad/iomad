@@ -26,10 +26,13 @@
 
 namespace local_iomad_oidc_sync\task;
 
+use core\task\scheduled_task;
+use local_iomad_oidc_sync\oidc_sync;
+
 /**
  * Class definition.
  */
-class oidc_sync_task extends \core\task\scheduled_task {
+class oidc_sync_task extends scheduled_task {
 
     /**
      * Get a descriptive name for this task (shown to admins).
@@ -51,7 +54,7 @@ class oidc_sync_task extends \core\task\scheduled_task {
         mtrace("Running local IOMAD OIDC sync OIDC sync task at ".date('d M Y h:i:s', $runtime));
 
         // We do nothing more than fire off the function from the classlib.
-        \local_iomad_oidc_sync\oidc_sync::run_sync();
+        oidc_sync::run_sync();
 
         mtrace("local IOMAD OIDC sync completed at " . date('d M Y h:i:s', time()));
     }

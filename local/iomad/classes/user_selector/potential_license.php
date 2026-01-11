@@ -28,7 +28,11 @@ use local_iomad\company;
 class potential_license extends company_base {
 
     public function __construct($name, $options) {
+        global $DB;
+
         parent::__construct($name, $options);
+
+        $this->license = $DB->get_record('companylicense', ['id' => $this->licenseid]);
 
         unset($this->courses[0]);
     }

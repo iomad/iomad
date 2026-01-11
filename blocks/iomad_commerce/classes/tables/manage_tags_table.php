@@ -25,10 +25,10 @@
 namespace block_iomad_commerce\tables;
 
 // Add required dependancies
-use \table_sql;
-use \moodle_url;
+use table_sql;
+use moodle_url;
 use local_iomad\iomad;
-use \context_system;
+use context_system;
 
 // Ensure that it is loaded in Moodle else die
 defined('MOODLE_INTERNAL') || die();
@@ -40,6 +40,7 @@ require_once($CFG->libdir.'/tablelib.php');
 class manage_tags_table extends table_sql {
 
     protected $assignableitems;
+    protected $companyid;
 
     /**
      * Constructor
