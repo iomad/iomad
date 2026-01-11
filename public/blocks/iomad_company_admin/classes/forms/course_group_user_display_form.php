@@ -23,12 +23,14 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \company_moodleform;
-use \company;
-use \potential_company_group_user_selector;
-use \current_company_group_user_selector;
-use \context_coursecat;
-use \context_system;
+use company_moodleform;
+use context_coursecat;
+use context_system;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
+use local_iomad\user_selector\potential_group;
+use local_iomad\user_selector\current_group;
 
 class course_group_user_display_form extends company_moodleform {
     protected $courseid = 0;
@@ -93,10 +95,10 @@ class course_group_user_display_form extends company_moodleform {
                              'subdepartments' => $this->subhierarchieslist,
                              'parentdepartmentid' => $this->parentlevel);
             if (empty($this->potentialusers)) {
-                $this->potentialusers = new potential_company_group_user_selector('potentialgroupusers', $options);
+                $this->potentialusers = new potential_group('potentialgroupusers', $options);
             }
             if (empty($this->currentusers)) {
-                $this->currentusers = new current_company_group_user_selector('currentgroupusers', $options);
+                $this->currentusers = new current_group('currentgroupusers', $options);
             }
         } else {
             return;

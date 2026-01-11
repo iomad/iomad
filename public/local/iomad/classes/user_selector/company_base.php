@@ -206,13 +206,19 @@ abstract class company_base extends user_selector_base {
         }
 
         // Create the profile field selectors.
-        $profilesearch = "<select name = '" . $name . "_profilefieldid' class=\"form-control custom_srch d-block col-12 my-2\" id=\"" .$name ."_custom_srch\">
+        $profilesearch = "<select name = '" . $this->name . "_profilefieldid'
+                           class=\"form-control custom_srch d-block col-12 my-2\"
+                           id=\"" .$this->name ."_custom_srch\">
                           <option value=0>" . get_string('user') . "</option>";
         foreach ($companyprofilecategories as $companyprofilecategory) {
             if (!empty($profileid) && $profileid == $companyprofilecategory->id) {
-                $profilesearch .= "<option value=" . $companyprofilecategory->id . " selected>" . format_string($companyprofilecategory->name) . "</option>";
+                $profilesearch .= "<option value=" . $companyprofilecategory->id . " selected>" .
+                                  format_string($companyprofilecategory->name) .
+                                  "</option>";
             } else {
-                $profilesearch .= "<option value=" . $companyprofilecategory->id .">" . format_string($companyprofilecategory->name) . "</option>";
+                $profilesearch .= "<option value=" . $companyprofilecategory->id .">" .
+                                  format_string($companyprofilecategory->name) .
+                                  "</option>";
             }
         }
         $profilesearch .= "</select>";

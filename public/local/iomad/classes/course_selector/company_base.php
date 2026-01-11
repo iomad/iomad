@@ -55,7 +55,7 @@ abstract class company_base extends base {
         $this->shared = !empty($options['shared']) ? $options['shared'] : false;
         $this->partialshared = !empty($options['partialshared']) ? $options['partialshared'] : false;
         $this->showopenshared = !empty($options['showopenshared']) ? $options['showopenshared'] : false;
-        $this->user = $options['user'];
+        $this->user = !empty($options['user']) ? $options['user'] : [];
         $this->parentid = !empty($options['parentid']) ? $options['parentid'] : 0;
 
         parent::__construct($name, $options);
