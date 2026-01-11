@@ -51,9 +51,9 @@ class user_table extends table_sql {
 
         if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', $companycontext)) {
             return "<a href='".
-                    new moodle_url($userurl, array('userid' => $row->userid,
+                    new moodle_url($userurl, ['userid' => $row->userid,
                                                    'validonly' => $params['validonly'],
-                                                   'courseid' => $row->courseid)).
+                                                   'courseid' => $row->courseid]).
                     "'>$name</a>";
         } else {
             return $name;
@@ -68,7 +68,9 @@ class user_table extends table_sql {
     public function col_department($row) {
         global $CFG, $DB;
 
-        $userdepartments = $DB->get_records_sql("select d.* FROM {department} d JOIN {company_users} cu ON (d.id = cu.departmentid)
+        $userdepartments = $DB->get_records_sql("SELECT d.*
+                                                 FROM {department} d
+                                                 JOIN {company_users} cu ON (d.id = cu.departmentid)
                                                  WHERE cu.userid = :userid
                                                  AND cu.companyid = :companyid",
                                                  ['userid' => $row->userid,
@@ -147,7 +149,9 @@ class user_table extends table_sql {
             }
         } else {
             if (!empty($row->licenseallocated)) {
-                $element = $output->render_datetime_element('licenseallocated['.$row->id.']', 'licenseallocated_' . $row->id, $row->licenseallocated);
+                $element = $output->render_datetime_element('licenseallocated['.$row->id.']',
+                                                            'licenseallocated_' . $row->id,
+                                                            $row->licenseallocated);
                 return $element;
             }
         }
@@ -169,7 +173,9 @@ class user_table extends table_sql {
             }
         } else {
             //if (!empty($row->timeenrolled)) {
-                $element = $output->render_datetime_element('timeenrolled['.$row->id.']', 'timeenrolled_' . $row->id, $row->timeenrolled);
+                $element = $output->render_datetime_element('timeenrolled['.$row->id.']',
+                                                            'timeenrolled_' . $row->id,
+                                                            $row->timeenrolled);
                 return $element;
             //}
         }
@@ -191,7 +197,9 @@ class user_table extends table_sql {
             }
         } else {
             //if (!empty($row->timecompleted)) {
-                $element = $output->render_datetime_element('timecompleted['.$row->id.']', 'timecompleted_' . $row->id, $row->timecompleted);
+                $element = $output->render_datetime_element('timecompleted['.$row->id.']',
+                                                            'timecompleted_' . $row->id,
+                                                            $row->timecompleted);
                 return $element;
             //}
         }
@@ -224,7 +232,10 @@ class user_table extends table_sql {
     public function col_finalscore($row) {
         global $CFG, $DB, $USER;
 
-        if ($icourserec = $DB->get_record_sql("SELECT * FROM {iomad_courses} WHERE courseid = :courseid AND hasgrade = 1", array('courseid' => $row->courseid))) {
+        if ($icourserec = $DB->get_record_sql("SELECT * FROM {iomad_courses}
+                                               WHERE courseid = :courseid
+                                               AND hasgrade = 1",
+                                              ['courseid' => $row->courseid])) {
             if ($this->is_downloading() || empty($USER->editing)) {
                 if (!empty($row->finalscore) && !empty($row->timeenrolled)) {
                     return round($row->finalscore, get_config('local_iomad', 'report_grade_places'))."%";
@@ -235,20 +246,20 @@ class user_table extends table_sql {
                 //if (!empty($row->timecompleted)) {
                     $return = html_writer::tag('input',
                                                '',
-                                               array('name' => 'finalscore[' . $row->id . ']',
+                                               ['name' => 'finalscore[' . $row->id . ']',
                                                      'type' => 'number',
                                                      'value' => round($row->finalscore, get_config('local_iomad', 'report_grade_places')),
                                                      'min' => 0,
                                                      'max' => 100,
                                                      'step' => '0.01',
                                                      'onchange' => 'iomad_report_user_userdisplay_values.submit()',
-                                                     'id' => 'id_finalscore_' . $row->id));
+                                                     'id' => 'id_finalscore_' . $row->id]);
                     $return .= html_writer::tag('input',
                                                 '',
-                                                array('name' => 'origfinalscore[' . $row->id . ']',
+                                                ['name' => 'origfinalscore[' . $row->id . ']',
                                                      'type' => 'hidden',
                                                      'value' => round($row->finalscore, get_config('local_iomad', 'report_grade_places')),
-                                                     'id' => 'id_origfinalscore_' . $row->id));
+                                                     'id' => 'id_origfinalscore_' . $row->id]);
                     return $return;
                 //}
             }
@@ -269,28 +280,37 @@ class user_table extends table_sql {
             return;
         }
 
-        if (!empty($row->timecompleted) && $certmodule = $DB->get_record('modules', array('name' => 'iomadcertificate'))) {
-            if ($traccertrecs = $DB->get_records('local_iomad_track_certs', array('trackid' => $row->certsource))) {
+        if (!empty($row->timecompleted) && $certmodule = $DB->get_record('modules', ['name' => 'iomadcertificate'])) {
+            if ($traccertrecs = $DB->get_records('local_iomad_track_certs', ['trackid' => $row->certsource])) {
                 if (empty($USER->editing) || !iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
                     $usercontext = context_user::instance($row->userid);
                     $returntext = "";
                     foreach ($traccertrecs as $traccertrec) {
                         // create the file download link.
 
-                        $certurl = moodle_url::make_file_url('/pluginfile.php', '/'.$usercontext->id.'/local_iomad/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
-                        $returntext .= '<a href="' . $certurl . '" title="' . format_string($traccertrec->filename) .'">
-                                        <img src="' . $output->image_url('f/pdf') . '" alt="' . format_string($traccertrec->filename) . '" width="32px"></a>&nbsp';
+                        $certurl = moodle_url::make_file_url('/pluginfile.php',
+                                                             '/' . $usercontext->id .
+                                                             '/local_iomad/issue/' .
+                                                             $traccertrec->trackid .'/' .
+                                                             $traccertrec->filename);
+                        $returntext .= '<a href="' . $certurl . '" title="' . format_string($traccertrec->filename) .
+                                       '"><img src="' . $output->image_url('f/pdf') .
+                                       '" alt="' . format_string($traccertrec->filename) .
+                                       '" width="32px"></a>&nbsp';
                     }
                     return $returntext;
                 } else {
                     $certurl = new moodle_url($CFG->wwwroot . '/local/report_completion/index.php',
-                                              array('sesskey' => sesskey(),
-                                                    'courseid' => $row->courseid,
-                                                    'rowid' => $row->id,
-                                                    'action' => 'redocert',
-                                                    'redocertificate' => $row->id));
+                                              ['sesskey' => sesskey(),
+                                               'courseid' => $row->courseid,
+                                               'rowid' => $row->id,
+                                               'action' => 'redocert',
+                                               'redocertificate' => $row->id]);
                     $checkboxhtml = "<input type='checkbox' name='redo_certificates[]' value=$row->id class='enablecertificates'>&nbsp";
-                    return $checkboxhtml . '<a class="btn btn-secondary" href="' . $certurl . '">' . get_string('redocert', 'local_report_users') . '</a>';
+                    return $checkboxhtml . '<a class="btn btn-secondary" href="' .
+                           $certurl . '">' .
+                           get_string('redocert', 'local_report_users') .
+                           '</a>';
                 }
             } else {
                 return;
@@ -316,34 +336,38 @@ class user_table extends table_sql {
         // Get the buttons.
         // Link for user delete
         unset($params['userid']);
-        $resetlink = new moodle_url('/local/report_completion/index.php', $params + array(
+        $resetlink = new moodle_url('/local/report_completion/index.php', $params +
+            [
                 'userid' => $row->userid,
                 'delete' => $row->userid,
                 'courseid' => $row->courseid,
                 'rowid' => $row->id,
                 'action' => 'delete'
-            ));
-        $clearlink = new moodle_url('/local/report_completion/index.php', $params + array(
+            ]);
+        $clearlink = new moodle_url('/local/report_completion/index.php', $params +
+            [
                 'userid' => $row->userid,
                 'delete' => $row->userid,
                 'rowid' => $row->id,
                 'courseid' => $row->courseid,
-                'action' => 'clear'
-            ));
-        $revokelink = new moodle_url('/local/report_completion/index.php', $params + array(
+                'action' => 'clear',
+            ]);
+        $revokelink = new moodle_url('/local/report_completion/index.php', $params +
+            [
                 'userid' => $row->userid,
                 'delete' => $row->userid,
                 'rowid' => $row->id,
                 'courseid' => $row->courseid,
-                'action' => 'revoke'
-            ));
-        $trackonlylink = new moodle_url('/local/report_completion/index.php', $params + array(
+                'action' => 'revoke',
+            ]);
+        $trackonlylink = new moodle_url('/local/report_completion/index.php', $params +
+            [
                 'userid' => $row->userid,
                 'delete' => $row->userid,
                 'rowid' => $row->id,
                 'courseid' => $row->courseid,
-                'action' => 'trackonly'
-            ));
+                'action' => 'trackonly',
+            ]);
         $delaction = '';
 
         if (has_capability('local/report_users:deleteentries', $companycontext)) {
@@ -352,23 +376,40 @@ class user_table extends table_sql {
                 if (empty($USER->editing)) {
                     if (!empty($row->licenseid) &&
                         $DB->get_record('companylicense',
-                                         array('id' => $row->licenseid,
-                                               'program' => 1))) {
+                                         ['id' => $row->licenseid,
+                                               'program' => 1])) {
                         if (has_capability('local/report_users:clearentries', $companycontext)) {
-                            $delaction .= '<a class="btn btn-danger" href="'.$clearlink.'">' . get_string('resetcourse', 'local_report_users') . '</a>';
+                            $delaction .= '<a class="btn btn-danger" href="'.$clearlink.'">' .
+                                          get_string('resetcourse', 'local_report_users') .
+                                          '</a>';
                         }
                     } else {
-                        if ($DB->get_record('companylicense_users', array('userid' => $row->userid, 'licensecourseid' => $row->courseid, 'licenseid' => $row->licenseid, 'issuedate' => $row->licenseallocated, 'isusing' => 1))) {
+                        if ($DB->get_record('companylicense_users', ['userid' => $row->userid,
+                                                                     'licensecourseid' => $row->courseid,
+                                                                     'licenseid' => $row->licenseid,
+                                                                     'issuedate' => $row->licenseallocated,
+                                                                     'isusing' => 1])) {
                             if (has_capability('local/report_users:deleteentries', $companycontext)) {
-                                $delaction .= '<a class="btn btn-danger" href="'.$resetlink.'">' . get_string('resetcourse', 'local_report_users') . '</a>';
+                                $delaction .= '<a class="btn btn-danger" href="'.$resetlink.'">' .
+                                              get_string('resetcourse', 'local_report_users') .
+                                              '</a>';
                             }
-                        } else if ($DB->get_record('companylicense_users', array('userid' => $row->userid, 'licensecourseid' => $row->courseid, 'licenseid' => $row->licenseid, 'issuedate' => $row->licenseallocated, 'isusing' => 0))) {
-                            if (has_capability('local/report_users:deleteentries', $companycontext)) {
-                                $delaction .= '<a class="btn btn-danger" href="'.$revokelink.'">' . get_string('revokelicense', 'local_report_users') . '</a>';
+                        } else if ($DB->get_record('companylicense_users', ['userid' => $row->userid,
+                                                                            'licensecourseid' => $row->courseid,
+                                                                            'licenseid' => $row->licenseid,
+                                                                            'issuedate' => $row->licenseallocated,
+                                                                            'isusing' => 0])) {
+
+                        if (has_capability('local/report_users:deleteentries', $companycontext)) {
+                                $delaction .= '<a class="btn btn-danger" href="'.$revokelink.'">' .
+                                              get_string('revokelicense', 'local_report_users') .
+                                              '</a>';
                             }
                         } else {
                             if (has_capability('local/report_users:clearentries', $companycontext)) {
-                                $delaction .= '<a class="btn btn-danger" href="'.$clearlink.'">' . get_string('clearcourse', 'local_report_users') . '</a>';
+                                $delaction .= '<a class="btn btn-danger" href="'.$clearlink.'">' .
+                                              get_string('clearcourse', 'local_report_users') .
+                                              '</a>';
                             }
                         }
                     }
@@ -376,7 +417,10 @@ class user_table extends table_sql {
             } else {
                 if (!empty($USER->editing) && iomad::has_capability('local/report_users:deleteentriesfull', $companycontext)) {
                     $checkboxhtml = "<input type='checkbox' name='purge_entries[]' value=$row->id class='enableentries'>&nbsp";
-                    $delaction .= $checkboxhtml . '<a class="btn btn-danger" href="'.$trackonlylink.'">' . get_string('purgerecord', 'local_report_users') . '</a>';
+                    $delaction .= $checkboxhtml .
+                                  '<a class="btn btn-danger" href="' . $trackonlylink. '">' .
+                                  get_string('purgerecord', 'local_report_users') .
+                                  '</a>';
                 }
             }
         }
@@ -403,7 +447,7 @@ class user_table extends table_sql {
         global $DB, $CFG;
 
         $tooltip = "";
-        $course = $DB->get_record('course', array('id' => $row->courseid));
+        $course = $DB->get_record('course', ['id' => $row->courseid]);
         $info = new completion_info($course);
         $completions = $info->get_completions($row->userid);
         $showgrade = true;
@@ -463,7 +507,7 @@ class user_table extends table_sql {
         if (!empty($row->timecompleted)) {
             $progress = 100;
         } else {
-            $total = $DB->count_records('course_completion_criteria', array('course' => $row->courseid));
+            $total = $DB->count_records('course_completion_criteria', ['course' => $row->courseid]);
             if ($total != 0 && !empty($row->timeenrolled)) {
                 $progress = round($completed * 100 / $totalcount, 0);
             } else {
@@ -476,10 +520,10 @@ class user_table extends table_sql {
             } else {
                 if (!empty($row->licenseid)) {
                     if ($DB->get_record('companylicense_users',
-                                        array('licenseid' => $row->licenseid,
-                                              'userid' => $row->userid,
-                                              'licensecourseid' => $row->courseid,
-                                              'issuedate' => $row->licenseallocated))) {
+                                        ['licenseid' => $row->licenseid,
+                                        'userid' => $row->userid,
+                                        'licensecourseid' => $row->courseid,
+                                        'issuedate' => $row->licenseallocated])) {
                         if (!$this->is_downloading()) {
                             return '<div class="progress" style="height:20px" data-html="true" title="'.nl2br($tooltip).'">
                                     <div class="progress-bar" style="width:0%;height:20px">0%</div>
@@ -504,10 +548,10 @@ class user_table extends table_sql {
             if ($progress < 100 &&
                 !empty($row->licenseid) &&
                 !$DB->get_record('companylicense_users',
-                                array('licenseid' => $row->licenseid,
-                                      'userid' => $row->userid,
-                                      'licensecourseid' => $row->courseid,
-                                      'issuedate' => $row->licenseallocated))) {
+                                ['licenseid' => $row->licenseid,
+                                'userid' => $row->userid,
+                                'licensecourseid' => $row->courseid,
+                                'issuedate' => $row->licenseallocated])) {
                 return get_string('suspended');
             }
 
@@ -571,7 +615,9 @@ class user_table extends table_sql {
                 return userdate($row->timecompleted, get_config('local_iomad', 'date_format'));
             } else {
                 if ($type == 'criteria' ) {
-                    if ($critrecord = $DB->get_record('course_completion_crit_compl', ['userid' => $row->userid, 'course' => $row->courseid, 'criteriaid' => $criteriaid])) {
+                    if ($critrecord = $DB->get_record('course_completion_crit_compl', ['userid' => $row->userid,
+                                                                                       'course' => $row->courseid,
+                                                                                       'criteriaid' => $criteriaid])) {
                         if (!empty($critrecord->timecompleted)) {
                             return userdate($critrecord->timecompleted, get_config('local_iomad', 'date_format'));
                         } else {
@@ -682,13 +728,19 @@ class user_table extends table_sql {
 
                 case 'certificate':
                     if (!empty($USER->editing) && iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
-                        $this->headers[$index] = "<input type='checkbox' name='allthecertificates' id='check_allthecertificates' class='checkbox enableallcertificates'>&nbsp" . $this->headers[$index];
+                        $this->headers[$index] = "<input type='checkbox'
+                                                         name='allthecertificates'
+                                                         id='check_allthecertificates'
+                                                         class='checkbox enableallcertificates'>&nbsp" . $this->headers[$index];
                     }
                 break;
 
                 case 'actions':
                     if (!empty($USER->editing) && iomad::has_capability('local/report_users:deleteentriesfull', $companycontext)) {
-                        $this->headers[$index] = "&nbsp<input type='checkbox' name='alltheentries' id='check_alltheentries' class='checkbox enableallentries'>&nbsp" . $this->headers[$index];
+                        $this->headers[$index] = "&nbsp<input type='checkbox'
+                                                              name='alltheentries'
+                                                              id='check_alltheentries'
+                                                              class='checkbox enableallentries'>&nbsp" . $this->headers[$index];
                     }
                 break;
 
@@ -703,10 +755,10 @@ class user_table extends table_sql {
                     }
             }
 
-            $attributes = array(
+            $attributes = [
                 'class' => 'header c' . $index . $this->column_class[$column],
                 'scope' => 'col',
-            );
+            ];
             if ($this->headers[$index] === NULL) {
                 $content = '&nbsp;';
             } else if (!empty($this->prefs['collapse'][$column])) {
@@ -720,7 +772,7 @@ class user_table extends table_sql {
                     $helpicon  = $OUTPUT->render($this->helpforheaders[$index]);
                 }
                 $content = $this->headers[$index] . $helpicon . html_writer::tag('div',
-                        $icon_hide, array('class' => 'commands'));
+                        $icon_hide, ['class' => 'commands']);
             }
             echo html_writer::tag('th', $content, $attributes);
         }
