@@ -177,7 +177,7 @@ class company_edit_form extends \company_moodleform {
         $mform->setDefault('managerdigestday', 0);
         $mform->addHelpButton('managerdigestday', 'managerdigestday', 'block_iomad_company_admin');
 
-        if (iomad::has_capability('local/email:edit', $this->context)) {
+        if (iomad::has_capability('local/iomad:email_edit', $this->context)) {
             // Add in the company email template selector.
             $emailtemplates = \company::get_email_templates($this->companyid);
             if (!empty($emailtemplates[$this->previousemailtemplateid])) {

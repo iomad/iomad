@@ -25,13 +25,13 @@
 
 namespace local_iomad\task;
 
-require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
 use core\task\manager;
+use do_redocerts;
 
 /**
  * An adhoc import user task for local iomad

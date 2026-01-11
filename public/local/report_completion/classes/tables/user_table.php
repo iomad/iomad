@@ -98,7 +98,7 @@ class user_table extends table_sql {
     }
 
     /**
-     * Generate the display of the user's companies 
+     * Generate the display of the user's companies
      * @param object $user the table row being output.
      * @return string HTML content to go inside the td.
      */
@@ -277,7 +277,7 @@ class user_table extends table_sql {
                     foreach ($traccertrecs as $traccertrec) {
                         // create the file download link.
 
-                        $certurl = moodle_url::make_file_url('/pluginfile.php', '/'.$usercontext->id.'/local_iomad_track/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
+                        $certurl = moodle_url::make_file_url('/pluginfile.php', '/'.$usercontext->id.'/local_iomad/issue/'.$traccertrec->trackid.'/'.$traccertrec->filename);
                         $returntext .= '<a href="' . $certurl . '" title="' . format_string($traccertrec->filename) .'">
                                         <img src="' . $output->image_url('f/pdf') . '" alt="' . format_string($traccertrec->filename) . '" width="32px"></a>&nbsp';
                     }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Default library file for local IOMAD
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -61,4 +63,45 @@ function local_iomad_pre_course_delete($course) {
     }
 
     return true;
+}
+
+/**
+ * File handler for local IOMAD
+ *
+ * @param stdClass $course course object
+ * @param stdClass $birecord_or_cm block instance record
+ * @param stdClass $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool
+ */
+function local_iomad_pluginfile($course, $birecord_or_cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+
+    // Context will always be user context.
+    if ($context->contextlevel != CONTEXT_USER) {
+        send_file_not_found();
+    }
+
+    // Need to be logged in.
+    require_login();
+
+    // File area has to be issue.
+    if ($filearea !== 'issue') {
+        send_file_not_found();
+    }
+
+    // Set up the file storage and file.
+    $fs = get_file_storage();
+    $itemid = array_shift($args);
+    $filename = array_pop($args);
+    $filepath = $args ? '/'.implode('/', $args).'/' : '/';
+    if (!$file = $fs->get_file($context->id, 'local_iomad', 'issue', $itemid, $filepath, $filename) or $file->is_directory()) {
+        send_file_not_found();
+    }
+
+    // Send the file.
+    core\session\manager::write_close();
+    send_stored_file($file, null, 0, $forcedownload, $options);
 }

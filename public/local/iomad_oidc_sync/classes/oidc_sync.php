@@ -29,7 +29,7 @@ namespace local_iomad_oidc_sync;
 use local_iomad\company;
 use local_iomad\company_user;
 use local_iomad\iomad;
-use local_iomad_signup_observer;
+use local_iomad\observer;
 use core\event\user_updated;
 
 /**
@@ -47,7 +47,7 @@ class oidc_sync {
 
         // Disable the signup handler to prevent it from interfering with company assignments.
         // OIDC sync handles company assignment explicitly via company_user::create().
-        local_iomad_signup_observer::$disable_handler = true;
+        observer::$disable_handler = true;
 
         try {
             // Get the list of configured companies.
@@ -101,7 +101,7 @@ class oidc_sync {
             }
         } finally {
             // Always re-enable the signup handler, even if an exception occurs.
-            local_iomad_signup_observer::$disable_handler = false;
+            observer::$disable_handler = false;
         }
     }
 

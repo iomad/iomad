@@ -34,9 +34,6 @@ use block_iomad_learningpaths\companypaths;
 use block_iomad_company_admin\event\user_license_assigned;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/local/email/lib.php');
-require_once($CFG->dirroot . '/local/iomad_learningpath/classes/companypaths.php');
 
 class processor {
     public static function trigger_oncheckout($invoiceid) {

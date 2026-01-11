@@ -18,13 +18,14 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
-use \moodleform;
-use \context_system;
-use \potential_department_user_selector;
-use \current_department_user_selector;
+use moodle_url;
+use moodleform;
+use context_system;
+use local_iomad\user_selector\potential_department;
+use local_iomad\user_selector\current_department;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
 
 class company_managers_form extends moodleform {
     protected $context = null;
@@ -73,8 +74,8 @@ class company_managers_form extends moodleform {
                          'subdepartments' => $this->subhierarchieslist,
                          'parentdepartment' => $parentlevel,
                          'showothermanagers' => $this->showothermanagers);
-        $this->potentialusers = new potential_department_user_selector('potentialmanagers', $options);
-        $this->currentusers = new current_department_user_selector('currentmanagers', $options);
+        $this->potentialusers = new potential_department('potentialmanagers', $options);
+        $this->currentusers = new current_department('currentmanagers', $options);
 
         parent::__construct($actionurl);
     }

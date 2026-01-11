@@ -23,12 +23,17 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \company;
-use \potential_company_users_user_selector;
-use \current_company_users_user_selector;
-use \moodle_url;
-use \context_system;
+use moodleform;
+use local_iomad\user_selector\potential_company;
+use local_iomad\user_selector\current_company;
+use moodle_url;
+use context_system;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
+use core\event\user_updated;
+use block_iomad_company_admin\event\company_user_assigned;
+use block_iomad_company_admin\event\company_user_unassigned;
 
 class company_users_form extends moodleform {
     protected $context = null;
@@ -43,8 +48,8 @@ class company_users_form extends moodleform {
         $this->allusers = $allusers;    
 
         $options = array('context' => $this->context, 'companyid' => $this->selectedcompany, 'allusers' => $allusers);
-        $this->potentialusers = new potential_company_users_user_selector('potentialusers', $options);
-        $this->currentusers = new current_company_users_user_selector('currentusers', $options);
+        $this->potentialusers = new potential_company('potentialusers', $options);
+        $this->currentusers = new current_company('currentusers', $options);
 
         parent::__construct($actionurl);
     }
@@ -102,6 +107,8 @@ class company_users_form extends moodleform {
             new moodle_url('/blocks/iomad_company_admin/company_user_create_form.php?companyid='.
             $this->selectedcompany). '">Create one now</a>');
         } */
+
+        $mform->disable_form_change_checker();
     }
 
     public function process() {
@@ -139,7 +146,7 @@ class company_users_form extends moodleform {
                             // Add user to default company department.
                             $company->assign_user_to_company($adduser->id, 0, 0, false, $import);
 
-                            \core\event\user_updated::create_from_userid($adduser->id)->trigger();
+                            user_updated::create_from_userid($adduser->id)->trigger();
 
                             // Fire an event for this.
                             $eventother = array('companyid' => $company->id,
@@ -148,11 +155,11 @@ class company_users_form extends moodleform {
                                                 'usertypename' => '',
                                                 'oldcompany' => json_encode(array()));
 
-                            $event = \block_iomad_company_admin\event\company_user_assigned::create(array('context' => context_system::instance(),
-                                                                                                          'userid' => $USER->id,
-                                                                                                          'objectid' => $company->id,
-                                                                                                          'relateduserid' => $adduser->id,
-                                                                                                           'other' => $eventother));
+                            $event = company_user_assigned::create(array('context' => context_system::instance(),
+                                                                         'userid' => $USER->id,
+                                                                         'objectid' => $company->id,
+                                                                         'relateduserid' => $adduser->id,
+                                                                          'other' => $eventother));
                             $event->trigger();
                         }
                     }
@@ -172,7 +179,7 @@ class company_users_form extends moodleform {
                         $company->unassign_user_from_company($removeuser->id);
 
                         // Fire the user updated event.
-                        \core\event\user_updated::create_from_userid($removeuser->id)->trigger();
+                        user_updated::create_from_userid($removeuser->id)->trigger();
 
                         // Fire an event for this.
                         $eventother = array('companyid' => 0,
@@ -181,11 +188,11 @@ class company_users_form extends moodleform {
                                             'usertypename' => '',
                                             'oldcompany' => json_encode($company));
 
-                        $event = \block_iomad_company_admin\event\company_user_unassigned::create(array('context' => context_system::instance(),
-                                                                                                      'userid' => $USER->id,
-                                                                                                      'objectid' => 0,
-                                                                                                      'relateduserid' => $removeuser->id,
-                                                                                                       'other' => $eventother));
+                        $event = company_user_unassigned::create(array('context' => context_system::instance(),
+                                                                       'userid' => $USER->id,
+                                                                       'objectid' => 0,
+                                                                       'relateduserid' => $removeuser->id,
+                                                                       'other' => $eventother));
                         $event->trigger();
                     }
 

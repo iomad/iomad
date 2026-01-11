@@ -23,6 +23,8 @@
 
 namespace local_iomad\user_selector;
 
+use context_system;
+
 class potential_company extends company_base {
 
     protected function get_options() {

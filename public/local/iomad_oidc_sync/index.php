@@ -88,7 +88,7 @@ $PAGE->requires->js_call_amd('local_iomad_oidc_sync/tenantnameorguid', 'init');
 
 $url = new moodle_url('/local/iomad_oidc_sync/index.php', $params);
 
-if (!company::check_valid_user($companyid, $USER->id)) {
+if (!local_iomad\company::check_valid_user($companyid, $USER->id)) {
     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 

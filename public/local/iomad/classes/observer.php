@@ -278,18 +278,14 @@ class observer {
      * @return bool true on success.
      */
     public static function user_created($event) {
-error_log("A");
         // Do the sign up part - as this is part of this plugin too.
         // Check if the handler has been temporarily disabled
         if (!self::$disable_handler) {
-error_log("B");
             company::signup_user_created($event->objectid);
-error_log("C");
         }
 
         // Do the rest of it.
         company::user_created($event);
-error_log("D");
         return true;
     }
 

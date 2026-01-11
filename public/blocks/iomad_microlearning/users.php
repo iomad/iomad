@@ -24,9 +24,7 @@
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
-require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib/user_selectors.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot.'/local/email/lib.php');
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $companyid = optional_param('companyid', 0, PARAM_INTEGER);

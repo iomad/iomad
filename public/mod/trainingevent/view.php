@@ -24,7 +24,6 @@
  */
 
 require_once("../../config.php");
-require_once($CFG->dirroot."/local/email/lib.php");
 require_once($CFG->libdir."/gradelib.php");
 require_once('lib.php');
 require_once($CFG->dirroot.'/calendar/lib.php');

@@ -22,8 +22,6 @@
  */
 
 require_once(dirname(__FILE__).'/../../config.php');
-require_once($CFG->dirroot.'/local/iomad_track/lib.php');
-require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 
 // Params.
 $userid = required_param('userid', PARAM_INT);
@@ -34,11 +32,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+$companycontext = core\context\company::instance($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_users:addentry', $companycontext);
+local_iomad\iomad::require_capability('local/report_users:addentry', $companycontext);
 
 $linktext = get_string('user_detail_title', 'local_report_users');
 
@@ -49,13 +47,13 @@ $baseurl = new moodle_url('/local/report_users/newentry.php', array('userid' => 
 // Print the page header.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($baseurl);
-$PAGE->set_pagelayout('report');
+$PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linktext");
 $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
-if (iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
     $PAGE->navbar->add(get_string('pluginname', 'local_report_completion'),
                        new moodle_url($CFG->wwwroot . "/local/report_completion/index.php"));
 }
@@ -65,7 +63,7 @@ $PAGE->navbar->add($linktext, $reporturl);
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Check the userid is valid.
-if (!company::check_valid_user($companyid, $userid)) {
+if (!local_iomad\company::check_valid_user($companyid, $userid)) {
     throw new moodle_exception('invaliduser', 'block_iomad_company_management');
 }
 
@@ -108,7 +106,7 @@ if ($data = $mform->get_data()) {
     $trackid = $DB->insert_record('local_iomad_track', $newentry);
 
     // Create a certificate, if required.
-    local_iomad\track\track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
+    local_iomad\track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
 
     // Return success.
     redirect($returnurl,

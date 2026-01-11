@@ -33,11 +33,12 @@ class product_edit_form extends moodleform {
     protected $isadding;
     protected $shopsettingsid = 0;
     protected $context = null;
+    protected $editoroptions = [];
     protected $courses = [];
     protected $currency = '';
     protected $priceblocks = null;
-    protected $editoroptions;
-    protected $currencies;
+    protected $paths = [];
+    protected $currencies = [];
 
     public function __construct($actionurl, $isadding, $shopsettingsid, $courses = [], $priceblocks = null, $editoroptions = [], $paths = []) {
         global $CFG;
