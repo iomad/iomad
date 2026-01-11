@@ -115,7 +115,7 @@ class context_iomadcustompage extends context {
     /**
      * Returns iomadcustompage context instance.
      *
-     * @param int $pageid id from {iomadcustompages} table
+     * @param int $pageid id from {local_iomadcustompages} table
      * @param int $strictness
      * @return context|bool context instance
      */
@@ -262,13 +262,20 @@ class context_iomadcustompage extends context {
             */
 
             // Deeper pages - one query per depthlevel.
-            $maxdepth = $DB->get_field_sql("SELECT MAX(depth) FROM {iomadcustompages}");
+            $maxdepth = $DB->get_field_sql("
+                SELECT MAX(ctx.depth)
+                  FROM {context} ctx
+                  JOIN {local_iomadcustompages} sp
+                    ON sp.id = ctx.instanceid
+                 WHERE ctx.contextlevel = :contextlevel
+            ", ['contextlevel' => CONTEXT_CUSTOMPAGE]);
+
             for ($n = 2; $n <= $maxdepth; $n++) {
                 $sql = "INSERT INTO {context_temp} (id, path, depth, locked)
                         SELECT ctx.id, ".$DB->sql_concat('pctx.path', "'/'", 'ctx.id').", pctx.depth+1, ctx.locked
                           FROM {context} ctx
                           JOIN {local_iomadcustompages} sp
-                            ON (sp.id = ctx.instanceid AND ctx.contextlevel = ".CONTEXT_CUSTOMPAGE." AND sp.depth = $n)
+                            ON (sp.id = ctx.instanceid AND ctx.contextlevel = ".CONTEXT_CUSTOMPAGE." AND ctx.depth = $n)
                           JOIN {context} pctx ON (pctx.instanceid = sp.parent AND pctx.contextlevel = ".CONTEXT_CUSTOMPAGE.")
                          WHERE pctx.path IS NOT NULL AND pctx.depth > 0
                                $ctxemptyclause";
