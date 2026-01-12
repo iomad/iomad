@@ -214,33 +214,50 @@ function profile_category_icons($category) {
     $fieldcount    = $DB->count_records('user_info_field', array('categoryid' => $category->id));
 
     // Edit!
-    $editstr = '<a title="'.$stredit.'" href="company_user_profiles.php?id='.$category->id.
-               '&amp;action=editcategory"><img src="'.$OUTPUT->image_url('t/edit') .
-               '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+    $editurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
+                                                                                        'action' => 'editcategory']);
+    $editstr = '<a title="' . $stredit . '" href="' . $editurl->out() .
+               '"><i class="icon fa fa-pen fa-fw " title="' . $stredit .
+               '" role="img" aria-label="' . $stredit .
+               '"></i></a>';
 
     // Delete!
     // Can only delete the last category if there are no fields in it.
     if (($categorycount > 1) or ($fieldcount == 0)) {
-        $editstr .= '<a title="'.$strdelete.'" href="company_user_profiles.php?id='.$category->id.'&amp;action=deletecategory';
-        $editstr .= '"><img src="'.$OUTPUT->image_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
+        $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
+                                                                                              'action' => 'deletecategory']);
+        $editstr .= '<a title="' . $strdelete.'" href="' . $deleteurl->out() .
+                    '"><i class="icon fa fa-trash-can fa-fw " title="' . $strdelete .
+                    '" role="img" aria-label="' . $strdelete .
+                    '"></i></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
 
     // Move up!
+    $upurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
+                                                                                      'action' => 'movecategory',
+                                                                                      'dir' => 'up',
+                                                                                      'sesskey' => sesskey()]);
     if ($category->sortorder > 1) {
-        $editstr .= '<a title="'.$strmoveup.'" href="company_user_profiles.php?id='.$category->id.
-                    '&amp;action=movecategory&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'
-                    .$OUTPUT->image_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="' . $strmoveup . '" href="' . $upurl->out() .
+                    '"><i class="icon fa fa-arrow-up fa-fw " title="' . $strmoveup .
+                    '" role="img" aria-label="' . $strmoveup .
+                    '"></i></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
 
     // Move down!
+    $downurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $category->id,
+                                                                                        'action' => 'movecategory',
+                                                                                        'dir' => 'down',
+                                                                                        'sesskey' => sesskey()]);
     if ($category->sortorder < $categorycount) {
-        $editstr .= '<a title="'.$strmovedown.'" href="company_user_profiles.php?id='.$category->id.
-                    '&amp;action=movecategory&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'
-                    .$OUTPUT->image_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="' . $strmovedown . '" href="' . $downurl->out() .
+                    '"><i class="icon fa fa-arrow-up fa-fw " title="' . $strmovedown .
+                    '" role="img" aria-label="' . $strmovedown .
+                    '"></i></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
@@ -265,30 +282,44 @@ function profile_field_icons($field) {
     $datacount  = $DB->count_records('user_info_data', array('fieldid' => $field->id));
 
     // Edit!
-    $editstr = '<a title="'.$stredit.'" href="company_user_profiles.php?id='.$field->id.
-               '&amp;action=editfield"><img src="'.$OUTPUT->image_url('t/edit') .
-               '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+    $editurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
+                                                                                        'action' => 'editfield']);
+    $editstr = '<a title="' . $stredit . '" href="' . $editurl->out() .
+               '"><i class="icon fa fa-pen fa-fw " title="' . $stredit . '" role="img" aria-label="' . $stredit .
+               '"></i></a>';
 
     // Delete!
-    $editstr .= '<a title="'.$strdelete.'" href="company_user_profiles.php?id='.$field->id.'&amp;action=deletefield';
-    $editstr .= '"><img src="'.$OUTPUT->image_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
+    $deleteurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
+                                                                                          'action' => 'deletefield']);
+    $editstr .= '<a title="' . $strdelete . '" href="' . $deleteurl->out() .
+                    '"><i class="icon fa fa-trash-can fa-fw " title="' . $strdelete .
+                    '" role="img" aria-label="' . $strdelete .
+                    '"></i></a> ';
 
     // Move up!
-    if ($field->sortorder > 1) {
-        $editstr .= '<a title="'.$strmoveup.'" href="company_user_profiles.php?id='.
-                    $field->id.'&amp;action=movefield&amp;dir=up&amp;sesskey='.sesskey().
-                    '"><img src="'.$OUTPUT->image_url('t/up') . '" alt="'.$strmoveup.
-                    '" class="iconsmall" /></a> ';
+     $upurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
+                                                                                      'action' => 'movefield',
+                                                                                      'dir' => 'up',
+                                                                                      'sesskey' => sesskey()]);
+   if ($field->sortorder > 1) {
+        $editstr .= '<a title="' . $strmoveup . '" href="' . $upurl->out() .
+                    '"><i class="icon fa fa-arrow-up fa-fw " title="' . $strmoveup .
+                    '" role="img" aria-label="' . $strmoveup .
+                    '"></i></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
 
     // Move down!
+    $downurl = new moodle_url('/blocks/iomad_company_admin/company_user_profiles.php', ['id' => $field->id,
+                                                                                        'action' => 'movefield',
+                                                                                        'dir' => 'down',
+                                                                                        'sesskey' => sesskey()]);
     if ($field->sortorder < $fieldcount) {
-        $editstr .= '<a title="'.$strmovedown.'" href="company_user_profiles.php?id='.
-                    $field->id.'&amp;action=movefield&amp;dir=down&amp;sesskey='.sesskey().
-                    '"><img src="'.$OUTPUT->image_url('t/down') .
-                    '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="' . $strmovedown . '" href="' . $downurl->out() .
+                    '"><i class="icon fa fa-arrow-down fa-fw " title="' . $strmovedown .
+                    '" role="img" aria-label="' . $strmovedown .
+                    '"></i></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->image_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
