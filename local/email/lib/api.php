@@ -211,9 +211,16 @@ class EmailTemplate {
         // If there is no company already set
         // Get it by another means.
         if (empty($this->company)) {
-            // Otherwise use the creating users company.
-            $companyid = iomad::get_my_companyid(context_system::instance(), false);
-            $this->company = new company($companyid);
+            // Try to get company from invoice first (fixes null companyid issue with payment gateways).
+            if (!empty($this->invoice->companyid)) {
+                $this->company = new company($this->invoice->companyid);
+            } else {
+                // Otherwise use the creating users company.
+                $companyid = iomad::get_my_companyid(context_system::instance(), false);
+                if (!empty($companyid)) {
+                    $this->company = new company($companyid);
+                }
+            }
         }
 
         $this->course = $this->get_course($course);
