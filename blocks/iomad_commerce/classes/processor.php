@@ -114,8 +114,12 @@ class processor {
             $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $iteminfo->id]);
             if (!empty($paths) || $licensecoursecount > 0) {
                 $assignpaths = [];
-                // Get the company id
-                $companyid = iomad::get_my_companyid(context_system::instance());
+                // Get the company id from the invoice first, fall back to current user's company.
+                if (!empty($invoice->companyid)) {
+                    $companyid = $invoice->companyid;
+                } else {
+                    $companyid = iomad::get_my_companyid(context_system::instance());
+                }
                 // Get name for company license.
                 $company = $DB->get_record('company', ['id' => $companyid]);
                 $licensename = $company->shortname . " [" . $iteminfo->name . "] " . userdate(time(), $CFG->iomad_date_format);
@@ -133,8 +137,10 @@ class processor {
                 $companylicense->clearonexpire = $iteminfo->clearonexpire;
                 $companylicense->instant = $iteminfo->instant;
                 $companylicense->companyid = $companyid;
-                $companylicense->expirydate = (!empty($iteminfo->single_purchase_shelflife)) ? $iteminfo->single_purchase_shelflife + $runtime : 0;
-                $companylicense->cutoffdate = (!empty($iteminfo->cutofftime)) ? $iteminfo->cutofftime + $runtime : 0;
+                // Deal with license shelf life. Default to 5 years if not set (0 is treated as expired).
+                $defaultshelflife = 5 * 365 * 24 * 60 * 60; // 5 years in seconds.
+                $companylicense->expirydate = (!empty($iteminfo->single_purchase_shelflife)) ? $iteminfo->single_purchase_shelflife + $runtime : $runtime + $defaultshelflife;
+                $companylicense->cutoffdate = (!empty($iteminfo->cutofftime)) ? $iteminfo->cutofftime + $runtime : $companylicense->expirydate;
             }
             if (!empty($paths)) {
                 // Paths are included in the shop item
@@ -201,10 +207,20 @@ class processor {
                 // Always get 1 day.
                 $companylicense->validlength = ($validlength == 0 ) ? 1 : $validlength;
                 $companylicenseid = $DB->insert_record('companylicense', $companylicense);
+                // Get the company's main department for course association.
+                $companydepartment = company::get_company_parentnode($companyid);
 
                 foreach ($courses as $course) {
                     if ($DB->get_record('iomad_courses', ['courseid' => $course->courseid, 'licensed' => 1])) {
                         $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid, 'courseid' => $course->courseid]);
+                        // Ensure the course is associated with the company.
+                        if (!$DB->record_exists('company_course', ['companyid' => $companyid, 'courseid' => $course->courseid])) {
+                            $DB->insert_record('company_course', [
+                                'companyid' => $companyid,
+                                'courseid' => $course->courseid,
+                                'departmentid' => $companydepartment->id
+                            ]);
+                        }
                         $licenseuserid = $DB->insert_record('companylicense_users', (object)['licenseid' => $companylicenseid, 
                                                                                             'userid' => $invoice->userid,
                                                                                             'isusing' => 0,
@@ -263,8 +279,12 @@ class processor {
         $runtime = time();
         $transaction = $DB->start_delegated_transaction();
         try {
-            // Get name for company license.
-            $companyid = iomad::get_my_companyid(context_system::instance());
+            // Get company id from the invoice first, fall back to current user's company.
+            if (!empty($invoice->companyid)) {
+                $companyid = $invoice->companyid;
+            } else {
+                $companyid = iomad::get_my_companyid(context_system::instance());
+            }
             $company = $DB->get_record('company', ['id' => $companyid]);
             $item = $DB->get_record('course_shopsettings', ['id' => $invoiceitem->invoiceableitemid]);
             $courses = $DB->get_records('course_shopsettings_courses', ['itemid' => $item->id]);
@@ -285,8 +305,9 @@ class processor {
             $companylicense->instant = $item->instant;
             $companylicense->startdate = $runtime;
             $companylicense->companyid = $company->id;
-            // Deal with license shelf life.
-            $companylicense->expirydate = (!empty($item->single_purchase_shelflife)) ? $item->single_purchase_shelflife + $runtime : 0;
+            // Deal with license shelf life. Default to 5 years if not set (0 is treated as expired).
+            $defaultshelflife = 5 * 365 * 24 * 60 * 60; // 5 years in seconds.
+            $companylicense->expirydate = (!empty($item->single_purchase_shelflife)) ? $item->single_purchase_shelflife + $runtime : $runtime + $defaultshelflife;
             // Deal with cut off time.
             $companylicense->cutoffdate = (!empty($item->cutofftime)) ? $item->cutofftime + $runtime : $companylicense->expirydate;
             if (!empty($paths)) {
@@ -322,8 +343,18 @@ class processor {
                 // Always get 1 day.
                 $companylicense->validlength = ($validlength == 0 ) ? 1 : $validlength;
                 $companylicenseid = $DB->insert_record('companylicense', $companylicense);
+                // Get the company's main department for course association.
+                $companydepartment = company::get_company_parentnode($companyid);
                 foreach ($courses as $course) {
                     $DB->insert_record('companylicense_courses', ['licenseid' => $companylicenseid, 'courseid' => $course->courseid]);
+                    // Ensure the course is associated with the company.
+                    if (!$DB->record_exists('company_course', ['companyid' => $companyid, 'courseid' => $course->courseid])) {
+                        $DB->insert_record('company_course', [
+                            'companyid' => $companyid,
+                            'courseid' => $course->courseid,
+                            'departmentid' => $companydepartment->id
+                        ]);
+                    }
                 }
             }
             // Mark the invoice item as processed.
