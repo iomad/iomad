@@ -60,6 +60,7 @@ class emailtemplate {
     protected $nugget = null;
     protected $attachment = null;
     protected $license = null;
+    protected $contextsystem;
 
 <<<<<<<< HEAD:public/local/email/lib/api.php
     /**
@@ -185,6 +186,7 @@ class emailtemplate {
         $this->activity = array_key_exists('activity', $options) ? $options['activity'] : null;
         $this->nugget = array_key_exists('nugget', $options) ? $options['nugget'] : null;
         $this->attachment = array_key_exists('attachment', $options) ? $options['attachment'] : null;
+        $this->contextsystem = context_system::instance();
 
         // Do we have a default delay on email sending?
         if (!empty(get_config('local_iomad', 'emaildelay'))) {
@@ -372,7 +374,8 @@ class emailtemplate {
      *
      **/
     public function subject() {
-        return $this->fill($this->template->subject);
+        $subject = $this->fill($this->template->subject);
+        return $this->apply_moodle_filters($subject, $this->user->lang, false);
     }
 
     /**
@@ -381,7 +384,8 @@ class emailtemplate {
      *
      **/
     public function body() {
-        return $this->fill($this->template->body);
+        $body = $this->fill($this->template->body);
+        return $this->apply_moodle_filters($body, $this->user->lang, false);
     }
 
     /**
@@ -390,7 +394,8 @@ class emailtemplate {
      *
      **/
     public function signature() {
-        return $this->fill($this->template->signature);
+        $signature = $this->fill($this->template->signature);
+        return $this->apply_moodle_filters($signature, $this->user->lang, false);
     }
 
     /**
@@ -1308,6 +1313,45 @@ class emailtemplate {
         }
 
         return false;
+    }
+
+    /**
+     * Apply Moodle filters to text based on user's language preference
+     *
+     * @param string $text
+     * @param string $userlang
+     * @param boolean $preservehtml
+     * @return string
+     */
+    private function apply_moodle_filters($text, $userlang, $preservehtml = false) {
+
+        // Did we get passed anything?
+        if (empty($text)) {
+            return $text;
+        }
+
+        // Get the current language the process is using for later.
+        $currentlang = current_language();
+
+        // Set the language to the one which has been passed.
+        if (!empty($userlang)) {
+            force_current_language($userlang);
+        }
+
+        // Are we preserving HTML is the passed text?
+        if ($preservehtml) {
+            $filtered = format_text($text, FORMAT_HTML, ['context' => $this->contextsystem,
+                                                         'filter' => true]);
+        } else {
+            $filtered = format_string($text, true, ['context' => $this->contextsystem,
+                                                    'filter' => true]);
+        }
+
+        // Reset the language to what it was previously.
+        force_current_language($currentlang);
+
+        // Return the filtered text.
+        return $filtered;
     }
 
     // Event handlers.
