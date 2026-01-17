@@ -4292,7 +4292,6 @@ class company {
                              'smtpoauthservice' => 'smtpoauthservice',
                              'Username' => 'smtpuser',
                              'Password' => 'smtppass',
-                             'smtpmaxbulk' => 'smtpmaxbulk',
                              'noreplyaddress' => 'noreplyaddress',
                              'DKIM_selector' => 'emaildkimselector'];
 
