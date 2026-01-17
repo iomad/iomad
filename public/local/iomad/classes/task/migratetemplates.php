@@ -60,27 +60,25 @@ class migratetemplates extends adhoc_task {
         $templatesets = $DB->get_records('email_templateset', [], 'id', 'id');
 
         foreach ($templatesets as $templateset) {
-            foreach ($langs as $lang) {
-                if ($DB->count_records('email_templateset_templates', ['templateset' => $templateset->id, 'lang' => $lang]) != count($templates)) {
-                    foreach ($templates as $template) {
-                        $templaterec = (object) [];
-                        $templaterec->templateset = $templateset->id;
-                        $templaterec->name = $template;
-                        $templaterec->lang = $lang;
-                        $DB->execute("INSERT INTO {email_templateset_templates} (templateset,name,lang)
-                                      SELECT :templateset, :name, :lang
+            if ($DB->count_records('email_templateset_templates', ['templateset' => $templateset->id]) != count($templates)) {
+                foreach ($templates as $template) {
+                    $templaterec = (object) [];
+                    $templaterec->templateset = $templateset->id;
+                    $templaterec->name = $template;
+                    $DB->execute(
+                        "INSERT INTO {email_templateset_templates} (templateset,name)
+                                      SELECT :templateset, :name
                                       WHERE NOT EXISTS (
                                         SELECT * FROM {email_templateset_templates}
                                         WHERE templateset = :templateset2
-                                        AND name = :name2
-                                        AND lang = :lang2)",
-                                      ['templateset' => $templateset->id,
-                                       'templateset2' => $templateset->id,
-                                       'name' => $template,
-                                       'name2' => $template,
-                                       'lang' => $lang,
-                                       'lang2' => $lang]);
-                    }
+                                        AND name = :name2)",
+                        [
+                            'templateset' => $templateset->id,
+                            'templateset2' => $templateset->id,
+                            'name' => $template,
+                            'name2' => $template
+                        ]
+                    );
                 }
             }
         }
@@ -89,27 +87,26 @@ class migratetemplates extends adhoc_task {
         $companies = $DB->get_records('company', [], 'id', 'id');
 
         foreach ($companies as $company) {
-            foreach ($langs as $lang) {
-                if ($DB->count_records('email_template', ['companyid' => $company->id, 'lang' => $lang]) != count($templates)) {
-                    foreach ($templates as $template) {
-                        $templaterec = (object) [];
-                        $templaterec->companyid = $company->id;
-                        $templaterec->name = $template;
-                        $templaterec->lang = $lang;
-                        $DB->execute("INSERT INTO {email_template} (companyid,name,lang)
-                                      SELECT :companyid, :name, :lang
+            if ($DB->count_records('email_template', ['companyid' => $company->id]) != count($templates)) {
+                foreach ($templates as $template) {
+                    $templaterec = (object) [];
+                    $templaterec->companyid = $company->id;
+                    $templaterec->name = $template;
+                    $templaterec->lang = $lang;
+                    $DB->execute(
+                        "INSERT INTO {email_template} (companyid,name)
+                                      SELECT :companyid, :name
                                       WHERE NOT EXISTS (
                                         SELECT * FROM {email_template}
                                         WHERE companyid = :companyid2
-                                        AND name = :name2
-                                        AND lang = :lang2)",
-                                      ['companyid' => $company->id,
-                                       'companyid2' => $company->id,
-                                       'name' => $template,
-                                       'name2' => $template,
-                                       'lang' => $lang,
-                                       'lang2' => $lang]);
-                    }
+                                        AND name = :name2)",
+                        [
+                            'companyid' => $company->id,
+                            'companyid2' => $company->id,
+                            'name' => $template,
+                            'name2' => $template
+                        ]
+                    );
                 }
             }
         }

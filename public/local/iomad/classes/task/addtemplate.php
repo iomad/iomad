@@ -65,7 +65,8 @@ class addtemplate extends adhoc_task {
         $templatesets = $DB->get_records('email_templateset', [], 'id', 'id');
 
         foreach ($templatesets as $templateset) {
-            if (!$DB->get_record('email_templateset_templates', ['templateset' => $templateset->id, 'lang' => $lang, 'name' => $customdata->templatename])) {
+            if (!$DB->get_record('email_templateset_templates', ['templateset' => $templateset->id,
+                                                                 'name' => $customdata->templatename])) {
                 $templaterec = (object) [];
                 $templaterec->templateset = $templateset->id;
                 $templaterec->name = $customdata->templatename;
@@ -74,7 +75,6 @@ class addtemplate extends adhoc_task {
                 foreach ($langs as $lang) {
                     $templatelangrec = (object) [];
                     $templatelangrec->templatesetid = $templateid;
-                    $templatelangrec->lang = $lang;
                     $DB->insert_record('email_templateset_template_strings', $templaterec);
                 }
             }
@@ -84,7 +84,8 @@ class addtemplate extends adhoc_task {
         $companies = $DB->get_records('company', [], 'id', 'id');
 
         foreach ($companies as $company) {
-            if (!$DB->get_record('email_template', ['companyid' => $company->id, 'lang' => $lang, 'name' => $customdata->templatename])) {
+            if (!$DB->get_record('email_template', ['companyid' => $company->id,
+                                                    'name' => $customdata->templatename])) {
                 $templaterec = (object) [];
                 $templaterec->companyid = $company->id;
                 $templaterec->name = $customdata->templatename;
