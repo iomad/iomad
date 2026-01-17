@@ -2601,6 +2601,40 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025070200, 'local', 'iomad');
     }
 
+    if ($oldversion < 2025123000) {
+
+        // Need to re-run these tasks due to issues with these tasks not working with new
+        // database structure. 
+        $templates = [
+            'user_signed_up_to_waitlist', 
+            'user_signed_up_for_event_reminder',
+            'expiring_digest_manager',
+            'warning_digest_manager', 
+        ];
+ 
+        // Set up an ad-hoc task to re-add the new email templates - so we ensure we have them.
+        foreach ($templates as $template) {
+            $addtask = new local_iomad\task\addtemplate();
+            $addtask->set_custom_data([
+                'templatename' => $template,
+                'disabled' => 1,
+            ]);
+
+            // Queue the task.
+            core\task\manager::queue_adhoc_task($addtask);
+        }
+
+        // We may also have ended up with duplicates in the email_template table so
+        // run the ad-hoc task for that.
+        $addtask = new local_iomad\task\fixduplicatetemplates();
+
+        // Queue the task.
+        core\task\manager::queue_adhoc_task($addtask);
+
+        // Email savepoint reached.
+        upgrade_plugin_savepoint(true, 2025123000, 'local', 'email');
+    }
+
     if ($oldversion < 2025123100) {
         // Moving IOMAD settings from local_iomad_settings plugin using $CFG to local_iomad get_config.
         mtrace("");
