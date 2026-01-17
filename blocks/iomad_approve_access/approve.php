@@ -60,7 +60,7 @@ if (is_siteadmin($USER->id)) {
                                                       WHERE userid = :userid
                                                       AND companyid = :companyid
                                                       AND managertype > 0
-                                                      ORDER BY id",
+                                                      ORDER BY managertype",
                                                       ['userid' => $USER->id, 'companyid' => $companyid], 0, 1)) {
                 $companyuser = array_shift($companyusers);
         if ($companyuser->managertype == 2) {
