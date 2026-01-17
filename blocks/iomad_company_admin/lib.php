@@ -201,6 +201,9 @@ function block_iomad_company_admin_inplace_editable($itemtype, $itemid, $newvalu
     if ($itemtype === 'courses_autoenrol') {
         return \block_iomad_company_admin\output\courses_autoenrol_editable::update($itemid, $newvalue);
     }
+    if ($itemtype === 'courses_mandatory') {
+        return block_iomad_company_admin\output\courses_mandatory_editable::update($itemid, $newvalue);
+    }
     if ($itemtype === 'courses_license') {
         return \block_iomad_company_admin\output\courses_license_editable::update($itemid, $newvalue);
     }

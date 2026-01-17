@@ -37,6 +37,8 @@ $action = optional_param('action', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $validonly = optional_param('validonly', get_config('local_iomad', 'hidevalidcourses'), PARAM_BOOL);
 $edit = optional_param('edit', -1, PARAM_BOOL);
+$mandatoryonly = optional_param('mandatoryonly', false, PARAM_BOOL);
+
 
 if (!empty($USER->editing)) {
     $download = 0;
@@ -45,6 +47,7 @@ if (!empty($USER->editing)) {
 $params = array();
 $params['userid'] = $userid;
 $params['validonly'] = $validonly;
+$params['mandatoryonly'] = $mandatoryonly;
 
 // Deal with edit buttons.
 if ($edit != -1) {
@@ -392,7 +395,7 @@ if (!$table->is_downloading()) {
             echo html_writer::end_tag('div');
         }
         $url = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
-                              array('userid' => $userid, 'validonly' => !$validonly));
+                              array('userid' => $userid, 'mandatoryonly' => $mandatoryonly, 'validonly' => !$validonly));
         if (!$validonly) {
             $validstring = get_string('hidevalidcourses', 'block_iomad_company_admin');
         } else {
@@ -401,6 +404,24 @@ if (!$table->is_downloading()) {
         echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
         echo $output->single_button($url, $validstring);
         echo html_writer::end_tag('div');
+
+        // Deal with mandatory courses.
+        if (get_config('local_iomad', 'use_mandatory_courses')) {
+            $url = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
+                                  ['userid' => $userid,
+                                  'validonly' => $validonly,
+                                  'mandatoryonly' => !$mandatoryonly]);
+            if ($mandatoryonly) {
+                $mandatoryonlystring = get_string('allcourses', 'block_iomad_company_admin');
+            } else {
+                $mandatoryonlystring = get_string('mandatoryonly', 'local_report_completion');
+            }
+        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
+        echo $output->single_button($url, $mandatoryonlystring);
+        echo html_writer::end_tag('div');
+        }
+
+        // Conditionally add the "add new entry" button.
         if (!empty($USER->editing)) {
             echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
             $url = new moodle_url($CFG->wwwroot . '/local/report_users/newentry.php',
@@ -411,6 +432,16 @@ if (!$table->is_downloading()) {
         }
         echo html_writer::end_tag('div');
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+}
+
+// Are we only showing mandatory courses?
+$mandatorysql = "";
+if (get_config('local_iomad', 'use_mandatory_courses') &&
+    !empty($mandatoryonly)) {
+    $mandatorysql = " JOIN {company_course_options} cca ON (
+                        cca.courseid = lit.courseid
+                        AND cca.companyid = lit.companyid
+                        AND cca.mandatory = 1)";
 }
 
 // Set up the initial SQL for the form.
@@ -429,7 +460,7 @@ $selectsql = "lit.id,
               lit.id AS certsource,
               lit.coursecleared,1 AS actions,
               lit.modifiedtime";
-$fromsql = "{local_iomad_track} lit ";
+$fromsql = "{local_iomad_track} lit  $mandatorysql";
 $sqlparams = array('userid' => $userid, 'companyid' => $companyid);
 
 // Just valid courses?
@@ -464,7 +495,7 @@ $columns = array('coursename',
                  'timecompleted');
 
 // Do we show the time expires column?
-if (empty($USER->editing) && 
+if (empty($USER->editing) &&
     $DB->get_records_sql("SELECT lit.id FROM {iomad_courses} ic
                           JOIN {local_iomad_track} lit
                           ON ic.courseid = lit.courseid

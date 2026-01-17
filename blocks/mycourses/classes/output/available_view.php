@@ -15,45 +15,54 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class containing data for available courses view in the mycourses block.
+ *
  * @package   block_mycourses
- * @copyright 2021 Derick Turner
+ * @copyright 2021 E-Learn Design Ltd.
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_mycourses\output;
-defined('MOODLE_INTERNAL') || die();
 
 use renderable;
 use renderer_base;
 use templatable;
 use core_course\external\course_summary_exporter;
+use context_course;
+use core_course_list_element;
+use moodle_url;
 
 /**
- * Class containing data for courses view in the mycourses block.
+ * Class containing data for available courses view in the mycourses block.
  *
- * @copyright  2017 Simey Lameze <simey@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   block_mycourses
+ * @copyright 2021 E-Learn Design Ltd.
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class available_view implements renderable, templatable {
-    /** Quantity of courses per page. */
-    const COURSES_PER_PAGE = 6;
 
     /**
-     * The courses_view constructor.
+     * List of available courses.
      *
-     * @param array $courses list of courses.
-     * @param array $coursesprogress list of courses progress.
+     * @param array $myavailable
      */
-    protected $mycompletion;     
-    public function __construct($mycompletion) {
-        $this->mycompletion = $mycompletion;
+    protected $myavailable;
+
+    /**
+     * Constructor function
+     *
+     * @param array $myavailable
+     */
+    public function __construct($myavailable) {
+        $this->myavailable = $myavailable;
     }
 
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
+     * @param renderer_base $output
      * @return array
      */
     public function export_for_template(renderer_base $output) {
@@ -63,58 +72,40 @@ class available_view implements renderable, templatable {
         // Build courses view data structure.
         $availableview = [];
 
-        foreach ($this->mycompletion->mynotstartedenrolled as $mid => $notstarted) {
-            // get the course display info.
-            $context = \context_course::instance($notstarted->courseid);
-            $course = $DB->get_record("course", array("id"=>$notstarted->courseid));
-            $courseobj = new \core_course_list_element($course);
-
+        // Deal with the list of passed courses.
+        foreach ($this->myavailable as $notstarted) {
+            // Get the course display info.
+            $context = context_course::instance($notstarted->courseid);
+            $course = $DB->get_record('course', ['id' => $notstarted->courseid]);
+            $courseobj = new core_course_list_element($course);
             $exporter = new course_summary_exporter($course, ['context' => $context]);
             $exportedcourse = $exporter->export($output);
+            $coursesummary = '';
 
-            // Convert summary to plain text.
-            $coursesummary = content_to_text($exportedcourse->summary, $exportedcourse->summaryformat);
-
-            // display course overview files
-            $imageurl = \core_course\external\course_summary_exporter::get_course_image($courseobj);
-            if (empty($imageurl)) {
-                $imageurl = $OUTPUT->get_generated_image_for_id($course->id);
-            }
-
-            $exportedcourse = $exporter->export($output);
-            $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $notstarted->courseid));
-            $exportedcourse->image = $imageurl;
-            $exportedcourse->summary = $coursesummary;
-            $availableview['courses'][] = $exportedcourse;
-        }
-
-        foreach ($this->mycompletion->mynotstartedlicense as $mid => $notstarted) {
-            // get the course display info.
-            $context = \context_course::instance($notstarted->courseid);
-            $course = $DB->get_record("course", array("id"=>$notstarted->courseid));
-            $courseobj = new \core_course_list_element($course);
-
-            $exporter = new course_summary_exporter($course, ['context' => $context]);
-            $exportedcourse = $exporter->export($output);
+            // Do we also show the course summary?
             if ($CFG->mycourses_showsummary) {
-                // Convert summary to plain text.
                 $coursesummary = content_to_text($exportedcourse->summary, $exportedcourse->summaryformat);
-            } else {
-                $coursesummary = '';
             }
 
-            // display course overview files
-            $imageurl = \core_course\external\course_summary_exporter::get_course_image($courseobj);
+            // Deal with the course overview files.
+            $imageurl = course_summary_exporter::get_course_image($courseobj);
             if (empty($imageurl)) {
                 $imageurl = $OUTPUT->get_generated_image_for_id($course->id);
             }
 
+            // Set up the exported course object.
             $exportedcourse = $exporter->export($output);
-            $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $notstarted->courseid));
+            $exportedcourse->url = new moodle_url('/course/view.php', ['id' => $notstarted->courseid]);
             $exportedcourse->image = $imageurl;
             $exportedcourse->summary = $coursesummary;
+            if (get_config('local_iomad', 'use_mandatory_courses')) {
+                $exportedcourse->mandatory = $notstarted->mandatory;
+            }
+
+            // Add it to the course view data structure.
             $availableview['courses'][] = $exportedcourse;
         }
+
         return $availableview;
     }
 }

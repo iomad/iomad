@@ -127,7 +127,7 @@ class deletecompanytask extends adhoc_task {
 
         mtrace("dealing with courses");
         $DB->delete_records('company_course_groups', ['companyid' => $companyrec->id]);
-        $DB->delete_records('company_course_autoenrol', ['companyid' => $companyrec->id]);
+        $DB->delete_records('company_course_options', ['companyid' => $companyrec->id]);
 
         // Get courses which are just allocated to this company and not shared.
         $companycourses = $DB->get_records_sql("SELECT cc.courseid

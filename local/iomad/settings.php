@@ -44,6 +44,11 @@ if ($hassiteconfig) {
                                                   get_string('iomad_allow_username_help', 'local_iomad'),
                                                   0);
 
+    $generalconfigs[] = new admin_setting_configcheckbox('local_iomad/use_mandatory_courses',
+                                                get_string('iomad_use_mandatory_courses', 'local_iomad'),
+                                                get_string('iomad_use_mandatory_courses_help', 'local_iomad'),
+                                                0);
+
     $companyconfigs[] = new admin_setting_configcheckbox('local_iomad/show_company_structure',
                                                   get_string('iomad_show_company_structure', 'local_iomad'),
                                                   get_string('iomad_show_company_structure_help', 'local_iomad'),
