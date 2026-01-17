@@ -98,3 +98,7 @@ $string['hidepercentageusers'] = 'Total of company';
 $string['beginningoftime'] = 'Beginning of time';
 $string['neverassigned'] = 'Never assigned';
 $string['neverenrolled'] = 'Never enrolled';
+$string['report_options'] = 'Report options';
+$string['user_options'] = 'User options';
+$string['course_options'] = 'Course options';
+$string['mandatoryonly'] = 'Only show mandatory courses';

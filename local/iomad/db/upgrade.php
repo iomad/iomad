@@ -2599,6 +2599,28 @@ function xmldb_local_iomad_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025070200, 'local', 'iomad');
     }
 
+    if ($oldversion < 2025123000) {
+
+        // Define table company_course_autoenrol to be renamed to company_course_options.
+        $table = new xmldb_table('company_course_autoenrol');
+
+        // Launch rename table for company_course_options.
+        $dbman->rename_table($table, 'company_course_options');
+
+
+        // Define field mandatory to be added to company_course_options.
+        $table = new xmldb_table('company_course_options');
+        $field = new xmldb_field('mandatory', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'autoenrol');
+
+        // Conditionally launch add field id.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2025123000, 'local', 'iomad');
+    }
+
     return $result;
 
 }
