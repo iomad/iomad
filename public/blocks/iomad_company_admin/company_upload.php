@@ -42,19 +42,19 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 $useparentid = false;
 
 // Do we have rights to view this page?
-if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) ||
-    !iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext)) {
+if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
+    !local_iomad\iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext)) {
         throw new moodle_exception(get_string('nopermissions'), 'error', new moodle_url($CFG->wwwroot .'/my'));
 }
 
 // Can I only add to my company?
-if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $useparentid = true;
 }
 
@@ -294,7 +294,7 @@ if (empty($iid)) {
                             $erroredcompanies[] = $line;
                             continue 2;
                         } else if ($useparentid &&
-                                   !company_user::can_see_company($parentrec)) {
+                                   !local_iomad\company_user::can_see_company($parentrec)) {
                             $upt->track('status', get_string('invalidparent', 'block_iomad_company_admin', 'parent'), 'error');
                             $upt->track('parent', $errorstr, 'error');
                             $line[] = get_string('invalidparent', 'block_iomad_company_admin', 'parent');
@@ -391,7 +391,7 @@ if (empty($iid)) {
 
             // We hit create.
             $newcompanyid = $DB->insert_record('company', $companyrec);
-            $newcompany = new company($newcompanyid);
+            $newcompany = new local_iomad\company($newcompanyid);
 
             $eventother = array('companyid' => $newcompanyid);
 
@@ -402,7 +402,7 @@ if (empty($iid)) {
             $event->trigger();
 
             // Set up default department.
-            company::initialise_departments($newcompanyid);
+            local_iomad\company::initialise_departments($newcompanyid);
 
             // Set up course category for company.
             $coursecat = new stdclass();
@@ -420,7 +420,7 @@ if (empty($iid)) {
 
             // Deal with any parent company assignments.
             if (!empty($companydetails->parentid)) {
-                $company = new company($companydetails->id);
+                $company = new local_iomad\company($companydetails->id);
                 $company->assign_parent_managers($companydetails->parentid);
             }
 
