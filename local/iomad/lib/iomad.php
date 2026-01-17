@@ -381,12 +381,15 @@ class iomad {
      * @param array $categories list of category objects
      * @return array filtered list of categories
      */
-    public static function iomad_filter_profile_categories( $categories, $userid = 0 ) {
+    public static function iomad_filter_profile_categories( $categories, $userid = 0, $companyid = 0 ) {
         global $DB, $USER;
 
         if (empty($userid) || $userid == -1) {
             $user = $USER;
-            $user->company = $DB->get_record('company', ['id' => self::get_my_companyid(context_system::instance(), false)]);
+            if (empty($companyid)) {
+                $companyid = self::get_my_companyid(context_system::instance(), false);
+            }
+            $user->company = $DB->get_record('company', ['id' => $companyid]);
         } else {
             $user = $DB->get_record('user', array('id' => $userid));
             $user->company = company::get_company_byuserid($userid);
@@ -796,7 +799,7 @@ class iomad {
             $company = new company($companyid);
 
             $companycourses = $company->get_menu_courses(true, false, false, false, false, true);
-        
+
             // Check if the passed courseid is in the list.
             if (!empty($companycourses[$courseid])) {
 
