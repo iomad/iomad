@@ -141,7 +141,7 @@ class oidc_sync {
         $userfields = $authplugin->userfields;
 
         // Get all of the profile field categories.
-        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
+        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'), 0, $companyid);
         $customfields = [];
         if (!empty($profilecategories)) {
             $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)
@@ -162,7 +162,7 @@ class oidc_sync {
                 continue;
             }
             if (!empty($companyiomadoidcdata->$fieldname)) {
-                $mappedfields[$fieldname] = $companyiomadoidcdata->$fieldname;
+                $mappedfields[$field] = $companyiomadoidcdata->$fieldname;
             }
         }
 
@@ -232,11 +232,12 @@ class oidc_sync {
 
                 // Save custom profile fields data and fire the creation.
                 foreach ($mappedfields as $profilefield => $mapping) {
-                    if (!empty($adduser[$mapping])) {
-                        $userrec->$profilefield = $adduser[$mapping];
+                    if (!empty($aduser[$mapping])) {
+                        $userrec->$profilefield = $aduser[$mapping];
                     }
                 }
 
+                user_update_user($userrec, false, false);
                 profile_save_data($userrec);
                 user_updated::create_from_userid($userid)->trigger();
 
@@ -250,10 +251,12 @@ class oidc_sync {
 
                 // Sync the profile data.
                 foreach ($mappedfields as $profilefield => $mapping) {
-                    if (!empty($adduser[$mapping])) {
-                        $founduser->$profilefield = $adduser[$mapping];
+                    if (!empty($aduser[$mapping])) {
+                        $founduser->$profilefield = $aduser[$mapping];
                     }
                 }
+
+                user_update_user($founduser, false, false);
                 profile_save_data($founduser);
 
                 // Store this for later.
