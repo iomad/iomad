@@ -71,15 +71,18 @@ class iomad {
         }
 
         // Set the companyid to bypass the company select form if possible.
+        $companyid = 0;
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
         } else if (self::is_company_user()) {
             $companyid = self::companyid();
-        } else if (self::has_capability('block/iomad_company_admin:edit_departments', $context) && $required) {
-            if (!empty($SESSION->currenteditingcompany)) {
-                return $SESSION->currenteditingcompany;
-            } else {
-                redirect(new moodle_url('/blocks/iomad_company_admin/index.php'), get_string('pleaseselect', 'block_iomad_company_admin'));
+        } else if (!self::has_capability('block/iomad_company_admin:company_view_all', $context) && $required) {
+            if (self::has_capability('block/iomad_company_admin:company_edit', $context)) {
+                if (!empty($SESSION->currenteditingcompany)) {
+                    return $SESSION->currenteditingcompany;
+                } else {
+                    redirect(new moodle_url('/blocks/iomad_company_admin/index.php'), get_string('pleaseselect', 'block_iomad_company_admin'));
+                }
             }
         } else if (!empty($CFG->foundcompanyid)) {
             // If the SESSION variable isn't set up when we initially find the company id
@@ -89,9 +92,8 @@ class iomad {
 
             // Forget this from now on.
             unset ($CFG->foundcompanyid);
-        } else {
-            $companyid = 0;
         }
+
         return $companyid;
     }
 
