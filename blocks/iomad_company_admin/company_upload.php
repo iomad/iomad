@@ -48,7 +48,7 @@ $company = new local_iomad\company($companyid);
 $useparentid = false;
 
 // Do we have rights to view this page?
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) ||
+if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
     !local_iomad\iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext)) {
         throw new moodle_exception(get_string('nopermissions'), 'error', new moodle_url($CFG->wwwroot .'/my'));
 }
