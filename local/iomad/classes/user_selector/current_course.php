@@ -78,7 +78,7 @@ class current_course extends company_base {
                  JOIN {company_users} cu ON (cu.userid = u.id AND cu.educator = 0 $departmentsql)
                  LEFT JOIN {user_info_data} ui ON (ui.userid = u.id AND ui.userid = cu.userid)
                  JOIN {user_enrolments} ue ON (ue.userid = u.id)
-                 JOIN {enrol} e ON (ue.enrolid = e.id AND ".$DB->sql_compare_text('e.enrol')."='manual' AND e.status = 0)
+                 JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
                  JOIN {course} c ON (e.courseid = c.id)
                  JOIN {local_iomad_track} lit ON (c.id = lit.courseid AND e.courseid = lit.courseid AND cu.userid = lit.userid AND ue.userid = lit.userid AND cu.companyid = lit.companyid AND ue.timestart = lit.timeenrolled)
 
