@@ -57,7 +57,18 @@
                 {{#visible}}
                     <a href="{{url}}" class="aalink fullname mr-2 mb-1">
                 {{/visible}}
-                    {{> core_course/favouriteicon }}
+                    <span id="mandatory-icon-{{ id }}-{{ uniqid }}"
+                              data-region="mandatory-icon"
+                              data-course-id="{{id}}"
+                    >
+                        <span
+                            class="text-primary {{^mandatory}}hidden{{/mandatory}}"
+                            data-region="is-mandatory"
+                            aria-hidden="{{^mandatory}}true{{/mandatory}}{{#mandatory}}false{{/mandatory}}"
+                        >
+                            {{#pix}} i/flagged, core, {{#str}} mandatory, block_iomad_company_admin {{/str}} {{/pix}}
+                        </span>
+                    </span>
                     <span class="sr-only">
                         {{#str}}aria:coursename, core_course{{/str}}
                     </span>
@@ -84,7 +95,7 @@
         </div>
         {{#timeexpires}}
             <div class="d-flex align-items-start">
-                <strong>({{#str}} timeexpires, local_report_completion {{/str}}: </strong> {{ timeexpires }}) 
+                <strong>({{#str}} timeexpires, local_report_completion {{/str}}: </strong> {{ timeexpires }})
             </div>
         {{/timeexpires}}
         {{#hasgrade}}

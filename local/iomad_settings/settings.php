@@ -46,6 +46,11 @@ if ($hassiteconfig) {
                                                 get_string('iomad_show_company_structure_help', 'local_iomad_settings'),
                                                 1));
 
+    $settings->add(new admin_setting_configcheckbox('iomad_use_mandatory_courses',
+                                                get_string('iomad_use_mandatory_courses', 'local_iomad_settings'),
+                                                get_string('iomad_use_mandatory_courses_help', 'local_iomad_settings'),
+                                                0));
+
     $institutionsync = [get_string('no'),
                         get_string('companyshortname', 'block_iomad_company_admin'),
                         get_string('companyname', 'block_iomad_company_admin')];
