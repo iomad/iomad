@@ -73,9 +73,9 @@ $selectsql = "i.id,
               i.date,
               p.gateway,
               p.accountid,
-              (SELECT SUM(price) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
+              (SELECT SUM(price * quantity * license_allocation) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
               AS value,             
-              (SELECT COUNT(*) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id AND processed = 0)
+              (SELECT SUM(quantity * license_allocation) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id AND processed = 0)
               AS unprocesseditems,
               (SELECT DISTINCT(currency) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
               AS currency,             
