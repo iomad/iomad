@@ -51,6 +51,18 @@
         {{#visible}}
             <a href="{{ url }}">
         {{/visible}}
+            <span id="mandatory-icon-{{ id }}-{{ uniqid }}"
+                      data-region="mandatory-icon"
+                      data-course-id="{{id}}"
+            >
+                <span
+                    class="text-primary {{^mandatory}}hidden{{/mandatory}}"
+                    data-region="is-mandatory"
+                    aria-hidden="{{^mandatory}}true{{/mandatory}}{{#mandatory}}false{{/mandatory}}"
+                >
+                    {{#pix}} i/flagged, core, {{#str}} mandatory, block_iomad_company_admin {{/str}} {{/pix}}
+                </span>
+            </span>
             {{{fullname}}}
         {{#visible}}
             </a>
@@ -80,8 +92,6 @@
                 <b>{{#str}} downloadcert, block_mycourses {{/str}}: </b><a href="{{ certificateurl }}" title="{{ certificatename }}"><img src="{{ certificateimage }}" alt="{{ certificatename }}" width="36"></a></p>
             </div>
         {{/certificates}}
-
-
     </div>
     {{^visible}}
         </div>

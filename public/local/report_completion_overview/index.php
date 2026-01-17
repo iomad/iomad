@@ -26,18 +26,16 @@ require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
-$firstname       = optional_param('firstname', 0, PARAM_CLEAN);
+$firstname       = optional_param('firstname', '', PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended  = optional_param('showsuspended', 0, PARAM_INT);
 $downloadformat = optional_param('downloadformat', 'excel', PARAM_ALPHA);
-$email  = optional_param('email', 0, PARAM_CLEAN);
+$email  = optional_param('email', '', PARAM_CLEAN);
 $sort         = optional_param('sort', 'lastname', PARAM_ALPHA);
 $dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page         = optional_param('page', 0, PARAM_INT);
 // How many per page.
 $perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);
-// Id of user to tweak mnet ACL (requires $access).
-$acl          = optional_param('acl', '0', PARAM_INT);
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $coursesearch = optional_param('coursesearch', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
@@ -50,6 +48,7 @@ $ilast = optional_param('lastinitial', '', PARAM_ALPHA);
 $showexpiryonly = optional_param('showexpiryonly', get_config('local_report_completion_overview', 'showexpiryonly'), PARAM_BOOL);
 $bycourse = optional_param('bycourse', false, PARAM_BOOL);
 $viewchildren = optional_param('viewchildren', true, PARAM_BOOL);
+$mandatoryonly = optional_param('mandatoryonly', false, PARAM_BOOL);
 $showenrolledonly = optional_param('showenrolledonly', get_config('local_report_completion_overview', 'showenrolledonly'), PARAM_BOOL);
 
 // Deal with pagination.
@@ -59,39 +58,17 @@ if ($perpage == 0) {
 
 $params = array();
 
-if ($firstname) {
-    $params['firstname'] = $firstname;
-}
-if ($lastname) {
-    $params['lastname'] = $lastname;
-}
-if ($email) {
-    $params['email'] = $email;
-}
-if ($sort) {
-    $params['sort'] = $sort;
-}
-if ($dir) {
-    $params['dir'] = $dir;
-}
-if ($page) {
-    $params['page'] = $page;
-}
-if ($perpage) {
-    $params['perpage'] = $perpage;
-}
-if ($bycourse) {
-    $params['bycourse'] = $bycourse;
-}
-if ($search) {
-    $params['search'] = $search;
-}
-if ($coursesearch) {
-    $params['coursesearch'] = $coursesearch;
-}
-if ($departmentid) {
-    $params['deptid'] = $departmentid;
-}
+$params['firstname'] = $firstname;
+$params['lastname'] = $lastname;
+$params['email'] = $email;
+$params['sort'] = $sort;
+$params['dir'] = $dir;
+$params['page'] = $page;
+$params['perpage'] = $perpage;
+$params['bycourse'] = $bycourse;
+$params['search'] = $search;
+$params['coursesearch'] = $coursesearch;
+$params['deptid'] = $departmentid;
 $params['showtext'] = $showtext;
 if ($courses) {
     foreach ($courses as $a => $b) {
@@ -103,9 +80,8 @@ $params['lastinitial'] = $ilast;
 $params['showexpiryonly'] = $showexpiryonly;
 $params['showenrolledonly'] = $showenrolledonly;
 $params['viewchildren'] = $viewchildren;
-if ($showsuspended) {
-    $params['showsuspended'] = $showsuspended;
-}
+$params['mandatoryonly'] = $mandatoryonly;
+$params['showsuspended'] = $showsuspended;
 if ($dir == 'ASC') {
      $reversedir = 'DESC';
 } else {
@@ -140,24 +116,24 @@ foreach ($customfields as $customfield) {
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_completion_overview:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_completion_overview:view', $companycontext);
 
 // Are we showing any child companies?
 $canseechildren = false;
-if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
     $canseechildren = true;
 }
 
 // Get the associated department id.
-$parentlevel = company::get_company_parentnode($company->id);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Get the company additional optional user parameter names.
-$foundobj = iomad::add_user_filter_params($params, $companyid);
+$foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
@@ -183,58 +159,15 @@ $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('report');
 $PAGE->set_title($linktext);
+$PAGE->requires->js_call_amd('local_report_completion_overview/report_options', 'init');
 
-// Set the page heading.
-$PAGE->set_heading($linktext);
-if (iomad::has_capability('local/report_completion:view', $companycontext)) {
-    $switchparams = $params;
-    $switchparams['bycourse'] = !$bycourse;
-    $switchlink = new moodle_url('/local/report_completion_overview/index.php', $switchparams);
-    if ($bycourse) {
-        $switchcaption = get_string('byusers', 'local_report_completion_overview');
-    } else {
-        $switchcaption = get_string('bycourses', 'local_report_completion_overview');
-    }
-    $buttons = $OUTPUT->single_button($switchlink, $switchcaption, 'get');
-
-    if ($showtext) {
-        $displaycaption = get_string('format_image', 'portfolio');
-    } else {
-        $displaycaption = get_string('typetext', 'grades');
-    }
-    $textparams = $params;
-    $textparams['showtext'] = !$showtext;
-    $displaylink = new moodle_url('/local/report_completion_overview/index.php', $textparams);
-    $buttons .= $OUTPUT->single_button($displaylink, $displaycaption, 'get');
-    if ($showexpiryonly) {
-        $displaycaption = get_string('showexpiry', 'local_report_completion_overview');
-    } else {
-        $displaycaption = get_string('hideexpiry', 'local_report_completion_overview');
-    }
-    $showexpiryparams = $params;
-    $showexpiryparams['showexpiryonly'] = !$showexpiryonly;
-    $displaylink = new moodle_url('/local/report_completion_overview/index.php', $showexpiryparams);
-    $buttons .= $OUTPUT->single_button($displaylink, $displaycaption, 'get');
-    if (!$showenrolledonly) {
-        $displaycaption = get_string('showenrolledonly', 'local_report_completion_overview');
-    } else {
-        $displaycaption = get_string('hideenrolledonly', 'local_report_completion_overview');
-    }
-    $showenrolledonlyparams = $params;
-    $showenrolledonlyparams['showenrolledonly'] = !$showenrolledonly;
-    $displaylink = new moodle_url('/local/report_completion_overview/index.php', $showenrolledonlyparams);
-    $buttons .= $OUTPUT->single_button($displaylink, $displaycaption, 'get');
+// Optionally add the link back to the course completion report.
+if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
     $buttoncaption = get_string('pluginname', 'local_report_completion');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php");
-    $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
-    $numberarray = [get_config('local_iomad', 'max_list_users') => get_string('defaultrows', 'block_iomad_company_admin'), 10 => 10, 25 => 25, 50 => 50, 0 => get_string('all')];
-    $perpageparams = $params;
-    unset($perpageparams['page']);
-    $perpagelink = new moodle_url('/local/report_completion_overview/index.php', $perpageparams);
-    $buttons .= "&nbsp" . $OUTPUT->single_select($perpagelink, 'perpage', $numberarray, $perpage, ['' => 'Number of rows']);
+    $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
     $PAGE->set_button($buttons);
 }
-$PAGE->navbar->add($linktext, $linkurl);
 
 // Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
@@ -252,7 +185,7 @@ $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -264,8 +197,8 @@ if ($departmentid == 0 ) {
 }
 
 // Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
+$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 
@@ -298,7 +231,11 @@ if (!empty($usedfields)) {
         } else {
             $fieldsql = "value = :fieldsearchvalue AND fieldid = :fieldid";
         }
-        $foundfields[] = $DB->get_records_sql("SELECT instanceid FROM {customfield_data} WHERE $fieldsql", ['fieldsearchvalue' => $fieldsearchvalue, 'fieldid' => $fieldid]);
+        $foundfields[] = $DB->get_records_sql("SELECT instanceid
+                                               FROM {customfield_data}
+                                               WHERE $fieldsql",
+                                              ['fieldsearchvalue' => $fieldsearchvalue,
+                                               'fieldid' => $fieldid]);
     }
 
     // Sort the keys to be unique.
@@ -327,12 +264,22 @@ if (!empty($showenrolledonly)) {
                             WHERE 1 = 1 $departmentsql)";
 }
 
+// Are we only showing mandatory courses?
+$mandatorysql = "";
+if (!empty($mandatoryonly)) {
+    $mandatorysql = "JOIN {company_course_options} cca ON (
+                         cca.courseid = ic.courseid
+                         AND cca.courseid = c.id
+                         AND cca.mandatory = 1)";
+}
+
 if (empty($courses)) {
     $courses = $DB->get_records_sql("SELECT ic.courseid, c.fullname FROM {iomad_courses} ic
-                                    JOIN {course} c ON (ic.courseid = c.id)
-                                    WHERE 1=1 $courselistsql
-                                    $enrolledonlysql
-                                    ORDER BY c.fullname", $coursesearchparams);
+                                     JOIN {course} c ON (ic.courseid = c.id)
+                                     $mandatorysql
+                                     WHERE 1=1 $courselistsql
+                                     $enrolledonlysql
+                                     ORDER BY c.fullname", $coursesearchparams);
 }
 
 $expirecourses = $courses;
@@ -341,11 +288,44 @@ $expirecourses = $courses;
 $gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} WHERE hasgrade = 0");
 
 // Setup the user search form.
-$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 if (!$download) {
     echo $output->header();
-    // Display the search form and department picker.
+
+    // Set the options form data attributes.
+    $dataparams = [
+        'href' => '#',
+        'data-action' => 'show-Optionsform',
+    ];
+    foreach ($params as $param => $paramvalue) {
+        $dataparams["data-" . $param] = $paramvalue;
+    }
+
+    /*// Is this a parent company and can the user see any children?
+        if ($haschildren && $canseechildren) {
+            $dataparams['data-usingchildren'] = true;
+        } else {
+            $dataparams['data-usingchildren'] = false;
+        }*/
+
+    // Do we use mandatory courses?
+    if (get_config('local_iomad', 'use_mandatory_courses')) {
+        $dataparams['data-usingmandatory'] = true;
+    } else {
+        $dataparams['data-usingmandatory'] = false;
+    }
+    // Add the JS button.
+    $buttons = html_writer::start_tag('a', $dataparams);
+    $buttons .= html_writer::tag('i', '', ['class' => 'icon fa fa-cog fa-fw', 'aria-hidden' => true]);
+    $buttons .= get_string('report_options', 'local_report_completion');
+    $buttons .= html_writer::end_tag('a');
+
+    // Display the page heading.
+    echo html_writer::start_tag('div', ['class' => 'iomad_report_heading_wraper']);
+    echo html_writer::tag('span', $linktext, ['class' => 'iomad_report_heading']);
+    echo html_writer::tag('span', $buttons, ['class' => 'iomad_report_heading_controls']);
+    echo html_writer::end_tag('div');
 
     // Display the license selector and other control forms.
     if (!empty($companyid)) {
@@ -891,9 +871,9 @@ if (!$bycourse) {
     foreach ($courses as $course) {
         $runtime = time();
         if (!$download) {
-            $row = [html_writer::tag("a", $course->fullname, ['href' => new moodle_url($CFG->wwwroot . '/local/report_completion/index.php', ['courseid' => $course->courseid])])];
+            $row = [html_writer::tag("a", format_string($course->fullname), ['href' => new moodle_url($CFG->wwwroot . '/local/report_completion/index.php', ['courseid' => $course->courseid])])];
         } else {
-            $row = [$course->fullname];
+            $row = [format_string($course->fullname)];
         }
         foreach ($course->userdetails as $usercourse) {
             $coursesummary = [];

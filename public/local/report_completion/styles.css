@@ -57,7 +57,7 @@
  .reporttablecontrolscontrol div.col-md-9.form-inline.felement {
      display: contents
  }
- 
+
   .reporttablecontrolscontrol  div.col-md-3 {
       display: none
   }
@@ -114,4 +114,23 @@
     padding-right: 15px;
     display: flex;
     align-items: center;
+}
+
+.iomad_report_heading_controls {
+    float: right;
+}
+
+.iomad_report_heading {
+    float: left;
+    font-size: xx-large;
+    font-weight: bold;
+}
+
+.iomad_report_heading_wraper {
+    display: inline-block;
+    width: 100%;
+}
+
+#page-local-report_completion-index .page-header {
+    display: none;
 }

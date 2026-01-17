@@ -15,58 +15,72 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class containing data for completed courses view in the mycourses block.
+ *
  * @package   block_mycourses
- * @copyright 2021 Derick Turner
+ * @copyright 2021 E-Learn Design Ltd.
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace block_mycourses\output;
-defined('MOODLE_INTERNAL') || die();
 
+use context_course;
+use context_system;
+use core_course_list_element;
+use core_course\external\course_summary_exporter;
+use moodle_url;
 use renderable;
 use renderer_base;
 use templatable;
-use core_course\external\course_summary_exporter;
 
 /**
- * Class containing data for courses view in the mycourses block.
+ * Class containing data for available courses view in the mycourses block.
  *
- * @copyright  2017 Simey Lameze <simey@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   block_mycourses
+ * @copyright 2021 E-Learn Design Ltd.
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class completed_view implements renderable, templatable {
+
     /** Quantity of courses per page. */
     const COURSES_PER_PAGE = 6;
 
     /**
-     * The courses_view constructor.
+     * List of available courses.
      *
-     * @param array $courses list of courses.
-     * @param array $coursesprogress list of courses progress.
+     * @param array $mycompleted
      */
-    protected $mycompletion;     
-    public function __construct($mycompletion) {
-        $this->mycompletion = $mycompletion;
+    protected $mycompleted;
+
+    /**
+     * Constructor function
+     *
+     * @param array $mycompleted
+     */
+    public function __construct($mycompleted) {
+        $this->mycompleted = $mycompleted;
     }
 
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
+     * @param renderer_base $output
      * @return array
      */
     public function export_for_template(renderer_base $output) {
-        global $CFG, $DB, $USER, $OUTPUT;
+        global $CFG, $DB, $OUTPUT;
         require_once($CFG->dirroot.'/course/lib.php');
 
         // Build courses view data structure.
         $completedview = [];
 
-        foreach ($this->mycompletion->mycompleted as $mid => $completed) {
-            if (!$course = $DB->get_record("course", array("id"=>$completed->courseid))) {
-                $context = \context_system::instance();
-                $linkurl = new \moodle_url('/my');
+        // Process passed completed courses.
+        foreach ($this->mycompleted as $completed) {
+            if (!$course = $DB->get_record('course', ['id' => $completed->courseid])) {
+                $context = context_system::instance();
+                $linkurl = new moodle_url('/my');
                 $exportedcourse = (object) ['id' => 0,
                                             'fullname' => $completed->coursefullname,
                                             'shortname' => $completed->coursefullname,
@@ -80,59 +94,75 @@ class completed_view implements renderable, templatable {
                                             'url' => $linkurl->out(),
                                             'coursecategory' => ''];
             } else {
-                $context = \context_course::instance($completed->courseid);
-                $courseobj = new \core_course_list_element($course);
-
+                // Get the course display info.
+                $context = context_course::instance($completed->courseid);
+                $courseobj = new core_course_list_element($course);
                 $exporter = new course_summary_exporter($course, ['context' => $context]);
                 $exportedcourse = $exporter->export($output);
+                $coursesummary = '';
+                // Do we show the course summary?
                 if ($CFG->mycourses_showsummary) {
                     // Convert summary to plain text.
                     $coursesummary = content_to_text($exportedcourse->summary, $exportedcourse->summaryformat);
-                } else {
-                    $coursesummary = '';
                 }
-                // display course overview files
-                $imageurl = \core_course\external\course_summary_exporter::get_course_image($courseobj);
+
+                // Deal with the course overview files.
+                $imageurl = course_summary_exporter::get_course_image($courseobj);
                 if (empty($imageurl)) {
                     $imageurl = $OUTPUT->get_generated_image_for_id($course->id);
                 }
 
+                // Need to set a default final grade if it's empty.
                 if (empty($completed->finalgrade)) {
                     $completed->finalgrade = 0;
                 }
 
-                $exportedcourse = $exporter->export($output);
-                $exportedcourse->url = new \moodle_url('/course/view.php', array('id' => $completed->courseid));
+                // Finish the course display info.
+                $exportedcourse->url = new moodle_url('/course/view.php', ['id' => $completed->courseid]);
                 $exportedcourse->image = $imageurl;
                 $exportedcourse->summary = $coursesummary;
             }
+
+            // Get the date for the completed.
             $exportedcourse->timecompleted = userdate($completed->timecompleted, get_config('local_iomad', 'date_format'));
-            if ($iomadcourserec = $DB->get_record('iomad_courses', array('courseid' => $completed->courseid))) {
-                if (!empty($iomadcourserec->validlength)) {
-                    $exportedcourse->timeexpires = userdate($completed->timecompleted + $iomadcourserec->validlength * 24 * 60 * 60, get_config('local_iomad', 'date_format'));
-                }
+
+            // Does this expire anytime soon?
+            if (!empty($exportedcourse->timeexpires)) {
+                $exportedcourse->timeexpires = userdate($exportedcourse->timeexpires, get_config('local_iomad', 'date_format'));
             }
+
+            // Set the rest of the course details.
             $exportedcourse->progress = 100;
             $exportedcourse->hasprogress = true;
-            $exportedcourse->certificates = array();
-            $certificateimage = $output->image_url('f/pdf');
+            if (get_config('local_iomad', 'use_mandatory_courses')) {
+                $exportedcourse->mandatory = $completed->mandatory;
+            }
+
+            // Do we show a grade or completed?
             if (!empty($completed->hasgrade)) {
                 $exportedcourse->finalscore = intval($completed->finalgrade);
                 $exportedcourse->hasgrade = true;
             } else {
                 $exportedcourse->finalscore = get_string('passed', 'block_iomad_company_admin');
             }
+
+            // Process any certificates.
+            $exportedcourse->certificates = [];
             if (!empty($completed->certificates)) {
+                $certificateimage = $output->image_url('f/pdf');
                 foreach ($completed->certificates as $certificate) {
-                    $certout = new \stdclass();
+                    $certout = (object) [];
                     $certout->certificateurl = $certificate->certificateurl;
                     $certout->certificatename = $certificate->certificatename;
                     $certout->certificateimage = $certificateimage;
                     $exportedcourse->certificates[] = $certout;
                 }
             }
+
+            // Add the course detail to the list of courses.
             $completedview['courses'][] = $exportedcourse;
         }
+
         return $completedview;
     }
 }

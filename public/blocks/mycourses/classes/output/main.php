@@ -22,18 +22,15 @@
  */
 
 namespace block_mycourses\output;
-defined('MOODLE_INTERNAL') || die();
 
+use context_system;
+use block_mycourses\helper;
+use moodle_url;
 use renderable;
 use renderer_base;
 use templatable;
-use core_completion\progress;
-use core_course_renderer;
-use moodle_url;
-use iomad;
-use context_system;
+use local_iomad\iomad;
 
-require_once($CFG->dirroot . '/blocks/mycourses/locallib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
 /**
@@ -61,32 +58,60 @@ class main implements renderable, templatable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \renderer_base $output
+     * @param renderer_base $output
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-        global $CFG, $USER, $PAGE;
+        global $CFG, $DB, $USER, $PAGE;
+
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Get the sorting params.
         $sort = optional_param('sort', 'coursefullname', PARAM_CLEAN);
         $dir = optional_param('dir', 'ASC', PARAM_CLEAN);
         $tab = optional_param('tab', 'inprogress#mycourses_inprogress_view', PARAM_CLEAN);
         $view = optional_param('view', $CFG->mycourses_defaultview, PARAM_CLEAN);
+        $mandatoryonly = optional_param('mandatoryonly', false, PARAM_BOOL);
 
         // Get the completion info.
-        $mycompletion = mycourses_get_my_completion($sort, $dir);
-        $myarchive = mycourses_get_my_archive($sort, $dir);
+        $myinprogress = helper::get_my_inprogress($sort, $dir, $mandatoryonly);
+        $myavailable = helper::get_my_available($sort, $dir, $mandatoryonly);
+        $myarchive = helper::get_my_archive($sort, $dir, $mandatoryonly);
 
-        $availableview = new available_view($mycompletion);
-        $inprogressview = new inprogress_view($mycompletion);
+        $availableview = new available_view($myavailable);
+        $inprogressview = new inprogress_view($myinprogress);
         $completedview = new completed_view($myarchive);
 
+        // Are we showing the download certificates button?
         $downloadcerts = false;
         $downloadcertslink = "";
         if (iomad::has_capability('block/iomad_company_admin:downloadmycertificates', context_system::instance())) {
-            $downloadcertslinkurl = new moodle_url('/local/report_completion/index.php', ['certusers' => $USER->id, 'action' => 'downloadcerts', 'sesskey' => sesskey()]);
-            $downloadcertslink = $downloadcertslinkurl->out(false);
-            $downloadcerts = true;
+            // Does the user have any certificates to download?
+            if ($DB->get_records_sql("SELECT lit.id FROM {local_iomad_track} lit
+                                      JOIN {local_iomad_track_certs} litc ON (lit.id = litc.trackid)
+                                      WHERE lit.userid = :userid
+                                      AND lit.companyid = :companyid",
+                                     ['userid' => $USER->id,
+                                      'companyid' => $companyid])) {
+                $downloadcertslinkurl = new moodle_url('/local/report_completion/index.php',
+                                                       ['certusers' => $USER->id,
+                                                        'action' => 'downloadcerts',
+                                                        'sesskey' => sesskey()]);
+                $downloadcertslink = $downloadcertslinkurl->out(false);
+                $downloadcerts = true;
+            }
+        }
+
+        // Are mandatory courses enabled?
+        $mandatoryselecturl = "";
+        $mandatoryselectuse = false;
+        if (get_config('local_iomad', 'use_mandatory_courses')) {
+            $mandatoryselecturl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
+                                                                          'dir' => $dir,
+                                                                          'tab' => $this->tab,
+                                                                          'view' => $view,
+                                                                          'mandatoryonly' => !$mandatoryonly]);
+            $mandatoryselectuse = true;
         }
 
         // Now, set the tab we are going to be viewing.
@@ -100,13 +125,43 @@ class main implements renderable, templatable {
         } else {
             $viewinginprogress = true;
         }
+
+        // Set the default for no courses.
         $nocoursesurl = $output->image_url('courses', 'block_mycourses')->out();
-        $sortnameurl = new moodle_url($PAGE->url->out(false), ['sort' => 'coursefullname', 'dir' => $dir, 'tab' => $this->tab, 'view' => $view]);
-        $sortdateurl = new moodle_url($PAGE->url->out(false), ['sort' => 'timestarted', 'dir' => $dir, 'tab' => $this->tab, 'view' => $view]);
-        $sortascurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort, 'dir' => 'ASC', 'tab' => $this->tab, 'view' => $view]);
-        $sortdescurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort, 'dir' => 'DESC', 'tab' => $this->tab, 'view' => $view]);
-        $listviewurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort, 'dir' => $dir, 'tab' => $this->tab, 'view' => 'list']);
-        $cardviewurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort, 'dir' => $dir, 'tab' => $this->tab, 'view' => 'card']);
+
+        // Set up the sort URL links
+        $sortnameurl = new moodle_url($PAGE->url->out(false), ['sort' => 'coursefullname',
+                                                               'dir' => $dir,
+                                                               'tab' => $this->tab,
+                                                               'mandatoryonly' => $mandatoryonly,
+                                                               'view' => $view]);
+        $sortdateurl = new moodle_url($PAGE->url->out(false), ['sort' => 'timestarted',
+                                                               'dir' => $dir,
+                                                               'tab' => $this->tab,
+                                                               'mandatoryonly' => $mandatoryonly,
+                                                               'view' => $view]);
+        $sortascurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
+                                                              'dir' => 'ASC',
+                                                              'tab' => $this->tab,
+                                                              'mandatoryonly' => $mandatoryonly,
+                                                              'view' => $view]);
+        $sortdescurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
+                                                               'dir' => 'DESC',
+                                                               'tab' => $this->tab,
+                                                               'mandatoryonly' => $mandatoryonly,
+                                                               'view' => $view]);
+        $listviewurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
+                                                               'dir' => $dir,
+                                                               'tab' => $this->tab,
+                                                               'mandatoryonly' => $mandatoryonly,
+                                                               'view' => 'list']);
+        $cardviewurl = new moodle_url($PAGE->url->out(false), ['sort' => $sort,
+                                                               'dir' => $dir,
+                                                               'tab' => $this->tab,
+                                                               'mandatoryonly' => $mandatoryonly,
+                                                               'view' => 'card']);
+
+        // Set the type of view being used.
         $viewlist = false;
         $viewcard = false;
         if ($view == 'list') {
@@ -116,6 +171,7 @@ class main implements renderable, templatable {
             $viewcard = true;
         }
 
+        // Set up the JSON output.
         return [
             'midnight' => usergetmidnight(time()),
             'nocourses' => $nocoursesurl,
@@ -133,6 +189,9 @@ class main implements renderable, templatable {
             'cardviewurl' => $cardviewurl->out(false),
             'downloadcertslink' => $downloadcertslink,
             'downloadcerts' => $downloadcerts,
+            'mandatoryselecturl' => $mandatoryselecturl,
+            'mandatoryselectuse' => $mandatoryselectuse,
+            'mandatoryonly' => $mandatoryonly,
             'viewlist' => $viewlist,
             'viewcard' => $viewcard,
         ];

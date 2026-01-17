@@ -23,7 +23,7 @@
  */
 namespace block_mycourses\output;
 
-defined('MOODLE_INTERNAL') || die();
+use block_mycourses\helper;
 
 class mobile {
 
@@ -53,11 +53,14 @@ class mobile {
         $data['pages'] = $pages;
 
         $renderer = $PAGE->get_renderer('block_mycourses');
-        $mycompletion = mycourses_get_my_completion();
+
+        $myinprogress = helper::get_my_inprogress($sort, $dir);
+        $myavailable = helper::get_my_available($sort, $dir);
+        $myarchive = helper::get_my_archive($sort, $dir);
 
         switch ($page) {
             case 'available':
-                $availableview = new available_view($mycompletion);
+                $availableview = new available_view($myavailable);
                 $data['pagecontent'] = $availableview->export_for_template($renderer);
                 $data['nocourses'] = get_string('noavailable', 'block_mycourses');
                 $data['availablepage'] = true;
@@ -65,7 +68,7 @@ class mobile {
                 break;
 
             case 'completed':
-                $completedview = new completed_view($mycompletion);
+                $completedview = new completed_view($myarchive);
                 $data['pagecontent'] = $completedview->export_for_template($renderer);
                 $data['nocourses'] = get_string('nocompleted', 'block_mycourses');
                 $data['selectlabel'] = get_string('completedheader', 'block_mycourses');
@@ -73,7 +76,7 @@ class mobile {
 
             case 'inprogress':
             default:
-                $inprogressview = new inprogress_view($mycompletion);
+                $inprogressview = new inprogress_view($myinprogress);
                 $data['pagecontent'] = $inprogressview->export_for_template($renderer);
                 $data['nocourses'] = get_string('noinprogress', 'block_mycourses');
                 $data['selectlabel'] = get_string('inprogressheader', 'block_mycourses');

@@ -4106,7 +4106,7 @@ class company {
 
         // Get the courses which are assigned to the company which are not licensed.
         $courses = $DB->get_records_sql("SELECT DISTINCT courseid
-                                         FROM {company_course_autoenrol}
+                                         FROM {company_course_options}
                                          WHERE companyid = :companyid
                                          AND autoenrol = 1
                                          $companycoursesql",

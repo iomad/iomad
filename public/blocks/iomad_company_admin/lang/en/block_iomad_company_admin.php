@@ -553,6 +553,7 @@ $string['managertype'] = 'Role to assign';
 $string['managertype_help'] = 'This selects what type of role you would like to assign/unassign.';
 $string['managetemplates'] = 'Manage role templates';
 $string['manageusers'] = 'Select';
+$string['mandatory'] = 'Mandatory';
 $string['maxuserswarning'] = 'You have exceeded the allowed maximum number of active users allowed ({$a}). You will need to either suspend or delete some current users or contact the site administrator to increase the allowed value.';
 $string['maxuserswarningplural'] = 'Adding these users will increase the total number of active users in company beyond the maximum allowed ({$a}). You will need to either suspend or delete some current users or contact the site administrator to increase the allowed value.';
 $string['missingcompany'] = 'Missing company';

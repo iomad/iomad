@@ -34,6 +34,7 @@ use \iomad;
 use \moodle_url;
 use \single_select;
 use \html_writer;
+use block_iomad_company_admin\output\courses_mandatory_editable;
 
 class iomad_courses_table extends table_sql {
 
@@ -186,6 +187,43 @@ class iomad_courses_table extends table_sql {
                                                           $companycontext,
                                                           $row,
                                                           $value);
+
+            return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
+
+        } elseif($row->visible == 0) {
+
+            return "<span class=\"dimmed_text\">" . $options[$value] . "</span>";
+
+        } elseif($row->visible == 1){
+
+            return $options[$value];
+        }
+    }
+
+    /**
+     * Generate the display of the user's license allocated timestamp
+     * @param object $user the table row being output.
+     * @return string HTML content to go inside the td.
+     */
+    public function col_mandatory($row) {
+        global $USER, $companycontext, $company, $OUTPUT, $DB;
+
+        $options = [get_string('no'),
+                    get_string('yes')];
+
+        if (empty($row->mandatory)) {
+            $value = 0;
+        } else {
+            $value = $row->mandatory;
+        }
+
+        if (!empty($USER->editing) &&
+        iomad::has_capability('block/iomad_company_admin:managecourses', $companycontext)) {
+
+            $editable = new courses_mandatory_editable($company,
+                                                       $companycontext,
+                                                       $row,
+                                                       $value);
 
             return $OUTPUT->render_from_template('core/inplace_editable', $editable->export_for_template($OUTPUT));
 

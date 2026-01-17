@@ -29,7 +29,13 @@
 }}
 <div class="buttoncontrols" style="display:inline-flex;">
   <div class="dropdown show" style='padding-right: 5px'>
-    <a class="btn btn-outline-secondary dropdown-toggle" href="#" role="button" id="mycoursesdropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <a class="btn btn-outline-secondary dropdown-toggle"
+       href="#"
+       role="button"
+       id="mycoursesdropdownMenuLink"
+       data-toggle="dropdown"
+       aria-haspopup="true"
+       aria-expanded="false">
       {{#str}} sort {{/str}}
     </a>
 
@@ -39,7 +45,13 @@
     </div>
   </div>
   <div class="dropdown show" style='padding-right: 5px'>
-    <a class="btn btn-outline-secondary dropdown-toggle" href="#" role="button" id="mycoursesdropdownMenuLinkorder" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <a class="btn btn-outline-secondary dropdown-toggle"
+       href="#"
+       role="button"
+       id="mycoursesdropdownMenuLinkorder"
+       data-toggle="dropdown"
+       aria-haspopup="true"
+       aria-expanded="false">
       {{#str}} order {{/str}}
     </a>
 
@@ -49,7 +61,13 @@
     </div>
   </div>
   <div class="dropdown show">
-    <a class="btn btn-outline-secondary dropdown-toggle" href="#" role="button" id="mycoursesdropdownMenuLinktype" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <a class="btn btn-outline-secondary dropdown-toggle"
+       href="#"
+       role="button"
+       id="mycoursesdropdownMenuLinktype"
+       data-toggle="dropdown"
+       aria-haspopup="true"
+       aria-expanded="false">
       {{#viewlist}}
           {{#str}} list, block_myoverview {{/str}}
       {{/viewlist}}
@@ -65,8 +83,28 @@
   </div>
 </div>
 
+{{#mandatoryselectuse}}
+    <a id="flagmandatorylink"
+         class=" float-right"
+         href="{{{mandatoryselecturl}}}">
+        {{#pix}} i/flagged, core,
+            {{#mandatoryonly}}
+                {{#str}}allcourses, block_iomad_company_admin{{/str}}
+            {{/mandatoryonly}}
+            {{^mandatoryonly}}
+                {{#str}}mandatoryonly, local_report_completion{{/str}}
+            {{/mandatoryonly}}
+        {{/pix}}
+    </a>&nbsp
+{{/mandatoryselectuse}}
+
 {{#downloadcerts}}
-  <a class="btn btn-outline-secondary float-right" role="button" id="downloadcourseslink" href="{{{downloadcertslink}}}">{{#str}}downloadcertificates, block_iomad_company_admin{{/str}}</a>
+  <a class="btn btn-outline-secondary float-right"
+     role="button"
+     id="downloadcourseslink"
+     href="{{{downloadcertslink}}}">
+        {{#str}}downloadcertificates, block_iomad_company_admin{{/str}}
+    </a>
 {{/downloadcerts}}
 <div class="block-mycourses" data-region="mycourses">
     <ul class="nav nav-tabs" role="tablist">
@@ -74,7 +112,7 @@
             <a class="nav-link {{#viewingavailable}}active{{/viewingavailable}}"
                       href="#mycourses_available_view"
                       role="tab"
-                      data-bs-toggle="tab"
+                      data-toggle="tab"
                       aria-selected="{{#viewingavailable}}true{{/viewingavailable}}{{^viewingavailable}}false{{/viewingavailable}}">
                 {{#str}} availableheader, block_mycourses {{/str}}
             </a>
@@ -83,7 +121,7 @@
             <a class="nav-link {{#viewinginprogress}}active{{/viewinginprogress}}"
                       href="#mycourses_inprogress_view"
                       role="tab"
-                      data-bs-toggle="tab"
+                      data-toggle="tab"
                       aria-selected="{{#viewinginprogress}}true{{/viewinginprogress}}{{^viewinginprogress}}false{{/viewinginprogress}}">
                 {{#str}} inprogressheader, block_mycourses {{/str}}
             </a>
@@ -92,7 +130,7 @@
             <a class="nav-link {{#viewingcompleted}}active{{/viewingcompleted}}"
                       href="#mycourses_completed_view"
                       role="tab"
-                      data-bs-toggle="tab"
+                      data-toggle="tab"
                       aria-selected="{{#viewingcompleted}}true{{/viewingcompleted}}{{^viewingcompleted}}false{{/viewingcompleted}}">
                 {{#str}} completedheader, block_mycourses {{/str}}
             </a>
