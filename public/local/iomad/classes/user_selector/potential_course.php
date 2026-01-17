@@ -55,7 +55,7 @@ class potential_course extends company_base {
             return array();
         } else {
             $usersql = "SELECT ue.userid,count(ue.enrolid) AS enrolcount FROM {user_enrolments} ue
-                        JOIN {enrol} e ON (ue.enrolid = e.id AND ".$DB->sql_compare_text('e.enrol')."='manual' AND e.status = 0)
+                        JOIN {enrol} e ON (ue.enrolid = e.id AND e.status = 0)
                         JOIN {local_iomad_track} lit ON (e.courseid = lit.courseid AND ue.userid=lit.userid AND ue.timestart = lit.timeenrolled)
                         WHERE $coursesql
                         AND lit.companyid = :companyid
