@@ -2604,14 +2604,14 @@ function xmldb_local_iomad_upgrade($oldversion) {
     if ($oldversion < 2025123000) {
 
         // Need to re-run these tasks due to issues with these tasks not working with new
-        // database structure. 
+        // database structure.
         $templates = [
-            'user_signed_up_to_waitlist', 
+            'user_signed_up_to_waitlist',
             'user_signed_up_for_event_reminder',
             'expiring_digest_manager',
-            'warning_digest_manager', 
+            'warning_digest_manager',
         ];
- 
+
         // Set up an ad-hoc task to re-add the new email templates - so we ensure we have them.
         foreach ($templates as $template) {
             $addtask = new local_iomad\task\addtemplate();
@@ -2703,8 +2703,10 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
         // Set up the new config.
         foreach ($options as $key => $option) {
-            set_config($option, $CFG->$key, 'local_iomad');
-            unset_config($key);
+            if (!empty($CFG->$key)) {
+                set_config($option, $CFG->$key, 'local_iomad');
+                unset_config($key);
+            }
         }
 
         // We also need to save the files for the certificate.
