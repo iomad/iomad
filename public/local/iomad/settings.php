@@ -26,8 +26,7 @@ defined('MOODLE_INTERNAL') || die;
 if ($hassiteconfig) {
 
     // Basic navigation settings
-    $local_iomad_folder = new admin_category('local_iomad', get_string('pluginname', 'local_iomad'));
-    $ADMIN->add('localplugins', $local_iomad_folder);
+//    $local_iomad_folder = new admin_category('local_iomad', get_string('pluginname', 'local_iomad'));
 
     // Set up the config array.
     $companyconfigs = [];
@@ -349,37 +348,57 @@ if ($hassiteconfig) {
         set_config('signup_company', 0, 'local_iomad');
     }
 
-    // Finally add all of the settings.
-    $settings = new admin_settingpage('local_iomad_general',
+    // Set up the initial settings page with all of the tabs.
+    $settings = new local_iomad_admin_settingspage_tabs('settinglocaliomad', get_string('pluginname', 'local_iomad'));
+
+    // Set up the General page.
+    $page = new admin_settingpage('local_iomad_general',
                                       get_string('general_settings', 'local_iomad'),
                                       'moodle/site:config');
-    $ADMIN->add('local_iomad', $settings);
     foreach ($generalconfigs as $config) {
         $config->plugin = 'local_iomad';
-        $settings->add($config);
+        $page->add($config);
     }
-    $settings = new admin_settingpage('local_iomad_company',
+
+    // Must add the page after definiting all the settings!
+    $settings->add($page);
+
+    $page = new admin_settingpage('local_iomad_company',
                                       get_string('company_settings', 'local_iomad'),
                                       'moodle/site:config');
-    $ADMIN->add('local_iomad', $settings);
+
     foreach ($companyconfigs as $config) {
         $config->plugin = 'local_iomad';
-        $settings->add($config);
+        $page->add($config);
     }
-    $settings = new admin_settingpage('local_iomad_report',
+
+    // Must add the page after definiting all the settings!
+    $settings->add($page);
+
+    $page = new admin_settingpage('local_iomad_report',
                                       get_string('report_settings', 'local_iomad'),
                                       'moodle/site:config');
-    $ADMIN->add('local_iomad', $settings);
+
     foreach ($reportconfigs as $config) {
         $config->plugin = 'local_iomad';
-        $settings->add($config);
+        $page->add($config);
     }
-    $settings = new admin_settingpage('local_iomad_signup',
+
+    // Must add the page after definiting all the settings!
+    $settings->add($page);
+
+    $page = new admin_settingpage('local_iomad_signup',
                                       get_string('signup_settings', 'local_iomad'),
                                       'moodle/site:config');
-    $ADMIN->add('local_iomad', $settings);
+
     foreach ($signupconfigs as $config) {
         $config->plugin = 'local_iomad';
-        $settings->add($config);
+        $page->add($config);
     }
+
+    // Must add the page after definiting all the settings!
+    $settings->add($page);
+
+    $ADMIN->add('localplugins', $settings);
+
 }
