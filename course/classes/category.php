@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
 // IOMAD
 require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
 
-
 /**
  * Class to store, cache, render and manage course category
  *
@@ -756,8 +755,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return mixed
      */
     protected static function get_tree($id) {
-
-        // IOMAD Need to filter here.
         $all = self::get_cached_cat_tree();
         if (is_null($all) || !isset($all[$id])) {
             // Could not get or rebuild the tree, or requested a non-existant ID.
@@ -779,7 +776,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @throws moodle_exception
      */
     private static function get_cached_cat_tree(): ?array {
-        // IOMAD Need to filter here.
         $coursecattreecache = cache::make('core', 'coursecattree');
         $all = $coursecattreecache->get('all');
         if ($all !== false) {
@@ -1219,6 +1215,11 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             }
         }
 
+        // IOMAD - Filter the result.
+        if (!PHPUNIT_TEST) {
+            $list = iomad::iomad_filter_courses($list);
+        }
+
         return $list;
     }
 
@@ -1654,11 +1655,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 }
             }
 
-            // IOMAD - Filter the result.
-            if (!PHPUNIT_TEST) {
-                $courses = iomad::iomad_filter_courses($courses);
-            }
-
             return $courses;
         }
 
@@ -1695,7 +1691,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 $requiredcapabilities, $searchcond, $searchcondparams);
             self::sort_records($courselist, $sortfields);
 
-            // IOMAD: strip out courses user shouldn't see.
+            // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
                 $courselist = iomad::iomad_filter_courses($courselist);
             }
@@ -1787,11 +1783,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $courses = array();
         foreach ($records as $record) {
             $courses[$record->id] = new core_course_list_element($record);
-        }
-
-        // IOMAD - Filter the result.
-        if (!PHPUNIT_TEST) {
-            $courses = iomad::iomad_filter_courses($courses);
         }
 
         return $courses;
