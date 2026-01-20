@@ -24,9 +24,10 @@
  */
 
 use core\exception\moodle_exception;
+use local_iomad\iomad;
+use context_system;
 
 // IOMAD
-
 
 
 /**
@@ -262,7 +263,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         }
 
         // IOMAD - dont show categories which a user can't see.
-        $companycategories = local_iomad\iomad::iomad_filter_categories([$id => $id]);
+        $companycategories = iomad::iomad_filter_categories([$id => $id]);
         if (empty($companycategories)) {
             return null;
         }
@@ -756,8 +757,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return mixed
      */
     protected static function get_tree($id) {
-
-        // IOMAD Need to filter here.
         $all = self::get_cached_cat_tree();
         if (is_null($all) || !isset($all[$id])) {
             // Could not get or rebuild the tree, or requested a non-existant ID.
@@ -779,7 +778,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @throws moodle_exception
      */
     private static function get_cached_cat_tree(): ?array {
-        // IOMAD Need to filter here.
         $coursecattreecache = cache::make('core', 'coursecattree');
         $all = $coursecattreecache->get('all');
         if ($all !== false) {
@@ -1219,6 +1217,11 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             }
         }
 
+        // IOMAD - Filter the result.
+        if (!PHPUNIT_TEST) {
+            $list = iomad::iomad_filter_courses($list);
+        }
+
         return $list;
     }
 
@@ -1614,15 +1617,15 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         $ids = $coursecatcache->get($cachekey);
         // IOMAD: only use cache if allowed.
-        $systemcontext = \context_system::instance();
-        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
+        $systemcontext = context_system::instance();
+        $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
 
-        if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext) && $ids !== false) {
+        if (iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext) && $ids !== false) {
             // We already cached last search result.
             $ids = array_slice($ids, $offset, $limit);
             $courses = array();
@@ -1652,11 +1655,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                         $courses[$id] = new core_course_list_element($records[$id]);
                     }
                 }
-            }
-
-            // IOMAD - Filter the result.
-            if (!PHPUNIT_TEST) {
-                $courses = local_iomad\iomad::iomad_filter_courses($courses);
             }
 
             return $courses;
@@ -1695,9 +1693,9 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 $requiredcapabilities, $searchcond, $searchcondparams);
             self::sort_records($courselist, $sortfields);
 
-            // IOMAD: strip out courses user shouldn't see.
+            // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
-                $courselist = local_iomad\iomad::iomad_filter_courses($courselist);
+                $courselist = iomad::iomad_filter_courses($courselist);
             }
 
             $coursecatcache->set($cachekey, array_keys($courselist));
@@ -1789,11 +1787,6 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             $courses[$record->id] = new core_course_list_element($record);
         }
 
-        // IOMAD - Filter the result.
-        if (!PHPUNIT_TEST) {
-            $courses = local_iomad\iomad::iomad_filter_courses($courses);
-        }
-
         return $courses;
     }
 
@@ -1824,7 +1817,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
             // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
-                $courses = local_iomad\iomad::iomad_filter_courses($courses);
+                $courses = iomad::iomad_filter_courses($courses);
             }
 
             $cnt = count($courses);
@@ -1918,7 +1911,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
             // IOMAD - Filter the result.
             if (!PHPUNIT_TEST) {
-                $courses = local_iomad\iomad::iomad_filter_courses($courses);
+                $courses = iomad::iomad_filter_courses($courses);
             }
 
             return $courses;
@@ -1971,7 +1964,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // IOMAD - Filter the result.
         if (!PHPUNIT_TEST) {
-            $courses = local_iomad\iomad::iomad_filter_courses($courses);
+            $courses = iomad::iomad_filter_courses($courses);
         }
 
         return $courses;
@@ -2795,7 +2788,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
 
         // IOMAD :  Filter the list of categories.
         if (!is_siteadmin() and !during_initial_install()) {
-            $names = local_iomad\iomad::iomad_filter_categories($names);
+            $names = iomad::iomad_filter_categories($names);
         }
 
         return $names;
@@ -3306,14 +3299,14 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         }
 
         // IOMAD
-        $systemcontext = \context_system::instance();
-        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
+        $systemcontext = context_system::instance();
+        $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
-        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
             return null;
         }
 
