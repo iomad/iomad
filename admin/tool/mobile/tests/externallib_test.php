@@ -18,6 +18,7 @@ namespace tool_mobile;
 
 use externallib_advanced_testcase;
 use core_external\external_api;
+use iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -73,7 +74,7 @@ final class externallib_test extends externallib_advanced_testcase {
             'wwwroot' => $CFG->wwwroot,
             'httpswwwroot' => $CFG->wwwroot,
             'sitename' => \core_external\util::format_string($SITE->fullname, $context->id, true),
-            'guestlogin' => $CFG->guestloginbutton,
+            'guestlogin' => iomad::get_config('', 'guestloginbutton'),
             'rememberusername' => $CFG->rememberusername,
             'authloginviaemail' => $CFG->authloginviaemail,
             'registerauth' => $CFG->registerauth,

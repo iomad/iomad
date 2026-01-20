@@ -1121,8 +1121,12 @@ function login_unlock_account($user, bool $notify = false) {
  */
 function signup_captcha_enabled() {
     global $CFG;
-    $authplugin = get_auth_plugin($CFG->registerauth);
-    return !empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey) && $authplugin->is_captcha_enabled();
+    $authplugin = get_auth_plugin(iomad::get_config('', 'registerauth'));
+
+    // IOMAD
+    return !empty(iomad::get_config('', 'recaptchapublickey')) &&
+           !empty(iomad::get_config('', 'recaptchaprivatekey')) &&
+           $authplugin->is_captcha_enabled();
 }
 
 /**
@@ -1131,7 +1135,11 @@ function signup_captcha_enabled() {
  */
 function login_captcha_enabled(): bool {
     global $CFG;
-    return !empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey) && $CFG->enableloginrecaptcha == true;
+
+    // IOMAD
+    return !empty(iomad::get_config('', 'recaptchapublickey')) &&
+           !empty(iomad::get_config('', 'recaptchaprivatekey')) &&
+           !empty(iomad::get_config('', 'enableloginrecaptcha')) == true;
 }
 
 /**
@@ -1143,7 +1151,9 @@ function login_captcha_enabled(): bool {
  */
 function validate_login_captcha(string|bool $captcha): bool {
     global $CFG;
-    if (!empty($CFG->alternateloginurl)) {
+
+    // IOMAD
+    if (!empty(iomad::get_config('', 'alternateloginurl'))) {
         // An external login page cannot use the reCaptcha.
         return true;
     }
@@ -1155,7 +1165,7 @@ function validate_login_captcha(string|bool $captcha): bool {
     }
 
     require_once($CFG->libdir . '/recaptchalib_v2.php');
-    $response = recaptcha_check_response(RECAPTCHA_VERIFY_URL, $CFG->recaptchaprivatekey, getremoteaddr(), $captcha);
+    $response = recaptcha_check_response(RECAPTCHA_VERIFY_URL, iomad::get_config('', 'recaptchaprivatekey'), getremoteaddr(), $captcha);
     return $response['isvalid'];
 }
 
@@ -1171,7 +1181,7 @@ function signup_validate_data($data, $files) {
     global $CFG, $DB;
 
     $errors = array();
-    $authplugin = get_auth_plugin($CFG->registerauth);
+    $authplugin = get_auth_plugin(iomad::get_config('', 'registerauth'));
 
     if ($DB->record_exists('user', array('username' => $data['username'], 'mnethostid' => $CFG->mnet_localhost_id))) {
         $errors['username'] = get_string('usernameexists');
@@ -1272,7 +1282,7 @@ function signup_setup_new_user($user) {
     $user->timecreated = time();
     $user->mnethostid  = $CFG->mnet_localhost_id;
     $user->secret      = random_string(15);
-    $user->auth        = $CFG->registerauth;
+    $user->auth        = iomad::get_config('', 'registerauth');
     // Initialize alternate name fields to empty strings.
     $namefields = array_diff(\core_user\fields::get_name_fields(), useredit_get_required_name_fields());
     foreach ($namefields as $namefield) {
@@ -1290,10 +1300,10 @@ function signup_setup_new_user($user) {
 function signup_get_user_confirmation_authplugin() {
     global $CFG;
 
-    if (empty($CFG->registerauth)) {
+    if (empty(iomad::get_config('', 'registerauth'))) {
         return false;
     }
-    $authplugin = get_auth_plugin($CFG->registerauth);
+    $authplugin = get_auth_plugin(iomad::get_config('', 'registerauth'));
 
     if (!$authplugin->can_confirm()) {
         return false;
@@ -1310,8 +1320,8 @@ function signup_get_user_confirmation_authplugin() {
 function signup_is_enabled() {
     global $CFG;
 
-    if (!empty($CFG->registerauth)) {
-        $authplugin = get_auth_plugin($CFG->registerauth);
+    if (!empty(iomad::get_config('', 'registerauth'))) {
+        $authplugin = get_auth_plugin(iomad::get_config('', 'registerauth'));
         if ($authplugin->can_signup()) {
             return $authplugin;
         }
