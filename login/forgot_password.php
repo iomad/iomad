@@ -62,9 +62,8 @@ $PAGE->set_title($strforgotten);
 $PAGE->set_heading($COURSE->fullname);
 
 // if alternatepasswordurl is defined, then we'll just head there
-$forgottenpasswordurl = "forgottenpasswordurl" . $postfix;
-if (!empty($CFG->$forgottenpasswordurl)) {
-    redirect($CFG->$forgottenpasswordurl);
+if (!empty(local_iomad\iomad::get_config('', 'forgottenpasswordurl'))) {
+    redirect(local_iomad\iomad::get_config('', 'forgottenpasswordurl'));
 }
 
 // if you are logged in then you shouldn't be here!

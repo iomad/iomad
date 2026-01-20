@@ -50,7 +50,7 @@ use navigation_node;
 use rating;
 use rating_manager;
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 use HTML_QuickForm_element;
 
 /**
@@ -3500,7 +3500,7 @@ EOD;
 
         // IOMAD
         $systemcontext = \context_system::instance();
-        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
+        $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid) && $companyid > 0) {
             $companycontext = \core\context\company::instance($companyid);
         } else {
@@ -3509,14 +3509,14 @@ EOD;
 
         $iomadlink = "";
         if ($DB->get_manager()->table_exists('company') &&
-            (\iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext) ||
-             \iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext) ||
-             \iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext) ||
-             \iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext) ||
-             \iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $companycontext) ||
-             \iomad::has_capability('block/iomad_commerce:admin_view', $companycontext) ||
-             \iomad::has_capability('block/iomad_microlearning:view', $companycontext) ||
-             \iomad::has_capability('block/iomad_reports:view', $companycontext))) {
+            (iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext) ||
+             iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext) ||
+             iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext) ||
+             iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext) ||
+             iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $companycontext) ||
+             iomad::has_capability('block/iomad_commerce:admin_view', $companycontext) ||
+             iomad::has_capability('block/iomad_microlearning:view', $companycontext) ||
+             iomad::has_capability('block/iomad_reports:view', $companycontext))) {
             $iomadlink = "-" . get_string('dashboard', 'block_iomad_company_admin') . "|" .
                          '/blocks/iomad_company_admin/index.php' . "\n\r";
         }
@@ -3525,7 +3525,7 @@ EOD;
         $shoplink = "";
 
         // Deal with company custom menu items.
-        if ($companyid = \iomad::get_my_companyid(\context_system::instance(), false)) {
+        if ($companyid = iomad::get_my_companyid(\context_system::instance(), false)) {
             if ($DB->get_manager()->table_exists('company') &&
                 $companyrec = $DB->get_record('company', array('id' => $companyid))) {
                 if (!empty($companyrec->custommenuitems)) {

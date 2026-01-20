@@ -449,3 +449,8 @@ border-radius: 10px;
 #page-blocks-iomad_company_admin-iomad_courses_form .c0 a {
     display: inline-block;
 }
+
+div.mb-3.fitem.dangerbutton .btn-primary {
+    background-color: #ca3120;
+    border-color: #ca3120;
+}

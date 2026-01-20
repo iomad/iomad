@@ -36,6 +36,7 @@ use local_iomadcustompage\output\page_name_editable;
 use local_iomadcustompage\output\page_title_editable;
 use local_iomadcustompage\permission;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
+use local_iomad\iomad;
 
 /**
  * Plugin inplace editable implementation
@@ -106,7 +107,7 @@ function local_iomadcustompage_extend_navigation(global_navigation $nav) {
 
     if (isloggedin()) {
         $userid = (int)$USER->id;
-    } else if ($CFG->guestloginbutton) {
+    } else if (iomad::get_config('', 'guestloginbutton')) {
         $guest = guest_user();
         $userid = (int)$guest->id;
     }

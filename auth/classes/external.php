@@ -168,7 +168,7 @@ class core_auth_external extends external_api {
         $PAGE->set_context($context);   // Needed by format_string calls.
 
         // Check if an alternate forgotten password method is set.
-        if (!empty($CFG->forgottenpasswordurl)) {
+        if (!empty(local_iomad\iomad::get_config('', 'forgottenpasswordurl'))) {
             throw new moodle_exception('cannotmailconfirm');
         }
 
