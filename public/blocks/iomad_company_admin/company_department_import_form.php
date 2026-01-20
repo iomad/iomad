@@ -63,6 +63,10 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($linktext, $departmentlist);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $importform = new \block_iomad_company_admin\forms\company_department_import_form($PAGE->url);
 $errors = "";
 

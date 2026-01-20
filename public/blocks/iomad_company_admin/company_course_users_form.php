@@ -95,6 +95,10 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
 $PAGE->navbar->add($linktext, $linkurl);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the forms.
 $coursesform = new \block_iomad_company_admin\forms\company_ccu_courses_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses, $parentlevel);
 $coursesform->set_data(array('selectedcourses' => $selectedcourses, 'courses' => $courses));
 $usersform = new \block_iomad_company_admin\forms\company_course_users_form($PAGE->url, $companycontext, $companyid, $departmentid, $selectedcourses);

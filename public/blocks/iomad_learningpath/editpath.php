@@ -52,6 +52,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('managetitle', 'block_iomad_learningpath'));
 $output = $PAGE->get_renderer('block_iomad_learningpath');
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // IOMAD stuff
 $companypaths = new block_iomad_learningpath\companypaths($companyid, $systemcontext);
 $paths = $companypaths->get_paths();

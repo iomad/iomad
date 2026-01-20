@@ -59,6 +59,9 @@ $linktext = get_string('company_license_list_title', 'block_iomad_company_admin'
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage, 'showexpired' => $showexpired));
 $returnurl = $baseurl;
 

@@ -137,6 +137,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->requires->jquery();
 $PAGE->requires->js_call_amd('local_iomad/local_email', 'init');
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Are we dealing with a reset?
 //  Deal with any deletes.
 if ((!empty($reset) ||

@@ -45,6 +45,10 @@ $PAGE->set_url($url);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('dashboard', 'block_iomad_company_admin'));
 $PAGE->requires->js_call_amd('block_iomad_company_admin/admin', 'init');
+
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Renderer
 $renderer = $PAGE->get_renderer('block_iomad_company_admin');
 

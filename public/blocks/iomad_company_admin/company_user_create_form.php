@@ -80,6 +80,9 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select_nosub'
                               1,
                               optional_param('deptid', 0, PARAM_INT)]);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Check if the company has gone over the user quota.
 if (!$company->check_usercount(1)) {
     $maxusers = $company->get('maxusers');

@@ -60,7 +60,7 @@ if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $co
     $companycourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
                                                  FROM {course} c
                                                  JOIN {iomad_courses} ic ON (c.id = ic.courseid)
-                                                 ORDER BY c.fullname");    
+                                                 ORDER BY c.fullname");
 } else {
     $companycourses = $company->get_menu_courses(true, false);
 }
@@ -94,7 +94,7 @@ if (!$new) {
 
     // Get the tags that are being used by the current shop item
     $shopsettings->tags = \block_iomad_commerce\helper::get_course_tags($shopsettingsid);
-    
+
     //  Get any price bandings
     $shopsettings->block_start = [];
     $pricebands = $DB->get_records('course_shopblockprice', ['itemid' => $shopsettingsid], 'price_bracket_start');
@@ -142,6 +142,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string($title, 'block_iomad_commerce'));
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 /* next line copied from /course/edit.php */
 $editoroptions = ['maxfiles' => EDITOR_UNLIMITED_FILES,
                   'maxbytes' => $CFG->maxbytes,
@@ -169,7 +172,7 @@ if ($mform->is_cancelled()) {
 
     $DB->delete_records('course_shopblockprice', ['itemid' => $data->id]);
 
-    // Deal with the License price blocks. 
+    // Deal with the License price blocks.
     foreach ($data->item_block_start as $blockid => $itemblock) {
         if (!empty($itemblock)) {
             $priceblock = (object) [];

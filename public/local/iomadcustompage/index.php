@@ -57,6 +57,9 @@ if ($companyid > 0) {
 }
 $PAGE->set_context($systemcontext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 echo $OUTPUT->header();
 echo html_writer::start_div('d-flex justify-content-between mb-2');
 

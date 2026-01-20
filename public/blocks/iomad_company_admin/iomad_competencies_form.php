@@ -86,6 +86,9 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('iomad_company_frameworks_title', 'block_iomad_company_admin'));
 $PAGE->navbar->add($linktext, $linkurl);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Is the users company set and no other company selected?
 if (empty($company) && !empty($companyid)) {
     $company = $companyid;

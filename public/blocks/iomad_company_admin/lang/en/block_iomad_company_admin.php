@@ -112,6 +112,7 @@ $string['companycoursesmatching'] = 'Company courses matching \'{$a}\'';
 $string['company_course_users_title'] = 'Assign users to course';
 $string['companycreated'] = 'Company created';
 $string['companycreatedok'] = 'Company was created successfully';
+$string['companydashboardpageviewed'] = 'IOMAD dashboard page viewed';
 $string['companydeletecheckfull'] = 'Are you absolutely sure you want to completely delete {$a} and its users ?';
 $string['companydeletelicensecheckfull'] = 'Are you absolutely sure you want to completely delete {$a}?';
 $string['companydeletecheckfullpreamble'] = '<p>This will completely delete the company including all users, dedicated courses, licenses, stored reporting information, saved certificates and all other specific company information.</p><p><b>There is NO GOING BACK FROM THIS!</b></p><p>A handy checklist has been provided below which you have to agree to before the company is removed. On confirmation, a task will be created to delete the company. The company information may still be available until this task completes. You can suspend a company initially to prevent anyone from accessing before you start this process.</p>';

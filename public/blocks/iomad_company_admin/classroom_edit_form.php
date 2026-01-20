@@ -89,7 +89,9 @@ $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($linktext, $linkurl);
 
 require_login(null, false); // Adds to $PAGE, creates $OUTPUT.
-// Get the form data.
+
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Set up the form.
 $mform = new \block_iomad_company_admin\forms\classroom_edit_form($PAGE->url, $isadding, $companyid, $classroomid, $editoroptions);
@@ -116,13 +118,13 @@ if ($mform->is_cancelled()) {
             $data->capacity = 0;
         }
     }
-    
+
     if (!empty($data->ispublic)) {
         $data->ispublic = 1;
      } else {
          $data->ispublic = 0;
      }
-    
+
     $data->description = "";
     $data->descriptionformat = $data->description_editor['format'];
 

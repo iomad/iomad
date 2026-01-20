@@ -23,10 +23,10 @@
 
 // Include Moodle configuration file
 require_once(dirname(__FILE__) . '/../../config.php');
-// Include IOMAD company admin library 
+// Include IOMAD company admin library
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-// Check if commerce is enabled 
+// Check if commerce is enabled
 \block_iomad_commerce\helper::require_commerce_enabled();
 
 // Define optional GET parameters
@@ -66,7 +66,10 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
-// Delete a tag dependant on the value of the delete parameter passed after 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Delete a tag dependant on the value of the delete parameter passed after
 if ($delete && confirm_sesskey()) {
     // Check the user has the correct capability to delete a shop tag
     if (!iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
@@ -83,15 +86,15 @@ if ($delete && confirm_sesskey()) {
         // Get the shop tag name and output it to the heading
         echo $OUTPUT->heading(get_string('deleteshoptag', $component, $DB->get_record('shoptag', ['id' => $delete], 'tag')->tag));
         // Get all shop items using the current tag and create a list
-        $shopitems = $DB->get_records_sql('SELECT id as id, name as name FROM {course_shopsettings} 
+        $shopitems = $DB->get_records_sql('SELECT id as id, name as name FROM {course_shopsettings}
                                            WHERE id in (SELECT itemid FROM {course_shoptag} WHERE shoptagid = :shoptagid)
                                            AND companyid = :companyid ORDER BY name ASC',
                                            ['shoptagid' => $delete, 'companyid' => $companyid]);
         // Set the paramters for the URL
         $optionyes = ['delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey()];
         // Define the $string variable dependant whether there are shop items using the shop tag or not
-        $string = (!empty($shopitems)) ? 
-                                        get_string('deleteshoptagcheckused', $component, implode(', ', array_map(fn($r) => $r->name, $shopitems))) : 
+        $string = (!empty($shopitems)) ?
+                                        get_string('deleteshoptagcheckused', $component, implode(', ', array_map(fn($r) => $r->name, $shopitems))) :
                                         get_string('deleteshoptagcheck', $component);
         // Define and output the URL
         echo $OUTPUT->confirm($string, new moodle_url('manage_tags.php', $optionyes), 'manage_tags.php');

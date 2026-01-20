@@ -94,6 +94,9 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Only display if you have the correct capability, or you are not in more than one company.
 // Just display name of current company if no choice.
 if (!iomad::has_capability('block/iomad_company_admin:company_view_all',$systemcontext)) {

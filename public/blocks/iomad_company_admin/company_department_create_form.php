@@ -66,6 +66,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($linktext, $departmentlist);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Did we get a move request?
 // Delete any valid departments.
 if ($moveid && confirm_sesskey() && $confirm == md5($moveid)) {

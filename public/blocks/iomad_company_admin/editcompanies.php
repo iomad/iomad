@@ -97,6 +97,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
@@ -253,8 +256,8 @@ foreach ($columns as $column) {
     } else {
         $columndir = $dir == "ASC" ? "DESC":"ASC";
         $columnicon = $dir == "ASC" ? "down":"up";
-        $columnicontitle = get_string(strtolower($dir)); 
-        $columnicon = " <i class='icon fa fa-arrow-" . $columnicon . "-short-wide fa-fw ' 
+        $columnicontitle = get_string(strtolower($dir));
+        $columnicon = " <i class='icon fa fa-arrow-" . $columnicon . "-short-wide fa-fw '
                          title='" . $columnicontitle ."'
                          role='img' aria-label='" . $columnicontitle ."'></i>";
 
@@ -323,7 +326,7 @@ if (!empty($params['showchild']) && !empty($params['name'])) {
         $sqlsearch1 = " parentid  = $companyrecord";
         $companyrecords1 = $DB->get_fieldset_select('company', 'id', $sqlsearch1);
         foreach($companyrecords1 as $companyrecord1){
-            array_push($companyrecords, $companyrecord1); 
+            array_push($companyrecords, $companyrecord1);
         }
     }
     foreach ($companyrecords as $companyrecord) {

@@ -68,6 +68,10 @@ if (has_capability('block/iomad_company_admin:company_add', $systemcontext)) {
 }
 $PAGE->set_button($buttons);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $usersform = new \block_iomad_company_admin\forms\company_users_form($PAGE->url, $companycontext, $companyid, $allusers);
 
 if ($usersform->is_cancelled()) {

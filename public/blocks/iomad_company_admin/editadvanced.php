@@ -63,6 +63,9 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('myhome') . " - $linktext");
 $PAGE->navbar->add($listtext, $listurl);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 if ($id == -1) {
     // Creating new user.
     iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);

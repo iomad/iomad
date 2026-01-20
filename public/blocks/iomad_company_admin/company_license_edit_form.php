@@ -82,6 +82,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // If we are editing a license, check that the parent id is set.
 if (!empty($licenseid)) {
     $licenseinfo = $DB->get_record('companylicense', array('id' => $licenseid));

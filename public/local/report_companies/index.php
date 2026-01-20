@@ -63,6 +63,9 @@ $PAGE->requires->css("/local/report_companies/styles.css");
 // Set the page heading.
 $PAGE->set_heading($strcompletion);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Renderer.
 $output = $PAGE->get_renderer('local_report_companies');
 

@@ -87,6 +87,9 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Is the users company set and no other company selected?
 if (empty($company) && !empty($companyid)) {
     $company = $companyid;

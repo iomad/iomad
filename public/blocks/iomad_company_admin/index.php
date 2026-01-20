@@ -150,6 +150,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Set the page heading.
 $PAGE->set_heading(get_string('dashboard', 'block_iomad_company_admin'));
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Set the current tab to stick.
 if (!empty($selectedtab)) {
     $SESSION->iomad_company_admin_tab = $selectedtab;

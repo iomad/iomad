@@ -106,6 +106,9 @@ $PAGE->requires->jquery();
 // Parameter is name of proper select form element.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', '', $userdepartment));
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // get output renderer
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
@@ -205,7 +208,7 @@ if (empty($iid)) {
                 }
             }
             if (!$DB->get_records_sql("SELECT * FROM {user} u
-                                       JOIN {company_users} cu 
+                                       JOIN {company_users} cu
                                        ON (u.id = cu.userid)
                                        WHERE u.username = :username
                                        AND cu.companyid = :companyid",
@@ -830,7 +833,7 @@ if (!empty($cancelled)) {
                     profile_save_data($existinguser);
 
                     \core\event\user_updated::create_from_userid($existinguser->id)->trigger();
-     
+
                     // Is the company department valid?
                     if ($passeddepartment && !empty($existinguser->department)) {
                         if (!$department = $DB->get_record('department', array('company' => $company->id,
@@ -1121,7 +1124,7 @@ if (!empty($cancelled)) {
                     // Do we have a department passed?
                     if (preg_match('/^department\d+$/', $column)) {
                         $i = substr($column, 10);
-    
+
                         if (empty($user->{'department'.$i})) {
                             continue;
                         }
@@ -1146,21 +1149,21 @@ if (!empty($cancelled)) {
                             $erroredusers[] = $line;
                             continue;
                         }
-    
+
                         // Since we got a valid department, remove the user from any default one.  Typically top-level.
                         if ($department->id != $defaultdepartmentid &&
                             !empty($defaultdepartmentid)) {
-    
+
                             // Remove the user from the default department.
                             $DB->delete_records('company_users', array('userid' => $user->id, 'companyid' => $company->id, 'departmentid' => $defaultdepartmentid));
-    
+
                             // Only want to do this once.
                             $defaultdepartmentid = 0;
                         } else {
                             // Default is the first we were passed.  No longer required.
                             $defaultdepartmentid = 0;
                         }
-    
+
                         // Add the user to this department.
                         $company->assign_user_to_company($user->id, $department->id);
                     }

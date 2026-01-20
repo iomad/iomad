@@ -61,6 +61,9 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string('classrooms_for', 'block_iomad_company_admin', $company->get_name()));
 $PAGE->navbar->add($linktext, $linkurl);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort,
                                                     'dir' => $dir,
                                                     'search' => $search,
@@ -145,7 +148,7 @@ if (!empty($search)) {
     $searchsql .= " OR " . $DB->sql_like('city', ':citysearch', false);
     $searchsql .= " OR " . $DB->sql_like('country', ':countrysearch', false);
     $searchsql .= " OR " . $DB->sql_like('postcode', ':postcodesearch', false) . ")";
-    
+
     $sqlparams['namesearch'] = '%' . $DB->sql_like_escape($search) . '%';
     $sqlparams['addresssearch'] = '%' . $DB->sql_like_escape($search) . '%';
     $sqlparams['citysearch'] = '%' . $DB->sql_like_escape($search) . '%';

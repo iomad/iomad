@@ -70,6 +70,9 @@ $title = get_string('pluginname', 'block_iomad_microlearning');
 
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Deal with the link back to the main microlearning page.
 $buttoncaption = get_string('threads', 'block_iomad_microlearning');
 $buttonlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
@@ -178,7 +181,7 @@ if (!empty($fileimport)) {
                             $erroredgroups[] = $line;
                             continue;
                         }
-                    } 
+                    }
                 }
 
                 // Write the info to the db.
