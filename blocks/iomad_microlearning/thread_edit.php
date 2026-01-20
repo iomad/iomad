@@ -57,6 +57,9 @@ $output = $PAGE->get_renderer('block_iomad_microlearning');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Set up the form.
 $editform = new block_iomad_microlearning\forms\thread_edit_form();
 

@@ -126,6 +126,9 @@ if (empty($templatesetid)) {
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir,
                                                     'perpage' => $perpage,
                                                     'lang' => $lang));
@@ -449,14 +452,14 @@ if ($manage) {
             $supenabledrecs[$i] = "d";
         }
     }
-    $enabledcounts = array_count_values($enabledrecs);  
+    $enabledcounts = array_count_values($enabledrecs);
     if (empty($enabledcounts["d"])) {
         $enabledcounts["d"] = 0;
     }
     if (empty($enabledcounts["e"])) {
         $enabledcounts["e"] = 0;
     }
-    $manenabledcounts = array_count_values($manenabledrecs);    
+    $manenabledcounts = array_count_values($manenabledrecs);
     if (empty($manenabledcounts["d"])) {
         $manenabledcounts["d"] = 0;
     }
@@ -470,17 +473,17 @@ if ($manage) {
     if (empty($supenabledcounts["e"])) {
         $supenabledcounts["e"] = 0;
     }
-    if ($enabledcounts["d"] < $enabledcounts["d"] + $enabledcounts["e"]) {    
+    if ($enabledcounts["d"] < $enabledcounts["d"] + $enabledcounts["e"]) {
         $echecked = "";
     } else {
         $echecked = " checked ";
     }
-    if ($manenabledcounts["d"] < $manenabledcounts["d"] + $manenabledcounts["e"]) {    
+    if ($manenabledcounts["d"] < $manenabledcounts["d"] + $manenabledcounts["e"]) {
         $emchecked = "";
     } else {
         $emchecked = " checked ";
     }
-    if ($supenabledcounts["d"] < $supenabledcounts["d"] + $supenabledcounts["e"]) {    
+    if ($supenabledcounts["d"] < $supenabledcounts["d"] + $supenabledcounts["e"]) {
         $eschecked = "";
     } else {
         $eschecked = " checked ";

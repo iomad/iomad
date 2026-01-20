@@ -73,6 +73,10 @@ $linktext = get_string('user_courses_for', 'block_iomad_company_admin', fullname
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $coursesform = new \block_iomad_company_admin\forms\company_users_course_form($formurl, $companycontext, $companyid, $departmentid, $userid);
 
 echo $OUTPUT->header();

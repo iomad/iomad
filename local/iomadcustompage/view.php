@@ -55,6 +55,8 @@ $PAGE->set_url($pageurl);
 $PAGE->set_other_editing_capability('local/iomadcustompage:edit');
 $PAGE->set_blocks_editing_capability('local/iomadcustompage:edit');
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 /** @var \local_iomadcustompage\output\renderer $renderer */
 $renderer = $PAGE->get_renderer('local_iomadcustompage');

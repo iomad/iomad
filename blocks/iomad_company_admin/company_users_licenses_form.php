@@ -73,6 +73,10 @@ $buttonlink = new moodle_url('/blocks/iomad_company_admin/editusers.php');
 $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $coursesform = new \block_iomad_company_admin\forms\company_users_licenses_form($PAGE->url, $companycontext, $companyid, $departmentid, $userid, $licenseid);
 
 echo $OUTPUT->header();
@@ -158,7 +162,7 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
                                 $licenselist[$license->id] = $license->name . " (" . get_string('licensevalidfrom', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format)) . ")";
                                 if ($licenseid == $license->id) {
                                     $availablewarning = get_string('licensevalidfromwarning', 'block_iomad_company_admin', userdate($license->startdate, $CFG->iomad_date_format));
-                                }  
+                                }
                             } else {
                                 $licenselist[$license[$deptlicenseid->licenseid]->id]  = $license[$deptlicenseid->licenseid]->name;
                             }

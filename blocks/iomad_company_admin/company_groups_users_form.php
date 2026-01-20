@@ -82,6 +82,10 @@ $PAGE->set_heading($linktext);
 // Parameter is name of proper select form element.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid'));
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $courseform = new \block_iomad_company_admin\forms\company_gu_courses_form($PAGE->url, $companycontext, $companyid, $selectedcourse);
 $mform = new \block_iomad_company_admin\forms\course_group_user_display_form($PAGE->url, $companyid, $selectedcourse, $output);
 if (!empty($selectedcourse) && !empty($selectedgroup)) {
