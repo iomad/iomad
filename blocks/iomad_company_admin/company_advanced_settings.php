@@ -61,6 +61,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Check our capabilities.
 $candoiomadoidc = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
 $candoiomadsaml2 = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;

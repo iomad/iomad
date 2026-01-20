@@ -213,6 +213,9 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Are there any existing companies?
 $firstcompany = !$DB->record_exists('company', array());
 

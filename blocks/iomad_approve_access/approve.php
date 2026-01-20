@@ -51,6 +51,9 @@ $dateformat = get_config('local_iomad', 'date_format');
 $PAGE->set_title($strmanage);
 $PAGE->set_heading($strmanage);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 if (is_siteadmin($USER->id)) {
     $approvaltype = 'both';
 } else {

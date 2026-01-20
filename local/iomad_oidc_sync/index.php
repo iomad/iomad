@@ -86,6 +86,9 @@ $PAGE->set_title(get_string('consent_title', 'local_iomad_oidc_sync'));
 $PAGE->set_heading(get_string('consent_title', 'local_iomad_oidc_sync'));
 $PAGE->requires->js_call_amd('local_iomad_oidc_sync/tenantnameorguid', 'init');
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $url = new moodle_url('/local/iomad_oidc_sync/index.php', $params);
 
 if (!local_iomad\company::check_valid_user($companyid, $USER->id)) {

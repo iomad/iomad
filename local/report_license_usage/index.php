@@ -133,6 +133,9 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
                              'init',
                              ['deptid', 1, optional_param('deptid', 0, PARAM_INT)]);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 echo $output->header();
 
 // Check the department is valid.

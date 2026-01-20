@@ -133,6 +133,9 @@ if ($canedit && $PAGE->user_allowed_editing()) {
     $PAGE->set_button($buttons);
 }
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Delete any valid courses.
 if (!empty($deleteid)) {
     if (!$course = $DB->get_record('course', array('id' => $deleteid))) {

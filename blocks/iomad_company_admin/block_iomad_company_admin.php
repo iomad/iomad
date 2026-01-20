@@ -166,6 +166,9 @@ class block_iomad_company_admin extends block_base {
             $companycontext =  \core\context\company::instance($companyid);
         }
 
+        // Log this page view.
+        block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($this->page->url->out())->trigger();
+
         // Build tabs.
         $tabs = [];
         $panes = [];

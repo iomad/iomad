@@ -78,6 +78,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Parameter is name of proper select form element followed by 1=submit its form
 $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $urlparams = array('deptid' => $departmentid,
                    'managertype' => $roleid,
                    'showothermanagers' => $showothermanagers);

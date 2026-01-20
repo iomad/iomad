@@ -143,6 +143,9 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'ini
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $baseurl = new moodle_url(basename(__FILE__), $params);// Set the companyid
 
 $returnurl = $baseurl;

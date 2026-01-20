@@ -59,6 +59,10 @@ $linktext = get_string('company_templates_for', 'block_iomad_company_admin', $co
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $mform = new \block_iomad_company_admin\forms\company_competency_templates_form($PAGE->url, $companycontext, $companyid);
 
 if ($mform->is_cancelled()) {
