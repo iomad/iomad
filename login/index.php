@@ -432,9 +432,8 @@ if ($errorcode && isset($SESSION->loginredirect)) {
 $SESSION->loginredirect = $loginredirect;
 
 /// Redirect to alternative login URL if needed
-$alternateloginurl = "alternateloginurl" . $postfix;
-if (!empty($CFG->$alternateloginurl) && $loginredirect) {
-    $loginurl = new moodle_url($CFG->$alternateloginurl);
+if (!empty(iomad::get_config('', 'alternateloginurl')) && $loginredirect) {
+    $loginurl = new moodle_url(iomad::get_config('', 'alternateloginurl'));
 
     $loginurlstr = $loginurl->out(false);
 
