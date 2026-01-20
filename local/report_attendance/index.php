@@ -60,6 +60,9 @@ $PAGE->requires->css("/local/report_attendance/styles.css");
 // Set the page heading.
 $PAGE->set_heading($strcompletion);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Get the associated department id.
 $company = new company($companyid);
 $parentlevel = company::get_company_parentnode($company->id);
@@ -172,7 +175,7 @@ if (!empty($courseid)) {
                     $first = true;
                     foreach($userdepartments as $department) {
                         $userdepartmentstring .= format_string($department->name);
-            
+
                         if ($current < $count) {
                             $userdepartmentstring .= ",<br>";
                         }

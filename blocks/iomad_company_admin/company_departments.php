@@ -70,6 +70,9 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 // Set the page heading.
 $PAGE->set_heading(get_string('companydepartment', 'block_iomad_company_admin'). $company->get_name());
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Set up the initial forms.
 $mform = new \block_iomad_company_admin\forms\department_display_form($PAGE->url, $companyid, $departmentid, $output);
 

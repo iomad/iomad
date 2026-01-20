@@ -55,6 +55,9 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 $baseurl = new moodle_url('/blocks/iomad_commerce/orderlist.php',
                           ['sort' => $sort,
                            'dir' => $dir,
@@ -74,11 +77,11 @@ $selectsql = "i.id,
               p.gateway,
               p.accountid,
               (SELECT SUM(price * quantity * license_allocation) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
-              AS value,             
+              AS value,
               (SELECT SUM(quantity * license_allocation) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id AND processed = 0)
               AS unprocesseditems,
               (SELECT DISTINCT(currency) FROM {invoiceitem} ii WHERE ii.invoiceid = i.id)
-              AS currency,             
+              AS currency,
               u.firstname AS firstname,
               u.lastname AS lastname " . $usersql->selects;
 $fromsql = "{invoice} i JOIN {user} u ON (i.userid = u.id) LEFT JOIN {payments} p ON (i.paymentid = p.id)";

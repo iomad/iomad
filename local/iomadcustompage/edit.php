@@ -57,6 +57,9 @@ $renderer = $PAGE->get_renderer('local_iomadcustompage');
 $pagename = $page->get_formatted_name();
 $PAGE->set_title($pagename);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 echo $OUTPUT->header();
 
 // Add dynamic tabs.

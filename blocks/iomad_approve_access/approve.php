@@ -51,6 +51,9 @@ $strmanage = get_string('approveusers', 'block_iomad_approve_access');
 $PAGE->set_title($strmanage);
 $PAGE->set_heading($strmanage);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 if (is_siteadmin($USER->id)) {
     $approvaltype = 'both';
 } else {
@@ -280,7 +283,7 @@ if ($data = $callform->get_data()) {
                         $attending = $DB->count_records('trainingevent_users', ['trainingeventid' => $event->id, 'waitlisted' => 0]);
                         if ($location->isvirtual || $attending < $maxcapacity) {
                            $waitlisted = 0;
-                        
+
                         } else if ($event->haswaitinglist) {
                             $waitlisted = 1;
                         } else {
@@ -294,7 +297,7 @@ if ($data = $callform->get_data()) {
                                                                                    'classroom' => $location));
                             //  Update the attendance at the event.
                             iomad_approve_access::register_user($approveuser, $event, $waitlisted);
-    
+
                             // Fire an event for this.
                             $moodleevent = \block_iomad_approve_access\event\request_granted::create(array('context' => context_module::instance($cmidinfo->id),
                                                                                                            'userid' => $USER->id,
@@ -302,7 +305,7 @@ if ($data = $callform->get_data()) {
                                                                                                            'objectid' => $event->id,
                                                                                                            'courseid' => $approvecourse->id));
                             $moodleevent->trigger();
-    
+
                             // Do we need to notify teachers?
                             if (!empty($event->emailteachers)) {
                                 // Are we using groups?
@@ -310,7 +313,7 @@ if ($data = $callform->get_data()) {
                                 $userteachers = [];
                                 foreach ($usergroups as $usergroup => $junk) {
                                     $userteachers = $userteachers + get_enrolled_users(context_course::instance($approvecourse->id), 'mod/trainingevent:viewattendees', $usergroup);
-                                } 
+                                }
                                 foreach ($userteachers as $userteacher) {
                                     EmailTemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
                                                                                                   'approveuser' => $approveuser,

@@ -60,6 +60,10 @@ $linktext = get_string('company_frameworks_for', 'block_iomad_company_admin', $c
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
+// Set up the form.
 $mform = new \block_iomad_company_admin\forms\company_frameworks_form($PAGE->url, $companycontext, $companyid);
 
 if ($mform->is_cancelled()) {
