@@ -23,6 +23,7 @@ use core_reportbuilder\local\helpers\database;
 use dml_exception;
 use local_iomadcustompage\local\audiences\base;
 use MoodleQuickForm;
+use local_iomad\iomad;
 
 /**
  * Administrators audience type
@@ -104,6 +105,6 @@ class guests extends base {
      */
     public function is_available(): bool {
         global $CFG;
-        return (bool)$CFG->guestloginbutton;
+        return (bool) iomad::get_config('', 'guestloginbutton');
     }
 }

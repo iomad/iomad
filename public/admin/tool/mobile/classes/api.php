@@ -33,6 +33,7 @@ use lang_string;
 use curl;
 use core_qrcode;
 use stdClass;
+use local_iomad\iomad;
 
 /**
  * API exposed by tool_mobile, to be used mostly by external functions and the plugin settings.
@@ -180,16 +181,16 @@ class api {
         // Check if contacting site support is available to all visitors.
         $sitesupportavailable = (isset($CFG->supportavailability) && $CFG->supportavailability == CONTACT_SUPPORT_ANYONE);
 
-        [$authinstructions] = \core_external\util::format_text($CFG->auth_instructions, FORMAT_MOODLE, $context->id);
+        [$authinstructions] = \core_external\util::format_text(iomad::get_config('', 'auth_instructions'), FORMAT_MOODLE, $context->id);
         [$maintenancemessage] = \core_external\util::format_text($CFG->maintenance_message, FORMAT_MOODLE, $context->id);
         $settings = array(
             'wwwroot' => $CFG->wwwroot,
             'httpswwwroot' => $CFG->wwwroot,
             'sitename' => \core_external\util::format_string($SITE->fullname, $context->id, true),
-            'guestlogin' => $CFG->guestloginbutton,
+            'guestlogin' => iomad::get_config('', 'guestloginbutton'),
             'rememberusername' => $CFG->rememberusername,
-            'authloginviaemail' => $CFG->authloginviaemail,
-            'registerauth' => $CFG->registerauth,
+            'authloginviaemail' => iomad::get_config('', 'authloginviaemail'),
+            'registerauth' => iomad::get_config('', 'registerauth'),
             'forgottenpasswordurl' => clean_param($CFG->forgottenpasswordurl, PARAM_URL), // We may expect a mailto: here.
             'authinstructions' => $authinstructions,
             'authnoneenabled' => (int) is_enabled_auth('none'),

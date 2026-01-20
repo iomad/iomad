@@ -33,6 +33,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\check\check;
 use core\check\result;
+use local_iomad\iomad;
 
 /**
  * Verifies web crawler (search engine) access
@@ -76,7 +77,7 @@ class crawlers extends check {
         if (empty($CFG->opentowebcrawlers)) {
             $status = result::OK;
             $summary = get_string('check_crawlers_ok', 'report_security');
-        } else if (!empty($CFG->guestloginbutton)) {
+        } else if (!empty(iomad::get_config('', 'guestloginbutton'))) {
             $status = result::INFO;
             $summary = get_string('check_crawlers_info', 'report_security');
         } else {

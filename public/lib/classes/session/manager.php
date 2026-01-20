@@ -19,6 +19,7 @@ namespace core\session;
 use core\clock;
 use core\di;
 use html_writer;
+use local_iomad\iomad;
 
 /**
  * Session manager, this is the public Moodle API for sessions.
@@ -532,7 +533,7 @@ class manager {
                 $user = guest_user();
             }
             $referer = get_local_referer(false);
-            if (!empty($CFG->guestloginbutton) and !$user and !empty($referer)) {
+            if (!empty(iomad::get_config('', 'guestloginbutton')) and !$user and !empty($referer)) {
                 // Automatically log in users coming from search engine results.
                 if (strpos($referer, 'google') !== false ) {
                     $user = guest_user();

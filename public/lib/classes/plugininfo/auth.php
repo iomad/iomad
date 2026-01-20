@@ -26,6 +26,7 @@ namespace core\plugininfo;
 use admin_settingpage;
 use moodle_url;
 use part_of_admin_tree;
+use local_iomad\iomad;
 
 /**
  * Class for authentication plugins
@@ -63,7 +64,7 @@ class auth extends base {
     }
 
     public static function enable_plugin(string $pluginname, int $enabled): bool {
-        global $CFG;
+        global $CFG, $DB;
 
         $haschanged = false;
         $plugins = [];
@@ -78,9 +79,11 @@ class auth extends base {
             unset($plugins[$pluginname]);
             $haschanged = true;
 
-            if ($pluginname == $CFG->registerauth) {
-                set_config('registerauth', '');
-            }
+            // IOMAD.
+            // Need to blanket switch this off as it may not be just default.
+            $sqllike = $DB->sql_like('name', ':name') . " AND value = :value";
+            $DB->set_field_select('config', 'value', '', $sqllike, ['name' => 'registerauth%',
+                                                                    'value' => $pluginname]);
         }
 
         if ($haschanged) {

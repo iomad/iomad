@@ -44,12 +44,12 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = core\context\company::instance($companyid);
 $company = new local_iomad\company($companyid);
 
 local_iomad\iomad::require_capability('block/iomad_company_admin:user_create', $companycontext);
 
-$urlparams = array('companyid' => $companyid);
+$urlparams =  ['companyid' => $companyid];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
@@ -74,7 +74,11 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
 $PAGE->requires->js_call_amd('block_iomad_company_admin/company_user', 'init', []);;
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select_nosub', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select_nosub',
+                             'init',
+                             ['deptid',
+                              1,
+                              optional_param('deptid', 0, PARAM_INT)]);
 
 // Check if the company has gone over the user quota.
 if (!$company->check_usercount(1)) {
@@ -82,7 +86,7 @@ if (!$company->check_usercount(1)) {
     throw new moodle_exception('maxuserswarning', 'block_iomad_company_admin', $dashboardurl, $maxusers);
 }
 
-$mform = new \block_iomad_company_admin\forms\user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
+$mform = new block_iomad_company_admin\forms\user_edit_form($PAGE->url, $companyid, $departmentid, $licenseid);
 if ($mform->is_cancelled()) {
     redirect($dashboardurl);
     die;
@@ -113,23 +117,58 @@ if ($mform->is_cancelled()) {
             die();
         }
     }
-    $user = new stdclass();
+    $user = (object) [];
     $user->id = $userid;
     $data->id = $userid;
 
     // Save custom profile fields data.
     profile_save_data($data);
-    \core\event\user_updated::create_from_userid($userid)->trigger();
+    core\event\user_updated::create_from_userid($userid)->trigger();
 
     // Process any department moves or promotions.
-    local_iomad\company::upsert_company_user($userid, $companyid, $departmentid, $data->managertype, $data->educator, false, true);
+    switch ($data->managertype) {
+            case 0:
+                $educator = 0;
+                $managertype = 0;
+                break;
+            case 1:
+                $educator = 1;
+                $managertype = 0;
+                break;
+            case 10:
+                $educator = 0;
+                $managertype = 1;
+                break;
+            case 11:
+                $educator = 1;
+                $managertype = 1;
+                break;
+            case 20:
+                $educator = 0;
+                $managertype = 2;
+                break;
+            case 21:
+                $educator = 1;
+                $managertype = 2;
+                break;
+            case 40:
+                $educator = 0;
+                $managertype = 4;
+                break;
+            case 41:
+                $educator = 1;
+                $managertype = 4;
+                break;
+        }
+
+    local_iomad\company::upsert_company_user($userid, $companyid, $departmentid, $managertype, $educator, false, true);
 
     // Enrol the user on the courses.
     if (!empty($data->currentcourses)) {
-        $userdata = $DB->get_record('user', array('id' => $userid));
+        $userdata = $DB->get_record('user',  ['id' => $userid]);
         local_iomad\company_user::enrol($userdata, $data->currentcourses, $companyid, 0, 0, $data->due);
         foreach ($data->currentcourses as $courseid) {
-            $course = $DB->get_record('course', array('id' => $courseid));
+            $course = $DB->get_record('course',  ['id' => $courseid]);
             local_iomad\emailtemplate::send('user_added_to_course',
                                 ['course' => $course,
                                  'user' => $userdata,
@@ -138,17 +177,17 @@ if ($mform->is_cancelled()) {
     }
     // Assign and licenses.
     if (!empty($licenseid)) {
-        $licenserecord = (array) $DB->get_record('companylicense', array('id' => $licenseid));
+        $licenserecord = (array) $DB->get_record('companylicense',  ['id' => $licenseid]);
         if (!empty($licenserecord['program'])) {
             // If so the courses are not passed automatically.
             $data->licensecourses =  $DB->get_records_sql_menu("SELECT c.id, clc.courseid FROM {companylicense_courses} clc
-                                                                   JOIN {course} c ON (clc.courseid = c.id
-                                                                   AND clc.licenseid = :licenseid)",
-                                                                   array('licenseid' => $licenserecord['id']));
+                                                                JOIN {course} c ON (clc.courseid = c.id
+                                                                AND clc.licenseid = :licenseid)",
+                                                               ['licenseid' => $licenserecord['id']]);
         }
 
         if (!empty($data->licensecourses)) {
-            $userdata = $DB->get_record('user', array('id' => $userid));
+            $userdata = $DB->get_record('user',  ['id' => $userid]);
             $count = $licenserecord['used'];
             $numberoflicenses = $licenserecord['allocation'];
             foreach ($data->licensecourses as $licensecourse) {
@@ -157,25 +196,25 @@ if ($mform->is_cancelled()) {
                     $licenserecord['used'] = $count;
                     $DB->update_record('companylicense', $licenserecord);
                     redirect(new moodle_url("/blocks/iomad_company_admin/company_license_users_form.php",
-                                             array('licenseid' => $licenseid, 'error' => 1)));
+                                              ['licenseid' => $licenseid, 'error' => 1]));
                 }
 
                 $issuedate = time();
                 $DB->insert_record('companylicense_users',
-                                    array('userid' => $userdata->id,
+                                     ['userid' => $userdata->id,
                                           'licenseid' => $licenseid,
                                           'issuedate' => $issuedate,
-                                          'licensecourseid' => $licensecourse));
+                                          'licensecourseid' => $licensecourse]);
 
                 // Create an event.
-                $eventother = array('licenseid' => $licenseid,
+                $eventother =  ['licenseid' => $licenseid,
                                     'issuedate' => $issuedate,
-                                    'duedate' => $data->due);
-                $event = \block_iomad_company_admin\event\user_license_assigned::create(array('context' => context_course::instance($licensecourse),
-                                                                                              'objectid' => $licenseid,
-                                                                                              'courseid' => $licensecourse,
-                                                                                              'userid' => $userdata->id,
-                                                                                              'other' => $eventother));
+                                    'duedate' => $data->due];
+                $event = block_iomad_company_admin\event\user_license_assigned::create( ['context' => context_course::instance($licensecourse),
+                                                                                         'objectid' => $licenseid,
+                                                                                         'courseid' => $licensecourse,
+                                                                                         'userid' => $userdata->id,
+                                                                                         'other' => $eventother]);
                 $event->trigger();
                 $count++;
             }
@@ -183,9 +222,9 @@ if ($mform->is_cancelled()) {
     }
 
     if (isset($data->submitandback)) {
-        redirect($dashboardurl, get_string('usercreated', 'block_iomad_company_admin'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($dashboardurl, get_string('usercreated', 'block_iomad_company_admin'), null, core\output\notification::NOTIFY_SUCCESS);
     } else {
-        redirect($linkurl, get_string('usercreated', 'block_iomad_company_admin'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($linkurl, get_string('usercreated', 'block_iomad_company_admin'), null, core\output\notification::NOTIFY_SUCCESS);
     }
 }
 echo $output->header();
@@ -202,7 +241,7 @@ if (!empty($userid) && !local_iomad\company::check_valid_user($companyid, $useri
 
 // Display a message if user is created..
 if ($createdok) {
-    echo html_writer::start_tag('div', array('class' => "alert alert-success"));
+    echo html_writer::start_tag('div',  ['class' => "alert alert-success"]);
     echo get_string('usercreated', 'block_iomad_company_admin');
     echo "</div>";
 }

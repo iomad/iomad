@@ -104,12 +104,14 @@ class login implements renderable, templatable {
         $languagedata = new \core\output\language_menu($PAGE);
 
         $this->languagemenu = $languagedata->export_for_action_menu($OUTPUT);
-        $this->canloginasguest = $CFG->guestloginbutton && !isguestuser();
-        $this->canloginbyemail = !empty($CFG->authloginviaemail);
+        $this->canloginasguest = iomad::get_config('', 'guestloginbutton') && !isguestuser();
+        $this->canloginbyemail = !empty(iomad::get_config('', 'authloginviaemail'));
 
         // IOMAD - need to check our settings for signup link too.
         $this->cansignup = (!empty(get_config('local_iomad', 'signup_showinstructions')) &&
-                           isset($CFG->registerauth) && ($CFG->registerauth == 'email' || !empty($CFG->registerauth)));
+                           !empty(iomad::get_config('', 'registerauth')) &&
+                           (iomad::get_config('', 'registerauth') == 'email' ||
+                            !empty(iomad::get_config('', 'registerauth'))));
         if ($CFG->rememberusername == 0) {
             $this->cookieshelpicon = new help_icon('cookiesenabledonlysession', 'core');
         } else {
@@ -123,14 +125,12 @@ class login implements renderable, templatable {
         $this->signupurl = new moodle_url('/login/signup.php');
 
         // Authentication instructions.
-        $auth_instructions = "auth_instructions" . $postfix;
-        if (empty($CFG->$auth_instructions)) {
-            $CFG->$auth_instructions = $CFG->auth_instructions;
-        }
-        $this->instructions = $CFG->$auth_instructions;
+        $this->instructions = iomad::get_config('', 'auth_instructions');
         if (is_enabled_auth('none')) {
             $this->instructions = get_string('loginstepsnone');
-        } else if (isset($CFG->registerauth) && $CFG->registerauth == 'email' && empty($this->instructions)) {
+        } else if (!empty(iomad::get_config('', 'registerauth')) &&
+                   iomad::get_config('', 'registerauth') == 'email' &&
+                   empty($this->instructions)) {
             $this->instructions = get_string('loginsteps', 'core', 'signup.php');
         }
 
@@ -158,9 +158,9 @@ class login implements renderable, templatable {
         }
 
         // Toggle password visibility icon.
-        $this->togglepassword = get_config('core', 'loginpasswordtoggle') == TOGGLE_SENSITIVE_ENABLED ||
-            get_config('core', 'loginpasswordtoggle') == TOGGLE_SENSITIVE_SMALL_SCREENS_ONLY;
-        $this->smallscreensonly = get_config('core', 'loginpasswordtoggle') == TOGGLE_SENSITIVE_SMALL_SCREENS_ONLY;
+        $this->togglepassword = iomad::get_config('core', 'loginpasswordtoggle') == TOGGLE_SENSITIVE_ENABLED ||
+            iomad::get_config('core', 'loginpasswordtoggle') == TOGGLE_SENSITIVE_SMALL_SCREENS_ONLY;
+        $this->smallscreensonly = iomad::get_config('core', 'loginpasswordtoggle') == TOGGLE_SENSITIVE_SMALL_SCREENS_ONLY;
     }
 
     /**
@@ -208,7 +208,7 @@ class login implements renderable, templatable {
         $data->recaptcha = $this->recaptcha;
         $data->togglepassword = $this->togglepassword;
         $data->smallscreensonly = $this->smallscreensonly;
-        $data->showloginform = get_config('core', 'showloginform') === false || get_config('core', 'showloginform');
+        $data->showloginform = iomad::get_config('core', 'showloginform') === false || iomad::get_config('core', 'showloginform');
 
         return $data;
     }

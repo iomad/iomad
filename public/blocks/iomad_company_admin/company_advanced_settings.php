@@ -38,12 +38,12 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+$companycontext = core\context\company::instance($companyid);
+$company = new local_iomad\company($companyid);
 $postfix = "_$companyid";
 
-iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);
 
 $linktext = get_string('companyadvanced', 'block_iomad_company_admin');
 
@@ -62,17 +62,35 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 $PAGE->set_heading($linktext);
 
 // Check our capabilities.
-$candoiomadoidc = iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
-$candoiomadsaml2 = iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
-$candoiomadoidcsync = iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
-$candopolicies = iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
-$candomfa = iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
+$candoiomadoidc = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
+$candoiomadsaml2 = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
+$candoiomadoidcsync = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
+$candopolicies = local_iomad\iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
+$candoauthoptions = local_iomad\iomad::has_capability('block/iomad_company_admin:companyauthsettings', $companycontext) ? true : false;
+$candomfa = local_iomad\iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
 $candomfa = false;
 
 // Check if all of the modules are installed.
-$authmodules = \core_plugin_manager::instance()->get_plugins_of_type('auth');
-$localmodules = \core_plugin_manager::instance()->get_plugins_of_type('local');
-$toolmodules = \core_plugin_manager::instance()->get_plugins_of_type('tool');
+$authmodules = core_plugin_manager::instance()->get_plugins_of_type('auth');
+$localmodules = core_plugin_manager::instance()->get_plugins_of_type('local');
+$toolmodules = core_plugin_manager::instance()->get_plugins_of_type('tool');
+
+// Set the list of general auth options we support.
+$authoptions = [
+    'registerauth',
+    'authloginviaemail',
+    'guestloginbutton',
+    'alternateloginurl',
+    'showloginform',
+    'forgottenpasswordurl',
+    'auth_instructions',
+    'allowemailaddresses',
+    'denyemailaddresses',
+    'enableloginrecaptcha',
+    'recaptchapublickey',
+    'recaptchaprivatekey',
+    'loginpasswordtoggle',
+];
 
 if (empty($authmodules['iomadoidc'])) {
     $candoiomadoidc = false;
@@ -94,7 +112,7 @@ if (!empty($action) &&
     confirm_sesskey()) {
     if ($candoiomadoidc &&
         $action == 'iomadoidcbasic') {
-        $mform = new \block_iomad_company_admin\forms\company_iomadoidc_form($PAGE->url);
+        $mform = new block_iomad_company_admin\forms\company_iomadoidc_form($PAGE->url);
         // Set the form data
         $companyiomadoidcdata = get_config('auth_iomadoidc');
         $companyiomadoidcdata->action = $action;
@@ -111,31 +129,57 @@ if (!empty($action) &&
         $action == 'iomadoidcmappings') {
         $companyiomadoidcdata = get_config('auth_iomadoidc');
         $companyiomadoidcdata->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_iomadoidc_mappings_form($PAGE->url);
+        $mform = new block_iomad_company_admin\forms\company_iomadoidc_mappings_form($PAGE->url);
         // Set the form data
         $mform->set_data($companyiomadoidcdata);
     } else if ($candoiomadsaml2 &&
                $action == 'iomadsaml') {
         $companyiomadsaml2data = get_config('auth_iomadsaml2');
         $companyiomadsaml2data->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_iomadsaml2_form($PAGE->url);
+        $mform = new block_iomad_company_admin\forms\company_iomadsaml2_form($PAGE->url);
         // Set the form data
         $mform->set_data($companyiomadsaml2data);
     } else if ($candoiomadsaml2 &&
                $action == 'iomadsamlmappings') {
         $companyiomadsaml2data = get_config('auth_iomadsaml2');
         $companyiomadsaml2data->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_iomadsaml2_mappings_form($PAGE->url);
+        $mform = new block_iomad_company_admin\forms\company_iomadsaml2_mappings_form($PAGE->url);
         // Set the form data
         $mform->set_data($companyiomadsaml2data);
     } else if ($candomfa &&
                $action == 'iomadmfasettings') {
         //$companyiomadsaml2data = get_config('auth_iomadsaml2');
         //$companyiomadsaml2data->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_mfa_form($PAGE->url);
+        $mform = new block_iomad_company_admin\forms\company_mfa_form($PAGE->url);
         // Set the form data
         //$mform->set_data($companyiomadsaml2data);
+    } else if ($candoauthoptions &&
+               $action == 'companyauthoptions') {
+
+        // Get the company options for this section.
+        $companyauthoptionsdata = (object) [];
+        foreach ($authoptions as $authoption) {
+            // We are forcing postfix here as we don't want to get the site options if we can help it.
+            $field = $authoption . $postfix;
+            if (isset($CFG->$field)) {
+                if ($authoption == 'auth_instructions') {
+                    $companyauthoptionsdata->$authoption = ['text' => $CFG->$field,
+                                                            'format' => 1];
+                } else {
+                    $companyauthoptionsdata->$authoption = $CFG->$field;
+                }
+            }
+        }
+        $companyauthoptionsdata->action = $action;
+
+        // Set up the form.
+        $mform = new block_iomad_company_admin\forms\company_auth_options_form($PAGE->url);
+
+        // Set the form data
+        $mform->set_data($companyauthoptionsdata);
     }
+
+    // Process the form.
     if (!empty($mform) &&
         $mform->is_cancelled()) {
             redirect($linkurl);
@@ -200,7 +244,7 @@ if (!empty($action) &&
             $idpmetadata = 'idpmetadata'. $postfix;
             unset($data->idpmetadata);
             // We need the auth plugin definition.
-            $iomadsaml2auth = new \auth_iomadsaml2\auth();
+            $iomadsaml2auth = new auth_iomadsaml2\auth();
             // We also need the current config.
             $iomadsaml2config = get_config('auth_iomadsaml2');
             foreach ($data as $id => $value) {
@@ -219,7 +263,49 @@ if (!empty($action) &&
                 set_config($id, $value, 'auth_iomadsaml2');
             }
             $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
+        } else if ($action == 'companyauthoptions') {
+            // Process the changes for auth options.
+            // Are we resetting everything?
+            if (!empty($data->resetbutton)) {
+                foreach ($authoptions as $authoption) {
+                    $field = $authoption . $postfix;
+                    unset_config($field);
+                }
+                $redirectmessage = get_string('companyauthsettingsresetok' , 'block_iomad_company_admin');
+            } else {
+                // Make the changes.
+                unset($data->action);
+                unset($data->submitbutton);
+
+                // Process the rest of the options.
+                foreach ($authoptions as $authoption) {
+                    $field = $authoption . $postfix;
+                    if ($authoption == 'auth_instructions') {
+                        if (!empty($data->$authoption['text'])) {
+                            set_config($field, $data->$authoption['text']);
+                        } else {
+                            set_config($field, '');
+                        }
+                    } else {
+                        // Deal with empty form returns.
+                        if ($authoption == 'auth_instructions' ||
+                            $authoption == 'alternateloginurl' ||
+                            $authoption == 'forgottenpasswordurl' ||
+                            $authoption == 'allowemailaddresses' ||
+                            $authoption == 'denyemailaddresses' ||
+                            $authoption == 'recaptchapublickey' ||
+                            $authoption == 'recaptchaprivatekey') {
+                            if (empty($data->$authoption)) {
+                                $data->$authoption = '';
+                            }
+                        }
+                        set_config($field, $data->$authoption);
+                    }
+                }
+                $redirectmessage = get_string('companysavedok', 'block_iomad_company_admin');
+            }
         }
+
         // Set redirect success.
         redirect($linkurl, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
         die;
@@ -234,6 +320,16 @@ if ($candoiomadoidc || $candoiomadsaml2) {
     $options .= html_writer::end_tag('div');
     $options .= html_writer::start_tag('div', ['class' => 'col-sm-9']);
     $options .= html_writer::start_tag('ul', ['class' => 'list-unstyled']);
+    if ($candoauthoptions) {
+        $options .= html_writer::start_tag('li');
+        $options .= html_writer::tag('a',
+                                     get_string('commonsettings', 'admin'),
+                                     array('href' => new moodle_url('/blocks/iomad_company_admin/company_advanced_settings.php',
+                                                                    ['action' => 'companyauthoptions',
+                                                                     'sesskey' => sesskey()])));
+
+        $options .= html_writer::end_tag('li');
+    }
     if ($candoiomadoidc) {
         $options .= html_writer::tag('li', html_writer::tag('strong', get_string('pluginname', 'auth_iomadoidc')));
         $options .= html_writer::start_tag('li');

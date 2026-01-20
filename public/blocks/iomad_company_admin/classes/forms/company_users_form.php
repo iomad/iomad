@@ -45,7 +45,7 @@ class company_users_form extends moodleform {
     public function __construct($actionurl, $context, $companyid, $allusers) {
         $this->selectedcompany = $companyid;
         $this->context = $context;
-        $this->allusers = $allusers;    
+        $this->allusers = $allusers;
 
         $options = array('context' => $this->context, 'companyid' => $this->selectedcompany, 'allusers' => $allusers);
         $this->potentialusers = new potential_company('potentialusers', $options);
@@ -61,52 +61,45 @@ class company_users_form extends moodleform {
 
     public function definition_after_data() {
         global $USER, $OUTPUT;
-        $mform =& $this->_form;
+        $mform = &$this->_form;
 
         // Adding the elements in the definition_after_data function rather than in the definition function
         // so that when the currentusers or potentialusers get changed in the process function, the
         // changes get displayed, rather than the lists as they are before processing.
 
-//        if (count($this->potentialusers->find_users('')) || count($this->currentusers->find_users(''))) {
+        $mform->addElement('html', '
+                <table summary=""
+                       class="companyuserstable addremovetable generaltable generalbox boxaligncenter"
+                       cellspacing="0">
+                    <tr>
+                        <td id="existingcell">');
 
-            $mform->addElement('html', '<table summary=""
-                                        class="companyuserstable addremovetable generaltable generalbox boxaligncenter"
-                                        cellspacing="0">
-                <tr>
-                  <td id="existingcell">');
+        $mform->addElement('html', $this->currentusers->display(true));
 
-            $mform->addElement('html', $this->currentusers->display(true));
-
-            $mform->addElement('html', '
+        $mform->addElement('html', '
                   </td>
                   <td id="buttonscell">
                       <p class="arrow_button">
-                        <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow().'&nbsp;'.get_string('add') . '"
-                               title="' . print_string('add') .'" class="btn btn-secondary"/><br />');
-            if ($this->allusers) {
-                $mform->addElement('html', '
-                        <input name="import" id="import" type="submit" value="'.$OUTPUT->larrow(). '&nbsp;'. get_string('import').'"
-                               title="'. print_string('remove') .'" class="btn btn-secondary"/><br />');
-            }
+                        <input name="add" id="add" type="submit" value="' . $OUTPUT->larrow() . '&nbsp;' . get_string('add') . '"
+                               title="' . print_string('add') . '" class="btn btn-secondary"/><br />');
+        if ($this->allusers) {
             $mform->addElement('html', '
-                        <input name="remove" id="remove" type="submit" value="'. get_string('remove').'&nbsp;'.$OUTPUT->rarrow(). '"
-                               title="'. print_string('remove') .'" class="btn btn-secondary"/><br />
+                        <input name="import" id="import" type="submit" value="' . $OUTPUT->larrow() . '&nbsp;' . get_string('import') . '"
+                               title="' . print_string('remove') . '" class="btn btn-secondary"/><br />');
+        }
+        $mform->addElement('html', '
+                        <input name="remove" id="remove" type="submit" value="' . get_string('remove') . '&nbsp;' . $OUTPUT->rarrow() . '"
+                               title="' . print_string('remove') . '" class="btn btn-secondary"/><br />
                      </p>
                   </td>
                   <td id="potentialcell">');
 
-            $mform->addElement('html', $this->potentialusers->display(true));
+        $mform->addElement('html', $this->potentialusers->display(true));
 
-            $mform->addElement('html', '
+        $mform->addElement('html', '
                   </td>
                 </tr>
               </table>');
-/*        } else {
-            $mform->addElement('html', get_string('nousers', 'block_iomad_company_admin').
-            ' <a href="'.
-            new moodle_url('/blocks/iomad_company_admin/company_user_create_form.php?companyid='.
-            $this->selectedcompany). '">Create one now</a>');
-        } */
 
         $mform->disable_form_change_checker();
     }

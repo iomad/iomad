@@ -950,7 +950,8 @@ $cachewarnings = cache_helper::warnings();
 $eventshandlers = $DB->get_records_sql('SELECT DISTINCT component FROM {events_handlers}');
 $themedesignermode = !empty($CFG->themedesignermode);
 $mobileconfigured = !empty($CFG->enablemobilewebservice);
-$invalidforgottenpasswordurl = !empty($CFG->forgottenpasswordurl) && empty(clean_param($CFG->forgottenpasswordurl, PARAM_URL));
+$invalidforgottenpasswordurl = !empty(local_iomad\iomad::get_config('', 'forgottenpasswordurl')) &&
+                               empty(clean_param(local_iomad\iomad::get_config('', 'forgottenpasswordurl'), PARAM_URL));
 
 // Check if a directory with development libraries exists.
 $devlibdir = false;

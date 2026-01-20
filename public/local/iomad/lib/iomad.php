@@ -1982,6 +1982,39 @@ class iomad {
 
         return "$scheme$user$pass$host$port$path$query$fragment";
      }
+
+     /**
+      * Wrapper function for
+      *
+      * @param string $plugin
+      * @param string $name
+      * @return boolean|object|string
+      */
+     public static function get_config($plugin, $name = null) {
+
+        // Did we get passed an item?
+        if (empty($name)) {
+            // No - just run the Moodle function.
+            return get_config($plugin, $name);
+        }
+
+        // Get my companyid;
+        $companyid = self::get_my_companyid(context_system::instance(), false);
+        if ($companyid > 0) {
+            $companyname = $name . "_" . $companyid;
+        } else {
+            // Not a valid companyid - use the site setting.
+            return get_config($plugin, $name);
+        }
+
+        // Is there a company value?
+        if ($value = get_config($plugin, $companyname)) {
+            return $value;
+        } else {
+            // Use the site setting.
+            return get_config($plugin, $name);
+        }
+     }
 }
 
 global $CFG;

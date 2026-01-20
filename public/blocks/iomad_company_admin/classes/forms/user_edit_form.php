@@ -25,13 +25,16 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \company;
-use \iomad;
+use context_coursecat;
 use core_user;
 use core_text;
+use local_iomad\company;
+use local_iomad\iomad;
+use local_iomad\company_user;
+use moodleform;
 
 //class user_edit_form extends company_moodleform {
-class user_edit_form extends \moodleform {
+class user_edit_form extends moodleform {
 
     protected $title = '';
     protected $description = '';
@@ -41,8 +44,8 @@ class user_edit_form extends \moodleform {
     protected $departmentid = 0;
     protected $companyname = '';
     protected $licenseid = 0;
-    protected $licensecourses = array();
-    protected $subhierarchieslist = array();
+    protected $licensecourses = [];
+    protected $subhierarchieslist = [];
     protected $selectedcompany;
     protected $companycontext;
     protected $companydepartment;
@@ -62,19 +65,18 @@ class user_edit_form extends \moodleform {
         $this->companycontext = $companycontext;
         $parentlevel = company::get_company_parentnode($company->id);
         $this->companydepartment = $parentlevel->id;
-        $systemcontext = \context_system::instance();
-        $departmenttree = array();
+        $departmenttree = [];
 
-        if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $this->companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $this->companycontext)) {
             $userhierarchylevel = $parentlevel->id;
-            $userlevels = array($parentlevel->id => $parentlevel->id);
+            $userlevels = [$parentlevel->id => $parentlevel->id];
         } else {
             $userlevels = $company->get_userlevel($USER);
             $userhierarchylevel = key($userlevels);
         }
         foreach ($userlevels as $userlevelid => $userlevel) {
-            $this->subhierarchieslist = $this->subhierarchieslist + \company::get_all_subdepartments($userlevelid);
-            $departmenttree[] = \company::get_all_subdepartments_raw($userlevelid);
+            $this->subhierarchieslist = $this->subhierarchieslist + company::get_all_subdepartments($userlevelid);
+            $departmenttree[] = company::get_all_subdepartments_raw($userlevelid);
         }
         $this->treehtml = $output->department_tree($departmenttree, optional_param('deptid', 0, PARAM_INT));
 
@@ -86,7 +88,7 @@ class user_edit_form extends \moodleform {
         $this->userdepartment = $userhierarchylevel;
         $this->companycourses = $this->company->get_menu_courses(true, true);
         unset($this->companycourses[0]);
-        $this->context = \context_coursecat::instance($CFG->defaultrequestcategory);
+        $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
 
         parent::__construct($actionurl);
     }
@@ -134,7 +136,6 @@ class user_edit_form extends \moodleform {
             $mform->setDefault('use_email_as_username', 0);
         }
 
-
         /* /copied from /user/editlib.php */
 
         $mform->addElement('static', 'blankline', '', '');
@@ -166,37 +167,37 @@ class user_edit_form extends \moodleform {
         $mform->addElement('static', 'departmenttext', get_string('department', 'block_iomad_company_admin'));
         $mform->addElement('html', $this->treehtml);
         $mform->addElement('select', 'deptid', get_string('department', 'block_iomad_company_admin'), $this->subhierarchieslist, 0);
-
+        $mform->addElement('html', '<br>');
+        
         // Add in company/department manager checkboxes.
-        $managerarray = array();
-        if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $this->companycontext)) {
-            $managerarray['0'] = get_string('user', 'block_iomad_company_admin');
-            $managerarray['2'] = get_string('departmentmanager', 'block_iomad_company_admin');
-        }
+        // Deal with role selector.
+        $usertypeselect = ['0' => get_string('user', 'block_iomad_company_admin')];
         if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $this->companycontext)) {
-            if (empty($managearray)) {
-                $managerarray['0'] = get_string('user', 'block_iomad_company_admin');
-            }
-            $managerarray['1'] = get_string('companymanager', 'block_iomad_company_admin');
+            $usertypeselect[10] = get_string('companymanager', 'block_iomad_company_admin');
+        }
+        if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $this->companycontext)) {
+            $usertypeselect[20] = get_string('departmentmanager', 'block_iomad_company_admin');
         }
         if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $this->companycontext)) {
-            if (empty($managearray)) {
-                $managerarray['0'] = get_string('user', 'block_iomad_company_admin');
-            }
-            $managerarray['4'] = get_string('companyreporter', 'block_iomad_company_admin');
+            $usertypeselect[40] = get_string('companyreporter', 'block_iomad_company_admin');
         }
-        if (!empty($managerarray)) {
-            $mform->addElement('select', 'managertype', get_string('managertype', 'block_iomad_company_admin'), $managerarray, 0);
+        if (!get_config('local_iomad', 'autoenrol_managers')) {
+            $usertypeselect[1] = get_string('educator', 'block_iomad_company_admin');
+            if (iomad::has_capability('block/iomad_company_admin:assign_company_manager', $this->companycontext)) {
+                $usertypeselect[11] = get_string('companymanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+            }
+            if (iomad::has_capability('block/iomad_company_admin:assign_department_manager', $this->companycontext)) {
+                $usertypeselect[21] = get_string('departmentmanager', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+            }
+            if (iomad::has_capability('block/iomad_company_admin:assign_company_reporter', $this->companycontext)) {
+                $usertypeselect[41] = get_string('companyreporter', 'block_iomad_company_admin') . ' + ' . get_string('educator', 'block_iomad_company_admin');
+            }
+        }
+        ksort($usertypeselect);
+        if (!empty($usertypeselect)) {
+            $mform->addElement('select', 'managertype', get_string('managertype', 'block_iomad_company_admin'), $usertypeselect, 0);
         } else {
             $mform->addElement('hidden', 'managertype', 0);
-        }
-        // Deal with the educator role.
-        if (!get_config('local_iomad', 'autoenrol_managers')) {
-            $mform->addElement('selectyesno', 'educator', get_string('assigneducator', 'block_iomad_company_admin'));
-            $mform->addHelpButton('educator', 'educator', 'block_iomad_company_admin');
-        } else {
-            $mform->addElement('hidden', 'educator', 0);
-            $mform->setType('educator', PARAM_BOOL);
         }
 
         // Optional profile fields.
@@ -215,10 +216,10 @@ class user_edit_form extends \moodleform {
             }
         }
         // Get company category.
-        if ($companyinfo = $DB->get_record('company', array('id' => $this->selectedcompany))) {
+        if ($companyinfo = $DB->get_record('company', ['id' => $this->selectedcompany])) {
 
             // Get fields from company category.
-            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $companyinfo->profileid))) {
+            if ($fields = $DB->get_records('user_info_field', ['categoryid' => $companyinfo->profileid])) {
                 // Display the header and the fields.
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
@@ -231,16 +232,16 @@ class user_edit_form extends \moodleform {
         }
 
         // Deal with licenses.
-        if (\iomad::has_capability('block/iomad_company_admin:allocate_licenses', $this->companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $this->companycontext)) {
             $mform->addElement('header', 'licenses', get_string('assignlicenses', 'block_iomad_company_admin'));
             $foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
-                                                   WHERE expirydate >= :timestamp
-                                                   AND companyid = :companyid
-                                                   AND used < allocation",
-                                                   array('timestamp' => time(),
-                                                         'companyid' => $this->selectedcompany));
-            $licenses = array('0' => get_string('nolicense', 'block_iomad_company_admin')) + $foundlicenses;
-            $licensecourses = array();
+                                                        WHERE expirydate >= :timestamp
+                                                        AND companyid = :companyid
+                                                        AND used < allocation",
+                                                       ['timestamp' => time(),
+                                                        'companyid' => $this->selectedcompany]);
+            $licenses = ['0' => get_string('nolicense', 'block_iomad_company_admin')] + $foundlicenses;
+            $licensecourses = [];
             if (count($foundlicenses) == 0) {
                 // No valid licenses.
                 $mform->addElement('html', '<div id="licensedetails"><b>' . get_string('nolicenses', 'block_iomad_company_admin') . '</b></div>');
@@ -248,12 +249,12 @@ class user_edit_form extends \moodleform {
                 $mform->addElement('html', "<div class='fitem'><div class='fitemtitle'>" .
                                             get_string('selectlicensecourse', 'block_iomad_company_admin') .
                                             "</div><div class='felement'>");
-                $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, array('id' => 'licenseidselector'));
+                $mform->addElement('select', 'licenseid', get_string('select_license', 'block_iomad_company_admin'), $licenses, ['id' => 'licenseidselector']);
                 $mylicenseid = $this->licenseid;
                 if (empty($this->licenseid)) {
                     $mform->addElement('html', '<div id="licensedetails"></div>');
                 } else {
-                    $mylicensedetails = $DB->get_record('companylicense', array('id' => $this->licenseid));
+                    $mylicensedetails = $DB->get_record('companylicense', ['id' => $this->licenseid]);
                     $licensestring = get_string('licensedetails', 'block_iomad_company_admin', $mylicensedetails);
                     $licensestring2 = get_string('licensedetails2', 'block_iomad_company_admin', $mylicensedetails);
                     $licensestring3 = get_string('licensedetails3', 'block_iomad_company_admin', $mylicensedetails);
@@ -268,39 +269,43 @@ class user_edit_form extends \moodleform {
                                                              JOIN {course} c ON (clc.courseid = c.id
                                                              AND clc.licenseid = :licenseid)
                                                              ORDER BY c.fullname",
-                                                             array('licenseid' => $mylicenseid))) {
-                    $licensecourses = array();
+                                                             ['licenseid' => $mylicenseid])) {
+                    $licensecourses = [];
                 }
             }
 
             $mform->addElement('html', '<div id="licensecoursescontainer" class="invisible">');
             $licensecourseselect = $mform->addElement('select', 'licensecourses',
                                                       get_string('select_license_courses', 'block_iomad_company_admin'),
-                                                      $licensecourses, array('id' => 'licensecourseselector'));
+                                                      $licensecourses, ['id' => 'licensecourseselector']);
             $licensecourseselect->setMultiple(true);
             $mform->addElement('html', '</div>');
             if (!empty($mylicensedetails->program)) {
                 $licensecourseselect->setSelected($licensecourses);
             } else {
-                $licensecourseselect->setSelected(array());
+                $licensecourseselect->setSelected([]);
             }
         }
 
         if (iomad::has_capability('block/iomad_company_admin:company_course_users', $this->companycontext)) {
             $mform->addElement('header', 'courses', get_string('assigncourses', 'block_iomad_company_admin'));
-            $autooptions = array('multiple' => true,
-                                 'noselectionstring' => get_string('none'));
-            $mform->addElement('autocomplete', 'currentcourses', get_string('selectenrolmentcourse', 'block_iomad_company_admin'), $this->companycourses, $autooptions);
+            $autooptions = ['multiple' => true,
+                            'noselectionstring' => get_string('none')];
+            $mform->addElement('autocomplete',
+                               'currentcourses',
+                               get_string('selectenrolmentcourse', 'block_iomad_company_admin'),
+                               $this->companycourses,
+                               $autooptions);
         }
 
         // add action buttons
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton',
                             get_string('createuseragain', 'block_iomad_company_admin'));
         $buttonarray[] = &$mform->createElement('submit', 'submitandback',
                             get_string('createuserandback', 'block_iomad_company_admin'));
         $buttonarray[] = &$mform->createElement('cancel');
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');
 
     }
@@ -350,7 +355,7 @@ class user_edit_form extends \moodleform {
         }
 
         // Validate email.
-        if ($existingusers = $DB->get_records('user', array('email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id))) {
+        if ($existingusers = $DB->get_records('user', ['email' => $usernew->email, 'mnethostid' => $CFG->mnet_localhost_id])) {
             foreach ($existingusers as $existinguser) {
                 if ($DB->record_exists('company_users', ['userid' => $existinguser->id, 'companyid' => $this->company->id])) {
                     if (empty($CFG->allowaccountssameemail)) {
@@ -382,16 +387,14 @@ class user_edit_form extends \moodleform {
 
         // It is insecure to send passwords by email without forcing them to be changed on first login.
         if (!$usernew->preference_auth_forcepasswordchange && $usernew->sendnewpasswordemails) {
-            $errors['preference_auth_forcepasswordchange'] = get_string('sendemailsforcepasswordchange',
-                                                                        'block_iomad_company_admin',
-                                                             array('forcechange' => get_string('forcepasswordchange'),
-                                                                   'sendemail' => get_string('sendnewpasswordemails',
-                                                                   'block_iomad_company_admin')));
+            $errors['preference_auth_forcepasswordchange'] = get_string('sendemailsforcepasswordchange', 'block_iomad_company_admin',
+                                                             ['forcechange' => get_string('forcepasswordchange'),
+                                                                   'sendemail' => get_string('sendnewpasswordemails', 'block_iomad_company_admin')]);
         }
 
         //  Check numbers of licensed courses against license.
         if (!empty($usernew->licenseid)) {
-            $license = $DB->get_record('companylicense', array('id' => $usernew->licenseid));
+            $license = $DB->get_record('companylicense', ['id' => $usernew->licenseid]);
 
             // Are we dealing with a program license?
             if (!empty($license->program)) {
@@ -399,11 +402,11 @@ class user_edit_form extends \moodleform {
                 $usernew->licensecourses =  $DB->get_records_sql_menu("SELECT c.id, c.fullname FROM {companylicense_courses} clc
                                                                        JOIN {course} c ON (clc.courseid = c.id
                                                                        AND clc.licenseid = :licenseid)",
-                                                                       array('licenseid' => $license->id));
+                                                                       ['licenseid' => $license->id]);
             }
 
             if (!empty($usernew->licensecourses)) {
-                if ($license = $DB->get_record('companylicense', array('id' => $usernew->licenseid))) {
+                if ($license = $DB->get_record('companylicense', ['id' => $usernew->licenseid])) {
                     if (count($usernew->licensecourses) + $license->used > $license->allocation) {
                         $errors['licensecourses'] = get_string('triedtoallocatetoomanylicenses', 'block_iomad_company_admin');
                     }
@@ -415,5 +418,4 @@ class user_edit_form extends \moodleform {
 
         return $errors;
     }
-
 }

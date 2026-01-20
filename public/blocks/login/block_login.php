@@ -58,7 +58,7 @@ class block_login extends block_base {
         $this->content->text = '';
 
         if (!isloggedin() or isguestuser()) {   // Show the block
-            if (empty($CFG->authloginviaemail)) {
+            if (empty(\local_iomad\iomad::get_config('', 'authloginviaemail'))) {
                 $strusername = get_string('username');
             } else {
                 $strusername = get_string('usernameemail');

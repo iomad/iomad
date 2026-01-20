@@ -277,7 +277,7 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
                 $currentcompany = $SESSION->company;
             }
             if (empty($currenteditingcompany)  ||
-                !company::check_valid_user($currenteditingcompany, $user->id)) {
+                !local_iomad\company::check_valid_user($currenteditingcompany, $user->id)) {
                 // Check if the user is in multiple companies.
                 if ($DB->count_records_sql("SELECT COUNT(DISTINCT companyid) FROM {company_users} WHERE userid = :userid", ['userid' => $user->id]) == 1) {
                     if ($mycompany = company::by_userid($user->id, true)) {
@@ -432,9 +432,8 @@ if ($errorcode && isset($SESSION->loginredirect)) {
 $SESSION->loginredirect = $loginredirect;
 
 /// Redirect to alternative login URL if needed
-$alternateloginurl = "alternateloginurl" . $postfix;
-if (!empty($CFG->$alternateloginurl) && $loginredirect) {
-    $loginurl = new moodle_url($CFG->$alternateloginurl);
+if (!empty(local_iomad\iomad::get_config('', 'alternateloginurl')) && $loginredirect) {
+    $loginurl = new moodle_url(local_iomad\iomad::get_config('', 'alternateloginurl'));
 
     $loginurlstr = $loginurl->out(false);
 

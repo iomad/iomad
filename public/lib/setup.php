@@ -1076,7 +1076,7 @@ $PAGE = new $classname();
 unset($classname);
 
 
-if (!empty($CFG->debugvalidators) and !empty($CFG->guestloginbutton)) {
+if (!empty($CFG->debugvalidators) and !empty(local_iomad\iomad::get_config('', 'guestloginbutton'))) {
     if ($CFG->theme == 'standard') {    // Temporary measure to help with XHTML validation
         if (isset($_SERVER['HTTP_USER_AGENT']) and empty($USER->id)) {      // Allow W3CValidator in as user called w3cvalidator (or guest)
             if ((strpos($_SERVER['HTTP_USER_AGENT'], 'W3C_Validator') !== false) or

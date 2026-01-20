@@ -214,7 +214,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     public function user_login($username, $password = null) {
         global $CFG;
         // Short circuit for guest user.
-        if (!empty($CFG->guestloginbutton) && $username === 'guest' && $password === 'guest') {
+        if (!empty(local_iomad\iomad::get_config('', 'guestloginbutton')) && $username === 'guest' && $password === 'guest') {
             return false;
         }
         return $this->loginflow->user_login($username, $password);

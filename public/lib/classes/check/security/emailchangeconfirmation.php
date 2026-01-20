@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\check\check;
 use core\check\result;
+use local_iomad\iomad;
 
 /**
  * Verifies email confirmation - spammers were changing mails very often
@@ -69,7 +70,7 @@ class emailchangeconfirmation extends check {
         global $CFG;
         $details = get_string('check_emailchangeconfirmation_details', 'report_security');
         if (empty($CFG->emailchangeconfirmation)) {
-            if (empty($CFG->allowemailaddresses)) {
+            if (empty(iomad::get_config('', 'allowemailaddresses'))) {
                 $status = result::WARNING;
                 $summary = get_string('check_emailchangeconfirmation_error', 'report_security');
             } else {

@@ -31,6 +31,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use core_external\external_warnings;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -58,7 +59,7 @@ class auth_email_external extends external_api {
     protected static function check_signup_enabled() {
         global $CFG;
 
-        if (empty($CFG->registerauth) or $CFG->registerauth != 'email') {
+        if (empty(iomad::get_config('', 'registerauth')) or iomad::get_config('', 'registerauth') != 'email') {
             throw new moodle_exception('registrationdisabled', 'error');
         }
     }
