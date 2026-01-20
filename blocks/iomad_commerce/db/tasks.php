@@ -15,18 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce block scheduled tasks.
+ *
  * @package   block_iomad_commerce
- * @copyright 2021 Derick Turner
+ * @category  task
+ * @copyright 2026 E-Learn Design Ltd https://www.e-learndesign.co.uk
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name
-$plugin->version  = 2026012045;   // The (date) version of this plugin.
-$plugin->requires = 2024100700;   // Requires this Moodle version.
-$plugin->component = 'block_iomad_commerce';
-$plugin->dependencies = ['local_iomad' => 2024090401];
-$plugin->supported = [405, 405];
-$plugin->maturity = MATURITY_STABLE;
+$tasks = [
+    [
+        'classname' => 'block_iomad_commerce\task\user_basket_cleanup_task',
+        'blocking' => 0,
+        'minute' => '15',
+        'hour' => '21',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];
