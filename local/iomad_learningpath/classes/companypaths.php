@@ -244,7 +244,6 @@ class companypaths {
 
         // Get file storage
         $fs = get_file_storage();
-
         // find the files
         $files = $fs->get_area_files($context->id, 'local_iomad_learningpath', 'picture', $id);
         foreach ($files as $file) {
@@ -586,7 +585,7 @@ class companypaths {
 
         // Delete courses from path
         $DB->delete_records('iomad_learningpathcourse', ['path' => $pathid]);
-        
+
         // Delete groups from path
         $DB->delete_records('iomad_learningpathgroup', ['learningpath' => $pathid]);
 
@@ -731,7 +730,7 @@ class companypaths {
                 $companyprofjoin = "LEFT JOIN {user_info_data} uid ON (u.id = uid.userid AND uid.fieldid = :profilefieldid)";
                 $filtersql = " AND " . $DB->sql_like("uid.data", ':profsearch', false, false);
                 $sqlparams['profilefieldid'] = $profilefieldid;
-                $sqlparams['profsearch'] = "%".$filter."%"; 
+                $sqlparams['profsearch'] = "%".$filter."%";
             } else {
                 $filtersql = " AND (
                              " . $DB->sql_like("u.firstname", ':firstname', false, false) . "
@@ -845,7 +844,7 @@ class companypaths {
 
         $path = $DB->get_record('iomad_learningpath', array('id' => $pathid));
 
-        // If we are removing a license 
+        // If we are removing a license
         if (($licenseid == 0 && !empty($path->licenseid)) || $path->licenseid != $licenseid) {
             // Remove the courses from the learning path.
             if ($courses = $DB->get_records('iomad_learningpathcourse', array('path' => $pathid), 'course', 'course')) {
