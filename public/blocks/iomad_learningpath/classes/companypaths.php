@@ -244,7 +244,6 @@ class companypaths {
 
         // Get file storage
         $fs = get_file_storage();
-
         // find the files
         $files = $fs->get_area_files($context->id, 'block_iomad_learningpath', 'picture', $id);
         foreach ($files as $file) {

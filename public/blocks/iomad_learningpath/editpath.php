@@ -100,7 +100,7 @@ if ($form->is_cancelled()) {
     }
     // Check if a file has been uploaded
     $fs = get_file_storage();
-    $files = $fs->get_area_files(5, 'user', 'draft', $data->picture, 'itemid', false);
+    $files = $fs->get_area_files(context_user::instance($USER->id)->id, 'user', 'draft', $data->picture, 'itemid', false);
     if (!empty($files)) {
         file_save_draft_area_files($data->picture, $systemcontext->id, 'block_iomad_learningpath', 'picture', $id,
             ['maxfiles' => 1]);
