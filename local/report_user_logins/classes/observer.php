@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD Report user logins
+ *
  * @package   local_report_user_logins
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,10 +25,19 @@
 
 namespace local_report_user_logins;
 
+/**
+ * IOMAD Report user logins observer class
+ *
+ * @package   local_report_user_logins
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class observer {
 
     /**
      * Consume user_loggedin event
+     *
      * @param object $event the event object
      */
     public static function user_loggedin($event) {
@@ -42,27 +53,41 @@ class observer {
         $userid = $data['userid'];
 
         // Does it alreay exist?
-        if ($current = $DB->get_record('local_report_user_logins', array('userid' => $userid))) {
+        if ($current = $DB->get_record('local_report_user_logins', ['userid' => $userid])) {
             // Check if this is first log on.
             if (empty($current->firstlogin)) {
-                $userrec = $DB->get_record('user', array('id' => $userid));
-                $DB->set_field('local_report_user_logins', 'firstlogin', $userrec->firstaccess, array('id' => $current->id));
+                $userrec = $DB->get_record('user', ['id' => $userid]);
+                $DB->set_field('local_report_user_logins',
+                               'firstlogin',
+                               $userrec->firstaccess,
+                               ['id' => $current->id]);
             }
 
-            // update it.
-            $DB->set_field('local_report_user_logins', 'logincount', $current->logincount + 1, array('id' => $current->id));
-            $DB->set_field('local_report_user_logins', 'lastlogin', $data['timecreated'], array('id' => $current->id));
-            $DB->set_field('local_report_user_logins', 'modifiedtime', $data['timecreated'], array('id' => $current->id));
+            // Update it.
+            $DB->set_field('local_report_user_logins',
+                           'logincount',
+                           $current->logincount + 1,
+                           ['id' => $current->id]);
+            $DB->set_field('local_report_user_logins',
+                           'lastlogin',
+                           $data['timecreated'],
+                           ['id' => $current->id]);
+            $DB->set_field('local_report_user_logins',
+                           'modifiedtime',
+                           $data['timecreated'],
+                           ['id' => $current->id]);
         } else {
-           // Doesn't exist but should. Create it!
-           $user = $DB->get_record('user', array('id' => $userid));
-           $totallogins = $DB->count_records('logstore_standard_log', array('userid' => $user->id, 'eventname' => '\core\event\user_loggedin'));
-           $DB->insert_record('local_report_user_logins', array('userid' => $user->id,
-                                                                'created' => $user->timecreated,
-                                                                'firstlogin' => $user->firstaccess,
-                                                                'lastlogin' => $user->currentlogin,
-                                                                'logincount' => $totallogins,
-                                                                'modifiedtime' => time()));
+            // Doesn't exist but should. Create it!
+            $user = $DB->get_record('user', ['id' => $userid]);
+            $totallogins = $DB->count_records('logstore_standard_log',
+                                              ['userid' => $user->id,
+                                               'eventname' => '\core\event\user_loggedin']);
+            $DB->insert_record('local_report_user_logins', ['userid' => $user->id,
+                                                            'created' => $user->timecreated,
+                                                            'firstlogin' => $user->firstaccess,
+                                                            'lastlogin' => $user->currentlogin,
+                                                            'logincount' => $totallogins,
+                                                            'modifiedtime' => time()]);
         }
 
         return true;
@@ -70,6 +95,7 @@ class observer {
 
     /**
      * Consume user_created event
+     *
      * @param object $event the event object
      */
     public static function user_created($event) {
@@ -80,13 +106,13 @@ class observer {
         $userid = $data['relateduserid'];
 
         // Add the user.
-        $user = $DB->get_record('user', array('id' => $userid));
-        $DB->insert_record('local_report_user_logins', array('userid' => $user->id,
-                                                             'created' => $user->timecreated,
-                                                             'firstlogin' => null,
-                                                             'lastlogin' => null,
-                                                             'logincount' => 0,
-                                                             'modifiedtime' => time()));
+        $user = $DB->get_record('user', ['id' => $userid]);
+        $DB->insert_record('local_report_user_logins', ['userid' => $user->id,
+                                                        'created' => $user->timecreated,
+                                                        'firstlogin' => null,
+                                                        'lastlogin' => null,
+                                                        'logincount' => 0,
+                                                        'modifiedtime' => time()]);
 
         return true;
     }
