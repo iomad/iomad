@@ -15,6 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce
+ *
+
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,7 +27,7 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
 $context = context_system::instance();
 require_login();
@@ -48,25 +51,24 @@ $PAGE->navbar->add(get_string('review', 'block_iomad_commerce'));
 
 // Don't do the pre_order_review_processing on postback.
 if (array_key_exists('submitbutton', $_POST)) {
-    $basket = \block_iomad_commerce\helper::get_basket();
-    $pp = \block_iomad_commerce\helper::get_payment_provider_instance($basket->checkout_method);
+    $basket = block_iomad_commerce\helper::get_basket();
+    $pp = block_iomad_commerce\helper::get_payment_provider_instance($basket->checkout_method);
 } else {
     // Add the rest of the stuff to the basket invoice.
-    $basket = \block_iomad_commerce\helper::get_basket();
-    $pp = \block_iomad_commerce\helper::get_payment_provider_instance($basket->checkout_method);
+    $basket = block_iomad_commerce\helper::get_basket();
+    $pp = block_iomad_commerce\helper::get_payment_provider_instance($basket->checkout_method);
     $pp->pre_order_review_processing();
     // Refresh basket info after processing.
-    $basket = \block_iomad_commerce\helper::get_basket();
+    $basket = block_iomad_commerce\helper::get_basket();
 }
 
-$mform = new \block_iomad_commerce\forms\confirmation_form($PAGE->url, $basket, $pp);
+$mform = new block_iomad_commerce\forms\confirmation_form($PAGE->url, $basket, $pp);
 $mform->set_data($basket);
 
 $error = '';
 
 if ($mform->is_cancelled()) {
-redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/basket.php'));
-
+    redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/basket.php'));
 } else if ($data = $mform->get_data()) {
 
     $error = $pp->confirm();
