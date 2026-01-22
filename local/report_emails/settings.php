@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report emails
+ *
  * @package   local_report_emails
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
