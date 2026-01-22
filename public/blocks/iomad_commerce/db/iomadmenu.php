@@ -14,19 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// Define the Iomad menu items that are defined by this plugin
-
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Define the IOMAD menu items provided by this plugin.
+ *
+ * @return array
+ */
 function block_iomad_commerce_menu() {
 
-    return array(
-        'ShopSettings_list' => array(
+    return [
+        'ShopSettings_list' => [
             'category' => 'ECommerceAdmin',
             'tab' => 6,
             'name' => get_string('courses', 'block_iomad_commerce'),
@@ -35,9 +40,9 @@ function block_iomad_commerce_menu() {
             'icondefault' => 'courses',
             'style' => 'ecomm',
             'icon' => 'fa-file-text',
-            'iconsmall' => 'fa-money'
-        ),
-        'Orders' => array(
+            'iconsmall' => 'fa-money',
+        ],
+        'Orders' => [
             'category' => 'ECommerceAdmin',
             'tab' => 6,
             'name' => get_string('orders', 'block_iomad_commerce'),
@@ -46,7 +51,7 @@ function block_iomad_commerce_menu() {
             'icondefault' => 'orders',
             'style' => 'ecomm',
             'icon' => 'fa-truck',
-            'iconsmall' => 'fa-eye'
-        ),
-    );
+            'iconsmall' => 'fa-eye',
+        ],
+    ];
 }

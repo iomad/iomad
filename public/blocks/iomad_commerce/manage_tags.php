@@ -15,51 +15,55 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Include Moodle configuration file
+// Include Moodle configuration file.
 require_once(dirname(__FILE__) . '/../../config.php');
-// Include IOMAD company admin library
+
+// Include IOMAD company admin library.
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-// Check if commerce is enabled
-\block_iomad_commerce\helper::require_commerce_enabled();
+// Check if commerce is enabled.
+block_iomad_commerce\helper::require_commerce_enabled();
 
-// Define optional GET parameters
-$delete       = optional_param('delete', 0, PARAM_INT);
-$confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
+// Define optional GET parameters.
+$delete = optional_param('delete', 0, PARAM_INT);
+$confirm = optional_param('confirm', '', PARAM_ALPHANUM);
 
-// Get the context
+// Get the context.
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-// Require the user to be logged in
+// Require the user to be logged in.
 require_login();
 
-// Ensure that the user has the correct capability
-iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
+// Ensure that the user has the correct capability.
+local_iomad\iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
 
-// Define the component string
+// Define the component string.
 $component = 'block_iomad_commerce';
 
-// Define the title for the page
+// Define the title for the page.
 $title = get_string('managetags', $component);
 
-// Define the base url for the page
+// Define the base url for the page.
 $baseurl = new moodle_url('/blocks/iomad_commerce/manage_tags.php');
 
-// Variable to store whether the user has deleted a tag, it is used to not log a event for the page being viewed if a user has just deleted a tag
+// Variable to store whether the user has deleted a tag, it is used to not log an
+// event for the page being viewed if a user has just deleted a tag.
 $tagdeleted = false;
 
-// Set paramters for the page using the PAGE variable
+// Set paramters for the page using the PAGE variable.
 $PAGE->set_context($companycontext);
 $PAGE->set_url($baseurl);
 $PAGE->set_pagelayout('base');
@@ -69,67 +73,86 @@ $PAGE->set_heading($title);
 // Log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-// Delete a tag dependant on the value of the delete parameter passed after
+// Delete a tag dependant on the value of the delete parameter passed after.
 if ($delete && confirm_sesskey()) {
-    // Check the user has the correct capability to delete a shop tag
-    if (!iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
+    // Check the user has the correct capability to delete a shop tag.
+    if (!local_iomad\iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'delete a tag');
     }
-    // Check that the record exists
-    if (!$DB->record_exists('shoptag',['id' => $delete])) {
+
+    // Check that the record exists.
+    if (!$DB->record_exists('shoptag', ['id' => $delete])) {
         throw new moodle_exception('notag', 'error');
     }
     if ($confirm != md5($delete)) {
-        // If the confirm md5 hash does not match then prompt the user to confirm the deletion of the tag
-        // Output the header
+        // If the confirm md5 hash does not match then prompt the user to confirm the deletion of the tag.
+        // Output the header.
         echo $OUTPUT->header();
-        // Get the shop tag name and output it to the heading
+
+        // Get the shop tag name and output it to the heading.
         echo $OUTPUT->heading(get_string('deleteshoptag', $component, $DB->get_record('shoptag', ['id' => $delete], 'tag')->tag));
-        // Get all shop items using the current tag and create a list
-        $shopitems = $DB->get_records_sql('SELECT id as id, name as name FROM {course_shopsettings}
-                                           WHERE id in (SELECT itemid FROM {course_shoptag} WHERE shoptagid = :shoptagid)
-                                           AND companyid = :companyid ORDER BY name ASC',
-                                           ['shoptagid' => $delete, 'companyid' => $companyid]);
-        // Set the paramters for the URL
-        $optionyes = ['delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey()];
-        // Define the $string variable dependant whether there are shop items using the shop tag or not
+
+        // Get all shop items using the current tag and create a list.
+        $shopitems = $DB->get_records_sql("SELECT id, name
+                                           FROM {course_shopsettings}
+                                           WHERE companyid = :companyid
+                                           AND id IN (
+                                               SELECT itemid
+                                               FROM {course_shoptag}
+                                               WHERE shoptagid = :shoptagid)
+                                           ORDER BY name ASC",
+                                          ['shoptagid' => $delete,
+                                           'companyid' => $companyid]);
+
+        // Set the paramters for the URL.
+        $optionyes = ['delete' => $delete,
+                      'confirm' => md5($delete),
+                      'sesskey' => sesskey()];
+
+        // Define the $string variable dependant whether there are shop items using the shop tag or not.
         $string = (!empty($shopitems)) ?
-                                        get_string('deleteshoptagcheckused', $component, implode(', ', array_map(fn($r) => $r->name, $shopitems))) :
-                                        get_string('deleteshoptagcheck', $component);
-        // Define and output the URL
+            get_string('deleteshoptagcheckused', $component, implode(', ', array_map(fn($r) => $r->name, $shopitems))) :
+            get_string('deleteshoptagcheck', $component);
+
+        // Define and output the URL.
         echo $OUTPUT->confirm($string, new moodle_url('manage_tags.php', $optionyes), 'manage_tags.php');
-        // Output the footer
+
+        // Output the footer.
         echo $OUTPUT->footer();
-        // die to not proceed further with the rest of the code
+
+        // Die to not proceed further with the rest of the code.
         die;
     } else {
-        // Create data for the other parameter of the event
+        // Create data for the other parameter of the event.
         $eventother = ['tag' => $DB->get_record('shoptag', ['id' => $delete], 'tag')->tag];
-        // Delete the tag
+
+        // Delete the tag.
         $DB->delete_records('course_shoptag', ['shoptagid' => $delete]);
         $DB->delete_records('shoptag', ['id' => $delete]);
-        // Create the event and then trigger it
-        $event = \block_iomad_commerce\event\shoptag_deleted::create(['context' => $companycontext,
-                                                                      'objectid' => $delete,
-                                                                      'other' => $eventother]);
+
+        // Create the event and then trigger it.
+        $event = block_iomad_commerce\event\shoptag_deleted::create(['context' => $companycontext,
+                                                                     'objectid' => $delete,
+                                                                     'other' => $eventother]);
         $event->trigger();
         $tagdeleted = true;
     }
 }
 
-// Output the header
+// Output the header.
 echo $OUTPUT->header();
 
-// Check if there are any tags for the current company
+// Check if there are any tags for the current company.
 if ($tags = $DB->record_exists('shoptag', ['companyid' => $companyid])) {
-    // Define SQL for the table
+
+    // Define SQL for the table.
     $selectsql = "id, tag";
     $fromsql = "{shoptag}";
     $wheresql = "companyid = :companyid";
     $sqlparams = ["companyid" => $companyid];
 
-    // Create and display the table
-    $table = new \block_iomad_commerce\tables\manage_tags_table('block_iomad_commerce');
+    // Create and display the table.
+    $table = new block_iomad_commerce\tables\manage_tags_table('block_iomad_commerce');
     $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
     $table->define_baseurl($baseurl);
     $table->define_columns(['tag', 'itemsusedby', 'actions']);
@@ -139,21 +162,22 @@ if ($tags = $DB->record_exists('shoptag', ['companyid' => $companyid])) {
     $table->out(10, false);
 
 } else {
-    // No records returned so output a message to state there are no tags available
-    echo "<p>".get_string('notagsexist', $component)."</p>";
+
+    // No records returned so output a message to state there are no tags available.
+    echo html_writer::tag('p', get_string('notagsexist', $component));
 }
 
-// Add a cancel button which returns the user to the ecommerce page dashboard
-echo $OUTPUT->single_button(new moodle_url("$CFG->wwwroot/blocks/iomad_commerce/courselist.php"), get_string('cancel'));
+// Add a cancel button which returns the user to the ecommerce page dashboard.
+echo $OUTPUT->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/courselist.php'), get_string('cancel'));
 
-if(!$tagdeleted){
-// Create a event and trigger it
+if (!$tagdeleted) {
+    // Create a event and trigger it.
     $eventother = ['companyid' => $companyid];
-    $event = \block_iomad_commerce\event\manage_tags_viewed::create(['context' => $companycontext,
-                                                                    'objectid' => $delete,
-                                                                    'other' => $eventother]);
+    $event = block_iomad_commerce\event\manage_tags_viewed::create(['context' => $companycontext,
+                                                                   'objectid' => $delete,
+                                                                   'other' => $eventother]);
     $event->trigger();
 }
 
-// Output the footer
+// Output the footer.
 echo $OUTPUT->footer();

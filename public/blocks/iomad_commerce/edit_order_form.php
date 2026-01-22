@@ -15,21 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user create a course for a particular company.
- */
-
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 require_once(dirname(__FILE__) . '/../../course/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $invoiceid = required_param('id', PARAM_INTEGER);
@@ -38,20 +36,20 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
 
-$urlparams = array();
+$urlparams = [];
 if ($returnurl) {
     $urlparams['returnurl'] = $returnurl;
 }
 $companylist = new moodle_url('/blocks/iomad_commerce/orderlist.php', $urlparams);
 
-$invoice = \block_iomad_commerce\helper::get_invoice($invoiceid);
+$invoice = block_iomad_commerce\helper::get_invoice($invoiceid);
 
 // Set the name for the page.
 $linktext = get_string('orders', 'block_iomad_commerce');
@@ -80,7 +78,7 @@ if (empty($invoice->paymentid)) {
 }
 
 $showaccount = false;
-if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $showaccount = true;
 }
 $mform = new \block_iomad_commerce\forms\order_edit_form($PAGE->url, $invoiceid, $showaccount);

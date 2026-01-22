@@ -15,14 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
-/**
- * Script to let a user create a course for a particular company.
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
@@ -30,7 +28,7 @@ require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 require_once(dirname(__FILE__) . '/../../course/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
 $returnurl      = optional_param('returnurl', '', PARAM_LOCALURL);
 $shopsettingsid = optional_param('shopsettingsid', 0, PARAM_INTEGER);
@@ -41,10 +39,10 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 $urlparams = [];
 if ($returnurl) {
@@ -55,7 +53,7 @@ $urlparams['default'] = $default;
 $companylist = new moodle_url('/blocks/iomad_commerce/courselist.php', $urlparams);
 
 // Is this the company set of the default set?
-if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $companycontext)) {
+if ($default && local_iomad\iomad::has_capability('block/iomad_commerce:manage_default', $companycontext)) {
     $companyid = 0;
     $companycourses = $DB->get_records_sql_menu("SELECT c.id, c.fullname
                                                  FROM {course} c
@@ -65,11 +63,15 @@ if ($default && iomad::has_capability('block/iomad_commerce:manage_default', $co
     $companycourses = $company->get_menu_courses(true, false);
 }
 
-// Get all learning paths that have courses and are active
-$companypaths = $DB->get_records_sql_menu("SELECT ilp.id as id, ilp.name as name FROM {iomad_learningpath} ilp
+// Get all learning paths that have courses and are active.
+$companypaths = $DB->get_records_sql_menu("SELECT ilp.id, ilp.name
+                                           FROM {iomad_learningpath} ilp
                                            WHERE ilp.company = :companyid
-                                           AND ilp.id in (SELECT path from {iomad_learningpathcourse} ilpc WHERE ilp.id = ilpc.path)
-                                           AND ilp.active = 1",
+                                           AND ilp.active = 1
+                                           AND ilp.id IN (
+                                               SELECT path
+                                               FROM {iomad_learningpathcourse} ilpc
+                                               WHERE ilp.id = ilpc.path)",
                                            ['companyid' => $companyid]);
 
 $priceblocks = [];
@@ -84,18 +86,19 @@ if (!$new) {
         $shopsettings->itemcourses[] = $course->courseid;
     }
 
-    // Get the learning paths that are already assigned to the shop item
+    // Get the learning paths that are already assigned to the shop item.
     $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $shopsettingsid]);
-    // Create the array to store the learning paths
+
+    // Create the array to store the learning paths.
     $shopsettings->itempaths = [];
     foreach ($paths as $path) {
         $shopsettings->itempaths[] = $path->pathid;
     }
 
-    // Get the tags that are being used by the current shop item
-    $shopsettings->tags = \block_iomad_commerce\helper::get_course_tags($shopsettingsid);
+    // Get the tags that are being used by the current shop item.
+    $shopsettings->tags = block_iomad_commerce\helper::get_course_tags($shopsettingsid);
 
-    //  Get any price bandings
+    // Get any price bandings.
     $shopsettings->block_start = [];
     $pricebands = $DB->get_records('course_shopblockprice', ['itemid' => $shopsettingsid], 'price_bracket_start');
     foreach ($pricebands as $priceband) {
@@ -105,9 +108,9 @@ if (!$new) {
     $shopsettings->short_summary_editor = ['text' => $shopsettings->short_description];
     $shopsettings->summary_editor = ['text' => $shopsettings->long_description];
     $shopsettings->default = $default;
-     $shopsettings->currency =  $shopsettings->single_purchase_currency;
+     $shopsettings->currency = $shopsettings->single_purchase_currency;
 
-    iomad::require_capability('block/iomad_commerce:edit_course', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_commerce:edit_course', $companycontext);
 } else {
     $isadding = true;
     $shopsettingsid = 0;
@@ -121,7 +124,7 @@ if (!$new) {
         $shopsettings->currency = 'GBP';
     }
 
-    iomad::require_capability('block/iomad_commerce:add_course', $companycontext);
+    local_iomad\iomad::require_capability('block/iomad_commerce:add_course', $companycontext);
 }
 
 // Correct the navbar.
@@ -141,6 +144,7 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string($title, 'block_iomad_commerce'));
+$PAGE->requires->js('/blocks/iomad_commerce/module.js');
 
 // Log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
@@ -151,7 +155,15 @@ $editoroptions = ['maxfiles' => EDITOR_UNLIMITED_FILES,
                   'trusttext' => false,
                   'noclean' => true];
 
-$mform = new block_iomad_commerce\forms\product_edit_form(new moodle_url('/blocks/iomad_commerce/edit_course_shopsettings_form.php'), $isadding, $shopsettingsid, $companycourses, $priceblocks, $editoroptions, $companypaths);
+$mform = new block_iomad_commerce\forms\product_edit_form(
+    new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/edit_course_shopsettings_form.php'),
+    $isadding,
+    $shopsettingsid,
+    $companycourses,
+    $priceblocks,
+    $editoroptions,
+    $companypaths
+);
 $mform->set_data($shopsettings);
 
 if ($mform->is_cancelled()) {
@@ -193,9 +205,10 @@ if ($mform->is_cancelled()) {
         $DB->insert_record('course_shopsettings_courses', ['itemid' => $data->id, 'courseid' => $itemcourse]);
     }
 
-    // Delete associated learning paths
+    // Delete associated learning paths.
     $DB->delete_records('course_shopsettings_paths', ['itemid' => $data->id]);
-    // Create records for the learning paths
+
+    // Create records for the learning paths.
     foreach ($data->itempaths as $itempath) {
         $DB->insert_record('course_shopsettings_paths', ['itemid' => $data->id, 'pathid' => $itempath]);
     }
@@ -208,8 +221,9 @@ if ($mform->is_cancelled()) {
     $newcourseshoptagrecord = (object)[];
     $newcourseshoptagrecord->itemid = $data->id;
     foreach ($tags as $tag) {
-        // Check if the tag exists for the company and if it doesn't then create a new record for the tag for the current company
-        if ($tag == ''){
+        // Check if the tag exists for the company and if it doesn't then
+        // create a new record for the tag for the current company.
+        if ($tag == '') {
             $st = $DB->get_record('shoptag', ['tag' => $tag]);
         } else if (!$st = $DB->get_record('shoptag', ['tag' => $tag, 'companyid' => $companyid])) {
             $st = (object)[];
@@ -218,16 +232,19 @@ if ($mform->is_cancelled()) {
             $st->id = $DB->insert_record('shoptag', $st, true);
         }
 
-	if (!isset($st)) {
-            // Create a new record in course_shoptag for the tag being used for the shop item
-	    $newcourseshoptagrecord->shoptagid = $st->id;
-	    $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
-	}
+        if (!isset($st)) {
+            // Create a new record in course_shoptag for the tag being used for the shop item.
+            $newcourseshoptagrecord->shoptagid = $st->id;
+            $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
+        }
     }
 
     $transaction->allow_commit();
 
-    redirect($companylist, get_string('itemaddedsuccessfully', 'block_iomad_commerce'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($companylist,
+             get_string('itemaddedsuccessfully', 'block_iomad_commerce'),
+             null,
+             core\output\notification::NOTIFY_SUCCESS);
 
 } else {
 

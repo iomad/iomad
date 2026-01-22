@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,5 +24,7 @@
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
+
+require_course_login($SITE);
 
 redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/shop.php'));

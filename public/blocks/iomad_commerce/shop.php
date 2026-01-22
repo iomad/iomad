@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,12 +26,12 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
-$sort         = optional_param('sort', 'name', PARAM_ALPHA);
-$dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
-$page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_courses'), PARAM_INT);        // How many per page.
+$sort = optional_param('sort', 'name', PARAM_ALPHA);
+$dir = optional_param('dir', 'ASC', PARAM_ALPHA);
+$page = optional_param('page', 0, PARAM_INT);
+$perpage = optional_param('perpage', get_config('local_iomad', 'max_list_courses'), PARAM_INT);
 
 // Setup the navbar.
 // Set the name for the page.
@@ -41,10 +43,10 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
@@ -52,19 +54,19 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->navbar->add($linktext);
 
-$baseurl = new moodle_url('/blocks/iomad_commerce/shop.php', array('sort' => $sort, 'dir' => $dir, 'perpage' => $perpage));
+$baseurl = new moodle_url('/blocks/iomad_commerce/shop.php', ['sort' => $sort,
+                                                              'dir' => $dir,
+                                                              'perpage' => $perpage]);
 $returnurl = $baseurl;
 
 // Display the page header.
 echo $OUTPUT->header();
 
-flush();
-
-\block_iomad_commerce\helper::show_basket_info();
+block_iomad_commerce\helper::show_basket_info();
 
 // ...**********tag listing and filtering*****************.
 if (array_key_exists('tag', $_GET)) {
-    $shoptags = \block_iomad_commerce\helper::get_shop_tags();
+    $shoptags = block_iomad_commerce\helper::get_shop_tags();
     if (in_array( $_GET['tag'], $shoptags )) {
         $SESSION->shoptag = optional_param('tag', '', PARAM_NOTAGS);
     } else {
@@ -77,16 +79,15 @@ $tagwhere = '';
 $sqlparams = ['companyid' => $companyid];
 $tagfilters = '';
 if (isset($SESSION->shoptag) && $SESSION->shoptag != '') {
-    $tagfilters = "<li>";
-    $tagfilters .= get_string('filtered_by_tag', 'block_iomad_commerce', '<em>' . $SESSION->shoptag . '</em>' );
-    $tagfilters .= "</li>";
-
+    $tagfilters = html_writer::tag('li', get_string('filtered_by_tag',
+                                                    'block_iomad_commerce',
+                                                    '<em>' . $SESSION->shoptag . '</em>' ));
     $tagjoin = 'INNER JOIN {course_shoptag} cst ON cst.itemid = css.id
                 INNER JOIN {shoptag} st ON cst.shoptagid = st.id';
     $tagwhere = ' AND st.tag = :tag ';
     $sqlparams['tag'] = $SESSION->shoptag;
 } else {
-    $shoptags = \block_iomad_commerce\helper::get_shop_tags();
+    $shoptags = block_iomad_commerce\helper::get_shop_tags();
     if (count($shoptags)) {
         echo get_string('filter_by_tag', 'block_iomad_commerce');
         foreach ($shoptags as $shoptag) {
@@ -94,8 +95,7 @@ if (isset($SESSION->shoptag) && $SESSION->shoptag != '') {
         }
     }
 }
-
-echo "<ul id='filtering'>";
+echo html_writer::start_tag('ul', ['id' => 'filtering']);
 echo $tagfilters;
 
 // ...***********search*****************.
@@ -112,9 +112,7 @@ if (array_key_exists('q', $_GET)) {
 $searchwhere = '';
 if (isset($SESSION->shopsearch)) {
     $searchkey = $SESSION->shopsearch;
-    echo "<li>";
-    echo get_string('filtered_by_search', 'block_iomad_commerce', '<em>' . $searchkey . '</em>');
-    echo "</li>";
+    echo html_write::tag('li', get_string('filtered_by_search', 'block_iomad_commerce', '<em>' . $searchkey . '</em>'));
 
     $searchwhere = ' AND
         (' . $DB->sql_like("c.fullname", ":searchkey1") . '
@@ -141,39 +139,58 @@ if (count($sqlparams) > 1) {
     echo '<a href="?tag=&q=">' . get_string('remove_filter', 'block_iomad_commerce') . '</a>';
 }
 
-echo "</ul>";
+echo html_writer::end_tag('ul');
 
-echo html_writer::start_tag('div', ['style' =>'display:inline-flex;padding-bottom:10px;', 'id' => 'shoptagsearch']);
+echo html_writer::start_tag('div', ['style' => 'display:inline-flex;padding-bottom:10px;',
+                                    'id' => 'shoptagsearch']);
 echo html_writer::tag('span', get_string('search'));
-echo "<form method='get'><input type='text' name='q' class='form-control' style='width: 195px;margin-left:20px;' value='$searchkey' /></form>";
+echo html_writer::start_tag('form', ['method' => 'get']);
+echo html_writer::empty_tag('input', ['type' => 'text',
+                                      'name' => 'q',
+                                      'class' => 'form-control',
+                                      'style' => 'width: 195px;margin-left:20px;',
+                                      'value' => $searchkey]);
+echo html_writer::end_tag('form');
 echo html_writer::end_tag('div');
 
 // ...***********create course list sql (includes filtering on tags)*****************.
 $typewhere = "";
-if (!iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
+if (!local_iomad\iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
     $typewhere = " AND css.allow_single_purchase = 1 ";
 }
 
-$sql = 'FROM {course_shopsettings} css
+$sql = "FROM {course_shopsettings} css
         LEFT JOIN {course_shopsettings_courses} csc ON (css.id = csc.itemid)
         LEFT JOIN {course} c ON (csc.courseid = c.id)
         LEFT JOIN {course_shopsettings_paths} cssp ON (css.id = cssp.itemid)
         LEFT JOIN {iomad_learningpath} ilp ON (cssp.pathid = ilp.id)
-            ' . $tagjoin . '
-            LEFT JOIN {course_shopblockprice} sbp ON (css.id = sbp.itemid
-                                                  AND sbp.id = (SELECT id FROM {course_shopblockprice}
-                                                  WHERE itemid = css.id ORDER BY price LIMIT 1 ))
-        WHERE css.enabled = 1
-        AND css.companyid =:companyid
-        AND (css.allow_single_purchase = 1 or css.id = sbp.itemid
+        $tagjoin
+        LEFT JOIN {course_shopblockprice} sbp ON (css.id = sbp.itemid
                                               AND sbp.id = (SELECT id FROM {course_shopblockprice}
                                               WHERE itemid = css.id ORDER BY price LIMIT 1 ))
-        AND (ilp.id IS NULL OR (ilp.id IS NOT NULL AND ilp.id in (SELECT path FROM {iomad_learningpathcourse} WHERE path = ilp.id)))
-        ' . $tagwhere . $searchwhere . $typewhere . '
-        GROUP BY css.id, sbp.id ORDER BY css.name';
+        WHERE css.enabled = 1
+        AND css.companyid = :companyid
+        AND (
+            css.allow_single_purchase = 1 OR css.id = sbp.itemid
+            AND sbp.id = (
+                SELECT id FROM {course_shopblockprice}
+                WHERE itemid = css.id ORDER BY price LIMIT 1 ))
+        AND (
+            ilp.id IS NULL
+            OR (
+                ilp.id IS NOT NULL
+                AND ilp.id IN (
+                    SELECT path
+                    FROM {iomad_learningpathcourse}
+                    WHERE path = ilp.id)))
+        $tagwhere
+        $searchwhere
+        $typewhere
+        GROUP BY css.id, sbp.id
+        ORDER BY css.name";
 
 // Get the number of Courses.
-$items = $DB->get_records_sql( 'SELECT distinct css.* ' . $sql, $sqlparams);
+$items = $DB->get_records_sql("SELECT DISTINCT css.* $sql", $sqlparams);
 $itemcount = count($items);
 
 echo $OUTPUT->paging_bar($itemcount, $page, $perpage, $baseurl);
@@ -190,38 +207,47 @@ if ($itemcount) {
     $strmoreinfo = get_string('moreinfo', 'block_iomad_commerce');
 
     $table = new html_table();
-    $table->head = [get_string('Course', 'block_iomad_commerce'), "", ""];
+    $table->head = [get_string('course', 'block_iomad_commerce'), "", ""];
     $table->align = ["left", "center", "center"];
     $table->width = "95%";
 
     foreach ($items as $item) {
-        $available = ($item->allow_single_purchase || $item->allow_license_blocks) &&
-                     (iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) || iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext));
-        $price = \block_iomad_commerce\helper::get_lowest_price_text($item);
+        $available = ($item->allow_single_purchase ||
+                      $item->allow_license_blocks) &&
+                     (local_iomad\iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
+                      local_iomad\iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext));
+        $price = block_iomad_commerce\helper::get_lowest_price_text($item);
         if ($available) {
             if ($item->allow_single_purchase) {
                 $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/buynow.php", ['itemid' => $item->id]);
             } else {
                 $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
             }
-            $buynowbutton = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>$strbuynow</a>&nbsp$strextra";
+            $buynowbutton = html_writer::tag('a', $strbuynow, ['href' => $buynowurl,
+                                                               'class' => 'btn btn-primary']) .
+                            "&nbsp" . $strextra;
 
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
-            $moreinfobutton = "$price <a href='" . $moreinfourl->out() . "' class='btn btn-secondary'>$strmoreinfo</a>";
+            $moreinfobutton = "$price " . html_writer::tag('a', $strmoreinfo, ['href' => $moreinfourl,
+                                                                               'class' => 'btn btn-secondary']);
         } else {
             if ($mustlogin) {
                 $buynowurl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
                 $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
-                $buynowbutton = "<a href='" . $buynowurl->out() . "' class='btn btn-primary'>$strbuynow</a>&nbsp$strextra";
+                $buynowbutton = html_writer::tag('a', $strbuynow, ['href' => $buynowurl,
+                                                                   'class' => 'btn btn-primary']) .
+                                "&nbsp" . $strextra;
             } else {
                 $buynowbutton = "";
             }
             $moreinfourl = new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/item.php", ['itemid' => $item->id]);
-            $moreinfobutton = "$price <a href='" . $moreinfourl->out() . "' class='btn btn-secondary'>$strmoreinfo</a>";
+            $moreinfobutton = "$price " . html_writer::tag('a', $strmoreinfo, ['href' => $moreinfourl,
+                                                                               'class' => 'btn btn-secondary']);
         }
 
 
-        $table->data[] = ["<h3>" . format_string($item->name) . "</h3><p>" .$item->short_description . "</p>",
+        $table->data[] = [html_writer::tag('h3', format_string($item->name)) .
+                          html_writer::tag('p', $item->short_description),
                           $moreinfobutton,
                           $buynowbutton];
     }
@@ -232,7 +258,7 @@ if ($itemcount) {
     }
 
 } else {
-    echo "<p>" . get_string('nocoursesontheshop', 'block_iomad_commerce') . "</p>";
+    echo html_writer::tag('p', get_string('nocoursesontheshop', 'block_iomad_commerce'));
 }
 
 echo $OUTPUT->footer();

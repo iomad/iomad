@@ -15,58 +15,66 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce block buy now page
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
-$itemid    = required_param('itemid', PARAM_INT);
-$nlicenses   = optional_param('nlicenses', 0, PARAM_INT);
-$licenses    = optional_param('licenses', 0, PARAM_INT);
+$itemid = required_param('itemid', PARAM_INT);
+$nlicenses = optional_param('nlicenses', 0, PARAM_INT);
+$licenses = optional_param('licenses', 0, PARAM_INT);
+
+// May be viewed by the guest account.
+require_course_login($SITE);
 
 if ($licenses && !$nlicenses) {
-    redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/item.php', ['licenseformempty' => 1, 'id' => $itemid]));
+    redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/item.php',
+                            ['licenseformempty' => 1, 'id' => $itemid]));
 }
 
-global $DB;
-
-$PAGE->set_url(new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/buynow.php", ['itemid' => $itemid, 'nlicenses' => $nlicenses]));
+$PAGE->set_url(new moodle_url($CFG->wwwroot . "/blocks/iomad_commerce/buynow.php",
+                              ['itemid' => $itemid,
+                               'nlicenses' => $nlicenses]));
 $PAGE->set_context(context_system::instance());
 $context = $PAGE->context;
 
-
 // Get or create basket.
 if (!empty($SESSION->basketid)) {
-    if (!$basket = $DB->get_record('invoice', array('id' => $SESSION->basketid, 'status' => \block_iomad_commerce\helper::INVOICESTATUS_BASKET), '*')) {
-        $basket = new stdClass;
+    if (!$basket = $DB->get_record('invoice',
+                                   ['id' => $SESSION->basketid,
+                                    'status' => block_iomad_commerce\helper::INVOICESTATUS_BASKET])) {
+        $basket = (object) [];
         $basket->userid = $USER->id;
-        $basket->status = \block_iomad_commerce\helper::INVOICESTATUS_BASKET;
+        $basket->status = block_iomad_commerce\helper::INVOICESTATUS_BASKET;
         $basket->date = time();
         $basket->id = $DB->insert_record('invoice', $basket, true);
         $SESSION->basketid = $basket->id;
     }
 } else {
-    $basket = new stdClass;
+    $basket = (object) [];
     $basket->userid = $USER->id;
-    $basket->status = \block_iomad_commerce\helper::INVOICESTATUS_BASKET;
+    $basket->status = block_iomad_commerce\helper::INVOICESTATUS_BASKET;
     $basket->date = time();
     $basket->id = $DB->insert_record('invoice', $basket, true);
     $SESSION->basketid = $basket->id;
 }
 
-
-$invoiceitem = new stdClass;
+// Set up the invoice item.
+$invoiceitem = (object) [];
 $invoiceitem->invoiceid = $basket->id;
 $invoiceitem->invoiceableitemid = $itemid;
 
+// Do we have license blocks?
 if ($nlicenses) {
-
-    if ($block = \block_iomad_commerce\helper::get_license_block($itemid, $nlicenses)) {
+    if ($block = block_iomad_commerce\helper::get_license_block($itemid, $nlicenses)) {
         $invoiceitem->currency = $block->currency;
         $invoiceitem->price = $block->price;
         $invoiceitem->invoiceableitemtype = 'licenseblock';
@@ -75,13 +83,14 @@ if ($nlicenses) {
         $invoiceitem->license_validlength = $block->validlength;
         $invoiceitem->license_shelflife = $block->shelflife;
     } else {
-        redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/item.php?itemid='.$itemid.'&invalidamount=true'));
+        redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/item.php',
+                                ['itemid' => $itemid,
+                                 'invalidamount' => 'true']));
     }
-
 } else {
-    // Single purchase.
 
-    if ($course = $DB->get_record('course_shopsettings', array('id' => $itemid), '*', MUST_EXIST)) {
+    // Single purchase.
+    if ($course = $DB->get_record('course_shopsettings', ['id' => $itemid], '*', MUST_EXIST)) {
         $invoiceitem->currency = $course->single_purchase_currency;
         $invoiceitem->price = $course->single_purchase_price;
         $invoiceitem->invoiceableitemtype = 'singlepurchase';
@@ -92,6 +101,8 @@ if ($nlicenses) {
     }
 }
 
+// Add the new invoice item.
 $DB->insert_record('invoiceitem', $invoiceitem);
 
+// Redirect to the user's basket.
 redirect(new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/basket.php'));

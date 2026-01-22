@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by iomad_company_admin/editusers.php.
+ * IOMAD eCommerce
  *
- * @package   block_iomad_company_admin
+ * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,15 +25,24 @@
 
 namespace block_iomad_commerce\tables;
 
-use \table_sql;
-use \moodle_url;
-use \iomad;
-use \html_writer;
+use table_sql;
+use moodle_url;
+use local_iomad\iomad;
+use html_writer;
 
+// Ensure that it is loaded in Moodle else die.
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * IOMAD eCommerce orders table class
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class orders_table extends table_sql {
 
     /**
@@ -132,47 +141,21 @@ class orders_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_actions($row) {
-        global $companycontext;
+        global $CFG, $companycontext;
 
-        $stredit   = get_string('edit');
+        $stredit = get_string('edit');
+        $editbutton = "";
         if (iomad::has_capability('block/iomad_commerce:admin_view', $companycontext)) {
-            $editbutton = "<a href='" . new moodle_url('edit_order_form.php', array("id" => $row->id)) . "'>
-            <i class='icon fa fa-cog fa-fw ' title='$stredit' role='img' aria-label='$stredit'></i></a>";
-        } else {
-            $editbutton = "";
+            $editorderurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/edit_order_form.php',
+                                           ["id" => $row->id]);
+            $editbutton = html_writer::start_tag('a', ['href' => $editorderurl]);
+            $editbutton .= html_writer::tag('i', '', ['class' => 'icon fa fa-cog fa-fw ',
+                                                      'title' => $stredit,
+                                                      'role' => 'img',
+                                                      'aria-label' => $stredit]);
+            $editbutton .= html_writer::end_tag('a');
         }
+
         return $editbutton;
-    }
-
-    /**
-     * @return string sql to add to where statement.
-     */
-    function get_sql_where() {
-        global $DB, $SESSION;
-
-        $uniqueid = 'block_iomad_commerce_orders_table';
-
-        if (isset($SESSION->flextable[$uniqueid])) {
-            $prefs = $SESSION->flextable[$uniqueid];
-        } else if (!$prefs = json_decode(get_user_preferences("flextable_{$uniqueid}", ''), true)) {
-            return '';
-        }
-
-        $conditions = array();
-        $params = array();
-
-        static $i = 0;
-        $i++;
-
-        if (!empty($prefs['i_first'])) {
-            $conditions[] = $DB->sql_like('u.firstname', ':ifirstc'.$i, false, false);
-            $params['ifirstc'.$i] = $prefs['i_first'].'%';
-        }
-        if (!empty($prefs['i_last'])) {
-            $conditions[] = $DB->sql_like('u.lastname', ':ilastc'.$i, false, false);
-            $params['ilastc'.$i] = $prefs['i_last'].'%';
-        }
-
-        return array(implode(" AND ", $conditions), $params);
     }
 }

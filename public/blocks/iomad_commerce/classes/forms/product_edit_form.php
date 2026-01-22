@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,31 +25,64 @@
 
 namespace block_iomad_commerce\forms;
 
-use \moodleform;
-use \context_system;
-use \block_iomad_commerce\helper;
+use moodleform;
+use block_iomad_commerce\helper;
 use lang_string;
 
+/**
+ * Block IOMAD eCommerce
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class product_edit_form extends moodleform {
 
+    /** @var isadding check if adding a product bool */
     protected $isadding;
+
+    /** @var shopsettingsid shop setting ID int */
     protected $shopsettingsid = 0;
-    protected $context = null;
-    protected $editoroptions = [];
+
+    /** @var courses list of courses array */
     protected $courses = [];
-    protected $currency = '';
-    protected $priceblocks = null;
-    protected $paths = [];
+
+    /** @var currencies list of currencies array */
     protected $currencies = [];
 
-    public function __construct($actionurl, $isadding, $shopsettingsid, $courses = [], $priceblocks = null, $editoroptions = [], $paths = []) {
-        global $CFG;
+    /** @var paths list of paths array */
+    protected $paths = [];
+
+    /** @var priceblocks list of price blocks array */
+    protected $priceblocks = null;
+
+    /** @var editoroptions array */
+    protected $editoroptions = [];
+
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param bool $isadding
+     * @param int $shopsettingsid
+     * @param array $courses
+     * @param array $priceblocks
+     * @param array $editoroptions
+     * @param array $paths
+     */
+    public function __construct($actionurl,
+                                $isadding,
+                                $shopsettingsid,
+                                $courses = [],
+                                $priceblocks = null,
+                                $editoroptions = [],
+                                $paths = []) {
 
         $this->isadding = $isadding;
         $this->shopsettingsid = $shopsettingsid;
         $this->courses = $courses;
         $this->priceblocks = $priceblocks;
-        $this->context = context_system::instance();
         $this->editoroptions = $editoroptions;
         $this->paths = $paths;
 
@@ -67,6 +102,11 @@ class product_edit_form extends moodleform {
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
         global $CFG, $DB;
 
@@ -96,8 +136,12 @@ class product_edit_form extends moodleform {
 
             $mform->addElement('autocomplete', 'itemcourses', get_string('courses'), $this->courses, ['multiple' => true]);
 
-            // Create a element for learning paths
-            $mform->addElement('autocomplete', 'itempaths', get_string('learning_paths', 'block_iomad_commerce'), $this->paths, ['multiple' => true]);
+            // Create an element for learning paths.
+            $mform->addElement('autocomplete',
+                               'itempaths',
+                               get_string('learning_paths', 'block_iomad_commerce'),
+                               $this->paths,
+                               ['multiple' => true]);
 
             $mform->addElement('editor', 'short_summary_editor', get_string('course_short_summary', 'block_iomad_commerce'),
                                           null, $this->editoroptions);
@@ -179,7 +223,7 @@ class product_edit_form extends moodleform {
                 $mform->createElement('text', 'item_block_start'),
                 $mform->createElement('html', '</td><td style="text-align: right;">'),
                 $mform->createElement('text', 'item_block_price'),
-                $mform->createElement('html', '</td></tr>')
+                $mform->createElement('html', '</td></tr>'),
             ];
 
             // Set the default number to be repeated.
@@ -193,9 +237,15 @@ class product_edit_form extends moodleform {
             $repeatoptions = ['item_block_start' => ['rule' => 'numeric', 'type' => PARAM_INT],
                               'item_block_price' => ['rule' => 'numeric', 'type' => PARAM_LOCALISEDFLOAT]];
 
-            $mform->addElement('html', '<table id="licenseblockstable" class="generaltable" width="95%">
-                                        <tr><th style="text-align: right;">' . get_string('licenseblock_start', 'block_iomad_commerce') . '</th>
-                                        <th style="text-align: right;">' . get_string('licenseblock_price', 'block_iomad_commerce') . '</th></tr>');
+            $mform->addElement('html', '<table id="licenseblockstable" class="generaltable" width="95%">' .
+                                        '<tr>
+                                            <th style="text-align: right;">' .
+                                                get_string('licenseblock_start', 'block_iomad_commerce') .
+                                           '</th>
+                                            <th style="text-align: right;">' .
+                                                get_string('licenseblock_price', 'block_iomad_commerce') .
+                                            '</th>
+                                        </tr>');
             $this->repeat_elements($licenseblockarray,
                                    $repeatno,
                                    $repeatoptions,
@@ -209,7 +259,11 @@ class product_edit_form extends moodleform {
             /******** tags **************/
             $mform->addElement('header', 'header', get_string('categorization', 'block_iomad_commerce'));
 
-            $mform->addElement('textarea', 'tags', get_string('tags', 'block_iomad_commerce'), array('rows' => 5, 'cols' => 60));
+            $mform->addElement('textarea',
+                               'tags',
+                               get_string('tags', 'block_iomad_commerce'),
+                               ['rows' => 5,
+                                'cols' => 60]);
             $mform->addHelpButton('tags', 'tags', 'block_iomad_commerce');
             $mform->setType('tags', PARAM_NOTAGS);
 
@@ -223,9 +277,6 @@ class product_edit_form extends moodleform {
             $html = "<div class='fitem'><div class='fitemtitle'></div><div class='felement'>$select</div></div>";
 
             $mform->addElement('html', $html);
-
-            global $PAGE;
-            $PAGE->requires->js('/blocks/iomad_commerce/module.js');
 
             /******** end tags **********/
 
@@ -242,6 +293,11 @@ class product_edit_form extends moodleform {
         }
     }
 
+    /**
+     * Form get data function
+     *
+     * @return array
+     */
     public function get_data() {
         $data = parent::get_data();
 
@@ -257,8 +313,14 @@ class product_edit_form extends moodleform {
         return $data;
     }
 
+    /**
+     * Form validation function
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
-        global $DB, $CFG;
 
         $errors = parent::validation($data, $files);
 
@@ -275,11 +337,11 @@ class product_edit_form extends moodleform {
             $errors['allow_single_purchase'] = get_string('error_incompatibletype', 'block_iomad_commerce');
         }
 
-        if (count($data['itemcourses']) == 0 and count($data['itempaths']) == 0) {
+        if (count($data['itemcourses']) == 0 && count($data['itempaths']) == 0) {
             $errors['itempaths'] = get_string('requiredcoursepath', 'block_iomad_commerce');
         }
 
-        if (count($data['itemcourses']) > 0 and count($data['itempaths']) > 0) {
+        if (count($data['itemcourses']) > 0 && count($data['itempaths']) > 0) {
             $errors['itempaths'] = get_string('onlyonecoursepath', 'block_iomad_commerce');
         }
 
@@ -287,13 +349,13 @@ class product_edit_form extends moodleform {
             $errors['item_block_start[0]'] = get_string('error_invalidlicensenumber', 'block_iomad_commerce');
         }
 
-        for($i = 0; $i < count($data['item_block_start']); $i++){
-            if(!empty($data['item_block_start'][$i]) && !isset($data['item_block_price'][$i])){
+        for ($i = 0; $i < count($data['item_block_start']); $i++) {
+            if (!empty($data['item_block_start'][$i]) &&
+                !isset($data['item_block_price'][$i])) {
                 $errors['item_block_price['.$i.']'] = get_string('error_invalidlicenseprice', 'block_iomad_commerce');
             }
         }
 
         return $errors;
     }
-
 }

@@ -15,30 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
-$sort     = optional_param('sort', 'name', PARAM_ALPHA);
-$dir      = optional_param('dir', 'ASC', PARAM_ALPHA);
-$page     = optional_param('page', 0, PARAM_INT);
-$perpage  = optional_param('perpage', 30, PARAM_INT);        // How many per page.
+$sort = optional_param('sort', 'name', PARAM_ALPHA);
+$dir = optional_param('dir', 'ASC', PARAM_ALPHA);
+$page = optional_param('page', 0, PARAM_INT);
+$perpage = optional_param('perpage', 30, PARAM_INT);
 $download = optional_param('download', 0, PARAM_CLEAN);
 
 require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -64,8 +67,8 @@ $baseurl = new moodle_url('/blocks/iomad_commerce/orderlist.php',
                            'perpage' => $perpage]);
 $returnurl = $baseurl;
 
-//  Check we can actually do anything on this page.
-iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
+// Check we can actually do anything on this page.
+local_iomad\iomad::require_capability('block/iomad_commerce:admin_view', $companycontext);
 
 $userfields = \core_user\fields::for_name()->with_identity($systemcontext)->excluding('id', 'deleted', 'firstname', 'lastname');
 $usersql = $userfields->get_sql('u');
@@ -88,7 +91,7 @@ $fromsql = "{invoice} i JOIN {user} u ON (i.userid = u.id) LEFT JOIN {payments} 
 $wheresql = " i.companyid = :companyid";
 $sqlparams = ['companyid' => $companyid];
 
-//Set up the table headers.
+// Set up the table headers.
 $headers = [get_string('reference', 'block_iomad_commerce'),
             get_string('date'),
             get_string('fullname'),
@@ -109,7 +112,7 @@ $columns = ['reference',
             'actions'];
 
 // Actually create and display the table.
-$table = new \block_iomad_commerce\tables\orders_table('block_iomad_commerce_orders_table');
+$table = new block_iomad_commerce\tables\orders_table('block_iomad_commerce_orders_table');
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
 $table->define_baseurl($baseurl);
 $table->define_columns($columns);
@@ -117,7 +120,11 @@ $table->define_headers($headers);
 $table->no_sorting('actions');
 $table->no_sorting('paymentprovider');
 $table->sort_default_column = 'date DESC';
-$table->is_downloading($download, format_string($company->get('name')) . ' invoices ' . format_string(userdate(time(), $CFG->iomad_date_format)), 'companyinvoices');
+$table->is_downloading($download,
+                       format_string($company->get('name')) .
+                                     ' invoices ' .
+                                     format_string(userdate(time(), $CFG->iomad_date_format)),
+                       'companyinvoices');
 
 if (!$table->is_downloading()) {
     echo $OUTPUT->header();

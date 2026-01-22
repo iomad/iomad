@@ -15,22 +15,49 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Block IOMAD eCommerce class definition
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class iomad_commerce {
 
+    /**
+     * Update remote company handler
+     *
+     * @param object $company
+     * @param object $oldcompany
+     * @return void
+     */
     public static function update_company($company, $oldcompany) {
 
         $call = 'updateCompany';
-        $payload = array('origname' => $oldcompany->name,
-                         'newname' => $company->name);
-        $response = self::docall($call, $payload, $company->id);
+        $payload = [
+            'origname' => $oldcompany->name,
+            'newname' => $company->name,
+        ];
+
+        return self::docall($call, $payload, $company->id);
     }
 
+    /**
+     * Update remote user handler
+     *
+     * @param object $user
+     * @param id $companyid
+     * @return void
+     */
     public static function update_user($user, $companyid) {
 
         $call = 'updateUser';
@@ -40,17 +67,19 @@ class iomad_commerce {
         if (empty($user->manager)) {
             $user->manager = 0;
         }
-        $payload = array('userid' => $user->id,
-                         'username' => $user->username,
-                         'firstname' => $user->firstname,
-                         'lastname' => $user->lastname,
-                         'email' => $user->email,
-                         'company' => $user->company,
-                         'password' => $user->password,
-                         'address' => $user->address,
-                         'city' => $user->city,
-                         'country' => $user->country,
-                         'manager' => $user->manager);
+        $payload = [
+            'userid' => $user->id,
+            'username' => $user->username,
+            'firstname' => $user->firstname,
+            'lastname' => $user->lastname,
+            'email' => $user->email,
+            'company' => $user->company,
+            'password' => $user->password,
+            'address' => $user->address,
+            'city' => $user->city,
+            'country' => $user->country,
+            'manager' => $user->manager,
+        ];
 
         if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
             $payload['extragroup'] = $user->extragroup->name;
@@ -60,9 +89,17 @@ class iomad_commerce {
             $payload['extragroupaction'] = null;
         }
 
-        $response = self::docall($call, $payload, $companyid);
+        return self::docall($call, $payload, $companyid);
     }
 
+    /**
+     * Assign user to company remote handler
+     *
+     * @param object $user
+     * @param string $companyname
+     * @param integer $companyid
+     * @return void
+     */
     public static function assign_user($user, $companyname="", $companyid=0) {
 
         $call = 'updateUser';
@@ -75,40 +112,66 @@ class iomad_commerce {
         if (empty($companyname)) {
             $companyname = 'Registered';
         }
-        $payload = array('userid' => $user->id,
-                         'username' => $user->username,
-                         'firstname' => $user->firstname,
-                         'lastname' => $user->lastname,
-                         'email' => $user->email,
-                         'company' => $companyname,
-                         'password' => $user->password,
-                         'address' => $user->address,
-                         'city' => $user->city,
-                         'country' => $user->country,
-                         'manager' => $user->manager);
+        $payload = [
+            'userid' => $user->id,
+            'username' => $user->username,
+            'firstname' => $user->firstname,
+            'lastname' => $user->lastname,
+            'email' => $user->email,
+            'company' => $companyname,
+            'password' => $user->password,
+            'address' => $user->address,
+            'city' => $user->city,
+            'country' => $user->country,
+            'manager' => $user->manager,
+        ];
 
         if (!empty($user->extragroup->name) && !empty($user->extragroup->action)) {
             $payload['extragroup'] = $user->extragroup->name;
             $payload['extragroupaction'] = $user->extragroup->action;
         }
 
-        $response = self::docall($call, $payload, $companyid);
+        return self::docall($call, $payload, $companyid);
     }
 
+    /**
+     * Delete user handler for remote
+     *
+     * @param string $username
+     * @param integer $companyid
+     * @return void
+     */
     public static function delete_user($username, $companyid) {
 
         $call = 'deleteUser';
-        $payload = array('username' => $username);
-        self::docall($call, $payload, $companyid);
+        $payload = ['username' => $username];
+
+        return self::docall($call, $payload, $companyid);
     }
 
+    /**
+     * Make the remote webservice call
+     *
+     * @param string $call
+     * @param array $payload
+     * @param int $companyid
+     * @return void
+     */
     private static function docall($call, $payload, $companyid) {
         global $CFG;
 
-        $opts = array(
-                        'http' => array('user_agent' => 'PHPSoapClient')
-        );
+        $opts = [
+            'http' => [
+                'user_agent' => 'PHPSoapClient',
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+        ];
         $soapcontext = stream_context_create($opts);
+
         $checkname = "commerce_externalshop_url_$companyid";
         if (!empty($CFG->$checkname)) {
             $mainurl = $CFG->$checkname;
@@ -118,18 +181,11 @@ class iomad_commerce {
         $wsdlurl = $mainurl . '/wp-content/plugins/wpiomadsoap/wsdl/wpiomadsoap.wsdl';
         $soapserverurl = $mainurl . '/?api=soap&version=v1&wsdl';
 
-        $client = new SoapClient($wsdlurl, array('stream_context' => $soapcontext,
-                                                 'cache_wsdl' => WSDL_CACHE_NONE,
-                                                 'trace' => 1,
-                                                 'stream_context' => stream_context_create(
-                                                     [
-                                                         'ssl' => [
-                                                             'verify_peer'       => false,
-                                                             'verify_peer_name'  => false,
-                                                             'allow_self_signed' => true
-                                                         ]
-                                                     ]
-                                                 )));
+        $client = new SoapClient($wsdlurl, [
+            'stream_context' => $soapcontext,
+            'cache_wsdl' => WSDL_CACHE_NONE,
+            'trace' => 1,
+        ]);
 
         try {
             $client->__setLocation($soapserverurl);

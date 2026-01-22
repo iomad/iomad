@@ -15,14 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * IOMAD eCommerce block upgrade function
+ *
+ * @param [type] $oldversion
+ * @return void
+ */
 function xmldb_block_iomad_commerce_upgrade($oldversion) {
     global $CFG, $DB;
 
@@ -197,7 +203,9 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         if ($shopitems = $DB->get_records('course_shopsettings')) {
             foreach ($shopitems as $shopitem) {
                 if (!empty($shopitem->courseid)) {
-                    $DB->insert_record('course_shopsettings_courses', ['itemid' => $shopitem->id, 'courseid' => $shopitem->courseid]);
+                    $DB->insert_record('course_shopsettings_courses',
+                                       ['itemid' => $shopitem->id,
+                                        'courseid' => $shopitem->courseid]);
                     if ($course = $DB->get_record('course', ['id' => $shopitem->courseid])) {
                         $shopitem->name = $course->fullname;
                         $ignore = false;
@@ -230,7 +238,9 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
                                 unset($companyitem->id);
                                 $companyitem->companyid = $company->id;
                                 $companyitemid = $DB->insert_record('course_shopsettings', $companyitem);
-                                $DB->insert_record('course_shopsettings_courses', ['itemid' => $companyitemid, 'courseid' => $course->id]);
+                                $DB->insert_record('course_shopsettings_courses',
+                                                   ['itemid' => $companyitemid,
+                                                    'courseid' => $course->id]);
                                 $companyblockprices = $blockprices;
                                 foreach ($companyblockprices as $companyblockprice) {
                                     unset($companyblockprice->id);
@@ -249,7 +259,7 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
                 }
             }
         }
-            
+
         // Drop the courseid field from the  course_shopsettings table.
         // Define field courseid to be dropped from course_shopsettings.
         $table = new xmldb_table('course_shopsettings');
@@ -273,7 +283,6 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
 
         // Launch rename field courseid.
         $dbman->rename_field($table, $field, 'itemid');
-
 
         // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2023021000, 'iomad_commerce');
@@ -449,7 +458,7 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // get all of the companies.
+        // Get all of the companies.
         $companies = $DB->get_records('company');
         foreach ($companies as $company) {
             $DB->set_field('invoice', 'companyid', $company->id, ['company' => $company->name]);
@@ -500,9 +509,10 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
             $dbman->rename_field($table, $field, 'itemid');
         }
 
-        // Add a company id for each shoptag record and if it is used in multiple companies then create a seperate record for each company
+        // Add a company id for each shoptag record and if it is used in multiple
+        // companies then create a seperate record for each company.
         if ($shoptags = $DB->get_records('shoptag')) {
-            // Loop through the records returned
+            // Loop through the records returned.
             foreach ($shoptags as $shoptag) {
                 // Is the tag in use?
                 if ($items = $DB->get_records_sql("SELECT cs.id,cs.itemid,css.companyid
@@ -543,22 +553,22 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
     }
 
     if ($oldversion < 2025070700) {
-        // Define the table
+        // Define the table.
         $table = new xmldb_table('course_shopsettings_paths');
 
-        // Define field id and add to course_shopsettings_threads
+        // Define field id and add to course_shopsettings_threads.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
 
-        // Define field itemid and add to course_shopsettings_threads
+        // Define field itemid and add to course_shopsettings_threads.
         $table->add_field('itemid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null, 'id');
 
-        // Define field threadid and add to course_shopsettings_threads
+        // Define field threadid and add to course_shopsettings_threads.
         $table->add_field('pathid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null, 'pathid');
 
-        // Define the primary key and add to course_shopsettings_threads
+        // Define the primary key and add to course_shopsettings_threads.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
-        // Conditionally launch create table for course_shopsettings_threads
+        // Conditionally launch create table for course_shopsettings_threads.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -566,7 +576,6 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         // Iomad_commerce savepoint reached.
         upgrade_block_savepoint(true, 2025070700, 'iomad_commerce');
     }
-
 
     return $result;
 }
