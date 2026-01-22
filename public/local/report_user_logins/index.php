@@ -30,10 +30,10 @@ require_once($CFG->dirroot."/lib/tablelib.php");
 // Params.
 $participant = optional_param('participant', 0, PARAM_INT);
 $download = optional_param('download', 0, PARAM_CLEAN);
-$firstname = optional_param('firstname', 0, PARAM_CLEAN);
+$firstname = optional_param('firstname', '', PARAM_CLEAN);
 $lastname = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
-$email = optional_param('email', 0, PARAM_CLEAN);
+$email = optional_param('email', '', PARAM_CLEAN);
 $sort = optional_param('sort', 'lastname', PARAM_ALPHA);
 $dir = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page = optional_param('page', 0, PARAM_INT);
