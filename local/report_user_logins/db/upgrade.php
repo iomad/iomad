@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report user logins
+ *
  * @package   local_report_user_logins
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,24 +24,15 @@
  */
 
 /**
- * As of the implementation of this block and the general navigation code
- * in Moodle 2.0 the body of immediate upgrade work for this block and
- * settings is done in core upgrade {@see lib/db/upgrade.php}
+ * IOMAD report user logins upgrade functions.
  *
- * There were several reasons that they were put there and not here, both becuase
- * the process for the two blocks was very similar and because the upgrade process
- * was complex due to us wanting to remvoe the outmoded blocks that this
- * block was going to replace.
- *
- * @global moodle_database $DB
- * @param int $oldversion
- * @param object $block
+ * @package   local_report_user_logins
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
 function xmldb_local_report_user_logins_upgrade($oldversion) {
-    global $CFG, $DB;
+    global $DB;
 
     $result = true;
     $dbman = $DB->get_manager();
@@ -69,15 +62,24 @@ function xmldb_local_report_user_logins_upgrade($oldversion) {
             $dbman->create_table($table);
         }
 
-        $DB->execute("INSERT INTO {local_report_user_logins} (userid, created, firstlogin, lastlogin, logincount, modifiedtime) 
-                      SELECT id as userid, 
-                             timecreated, 
-                             NULLIF(firstaccess,0) AS firstaccess, 
-                             NULLIF(currentlogin,0) AS currentlogin, 
-                             IF (currentlogin = 0, 0, IFNULL((SELECT COUNT(id) FROM {logstore_standard_log} l WHERE u.id = l.userid AND eventname = :eventname),0)) AS totallogins, 
-                             " . time() . " as modifiedtime 
-                             FROM {user} u",
-                      array('eventname' => '\core\event\user_loggedin'));
+        $DB->execute("INSERT INTO {local_report_user_logins} (userid, created, firstlogin, lastlogin, logincount, modifiedtime)
+                      SELECT id AS userid,
+                      timecreated,
+                      NULLIF(firstaccess,0) AS firstaccess,
+                      NULLIF(currentlogin,0) AS currentlogin,
+                      CASE
+                          WHEN currentlogin = 0
+                          THEN 0
+                          ELSE (
+                              SELECT COUNT(id)
+                              FROM {logstore_standard_log} l
+                              WHERE u.id = l.userid
+                              AND eventname = :eventname)
+                      END AS totallogins,
+                      :modifiedtime as modifiedtime
+                      FROM {user} u",
+                     ['eventname' => '\core\event\user_loggedin',
+                      'modifiedtime' => time()]);
 
         // Deal with any that may have been missed.
         if ($missedusers = $DB->get_records_sql("SELECT u.* FROM {user} u
@@ -86,8 +88,8 @@ function xmldb_local_report_user_logins_upgrade($oldversion) {
                                                  AND u.currentlogin != 0")) {
             foreach ($missedusers as $missed) {
                 // Not in the logs to we are going to set it to 1 as it's the only evidence we have.
-                $DB->set_field('local_report_user_logins', 'logincount', 1, array('userid' => $missed->id));
-                $DB->set_field('local_report_user_logins', 'lastlogin', $missed->currentlogin, array('userid' => $missed->id));
+                $DB->set_field('local_report_user_logins', 'logincount', 1, ['userid' => $missed->id]);
+                $DB->set_field('local_report_user_logins', 'lastlogin', $missed->currentlogin, ['userid' => $missed->id]);
             }
         }
 
@@ -96,5 +98,4 @@ function xmldb_local_report_user_logins_upgrade($oldversion) {
     }
 
     return $result;
-
 }
