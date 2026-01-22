@@ -15,24 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report emails
+ *
  * @package   local_report_emails
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['report_emails:view'] = 'View the IOMAD email report';
-$string['report_emails:resend'] = 'Resend IOMAD emails';
-$string['pluginname'] = 'Outgoing Email Report';
-$string['privacy:metadata'] = 'The \'Local IOMAD email report\' only shows data stored in other locations.';
-$string['sender'] = 'Sender';
+$string['controls'] = 'Controls';
 $string['created'] = 'Date created';
 $string['due'] = 'Date due';
-$string['sent'] = 'Date sent';
-$string['controls'] = 'Controls';
+$string['pluginname'] = 'Outgoing Email Report';
+$string['privacy:metadata'] = 'The \'Local IOMAD email report\' only shows data stored in other locations.';
+$string['report_emails:resend'] = 'Resend IOMAD emails';
+$string['report_emails:view'] = 'View the IOMAD email report';
 $string['resend'] = 'Resend';
-$string['resendemail'] = 'Resend email';
-$string['resendemailfull'] = 'Are you sure you want to re-process this email?';
 $string['resendall'] = 'Resend all';
 $string['resendallemails'] = 'Resend all emails';
-$string['resendallemailsfull'] = 'Are you sure you want to resend all of the emails in the current selection. This could result in many emails being sent out.'; 
+$string['resendallemailsfull'] = 'Are you sure you want to resend all of the emails in the current selection. This could result in many emails being sent out.';
+$string['resendemail'] = 'Resend email';
+$string['resendemailfull'] = 'Are you sure you want to re-process this email?';
+$string['sender'] = 'Sender';
+$string['sent'] = 'Date sent';

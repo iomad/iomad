@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD report emails
  *
  * @package   local_report_emails
  * @copyright 2021 Derick Turner
@@ -28,11 +28,20 @@ namespace local_report_emails\tables;
 use table_sql;
 use moodle_url;
 use local_iomad\iomad;
+use html_writer;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * IOMAD report emails email table class
+ *
+ * @package   local_report_emails
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class emails_table extends table_sql {
 
     /**
@@ -41,15 +50,13 @@ class emails_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        global $params, $companycontext;
+        global $CFG, $companycontext;
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
-        $userurl = '/local/report_users/userdisplay.php';
+        $userurl = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php', ['userid' => $row->id]);
 
         if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', $companycontext)) {
-            return "<a href='".
-                    new moodle_url($userurl, ['userid' => $row->id]).
-                    "'>$name</a>";
+            return html_writer::tag('a', $name, ['href' => $userurl]);
         } else {
             return $name;
         }
@@ -61,7 +68,6 @@ class emails_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_templatename($row) {
-        global $CFG, $DB;
 
         return get_string($row->templatename. '_name', 'local_iomad');
     }
@@ -74,7 +80,7 @@ class emails_table extends table_sql {
     public function col_sender($row) {
         global $CFG, $DB;
 
-        if ($sender = $DB->get_record('user', array('id' => $row->senderid))) {
+        if ($sender = $DB->get_record('user', ['id' => $row->senderid])) {
             return fullname($sender);
         } else {
             return $CFG->supportname;
@@ -124,13 +130,12 @@ class emails_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_coursename($row) {
-        global $CFG, $DB, $companycontext;
+        global $CFG, $companycontext;
 
-        $courseurl  = '/local/report_completion/index.php';
+        $courseurl = new moodle_url($CFG->wwwroot . '/local/report_completion/index.php',
+                                    ['courseid' => $row->courseid]);
         if (!$this->is_downloading() && iomad::has_capability('local/report_completion:view', $companycontext)) {
-            return "<a href='".
-                    new moodle_url($courseurl, array('courseid' => $row->courseid)).
-                    "'>" . format_string($row->coursename, true, 1) . "</a>";
+            return html_writer::tag('a', format_string($row->coursename, true, 1), ['href' => $courseurl]);
         } else {
             return format_string($row->coursename, true, 1);
         }
@@ -145,8 +150,8 @@ class emails_table extends table_sql {
         global $CFG, $output, $companycontext;
 
         if (iomad::has_capability('local/report_emails:resend', $companycontext) && !empty($row->sent)) {
-            $resendlink = new moodle_url('/local/report_emails/index.php',
-                                                array('emailid' => $row->emailid));
+            $resendlink = new moodle_url($CFG->wwwroot . '/local/report_emails/index.php',
+                                         ['emailid' => $row->emailid]);
             return $output->single_button($resendlink, get_string('resend', 'local_report_emails'));
         } else {
             return;
@@ -167,8 +172,8 @@ class emails_table extends table_sql {
                                              WHERE cu.userid = :userid
                                              AND cu.companyid = :companyid
                                              ORDER BY d.name",
-                                             array('userid' => $row->id,
-                                                   'companyid' => $row->companyid));
+                                            ['userid' => $row->id,
+                                             'companyid' => $row->companyid]);
         $returnstr = "";
         $count = count($departments);
         $current = 1;
@@ -176,7 +181,7 @@ class emails_table extends table_sql {
             $returnstr = "<details><summary>" . get_string('show') . "</summary>";
         }
 
-        foreach($departments as $department) {
+        foreach ($departments as $department) {
             $returnstr .= format_string($department->name);
             if ($current < $count) {
                 $returnstr .= ",<br>";
@@ -189,6 +194,5 @@ class emails_table extends table_sql {
         }
 
         return $returnstr;
-
     }
 }

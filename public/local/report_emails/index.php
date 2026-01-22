@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report emails
+ *
  * @package   local_report_emails
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -28,17 +30,17 @@ require_once($CFG->dirroot."/lib/tablelib.php");
 // Params.
 $participant = optional_param('participant', 0, PARAM_INT);
 $download = optional_param('download', 0, PARAM_CLEAN);
-$firstname       = optional_param('firstname', 0, PARAM_CLEAN);
-$lastname      = optional_param('lastname', '', PARAM_CLEAN);
+$firstname = optional_param('firstname', '', PARAM_CLEAN);
+$lastname = optional_param('lastname', '', PARAM_CLEAN);
 $showsuspended = optional_param('showsuspended', 0, PARAM_INT);
-$email  = optional_param('email', 0, PARAM_CLEAN);
-$allemails  = optional_param('allemails', 0, PARAM_CLEAN);
-$sort         = optional_param('sort', 'lastname', PARAM_ALPHA);
-$dir          = optional_param('dir', 'ASC', PARAM_ALPHA);
-$page         = optional_param('page', 0, PARAM_INT);
-$perpage      = optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);        // How many per page.
-$acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
-$search      = optional_param('search', '', PARAM_CLEAN);// Search string.
+$email = optional_param('email', '', PARAM_CLEAN);
+$allemails = optional_param('allemails', 0, PARAM_CLEAN);
+$sort = optional_param('sort', 'lastname', PARAM_ALPHA);
+$dir = optional_param('dir', 'ASC', PARAM_ALPHA);
+$page = optional_param('page', 0, PARAM_INT);
+$perpage = optional_param('perpage', get_config('local_iomad', 'max_list_users'), PARAM_INT);
+$acl = optional_param('acl', '0', PARAM_INT);
+$search = optional_param('search', '', PARAM_CLEAN);
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
 $templateid = optional_param('templateid', 0, PARAM_CLEAN);
 $emailfromraw = optional_param_array('emailfromraw', null, PARAM_INT);
@@ -51,36 +53,18 @@ if (!empty($download)) {
     $perpage = 0;
 }
 
-if ($firstname) {
-    $params['firstname'] = $firstname;
-}
-if ($lastname) {
-    $params['lastname'] = $lastname;
-}
-if ($email) {
-    $params['email'] = $email;
-}
-if ($sort) {
-    $params['sort'] = $sort;
-}
-if ($dir) {
-    $params['dir'] = $dir;
-}
-if ($page) {
-    $params['page'] = $page;
-}
-if ($templateid) {
-    $params['templateid'] = $templateid;
-}
-if ($search) {
-    $params['search'] = $search;
-}
-if ($departmentid) {
-    $params['deptid'] = $departmentid;
-}
-if ($showsuspended) {
-    $params['showsuspended'] = $showsuspended;
-}
+$params = [
+    'firstname' => $firstname,
+    'lastname' => $lastname,
+    'email' => $email,
+    'sort' => $sort,
+    'dir' => $dir,
+    'page' => $page,
+    'templateid' => $templateid,
+    'search' => $search,
+    'deptid' => $departmentid,
+    'showsuspended' => $showsuspended,
+];
 
 if ($emailfromraw) {
     if (is_array($emailfromraw)) {
@@ -121,34 +105,39 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$company = new company($companyid);
+$company = new local_iomad\company($companyid);
 
-iomad::require_capability('local/report_emails:view', $companycontext);
+local_iomad\iomad::require_capability('local/report_emails:view', $companycontext);
 
-$fieldnames= array();
-$allfields = array();
-if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM {user_info_category} uic, {company} c
+$fieldnames = [];
+$allfields = [];
+if ($category = $DB->get_record_sql("SELECT uic.id, uic.name
+                                     FROM {user_info_category} uic, {company} c
                                      WHERE c.id = :companyid
-                                     AND c.profileid=uic.id", array('companyid' => $companyid))) {
+                                     AND c.profileid=uic.id",
+                                    ['companyid' => $companyid])) {
     // Get field names from company category.
-    if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+    if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
         foreach ($fields as $field) {
             $allfields[$field->id] = $field;
-            $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            $fieldnames[$field->id] = 'profile_field_' . $field->shortname;
+            require_once($CFG->dirroot.'/user/profile/field/' . $field->datatype . '/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
-            ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname, null, PARAM_ALPHANUMEXT);
+            ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname,
+                                                                    null,
+                                                                    PARAM_ALPHANUMEXT);
         }
     }
 }
-if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
-                                                WHERE id NOT IN (
-                                                 SELECT profileid FROM {company})")) {
+if ($categories = $DB->get_records_sql("SELECT id
+                                        FROM {user_info_category}
+                                        WHERE id NOT IN (
+                                            SELECT profileid FROM {company})")) {
     foreach ($categories as $category) {
-        if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id))) {
+        if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
                 $allfields[$field->id] = $field;
                 $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
@@ -163,20 +152,25 @@ if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
 }
 
 // Deal with the user optional profile search.
-$idlist = array();
+$idlist = [];
 if (!empty($fieldnames)) {
-    $fieldids = array();
+    $fieldids = [];
     foreach ($fieldnames as $id => $fieldname) {
         if (!empty($allfields[$id]->datatype) && $allfields[$id]->datatype == "menu") {
             $paramarray = explode("\n", $allfields[$id]->param1);
             if (!empty($paramarray[${$fieldname}])) {
                 ${$fieldname} = $paramarray[${$fieldname}];
+            } else {
+                ${$fieldname};
             }
         }
         if (!empty(${$fieldname}) && ${$fieldname} != -1) {
             $idlist[0] = "We found no one";
-            $fieldsql = $DB->sql_compare_text('data')." LIKE '%".${$fieldname}."%' AND fieldid = $id";
-            if ($idfields = $DB->get_records_sql("SELECT userid from {user_info_data} WHERE $fieldsql")) {
+            $fieldsql = $DB->sql_like($DB->sql_compare_text('data'), ':fieldname') .
+                        " AND fieldid = :fieldid";
+            $fieldparams = ['fieldname' => '%' . ${$fieldname} . '%',
+                            'fieldid' => $id];
+            if ($idfields = $DB->get_records_select('user_info_data', $fieldsql, $fieldsqlparams, '', 'userid')) {
                 $fieldids[] = $idfields;
             }
         }
@@ -218,27 +212,32 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Javascript for fancy select.
-// Parameter is name of proper select form element followed by 1=submit its form
-$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select', 'init', array('deptid', 1, optional_param('deptid', 0, PARAM_INT)));
+// Parameter is name of proper select form element followed by 1=submit its form.
+$PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
+                             'init',
+                             ['deptid',
+                              1,
+                              optional_param('deptid', 0, PARAM_INT)]);
 
 // Work out department level.
-$company = new company($companyid);
-$parentlevel = company::get_company_parentnode($company->id);
+$company = new local_iomad\company($companyid);
+$parentlevel = local_iomad\company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
-// all companies?
+// All companies?
+$companysql = "";
+$parentparams = [];
 if ($parentslist = $company->get_parent_companies_recursive()) {
+    [$parentsql, $parentparams] = $DB->get_in_or_equal(array_keys($parentslist), SQL_PARAMS_NAMED, 'pcompid');
     $companysql = " AND u.id NOT IN (
                     SELECT userid FROM {company_users}
                     WHERE managertype = 1
-                    AND companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-} else {
-    $companysql = "";
+                    AND companyid {$parentsql} )";
 }
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
-    $userlevels = array($parentlevel->id => $parentlevel->id);
+if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+    $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
 }
@@ -249,47 +248,49 @@ if ($departmentid == 0 ) {
 }
 
 // Get the company additional optional user parameter names.
-$foundobj = iomad::add_user_filter_params($params, $companyid);
+$foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
 $baseurl = new moodle_url('/local/report_emails/index.php', $params);
 
 // Deal with resend check.
-if ($emailid and confirm_sesskey()) {
+if ($emailid && confirm_sesskey()) {
 
-    // resend email, after confirmation.
+    // Resend email, after confirmation.
     $email = $DB->get_record('email', ['id' => $emailid], '*', MUST_EXIST);
     if ($confirm != md5($emailid)) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('resendemail', 'local_report_emails'));
-        $optionsyes = array('emailid' => $emailid,
+        $optionsyes = ['emailid' => $emailid,
                             'confirm' => md5($emailid),
-                            'sesskey' => sesskey());
+                            'sesskey' => sesskey()];
 
         echo $OUTPUT->confirm(get_string('resendemailfull', 'local_report_emails'),
-                              new moodle_url('/local/report_emails/index.php', $optionsyes), '/local/report_emails/index.php');
+                              new moodle_url($CFG->wwwroot . '/local/report_emails/index.php',
+                                             $optionsyes),
+                              new moodle_url($CFG->wwwroot . '/local/report_emails/index.php'));
         echo $OUTPUT->footer();
         die;
     } else {
-        $DB->set_field('email', 'sent', null, array('id' => $emailid));
+        $DB->set_field('email', 'sent', null, ['id' => $emailid]);
         redirect($baseurl);
         die;
     }
 }
 
 // Do we have any additional reporting fields?
-$extrafields = array();
+$extrafields = [];
 if (!empty(get_config('local_iomad', 'report_fields'))) {
-    $companyrec = $DB->get_record('company', array('id' => $companyid));
+    $companyrec = $DB->get_record('company', ['id' => $companyid]);
     foreach (explode(',', get_config('local_iomad', 'report_fields')) as $extrafield) {
-        $extrafields[$extrafield] = new stdclass();
+        $extrafields[$extrafield] = (object) [];
         $extrafields[$extrafield]->name = $extrafield;
         if (strpos($extrafield, 'profile_field') !== false) {
             // Its an optional profile field.
-            $profilefield = $DB->get_record('user_info_field', array('shortname' => str_replace('profile_field_', '', $extrafield)));
+            $profilefield = $DB->get_record('user_info_field', ['shortname' => str_replace('profile_field_', '', $extrafield)]);
             if ($profilefield->categoryid == $companyrec->profileid ||
-                !$DB->get_record('company', array('profileid' => $profilefield->categoryid))) {
+                !$DB->get_record('company', ['profileid' => $profilefield->categoryid])) {
                 $extrafields[$extrafield]->title = $profilefield->name;
                 $extrafields[$extrafield]->fieldid = $profilefield->id;
             } else {
@@ -302,47 +303,49 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 }
 
 // Get the appropriate list of email templates.
-$templateslist = array(0 => get_string('all'));
+$templateslist = [0 => get_string('all')];
 $templates = local_iomad\email::get_templates();
-$templatenames = array();
+$templatenames = [];
 foreach (array_keys($templates) as $templatename) {
     $templateslist[] = $templatename;
     $templatenames[$templatename] = get_string($templatename .'_name', 'local_iomad');
 }
 // Make the names nice.
 uasort($templatenames, 'email_template_sort');
-$templatenames = array('0' => get_string('all')) + $templatenames;
+$templatenames = ['0' => get_string('all')] + $templatenames;
 
 $selectparams = $params;
-$selecturl = new moodle_url('/local/report_emails/index.php', $selectparams);
+$selecturl = new moodle_url($CFG->wwwroot . '/local/report_emails/index.php', $selectparams);
 $select = new single_select($selecturl, 'templateid', $templatenames, $templateid);
 $select->label = get_string('templatetype', 'local_iomad');
 $select->formid = 'choosetemplate';
-$templateselectoutput = html_writer::tag('div', $output->render($select), array('id' => 'iomad_template_selector'));
+$templateselectoutput = html_writer::tag('div', $output->render($select), ['id' => 'iomad_template_selector']);
 
-$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Deal with resend check.
-if ($allemails and confirm_sesskey()) {
+if ($allemails && confirm_sesskey()) {
 
-    // resend email, after confirmation.
+    // Resend email, after confirmation.
     if ($confirm != md5($allemails)) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('resendallemails', 'local_report_emails'));
-        $optionsyes = array('allemails' => $allemails,
+        $optionsyes = ['allemails' => $allemails,
                             'confirm' => md5($allemails),
-                            'sesskey' => sesskey()) + $params;
+                            'sesskey' => sesskey()] + $params;
 
         echo $OUTPUT->confirm(get_string('resendallemailsfull', 'local_report_emails'),
-                              new moodle_url('/local/report_emails/index.php', $optionsyes), '/local/report_emails/index.php');
+                              new moodle_url($CFG->wwwroot . '/local/report_emails/index.php', $optionsyes),
+                              new moodle_url($CFG->wwwroot . '/local/report_emails/index.php'));
         echo $OUTPUT->footer();
         die;
     } else {
         // Deal with where we are on the department tree.
-        $currentdepartment = company::get_departmentbyid($departmentid);
-        $showdepartments = company::get_subdepartments_list($currentdepartment);
+        $currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+        $showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
         $showdepartments[$departmentid] = $departmentid;
-        $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
+        [$departmentinsql, $departmentparams] = $DB->get_in_or_equal(array_keys($showdepartments), SQL_PARAMS_NAMED, 'departid');
+        $departmentsql = " AND d.id $departmentinsql";
 
         if (!empty($templateid)) {
             $templatesql = " AND templatename = :templatename ";
@@ -360,17 +363,24 @@ if ($allemails and confirm_sesskey()) {
             foreach ($extrafields as $extrafield) {
                 if (!empty($extrafield->fieldid)) {
                     // Its a profile field.
-                    $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid . " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
-                    $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
+                    $fromsql .= " LEFT JOIN {user_info_data} P" .
+                                $extrafield->fieldid .
+                                " ON (u.id = P" .
+                                $extrafield->fieldid .
+                                ".userid AND P" .
+                                $extrafield->fieldid .
+                                ".fieldid = :p" .
+                                $extrafield->fieldid .
+                                "fieldid )";
+                    $sqlparams["p" . $extrafield->fieldid . "fieldid"] = $extrafield->fieldid;
                 }
             }
         }
 
-        //get all of the emails.
-        $allemails = $DB->get_records_sql("SELECT e.id FROM
+        // Get all of the emails.
+        $allemails = $DB->get_records_sql("SELECT DISTINCT e.id FROM
                                            {user} u
-                                           JOIN {email} e
-                                           ON (u.id = e.userid)
+                                           JOIN {email} e ON (u.id = e.userid)
                                            JOIN {company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid)
                                            JOIN {department} d ON (cu.departmentid = d.id)
                                            JOIN {course} c on (e.courseid = c.id)
@@ -380,9 +390,9 @@ if ($allemails and confirm_sesskey()) {
                                            $templatesql
                                            $departmentsql
                                            $companysql",
-                                           $sqlparams);
+                                           $sqlparams + $parentparams + $departmentparams);
         foreach ($allemails as $email) {
-            $DB->set_field('email', 'sent', null, array('id' => $email->id));
+            $DB->set_field('email', 'sent', null, ['id' => $email->id]);
         }
 
         redirect($baseurl);
@@ -394,8 +404,10 @@ if ($allemails and confirm_sesskey()) {
 $customdata = null;
 
 // Set up the table.
-$table = new \local_report_emails\tables\emails_table('user_report_logins');
-$table->is_downloading($download, format_string($company->get('name')) . ' ' . get_string('pluginname', 'local_report_emails'), 'user_report_logins123');
+$table = new local_report_emails\tables\emails_table('user_report_logins');
+$table->is_downloading($download,
+                       format_string($company->get('name')) . ' ' . get_string('pluginname', 'local_report_emails'),
+                       'email_report_123');
 
 if (!$table->is_downloading()) {
     echo $output->header();
@@ -404,15 +416,15 @@ if (!$table->is_downloading()) {
         if (empty($table->is_downloading())) {
             echo $output->display_tree_selector($company, $parentlevel, $baseurl, $params, $departmentid);
 
-            echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-            echo html_writer::start_tag('div', array('class' => 'controlitems'));
+            echo html_writer::start_tag('div', ['class' => 'iomadclear']);
+            echo html_writer::start_tag('div', ['class' => 'controlitems']);
             echo $templateselectoutput;
             echo html_writer::end_tag('div');
 
-            if (iomad::has_capability('local/report_emails:resend', $companycontext)) {
+            if (local_iomad\iomad::has_capability('local/report_emails:resend', $companycontext)) {
                 $params['allemails'] = 'allemails';
                 $resendlink = new moodle_url('/local/report_emails/index.php', $params);
-                echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
+                echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
                 echo $output->single_button($resendlink, get_string('resendall', 'local_report_emails'));
                 echo html_writer::end_tag('div');
             }
@@ -426,8 +438,8 @@ if (!$table->is_downloading()) {
             $options['adddodownload'] = false;
             $options['emailfromraw'] = $emailfrom;
             $options['emailtoraw'] = $emailto;
-            $mform = new \local_iomad\forms\user_search_form(null, $options);
-            $mform->set_data(array('departmentid' => $departmentid));
+            $mform = new local_iomad\forms\user_search_form(null, $options);
+            $mform->set_data($params);
             $mform->set_data($options);
             $mform->get_data();
 
@@ -435,16 +447,17 @@ if (!$table->is_downloading()) {
             echo html_writer::start_tag('div', ['class' => 'iomadusersearchform']);
             $mform->display();
             echo html_writer::end_tag('div');
-            echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+            echo html_writer::start_tag('div', ['class' => 'iomadclear']);
         }
     }
 }
 
 // Deal with where we are on the department tree.
-$currentdepartment = company::get_departmentbyid($departmentid);
-$showdepartments = company::get_subdepartments_list($currentdepartment);
+$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
+$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
-$departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
+[$departmentinsql, $departmentparams] = $DB->get_in_or_equal(array_keys($showdepartments), SQL_PARAMS_NAMED, 'deptids');
+$departmentsql = " AND d.id {$departmentinsql}";
 
 if (!empty($templateid)) {
     $templatesql = " AND templatename = :templatename ";
@@ -454,31 +467,43 @@ if (!empty($templateid)) {
 }
 
 // Set up the initial SQL for the form.
-$selectsql = " DISTINCT e.id AS emailid, u.*,cu.companyid,u.email,e.templatename, e.modifiedtime AS created, e.sent, c.id AS courseid, c.fullname AS coursename, e.senderid, e.due, e.subject";
+$selectsql = " DISTINCT e.id AS emailid,
+               u.*,
+               cu.companyid,
+               u.email,
+               e.templatename,
+               e.modifiedtime AS created,
+               e.sent,
+               c.id AS courseid,
+               c.fullname AS coursename,
+               e.senderid,
+               e.due,
+               e.subject";
 
-$fromsql = "{user} u JOIN {email} e ON (u.id = e.userid) JOIN {company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid) JOIN {department} d ON (cu.departmentid = d.id) JOIN {course} c on (e.courseid = c.id)";
+$fromsql = "{user} u
+            JOIN {email} e ON (u.id = e.userid)
+            JOIN {company_users} cu ON (u.id = cu.userid AND e.userid = cu.userid)
+            JOIN {department} d ON (cu.departmentid = d.id)
+            JOIN {course} c on (e.courseid = c.id)";
 $wheresql = $searchinfo->sqlsearch . " AND cu.companyid = :companyid $templatesql $departmentsql $companysql";
 $countsql = "SELECT COUNT(DISTINCT e.id) FROM $fromsql WHERE $wheresql";
-$sqlparams = array('companyid' => $companyid) + $searchinfo->searchparams;
+$sqlparams = ['companyid' => $companyid] + $searchinfo->searchparams + $departmentparams + $parentparams;
 
 // Set up the headers for the form.
-$headers = array(get_string('fullname'),
-                 get_string('department', 'block_iomad_company_admin'),
-                 get_string('email'));
+$headers = [get_string('fullname'),
+            get_string('department', 'block_iomad_company_admin'),
+            get_string('email')];
 
-$columns = array('fullname',
-                 'department',
-                 'email');
+$columns = ['fullname',
+            'department',
+            'email'];
 
 // Deal with optional report fields.
 if (!empty($extrafields)) {
     foreach ($extrafields as $extrafield) {
         $headers[] = $extrafield->title;
         $columns[] = $extrafield->name;
-        if (!empty($extrafield->fieldid)) {
-            // Its a profile field.
-            // Skip it this time as these may not have data.
-        } else {
+        if (empty($extrafield->fieldid)) {
             $selectsql .= ", u." . $extrafield->name;
         }
     }
@@ -486,7 +511,15 @@ if (!empty($extrafields)) {
         if (!empty($extrafield->fieldid)) {
             // Its a profile field.
             $selectsql .= ", P" . $extrafield->fieldid . ".data AS " . $extrafield->name;
-            $fromsql .= " LEFT JOIN {user_info_data} P" . $extrafield->fieldid . " ON (u.id = P" . $extrafield->fieldid . ".userid AND P".$extrafield->fieldid . ".fieldid = :p" . $extrafield->fieldid . "fieldid )";
+            $fromsql .= " LEFT JOIN {user_info_data} P" .
+                        $extrafield->fieldid .
+                        " ON (u.id = P" .
+                        $extrafield->fieldid .
+                        ".userid AND P" .
+                        $extrafield->fieldid .
+                        ".fieldid = :p" .
+                        $extrafield->fieldid .
+                        "fieldid )";
             $sqlparams["p".$extrafield->fieldid."fieldid"] = $extrafield->fieldid;
         }
     }
@@ -511,7 +544,7 @@ $columns[] = 'due';
 $columns[] = 'sent';
 $columns[] = 'controls';
 
-// Remove page parameter from $baseurl
+// Remove page parameter from $baseurl.
 $baseurl->remove_params(['page']);
 
 $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
@@ -529,8 +562,16 @@ if (!$table->is_downloading()) {
     echo $output->footer();
 }
 
-function email_template_sort($a,$b)
-{
-    if ($a==$b) return 0;
-    return ($a<$b)?-1:1;
+/**
+ * Email template sort function.
+ *
+ * @param int $a
+ * @param int $b
+ * @return void
+ */
+function email_template_sort($a, $b) {
+    if ($a == $b) {
+        return 0;
+    }
+    return ($a < $b) ? -1 : 1;
 }
