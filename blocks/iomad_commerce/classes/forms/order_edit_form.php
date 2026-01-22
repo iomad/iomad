@@ -15,39 +15,57 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Script to let a user create a course for a particular company.
- */
 
 namespace block_iomad_commerce\forms;
 
-use \moodleform;
-use \context_system;
-use \block_iomad_commerce\helper;
+use moodleform;
+use block_iomad_commerce\helper;
 
+/**
+ * Block IOMAD eCommerce order edit form
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class order_edit_form extends moodleform {
-    protected $invoiceid = 0;
-    protected $showaccount = false;
-    protected $context = null;
 
+    /** @var invoiceid invoice ID int */
+    protected $invoiceid = 0;
+
+    /** @var showaccount do we show the payment account - bool */
+    protected $showaccount = false;
+
+    /**
+     * Constructor function
+     *
+     * @param moodle_url] $actionurl
+     * @param int $invoiceid
+     * @param boolean $showaccount
+     */
     public function __construct($actionurl, $invoiceid, $showaccount = false) {
-        global $CFG;
 
         $this->invoiceid = $invoiceid;
-        $this->context = context_system::instance();
         $this->showaccount = $showaccount;
 
         parent::__construct($actionurl);
     }
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG;
 
         $mform =& $this->_form;
 
@@ -60,10 +78,18 @@ class order_edit_form extends moodleform {
 
         $mform->addElement('static', 'reference', get_string('reference', 'block_iomad_commerce'));
 
+        // Set some defaults.
         $choices = [];
-        foreach ([\block_iomad_commerce\helper::INVOICESTATUS_UNPAID, \block_iomad_commerce\helper::INVOICESTATUS_PAID] as $status) {
+        $statuses = [
+            helper::INVOICESTATUS_UNPAID,
+            helper::INVOICESTATUS_PAID,
+            ];
+
+        // Set up the choice options for the select.
+        foreach ($statuses as $status) {
             $choices[$status] = get_string('status_' . $status, 'block_iomad_commerce');
         }
+
         $mform->addElement('select', 'status', get_string('status'), $choices);
         $mform->addRule('status', $strrequired, 'required', null, 'client');
         $mform->disabledIf('status', 'id', 'ne', 0);
@@ -85,7 +111,7 @@ class order_edit_form extends moodleform {
         $mform->addElement('header', 'header', get_string('basket', 'block_iomad_commerce'));
 
         $mform->addElement('html', '<p>' . get_string('process_help', 'block_iomad_commerce') . '</p>');
-        $mform->addElement('html', \block_iomad_commerce\helper::get_invoice_html($this->invoiceid, 0, 0, 0));
+        $mform->addElement('html', helper::get_invoice_html($this->invoiceid, 0, 0, 0));
 
         $mform->addElement('header', 'header', get_string('paymentprocessing', 'block_iomad_commerce'));
 
