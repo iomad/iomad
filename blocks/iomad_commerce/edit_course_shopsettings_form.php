@@ -15,14 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
-/**
- * Script to let a user create a course for a particular company.
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
@@ -30,7 +28,7 @@ require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 require_once(dirname(__FILE__) . '/../../course/lib.php');
 
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
 $returnurl      = optional_param('returnurl', '', PARAM_LOCALURL);
 $shopsettingsid = optional_param('shopsettingsid', 0, PARAM_INTEGER);
@@ -41,7 +39,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
@@ -90,7 +88,7 @@ if (!$new) {
     $shopsettings->short_summary_editor = ['text' => $shopsettings->short_description];
     $shopsettings->summary_editor = ['text' => $shopsettings->long_description];
     $shopsettings->default = $default;
-     $shopsettings->currency =  $shopsettings->single_purchase_currency;
+     $shopsettings->currency = $shopsettings->single_purchase_currency;
 
     iomad::require_capability('block/iomad_commerce:edit_course', $companycontext);
 } else {
@@ -126,6 +124,7 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title($linktext);
 $PAGE->set_heading(get_string($title, 'block_iomad_commerce'));
+$PAGE->requires->js('/blocks/iomad_commerce/module.js');
 
 /* next line copied from /course/edit.php */
 $editoroptions = ['maxfiles' => EDITOR_UNLIMITED_FILES,
@@ -133,7 +132,14 @@ $editoroptions = ['maxfiles' => EDITOR_UNLIMITED_FILES,
                   'trusttext' => false,
                   'noclean' => true];
 
-$mform = new block_iomad_commerce\forms\product_edit_form(new moodle_url('/blocks/iomad_commerce/edit_course_shopsettings_form.php'), $isadding, $shopsettingsid, $companycourses, $priceblocks, $editoroptions);
+$mform = new block_iomad_commerce\forms\product_edit_form(
+    new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/edit_course_shopsettings_form.php'),
+    $isadding,
+    $shopsettingsid,
+    $companycourses,
+    $priceblocks,
+    $editoroptions,
+);
 $mform->set_data($shopsettings);
 
 if ($mform->is_cancelled()) {
@@ -183,8 +189,9 @@ if ($mform->is_cancelled()) {
     $newcourseshoptagrecord = new stdClass();
     $newcourseshoptagrecord->itemid = $data->id;
     foreach ($tags as $tag) {
-        // Check if the tag exists for the company and if it doesn't then create a new record for the tag for the current company
-        if ($tag == ''){
+        // Check if the tag exists for the company and if it doesn't then
+        // create a new record for the tag for the current company.
+        if ($tag == '') {
             $st = $DB->get_record('shoptag', ['tag' => $tag]);
         } else if (!$st = $DB->get_record('shoptag', ['tag' => $tag, 'companyid' => $companyid])) {
             $st = new stdClass();
@@ -193,14 +200,19 @@ if ($mform->is_cancelled()) {
             $st->id = $DB->insert_record('shoptag', $st, true);
         }
 
-        // Create a new record in course_shoptag for the tag being used for the shop item
-        $newcourseshoptagrecord->shoptagid = $st->id;
-        $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
+        if (!isset($st)) {
+            // Create a new record in course_shoptag for the tag being used for the shop item.
+            $newcourseshoptagrecord->shoptagid = $st->id;
+            $DB->insert_record('course_shoptag', $newcourseshoptagrecord);
+        }
     }
 
     $transaction->allow_commit();
 
-    redirect($companylist, get_string('itemaddedsuccessfully', 'block_iomad_commerce'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($companylist,
+             get_string('itemaddedsuccessfully', 'block_iomad_commerce'),
+             null,
+             core\output\notification::NOTIFY_SUCCESS);
 
 } else {
 

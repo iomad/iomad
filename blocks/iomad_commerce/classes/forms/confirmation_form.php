@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,23 +25,42 @@
 
 namespace block_iomad_commerce\forms;
 
-use \moodleform;
-use \context_system;
+use moodleform;
 
+/**
+ * Block IOMAD eCommerce
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class confirmation_form extends moodleform {
-    protected $basket = null;
-    protected $paymentprovider = null;
 
-    function __construct($actionurl, $basket, $paymentprovider) {
-        global $CFG;
+    /** @var paymentprovider payment provider object. */
+    protected $paymentprovider;
 
-        $this->basket = $basket;
+    /**
+     * Constructor function
+     *
+     * @param moodle_url $actionurl
+     * @param object $basket
+     * @param object $paymentprovider
+     */
+    public function __construct($actionurl, $basket, $paymentprovider) {
+
+        // Set the payment provider.
         $this->paymentprovider = $paymentprovider;
+
         parent::__construct($actionurl);
     }
 
-    function definition() {
-        global $CFG;
+    /**
+     * Form definition
+     *
+     * @return void
+     */
+    public function definition() {
 
         $mform =& $this->_form;
 
