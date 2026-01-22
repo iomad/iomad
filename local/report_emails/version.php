@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report emails
+ *
  * @package   local_report_emails
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->release  = '4.3.12 (Build: 20250414)'; // Human-friendly version name
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->release  = '4.3.12 (Build: 20250414)'; // Human-friendly version name.
 $plugin->version  = 2021021500;
 $plugin->requires = 2019052000;
 $plugin->component  = 'local_report_emails';

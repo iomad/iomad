@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report emails
+ *
  * @package   local_report_emails
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -22,27 +24,12 @@
  */
 
 /**
- * As of the implementation of this block and the general navigation code
- * in Moodle 2.0 the body of immediate upgrade work for this block and
- * settings is done in core upgrade {@see lib/db/upgrade.php}
+ * IOMAD report emails upgrade function
  *
- * There were several reasons that they were put there and not here, both becuase
- * the process for the two blocks was very similar and because the upgrade process
- * was complex due to us wanting to remvoe the outmoded blocks that this
- * block was going to replace.
- *
- * @global moodle_database $DB
  * @param int $oldversion
- * @param object $block
+ * @return void
  */
-
-defined('MOODLE_INTERNAL') || die();
-
 function xmldb_local_report_emails_upgrade($oldversion) {
-    global $CFG, $DB;
 
-    $result = true;
-
-    return $result;
-
+    return true;
 }
