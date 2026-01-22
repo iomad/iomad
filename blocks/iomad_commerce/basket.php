@@ -15,19 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce block
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
-
-\block_iomad_commerce\helper::require_commerce_enabled();
+block_iomad_commerce\helper::require_commerce_enabled();
 
 $remove = optional_param('remove', 0, PARAM_INT);
 
-global $DB;
+// May be viewed by the guest account.
+require_course_login($SITE);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -44,16 +47,19 @@ $PAGE->set_title($linktext);
 $PAGE->navbar->add($linktext, $linkurl);
 $PAGE->navbar->add(get_string('basket', 'block_iomad_commerce'));
 
+// Set up some default links.
+$checkouturl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/checkout.php');
+$shopurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/shop.php');
+
 echo $OUTPUT->header();
 
-flush();
-
+// Process any actions.
 if (!empty($SESSION->basketid)) {
     if ($remove) {
         // Before deleting
         // check that the record to be removed is on the current user's basket
         // (and not on an invoice or on somebody else's basket).
-        if ($DB->record_exists_sql('SELECT ii.id
+        if ($DB->record_exists_sql("SELECT ii.id
                                       FROM {invoiceitem} ii
                                      WHERE ii.id = :toberemoved
                                        AND
@@ -62,31 +68,48 @@ if (!empty($SESSION->basketid)) {
                                              WHERE i.id = :basketid
                                              AND i.status = :status
                                              AND i.id = ii.invoiceid
-                                             )', array('basketid' => $SESSION->basketid, 'status' => \block_iomad_commerce\helper::INVOICESTATUS_BASKET, 'toberemoved' => $remove))) {
-            $DB->delete_records('invoiceitem', array('id' => $remove));
+                                             )",
+                                    ['basketid' => $SESSION->basketid,
+                                    'status' => block_iomad_commerce\helper::INVOICESTATUS_BASKET,
+                                    'toberemoved' => $remove])) {
+
+            // The remove it.
+            $DB->delete_records('invoiceitem', ['id' => $remove]);
         }
     }
 
-    $baskethtml = \block_iomad_commerce\helper::get_basket_html(1);
+    // Get the basket html code.
+    $baskethtml = block_iomad_commerce\helper::get_basket_html(1);
 
+    // If there is any, then display it.
     if ($baskethtml) {
         echo $baskethtml;
+        echo html_writer::start_tag('p');
 
-        echo "<p>";
-        if (!\block_iomad_commerce\helper::check_multiple_currencies($SESSION->basketid)) {
-            echo '<a href="' . new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/checkout.php') . '" class="btn btn-primary">' . get_string('checkout', 'block_iomad_commerce') .
-                 '</a> ' . get_string('or', 'block_iomad_commerce');
+        // Check if we have items using multiple currencies.
+        if (!block_iomad_commerce\helper::check_multiple_currencies($SESSION->basketid)) {
+            // If not display the checkout button.
+            echo html_writer::tag('a', get_string('checkout', 'block_iomad_commerce'), ['href' => $checkouturl,
+                                                                                        'class' => 'btn btn-primary']);
+            echo "&nbsp" . get_string('or', 'block_iomad_commerce');
         }
-        echo ' <a href="' . new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/shop.php') . '" class="btn btn-secondary">' . get_string('returntoshop', 'block_iomad_commerce') .
-             '</a></p> ';
-
     } else {
-        echo '<p>' . get_string('emptybasket', 'block_iomad_commerce') . '</p>';
-        echo '<p><a href="' . new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/shop.php') . '" class="btn btn-secondary">' . get_string('returntoshop', 'block_iomad_commerce') .
-              '</a></p> ';
+        echo html_writer::tag('p', get_string('emptybasket', 'block_iomad_commerce'));
     }
+
+    // Display the return to shop button.
+    echo html_writer::tag('a', get_string('returntoshop', 'block_iomad_commerce'), ['class' => 'btn btn-secondary',
+                                                                                    'href' => $shopurl]);
+    echo html_writer::end_tag('p');
 } else {
-    echo '<p>' . get_string('emptybasket', 'block_iomad_commerce') . '</p>';
+    // Display the default text.
+    echo html_writer::tag('p', get_string('emptybasket', 'block_iomad_commerce'));
+
+    // Display the return to shop button.
+    echo html_writer::start_tag('p');
+    echo html_writer::tag('a', get_string('returntoshop', 'block_iomad_commerce'), ['class' => 'btn btn-secondary',
+                                                                                    'href' => $shopurl]);
+    echo html_writer::end_tag('p');
 }
 
 echo $OUTPUT->footer();

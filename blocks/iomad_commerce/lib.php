@@ -15,13 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 
 /**
  * Callback for inplace editable API.
@@ -32,11 +32,12 @@ require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
  * @return \core\output\inplace_editable
  */
 function block_iomad_commerce_inplace_editable($itemtype, $itemid, $newvalue) {
-    // Check if the item type has a corresponding editable and if so then return the update method for that editable and pass the $itemid and $newvalue variables
+    // Check if the item type has a corresponding editable and if so then return the
+    // update method for that editable and pass the $itemid and $newvalue variables.
     if ($itemtype === 'course_shoptag') {
-        return \block_iomad_commerce\output\course_shoptag_editable::update($itemid, $newvalue);
+        return block_iomad_commerce\output\course_shoptag_editable::update($itemid, $newvalue);
     }
     if ($itemtype === 'tag_name') {
-        return \block_iomad_commerce\output\tag_name_editable::update($itemid, $newvalue);
+        return block_iomad_commerce\output\tag_name_editable::update($itemid, $newvalue);
     }
 }
