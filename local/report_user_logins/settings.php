@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report user logins
+ *
  * @package   local_report_user_logins
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
