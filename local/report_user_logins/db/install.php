@@ -15,16 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report user logins
+ *
  * @package   local_report_user_logins
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * IOMAD report user logins installation function
+ *
+ * @return void
+ */
 function xmldb_local_report_user_logins_install() {
-    global $CFG, $DB;
+    global $DB;
 
     // Only do this if the logstore table exists.
     $dbman = $DB->get_manager();
@@ -32,24 +37,34 @@ function xmldb_local_report_user_logins_install() {
         return true;
     }
 
-    upgrade_set_timeout(7200); // Set installation time to 2 hours as this takes a long time.
+    // Set installation time to 2 hours as this takes a long time.
+    upgrade_set_timeout(7200);
 
     // Populate the report table from any previous users.
-    $users = $DB->get_records('user', array('deleted' => 0));
+    $users = $DB->get_records('user', ['deleted' => 0]);
     $total = count($users);
     mtrace("Dealing with $total users");
     $count = 0;
     $warn = 10;
 
-    $DB->execute("INSERT INTO {local_report_user_logins} (userid, created, firstlogin, lastlogin, logincount, modifiedtime) 
-                  SELECT id as userid,
-                         timecreated,
-                         NULLIF(firstaccess,0) AS firstaccess,
-                         NULLIF(currentlogin,0) AS currentlogin,
-                         CASE WHEN currentlogin = 0 THEN 0 ELSE (SELECT COUNT(id) FROM {logstore_standard_log} l WHERE u.id = l.userid AND eventname = :eventname) END AS totallogins,
-                         " . time() . " as modifiedtime
-                         FROM {user} u",
-                  array('eventname' => '\core\event\user_loggedin'));
+    $DB->execute("INSERT INTO {local_report_user_logins} (userid, created, firstlogin, lastlogin, logincount, modifiedtime)
+                  SELECT id AS userid,
+                  timecreated,
+                  NULLIF(firstaccess,0) AS firstaccess,
+                  NULLIF(currentlogin,0) AS currentlogin,
+                  CASE
+                      WHEN currentlogin = 0
+                      THEN 0
+                      ELSE (
+                          SELECT COUNT(id)
+                          FROM {logstore_standard_log} l
+                          WHERE u.id = l.userid
+                          AND eventname = :eventname)
+                  END AS totallogins,
+                  :modifiedtime as modifiedtime
+                  FROM {user} u",
+                 ['eventname' => '\core\event\user_loggedin',
+                  'modifiedtime' => time()]);
 
     // Deal with any that may have been missed.
     if ($missedusers = $DB->get_records_sql("SELECT u.* FROM {user} u
@@ -58,8 +73,8 @@ function xmldb_local_report_user_logins_install() {
                                              AND u.currentlogin != 0")) {
         foreach ($missedusers as $missed) {
             // Not in the logs to we are going to set it to 1 as it's the only evidence we have.
-            $DB->set_field('local_report_user_logins', 'logincount', 1, array('userid' => $missed->id));
-            $DB->set_field('local_report_user_logins', 'lastlogin', $missed->currentlogin, array('userid' => $missed->id));
+            $DB->set_field('local_report_user_logins', 'logincount', 1, ['userid' => $missed->id]);
+            $DB->set_field('local_report_user_logins', 'lastlogin', $missed->currentlogin, ['userid' => $missed->id]);
             echo ".";
         }
     }
