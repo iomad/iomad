@@ -15,30 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report user logins
+ *
  * @package   local_report_user_logins
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$observers = array(
+defined('MOODLE_INTERNAL') || die();
 
-    array(
+$observers = [
+
+    [
         'eventname' => 'core\event\user_loggedin',
         'callback' => '\local_report_user_logins\observer::user_loggedin',
         'internal' => false,
-    ),
+    ],
 
-    array(
+    [
         'eventname' => 'core\event\user_created',
         'callback' => '\local_report_user_logins\observer::user_created',
         'internal' => false,
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-);
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+];

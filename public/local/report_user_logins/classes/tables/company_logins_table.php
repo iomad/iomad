@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD report user logins
  *
  * @package   local_report_user_logins
  * @copyright 2012 Derick Turner
@@ -25,17 +25,23 @@
 
 namespace local_report_user_logins\tables;
 
-use \table_sql;
-use \iomad;
-use \context_system;
-use \moodle_url;
-use \company;
-use \html_writer;   
+use table_sql;
+use moodle_url;
+use local_iomad\company;
+use html_writer;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * IOMAD report user logins company table
+ *
+ * @package   local_report_user_logins
+ * @copyright 2012 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class company_logins_table extends table_sql {
 
     /**
@@ -44,7 +50,7 @@ class company_logins_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_name($row) {
-        global $CFG, $params;
+        global $params;
 
         $parentlevel = company::get_company_parentnode($row->id);
         $params['deptid'] = $parentlevel->id;
@@ -59,7 +65,7 @@ class company_logins_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_total($row) {
-        global $CFG, $DB;
+        global $DB;
 
         $totalusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
                                             JOIN {company_users} cu ON (u.id = cu.userid)
@@ -76,17 +82,20 @@ class company_logins_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_real($row) {
-        global $CFG, $DB;
+        global $DB;
 
-        $realusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
-                                           JOIN {company_users} cu ON (u.id = cu.userid)
-                                           JOIN {local_report_user_logins} lrul ON (u.id = lrul.userid AND cu.userid = lrul.userid)
-                                           WHERE u.deleted = 0
-                                           AND u.confirmed = 1
-                                           AND lrul.logincount > 0
-                                           and cu.companyid = :companyid",
-                                           ['companyid' => $row->id]);
-         
+        $realusers = $DB->get_record_sql("SELECT count(u.id) AS number
+                                          FROM {user} u
+                                          JOIN {company_users} cu ON (u.id = cu.userid)
+                                          JOIN {local_report_user_logins} lrul ON (
+                                              u.id = lrul.userid
+                                              AND cu.userid = lrul.userid)
+                                          WHERE u.deleted = 0
+                                          AND u.confirmed = 1
+                                          AND lrul.logincount > 0
+                                          AND cu.companyid = :companyid",
+                                         ['companyid' => $row->id]);
+
         return $realusers->number;
     }
 
@@ -96,24 +105,26 @@ class company_logins_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_percentage($row) {
-        global $CFG, $DB;
+        global $DB;
 
         $totalusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
-                                            JOIN {company_users} cu ON (u.id = cu.userid)
-                                            WHERE u.deleted = 0
-                                            AND u.confirmed = 1
-                                            and cu.companyid = :companyid",
-                                            ['companyid' => $row->id]);
-         
-        $realusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
                                            JOIN {company_users} cu ON (u.id = cu.userid)
-                                           JOIN {local_report_user_logins} lrul ON (u.id = lrul.userid AND cu.userid = lrul.userid)
                                            WHERE u.deleted = 0
                                            AND u.confirmed = 1
-                                           AND lrul.logincount > 0
-                                           and cu.companyid = :companyid",
-                                           ['companyid' => $row->id]);
-        if (!empty($totalusers->number)) {        
+                                           AND cu.companyid = :companyid",
+                                          ['companyid' => $row->id]);
+
+        $realusers = $DB->get_record_sql("SELECT count(u.id) AS number FROM {user} u
+                                          JOIN {company_users} cu ON (u.id = cu.userid)
+                                          JOIN {local_report_user_logins} lrul ON (
+                                              u.id = lrul.userid
+                                              AND cu.userid = lrul.userid)
+                                          WHERE u.deleted = 0
+                                          AND u.confirmed = 1
+                                          AND lrul.logincount > 0
+                                          AND cu.companyid = :companyid",
+                                         ['companyid' => $row->id]);
+        if (!empty($totalusers->number)) {
             return get_string('percents', 'moodle', number_format(($realusers->number / $totalusers->number) * 100, 2));
         } else {
             return 0;

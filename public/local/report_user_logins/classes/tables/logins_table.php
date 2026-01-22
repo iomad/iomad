@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD report user logins
  *
  * @package   local_report_user_logins
  * @copyright 2012 Derick Turner
@@ -25,15 +25,23 @@
 
 namespace local_report_user_logins\tables;
 
-use \table_sql;
-use \iomad;
-use \context_system;
-use \moodle_url;
+use table_sql;
+use local_iomad\iomad;
+use moodle_url;
+use html_writer;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * IOMAD report user logins users table
+ *
+ * @package   local_report_user_logins
+ * @copyright 2012 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class logins_table extends table_sql {
 
     /**
@@ -42,15 +50,14 @@ class logins_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        global $params, $companycontext;
+        global $CFG, $companycontext;
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
-        $userurl = '/local/report_users/userdisplay.php';
+        $userurl = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
+                                  ['userid' => $row->id]);
 
         if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', $companycontext)) {
-            return "<a href='".
-                    new moodle_url($userurl, ['userid' => $row->id]).
-                    "'>$name</a>";
+            return html_writer::tag('a', $name, ['href' => $userurl]);
         } else {
             return $name;
         }
@@ -111,8 +118,8 @@ class logins_table extends table_sql {
                                              WHERE cu.userid = :userid
                                              AND cu.companyid = :companyid
                                              ORDER BY d.name",
-                                             array('userid' => $row->id,
-                                                   'companyid' => $row->companyid));
+                                            ['userid' => $row->id,
+                                             'companyid' => $row->companyid]);
         $returnstr = "";
         $count = count($departments);
         $current = 1;
@@ -120,7 +127,7 @@ class logins_table extends table_sql {
             $returnstr = "<details><summary>" . get_string('show') . "</summary>";
         }
 
-        foreach($departments as $department) {
+        foreach ($departments as $department) {
             $returnstr .= format_string($department->name);
             if ($current < $count) {
                 $returnstr .= ",<br>";
@@ -146,7 +153,7 @@ class logins_table extends table_sql {
         $companies = $DB->get_records_sql("SELECT DISTINCT c.name FROM {company} c
                                            JOIN {company_users} cu ON (c.id = cu.companyid)
                                            WHERE cu.userid = :userid",
-                                           ['userid' => $row->id]);
+                                          ['userid' => $row->id]);
         $returnstr = "";
         $count = count($companies);
         $current = 1;
@@ -154,7 +161,7 @@ class logins_table extends table_sql {
             $returnstr = "<details><summary>" . get_string('show') . "</summary>";
         }
 
-        foreach($companies as $company) {
+        foreach ($companies as $company) {
             $returnstr .= format_string($company->name);
             if ($current < $count) {
                 $returnstr .= ",<br>";
