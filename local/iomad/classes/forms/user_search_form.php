@@ -131,6 +131,8 @@ class user_search_form extends moodleform {
         $mform->addElement('hidden', 'licenseid');
         $mform->addElement('hidden', 'templateid');
         $mform->addElement('hidden', 'sort');
+        $mform->addElement('hidden', 'viewchildren');
+        $mform->addElement('hidden', 'showsummary');
         $mform->setType('firstname', PARAM_CLEAN);
         $mform->setType('lastname', PARAM_CLEAN);
         $mform->setType('email', PARAM_EMAIL);
@@ -141,6 +143,8 @@ class user_search_form extends moodleform {
         $mform->setType('licenseid', PARAM_INT);
         $mform->setType('templateid', PARAM_INT);
         $mform->setType('sort', PARAM_ALPHA);
+        $mform->setType('viewchildren', PARAM_BOOL);
+        $mform->setType('showsummary', PARAM_BOOL);
         $mform->setExpanded('usersearchfields', false);
 
         // Get company category.
