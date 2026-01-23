@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report users
+ *
  * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the Iomad menu items that are defined by this plugin
-
+/**
+ * Define the Iomad menu items that are defined by this plugin
+ *
+ * @return void
+ */
 function local_report_users_menu() {
 
-        return array(
-            'users' => array(
+        return [
+            'users' => [
                 'category' => 'Reports',
                 'tab' => 8,
                 'name' => get_string('pluginname', 'local_report_users'),
@@ -36,6 +41,6 @@ function local_report_users_menu() {
                 'style' => 'report',
                 'icon' => 'fa-users',
                 'iconsmall' => 'fa-bar-chart-o',
-            ),
-        );
+            ],
+        ];
 }
