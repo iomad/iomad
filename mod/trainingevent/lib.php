@@ -322,21 +322,28 @@ function trainingevent_get_extra_capabilities() {
  * @return bool|null True if module supports feature, false if not, null if doesn't know
  */
 function trainingevent_supports($feature) {
-    switch($feature) {
-        case FEATURE_IDNUMBER:                return true;
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_GRADE_HAS_GRADE:         return true;
-        case FEATURE_GRADE_OUTCOMES:          return true;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
-        case FEATURE_NO_VIEW_LINK:            return false;
-        case FEATURE_MOD_PURPOSE:             return MOD_PURPOSE_ASSESSMENT;
-        default: return null;
+    if (!$feature) {
+        return null;
     }
+    $features = [
+        FEATURE_IDNUMBER => true,
+        FEATURE_GROUPS => true,
+        FEATURE_GROUPINGS => true,
+        FEATURE_GROUPMEMBERSONLY => true,
+        FEATURE_MOD_INTRO => true,
+        FEATURE_BACKUP_MOODLE2 => true,
+        FEATURE_COMPLETION_TRACKS_VIEWS => true,
+        FEATURE_COMPLETION_HAS_RULES => true,
+        FEATURE_GRADE_HAS_GRADE => true,
+        FEATURE_GRADE_OUTCOMES => true,
+        FEATURE_SHOW_DESCRIPTION => true,
+        FEATURE_NO_VIEW_LINK => false,
+        FEATURE_MOD_PURPOSE => MOD_PURPOSE_ASSESSMENT,
+    ];
+    if (isset($features[(string) $feature])) {
+        return $features[$feature];
+    }
+    return null;
 }
 
 /***
