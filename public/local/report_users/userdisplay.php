@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report users
+ *
  * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -44,10 +46,11 @@ if (!empty($USER->editing)) {
     $download = 0;
 }
 
-$params = array();
-$params['userid'] = $userid;
-$params['validonly'] = $validonly;
-$params['mandatoryonly'] = $mandatoryonly;
+$params = [
+    'userid' => $userid,
+    'validonly' => $validonly,
+    'mandatoryonly' => $mandatoryonly,
+];
 
 // Deal with edit buttons.
 if ($edit != -1) {
@@ -58,7 +61,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
 $company = new local_iomad\company($companyid);
@@ -75,7 +78,7 @@ if (!local_iomad\iomad::has_capability('local/report_users:redocertificates', $c
     $USER->editing = false;
 }
 
-$userinfo = $DB->get_record('user', array('id' => $userid));
+$userinfo = $DB->get_record('user', ['id' => $userid]);
 
 $linktext = get_string('user_detail_title', 'local_report_users');
 
@@ -93,6 +96,7 @@ $PAGE->requires->jquery();
 $PAGE->set_other_editing_capability('local/report_users:redocertificates');
 $PAGE->set_other_editing_capability('local/report_users:deleteentriesfull');
 $PAGE->set_other_editing_capability('local/report_users:updateentries');
+$PAGE->requires->js_call_amd('local_report_users/handleall', 'init');
 
 // Set the page heading.
 $PAGE->set_heading(get_string('userdetails', 'local_report_users').
@@ -106,7 +110,13 @@ if (local_iomad\iomad::has_capability('local/report_completion:view', $companyco
 }
 if (local_iomad\iomad::has_capability('block/iomad_company_admin:downloadcertificates', $companycontext)) {
     $buttoncaption = get_string('downloadcertificates', 'block_iomad_company_admin');
-    $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php", ['certcourses' => '0', 'certusers' => $userid, 'action' => 'downloadcerts', 'sesskey' => sesskey()]);
+    $buttonlink = new moodle_url(
+        $CFG->wwwroot . '/local/report_completion/index.php',
+        [
+            'certcourses' => '0',
+            'certusers' => $userid,
+            'action' => 'downloadcerts',
+            'sesskey' => sesskey()]);
     $buttons .= $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 }
 // Non boost theme edit buttons.
@@ -125,34 +135,48 @@ if (!empty($data)) {
         if (!empty($confirm) && confirm_sesskey()) {
             local_iomad\iomad::require_capability('local/report_users:redocertificates', $companycontext);
             echo $OUTPUT->header();
-            foreach($data->redo_certificates as $redocertificate) {
-                if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
+            foreach ($data->redo_certificates as $redocertificate) {
+                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $redocertificate])) {
                     echo html_writer::start_tag('p');
                     local_iomad\track::delete_entry($redocertificate);
-                    local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, true, false);
+                    local_iomad\track::record_certificates(
+                        $trackrec->courseid,
+                        $trackrec->userid,
+                        $trackrec->id,
+                        true,
+                        false);
                     echo html_writer::end_tag('p');
                 }
             }
-            echo $OUTPUT->single_button(new moodle_url('/local/report_users/userdisplay.php',
-                                     array('userid' => $userid)), get_string('continue'));
+            echo $OUTPUT->single_button(
+                new moodle_url(
+                    $CFG->wwwroot . '/local/report_users/userdisplay.php',
+                    [
+                        'userid' => $userid,
+                    ]
+                ),
+                get_string('continue')
+            );
             echo $OUTPUT->footer();
             die;
         } else {
             local_iomad\iomad::require_capability('local/report_users:redocertificates', $companycontext);
-            $param_array = array('userid' => $userid,
-                                 'confirm' => true,
-                                 'redo_selected_certificates' => $data->redo_selected_certificates,
-                                 'sesskey' => sesskey()
-                                 );
+            $paramarray = ['userid' => $userid,
+                           'confirm' => true,
+                           'redo_selected_certificates' => $data->redo_selected_certificates,
+                           'sesskey' => sesskey(),
+                           ];
             foreach ($data->redo_certificates as $key => $redocertificate) {
-                $param_array["redo_certificates[$key]"] = $redocertificate;
+                $paramarray["redo_certificates[$key]"] = $redocertificate;
             }
-            $confirmurl = new moodle_url('/local/report_users/userdisplay.php', $param_array);
+            $confirmurl = new moodle_url('/local/report_users/userdisplay.php', $paramarray);
 
             $cancel = new moodle_url('/local/report_users/userdisplay.php',
-                                     array('userid' => $userid));
+                                     ['userid' => $userid]);
             echo $OUTPUT->header();
-            echo $OUTPUT->confirm(get_string('redoselectedcertificatesconfirm', 'block_iomad_company_admin'), $confirmurl, $cancel);
+            echo $OUTPUT->confirm(get_string('redoselectedcertificatesconfirm', 'block_iomad_company_admin'),
+                                  $confirmurl,
+                                  $cancel);
             echo $OUTPUT->footer();
             die;
 
@@ -161,27 +185,27 @@ if (!empty($data)) {
         if (!empty($confirm) && confirm_sesskey()) {
             local_iomad\iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
             echo $OUTPUT->header();
-            foreach($data->purge_entries as $rowid) {
+            foreach ($data->purge_entries as $rowid) {
                 local_iomad\track::delete_entry($rowid, true);
                 echo html_writer::tag('p', get_string('deletedtrackentry', 'block_iomad_company_admin', $rowid));
             }
             echo $OUTPUT->single_button(new moodle_url('/local/report_users/userdisplay.php',
-                                     array('userid' => $userid)), get_string('continue'));
+                                     ['userid' => $userid]), get_string('continue'));
             echo $OUTPUT->footer();
             die;
         } else {
             local_iomad\iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
-            $param_array = array('userid' => $userid,
-                                 'confirm' => true,
-                                 'purge_selected_entries' => $data->purge_selected_entries,
-                                 'sesskey' => sesskey()
-                                 );
+            $paramarray = ['userid' => $userid,
+                           'confirm' => true,
+                           'purge_selected_entries' => $data->purge_selected_entries,
+                           'sesskey' => sesskey(),
+                           ];
             foreach ($data->purge_entries as $key => $purgeentry) {
-                $param_array["purge_entries[$key]"] = $purgeentry;
+                $paramarray["purge_entries[$key]"] = $purgeentry;
             }
-            $confirmurl = new moodle_url('/local/report_users/userdisplay.php', $param_array);
+            $confirmurl = new moodle_url('/local/report_users/userdisplay.php', $paramarray);
             $cancel = new moodle_url('/local/report_users/userdisplay.php',
-                                     array('userid' => $userid));
+                                     ['userid' => $userid]);
             echo $OUTPUT->header();
             echo $OUTPUT->confirm(get_string('purgeselectedentriesconfirm', 'block_iomad_company_admin'), $confirmurl, $cancel);
             echo $OUTPUT->footer();
@@ -218,13 +242,19 @@ if (!empty($data)) {
         if (!empty($data->finalscore)) {
             foreach ($data->finalscore as $key => $value) {
                 if ($data->origfinalscore[$key] != $value && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'finalscore', $value, array('id' => $key));
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $key));
+                    $DB->set_field('local_iomad_track', 'finalscore', $value, ['id' => $key]);
+                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
 
                     // Re-generate the certificate.
-                    if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $key))) {
+                    if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
                         local_iomad\track::delete_entry($key);
-                        local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
+                        local_iomad\track::record_certificates(
+                            $trackrec->courseid,
+                            $trackrec->userid,
+                            $trackrec->id,
+                            false,
+                            false
+                            );
                     }
                 }
             }
@@ -235,8 +265,8 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'licenseallocated', $senttime, array('id' => $key));
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $key));
+                    $DB->set_field('local_iomad_track', 'licenseallocated', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
@@ -246,29 +276,38 @@ if (!empty($data)) {
                 $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                 if ($testtime != $senttime && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'timeenrolled', $senttime, array('id' => $key));
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $key));
+                    $DB->set_field('local_iomad_track', 'timeenrolled', $senttime, ['id' => $key]);
+                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
                 }
             }
         }
         if (!empty($data->timecompleted)) {
             foreach ($data->timecompleted as $key => $value) {
-                if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $key))) {
+                if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
                     $testtime = strtotime("0:00", $data->origtimecompleted[$key]);
                     $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
                     if ($testtime != $senttime && confirm_sesskey()) {
-                        $DB->set_field('local_iomad_track', 'timecompleted', $senttime, array('id' => $key));
-                        $DB->set_field('local_iomad_track', 'modifiedtime', time(), array('id' => $key));
-                        if ($iomadcourseinfo = $DB->get_record('iomad_courses', array('courseid' => $trackrec->courseid))) {
+                        $DB->set_field('local_iomad_track', 'timecompleted', $senttime, ['id' => $key]);
+                        $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+                        if ($iomadcourseinfo = $DB->get_record('iomad_courses', ['courseid' => $trackrec->courseid])) {
                             if (!empty($iomadcourseinfo->validlength)) {
-                                $DB->set_field('local_iomad_track', 'timeexpires', $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60), array('id' => $key));
+                                $DB->set_field(
+                                    'local_iomad_track',
+                                    'timeexpires',
+                                    $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60),
+                                    ['id' => $key]);
                             }
                         }
 
                         // Re-generate the certificate.
                         local_iomad\track::delete_entry($key);
-                        local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
+                        local_iomad\track::record_certificates(
+                            $trackrec->courseid,
+                            $trackrec->userid,
+                            $trackrec->id,
+                            false,
+                            false);
                     }
                 }
             }
@@ -288,26 +327,31 @@ if (!local_iomad\company::check_valid_user($companyid, $userid)) {
 if (!empty($action)) {
     if (!empty($confirm) && confirm_sesskey()) {
         if ($action == 'redocert' && !empty($redocertificate)) {
-            if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
+            if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $redocertificate])) {
                 local_iomad\track::delete_entry($redocertificate);
-                if (local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false)) {
-                    redirect(new moodle_url('/local/report_users/userdisplay.php', array('userid' => $userid)),
+                if (local_iomad\track::record_certificates(
+                    $trackrec->courseid,
+                    $trackrec->userid,
+                    $trackrec->id,
+                    false,
+                    false)) {
+                    redirect(new moodle_url('/local/report_users/userdisplay.php', ['userid' => $userid]),
                              get_string($action . "_successful", 'local_report_users'),
                              null,
-                             \core\output\notification::NOTIFY_SUCCESS);
+                             core\output\notification::NOTIFY_SUCCESS);
                 } else {
-                    redirect(new moodle_url('/local/report_users/userdisplay.php', array('userid' => $userid)),
+                    redirect(new moodle_url('/local/report_users/userdisplay.php', ['userid' => $userid]),
                              get_string($action . "_failed", 'local_report_users'),
                              null,
-                             \core\output\notification::NOTIFY_ERROR);
+                             core\output\notification::NOTIFY_ERROR);
                 }
             }
         } else if ($action != 'trackonly') {
             local_iomad\company_user::delete_user_course($userid, $courseid, $action, $rowid);
-            redirect(new moodle_url('/local/report_users/userdisplay.php', array('userid' => $userid)),
+            redirect(new moodle_url('/local/report_users/userdisplay.php', ['userid' => $userid]),
                      get_string($action . "_successful", 'local_report_users'),
                      null,
-                     \core\output\notification::NOTIFY_SUCCESS);
+                     core\output\notification::NOTIFY_SUCCESS);
             die;
         } else {
             local_iomad\track::delete_entry($rowid, true);
@@ -316,15 +360,15 @@ if (!empty($action)) {
         echo $OUTPUT->header();
         if ($action != 'redocert') {
             $confirmurl = new moodle_url('/local/report_users/userdisplay.php',
-                                         array('userid' => $userid,
+                                         ['userid' => $userid,
                                          'rowid' => $rowid,
                                          'confirm' => $delete,
                                          'courseid' => $courseid,
                                          'action' => $action,
-                                         'sesskey' => sesskey()
-                                         ));
+                                         'sesskey' => sesskey(),
+                                         ]);
             $cancel = new moodle_url('/local/report_users/userdisplay.php',
-                                     array('userid' => $userid));
+                                     ['userid' => $userid]);
             if ($action == 'delete') {
                 echo $OUTPUT->confirm(get_string('resetcourseconfirm', 'local_report_users'), $confirmurl, $cancel);
             } else if ($action == 'revoke') {
@@ -341,16 +385,16 @@ if (!empty($action)) {
             }
         } else {
             $confirmurl = new moodle_url('/local/report_users/userdisplay.php',
-                                         array('userid' => $userid,
+                                         ['userid' => $userid,
                                          'rowid' => $rowid,
                                          'confirm' => $redocertificate,
                                          'redocertificate' => $redocertificate,
                                          'courseid' => $courseid,
                                          'action' => $action,
-                                         'sesskey' => sesskey()
-                                         ));
+                                         'sesskey' => sesskey(),
+                                         ]);
             $cancel = new moodle_url('/local/report_users/userdisplay.php',
-                                     array('userid' => $userid));
+                                     ['userid' => $userid]);
             echo $OUTPUT->confirm(get_string('redocertificateconfirm', 'local_report_users'), $confirmurl, $cancel);
         }
 
@@ -360,8 +404,13 @@ if (!empty($action)) {
 }
 
 // Set up the table.
-$table = new \local_report_users\tables\completion_table('user_report_completion');
-$table->is_downloading($download, format_string($company->get('name')) . ' course completion report ' . fullname($userinfo), 'user_report_completion123');
+$table = new local_report_users\tables\completion_table('user_report_completion');
+$table->is_downloading(
+    $download,
+    format_string($company->get('name')) .
+                  ' course completion report ' .
+                  fullname($userinfo),
+    'user_report_completion123');
 
 if (!$table->is_downloading()) {
     $mainadmin = get_admin();
@@ -374,66 +423,66 @@ if (!$table->is_downloading()) {
         echo "</h2>";
     }
 
-        echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-        if ((local_iomad\iomad::has_capability('block/iomad_company_admin:company_course_users', $companycontext)
-             or local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
-             and ($userid == $USER->id or $userid != $mainadmin->id)
-             and !is_mnet_remote_user($userinfo)) {
-            $url = new moodle_url('/blocks/iomad_company_admin/company_users_course_form.php',
-                                  array('userid' => $userid));
-            echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-            echo $output->single_button($url, get_string('userenrolments', 'block_iomad_company_admin'));
-            echo html_writer::end_tag('div');
-        }
-
-        if ((local_iomad\iomad::has_capability('block/iomad_company_admin:company_license_users', $companycontext)
-             or local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext))
-             and ($userid == $USER->id or $userid != $mainadmin->id)
-             and !is_mnet_remote_user($userinfo)) {
-            $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_users_licenses_form.php',
-                                   array('userid' => $userid));
-            echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-            echo $output->single_button($url, get_string('userlicenses', 'block_iomad_company_admin'));
-            echo html_writer::end_tag('div');
-        }
-        $url = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
-                              array('userid' => $userid, 'mandatoryonly' => $mandatoryonly, 'validonly' => !$validonly));
-        if (!$validonly) {
-            $validstring = get_string('hidevalidcourses', 'block_iomad_company_admin');
-        } else {
-            $validstring = get_string('showvalidcourses', 'block_iomad_company_admin');
-        }
-        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-        echo $output->single_button($url, $validstring);
+    echo html_writer::start_tag('div', ['class' => 'iomadclear']);
+    if ((local_iomad\iomad::has_capability('block/iomad_company_admin:company_course_users', $companycontext) ||
+         local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) &&
+        ($userid == $USER->id || $userid != $mainadmin->id) &&
+         !is_mnet_remote_user($userinfo)) {
+        $url = new moodle_url('/blocks/iomad_company_admin/company_users_course_form.php',
+                              ['userid' => $userid]);
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        echo $output->single_button($url, get_string('userenrolments', 'block_iomad_company_admin'));
         echo html_writer::end_tag('div');
+    }
 
-        // Deal with mandatory courses.
-        if (get_config('local_iomad', 'use_mandatory_courses')) {
-            $url = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
-                                  ['userid' => $userid,
-                                  'validonly' => $validonly,
-                                  'mandatoryonly' => !$mandatoryonly]);
-            if ($mandatoryonly) {
-                $mandatoryonlystring = get_string('allcourses', 'block_iomad_company_admin');
-            } else {
-                $mandatoryonlystring = get_string('mandatoryonly', 'local_report_completion');
-            }
-        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
+    if ((local_iomad\iomad::has_capability('block/iomad_company_admin:company_license_users', $companycontext) ||
+         local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) &&
+        ($userid == $USER->id || $userid != $mainadmin->id) &&
+         !is_mnet_remote_user($userinfo)) {
+        $url = new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_users_licenses_form.php',
+                               ['userid' => $userid]);
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        echo $output->single_button($url, get_string('userlicenses', 'block_iomad_company_admin'));
+        echo html_writer::end_tag('div');
+    }
+    $url = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
+                          ['userid' => $userid, 'mandatoryonly' => $mandatoryonly, 'validonly' => !$validonly]);
+    if (!$validonly) {
+        $validstring = get_string('hidevalidcourses', 'block_iomad_company_admin');
+    } else {
+        $validstring = get_string('showvalidcourses', 'block_iomad_company_admin');
+    }
+    echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+    echo $output->single_button($url, $validstring);
+    echo html_writer::end_tag('div');
+
+    // Deal with mandatory courses.
+    if (get_config('local_iomad', 'use_mandatory_courses')) {
+        $url = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
+                              ['userid' => $userid,
+                              'validonly' => $validonly,
+                              'mandatoryonly' => !$mandatoryonly]);
+        if ($mandatoryonly) {
+            $mandatoryonlystring = get_string('allcourses', 'block_iomad_company_admin');
+        } else {
+            $mandatoryonlystring = get_string('mandatoryonly', 'local_report_completion');
+        }
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
         echo $output->single_button($url, $mandatoryonlystring);
         echo html_writer::end_tag('div');
-        }
+    }
 
-        // Conditionally add the "add new entry" button.
-        if (!empty($USER->editing)) {
-            echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-            $url = new moodle_url($CFG->wwwroot . '/local/report_users/newentry.php',
-                                  array('userid' => $userid,
-                                        'returnurl' => $baseurl->out()));
-            echo $output->single_button($url, get_string('addnewentry', 'blog'));
-            echo html_writer::end_tag('div');
-        }
+    // Conditionally add the "add new entry" button.
+    if (!empty($USER->editing)) {
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        $url = new moodle_url($CFG->wwwroot . '/local/report_users/newentry.php',
+                              ['userid' => $userid,
+                               'returnurl' => $baseurl->out()]);
+        echo $output->single_button($url, get_string('addnewentry', 'blog'));
         echo html_writer::end_tag('div');
-        echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+    }
+    echo html_writer::end_tag('div');
+    echo html_writer::start_tag('div', ['class' => 'iomadclear']);
 }
 
 // Are we only showing mandatory courses?
@@ -463,11 +512,15 @@ $selectsql = "lit.id,
               lit.coursecleared,1 AS actions,
               lit.modifiedtime";
 $fromsql = "{local_iomad_track} lit  $mandatorysql";
-$sqlparams = array('userid' => $userid, 'companyid' => $companyid);
+$sqlparams = ['userid' => $userid, 'companyid' => $companyid];
 
 // Just valid courses?
 if ($validonly) {
-    $validsql = " AND (lit.timeexpires > :runtime or (lit.timecompleted IS NULL) or (lit.timecompleted > 0 AND lit.timeexpires IS NULL))";
+    $validsql = " AND (lit.timeexpires > :runtime
+                      OR (lit.timecompleted IS NULL)
+                      OR (
+                          lit.timecompleted > 0
+                          AND lit.timeexpires IS NULL))";
     $sqlparams['runtime'] = time();
 } else {
     $validsql = "";
@@ -481,20 +534,22 @@ $companycourses = $company->get_menu_courses(true);
 if (empty($companycourses)) {
     $companycourses = [0];
 }
-$wheresql = " lit.userid = :userid $companysql AND lit.courseid IN (" . join(',', array_keys($companycourses)) .") $validsql";
+[$courseinsql, $courseparams] = $DB->get_in_or_equal(array_keys($companycourses), SQL_PARAMS_NAMED, 'compcourse');
+$wheresql = " lit.userid = :userid $companysql
+              AND lit.courseid $courseinsql $validsql";
 
 // Set up the headers for the form.
-$headers = array(get_string('course', 'local_report_completion'),
-                 get_string('status'),
-                 get_string('licensedateallocated', 'block_iomad_company_admin'),
-                 get_string('datestarted', 'local_report_completion'),
-                 get_string('datecompleted', 'local_report_completion'));
+$headers = [get_string('course', 'local_report_completion'),
+            get_string('status'),
+            get_string('licensedateallocated', 'block_iomad_company_admin'),
+            get_string('datestarted', 'local_report_completion'),
+            get_string('datecompleted', 'local_report_completion')];
 
-$columns = array('coursename',
-                 'status',
-                 'licenseallocated',
-                 'timeenrolled',
-                 'timecompleted');
+$columns = ['coursename',
+            'status',
+            'licenseallocated',
+            'timeenrolled',
+            'timecompleted'];
 
 // Do we show the time expires column?
 if (empty($USER->editing) &&
@@ -503,7 +558,7 @@ if (empty($USER->editing) &&
                           ON ic.courseid = lit.courseid
                           WHERE ic.validlength > 0
                           AND lit.userid = :userid",
-                          array('userid' => $userid))) {
+                         ['userid' => $userid])) {
     $columns[] = 'timeexpires';
     $headers[] = get_string('timeexpires', 'local_report_completion');
 }
@@ -514,12 +569,12 @@ if ($DB->get_records_sql("SELECT lit.id FROM {iomad_courses} ic
                           ON ic.courseid = lit.courseid
                           WHERE ic.hasgrade = 1
                           AND lit.userid = :userid",
-                          array('userid' => $userid))) {
+                         ['userid' => $userid])) {
     $columns[] = 'finalscore';
     $headers[] = get_string('grade', 'iomadcertificate');
 }
 
-if (!$table->is_downloading()){
+if (!$table->is_downloading()) {
     $headers[] = get_string('certificate', 'local_report_completion');
     $columns[] = 'certificate';
     $headers[] = get_string('actions');
@@ -527,43 +582,80 @@ if (!$table->is_downloading()){
 
     // Set up the form.
     if (!empty($USER->editing) && !$table->is_downloading()) {
-        echo html_writer::start_tag('form', array('action' => $baseurl,
-                                                  'enctype' => 'application/x-www-form-urlencoded',
-                                                  'method' => 'post',
-                                                  'name' => 'iomad_report_user_userdisplay_values',
-                                                  'id' => 'iomad_report_user_userdisplay_values'));
-        echo "<input type='hidden' name='sesskey' value=" . sesskey() .">";
-        echo "<input type='hidden' name='download' value=''>";
-        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-        echo html_writer::start_tag('div', array('class' => 'singlebutton'));
-        echo "<input type = 'submit' id='redo_all_certs' name='redo_selected_certificates' value = '" . get_string('redoselectedcertificates', 'block_iomad_company_admin') . "' class='btn btn-secondary'>";
+        echo html_writer::start_tag(
+            'form',
+            [
+                'action' => $baseurl,
+                'enctype' => 'application/x-www-form-urlencoded',
+                'method' => 'post',
+                'name' => 'iomad_report_user_userdisplay_values',
+                'id' => 'iomad_report_user_userdisplay_values',
+            ]
+        );
+        echo html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'hidden',
+                'name' => 'sesskey',
+                'value' => sesskey(),
+            ]
+        );
+        echo html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'hidden',
+                'name' => 'download',
+                'value' => '',
+            ]
+        );
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        echo html_writer::start_tag('div', ['class' => 'singlebutton']);
+        echo html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'submit',
+                'id' => 'redo_all_certs',
+                'name' => 'redo_selected_certificates',
+                'value' => get_string('redoselectedcertificates', 'block_iomad_company_admin'),
+                'class' => 'btn btn-secondary',
+            ]
+        );
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
-        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-        echo html_writer::start_tag('div', array('class' => 'singlebutton'));
-        echo "<input type = 'submit' id='purge_all_selected' name='purge_selected_entries' value = '" . get_string('purgeselectedentries', 'block_iomad_company_admin') . "' class='btn btn-secondary'>";
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        echo html_writer::start_tag('div', ['class' => 'singlebutton']);
+        echo html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'submit',
+                'id' => 'purge_all_selected',
+                'name' => 'purge_selected_entries',
+                'value' => get_string('purgeselectedentries', 'block_iomad_company_admin'),
+                'class' => 'btn btn-secondary',
+            ]
+        );
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
-        echo html_writer::start_tag('div', array('class' => 'iomadclear'));
+        echo html_writer::start_tag('div', ['class' => 'iomadclear']);
 
     }
 }
 
-$table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
+$table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams + $courseparams);
 $table->define_baseurl($baseurl);
 $table->define_columns($columns);
 $table->define_headers($headers);
 $table->no_sorting('status');
 $table->no_sorting('certificate');
 $table->no_sorting('actions');
-$table->sort_default_column='coursename';
+$table->sort_default_column = 'coursename';
 
 if (!empty($USER->editing)) {
     $table->downloadable = false;
 }
 
 if (!$table->is_downloading()) {
-        echo html_writer::start_tag('div', array('class' => 'tablecontainer'));
+        echo html_writer::start_tag('div', ['class' => 'tablecontainer']);
 }
 $table->out(get_config('local_iomad', 'max_list_courses'), true);
 
@@ -571,15 +663,33 @@ if (!$table->is_downloading()) {
     if (!empty($USER->editing)) {
         // Set up the form.
         echo html_writer::end_tag('div');
-        echo html_writer::start_tag('div', array('class' => 'iomadclear'));
-        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-        echo html_writer::start_tag('div', array('class' => 'singlebutton'));
-        echo "<input type = 'submit' id='redo_all_certs_bottom' name='redo_selected_certificates' value = '" . get_string('redoselectedcertificates', 'block_iomad_company_admin') . "' class='btn btn-secondary'>";
+        echo html_writer::start_tag('div', ['class' => 'iomadclear']);
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        echo html_writer::start_tag('div', ['class' => 'singlebutton']);
+        echo html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'submit',
+                'id' => 'redo_all_certs_bottom',
+                'name' => 'redo_selected_certificates',
+                'value' => get_string('redoselectedcertificates', 'block_iomad_company_admin'),
+                'class' => 'btn btn-secondary',
+            ]
+        );
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
-        echo html_writer::start_tag('div', array('class' => 'reporttablecontrolscontrol'));
-        echo html_writer::start_tag('div', array('class' => 'singlebutton'));
-        echo "<input type = 'submit' id='purge_all_selected_bottom' name='purge_selected_entries' value = '" . get_string('purgeselectedentries', 'block_iomad_company_admin') . "' class='btn btn-secondary'>";
+        echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
+        echo html_writer::start_tag('div', ['class' => 'singlebutton']);
+        echo html_writer::empty_tag(
+            'input',
+            [
+                'type' => 'submit',
+                'id' => 'purge_all_selected_bottom',
+                'name' => 'purge_selected_entries',
+                'value' => get_string('purgeselectedentries', 'block_iomad_company_admin'),
+                'class' => 'btn btn-secondary',
+            ]
+        );
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
         echo html_writer::end_tag('div');
@@ -589,28 +699,6 @@ if (!$table->is_downloading()) {
     }
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
-?>
-<script>
-$(".checkbox").change(function() {
-    var inputElems = document.getElementsByTagName("input")
-    var matched = this.value;
-    if(this.checked) {
-        if(this.classList.contains("enableallcertificates")) {
-            $(".enablecertificates").prop("checked", this.checked);
-        }
-        if(this.classList.contains("enableallentries")) {
-            $(".enableentries").prop("checked", this.checked);
-        }
-    } else {
-        if(this.classList.contains("enableallcertificates")) {
-            $(".enablecertificates").prop("checked", '');
-        }
-        if(this.classList.contains("enableallentries")) {
-            $(".enableentries").prop("checked", '');
-        }
-    }
-});
-</script>
-<?php
+
     echo $output->footer();
 }

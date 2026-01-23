@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report users
+ *
  * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,72 +25,72 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
+$capabilities = [
 
-    'local/report_users:view' => array(
+    'local/report_users:view' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'companymanager' => CAP_ALLOW,
             'companydepartmentmanager' => CAP_ALLOW,
             'clientadministrator' => CAP_ALLOW,
             'clientreporter' => CAP_ALLOW,
-            'companyreporter' => CAP_ALLOW
-        ),
-    ),
+            'companyreporter' => CAP_ALLOW,
+        ],
+    ],
 
-    'local/report_users:deleteentries' => array(
+    'local/report_users:deleteentries' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
+        ],
+    ],
 
-    'local/report_users:deleteentriesfull' => array(
+    'local/report_users:deleteentriesfull' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
+        ],
+    ],
 
-    'local/report_users:clearentries' => array(
+    'local/report_users:clearentries' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
+        ],
+    ],
 
-    'local/report_users:addentry' => array(
+    'local/report_users:addentry' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
+        ],
+    ],
 
-    'local/report_users:redocertificates' => array(
+    'local/report_users:redocertificates' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    ),
+        ],
+    ],
 
-    'local/report_users:updateentries' => array(
+    'local/report_users:updateentries' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-        ),
-    )
-);
+        ],
+    ],
+];

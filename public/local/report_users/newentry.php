@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report users
+ *
  * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -31,7 +33,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = core\context\company::instance($companyid);
 $company = new local_iomad\company($companyid);
@@ -42,7 +44,7 @@ $linktext = get_string('user_detail_title', 'local_report_users');
 
 // Set the url.
 $reporturl = new moodle_url('/local/report_users/index.php');
-$baseurl = new moodle_url('/local/report_users/newentry.php', array('userid' => $userid, 'returnurl' => $returnurl));
+$baseurl = new moodle_url('/local/report_users/newentry.php', ['userid' => $userid, 'returnurl' => $returnurl]);
 
 // Print the page header.
 $PAGE->set_context($companycontext);
@@ -98,12 +100,12 @@ if ($data = $mform->get_data()) {
     if ($iomadcourse = $DB->get_record_sql("SELECT * FROM {iomad_courses}
                                             WHERE courseid = :courseid
                                             AND validlength > 0",
-                                            array('courseid' => $data->courseid))) {
-        $newentry->timeexpires = $data->timecompleted + (24*60*60 * $iomadcourse->validlength);
+                                            ['courseid' => $data->courseid])) {
+        $newentry->timeexpires = $data->timecompleted + (24 * 60 * 60 * $iomadcourse->validlength);
     } else {
         $newentry->timeexpires = null;
     }
-    $courserec = $DB->get_record('course', array('id' => $data->courseid));
+    $courserec = $DB->get_record('course', ['id' => $data->courseid]);
     $newentry->coursename = $courserec->fullname;
     $newentry->coursecleared = 1;
     $trackid = $DB->insert_record('local_iomad_track', $newentry);
@@ -120,5 +122,7 @@ if ($data = $mform->get_data()) {
 }
 // Display the page.
 echo $output->header();
+
 $mform->display();
+
 echo $output->footer();

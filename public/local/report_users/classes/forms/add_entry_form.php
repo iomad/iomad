@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report users
+ *
  * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,23 +25,34 @@
 
 namespace local_report_users\forms;
 
-defined('MOODLE_INTERNAL') || die;
+use moodleform;
 
-use \iomad;
-use \company;
-use \moodle_url;
-use \moodleform;
-
+/**
+ * IOMAD report users add entry form class
+ *
+ * @package   local_report_users
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class add_entry_form extends moodleform {
 
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $company, $DB, $CFG;
+        global $company;
 
         $mform =& $this->_form;
 
         $companycourses = $company->get_menu_courses(true);
         $mform->addElement('select', 'courseid', get_string('course'), $companycourses);
-        $mform->addElement('date_selector', 'licenseallocated', get_string('licensedateallocated', 'block_iomad_company_admin'), array('optional' => true));
+        $mform->addElement('date_selector',
+                           'licenseallocated',
+                           get_string('licensedateallocated', 'block_iomad_company_admin'),
+                           ['optional' => true]);
         $mform->addElement('text', 'licensename', get_string('licensename', 'block_iomad_company_admin'));
         $mform->addElement('date_selector', 'timeenrolled', get_string('datestarted', 'local_report_completion'));
         $mform->addElement('date_selector', 'timecompleted', get_string('datecompleted', 'local_report_completion'));
@@ -54,10 +67,17 @@ class add_entry_form extends moodleform {
         $this->add_action_buttons(true);
     }
 
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $files
+     * @return void
+     */
     public function validation($data, $files) {
-        global $CFG, $DB;
+        global $DB;
 
-        $errors = array();
+        $errors = [];
 
         if ($data['timecompleted'] < $data['timeenrolled']) {
             $errors['timecompleted'] = get_string('timecompletedbeforetimeenrollederror', 'block_iomad_company_admin');
@@ -72,7 +92,7 @@ class add_entry_form extends moodleform {
             $errors['licenseallocated'] = get_string('licenseallocatedoutofordererror', 'block_iomad_company_admin');
         }
 
-        if ($DB->get_record('iomad_courses', array('courseid' => $data['courseid'], 'licensed' => 1)) &&
+        if ($DB->get_record('iomad_courses', ['courseid' => $data['courseid'], 'licensed' => 1]) &&
             empty($data['licenseallocated'])) {
             $errors['licenseallocated'] = get_string('courseislicensedrequired', 'block_iomad_company_admin');
         }
