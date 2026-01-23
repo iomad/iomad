@@ -4151,6 +4151,11 @@ class company {
                     }
                 } else {
                     company_user::enrol($user, array($course->id), $this->id, false, false, $due);
+
+                    // Send an email.
+                    EmailTemplate::send('user_added_to_course', ['course' => $course,
+                                                                 'user' => $user,
+                                                                 'due' => time()]);
                 }
             }
         }
