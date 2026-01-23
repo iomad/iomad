@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD company admin
+ *
  * @package   block_iomad_company_admin
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -39,40 +41,26 @@ $frameworkid = optional_param('frameworkid', 0, PARAM_INTEGER);
 $update = optional_param('update', null, PARAM_ALPHA);
 $shared = optional_param('shared', 0, PARAM_INTEGER);
 
-$params = array();
-
-if ($company) {
-    $params['company'] = $company;
-}
-if ($sort) {
-    $params['sort'] = $sort;
-}
-if ($dir) {
-    $params['dir'] = $dir;
-}
-if ($page) {
-    $params['page'] = $page;
-}
-if ($perpage) {
-    $params['perpage'] = $perpage;
-}
-if ($search) {
-    $params['search'] = $search;
-}
-if ($frameworkid) {
-    $params['frameworkid'] = $frameworkid;
-}
+$params = [
+    'company' => $company,
+    'sort' => $sort,
+    'dir' => $dir,
+    'page' => $page,
+    'perpage' => $perpage,
+    'search' => $search,
+    'frameworkid' => $frameworkid,
+];
 
 require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
+// Set the companyid.
+$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
-$mycompany = new company($companyid);
+$mycompany = new local_iomad\company($companyid);
 
-iomad::require_capability('block/iomad_company_admin:manageframeworks', $companycontext);
+local_iomad\iomad::require_capability('block/iomad_company_admin:manageframeworks', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/iomad_frameworks_form.php');
@@ -98,18 +86,16 @@ if (empty($company) && !empty($companyid)) {
 
 if (!empty($update)) {
     // Need to change something.
-    if (!$frameworkdetails = (array) $DB->get_record('iomad_frameworks', array('frameworkid' => $frameworkid))) {
+    if (!$frameworkdetails = $DB->get_record('iomad_frameworks', ['frameworkid' => $frameworkid])) {
         throw new moodle_exception(get_string('invaliddetails', 'block_iomad_company_admin'));
     } else {
         if ('shared' == $update) {
-            $previousshared = $frameworkdetails['shared'];
+            $previousshared = $frameworkdetails->shared;
+
             // Check if we are sharing a framework for the first time.
             if ($previousshared == 0 && $shared != 0) { // Turning sharing on.
-                // Set the shared options on.
-                $frameworkdetails['shared'] = $shared;
-                $DB->update_record('iomad_frameworks', $frameworkdetails);
-                // Deal with any current enrolments.
-                if ($companyframework = $DB->get_record('company_comp_frameworks', array('frameworkid' => $frameworkid))) {
+                // Deal with any current companies.
+                if ($companyframework = $DB->get_record('company_comp_frameworks', ['frameworkid' => $frameworkid])) {
                     if ($shared == 2) {
                         $sharingrecord = new stdclass();
                         $sharingrecord->frameworkid = $frameworkid;
@@ -117,28 +103,25 @@ if (!empty($update)) {
                         $DB->insert_record('company_shared_frameworks', $sharingrecord);
                     }
                 }
-            } else if ($shared == 0 and $previousshared != 0) { // Turning sharing off.
-                // Set the shared options on.
-                $frameworkdetails['shared'] = $shared;
-                $DB->update_record('iomad_frameworks', $frameworkdetails);
-                // Deal with enrolments.
-                if ($companygroups = $DB->get_records('company_framework_groups', array('frameworkid' => $frameworkid))) {
-                    // Got companies using it.
-                    $count = 1;
+            } else if ($shared == 0 && $previousshared != 0) { // Turning sharing off.
+                // Deal with companies.
+                if ($companygroups = $DB->get_records('company_framework_groups', ['frameworkid' => $frameworkid])) {
+                    $first = true;
                     // Skip the first company, it was the one who had it before anyone else so is
                     // assumed to be the owning company.
                     foreach ($companygroups as $companygroup) {
-                        if ($count == 1) {
+                        if ($first) {
+                            $first = false;
                             continue;
                         }
-                        $count ++;
-                        $DB->delete_records('company_shared_frameworks', (array) $companygroup);
+                        // Clear everyone else.
+                        $DB->delete_records('company_shared_frameworks', ['id' => $companygroup->id]);
                     }
                 }
-            } else {  // Changing from open sharing to closed sharing.
-                $frameworkdetails['shared'] = $shared;
-                $DB->update_record('iomad_frameworks', $frameworkdetails);
             }
+
+            // Update the field in the DB.
+            $DB->set_field('iomad_frameworks', 'shared', $shared, ['id' => $frameworkdetails->id]);
         }
     }
 }
@@ -149,71 +132,80 @@ $returnurl = $baseurl;
 echo $OUTPUT->header();
 
 // Get the list of companies and display it as a drop down select..
-
-$companyids = $DB->get_records_menu('company', array(), 'id, name');
+$companyids = $DB->get_records_menu('company', [], 'id, name');
 $companyids['none'] = get_string('nocompanyframeworks', 'block_iomad_company_admin');
 $companyids['all'] = get_string('allframeworks', 'block_iomad_company_admin');
 ksort($companyids);
 $companyselect = new single_select($linkurl, 'company', $companyids, $company);
 $companyselect->label = get_string('company', 'block_iomad_company_admin');
 $companyselect->formid = 'choosecompany';
-echo html_writer::tag('div', $OUTPUT->render($companyselect), array('id' => 'iomad_company_selector')).'<br>';
-
-// Need a name search in here too.
+echo html_writer::tag('div', $OUTPUT->render($companyselect), ['id' => 'iomad_company_selector']).'<br>';
 
 // Set default frameworks.
-$frameworks = array();
+$frameworks = [];
 
+// Get the frameworks.
 if (!empty($company)) {
+    $select = "";
+    $selectparams = [];
     if ($company == 'none') {
         // Get all frameworks which are not assigned to any company.
         if (!empty($search)) {
-            $select = "shortname like '%$search%' AND";
-        } else {
-            $select = "";
+            $select = $DB->sql_like('shortname', ':search', false) . " AND";
+            $selectparams = ['search' => '%' . $search . '%'];
         }
-        $sql = "SELECT * from {competency_framework} WHERE $select
-                id not in (select frameworkid from {company_comp_frameworks})";
-        $frameworks = $DB->get_records_sql($sql);
-    } else  if ($company == 'all') {
+        $sql = "SELECT *
+                FROM {competency_framework}
+                WHERE $select
+                id NOT IN (
+                    SELECT frameworkid
+                    FROM {company_comp_frameworks})";
+    } else if ($company == 'all') {
         // Get every framework.
         if (!empty($search)) {
-            $select = "shortname like '%$search%'";
-        } else {
-            $select = "";
+            $select = "WHERE " . $DB->sql_like('shortname', ':search', false);
+            $selectparams = ['search' => '%' . $search . '%'];
         }
-        $frameworks = $DB->get_records_select('competency_framework', $select);
+        $sql = "SELECT *
+                FROM {competency_framework}
+                $select";
     } else {
         // Get the frameworks belonging to that company only.
         if (!empty($search)) {
-            $select = "AND cf.shortname like '%$search%'";
-        } else {
-            $select = "";
+            $select = " AND " . $DB->sql_like('cf.shortname', ':search', false);
+            $selectparams = ['search' => '%' . $search . '%'];
         }
-        $sql = "SELECT cf.* from {competency_framework} cf, {company_comp_frameworks} ccf WHERE
-                ccf.companyid=$company AND ccf.frameworkid = cf.id $select";
-        $frameworks = $DB->get_records_sql($sql);
+        $sql = "SELECT cf.*
+                FROM {competency_framework} cf
+                JOIN {company_comp_frameworks} ccf ON (cf.id = ccf.frameworkid)
+                WHERE
+                ccf.companyid = :companyid
+                $select";
+        $selectparams['companyid'] = $company;
     }
+
+    // Get the data.
+    $frameworks = $DB->get_records_sql($sql, $selectparams);
 }
 
 // Display the table.
 $table = new html_table();
-$table->head = array (
+$table->head = [
     get_string('company', 'block_iomad_company_admin'),
     get_string('framework', 'block_iomad_company_admin'),
-    get_string('shared', 'block_iomad_company_admin')  . $OUTPUT->help_icon('shared_framework', 'block_iomad_company_admin'),
-);
-$table->align = array ("left", "center", "center");
+    get_string('shared', 'block_iomad_company_admin')  .
+    $OUTPUT->help_icon('shared_framework', 'block_iomad_company_admin'),
+];
+$table->align = ["left", "center", "center"];
 $table->width = "95%";
-$selectbutton = array('0' => get_string('no'), '1' => get_string('yes'));
-$sharedselectbutton = array('0' => get_string('no'),
-                            '1' => get_string('open', 'block_iomad_company_admin'),
-                            '2' => get_string('closed', 'block_iomad_company_admin'));
-
+$selectbutton = ['0' => get_string('no'), '1' => get_string('yes')];
+$sharedselectbutton = ['0' => get_string('no'),
+                       '1' => get_string('open', 'block_iomad_company_admin'),
+                       '2' => get_string('closed', 'block_iomad_company_admin')];
 
 foreach ($frameworks as $framework) {
-    if (!$iomaddetails = $DB->get_record('iomad_frameworks', array('frameworkid' => $framework->id))) {
-        $iomadrecord = array('frameworkid' => $framework->id, 'licensed' => 0, 'shared' => 0);
+    if (!$iomaddetails = $DB->get_record('iomad_frameworks', ['frameworkid' => $framework->id])) {
+        $iomadrecord = ['frameworkid' => $framework->id, 'licensed' => 0, 'shared' => 0];
         $iomadrecord['id'] = $DB->insert_record('iomad_frameworks', $iomadrecord);
         $iomaddetails = (object) $iomadrecord;
     }
@@ -224,9 +216,13 @@ foreach ($frameworks as $framework) {
     $sharedselect = new single_select($sharedurl, 'shared', $sharedselectbutton, $iomaddetails->shared);
     $sharedselect->label = '';
     $sharedselect->formid = 'sharedselect'.$framework->id;
-    $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), array('id' => 'shared_selector'.$framework->id));
-    if ($tablecompany = $DB->get_records_sql("select c.shortname from {company} c, {company_comp_frameworks} ccf WHERE
-                                                      ccf.frameworkid = $framework->id and ccf.companyid = c.id")) {
+    $sharedselectoutput = html_writer::tag('div', $OUTPUT->render($sharedselect), ['id' => 'shared_selector'.$framework->id]);
+    if ($tablecompany = $DB->get_records_sql("SELECT c.shortname
+                                              FROM {company} c
+                                              JOIN {company_comp_frameworks} ccf ON (c.id = ccf.companyid)
+                                              WHERE
+                                              ccf.frameworkid = :frameworkid",
+                                             ['frameworkid' => $framework->id])) {
         $companyname = "";
         foreach ($tablecompany as $tcompany) {
             if ($companyname == "") {
@@ -238,11 +234,11 @@ foreach ($frameworks as $framework) {
     } else {
         $companyname = "";
     }
-    $frameworklink = new moodle_url('/admin/tool/lp/competencies.php', array('competencyframeworkid'=>$framework->id,
-                                                                             'pagecontextid' => 1));
-    $table->data[] = array ($companyname,
-                            "<a href='$frameworklink'>$framework->shortname</a>",
-                            $sharedselectoutput);
+    $frameworklink = new moodle_url('/admin/tool/lp/competencies.php', ['competencyframeworkid' => $framework->id,
+                                                                        'pagecontextid' => 1]);
+    $table->data[] = [$companyname,
+                      html_writer::tag('a', $framework->shortname, ['href' => $frameworklink]),
+                      $sharedselectoutput];
 }
 
 if (!empty($table)) {
