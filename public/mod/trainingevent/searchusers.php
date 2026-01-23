@@ -23,7 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -35,39 +34,23 @@ $perpage      = optional_param('perpage', 30, PARAM_INT);        // How many per
 $acl          = optional_param('acl', '0', PARAM_INT);           // Id of user to tweak mnet ACL (requires $access).
 $search      = optional_param('search', '', PARAM_CLEAN);// Search string.
 $departmentid = optional_param('deptid', 0, PARAM_INTEGER);
-$firstname       = optional_param('firstname', 0, PARAM_CLEAN);
+$firstname       = optional_param('firstname', '', PARAM_CLEAN);
 $lastname      = optional_param('lastname', '', PARAM_CLEAN);   // Md5 confirmation hash.
-$email  = optional_param('email', 0, PARAM_CLEAN);
+$email  = optional_param('email', '', PARAM_CLEAN);
 $eventid = required_param('eventid', PARAM_INTEGER);
 
-$params = [];
-
-if ($sort) {
-    $params['sort'] = $sort;
-}
-if ($dir) {
-    $params['dir'] = $dir;
-}
-if ($page) {
-    $params['page'] = $page;
-}
-if ($perpage) {
-    $params['perpage'] = $perpage;
-}
-if ($search) {
-    $params['search'] = $search;
-}
-if ($firstname) {
-    $params['firstname'] = $firstname;
-}
-if ($lastname) {
-    $params['lastname'] = $lastname;
-}
-if ($email) {
-    $params['email'] = $email;
-}
-$params['deptid'] = $departmentid;
-$params['eventid'] = $eventid;
+$params = [
+    'sort' => $sort,
+    'dir' => $dir,
+    'page' => $page,
+    'perpage' => $perpage,
+    'search' => $search,
+    'firstname' => $firstname,
+    'lastname' => $lastname,
+    'email' => $email,
+    'deptid' => $departmentid,
+    'eventid' => $eventid,
+];
 
 if (!$trainingevent = $DB->get_record('trainingevent', ['id' => $eventid])) {
     throw new moodle_exception('invalid event ID');
@@ -218,13 +201,13 @@ if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM {user_info_cat
             $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
             require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
-            ${'profile_field_'.$field->shortname} = optional_param('profile_field_'.$field->shortname, null, PARAM_ALPHANUMEXT);
+            ${'profile_field_' . $field->shortname} = optional_param('profile_field_' . $field->shortname, null, PARAM_ALPHANUMEXT);
         }
     }
 }
 if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
-                                                WHERE id NOT IN (
-                                                 SELECT profileid FROM {company})")) {
+                                        WHERE id NOT IN (
+                                            SELECT profileid FROM {company})")) {
     foreach ($categories as $category) {
         if ($fields = $DB->get_records('user_info_field', ['categoryid' => $category->id])) {
             foreach ($fields as $field) {
@@ -232,7 +215,7 @@ if ($categories = $DB->get_records_sql("SELECT id FROM {user_info_category}
                 $fieldnames[$field->id] = 'profile_field_'.$field->shortname;
                 require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                 $newfield = 'profile_field_'.$field->datatype;
-                ${'profile_field_'.$field->shortname} = optional_param('profile_field_'. $field->shortname,
+                ${'profile_field_' . $field->shortname} = optional_param('profile_field_' . $field->shortname,
                                                                        null,
                                                                        PARAM_ALPHANUMEXT);
             }
@@ -247,14 +230,18 @@ if (!empty($fieldnames)) {
     foreach ($fieldnames as $id => $fieldname) {
         if (!empty($allfields[$id]->datatype) && $allfields[$id]->datatype == "menu" ) {
             $paramarray = explode("\n", $allfields[$id]->param1);
-            if (!empty($paramarray[${$fieldname}])) {
+            if (isset($paramarray[${$fieldname}])) {
                 ${$fieldname} = $paramarray[${$fieldname}];
+            } else {
+                ${$fieldname} = '';
             }
         }
         if (!empty(${$fieldname}) ) {
             $idlist[0] = "We found no one";
-            $fieldsql = $DB->sql_compare_text('data')."='".${$fieldname}."' AND fieldid = $id";
-            if ($idfields = $DB->get_records_sql("SELECT userid from {user_info_data} WHERE $fieldsql")) {
+            $fieldsql = $DB->sql_compare_text('data') . " = :fieldname AND fieldid = :fieldid";
+            $fieldarray = ['fieldname' => ${$fieldname},
+                           'fieldid' => $id];
+            if ($idfields = $DB->get_records_select('user_info_data', $fieldsql, $fieldarray, '', 'userid')) {
                 $fieldids[] = $idfields;
             }
         }
@@ -273,8 +260,8 @@ if (!empty($fieldnames)) {
     }
 }
 
-
-$returnurl = "view.php?eventid=$eventid";
+// Set up the return URL.
+$returnurl = new moodle_url($CFG->wwwroot . "/mod/trainingevent/view.php", ['eventid' => $eventid]);
 
 // Carry on with the user listing.
 
@@ -284,7 +271,9 @@ foreach ($columns as $column) {
     $string[$column] = get_string("$column");
 }
 
-// Get all or company users depending on capability.
+// Set up the search defaults.
+$sqlsearch = "";
+$searchparams = [];
 
 // Check if has capability to view all attendees.
 $coursecontext = context_course::instance($trainingevent->course);
@@ -292,70 +281,78 @@ if (!has_capability('mod/trainingevent:viewallattendees', $coursecontext)) {
     // Get department users.
     $departmentusers = company::get_recursive_department_users($departmentid);
     if ( count($departmentusers) > 0 ) {
-        $departmentids = "";
-        foreach ($departmentusers as $departmentuser) {
-            if (!empty($departmentids)) {
-                $departmentids .= ",".$departmentuser->userid;
-            } else {
-                $departmentids .= $departmentuser->userid;
-            }
-        }
-        $sqlsearch = " id in ($departmentids) AND ";
+        [$departmentsearch, $searchparams] = $DB->get_in_or_equal(array_keys($departmentusers), SQL_PARAMS_NAMED, 'depuser');
+        $sqlsearch = " id $departmentsearch AND ";
     } else {
         $sqlsearch = "1 = 0 AND ";
     }
-} else {
-    $sqlsearch = "";
 }
 
 // Deal with search strings..
 if (!empty($idlist)) {
-    $sqlsearch .= "id in (".implode(',', array_keys($idlist)).") AND ";
+    [$idsearch, $idparams] = $DB->get_in_or_equal(array_keys($idlist), SQL_PARAMS_NAMED, 'idlist');
+    $searchparams = $searchparams + $idparams;
+    $sqlsearch .= " id $idsearch AND ";
 }
 if (!empty($params['firstname'])) {
-    $sqlsearch .= "firstname like '%".$params['firstname']."%' AND ";
+    $sqlsearch .= $DB->sql_like('firstname', ':firstname') . " AND ";
+    $searchparams['firstname'] = '%' . $params['firstname'] . '%';
 }
 
 if (!empty($params['lastname'])) {
-    $sqlsearch .= "lastname like '%".$params['lastname']."%' AND ";
+    $sqlsearch .= $DB->sql_like('lastname', ':lastname') . " AND ";
+    $searchparams['lastname'] = '%' . $params['lastname'] . '%';
 }
 
 if (!empty($params['email'])) {
-    $sqlsearch .= "email like '%".$params['email']."%' AND ";
+    $sqlsearch .= $DB->sql_like('email', ':email') . " AND ";
+    $searchparams['email'] = '%' . $params['email'] . '%';
 }
+
 // Deal with users already assigned..
 if ($assignedusers = $DB->get_records('trainingevent_users', ['trainingeventid' => $trainingevent->id,
                                                               'waitlisted' => 0], null, 'userid')) {
-    $sqlsearch .= "id not in (".implode(',', array_keys($assignedusers)).") AND ";
+    [$assignedsearch, $assignedparams] = $DB->get_in_or_equal(array_keys($assignedusers), SQL_PARAMS_NAMED, 'assuser', false);
+    $sqlsearch .= "id $assignedsearch AND ";
+    $searchparams = $searchparams + $assignedparams;
 }
 
 // Strip out no course users.
-$sqlsearch .= "id IN (SELECT u.id FROM {user} u
-                           JOIN (SELECT DISTINCT eu2_u.id FROM {user} eu2_u
-                                 JOIN {user_enrolments} eu2_ue ON eu2_ue.userid = eu2_u.id
-                                 JOIN {enrol} eu2_e ON (eu2_e.id = eu2_ue.enrolid
-                                                        AND eu2_e.courseid = " . $trainingevent->course . ")
-                                 WHERE eu2_u.deleted = 0
-                                 AND eu2_ue.status = 0
-                                 AND eu2_e.status = 0
-                                 AND eu2_ue.timestart < " . time() . "
-                                 AND (eu2_ue.timeend = 0 OR eu2_ue.timeend > " . time() . ")) e
-                           ON e.id = u.id
-                           LEFT JOIN {user_lastaccess} ul ON (ul.userid = u.id AND ul.courseid = " . $trainingevent->course . ")
-                           LEFT JOIN {context} ctx ON (ctx.instanceid = u.id AND ctx.contextlevel = " . $context->id ."))";
+$sqlsearch .= "id IN (
+                SELECT u.id FROM {user} u
+                JOIN (
+                    SELECT DISTINCT eu2_u.id FROM {user} eu2_u
+                    JOIN {user_enrolments} eu2_ue ON eu2_ue.userid = eu2_u.id
+                    JOIN {enrol} eu2_e ON (
+                        eu2_e.id = eu2_ue.enrolid
+                        AND eu2_e.courseid = :eu2courseid)
+                    WHERE eu2_u.deleted = 0
+                    AND eu2_ue.status = 0
+                    AND eu2_e.status = 0
+                    AND eu2_ue.timestart < :timestart
+                    AND (
+                        eu2_ue.timeend = 0
+                        OR eu2_ue.timeend > :timeend)
+                    ) e
+                ON e.id = u.id
+                LEFT JOIN {user_lastaccess} ul ON (
+                    ul.userid = u.id
+                    AND ul.courseid = :ulcourseid)
+                LEFT JOIN {context} ctx ON (
+                    ctx.instanceid = u.id
+                    AND ctx.contextlevel = :contextlevel))";
+$searchparams['ulcourseid'] = $trainingevent->course;
+$searchparams['eu2courseid'] = $trainingevent->course;
+$searchparams['timestart'] = time();
+$searchparams['timeend'] = time();
+$searchparams['contextlevel'] = $context->id;
 
 // Get the user records.
-$userlist = "";
-$userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch);
-foreach ($userrecords as $userrecord) {
-    if ( !empty($userlist)) {
-        $userlist .= " OR id=$userrecord ";
-    } else {
-        $userlist .= " id=$userrecord ";
-    }
-}
-if (!empty($userlist)) {
-    $users = get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist);
+$userrecords = $DB->get_fieldset_select('user', 'id', $sqlsearch, $searchparams);
+if (!empty($userrecords)) {
+    [$userlistsql, $userlistparams] = $DB->get_in_or_equal(array_values($userrecords), SQL_PARAMS_NAMED, 'userlist');
+    $userlist = " u.id $userlistsql";
+    $users = get_users_listing($sort, $dir, $page * $perpage, $perpage, '', '', '', $userlist, $userlistparams);
 } else {
     $users = [];
 }
@@ -371,7 +368,6 @@ echo $output->paging_bar($usercount, $page, $perpage, $baseurl);
 
 flush();
 
-
 if (!$users) {
     $match = [];
     echo $output->heading(get_string('nousersfound'));
@@ -379,7 +375,6 @@ if (!$users) {
     $table = null;
 
 } else {
-
     $countries = get_string_manager()->get_list_of_countries();
     if (empty($mnethosts)) {
         $mnethosts = $DB->get_records('mnet_host', null, 'id', 'id,wwwroot,name');
@@ -403,7 +398,7 @@ if (!$users) {
 
     $mainadmin = get_admin();
 
-    $override = new stdclass();
+    $override = (object) [];
     $override->firstname = 'firstname';
     $override->lastname = 'lastname';
     $fullnamelanguage = get_string('fullnamedisplay', '', $override);
