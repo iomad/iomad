@@ -29,6 +29,7 @@ use table_sql;
 use iomad;
 use moodle_url;
 use html_writer;
+use context_system;
 
 defined('MOODLE_INTERNAL') || die();
 

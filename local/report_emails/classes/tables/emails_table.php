@@ -51,7 +51,7 @@ class emails_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        global $CFG,
+        global $CFG;
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
         $userurl = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php', ['userid' => $row->id]);

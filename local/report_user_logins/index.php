@@ -54,7 +54,6 @@ $canseechildren = true; //iomad::has_capability('block/iomad_company_admin:canvi
 
 // Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
 
 
