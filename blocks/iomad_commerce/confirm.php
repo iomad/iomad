@@ -69,7 +69,9 @@ if (empty($USER->profile['company'])) {
         // Does this shortname already exist?
         if ($count = $DB->get_record_sql("SELECT count(id) AS count
                                           FROM {company}
-                                          WHERE shortname LIKE '".$company->shortname."%'")) {
+                                          WHERE " .
+                                          $DB->sql_like('shortname', ':shortname'),
+                                        ['shortname' => $company->shortname])) {
             $count++;
             $company->shortname = $company->shortname.$count->count;
         }
