@@ -561,7 +561,7 @@ class enrol_license_plugin extends enrol_plugin {
         if (trim($instance->customtext1) !== '') {
             $message = $instance->customtext1;
             $key = ['{$a->coursename}', '{$a->profileurl}', '{$a->fullname}', '{$a->email}'];
-            $value = [a->coursename, $a->profileurl, fullname($user), $user->email];
+            $value = [$a->coursename, $a->profileurl, fullname($user), $user->email];
             $message = str_replace($key, $value, $message);
             if (strpos($message, '<') === false) {
                 // Plain text only.
