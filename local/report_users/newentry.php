@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD report users
+ *
  * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -35,7 +37,7 @@ require_login();
 $context = context_system::instance();
 iomad::require_capability('local/report_users:addentry', $context);
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($context);
 $company = new company($companyid);
 
@@ -43,7 +45,7 @@ $linktext = get_string('user_detail_title', 'local_report_users');
 
 // Set the url.
 $reporturl = new moodle_url('/local/report_users/index.php');
-$baseurl = new moodle_url('/local/report_users/newentry.php', array('userid' => $userid, 'returnurl' => $returnurl));
+$baseurl = new moodle_url('/local/report_users/newentry.php', ['userid' => $userid, 'returnurl' => $returnurl]);
 
 // Print the page header.
 $PAGE->set_context($context);
@@ -65,7 +67,7 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Check the userid is valid.
 if (!company::check_valid_user($companyid, $userid)) {
-    print_error('invaliduser', 'block_iomad_company_management');
+    throw new moodle_exception('invaliduser', 'block_iomad_company_management');
 }
 
 $mform = new local_report_users\forms\add_entry_form($PAGE->url);
@@ -96,12 +98,12 @@ if ($data = $mform->get_data()) {
     if ($iomadcourse = $DB->get_record_sql("SELECT * FROM {iomad_courses}
                                             WHERE courseid = :courseid
                                             AND validlength > 0",
-                                            array('courseid' => $data->courseid))) {
-        $newentry->timeexpires = $data->timecompleted + (24*60*60 * $iomadcourse->validlength);
+                                            ['courseid' => $data->courseid])) {
+        $newentry->timeexpires = $data->timecompleted + (24 * 60 * 60 * $iomadcourse->validlength);
     } else {
         $newentry->timeexpires = null;
     }
-    $courserec = $DB->get_record('course', array('id' => $data->courseid));
+    $courserec = $DB->get_record('course', ['id' => $data->courseid]);
     $newentry->coursename = $courserec->fullname;
     $newentry->coursecleared = 1;
     $trackid = $DB->insert_record('local_iomad_track', $newentry);
@@ -118,5 +120,7 @@ if ($data = $mform->get_data()) {
 }
 // Display the page.
 echo $output->header();
+
 $mform->display();
+
 echo $output->footer();

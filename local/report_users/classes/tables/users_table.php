@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for the table used by a {@link quiz_attempts_report}.
+ * IOMAD report users
  *
- * @package   local_report_user_license_allocations
+ * @package   local_report_users
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,15 +25,24 @@
 
 namespace local_report_users\tables;
 
-use \table_sql;
-use \moodle_url;
-use \iomad;
-use \context_system;
+use table_sql;
+use moodle_url;
+use iomad;
+use html_writer;
+use context_system;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/tablelib.php');
 
+/**
+ * IOMAD report users users table class
+ *
+ * @package   local_report_users
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class users_table extends table_sql {
 
     /**
@@ -42,15 +51,17 @@ class users_table extends table_sql {
      * @return string HTML content to go inside the td.
      */
     public function col_fullname($row) {
-        global $params;
+        global $CFG;
+
+        // 4.1 upstream compatibility - set companycontect to systemcontext.
+        $companycontext = context_system::instance();
 
         $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
-        $userurl = '/local/report_users/userdisplay.php';
+        $userurl = new moodle_url($CFG->wwwroot . '/local/report_users/userdisplay.php',
+                                  ['userid' => $row->id]);
 
-        if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', context_system::instance())) {
-            return "<a href='".
-                    new moodle_url($userurl, ['userid' => $row->id]).
-                    "'>$name</a>";
+        if (!$this->is_downloading() && iomad::has_capability('local/report_users:view', $companycontext)) {
+            return html_writer::tag('a', $name, ['href' => $userurl]);
         } else {
             return $name;
         }
@@ -65,7 +76,7 @@ class users_table extends table_sql {
         global $CFG;
 
         if (!empty($row->created)) {
-            return date($CFG->iomad_date_format, $row->created);
+            return userdate($row->created, $CFG->iomad_date_format);
         } else {
             return;
         }
@@ -79,60 +90,10 @@ class users_table extends table_sql {
     public function col_currentlogin($row) {
         global $CFG;
 
-        if (!empty($row->lastlogin)) {
-            return date($CFG->iomad_date_format, $row->lastlogin);
+        if (!empty($row->lastaccess)) {
+            return userdate($row->lastaccess, $CFG->iomad_date_format);
         } else {
             return get_string('never');
-        }
-    }
-
-    /**
-     * Generate the display of the user's license allocated timestamp
-     * @param object $user the table row being output.
-     * @return string HTML content to go inside the td.
-     */
-    public function col_timecompleted($row) {
-        global $CFG;
-
-        if (!empty($row->timecompleted)) {
-            return date($CFG->iomad_date_format, $row->timecompleted);
-        } else {
-            return;
-        }
-    }
-
-    /**
-     * Generate the display of the user's course expiration timestamp
-     * @param object $user the table row being output.
-     * @return string HTML content to go inside the td.
-     */
-    public function col_timeexpires($row) {
-        global $CFG;
-
-        if (!empty($row->timeexpires)) {
-            if ($icourserec = $DB->get_record_sql("SELECT * FROM {iomad_courses} WHERE courseid =: courseid AND expireafter !=0", array('courseid' => $row->courseid))) {
-                $expiredate = $row->timecompleted + $icourserec->timeexpires * 24 * 60 * 60;
-                return date($CFG->iomad_date_format, $expiredate);
-            } else {
-                return;
-            }
-        } else {
-            return;
-        }
-    }
-
-    /**
-     * Generate the display of the user's license allocated timestamp
-     * @param object $user the table row being output.
-     * @return string HTML content to go inside the td.
-     */
-    public function col_finalscore($row) {
-        global $CFG;
-
-        if (!empty($row->finalscore)) {
-            return round($row->finalscore, $CFG->iomad_report_grade_places)."%";
-        } else {
-            return;
         }
     }
 
@@ -150,8 +111,8 @@ class users_table extends table_sql {
                                              WHERE cu.userid = :userid
                                              AND cu.companyid = :companyid
                                              ORDER BY d.name",
-                                             array('userid' => $row->id,
-                                                   'companyid' => $row->companyid));
+                                            ['userid' => $row->id,
+                                             'companyid' => $row->companyid]);
         $returnstr = "";
         $count = count($departments);
         $current = 1;
@@ -159,10 +120,10 @@ class users_table extends table_sql {
             $returnstr = "<details><summary>" . get_string('show') . "</summary>";
         }
 
-        foreach($departments as $department) {
+        foreach ($departments as $department) {
             $returnstr .= format_string($department->name);
             if ($current < $count) {
-                $returnstr .= ",</br>";
+                $returnstr .= ",<br>";
             }
             $current++;
         }
@@ -172,6 +133,5 @@ class users_table extends table_sql {
         }
 
         return $returnstr;
-
     }
 }
