@@ -277,7 +277,7 @@ class emailtemplate {
      **/
     public function body() {
         $body = $this->fill($this->template->body);
-        return $this->apply_moodle_filters($body, $this->user->lang, false);
+        return $this->apply_moodle_filters($body, $this->user->lang, true);
     }
 
     /**
@@ -287,7 +287,7 @@ class emailtemplate {
      **/
     public function signature() {
         $signature = $this->fill($this->template->signature);
-        return $this->apply_moodle_filters($signature, $this->user->lang, false);
+        return $this->apply_moodle_filters($signature, $this->user->lang, true);
     }
 
     /**
