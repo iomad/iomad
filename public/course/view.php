@@ -31,15 +31,15 @@ redirect_if_major_upgrade_required();
 $id = optional_param('id', 0, PARAM_INT);
 $name = optional_param('name', '', PARAM_TEXT);
 $edit = optional_param('edit', -1, PARAM_BOOL);
-$hide = optional_param('hide', 0, PARAM_INT); // TODO remove this param as part of MDL-83530.
-$show = optional_param('show', 0, PARAM_INT); // TODO remove this param as part of MDL-83530.
-$duplicatesection = optional_param('duplicatesection', 0, PARAM_INT); // TODO remove this param as part of MDL-83530.
+$hide = optional_param('hide', 0, PARAM_INT);
+$show = optional_param('show', 0, PARAM_INT);
+$duplicatesection = optional_param('duplicatesection', 0, PARAM_INT);
 $idnumber = optional_param('idnumber', '', PARAM_RAW);
 $sectionid = optional_param('sectionid', 0, PARAM_INT);
 $section = optional_param('section', null, PARAM_INT);
 $expandsection = optional_param('expandsection', -1, PARAM_INT);
-$move = optional_param('move', 0, PARAM_INT); // TODO remove this param as part of MDL-83530.
-$marker = optional_param('marker', -1 , PARAM_INT); // TODO remove this param as part of MDL-83530.
+$move = optional_param('move', 0, PARAM_INT);
+$marker = optional_param('marker', -1 , PARAM_INT);
 $switchrole = optional_param('switchrole', -1, PARAM_INT); // Deprecated, use course/switchrole.php instead.
 $return = optional_param('return', 0, PARAM_LOCALURL);
 
@@ -55,7 +55,7 @@ if (!empty($name)) {
 }
 
 // Iomad - check if a user can even see the course.
-if (!iomad::iomad_check_course($id)) {
+if (!local_iomad\iomad::iomad_check_course($id, $name, $idnumber)) {
     // Set it to 0 so it fails DB get_record.
     $params['id'] = SITEID;
 }
@@ -113,8 +113,14 @@ if ($switchrole > 0 && confirm_sesskey() &&
 
 // If course is hosted on an external server, redirect to corresponding
 // url with appropriate authentication attached as parameter.
-$hook = new \core_course\hook\before_course_viewed($course);
-\core\hook\manager::get_instance()->dispatch($hook);
+if (file_exists($CFG->dirroot . '/course/externservercourse.php')) {
+    include($CFG->dirroot . '/course/externservercourse.php');
+    if (function_exists('extern_server_course')) {
+        if ($externurl = extern_server_course($course)) {
+            redirect($externurl);
+        }
+    }
+}
 
 require_once($CFG->dirroot.'/calendar/lib.php'); // This is after login because it needs $USER.
 
@@ -199,13 +205,8 @@ if ($PAGE->user_allowed_editing()) {
         }
     }
 
-    // TODO remove this if as part of MDL-83530.
     if (has_capability('moodle/course:sectionvisibility', $context)) {
         if ($hide && confirm_sesskey()) {
-            debugging(
-                'The hide param in course view is deprecated. Please use course/format/update.php instead.',
-                DEBUG_DEVELOPER
-            );
             set_section_visible($course->id, $hide, '0');
             if ($sectionid) {
                 redirect(course_get_url($course, $section, ['navigation' => true]));
@@ -215,10 +216,6 @@ if ($PAGE->user_allowed_editing()) {
         }
 
         if ($show && confirm_sesskey()) {
-            debugging(
-                'The show param in course view is deprecated. Please use course/format/update.php instead.',
-                DEBUG_DEVELOPER
-            );
             set_section_visible($course->id, $show, '1');
             if ($sectionid) {
                 redirect(course_get_url($course, $section, ['navigation' => true]));
@@ -228,12 +225,7 @@ if ($PAGE->user_allowed_editing()) {
         }
     }
 
-    // TODO remove this if as part of MDL-83530.
     if ($marker >= 0 && confirm_sesskey()) {
-        debugging(
-            'The marker param in course view is deprecated. Please use course/format/update.php instead.',
-            DEBUG_DEVELOPER
-        );
         course_set_marker($course->id, $marker);
         if ($sectionid) {
             redirect(course_get_url($course, $section, ['navigation' => true]));
@@ -242,29 +234,16 @@ if ($PAGE->user_allowed_editing()) {
         }
     }
 
-    // TODO remove this if as part of MDL-83530.
     if (
         !empty($section) && !empty($coursesections) && !empty($duplicatesection)
         && has_capability('moodle/course:update', $context) && confirm_sesskey()
     ) {
-        debugging(
-            'The duplicatesection param is deprecated. Please use course/format/update.php instead.',
-            DEBUG_DEVELOPER
-        );
         $newsection = $format->duplicate_section($coursesections);
         redirect(course_get_url($course, $newsection->section));
     }
 
-    // TODO remove this if as part of MDL-83530.
-    if (
-        !empty($section)
-        && !empty($move)
-        && has_capability('moodle/course:movesections', $context) && confirm_sesskey()
-    ) {
-        debugging(
-            'The move param is deprecated. Please use the standard move modal instead.',
-            DEBUG_DEVELOPER
-        );
+    if (!empty($section) && !empty($move) &&
+            has_capability('moodle/course:movesections', $context) && confirm_sesskey()) {
         $destsection = $section + $move;
         if (move_section_to($course, $section, $destsection)) {
             if ($course->id == SITEID) {
@@ -311,8 +290,8 @@ if ($PAGE->user_is_editing()) {
 
 // If viewing a section, make the title more specific.
 if ($section && $section > 0 && course_format_uses_sections($course->format)) {
-    $sectionname = $format->get_generic_section_name();
-    $sectiontitle = $format->get_section_name($section);
+    $sectionname = get_string('sectionname', "format_$course->format");
+    $sectiontitle = get_section_name($course, $section);
     $PAGE->set_title(
         get_string(
             'coursesectiontitle' . $editingtitle,
@@ -331,23 +310,6 @@ if (!empty($bulkbutton)) {
 }
 
 $PAGE->set_heading($course->fullname);
-
-// Make sure that section 0 exists (this function will create one if it is missing).
-course_create_sections_if_missing($course, 0);
-
-// Get information about course modules and existing module types.
-// format.php in course formats may rely on presence of these variables.
-$modinfo = get_fast_modinfo($course);
-$modnames = get_module_types_names();
-$modnamesplural = get_module_types_names(true);
-$modnamesused = $modinfo->get_used_module_names();
-$mods = $modinfo->get_cms();
-$sections = $modinfo->get_section_info_all();
-
-// Include course AJAX. This should be done before starting the UI
-// to allow page header, blocks, or drawers use the course editor.
-include_course_ajax($course, $modnamesused);
-
 echo $OUTPUT->header();
 
 // Show communication room status notification.
@@ -371,10 +333,25 @@ if ($PAGE->user_is_editing()) {
 // Course wrapper start.
 echo html_writer::start_tag('div', $containerattributes);
 
+// Make sure that section 0 exists (this function will create one if it is missing).
+course_create_sections_if_missing($course, 0);
+
+// Get information about course modules and existing module types.
+// format.php in course formats may rely on presence of these variables.
+$modinfo = get_fast_modinfo($course);
+$modnames = get_module_types_names();
+$modnamesplural = get_module_types_names(true);
+$modnamesused = $modinfo->get_used_module_names();
+$mods = $modinfo->get_cms();
+$sections = $modinfo->get_section_info_all();
+
 // CAUTION, hacky fundamental variable defintion to follow!
 // Note that because of the way course fromats are constructed though
 // inclusion we pass parameters around this way.
 $displaysection = $section;
+
+// Include course AJAX.
+include_course_ajax($course, $modnamesused);
 
 // Include the actual course format.
 require($CFG->dirroot .'/course/format/'. $course->format .'/format.php');
