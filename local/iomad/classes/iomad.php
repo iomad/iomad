@@ -789,7 +789,7 @@ class iomad {
      * the user belongs to a different company.
      * Otherwise, return true
      */
-    public static function iomad_check_course($courseid) {
+    public static function iomad_check_course($checkid = 0, $name = '', $idnumber = '') {
         global $CFG, $DB, $USER;
 
         // If we are installing this will be called to build
@@ -798,15 +798,40 @@ class iomad {
             return true;
         }
 
+        // Create the select SQL.
+        $sqlwhere = "1 = 2";
+        $sqlarray = [];
+        if (!empty($checkid)) {
+            $sqlwhere = "id = :courseid";
+            $sqlarray['courseid'] = $checkid;
+        } else if (!empty($name)) {
+            $sqlwhere = $DB->sql_compare_text('shortname') .
+                        " = " .
+                        $DB->sql_compare_text(':shortname');
+            $sqlarray['shortname'] = $name;
+
+        } else if (!empty($idnumber)) {
+            $sqlwhere = $DB->sql_compare_text('idnumber') .
+                        " = " .
+                        $DB->sql_compare_text(':idnumber');
+            $sqlarray['idnumber'] = $idnumber;
+        }
+
+        // Does the course exist?
+        if (!$course = $DB->get_record_select('course', $sqlwhere, $sqlparams)) {
+            return false;
+        }
+
         // Get the user company id.
         $companyid = iomad::get_my_companyid(context_system::instance());
         if ($companyid > 0) {
             $company = new company($companyid);
 
+            // Get the list of company courses.
             $companycourses = $company->get_menu_courses(true, false, false, false, false, true);
 
-            // Check if the passed courseid is in the list.
-            if (!empty($companycourses[$courseid])) {
+            // Check if the found courseid is in the list.
+            if (!empty($companycourses[$course->id])) {
 
                 // Course is visible.
                 return true;
