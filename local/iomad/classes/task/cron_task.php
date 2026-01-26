@@ -57,10 +57,13 @@ class cron_task extends scheduled_task {
                                                 GROUP BY userid
                                                 HAVING COUNT(companyid) > 1");
             $notmultisql = "";
-            $userinparams = [];
+            $usernotinparams = [];
             if (!empty($multiusers)) {
-                [$userinsql, $userinparams] = $DB->get_in_or_equal(array_keys($multiusers));
-                $notmultisql = " AND u.id NOT $userinsql";
+                [$usernotinsql, $usernotinparams] = $DB->get_in_or_equal(array_keys($multiusers),
+                                                                        SQL_PARAMS_NAMED,
+                                                                        'userid',
+                                                                        false);
+                $notmultisql = " AND u.id $usernotinsql";
             }
             if ($CFG->iomad_sync_institution == 1) {
                 mtrace("Copying company shortnames to user institution fields\n");
@@ -71,7 +74,7 @@ class cron_task extends scheduled_task {
                                                JOIN {company} c ON cu.companyid = c.id
                                                WHERE u.institution != c.shortname
                                                $notmultisql",
-                                               $userinparams, 0, 500);
+                                               $usernotinparams, 0, 500);
             } else if ($CFG->iomad_sync_institution == 2) {
                 mtrace("Copying company name to user institution fields\n");
 
@@ -82,7 +85,7 @@ class cron_task extends scheduled_task {
                                                JOIN {company} c ON cu.companyid = c.id
                                                WHERE u.institution != c.name
                                                $notmultisql",
-                                               $userinparams, 0, 500);
+                                               $usernotinparams, 0, 500);
             }
 
             // Update the users.
@@ -106,8 +109,14 @@ class cron_task extends scheduled_task {
             $multisql = "";
             $userinparams = [];
             if (!empty($multiusers)) {
-                [$userinsql, $userinparams] = $DB->get_in_or_equal(array_keys($multiusers));
-                $notmultisql = " AND u.id NOT $userinsql";
+                [$usernotinsql, $usernotinparams] = $DB->get_in_or_equal(array_keys($multiusers),
+                                                                        SQL_PARAMS_NAMED,
+                                                                        'userid',
+                                                                        false);
+                [$userinsql, $userinparams] = $DB->get_in_or_equal(array_keys($multiusers),
+                                                                   SQL_PARAMS_NAMED,
+                                                                   'userid');
+                $notmultisql = " AND u.id $usernotinsql";
                 $multisql = " WHERE u.id $userinsql ";
             }
             $users = $DB->get_records_sql("SELECT DISTINCT u.*, d.name as targetname
@@ -117,7 +126,7 @@ class cron_task extends scheduled_task {
                                            JOIN {department} d ON cu.departmentid = d.id
                                            WHERE u.department != d.name
                                            $notmultisql",
-                                          $userinparams, 0, 500);
+                                          $usernotinparams, 0, 500);
             // Update the users.
             foreach ($users as $user) {
                 $DB->set_field('user', 'department', $user->targetname, ['id' => $user->id]);
