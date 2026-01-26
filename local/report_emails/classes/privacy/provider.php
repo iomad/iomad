@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for local_report_emails.
+ * IOMAD report emails
  *
  * @package    local_report_emails
  * @copyright  2018 E-Learn Design http://www.e-learndesign.co.uk
@@ -24,8 +24,6 @@
  */
 
 namespace local_report_emails\privacy;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Privacy Subsystem for local_report_emails implementing null_provider.
@@ -41,7 +39,7 @@ class provider implements \core_privacy\local\metadata\null_provider {
      *
      * @return  string
      */
-    public static function get_reason() : string {
+    public static function get_reason(): string {
         return 'privacy:metadata';
     }
 }
