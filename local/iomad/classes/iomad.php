@@ -826,7 +826,7 @@ class iomad {
         }
 
         // Does the course exist?
-        if (!$course = $DB->get_record_select('course', $sqlwhere, $sqlparams)) {
+        if (!$course = $DB->get_record_select('course', $sqlwhere, $sqlarray)) {
             return false;
         }
 
