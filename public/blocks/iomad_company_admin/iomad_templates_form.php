@@ -180,11 +180,11 @@ if (!empty($company)) {
                 FROM {competency_template} ct
                 JOIN {company_comp_templates} cct ON (ct.id = cct.templateid)
                 WHERE
-                ccf.companyid = :companyid
+                cct.companyid = :companyid
                 $select";
         $selectparams['companyid'] = $company;
     }
-    $templates = $DB->get_records_sql($sql);
+    $templates = $DB->get_records_sql($sql, $selectparams);
 }
 
 // Display the table.
