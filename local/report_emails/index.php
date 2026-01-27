@@ -170,7 +170,7 @@ if (!empty($fieldnames)) {
                         " AND fieldid = :fieldid";
             $fieldparams = ['fieldname' => '%' . ${$fieldname} . '%',
                             'fieldid' => $id];
-            if ($idfields = $DB->get_records_select('user_info_data', $fieldsql, $fieldsqlparams, '', 'userid')) {
+            if ($idfields = $DB->get_records_select('user_info_data', $fieldsql, $fieldparams, '', 'userid')) {
                 $fieldids[] = $idfields;
             }
         }
