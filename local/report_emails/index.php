@@ -441,7 +441,7 @@ if (!$table->is_downloading()) {
             $options['adddodownload'] = false;
             $options['emailfromraw'] = $emailfrom;
             $options['emailtoraw'] = $emailto;
-            $mform = new local_iomad\forms\user_search_form(null, $options);
+            $mform = new iomad_user_filter_form(null, $options);
             $mform->set_data($params);
             $mform->set_data($options);
             $mform->get_data();

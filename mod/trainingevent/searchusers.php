@@ -206,7 +206,7 @@ $sqlsearch = "";
 $searchparams = [];
 
 // Check if has capability to view all attendees.
-$coursecontext = context_course::instance($trainingevent->course);
+$coursecontext = context_course::instance($event->course);
 if (!has_capability('mod/trainingevent:viewallattendees', $coursecontext)) {
     // Get department users.
     $departmentusers = company::get_recursive_department_users($departmentid);

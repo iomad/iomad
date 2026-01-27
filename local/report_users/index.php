@@ -214,7 +214,7 @@ $baseurl = new moodle_url(basename(__FILE__), $urlparams);
 $returnurl = $baseurl;
 
 // Set up the filter form.
-$mform = new local_iomad\forms\user_search_form(null, ['companyid' => $selectedcompanyid]);
+$mform = new iomad_user_filter_form(null, ['companyid' => $selectedcompanyid]);
 $mform->set_data(['departmentid' => $departmentid]);
 $mform->set_data($params);
 $mform->get_data();

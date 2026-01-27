@@ -518,7 +518,7 @@ if (!$table->is_downloading()) {
         $options['loginfromraw'] = $loginfrom;
         $options['logintoraw'] = $loginto;
         $options['page'] = 0;
-        $mform = new local_iomad\forms\user_search_form(null, $options);
+        $mform = new iomad_user_filter_form(null, $options);
         $mform->set_data($params);
         $mform->set_data($options);
         $mform->get_data();
