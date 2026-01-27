@@ -784,13 +784,21 @@ class iomad {
         return true;
     }
 
-    /** IOMAD:
-     * Check if a course is attached to a company AND
-     * the user belongs to a different company.
-     * Otherwise, return true
+    /**
+     * Check if a course exists and is available to the
+     * company the user belongs to..
+     *
+     * @param integer $checkid course id
+     * @param string $name course shortname
+     * @param string $idnumber course idnumber
+     * @param boolean $checkhidden don't strip hidden courses
+     * @return boolean
      */
-    public static function iomad_check_course($checkid = 0, $name = '', $idnumber = '') {
-        global $CFG, $DB, $USER;
+    public static function iomad_check_course($checkid = 0,
+                                              $name = '',
+                                              $idnumber = '',
+                                              $checkhidden = false) {
+        global $DB, $USER;
 
         // If we are installing this will be called to build
         // the basic category tree so just say yes.
@@ -827,8 +835,14 @@ class iomad {
         if ($companyid > 0) {
             $company = new company($companyid);
 
-            // Get the list of company courses.
-            $companycourses = $company->get_menu_courses(true, false, false, false, false, true);
+            // Get the list of company courses
+            $companycourses = $company->get_menu_courses(true,
+                                                         false,
+                                                         false,
+                                                         false,
+                                                         false,
+                                                         true,
+                                                         $checkhidden);
 
             // Check if the found courseid is in the list.
             if (!empty($companycourses[$course->id])) {

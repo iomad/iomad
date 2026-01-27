@@ -3144,40 +3144,63 @@ class company {
         return false;
     }
 
-    public function get_menu_courses($shared = false, $licensed = false, $groups = false, $default = true, $onlylicensed = false, $noncompany = false) {
+    /**
+     * Get a menu list of courses based on the parameters passed.
+     *
+     * @param boolean $shared include shared courses
+     * @param boolean $unlicensed include only unlicensed courses
+     * @param boolean $groups include courses without groups enabled
+     * @param boolean $default include a default menu item
+     * @param boolean $licenseonly include only licensed courses
+     * @param boolean $noncompany include courses that are unassigned to a tenant
+     * @param boolean $includehidden include courses which are hidde
+     * @return array
+     */
+    public function get_menu_courses($shared = false,
+                                     $unlicensed = false,
+                                     $groups = false,
+                                     $default = true,
+                                     $licenseonly = false,
+                                     $noncompany = false,
+                                     $includehidden = false) {
         global $DB;
 
-        // Can we view hidden courses?
+        // Set some defaults.
+        $unlicensesql = "";
+        $sharedlicsql = "";
+        $licenseonlysql = "";
+        $sharedsql = "";
+        $groupsql = "";
+        $noncompanysql = "";
         $hiddensql = " AND c.visible = 1 ";
         $showhidden = false;
+
+        // Can we view hidden courses or do we want them anyway?
         $hiddenstring = " (" . get_string('hidden', 'grades') . ")";
         if (iomad::has_capability('block/iomad_company_admin:hideshowcourses', $this->context) ||
-            iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $this->context)) {
+            iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $this->context) ||
+            $includehidden) {
             $hiddensql = "";
             $showhidden = true;
         }
 
-        // Deal with license option.
-        if ($licensed) {
-            $licensesql = "c.id NOT IN (
+
+        // Deal with license options.
+        if ($unlicensed) {
+            $unlicensesql = "c.id NOT IN (
                              SELECT courseid FROM {iomad_courses}
                              WHERE licensed = 1
                            )
                            AND";
             $sharedlicsql = " AND licensed != 1 ";
-        } else {
-            $licensesql = "";
-            $sharedlicsql = "";
-        }
 
-        if ($onlylicensed) {
-            $onlylicensedsql = "c.id IN (
+        }
+        if ($licenseonly) {
+            $licenseonlysql = "c.id IN (
                              SELECT courseid FROM {iomad_courses}
                              WHERE licensed = 1
                            )
                            AND";
-        } else {
-            $onlylicensedsql = "";
         }
 
         // Deal with shared option.
@@ -3192,19 +3215,14 @@ class company {
                                   WHERE companyid = :companyid2
                               )
                           )";
-        } else {
-            $sharedsql = "";
         }
 
         // Deal with groups option.
         if ($groups) {
             $groupsql = "c.groupmode != 0 AND";
-        } else {
-            $groupsql = "";
         }
 
         // Deal with any courses which don't belong to any company.
-        $noncompanysql = "";
         if ($noncompany) {
             $noncompanysql = " OR
                                c.id IN (
@@ -3214,13 +3232,14 @@ class company {
                                   )
                               )";
         }
+
         // Get the courses.
         $retcourses = $DB->get_records_sql("SELECT c.id, c.fullname, c.visible
                                             FROM {course} c
                                             WHERE
                                             $groupsql
-                                            $licensesql
-                                            $onlylicensedsql
+                                            $unlicensesql
+                                            $licenseonlysql
                                             c.id IN (
                                                 SELECT courseid FROM {company_course}
                                                 WHERE companyid = :companyid
@@ -3232,7 +3251,7 @@ class company {
                                            ['companyid' => $this->id,
                                             'companyid2' => $this->id]);
 
-        // Take care of multilanguage
+        // Take care of any text filters.
         foreach ($retcourses as $courseid => $course) {
             $displayname = format_string($course->fullname, true, 1);
             if ($course->visible == 0) {
@@ -3248,7 +3267,7 @@ class company {
 
         // Add a default entry and return the courses.
         if ($default) {
-            return array('0' => get_string('noselection', 'form')) + $retcourses;
+            return ['0' => get_string('noselection', 'form')] + $retcourses;
         } else {
             return $retcourses;
         }
