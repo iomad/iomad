@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->release  = '4.1.22 (Build: 20251208)'; // Human-friendly version name.
-$plugin->version  = 2020102741;
+$plugin->version  = 2020102841;
 $plugin->requires = 2019052000;
 $plugin->component  = 'local_report_users';
 $plugin->dependencies = ['local_iomad' => 2023042702];
