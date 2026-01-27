@@ -22,6 +22,6 @@
  */
 
 $plugin->release  = '4.0.12 (Build: 20231211)'; // Human-friendly version name
-$plugin->version  = 2021021500;
+$plugin->version  = 2021021501;
 $plugin->requires = 2019052000;
 $plugin->component  = 'local_report_emails';
