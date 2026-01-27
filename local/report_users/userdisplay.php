@@ -41,6 +41,7 @@ $action = optional_param('action', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $validonly = optional_param('validonly', $CFG->iomad_hidevalidcourses, PARAM_BOOL);
 $edit = optional_param('edit', -1, PARAM_BOOL);
+$mandatoryonly = false;
 
 if (!empty($USER->editing)) {
     $download = 0;
