@@ -536,7 +536,7 @@ class completion_table extends table_sql {
                                 'div',
                                 '0%',
                                 [
-                                    'class' > 'progress-bar',
+                                    'class' => 'progress-bar',
                                     'style' => 'width:0%;height:20px',
                                 ]
                             ) .
@@ -562,7 +562,7 @@ class completion_table extends table_sql {
                                 'div',
                                 '0%',
                                 [
-                                    'class' > 'progress-bar',
+                                    'class' => 'progress-bar',
                                     'style' => 'width:0%;height:20px',
                                 ]
                             ) .
@@ -597,7 +597,7 @@ class completion_table extends table_sql {
                                 'div',
                                 $progress . '%',
                                 [
-                                    'class' > 'progress-bar',
+                                    'class' => 'progress-bar',
                                     'style' => 'width:' . $progress . '%;height:20px',
                                 ]
                             ) .
