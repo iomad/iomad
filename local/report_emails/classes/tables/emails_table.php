@@ -135,7 +135,7 @@ class emails_table extends table_sql {
 
         $courseurl = new moodle_url($CFG->wwwroot . '/local/report_completion/index.php',
                                     ['courseid' => $row->courseid]);
-        if (!$this->is_downloading() && iomad::has_capability('local/report_completion:view', context_company::instance())) {
+        if (!$this->is_downloading() && iomad::has_capability('local/report_completion:view', context_system::instance())) {
             return html_writer::tag('a', format_string($row->coursename, true, 1), ['href' => $courseurl]);
         } else {
             return format_string($row->coursename, true, 1);
