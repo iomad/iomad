@@ -76,7 +76,7 @@ class users_table extends table_sql {
         global $CFG;
 
         if (!empty($row->created)) {
-            return userdate($row->created, $CFG->iomad_date_format);
+            return date($CFG->iomad_date_format, $row->created);
         } else {
             return;
         }
@@ -91,7 +91,7 @@ class users_table extends table_sql {
         global $CFG;
 
         if (!empty($row->lastaccess)) {
-            return userdate($row->lastaccess, $CFG->iomad_date_format);
+            return date($CFG->iomad_date_format, $row->lastaccess);
         } else {
             return get_string('never');
         }

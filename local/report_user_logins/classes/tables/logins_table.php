@@ -72,7 +72,7 @@ class logins_table extends table_sql {
     public function col_created($user) {
         global $CFG;
 
-        return userdate($user->created, $CFG->iomad_date_format);
+        return date($CFG->iomad_date_format, $user->created);
     }
 
     /**
@@ -86,7 +86,7 @@ class logins_table extends table_sql {
         if ($user->urlfirstlogin == null) {
             return(get_string('never'));
         } else {
-            return userdate($user->urlfirstlogin, $CFG->iomad_date_format);
+            return date($CFG->iomad_date_format, $user->urlfirstlogin);
         }
     }
 
@@ -101,7 +101,7 @@ class logins_table extends table_sql {
         if ($user->urllastlogin == null) {
             return(get_string('never'));
         } else {
-            return userdate($user->urllastlogin, $CFG->iomad_date_format);
+            return date($CFG->iomad_date_format, $user->urllastlogin);
         }
     }
 
