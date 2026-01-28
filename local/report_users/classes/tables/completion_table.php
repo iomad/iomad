@@ -369,14 +369,14 @@ class completion_table extends table_sql {
             if ($traccertrecs = $DB->get_records('local_iomad_track_certs', ['trackid' => $row->certsource])) {
                 if (empty($USER->editing) ||
                     !iomad::has_capability('local/report_users:redocertificates', $companycontext)) {
-                    $usercontext = context_user::instance($row->userid);
+                    $coursecontext = context_course::instance($row->courseid);
                     $returntext = "";
                     foreach ($traccertrecs as $traccertrec) {
                         // Create the file download link.
 
                         $certurl = moodle_url::make_file_url(
                             '/pluginfile.php',
-                            '/' . $usercontext->id .
+                            '/' . $coursecontext->id .
                             '/local_iomad_track/issue/' . $traccertrec->trackid .
                             '/' . $traccertrec->filename);
                         $returntext .= html_writer::start_tag(
