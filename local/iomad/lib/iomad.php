@@ -34,13 +34,23 @@ class iomad {
      * @param $parms - (array)
      */
     public static function register_site($data) {
-        global $CFG;
+        global $CFG, $DB;
 
         // Add in the missing data.
         $data['siteurl'] = $CFG->wwwroot;
-        $ch = curl_init('https://www.iomad.org/wp-json/contact-form-7/v1/contact-forms/4445/feedback');
+        $data['tenants'] = $DB->count_records('company');
+        $data['siteid'] = get_site_identifier();
+        $url = new moodle_url(
+            'https://www.iomad.org/wp-json/contact-form-7/v1/contact-forms/4445/feedback',
+            [
+                '_wpcf7_unit_tag' => 'wpcf7-f4445-p5646-o1',
+            ]
+            );
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'WordPress/5.6; https://www.iomad.org/');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: multipart/form-data']);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
         $response = curl_exec($ch);
