@@ -38,6 +38,7 @@ $string['consentlink'] = 'Submit consent with Microsoft';
 $string['iomad_oidc_sync:manage'] = 'Manage IOMAD OIDC sync settings';
 $string['iomad_oidc_sync:view'] = 'View the IOMAD OIDC sync status';
 $string['loglink'] = 'View Config log';
+$string['managermapping'] = '<b>NOTE</b> - If you are mapping local fields to the remote manager object, then please use the format <b>manager.<i>field</i></b> as the mapping value. E.g. <b>manager.mail</b>';
 $string['oidc_sync_task'] = 'IOMAD OIDC sync task';
 $string['pluginname'] = 'IOMAD OIDC sync';
 $string['privacy:metadata'] = 'The IOMAD OIDC sync plugin only shows data stored in other locations.';

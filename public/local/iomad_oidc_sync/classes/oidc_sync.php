@@ -70,7 +70,7 @@ class oidc_sync {
                     // Get the accesstoken.
                     if ($accesstoken = self::get_accesstoken($tenantid, $clientid, $clientsecret)) {
                         // So far so good - get the users.
-                        $users = self::get_users($accesstoken, "",  $company->syncgroupid);
+                        $users = self::get_users($accesstoken, $company->syncgroupid);
 
                         // Do we have a list of email domains?
                         $companydomains = $DB->get_records_menu('company_domains', ['companyid' => $company->id], '', 'id,domain');
@@ -182,7 +182,7 @@ class oidc_sync {
         // Process the users.
         foreach ($users as $aduser) {
             if ($CFG->debug > DEBUG_NONE) {
-                mtrace("Dealing with username " . $aduser['userPrincipalName']);
+                mtrace("Dealing with passed data " . print_r($aduser, true));
             }
 
             // Are we restricting by email domain?
@@ -248,14 +248,23 @@ class oidc_sync {
 
                 // Save custom profile fields data and fire the creation.
                 foreach ($mappedfields as $profilefield => $mapping) {
+                    if ($CFG->debug > DEBUG_NONE) {
+                        mtrace("Checking mapping $mapping");
+                    }
                     // Is this a manager field?
                     if (str_starts_with($mapping, 'manager')) {
                         // Need to get the value from the manager sub-array.
                         [$first, $second] = explode('.', $mapping);
                         if (!empty($aduser[$first][$second])) {
+                            if ($CFG->debug > DEBUG_NONE) {
+                                mtrace("Setting profile field $profilefield to " . $aduser[$first][$second]);
+                            }
                             $userrec->$profilefield = $aduser[$first][$second];
                         }
                     } else if (!empty($aduser[$mapping])) {
+                            if ($CFG->debug > DEBUG_NONE) {
+                                mtrace("Setting profile field $profilefield to " . $aduser[$mapping]);
+                            }
                         $userrec->$profilefield = $aduser[$mapping];
                     }
                 }
@@ -401,20 +410,15 @@ class oidc_sync {
      * the accesstoken previously created.
      *
      **/
-    private static function get_users($accesstoken, $domain = "", $syncgroupid = "") {
+    private static function get_users($accesstoken, $syncgroupid = "") {
 
         $userlist = [];
 
         // Get the correct URL for the Microsoft Graph API call to list users.
         if (empty($syncgroupid)) {
-            $graphurl = 'https://graph.microsoft.com/v1.0/users?$top=500';
+            $graphurl = 'https://graph.microsoft.com/v1.0/users?$expand=manager&$top=500';
         } else {
-            $graphurl = 'https://graph.microsoft.com/v1.0/groups/' . $syncgroupid . '/members?$top=500';
-        }
-
-        // Deal with any email domain searches.
-        if (!empty($domain)) {
-            $graphurl .= '&$filter=endswith(mail,\'@' . $domain .'\')&$count=true';
+            $graphurl = 'https://graph.microsoft.com/v1.0/groups/' . $syncgroupid . '/members?$expand=manager&$top=500';
         }
 
         // Setup the HTTP headers.
