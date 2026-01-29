@@ -70,25 +70,18 @@ class oidc_sync {
                     // Get the accesstoken.
                     if ($accesstoken = self::get_accesstoken($tenantid, $clientid, $clientsecret)) {
                         // So far so good - get the users.
-                        // Do we have a list of email domains?
-                        if ($companydomains = $DB->get_records('company_domains', ['companyid' => $company->id])) {
-                            $users = [];
-                            foreach ($companydomains as $companydomain) {
-                                // Process these individually.
-                                $companyusers = self::get_users($accesstoken, $companydomain->domain, $company->syncgroupid);
+                        $users = self::get_users($accesstoken, "",  $company->syncgroupid);
 
-                                // Did we find any?
-                                if (!empty($companyusers)) {
-                                    // Add them to the big list of users to be processed.
-                                    $users = array_merge(array_values($users), array_values($companyusers));
-                                }
-                            }
-                        } else {
-                            $users = self::get_users($accesstoken, "",  $company->syncgroupid);
-                        }
+                        // Do we have a list of email domains?
+                        $companydomains = $DB->get_records_menu('company_domains', ['companyid' => $company->id], '', 'id,domain');
+
                         if (!empty($users)) {
                             // Process them.
-                            self::process_users($company->id, $users, $company->useroption, $company->unsuspendonsync);
+                            self::process_users($company->id,
+                                                $users,
+                                                $company->useroption,
+                                                $company->unsuspendonsync,
+                                                $companydomains);
                         }
                     } else {
                         mtrace("Failed getting the access token for companyID " . $company->id);
@@ -133,7 +126,7 @@ class oidc_sync {
      * and, if not, creates them an assigns them to the company.
      *
      **/
-    private static function process_users($companyid, $users, $useroption, $unsuspendonsync) {
+    private static function process_users($companyid, $users, $useroption, $unsuspendonsync, $companydomains) {
         global $DB, $CFG;
 
         $postfix = "_$companyid";
@@ -188,12 +181,35 @@ class oidc_sync {
 
         // Process the users.
         foreach ($users as $aduser) {
+            if ($CFG->debug > DEBUG_NONE) {
+                mtrace("Dealing with username " . $aduser['userPrincipalName']);
+            }
+
+            // Are we restricting by email domain?
+            if (!empty($companydomains)) {
+                // Default set to fail.
+                $domainok = false;
+
+                // Check if the mail has the domain at the end.
+                foreach ($companydomains as $companydomain) {
+                    if (str_ends_with(strtolower($aduser['mail']), '@' . strtolower($companydomain))) {
+                        // It's a company domain.
+                        $domainok = true;
+                    }
+                }
+
+                // Did it match any of them?
+                if (!$domainok) {
+                    if ($CFG->debug > DEBUG_NONE) {
+                        mtrace("Not a company user - skipping");
+                    }
+                    continue;
+                }
+            }
+
+            // Process the user.
             $userrec = (object) [];
             $userrec->username = strtolower($aduser['userPrincipalName']);
-
-            if ($CFG->debug > DEBUG_NONE) {
-                mtrace("Dealing with username $userrec->username");
-            }
 
             // Only want to add new users.
             if (!$founduser = $DB->get_record('user', (array) $userrec)) {
@@ -232,7 +248,14 @@ class oidc_sync {
 
                 // Save custom profile fields data and fire the creation.
                 foreach ($mappedfields as $profilefield => $mapping) {
-                    if (!empty($aduser[$mapping])) {
+                    // Is this a manager field?
+                    if (str_starts_with($mapping, 'manager')) {
+                        // Need to get the value from the manager sub-array.
+                        [$first, $second] = explode('.', $mapping);
+                        if (!empty($aduser[$first][$second])) {
+                            $userrec->$profilefield = $aduser[$first][$second];
+                        }
+                    } else if (!empty($aduser[$mapping])) {
                         $userrec->$profilefield = $aduser[$mapping];
                     }
                 }
@@ -251,7 +274,13 @@ class oidc_sync {
 
                 // Sync the profile data.
                 foreach ($mappedfields as $profilefield => $mapping) {
-                    if (!empty($aduser[$mapping])) {
+                    if (str_starts_with($mapping, 'manager')) {
+                        // Need to get the value from the manager sub-array.
+                        [$first, $second] = explode('.', $mapping);
+                        if (!empty($aduser[$first][$second])) {
+                            $founduser->$profilefield = $aduser[$first][$second];
+                        }
+                    } else if (!empty($aduser[$mapping])) {
                         $founduser->$profilefield = $aduser[$mapping];
                     }
                 }
