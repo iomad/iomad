@@ -1280,7 +1280,8 @@ class potential_license_user_selector extends company_user_selector_base {
         $myusers = company::get_my_users($this->companyid);
 
         // are we dealing with an educator license?
-        if ($this->license->type > 1) {
+        // Types 2 and 3 are educator licenses, type 4 (blanket) is for all users
+        if ($this->license->type == 2 || $this->license->type == 3) {
             $edusql = " AND u.id IN (SELECT userid FROM {company_users} WHERE educator = 1) ";
         } else {
             $edusql = "";
