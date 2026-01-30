@@ -25,11 +25,12 @@
 
 namespace block_iomad_commerce\output;
 
-use core\output\inplace_editable;
-use local_iomad\iomad;
-use core_external;
-use renderer_base;
 use block_iomad_commerce\event\tag_name_updated;
+use core\output\inplace_editable;
+use core_external;
+use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
+use renderer_base;
 
 /**
  * Block IOMAD eCommerce tag name editable class
@@ -49,7 +50,7 @@ class tag_name_editable extends inplace_editable {
     public function __construct($companyid, $shoptag) {
 
         // Check the user has the correct permissions.
-        $capability = iomad::has_capability('block/iomad_commerce:manage_tags', \core\context\company::instance($companyid));
+        $capability = iomad::has_capability('block/iomad_commerce:manage_tags', context_company::instance($companyid));
 
         // Define variables used in other functions.
         $this->edithint = get_string('xshoptag', 'block_iomad_commerce', $shoptag->tag);
@@ -100,7 +101,7 @@ class tag_name_editable extends inplace_editable {
         $companyid = iomad::get_my_companyid($context, true);
 
         // Define the context.
-        $context = \core\context\company::instance($companyid);
+        $context = context_company::instance($companyid);
 
         // Check if the user has permissions to access this.
         core_external::validate_context($context);

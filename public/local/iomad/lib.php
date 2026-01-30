@@ -23,7 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use local_iomad\company;
 
 /**
  * Hook called by delete_course to remove iomad table references before course is deleted

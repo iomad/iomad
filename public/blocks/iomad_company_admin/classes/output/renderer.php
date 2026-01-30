@@ -25,14 +25,14 @@ namespace block_iomad_company_admin\output;
 
 defined('MOODLE_INTERNAL') || die();
 
-use plugin_renderer_base;
+use context_system;
 use html_writer;
 use html_table;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
 use moodle_url;
+use plugin_renderer_base;
 use single_select;
-use context_system;
-use iomad;
-use company;
 
 class renderer extends plugin_renderer_base {
 
@@ -291,7 +291,7 @@ class renderer extends plugin_renderer_base {
     public function display_tree_selector($company, $parentlevel, $linkurl, $urlparams, $departmentid = 0, $addchildcompanies = false) {
         global $DB, $USER;
 
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
             $userlevels = array($parentlevel->id => $parentlevel->id);
         } else {
@@ -348,7 +348,7 @@ class renderer extends plugin_renderer_base {
 
         // Get the available departments.
         $parentlevel = company::get_company_parentnode($company->id);
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
             $userlevels = array($parentlevel->id => $parentlevel->id);
         } else {

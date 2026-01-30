@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once(dirname('__FILE__').'/lib.php');
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
@@ -56,11 +59,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$mycompany = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$mycompany = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:manageframeworks', $companycontext);
+iomad::require_capability('block/iomad_company_admin:manageframeworks', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_company_admin/iomad_frameworks_form.php');

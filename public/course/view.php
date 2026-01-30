@@ -22,6 +22,8 @@
  * @package core_course
  */
 
+use local_iomad\iomad;
+
 require_once('../config.php');
 require_once('lib.php');
 require_once($CFG->libdir.'/completionlib.php');
@@ -55,7 +57,7 @@ if (!empty($name)) {
 }
 
 // Iomad - check if a user can even see the course.
-if (!local_iomad\iomad::iomad_check_course($id, $name, $idnumber, true)) {
+if (!iomad::iomad_check_course($id, $name, $idnumber, true)) {
     // Set it to 0 so it fails DB get_record.
     $params['id'] = SITEID;
 }

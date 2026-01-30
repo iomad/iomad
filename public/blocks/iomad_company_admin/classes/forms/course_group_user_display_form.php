@@ -26,9 +26,8 @@ namespace block_iomad_company_admin\forms;
 use company_moodleform;
 use context_coursecat;
 use context_system;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
 use local_iomad\user_selector\potential_group;
 use local_iomad\user_selector\current_group;
 
@@ -44,7 +43,7 @@ class course_group_user_display_form extends company_moodleform {
 
         $this->selectedcompany = $companyid;
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
-        $this->companycontext = \core\context\company::instance($companyid);
+        $this->companycontext = context_company::instance($companyid);
 
         $this->company = new company($this->selectedcompany);
         $this->courseid = $courseid;

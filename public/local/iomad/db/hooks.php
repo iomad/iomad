@@ -15,27 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Management page for Iomad Learning Paths
+ * Local IOMAD hook callbacks
  *
- * @package    local_iomadlearninpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @package    local_iomad
+ * @copyright  e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Derick Turner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_iomad\{company, iomad};
-use local_iomad\custom_context\context_company;
+defined('MOODLE_INTERNAL') || die();
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once(dirname(__FILE__) . '/lib.php');
-
-// Security
-require_login();
-
-$systemcontext = context_system::instance();
-
-// Set the companyid
-$companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = context_company::instance($companyid);
-$company = new company($companyid);
-
-iomad::require_capability('local/iomad_learningpath_manage', $companycontext);
+$callbacks = [
+    [
+        'hook' => core\hook\after_config::class,
+        'callback' => [local_iomad\hook_callbacks::class, 'after_config'],
+    ],
+];

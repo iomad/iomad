@@ -24,7 +24,7 @@
 
 namespace mod_forum\task;
 
-use company;
+use local_iomad\company;
 
 defined('MOODLE_INTERNAL') || die();
 

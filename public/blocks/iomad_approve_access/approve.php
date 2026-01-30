@@ -21,6 +21,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, emailtemplate, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->libdir.'/formslib.php');
@@ -33,7 +36,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 // Can I do this?
@@ -155,7 +158,7 @@ if ($data = $callform->get_data()) {
                             // Send the emails.
                             foreach ($mymanagers as $mymanager) {
                                 if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                    local_iomad\emailtemplate::send('course_classroom_approval', array('course' => $course,
+                                    emailtemplate::send('course_classroom_approval', array('course' => $course,
                                                                                            'event' => $event,
                                                                                            'user' => $manageruser,
                                                                                            'approveuser' => $eventuser,
@@ -233,7 +236,7 @@ if ($data = $callform->get_data()) {
                                 // Send the emails.
                                 foreach ($mymanagers as $mymanager) {
                                     if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                                        local_iomad\emailtemplate::send('course_classroom_manager_denied', array('course' => $course,
+                                        emailtemplate::send('course_classroom_manager_denied', array('course' => $course,
                                                                                                'event' => $event,
                                                                                                'user' => $USER,
                                                                                                'approveuser' => $eventuser,
@@ -290,7 +293,7 @@ if ($data = $callform->get_data()) {
                             $cancontinue = false;
                         }
                         if ($cancontinue) {
-                            local_iomad\emailtemplate::send('course_classroom_approved', array('course' => $approvecourse,
+                            emailtemplate::send('course_classroom_approved', array('course' => $approvecourse,
                                                                                    'event' => $event,
                                                                                    'user' => $approveuser,
                                                                                    'company' => $company,
@@ -315,7 +318,7 @@ if ($data = $callform->get_data()) {
                                     $userteachers = $userteachers + get_enrolled_users(context_course::instance($approvecourse->id), 'mod/trainingevent:viewattendees', $usergroup);
                                 }
                                 foreach ($userteachers as $userteacher) {
-                                    local_iomad\emailtemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
+                                    emailtemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
                                                                                                   'approveuser' => $approveuser,
                                                                                                   'user' => $userteacher,
                                                                                                   'classroom' => $location,
@@ -330,7 +333,7 @@ if ($data = $callform->get_data()) {
 
                         }
                     } else if ($senddenied) {
-                        local_iomad\emailtemplate::send('course_classroom_denied', array('course' => $approvecourse,
+                        emailtemplate::send('course_classroom_denied', array('course' => $approvecourse,
                                                                              'event' => $event,
                                                                              'user' => $approveuser,
                                                                              'company' => $company,

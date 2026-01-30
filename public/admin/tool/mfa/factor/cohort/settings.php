@@ -23,8 +23,19 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../../../../../cohort/lib.php');
+global $CFG;
+
+// IOMAD
+
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
+$postfix = "";
+if (!empty($companyid)) {
+    $postfix = "_$companyid";
+}
 
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('factor_cohort/description', '',

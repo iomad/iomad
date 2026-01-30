@@ -22,6 +22,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
 
@@ -38,10 +40,9 @@ $moveup = optional_param('moveup', null, PARAM_INT);
 $movedown = optional_param('movedown', null, PARAM_INT);
 $companyonly = optional_param('companyonly', false, PARAM_BOOL);
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if ($companyonly && !empty($companyid)) {
-    $companycontext = \core\context\company::instance($companyid);
+    $companycontext = context_company::instance($companyid);
     $PAGE->set_url(new moodle_url($CFG->wwwroot . '/admin/tool/iomadpolicy/managedocs.php', ['companyonly' => $companyonly]));
     $PAGE->set_context($companycontext);
     $PAGE->set_heading(get_string('pluginname', 'tool_iomadpolicy'));

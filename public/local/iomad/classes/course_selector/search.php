@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../../../config.php');
 
@@ -30,8 +32,8 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
 
 $PAGE->set_context($systemcontext);
 $PAGE->set_url('/local/iomad/classes/course_selector/search.php');

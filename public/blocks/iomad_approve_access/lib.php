@@ -21,9 +21,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->dirroot.'/local/iomad/lib/company.php');
-require_once($CFG->dirroot.'/local/iomad/lib/user.php');
-require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+use local_iomad\{company, emailtemplate, iomad};
+
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once($CFG->dirroot.'/mod/trainingevent/lib.php');
 
@@ -368,7 +367,7 @@ class iomad_approve_access {
         $mymanagers = $company->get_my_managers($user->id, $managertype);
         foreach ($mymanagers as $mymanager) {
             if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                local_iomad\emailtemplate::send('course_classroom_approval', ['course' => $course,
+                emailtemplate::send('course_classroom_approval', ['course' => $course,
                                                                   'user' => $manageruser,
                                                                   'approveuser' => $user,
                                                                   'event' => $trainingevent,
@@ -449,7 +448,7 @@ class iomad_approve_access {
         $mymanagers = $company->get_my_managers($user->id, $managertype);
         foreach ($mymanagers as $mymanager) {
             if ($manageruser = $DB->get_record('user', array('id' => $mymanager->userid))) {
-                local_iomad\emailtemplate::send('course_classroom_approval', ['course' => $course,
+                emailtemplate::send('course_classroom_approval', ['course' => $course,
                                                                   'user' => $manageruser,
                                                                   'approveuser' => $user,
                                                                   'event' => $trainingevent,

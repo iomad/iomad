@@ -25,10 +25,9 @@
 
 namespace local_iomad\forms;
 
-use moodleform;
 use context_system;
-use local_iomad\emailvars;
-use local_iomad\company;
+use local_iomad\{company, emailvars};
+use moodleform;
 
 /**
  * Template edit form definition
@@ -49,14 +48,8 @@ class template_edit_form extends moodleform {
     protected $companymanagers;
     protected $multiplecompanymanagers;
     protected $editing;
-<<<<<<<< HEAD:public/local/email/classes/forms/template_edit_form.php
-    protected $templatesetid;
-    protected $companymanagers;
-    protected $multiplecompanymanagers;
-========
     protected $isediting;
     protected $templatesetid;
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/forms/template_edit_form.php
 
     public function __construct($actionurl, $isadding, $isediting, $companyid, $templateid, $templaterecord, $templatesetid) {
         $this->isadding = $isadding;
@@ -65,13 +58,8 @@ class template_edit_form extends moodleform {
         $this->templaterecord = $templaterecord;
         $this->companyid = $companyid;
         $this->templatesetid = $templatesetid;
-<<<<<<<< HEAD:public/local/email/classes/forms/template_edit_form.php
-        $company = new company($companyid);
-        $this->companymanagers = $company->get_managers_select();
-========
         $this->company = new company($companyid);
         $this->companymanagers = $this->company->get_managers_select();
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/forms/template_edit_form.php
         $this->multiplecompanymanagers = $this->companymanagers;
         unset($this->multiplecompanymanagers[0]);
         if (!empty($isadding)) {
@@ -81,14 +69,7 @@ class template_edit_form extends moodleform {
     }
 
     public function definition() {
-<<<<<<<< HEAD:public/local/email/classes/forms/template_edit_form.php
-        global $CFG, $PAGE, $DB;
-
-        $context = context_system::instance();
-        $company = new company($this->companyid);
-========
         global $DB;
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/forms/template_edit_form.php
 
         $mform =& $this->_form;
 

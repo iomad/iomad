@@ -24,6 +24,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
@@ -47,7 +50,7 @@ $company = new company($companyid);
 
 // If we are 4.3+ we use the company context for this.
 if ($CFG->branch > 402) {
-    $companycontext = \core\context\company::instance($companyid);
+    $companycontext = context_company::instance($companyid);
 }
 
 iomad::require_capability('local/iomad_oidc_sync:view', $companycontext);
@@ -91,7 +94,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 
 $url = new moodle_url('/local/iomad_oidc_sync/index.php', $params);
 
-if (!local_iomad\company::check_valid_user($companyid, $USER->id)) {
+if (!company::check_valid_user($companyid, $USER->id)) {
     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 

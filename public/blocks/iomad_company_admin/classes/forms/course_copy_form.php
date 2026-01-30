@@ -25,6 +25,9 @@
 
 namespace block_iomad_company_admin\forms;
 
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/formslib.php");
@@ -53,7 +56,7 @@ class course_copy_form extends \moodleform {
 
         $mform = $this->_form;
         $course = $this->_customdata['course'];
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
         $courseconfig = get_config('moodlecourse');
 
         if (empty($course->category)) {
@@ -107,8 +110,8 @@ class course_copy_form extends \moodleform {
         $mform->addElement('select', 'visible', get_string('coursevisibility'), $choices);
         $mform->addHelpButton('visible', 'coursevisibility');
         $mform->setDefault('visible', $courseconfig->visible);
-        if (!\iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
-            !\iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext)) {
+        if (!iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
+            !iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext)) {
             $mform->hardFreeze('visible');
             $mform->setConstant('visible', $course->visible);
         }
@@ -149,8 +152,8 @@ class course_copy_form extends \moodleform {
         $mform->setDefault('idnumber', $course->idnumber);
         $mform->addHelpButton('idnumber', 'idnumbercourse');
         $mform->setType('idnumber', PARAM_RAW);
-        if (!\iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
-            !\iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext)) {
+        if (!iomad::has_capability('block/iomad_company_admin:hideshowcourses', $companycontext) &&
+            !iomad::has_capability('block/iomad_company_admin:hideshowallcourses', $companycontext)) {
             $mform->hardFreeze('idnumber');
             $mform->setConstant('idnumber', '');
         }

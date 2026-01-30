@@ -23,11 +23,11 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \company_moodleform;
-use \company;
-use \iomad;
-use \context_system;
-use \context_coursecat;
+use company_moodleform;
+use context_system;
+use context_coursecat;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
 
 class department_display_form extends company_moodleform {
     protected $selectedepartmentdcompany = 0;
@@ -47,7 +47,7 @@ class department_display_form extends company_moodleform {
 
         $this->selectedcompany = $companyid;
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
-        $this->companycontext = \core\context\company::instance($companyid);
+        $this->companycontext = context_company::instance($companyid);
 
         $this->company = new company($this->selectedcompany);
         $parentlevel = company::get_company_parentnode($this->company->id);

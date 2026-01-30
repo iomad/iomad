@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,12 +24,7 @@
 
 namespace local_iomad;
 
-use iomad;
-use company;
-
 defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot.'/local/iomad/lib/company.php');
 
 class tenancy {
 

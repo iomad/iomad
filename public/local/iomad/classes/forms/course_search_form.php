@@ -25,10 +25,8 @@ namespace local_iomad\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
-use \moodleform;
+use moodleform;
+use moodle_url;
 
 /**
  * Course search form used on the IOMAD pages.
@@ -110,3 +108,4 @@ class course_search_form extends moodleform {
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }
 }
+

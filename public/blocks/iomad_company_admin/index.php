@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once( '../../config.php');
 
 // We always require users to be logged in for this page.
@@ -39,7 +42,7 @@ $SESSION->showsuspendedcompanies = $showsuspendedcompanies;
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
 if (!empty($company)) {
-    $companycontext = \core\context\company::instance($company);
+    $companycontext = context_company::instance($company);
 }
 
 if ($companychange &&
@@ -132,7 +135,7 @@ if (empty($SESSION->currenteditingcompany) &&
 
 $companycontext = $systemcontext;
 if (!empty($company)) {
-    $companycontext =  \core\context\company::instance($company);
+    $companycontext =  context_company::instance($company);
 }
 
 // Page setup stuff.

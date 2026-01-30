@@ -25,6 +25,9 @@
  * Script to let a user edit the properties of a particular email template.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 require_once($CFG->libdir . '/formslib.php');
@@ -39,7 +42,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 $urlparams = array('id' => $classroomid);

@@ -109,6 +109,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 /** No capability change */
 define('CAP_INHERIT', 0);
 /** Allow permission, overrides CAP_PREVENT defined in parent contexts */
@@ -134,10 +136,6 @@ define('CONTEXT_MODULE', 70);
  * Any other context level instance can be parent of block context.
  */
 define('CONTEXT_BLOCK', 80);
-
-// IOMAD
-/** Company context level - one instance for each company */
-define('CONTEXT_COMPANY', 13);
 
 /** Capability allow management of trusts - NOT IMPLEMENTED YET - see {@link https://moodledev.io/docs/apis/subsystems/roles} */
 define('RISK_MANAGETRUST', 0x0001);

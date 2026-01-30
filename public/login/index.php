@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+
 require('../config.php');
 require_once('lib.php');
 
@@ -277,7 +279,7 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
                 $currentcompany = $SESSION->company;
             }
             if (empty($currenteditingcompany)  ||
-                !local_iomad\company::check_valid_user($currenteditingcompany, $user->id)) {
+                !company::check_valid_user($currenteditingcompany, $user->id)) {
                 // Check if the user is in multiple companies.
                 if ($DB->count_records_sql("SELECT COUNT(DISTINCT companyid) FROM {company_users} WHERE userid = :userid", ['userid' => $user->id]) == 1) {
                     if ($mycompany = company::by_userid($user->id, true)) {
@@ -432,8 +434,8 @@ if ($errorcode && isset($SESSION->loginredirect)) {
 $SESSION->loginredirect = $loginredirect;
 
 /// Redirect to alternative login URL if needed
-if (!empty(local_iomad\iomad::get_config('', 'alternateloginurl')) && $loginredirect) {
-    $loginurl = new moodle_url(local_iomad\iomad::get_config('', 'alternateloginurl'));
+if (!empty(iomad::get_config('', 'alternateloginurl')) && $loginredirect) {
+    $loginurl = new moodle_url(iomad::get_config('', 'alternateloginurl'));
 
     $loginurlstr = $loginurl->out(false);
 

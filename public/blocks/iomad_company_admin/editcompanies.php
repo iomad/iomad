@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -403,7 +406,7 @@ if ($companies) {
         $childbutton = '';
         $linkparams = $params;
         $linkparams['sesskey'] = sesskey();
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
         $strmanage = get_string('managecompany', 'block_iomad_company_admin');
         if (iomad::has_capability('block/iomad_company_admin:company_add', $context)) {
             $primary = false;

@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 /**
  * License enrolment plugin class.
  * @copyright  2011 E-Learn Design Ltd. http://www.e-learndesign.co.uk
@@ -360,7 +362,7 @@ class enrol_license_plugin extends enrol_plugin {
             }
         }
 
-        // Set the companyid.
+        // Set the companyid
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Get the license information.

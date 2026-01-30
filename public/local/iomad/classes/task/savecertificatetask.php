@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
 use core\task\manager;
-use local_iomad\track\track;
+use local_iomad\track;
 
 class savecertificatetask extends adhoc_task {
 

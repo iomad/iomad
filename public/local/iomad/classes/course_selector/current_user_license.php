@@ -23,10 +23,10 @@
 
 namespace local_iomad\course_selector;
 
-use local_iomad\iomad;
-use local_iomad\company;
 use context_course;
 use context_system;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
 
 class current_user_license extends company_base {
 
@@ -175,7 +175,7 @@ class current_user_license extends company_base {
 
         // Add some additional sensible conditions.
         if (!iomad::has_capability('moodle/course:viewhiddencourses', context_system::instance()) &&
-            !iomad::has_capability('moodle/course:viewhiddencourses', \core\context\company::instance(iomad::get_my_companyid(context_system::instance())))) {
+            !iomad::has_capability('moodle/course:viewhiddencourses', context_company::instance(iomad::get_my_companyid(context_system::instance())))) {
             $tests[] = $u . 'visible = 1';
         }
 

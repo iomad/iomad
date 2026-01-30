@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -58,7 +61,7 @@ if (!$trainingevent = $DB->get_record('trainingevent', ['id' => $eventid])) {
 
 $systemcontext = context_system::instance();
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 
 if (!$cm = get_coursemodule_from_instance('trainingevent', $trainingevent->id, $trainingevent->course)) {
     throw new moodle_exception('invalid coursemodule ID');

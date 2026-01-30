@@ -25,6 +25,8 @@
 use local_iomadcustompage\manager;
 use local_iomadcustompage\permission;
 use local_iomadcustompage\custom_context\context_iomadcustompage;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 require_once('../../config.php');
 require_once($CFG->dirroot . '/lib/adminlib.php');
@@ -35,7 +37,7 @@ $context = context_iomadcustompage::instance($pageid);
 // Set the companyid.
 $companyid = iomad::get_my_companyid(context_system::instance());
 if ($companyid > 0) {
-    $companycontext = \core\context\company::instance($companyid);
+    $companycontext = context_company::instance($companyid);
 }
 
 require_login(null, true);

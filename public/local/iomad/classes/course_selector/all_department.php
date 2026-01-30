@@ -23,6 +23,8 @@
 
 namespace local_iomad\course_selector;
 
+use local_iomad\company;
+
 class all_department extends company_base {
 
     public function __construct($name, $options) {
@@ -50,7 +52,7 @@ class all_department extends company_base {
         $params['companyid'] = $this->companyid;
 
         // Deal with departments.
-        $departmentlist = local_iomad\company::get_all_subdepartments($this->departmentid);
+        $departmentlist = company::get_all_subdepartments($this->departmentid);
         $departmentsql = "";
         if (!empty($departmentslist)) {
             $departmentsql = "AND cc.departmentid in (".implode(',', array_keys($departmentlist)).")";

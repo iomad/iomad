@@ -25,10 +25,8 @@ namespace local_iomad\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
-use \moodleform;
+use moodleform;
+use moodle_url;
 
 /**
  * Course search/select form used on the IOMAD pages.

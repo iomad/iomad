@@ -30,6 +30,8 @@ use context_system;
 use core_form\dynamic_form;
 use moodle_url;
 use moodle_exception;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 /**
  * Class tenantnameorguid_form used for to store the company MS tenantnameorguid value.
@@ -180,7 +182,7 @@ class tenantnameorguid extends dynamic_form {
         global $CFG;
 
         $context = $this->get_context_for_dynamic_submission();
-        if (!\iomad::has_capability('local/iomad_oidc_sync:manage', $context)) {
+        if (!iomad::has_capability('local/iomad_oidc_sync:manage', $context)) {
             $returnurl = new moodle_url($CFG->wwwroot . '/local/iomad_oidc_sync/index.php');
             throw new moodle_exception('nopermissions',
                                        '',
@@ -203,7 +205,7 @@ class tenantnameorguid extends dynamic_form {
         // If we are 4.3+ we use the company context for this.
         if ($CFG->branch > 402) {
             $companyid = $this->optional_param('companyid', 0, PARAM_INT);
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         }
 
         return $companycontext;

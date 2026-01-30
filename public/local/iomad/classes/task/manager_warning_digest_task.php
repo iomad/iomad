@@ -23,8 +23,7 @@
 
 namespace local_iomad\task;
 
-use local_iomad\emailtemplate;
-use local_iomad\company;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Manager course not started warning digest email scheduled task.

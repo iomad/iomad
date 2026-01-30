@@ -24,9 +24,8 @@
 
 namespace block_iomad_onlineusers;
 
-use iomad;
-use company;
 use context_system;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 

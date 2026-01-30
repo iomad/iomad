@@ -30,8 +30,8 @@ use moodle_url;
 use context_system;
 use stdClass;
 use html_writer;
-use iomad;
 use core_plugin_manager;
+use local_iomad\iomad;
 
 /**
  * Methods to use when registering the site at the moodle sites directory.

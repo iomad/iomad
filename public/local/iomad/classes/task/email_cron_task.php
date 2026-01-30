@@ -25,9 +25,8 @@
 
 namespace local_iomad\task;
 
-use local_iomad\company;
 use core\task\scheduled_task;
-use local_iomad\emailtemplate;
+use local_iomad\{company, emailtemplate};
 
 /**
  * IOMAD email processessing scheduled task.

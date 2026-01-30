@@ -24,8 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 require_once($CFG->libdir . '/externallib.php');
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
 class block_iomad_learningpath_external extends external_api {
 
@@ -76,11 +77,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Check state
         if (($params['state'] != 0) && ($params['state'] != 1)) {
@@ -149,11 +146,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Set up the company path object.
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -227,11 +220,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Add courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -287,11 +276,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Remove courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -357,11 +342,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Get full list of courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -454,13 +435,8 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
         $companypaths = new local_iomad_learningpath\companypaths($companyid, $context);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
-        $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Find any new ones and add them
         // Also make a list of courseids for delete phase.
@@ -540,11 +516,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Get full list of prospective courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -600,11 +572,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Get full list of prospective courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -668,11 +636,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Get lists of users
         $companypaths = new block_iomad_learningpath\companypaths($params['companyid'], $context);
@@ -728,11 +692,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Add users
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -790,11 +750,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         // Get lists of users
         $companypaths = new block_iomad_learningpath\companypaths($params['companyid'], $context);
@@ -860,11 +816,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-<<<<<<<< HEAD:public/local/iomad_learningpath/externallib.php
         iomad::require_capability('local/iomad_learningpath:manage', $context, $companyid);
-========
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
->>>>>>>> 14a4ae7d261 (IOMAD: moved local/iomad_learningpath content to blocks/iomad_learningpath - #2524):public/blocks/iomad_learningpath/externallib.php
 
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
         $companypaths->delete_users($params['pathid'], $params['userids']);

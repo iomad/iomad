@@ -21,6 +21,9 @@
  * @copyright   Catalyst IT
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use local_iomad\iomad;
+
 // Require_login is not needed here.
 // phpcs:disable moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../../config.php');
@@ -32,7 +35,6 @@ $PAGE->set_title(get_string('guidance', 'tool_mfa'));
 $PAGE->set_pagelayout('secure');
 
 // IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {

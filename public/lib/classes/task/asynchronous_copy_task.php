@@ -30,6 +30,7 @@ use async_helper;
 use cache_helper;
 use core\hook\manager;
 use core_backup\hook\before_copy_course_execute;
+use local_iomad\company;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -203,7 +204,7 @@ class asynchronous_copy_task extends adhoc_task {
 
         // IOMAD
         if (!empty($companyid)) {
-            $company = new \company($companyid);
+            $company = new company($companyid);
             $company->add_course($course, 0, true);
         }
 

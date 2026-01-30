@@ -14,35 +14,35 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-namespace core\context;
+namespace local_iomad\custom_context;
 
+use coding_exception;
+use context_system;
 use core\context;
+use moodle_url;
 use stdClass;
-use coding_exception, moodle_url;
 
 /**
- * User context class
+ * Company context class
  *
- * @package   core_access
- * @category  access
- * @copyright Derick Turner
+ * @package   local_iomad
+ * @copyright e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author    Derick Turner
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since     Moodle 4.3
  */
-class company extends context {
-    /** @var int numeric context level value matching legacy CONTEXT_USER */
-    public const LEVEL = 13;
+class context_company extends context {
 
     /**
-     * Please use \core\context\company::instance($companyid) if you need the instance of context.
+     * Please use context_company::instance($companyid) if you need the instance of context.
      * Alternatively if you know only the context id use \core\context::instance_by_id($contextid)
      *
      * @param stdClass $record
      */
     protected function __construct(stdClass $record) {
         parent::__construct($record);
-        if ($record->contextlevel != self::LEVEL) {
-            throw new coding_exception('Invalid $record->contextlevel in core\context\company constructor.');
+        if ($record->contextlevel != CONTEXT_COMPANY) {
+            throw new coding_exception('Invalid $record->contextlevel in context_company constructor.');
         }
     }
 
@@ -78,11 +78,11 @@ class company extends context {
         global $DB;
 
         $name = '';
-        if ($company = $DB->get_record('company', array('id' => $this->_instanceid))) {
+        if ($company = $DB->get_record('company', ['id' => $this->_instanceid])) {
             if ($withprefix) {
-                $name = get_string('company', 'block_iomad_company_admin').': ';
+                $name = get_string('company', 'block_iomad_company_admin') . ': ';
             }
-            $name .= format_string($company->name);
+            $name .= format_string($company->name, true, ['context' => $this]);
         }
         return $name;
     }
@@ -135,7 +135,7 @@ class company extends context {
     public function get_capabilities(string $sort = self::DEFAULT_CAPABILITY_SORT) {
         global $DB;
 
-        return $DB->get_records_select('capabilities', "contextlevel = :level", ['level' => self::LEVEL], $sort);
+        return $DB->get_records_select('capabilities', "contextlevel = :level", ['level' => CONTEXT_COMPANY], $sort);
     }
 
     /**
@@ -143,27 +143,27 @@ class company extends context {
      *
      * @param int $companyid id from {company} table
      * @param int $strictness
-     * @return company|false context instance
+     * @return context_company|false context instance
      */
     public static function instance($companyid, $strictness = MUST_EXIST) {
         global $DB;
 
-        if ($context = context::cache_get(self::LEVEL, $companyid)) {
+        if ($context = context::cache_get(CONTEXT_COMPANY, $companyid)) {
             return $context;
         }
 
         if (!$DB->get_manager()->table_exists('company')) {
-            return \context_system::instance();
+            return context_system::instance();
         }
 
-        if (!$record = $DB->get_record('context', array('contextlevel' => self::LEVEL, 'instanceid' => $companyid))) {
-            if ($company = $DB->get_record('company', array('id' => $companyid), 'id', $strictness)) {
-                $record = context::insert_context_record(self::LEVEL, $company->id, '/'.SYSCONTEXTID, 0);
+        if (!$record = $DB->get_record('context', ['contextlevel' => CONTEXT_COMPANY, 'instanceid' => $companyid])) {
+            if ($company = $DB->get_record('company', ['id' => $companyid], 'id', $strictness)) {
+                $record = context::insert_context_record(CONTEXT_COMPANY, $company->id, '/'.SYSCONTEXTID, 0);
             }
         }
 
         if ($record) {
-            $context = new company($record);
+            $context = new context_company($record);
             context::cache_add($context);
             return $context;
         }
@@ -181,15 +181,17 @@ class company extends context {
             return;
         }
 
-        $sql = "SELECT " . self::LEVEL . ", c.id
-                  FROM {company} c
-                 WHERE 1=1
-                       AND NOT EXISTS (SELECT 'x'
-                                         FROM {context} cx
-                                        WHERE c.id = cx.instanceid AND cx.contextlevel=" . self::LEVEL . ")";
+        $sql = "SELECT " . CONTEXT_COMPANY . ", c.id
+                FROM {company} c
+                WHERE 1=1
+                AND NOT EXISTS (
+                    SELECT 'x'
+                    FROM {context} cx
+                    WHERE c.id = cx.instanceid
+                    AND cx.contextlevel=" . CONTEXT_COMPANY . ")";
         $contextdata = $DB->get_recordset_sql($sql);
         foreach ($contextdata as $context) {
-            context::insert_context_record(self::LEVEL, $context->id, null);
+            context::insert_context_record(CONTEXT_COMPANY, $context->id, null);
         }
         $contextdata->close();
     }
@@ -204,16 +206,17 @@ class company extends context {
 
         if (!$DB->get_manager()->table_exists('company')) {
             $sql = "
-                  SELECT cx.*
+                    SELECT cx.*
                     FROM {context} cx
                     WHERE 1=2";
         } else {
 
             $sql = "
-                      SELECT cx.*
-                        FROM {context} cx
-             LEFT OUTER JOIN {company} c ON (cx.instanceid = c.id)
-                       WHERE c.id IS NULL AND cx.contextlevel = " . self::LEVEL . "
+                     SELECT cx.*
+                    FROM {context} cx
+                    LEFT OUTER JOIN {company} c ON (cx.instanceid = c.id)
+                    WHERE c.id IS NULL
+                    AND cx.contextlevel = " . CONTEXT_COMPANY . "
                    ";
         }
 
@@ -231,7 +234,7 @@ class company extends context {
         // First update normal companys.
         $path = $DB->sql_concat('?', 'id');
         $pathstart = '/' . SYSCONTEXTID . '/';
-        $params = array($pathstart);
+        $params = [$pathstart];
 
         if ($force) {
             $where = "depth <> 2 OR path IS NULL OR path <> ({$path})";
@@ -240,11 +243,12 @@ class company extends context {
             $where = "depth = 0 OR path IS NULL";
         }
 
-        $sql = "UPDATE {context}
-                   SET depth = 2,
-                       path = {$path}
-                 WHERE contextlevel = " . self::LEVEL . "
-                   AND ($where)";
+        $sql = "
+                UPDATE {context}
+                SET depth = 2,
+                path = {$path}
+                WHERE contextlevel = " . CONTEXT_COMPANY . "
+                AND ($where)";
         $DB->execute($sql, $params);
     }
 }

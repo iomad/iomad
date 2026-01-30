@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
@@ -35,7 +37,6 @@ $PAGE->set_course($SITE);
 require('setup.php');
 
 // IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";

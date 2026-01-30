@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_iomad\iomad;
+
 /**
  * Login block
  *
@@ -58,7 +60,7 @@ class block_login extends block_base {
         $this->content->text = '';
 
         if (!isloggedin() or isguestuser()) {   // Show the block
-            if (empty(\local_iomad\iomad::get_config('', 'authloginviaemail'))) {
+            if (empty(iomad::get_config('', 'authloginviaemail'))) {
                 $strusername = get_string('username');
             } else {
                 $strusername = get_string('usernameemail');

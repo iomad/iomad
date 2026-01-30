@@ -25,6 +25,9 @@
 * script for downloading of user lists
 */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once('lib.php');
@@ -37,7 +40,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 iomad::require_capability('block/iomad_company_admin:user_upload', $companycontext);

@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
@@ -145,7 +148,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 iomad::require_capability('local/report_completion_monthly:view', $companycontext);
@@ -229,7 +232,7 @@ $baseurl = new moodle_url(basename(__FILE__), $urlparams);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);

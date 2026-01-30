@@ -24,6 +24,8 @@
  */
 
 use auth_iomadoidc\form\application;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -46,7 +48,6 @@ $jsmodule = [
 ];
 $PAGE->requires->js_init_call('M.auth_iomadoidc.init', $jsparams, true, $jsmodule);
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";
@@ -56,7 +57,7 @@ if (!empty($companyid)) {
 
 // Is this from the company advanced settings page?
 if ($companyonly && !empty($companyid)) {
-    $companycontext = \core\context\company::instance($companyid);
+    $companycontext = context_company::instance($companyid);
     //iomad::require_capability('block/iomad_company_admin:configiomadoidc', $companycontext);
     $PAGE->set_pagelayout('base');
     $returnurl = new moodle_url('/blocks/iomad_company_admin/company_advanced_settings.php');

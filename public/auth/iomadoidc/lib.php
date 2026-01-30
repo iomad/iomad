@@ -25,6 +25,7 @@
  */
 
 use auth_iomadoidc\utils;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -56,7 +57,6 @@ function auth_iomadoidc_initialize_customicon($filefullname) {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     $postfix = "";
     $filenum = 0;
@@ -344,7 +344,6 @@ function auth_iomadoidc_get_field_mappings() {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";
@@ -398,7 +397,6 @@ function auth_iomadoidc_apply_default_email_mapping() {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";
@@ -446,7 +444,6 @@ function auth_iomadoidc_display_auth_lock_options($settings, $auth, $userfields,
     global $CFG, $DB;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";
@@ -599,7 +596,6 @@ function auth_iomadoidc_config_name_in_form(string $stringid) {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";
@@ -622,7 +618,6 @@ function auth_iomadoidc_is_setup_complete() {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";
@@ -689,7 +684,6 @@ function auth_iomadoidc_get_idp_type_name() {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";
@@ -723,7 +717,6 @@ function auth_iomadoidc_get_client_auth_method_name() {
     global $CFG;
 
     // IOMAD
-    require_once($CFG->dirroot . '/local/iomad/lib/company.php');
     $companyid = iomad::get_my_companyid(context_system::instance(), false);
     if (!empty($companyid)) {
         $postfix = "_$companyid";

@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
@@ -37,9 +40,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -87,15 +90,15 @@ if ($item) {
         $buynowurl = new moodle_url($CFG->wwwroot . "/login/index.php", ['wantsurl' => $buynowurl->out()]);
         echo html_writer::tag('a',  $strbuynow, ['href' => $buynowurl, 'class' => 'btn btn-primary']) . "&nbsp" . $strextra;
     } else if (($item->allow_single_purchase || $item->allow_license_blocks) &&
-        (local_iomad\iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
-         local_iomad\iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext))) {
+        (iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
+         iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext))) {
         $table = new html_table();
         $table->head = [get_string('priceoptions', 'block_iomad_commerce'), "", ""];
         $table->align = ["left", "center", "center"];
         $table->width = "600px";
 
         if ($item->allow_single_purchase &&
-            local_iomad\iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext)) {
+            iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext)) {
             $buynowurl = new moodle_url($CFG->wwwroot . '/blocks/iomad_commerce/buynow.php', ['itemid' => $item->id]);
             $table->data[] = [get_string('single_purchase', 'block_iomad_commerce'),
                               $item->single_purchase_currency . number_format($item->single_purchase_price, 2),
@@ -110,7 +113,7 @@ if ($item) {
             $priceblocks = $DB->get_records('course_shopblockprice', ['itemid' => $item->id], 'price_bracket_start');
 
             if (count($priceblocks)) {
-                if (local_iomad\iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
+                if (iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
                     foreach ($priceblocks as $priceblock) {
                         $table->data[] = [get_string('licenseblock_n', 'block_iomad_commerce', $priceblock->price_bracket_start),
                                           $priceblock->currency . ' ' . number_format($priceblock->price, 2),

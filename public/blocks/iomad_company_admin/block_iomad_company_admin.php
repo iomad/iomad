@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('lib.php');
 
 /**
@@ -163,7 +166,7 @@ class block_iomad_company_admin extends block_base {
 
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
-            $companycontext =  \core\context\company::instance($companyid);
+            $companycontext =  context_company::instance($companyid);
         }
 
         // Log this page view.

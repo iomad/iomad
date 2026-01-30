@@ -29,6 +29,8 @@ use core_courseformat\output\section_renderer;
 
  defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 /**
  * The core course renderer
  *

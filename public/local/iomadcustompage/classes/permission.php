@@ -24,7 +24,8 @@ use core\exception\coding_exception;
 use dml_exception;
 use local_iomadcustompage\local\helpers\audience;
 use local_iomadcustompage\local\models\page;
-use iomad;
+use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
 
 /**
  * Page permission class
@@ -63,7 +64,7 @@ class permission {
             // IOMAD!
             $companyid = iomad::get_my_companyid($context);
             if ($companyid > 0) {
-                $context = \core\context\company::instance($companyid);
+                $context = context_company::instance($companyid);
             }
         }
 
@@ -142,7 +143,7 @@ class permission {
         // IOMAD!
         $companyid = iomad::get_my_companyid(context_system::instance());
         if ($companyid > 0) {
-            $context = \core\context\company::instance($companyid);
+            $context = context_company::instance($companyid);
         }
 
         if ($page->get('usercreated') === $userid) {

@@ -25,10 +25,11 @@
 
 namespace tool_iomadsite;
 
+use context_coursecat;
+use local_iomad\{company, company_user};
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
@@ -263,11 +264,11 @@ class generate {
     protected function company_category($fullname) {
         global $DB;
 
-        $coursecat = new \stdclass();
+        $coursecat = (object) [];
         $coursecat->name = $fullname;
         $coursecat->sortorder = 999;
         $coursecat->id = $DB->insert_record('course_categories', $coursecat);
-        $coursecat->context = \context_coursecat::instance($coursecat->id);
+        $coursecat->context = context_coursecat::instance($coursecat->id);
         $categorycontext = $coursecat->context;
         $categorycontext->mark_dirty();
         $DB->update_record('course_categories', $coursecat);
@@ -285,7 +286,7 @@ class generate {
     protected function company_profile($shortname) {
         global $DB;
 
-        $catdata = new \stdclass();
+        $catdata = (object) [];
         $catdata->sortorder = $DB->count_records('user_info_category') + 1;
         $catdata->name = $shortname;
         $profileid = $DB->insert_record('user_info_category', $catdata, false);
@@ -303,7 +304,7 @@ class generate {
     protected function company_record($shortname, $fullname) {
         global $DB;
 
-        $company = new \stdClass();
+        $company = (object) [];
         $company->name = $fullname;
         $company->shortname = $shortname;
         $company->city = $this->citynames[array_rand($this->citynames, 1)];
@@ -332,7 +333,7 @@ class generate {
         $companyid = $DB->insert_record('company', $company);
         $company = $DB->get_record('company', ['id' => $companyid]);
 
-        \company::initialise_departments($companyid);
+        company::initialise_departments($companyid);
 
         return $company;
     }
@@ -345,13 +346,13 @@ class generate {
     public function courses($company) {
 
         // Iomad company object.
-        $comp = new \company($company->id);
+        $comp = new company($company->id);
 
         // Add a random number of courses.
         $howmany = rand(10, 25);
         for ($i = 0; $i < $howmany; $i++) {
             list($shortname, $fullname) = $this->invent_coursename();
-            $data = new \stdClass();
+            $data = (object) [];
             $data->fullname = $fullname;
             $data->shortname = $shortname;
             $data->category = $company->category;
@@ -389,7 +390,7 @@ class generate {
     protected function create_license($companyid) {
         global $DB;
 
-        $license = new \stdClass;
+        $license = (object) [];
         $license->name = "License " . ++$this->licenseindex;
         $license->allocation = rand(10, 250);
         $license->validlength = rand(30, 365);
@@ -418,7 +419,7 @@ class generate {
         $email = $firstname . '.' . $lastname . '.' . rand(1000, 9999) . '@example.com';
 
         // Data object for user details.
-        $data = new \stdClass;
+        $data = (object) [];
         $data->firstname = $firstname;
         $data->lastname = $lastname;
         $data->email = $email;
@@ -428,8 +429,7 @@ class generate {
         $data->newpassword = 'Aa*12345678';
         $data->companyid = $companyid;
         $data->selectedcourses = [];
-        $data->due = 0;
-        \company_user::create($data);
+        company_user::create($data);
     }
 
     /**

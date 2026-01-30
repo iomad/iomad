@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 require_once($CFG->libdir.'/authlib.php');
 require_once($CFG->dirroot.'/login/lib.php');
 
@@ -214,7 +216,7 @@ class auth_plugin_iomadoidc extends \auth_plugin_base {
     public function user_login($username, $password = null) {
         global $CFG;
         // Short circuit for guest user.
-        if (!empty(local_iomad\iomad::get_config('', 'guestloginbutton')) && $username === 'guest' && $password === 'guest') {
+        if (!empty(iomad::get_config('', 'guestloginbutton')) && $username === 'guest' && $password === 'guest') {
             return false;
         }
         return $this->loginflow->user_login($username, $password);

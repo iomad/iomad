@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('lib.php');
 require_once($CFG->dirroot.'/user/profile/definelib.php');
 
@@ -40,7 +43,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 // Correct the navbar.

@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -156,7 +159,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 iomad::require_capability('local/report_user_license_allocations:view', $companycontext);
@@ -222,7 +225,7 @@ $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);

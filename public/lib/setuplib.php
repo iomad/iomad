@@ -27,6 +27,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\{company, iomad};
+
 // Debug levels - always keep the values in ascending order!
 /** No warnings and errors at all */
 define('DEBUG_NONE', 0);

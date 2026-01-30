@@ -23,15 +23,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-<<<<<<<< HEAD:public/local/email/template_list.php
-require_once( 'local_lib.php');
-require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
-require_once( 'config.php');
-require_once( 'lib.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
-========
+use local_iomad\{company, email, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/template_list.php
 
 $delete       = optional_param('delete', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);
@@ -76,23 +71,17 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 // Check we can actually do anything on this page.
 if (empty($templatesetid)) {
-<<<<<<<< HEAD:public/local/email/template_list.php
-    iomad::require_capability('local/email:list', $companycontext);
+    iomad::require_capability('local/iomad:email_list', $companycontext);
 } else {
-    iomad::require_capability('local/email:templateset_list', $companycontext);
-========
-    local_iomad\iomad::require_capability('local/iomad:email_list', $companycontext);
-} else {
-    local_iomad\iomad::require_capability('local/iomad:email_templateset_list', $companycontext);
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/template_list.php
+    iomad::require_capability('local/iomad:email_templateset_list', $companycontext);
 }
 
-$email = local_iomad\email::get_templates();
+$email = email::get_templates();
 
 // Correct the navbar.
 // Set the name for the page.
@@ -518,7 +507,7 @@ if ($manage) {
                 'actions'];
 
     // Display the list of templates.
-    $usertemplates = local_iomad\email::get_user_templates(false);
+    $usertemplates = email::get_user_templates(false);
     $table = new local_iomad\tables\templates_table('email_templatess_table');
     $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
     $table->define_baseurl($baseurl);

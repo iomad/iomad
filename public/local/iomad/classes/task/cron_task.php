@@ -23,11 +23,10 @@
 
 namespace local_iomad\task;
 
-use core\task\scheduled_task;
 use block_iomad_company_admin\event\user_license_unassigned;
+use core\task\scheduled_task;
 use context_course;
-use local_iomad\company;
-use local_iomad\company_user;
+use local_iomad\{company, company_user};
 
 class cron_task extends scheduled_task {
 

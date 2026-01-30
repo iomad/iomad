@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 require_once($CFG->libdir.'/tablelib.php');
 
 /**

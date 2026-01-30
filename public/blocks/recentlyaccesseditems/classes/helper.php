@@ -24,6 +24,8 @@
 
 namespace block_recentlyaccesseditems;
 
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -68,7 +70,7 @@ class helper {
         }
 
         // IOMAD filter courses to only show those available for the current company.
-        $courses = \iomad::iomad_filter_courses($courses);
+        $courses = iomad::iomad_filter_courses($courses);
 
         // Group by courses to reduce get_fast_modinfo requests.
         foreach ($courses as $key => $items) {

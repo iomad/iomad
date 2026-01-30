@@ -27,6 +27,8 @@ use local_iomadcustompage\output\renderer;
 use local_iomadcustompage\permission;
 use core_reportbuilder\system_report_factory;
 use local_iomadcustompage\reportbuilder\local\systemreports\pages_list;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 require_once(__DIR__ . '/../../config.php');
 require_once("{$CFG->libdir}/adminlib.php");
@@ -53,7 +55,7 @@ $PAGE->requires->js_call_amd('local_iomadcustompage/pages_list', 'init');
 $context = $systemcontext;
 $companyid = iomad::get_my_companyid($systemcontext);
 if ($companyid > 0) {
-    $context = \core\context\company::instance($companyid);
+    $context = context_company::instance($companyid);
 }
 $PAGE->set_context($systemcontext);
 

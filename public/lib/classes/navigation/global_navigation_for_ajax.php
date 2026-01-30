@@ -21,6 +21,7 @@ use core\context\course as context_course;
 use core\context_helper;
 use core\url;
 use moodle_page;
+use local_iomad\iomad;
 
 /**
  * The global navigation class used especially for AJAX requests.

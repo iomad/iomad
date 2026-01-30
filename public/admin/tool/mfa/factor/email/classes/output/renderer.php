@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/iplookup/lib.php');
 
@@ -37,7 +39,6 @@ class factor_email_renderer extends plugin_renderer_base {
         global $DB, $USER, $CFG;;
 
         // IOMAD
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {

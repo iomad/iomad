@@ -26,10 +26,7 @@
 use core\exception\moodle_exception;
 use core_course\course_request;
 use local_iomad\iomad;
-use context_system;
-
-// IOMAD
-require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
+use local_iomad\custom_context\context_company;
 
 /**
  * Class to store, cache, render and manage course category
@@ -1621,7 +1618,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $systemcontext = context_system::instance();
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }
@@ -3291,7 +3288,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $systemcontext = context_system::instance();
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }

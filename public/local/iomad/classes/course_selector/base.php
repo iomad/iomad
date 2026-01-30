@@ -25,9 +25,10 @@
 
 namespace local_iomad\course_selector;
 
-use moodle_exception;
-use local_iomad\iomad;
 use context_system;
+use moodle_exception;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 /**
  * The default size of a course selector.
@@ -491,8 +492,8 @@ abstract class base {
 
         // Add some additional sensible conditions.
         $companyid = iomad::get_my_companyid(context_system::instance());
-        if (!iomad::has_capability('moodle/course:viewhiddencourses', \core\context\company::instance($companyid)) &&
-            !iomad::has_capability('moodle/course:viewhiddencourses', \core\context\company::instance($companyid))) {
+        if (!iomad::has_capability('moodle/course:viewhiddencourses', context_company::instance($companyid)) &&
+            !iomad::has_capability('moodle/course:viewhiddencourses', context_company::instance($companyid))) {
             $tests[] = $u . 'visible = 1';
         }
 

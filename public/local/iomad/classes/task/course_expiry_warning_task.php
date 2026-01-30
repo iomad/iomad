@@ -23,8 +23,8 @@
 
 namespace local_iomad\task;
 
-use local_iomad\emailtemplate;
-use \context_course;
+use context_course;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Course expiry warning email schedule task

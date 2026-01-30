@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 // Include Moodle configuration file.
 require_once(dirname(__FILE__) . '/../../config.php');
 
@@ -40,15 +43,15 @@ $confirm = optional_param('confirm', '', PARAM_ALPHANUM);
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 // Require the user to be logged in.
 require_login();
 
 // Ensure that the user has the correct capability.
-local_iomad\iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
+iomad::require_capability('block/iomad_commerce:manage_tags', $companycontext);
 
 // Define the component string.
 $component = 'block_iomad_commerce';
@@ -76,7 +79,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 // Delete a tag dependant on the value of the delete parameter passed after.
 if ($delete && confirm_sesskey()) {
     // Check the user has the correct capability to delete a shop tag.
-    if (!local_iomad\iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
+    if (!iomad::has_capability('block/iomad_commerce:manage_tags', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'delete a tag');
     }
 

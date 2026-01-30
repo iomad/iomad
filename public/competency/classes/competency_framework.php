@@ -29,6 +29,7 @@ use context;
 use lang_string;
 use stdClass;
 use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
 
 require_once($CFG->libdir . '/grade/grade_scale.php');
 require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
@@ -486,7 +487,7 @@ class competency_framework extends persistent {
     public static function can_manage_context($context) {
         $companyid = iomad::get_my_companyid(\context_system::instance(), false);
         return iomad::has_capability('moodle/competency:competencymanage', $context) ||
-                iomad::has_capability('moodle/competency:competencymanage', \core\context\company::instance($companyid));
+                iomad::has_capability('moodle/competency:competencymanage', context_company::instance($companyid));
     }
 
     /**
@@ -507,7 +508,7 @@ class competency_framework extends persistent {
     public static function can_read_context($context) {
         $companyid = iomad::get_my_companyid(\context_system::instance(), false);
         return iomad::has_capability('moodle/competency:competencyview', $context) || self::can_manage_context($context) ||
-               iomad::has_capability('moodle/competency:competencyview', \core\context\company::instance($companyid));
+               iomad::has_capability('moodle/competency:competencyview', context_company::instance($companyid));
     }
 
 }

@@ -24,10 +24,13 @@
  */
 
 namespace block_iomad_commerce\payment;
-use iomad;
-use company;
-use context_system;
 
+use block_iomad_commerce\helper;
+use block_iomad_commerce\processor;
+use context_system;
+use core_payment\local\entities\payable;
+use local_iomad\{company, emailtemplate, iomad};
+use moodle_url;
 
 /**
  * Payment subsystem callback implementation for block_iomad_commerce.
@@ -45,14 +48,14 @@ class service_provider implements \core_payment\local\callback\service_provider 
      * @param int $instanceid The enrolment instance id
      * @return \core_payment\local\entities\payable
      */
-    public static function get_payable(string $paymentarea, int $instanceid): \core_payment\local\entities\payable {
+    public static function get_payable(string $paymentarea, int $instanceid): payable {
         global $CFG;
 
         $companyid = iomad::get_my_companyid(context_system::instance());
         $company = new company($companyid);
         if ($paymentaccount = $company->get_payment_account()) {
-            $basket = \block_iomad_commerce\helper::get_basket_by_id($instanceid);
-            return new \core_payment\local\entities\payable($basket->total, $basket->currency, $paymentaccount);
+            $basket = helper::get_basket_by_id($instanceid);
+            return new payable($basket->total, $basket->currency, $paymentaccount);
         }
     }
 
@@ -61,13 +64,13 @@ class service_provider implements \core_payment\local\callback\service_provider 
      *
      * @param string $paymentarea Payment area
      * @param int $instanceid The enrolment instance id
-     * @return \moodle_url
+     * @return moodle_url
      */
-    public static function get_success_url(string $paymentarea, int $instanceid): \moodle_url {
+    public static function get_success_url(string $paymentarea, int $instanceid): moodle_url {
         global $CFG, $DB;
 
         // Send them back to the dashboard.
-        return new \moodle_url($CFG->wwwroot . '/my');
+        return new moodle_url($CFG->wwwroot . '/my');
     }
 
     /**
@@ -82,11 +85,11 @@ class service_provider implements \core_payment\local\callback\service_provider 
     public static function deliver_order(string $paymentarea, int $instanceid, int $paymentid, int $userid): bool {
         global $DB;
 
-        \block_iomad_commerce\processor::trigger_oncheckout($instanceid);
+        processor::trigger_oncheckout($instanceid);
 
         if ($invoice = $DB->get_record('invoice', ['id' => $instanceid])) {
             $invoice->paymentid = $paymentid;
-            \block_iomad_commerce\processor::trigger_onordercomplete($invoice);
+            processor::trigger_onordercomplete($invoice);
         }
 
         return true;

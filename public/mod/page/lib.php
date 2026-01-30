@@ -24,6 +24,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 use core\url;
+use local_iomad\company;
 
 /**
  * List of features supported in Page module

@@ -30,6 +30,7 @@ use context_system;
 use course_enrolment_manager;
 use moodle_url;
 use iomad_commerce;
+use local_iomad\custom_context\context_company;
 
 class company {
 
@@ -53,7 +54,7 @@ class company {
             unset($this->context);
             return;
         }
-        $this->context = \core\context\company::instance($companyid);
+        $this->context = context_company::instance($companyid);
     }
 
     /**
@@ -157,7 +158,7 @@ class company {
         global $CFG;
 
         $returnarray = array('0' => get_string('user', 'block_iomad_company_admin'));
-        $companycontext = \core\context\company::instance($this->id);
+        $companycontext = context_company::instance($this->id);
         if ($full || iomad::has_capability('block/iomad_company_admin:assign_company_manager', $companycontext)) {
             $returnarray['1'] = get_string('companymanager', 'block_iomad_company_admin');
         }
@@ -395,7 +396,7 @@ class company {
         if (!empty(get_config('local_iomad', 'show_company_structure'))) {
             $companyselect = [];
             foreach ($companies as $id => $companyname) {
-                $currentcompanycontext = \core\context\company::instance($id);
+                $currentcompanycontext = context_company::instance($id);
                 $companyselect[$id] = $companyname;
                 // Only show children is we are able to.
                 if ($showchildren &&
@@ -573,7 +574,7 @@ class company {
         if (empty($companyid)) {
             $companycontext = context_system::instance();
         } else {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         }
 
         if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
@@ -969,7 +970,7 @@ class company {
                 $eventother = array('licenseid' => $license->id,
                                     'parentid' => $license->parentid);
 
-                $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => \core\context\company::instance($companyid),
+                $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => context_company::instance($companyid),
                                                                                                 'userid' => $USER->id,
                                                                                                 'objectid' => $license->id,
                                                                                                 'other' => $eventother));
@@ -1310,7 +1311,7 @@ class company {
         }
 
         // Get the company context.
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
 
         // Get the manager roles.
         $companymanagerrole = $DB->get_record('role', array('shortname' => 'companymanager'));
@@ -2081,7 +2082,7 @@ class company {
         global $DB;
 
         // Get the company context.
-        $companycontext = \core\context\company::instance($this->id);
+        $companycontext = context_company::instance($this->id);
 
         // Can the user see the whole department tree?
         if (is_siteadmin() ||
@@ -2840,7 +2841,7 @@ class company {
         $departmentrec = $DB->get_record('department', array('id' => $departmentid), '*', MUST_EXIST);
 
         // And the context.
-        $companycontext = \core\context\company::instance($departmentrec->company);
+        $companycontext = context_company::instance($departmentrec->company);
 
         // Can we manage it?
         if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
@@ -3774,7 +3775,7 @@ class company {
 
             // Create an event for this.  This handles the actual lifting.
             $eventother = array('companyid' => $company->id);
-            $event = \block_iomad_company_admin\event\company_terminated::create(array('context' => \core\context\company::instance($company->id),
+            $event = \block_iomad_company_admin\event\company_terminated::create(array('context' => context_company::instance($company->id),
                                                                                        'objectid' => $company->id,
                                                                                        'userid' => $USER->id,
                                                                                        'other' => $eventother));
@@ -3856,7 +3857,7 @@ class company {
 
         // If current user is a site admin or they have appropriate capabilities then they can.
         if (is_siteadmin($userid) ||
-            iomad::has_capability('block/iomad_company_admin:company_add', \core\context\company::instance($companyid))) {
+            iomad::has_capability('block/iomad_company_admin:company_add', context_company::instance($companyid))) {
             return true;
         }
 
@@ -3970,7 +3971,7 @@ class company {
 
         // If current user is a site admin or they have appropriate capabilities then they can.
         if (is_siteadmin($USER->id) ||
-            iomad::has_capability('block/iomad_company_admin:company_add', \core\context\company::instance($companyid))) {
+            iomad::has_capability('block/iomad_company_admin:company_add', context_company::instance($companyid))) {
             return true;
         }
 
@@ -4045,7 +4046,7 @@ class company {
 
         if ($companyid > 0) {
             // Get the company context.
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = context_system::instance();
         }
@@ -5664,7 +5665,7 @@ class company {
                 $eventother['parentid'] = $licenseid;
                 $eventother['oldcourses'] = json_encode($oldcourses);
 
-                $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => \core\context\company::instance($licenserecord->companyid),
+                $event = \block_iomad_company_admin\event\company_license_updated::create(array('context' => context_company::instance($licenserecord->companyid),
                                                                                                 'userid' => $event->userid,
                                                                                                 'objectid' => $child->id,
                                                                                                 'other' => $eventother));

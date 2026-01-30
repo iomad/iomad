@@ -21,6 +21,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+use local_iomad\forms\company_search_form;
+
 require_once( '../../config.php');
 require_once( 'lib.php');
 require_once($CFG->dirroot . '/local/iomad/lib/user.php');
@@ -39,7 +43,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 // Check we can actually do anything on this page.
@@ -117,8 +121,7 @@ $PAGE->set_button($buttons);
 // Remove page parameter from the $baseurl variable
 $baseurl->remove_params(['page']);
 
-$searchform = new iomad_company_search_form($baseurl, []);
-
+$searchform = new company_search_form($baseurl, []);
 
 // Set up the table
 $table = new block_iomad_company_admin\tables\teaching_locations_table('teaching_locations_table');

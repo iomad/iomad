@@ -25,11 +25,12 @@
 
 namespace block_iomad_commerce\output;
 
-use local_iomad\iomad;
-use core_external;
-use renderer_base;
 use block_iomad_commerce\event\course_shoptag_deleted;
 use block_iomad_commerce\event\course_shoptag_created;
+use core_external;
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
+use renderer_base;
 
 /**
  * Block IOMAD eCommerce shoptag inplace editable class
@@ -56,7 +57,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
 
         // Check the user has the correct permissions.
         $capability = iomad::has_capability('block/iomad_commerce:manage_tags',
-                                            \core\context\company::instance($companyid));
+                                            context_company::instance($companyid));
 
         // Define variables used in other functions.
         $this->assignableitems = $assignableitems;
@@ -123,7 +124,7 @@ class course_shoptag_editable extends \core\output\inplace_editable {
         $companyid = iomad::get_my_companyid($context, true);
 
         // Define the context.
-        $context = \core\context\company::instance($companyid);
+        $context = context_company::instance($companyid);
 
         // Check if the user has permissions to access this.
         core_external::validate_context($context);

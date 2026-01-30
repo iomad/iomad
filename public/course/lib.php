@@ -30,6 +30,7 @@ use core_courseformat\base as course_format;
 use core_courseformat\formatactions;
 use core_courseformat\sectiondelegate;
 use core\output\local\action_menu\subpanel as action_menu_subpanel;
+use local_iomad\iomad;
 
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->libdir.'/filelib.php');

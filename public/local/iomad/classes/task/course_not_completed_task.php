@@ -23,7 +23,7 @@
 
 namespace local_iomad\task;
 
-use local_iomad\emailtemplate;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Course not completed email scheduled task

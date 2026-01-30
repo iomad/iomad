@@ -22,6 +22,7 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
 
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/lib.php');
@@ -34,7 +35,6 @@ require_capability('moodle/site:config', context_system::instance());
 $returnurl = get_local_referer(false);
 
 // IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";

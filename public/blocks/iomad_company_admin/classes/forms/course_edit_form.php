@@ -25,14 +25,14 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
-use \moodleform;
-use \context_system;
-use \context_coursecat;
-use \DateTime;
-use \core_course;
+use context_system;
+use context_coursecat;
+use core_course;
+use DateTime;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
+use moodle_url;
+use moodleform;
 
 class course_edit_form extends moodleform {
     protected $title = '';
@@ -50,7 +50,7 @@ class course_edit_form extends moodleform {
         $this->context = context_coursecat::instance($CFG->defaultrequestcategory);
         $this->editoroptions = $editoroptions;
         $this->companyrec = $DB->get_record('company', array('id' => $companyid));
-        $this->companycontext = \core\context\company::instance($companyid);
+        $this->companycontext = context_company::instance($companyid);
 
         parent::__construct($actionurl);
     }

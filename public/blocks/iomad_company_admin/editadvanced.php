@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, emailtemplate, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/gdlib.php');
 require_once($CFG->libdir.'/adminlib.php');
@@ -43,7 +46,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext =  \core\context\company::instance($companyid);
+$companycontext =  context_company::instance($companyid);
 
 // Correct the navbar .
 // Set the name for the page.
@@ -210,7 +213,7 @@ if ($usernew = $userform->get_data()) {
                 if (!$authplugin->user_update_password($usernew, $usernew->newpassword)) {
                     throw new moodle_exception('cannotupdatepasswordonextauth', '', '', $usernew->auth);
                 } else {
-                    local_iomad\emailtemplate::send('password_update', array('user' => $usernew));
+                    emailtemplate::send('password_update', array('user' => $usernew));
                 }
             }
         }

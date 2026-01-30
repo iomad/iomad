@@ -25,6 +25,8 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    //  It must be included from a Moodle page.
 }
 
+use local_iomad\{company, company_user, iomad};
+
 require_once($CFG->libdir.'/formslib.php');
 
 require_once('lib.php');
@@ -222,13 +224,13 @@ class admin_uploaduser_form2 extends company_moodleform {
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
         } else {
-            $companyid = local_iomad\company_user::companyid();
+            $companyid = company_user::companyid();
         }
 
         // Get the department list.
-        $company = new local_iomad\company($companyid);
+        $company = new company($companyid);
         $companymanualcourses = $company->get_menu_courses(true, true);
-        $parentlevel = local_iomad\company::get_company_parentnode($companyid);
+        $parentlevel = company::get_company_parentnode($companyid);
         $this->departmentid = $parentlevel->id;
         $mform->addElement('header', 'advanced');
         $mform->setExpanded('advanced');
@@ -247,7 +249,7 @@ class admin_uploaduser_form2 extends company_moodleform {
 
 
         // Deal with licenses.
-        if (local_iomad\iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:allocate_licenses', $companycontext)) {
             if ($foundlicenses = $DB->get_records_sql_menu("SELECT id, name FROM {companylicense}
                                                    WHERE expirydate >= :timestamp
                                                    AND companyid = :companyid",

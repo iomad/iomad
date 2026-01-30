@@ -30,9 +30,9 @@ use auth_iomadoidc\adminsetting\auth_iomadoidc_admin_setting_iconselect;
 use auth_iomadoidc\adminsetting\auth_iomadoidc_admin_setting_loginflow;
 use auth_iomadoidc\adminsetting\auth_iomadoidc_admin_setting_redirecturi;
 use auth_iomadoidc\utils;
+use local_iomad\iomad;
 
 // IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 $filenum = 0;
 $postfix = "";

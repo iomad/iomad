@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 /**
  * Block default class.
  */
@@ -63,10 +66,10 @@ class block_iomad_link extends block_base {
         global $USER, $CFG, $DB, $OUTPUT;
 
         // Only display if you have the correct capability.
-        $systemcontext = \context_system::instance();
+        $systemcontext = context_system::instance();
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid) && $companyid > 0) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }

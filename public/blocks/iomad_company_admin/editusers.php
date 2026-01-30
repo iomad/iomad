@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -92,26 +95,26 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $showall = false;
 }
 if ($showall) {
     $params['showall'] = $showall;
 }
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:view_editusers', $companycontext);
+iomad::require_capability('block/iomad_company_admin:view_editusers', $companycontext);
 
 // Deal with edit buttons.
 if ($edit != -1) {
     $USER->editing = $edit;
 }
 
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext) &&
-    !local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext) &&
+    !iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
     $USER->editing = false;
 }
 
@@ -152,7 +155,7 @@ $returnurl = $baseurl;
 
 // Check the department is valid.
 if (!empty($departmentid)) {
-    if (!local_iomad\company::check_valid_department($companyid, $departmentid)) {
+    if (!company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
     $deprecord = $DB->get_record('department', ['id' => $departmentid]);
@@ -162,11 +165,11 @@ if (!empty($departmentid)) {
 }
 
 // Get the associated department id.
-$company = new local_iomad\company($companyid);
-$parentlevel = local_iomad\company::get_company_parentnode($company->id);
+$company = new company($companyid);
+$parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
@@ -176,12 +179,12 @@ if ($departmentid == 0) {
     $departmentid = $userhierarchylevel;
 }
 
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:view_editusers', $companycontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:view_editusers', $companycontext)) {
     throw new moodle_exception('nopermissions', 'error', '', 'view edit users');
 }
 
 // Set up the filter form.
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $mform = new \local_iomad\forms\user_search_form(null, array('companyid' => $selectedcompanyid, 'useshowall' => true, 'addusertype' => true));
 } else {
     $mform = new \local_iomad\forms\user_search_form(null, array('companyid' => $selectedcompanyid, 'addusertype' => true));
@@ -291,7 +294,7 @@ if ($confirmuser and confirm_sesskey()) {
     }
 
 } else if ($password and confirm_sesskey()) {
-    if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
+    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'reset a user');
     }
 
@@ -311,11 +314,11 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually delete the user.
-        local_iomad\company_user::generate_temporary_password($user, true, true);
+        company_user::generate_temporary_password($user, true, true);
     }
 } else if ($delete and confirm_sesskey()) {              // Delete a selected user, after confirmation.
 
-    if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
+    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'delete a user');
     }
 
@@ -323,7 +326,7 @@ if ($confirmuser and confirm_sesskey()) {
         throw new moodle_exception('nousers', 'error');
     }
 
-    if (!local_iomad\company::check_canedit_user($companyid, $user->id)) {
+    if (!company::check_canedit_user($companyid, $user->id)) {
         throw new moodle_exception('invaliduserid');
     }
 
@@ -342,7 +345,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually delete the user.
-        local_iomad\company_user::delete($user->id, $companyid);
+        company_user::delete($user->id, $companyid);
 
         // Create an event for this.
         $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
@@ -358,7 +361,7 @@ if ($confirmuser and confirm_sesskey()) {
 
 } else if ($suspend and confirm_sesskey()) {              // Delete a selected user, after confirmation.
 
-    if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
+    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'suspend a user');
     }
 
@@ -366,7 +369,7 @@ if ($confirmuser and confirm_sesskey()) {
         throw new moodle_exception('nousers', 'error');
     }
 
-    if (!local_iomad\company::check_canedit_user($companyid, $user->id)) {
+    if (!company::check_canedit_user($companyid, $user->id)) {
         throw new moodle_exception('invaliduserid');
     }
     if (is_primary_admin($user->id)) {
@@ -384,7 +387,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually suspend the user.
-        local_iomad\company_user::suspend($user->id, $companyid);
+        company_user::suspend($user->id, $companyid);
 
         // Create an event for this.
         $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
@@ -406,7 +409,7 @@ if ($confirmuser and confirm_sesskey()) {
     }
 
     // Unsuspends a selected user, after confirmation.
-    if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
+    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
         throw new moodle_exception('nopermissions', 'error', '', 'suspend a user');
     }
 
@@ -414,7 +417,7 @@ if ($confirmuser and confirm_sesskey()) {
         throw new moodle_exception('nousers', 'error');
     }
 
-    if (!local_iomad\company::check_canedit_user($companyid, $user->id)) {
+    if (!company::check_canedit_user($companyid, $user->id)) {
         throw new moodle_exception('invaliduserid');
     }
 
@@ -433,7 +436,7 @@ if ($confirmuser and confirm_sesskey()) {
         die;
     } else {
         // Actually unsuspend the user.
-        local_iomad\company_user::unsuspend($user->id, $companyid);
+        company_user::unsuspend($user->id, $companyid);
 
         // Create an event for this.
         $eventother = array('userid' => $user->id, 'companyname' => $company->get_name(), 'companyid' => $companyid);
@@ -448,7 +451,7 @@ if ($confirmuser and confirm_sesskey()) {
     }
 
 } else if ($acl and confirm_sesskey()) {
-    if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
+    if (!iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)) {
         // TODO: this should be under a separate capability.
         throw new moodle_exception('nopermissions', 'error', '', 'modify the NMET access control list');
     }
@@ -519,16 +522,16 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 }
 
 // Deal with the form searching.
-$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Get all or company users depending on capability.
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
     // Make sure we dont display site admins.
     // Set default search to something which cant happen.
     $sqlsearch = " AND u.id NOT IN (" . $CFG->siteadmins . ")";
 
     // Get department users.
-    $departmentusers = local_iomad\company::get_recursive_department_users($departmentid);
+    $departmentusers = company::get_recursive_department_users($departmentid);
     if (count($departmentusers) > 0 || $showall) {
         if (!$showall) {
             $sqlsearch .= " AND u.id IN (" . implode(',', array_keys($departmentusers)) . ") ";
@@ -538,7 +541,7 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', 
     }
 } else {
     // Get users company association.
-    $departmentusers = local_iomad\company::get_recursive_department_users($departmentid);
+    $departmentusers = company::get_recursive_department_users($departmentid);
     if (count($departmentusers) > 0) {
         if (empty($showsuspended)) {
             $sqlsearch = " AND u.id in (" . implode(',', array_keys($departmentusers)) . ") ";
@@ -559,7 +562,7 @@ if ($usertype != 'a' ) {
 if (!empty($showall)) {
     $companysql = "";
 } else {
-    $company = new local_iomad\company($companyid);
+    $company = new company($companyid);
 
     if ($parentslist = $company->get_parent_companies_recursive()) {
         $companysql = " AND c.id = :companyid AND u.id NOT IN (
@@ -630,8 +633,8 @@ if ($edit != 1) {
 }
 
 // Can we see the controls?
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)
-             || local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:editusers', $companycontext)
+             || iomad::has_capability('block/iomad_company_admin:editallusers', $companycontext)) {
         $headers[] = '';
         $columns[] = 'actions';
 }
@@ -664,7 +667,7 @@ $table->sort_default_column = 'fullname DESC';
 $table->out(get_config('local_iomad', 'max_list_users'), true);
 
 // Set up the add new user button
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:user_create', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:user_create', $companycontext)) {
     // Add the button to add a user.
     echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_company_admin/company_user_create_form.php'),
                                                get_string('createuser', 'block_iomad_company_admin'));

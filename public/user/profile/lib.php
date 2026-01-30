@@ -22,6 +22,9 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 /**
  * Visible to anyone who has the moodle/site:viewuseridentity permission.
  * Editable by the profile owner if they have the moodle/user:editownprofile capability
@@ -528,7 +531,7 @@ class profile_field_base {
         // IOMAD: is this a company manager and can they edit this user.
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }

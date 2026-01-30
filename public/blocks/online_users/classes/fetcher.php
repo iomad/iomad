@@ -26,9 +26,8 @@ namespace block_online_users;
 
 defined('MOODLE_INTERNAL') || die();
 
-use iomad;
-use company;
 use context_system;
+use local_iomad\iomad;
 
 /**
  * Class used to list and count online users

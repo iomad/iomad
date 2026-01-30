@@ -26,6 +26,8 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from view.php
 }
 
+use local_iomad\iomad;
+
 $pdf = new PDF($iomadcertificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
 $pdf->SetTitle(format_string($iomadcertificate->name, true));

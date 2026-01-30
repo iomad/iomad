@@ -29,7 +29,8 @@ use core_reportbuilder\local\helpers\database;
 use dml_exception;
 use local_iomadcustompage\local\audiences\base;
 use local_iomadcustompage\local\models\audience as audience_model;
-use iomad;
+use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
 
 /**
  * Class containing page audience helper methods
@@ -201,7 +202,7 @@ class audience {
             // IOMAD!
             $companyid = iomad::get_my_companyid($context);
             if ($companyid > 0) {
-                $context = \core\context\company::instance($companyid);
+                $context = context_company::instance($companyid);
             }
         }
 

@@ -25,10 +25,10 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
 use context_system;
+use moodle_url;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
 
 class company_edit_form extends \company_moodleform {
     protected $firstcompany;
@@ -63,10 +63,10 @@ class company_edit_form extends \company_moodleform {
         }
         if ($parentcompanyid) {
             $this->parentcompany = $DB->get_record('company', ['id' => $parentcompanyid], '*', MUST_EXIST);
-            $this->context = \core\context\company::instance($parentcompanyid);
+            $this->context = context_company::instance($parentcompanyid);
         }
         if (!empty($companyid)) {
-            $this->context = \core\context\company::instance($companyid);
+            $this->context = context_company::instance($companyid);
         }
         // Default context is system as no company details have been added at all.
         if (empty($this->context)) {

@@ -23,11 +23,12 @@
 
 namespace local_iomad;
 
-use moodleform;
+use cache;
 use context;
 use context_system;
 use moodle_url;
-use cache;
+use moodleform;
+use local_iomad\custom_context\context_company;
 use required_capability_exception;
 
 class iomad {

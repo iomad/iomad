@@ -23,8 +23,7 @@
 
 namespace local_iomad\course_selector;
 
-use local_iomad\iomad;
-use local_iomad\company;
+use local_iomad\{company, iomad};
 
 class potential_company extends company_base {
 

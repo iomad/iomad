@@ -17,7 +17,8 @@
 namespace core\navigation\views;
 
 use navigation_node;
-use iomad;
+use local_iomad\iomad;
+use local_iomad\custom_context\context_company;
 
 /**
  * Class primary.
@@ -95,7 +96,7 @@ class primary extends view {
         $systemcontext = \context_system::instance();
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid) && $companyid > 0) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }

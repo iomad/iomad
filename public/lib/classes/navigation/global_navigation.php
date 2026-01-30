@@ -36,6 +36,7 @@ use core_course_category;
 use course_modinfo;
 use moodle_page;
 use stdClass;
+use local_iomad\iomad;
 
 /**
  * The global navigation class used for... the global navigation

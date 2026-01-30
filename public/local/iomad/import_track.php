@@ -25,6 +25,9 @@
  * Script to import completion information.
  */
 
+use local_iomad\{company, iomad, track};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
@@ -46,11 +49,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/iomad:importtrackfrommoodle', $companycontext);
+iomad::require_capability('local/iomad:importtrackfrommoodle', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {
@@ -252,7 +255,7 @@ if (!empty($fileimport)) {
                         continue;
                     } else {
                         $completionrec->companyid = $usercompany->id;
-                        $company = new local_iomad\company($usercompany->id);
+                        $company = new company($usercompany->id);
                         $upt->track('company', $usercompany->name);
                     }
                 }
@@ -302,7 +305,7 @@ if (!empty($fileimport)) {
                 $upt->track('id', $trackid);
                 $upt->track('status', get_string('ok'));
 
-                local_iomad\track\track::record_certificates($courserec->id, $userrec->id, $trackid, false);
+                track::record_certificates($courserec->id, $userrec->id, $trackid, false);
             }
 
             $upt->flush();

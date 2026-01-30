@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 /**
  * Form for editing HTML block instances.
  *
@@ -57,7 +60,7 @@ class block_iomad_html_edit_form extends block_edit_form {
         }
 
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
 
         if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
             // Deal with the companies.

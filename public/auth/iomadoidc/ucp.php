@@ -23,12 +23,13 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use local_iomad\iomad;
+
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
 require_once(__DIR__.'/lib.php');
 
 // IOMAD
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 $companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";

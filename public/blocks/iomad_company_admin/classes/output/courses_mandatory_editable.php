@@ -25,12 +25,12 @@
 
 namespace block_iomad_company_admin\output;
 
-use core_external;
-use coding_exception;
-use local_iomad\company;
-use local_iomad\iomad;
-use core\output\inplace_editable;
 use block_iomad_company_admin\event\company_course_updated;
+use coding_exception;
+use core\output\inplace_editable;
+use core_external;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
 use renderer_base;
 
 defined('MOODLE_INTERNAL') || die();
@@ -124,7 +124,7 @@ class courses_mandatory_editable extends inplace_editable {
         $mandatory = clean_param($mandatory, PARAM_INT);
 
         // Check company context is valid.
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
         core_external::validate_context($companycontext);
 
         // Check permissions.

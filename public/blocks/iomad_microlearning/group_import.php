@@ -25,6 +25,9 @@
  * Script to import completion information.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
@@ -45,7 +48,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 iomad::require_capability('block/iomad_microlearning:importgroupfromcsv', $companycontext);

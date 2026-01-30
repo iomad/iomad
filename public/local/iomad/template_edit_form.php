@@ -27,14 +27,10 @@
  * Script to let a user edit the properties of a particular email template.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
-<<<<<<<< HEAD:public/local/email/template_edit_form.php
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
-require_once('lib.php');
-require_once('config.php');
-========
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/template_edit_form.php
 
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
@@ -75,19 +71,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-<<<<<<<< HEAD:public/local/email/template_edit_form.php
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
-iomad::require_capability('local/email:edit', $companycontext);
-========
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
-
-local_iomad\iomad::require_capability('local/iomad:email_edit', $companycontext);
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/template_edit_form.php
+iomad::require_capability('local/iomad:email_edit', $companycontext);
 
 if (empty($templatesetid)) {
     if (!$templaterecord = $DB->get_record_sql("SELECT et.*, ets.id AS templatestringid, ets.subject,ets.body, ets.signature, ets.lang

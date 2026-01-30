@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use local_iomad\company;
+
 /**
  * List of features supported in URL module
  * @param string $feature FEATURE_xx constant for requested feature

@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad, track};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__).'/../../config.php');
 
 // Params.
@@ -34,11 +37,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/report_users:addentry', $companycontext);
+iomad::require_capability('local/report_users:addentry', $companycontext);
 
 $linktext = get_string('user_detail_title', 'local_report_users');
 
@@ -55,7 +58,7 @@ $PAGE->set_title($linktext);
 // Set the page heading.
 $PAGE->set_heading(get_string('pluginname', 'block_iomad_reports') . " - $linktext");
 $PAGE->navbar->add(get_string('dashboard', 'block_iomad_company_admin'));
-if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (iomad::has_capability('local/report_completion:view', $companycontext)) {
     $PAGE->navbar->add(get_string('pluginname', 'local_report_completion'),
                        new moodle_url($CFG->wwwroot . "/local/report_completion/index.php"));
 }
@@ -68,7 +71,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 // Check the userid is valid.
-if (!local_iomad\company::check_valid_user($companyid, $userid)) {
+if (!company::check_valid_user($companyid, $userid)) {
     throw new moodle_exception('invaliduser', 'block_iomad_company_management');
 }
 
@@ -111,7 +114,7 @@ if ($data = $mform->get_data()) {
     $trackid = $DB->insert_record('local_iomad_track', $newentry);
 
     // Create a certificate, if required.
-    local_iomad\track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
+    track::record_certificates($newentry->courseid, $newentry->userid, $trackid, false, false);
 
     // Return success.
     redirect($returnurl,

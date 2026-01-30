@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 require(__DIR__ . '/../../../config.php');
 
 $id = required_param('id', PARAM_INT);
@@ -41,7 +43,6 @@ if (!$canreadtemplate) {
 }
 
 // Get my company id.
-$companyid = \iomad::get_my_companyid(context_system::instance(), false);
 
 // Set up the page.
 $url = new moodle_url('/admin/tool/lp/template_learningpaths.php', array(

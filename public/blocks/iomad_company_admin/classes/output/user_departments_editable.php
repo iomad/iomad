@@ -23,12 +23,12 @@
 
 namespace block_iomad_company_admin\output;
 
-use context_course;
+use coding_exception;
 use core_user;
 use core_external;
-use coding_exception;
-use local_iomad\company;
-use local_iomad\iomad;
+use context_course;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -155,7 +155,7 @@ class user_departments_editable extends \core\output\inplace_editable {
         }
 
         // Check user is enrolled in the course.
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
         core_external::validate_context($companycontext);
 
         // Check permissions.

@@ -14,48 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
-<<<<<<<< HEAD:public/local/email/template_apply_form.php
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
-require_once($CFG->libdir . '/formslib.php');
-require_once('lib.php');
-require_once('config.php');
-
-class template_apply_form extends moodleform {
-    protected $isadding;
-    protected $subject = '';
-    protected $body = '';
-    protected $templateid;
-    protected $templaterecord;
-    protected $companyid;
-    protected $editing;
-
-    public function __construct($actionurl, $templatesetid, $companies) {
-        $this->templatesetid = $templatesetid;
-        $this->companies = $companies;
-
-        parent::__construct($actionurl);
-    }
-
-    public function definition() {
-        global $CFG, $PAGE, $DB;
-
-        $mform =& $this->_form;
-
-        $strrequired = get_string('required');
-
-        $mform->addElement('header', '', get_string('selectacompany', 'block_iomad_company_admin'));
-        $mform->addElement('autocomplete', 'companies', '', $this->companies, array('multiple' => true));
-        $mform->addElement('hidden', 'templatesetid', $this->templatesetid);
-        $mform->setType('templatesetid', PARAM_INT);
-
-        $this->add_action_buttons(true);
-
-    }
-}
-========
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/template_apply_form.php
 
 $templatesetid = required_param('templatesetid', PARAM_INTEGER);
 
@@ -64,17 +26,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-<<<<<<<< HEAD:public/local/email/template_apply_form.php
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
-========
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/template_apply_form.php
-
-
 
 $templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid));
 

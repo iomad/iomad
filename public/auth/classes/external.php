@@ -29,6 +29,7 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 use core_external\external_warnings;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -168,7 +169,7 @@ class core_auth_external extends external_api {
         $PAGE->set_context($context);   // Needed by format_string calls.
 
         // Check if an alternate forgotten password method is set.
-        if (!empty(local_iomad\iomad::get_config('', 'forgottenpasswordurl'))) {
+        if (!empty(iomad::get_config('', 'forgottenpasswordurl'))) {
             throw new moodle_exception('cannotmailconfirm');
         }
 

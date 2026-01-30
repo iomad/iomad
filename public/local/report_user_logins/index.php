@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
@@ -51,15 +54,15 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/report_user_logins:view', $companycontext);
+iomad::require_capability('local/report_user_logins:view', $companycontext);
 
 // Are we showing any child companies?
 $canseechildren = false;
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
     $canseechildren = true;
 }
 
@@ -121,12 +124,12 @@ if ($logintoraw) {
 if ($viewchildren &&
     $canseechildren &&
     !empty($departmentid) &&
-    local_iomad\company::can_manage_department($departmentid)) {
+    company::can_manage_department($departmentid)) {
     $departmentrec = $DB->get_record('department', ['id' => $departmentid]);
     $realcompanyid = $companyid;
     $companyid = $departmentrec->company;
     $realcompany = $company;
-    $selectedcompany = new local_iomad\company($companyid);
+    $selectedcompany = new company($companyid);
 } else {
     $realcompanyid = $companyid;
     $realcompany = $company;
@@ -254,11 +257,11 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Work out department level.
-$company = new local_iomad\company($companyid);
+$company = new company($companyid);
 if ($viewchildren && $canseechildren) {
-    $parentlevel = local_iomad\company::get_company_parentnode($realcompany->id);
+    $parentlevel = company::get_company_parentnode($realcompany->id);
 } else {
-    $parentlevel = local_iomad\company::get_company_parentnode($company->id);
+    $parentlevel = company::get_company_parentnode($company->id);
 }
 $companydepartment = $parentlevel->id;
 
@@ -289,7 +292,7 @@ if (!$showsummary && $canseechildren && $viewchildren && $haschildren) {
 }
 
 // Work out where the user sits in the company department tree.
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -301,7 +304,7 @@ if ($departmentid == 0 ) {
 }
 if (!$showsummary) {
     // Get the company additional optional user parameter names.
-    $foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
+    $foundobj = iomad::add_user_filter_params($params, $companyid);
     $idlist = $foundobj->idlist;
     $foundfields = $foundobj->foundfields;
 }
@@ -337,7 +340,7 @@ if (!$showsummary && !empty(get_config('local_iomad', 'report_fields'))) {
 
 if (!$showsummary) {
     // Get the appropriate list of departments.
-    $searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+    $searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
     // Create data for form.
     $customdata = null;
@@ -359,8 +362,8 @@ if (!$showsummary) {
 // If it's userlisting.
 if (!$showsummary) {
     // Deal with where we are on the department tree.
-    $currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
-    $showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
+    $currentdepartment = company::get_departmentbyid($departmentid);
+    $showdepartments = company::get_subdepartments_list($currentdepartment);
     $showdepartments[$departmentid] = $departmentid;
     [$departmentinsql, $departmentparams] = $DB->get_in_or_equal(array_keys($showdepartments), SQL_PARAMS_NAMED, 'deptlist');
     $departmentsql = " AND d.id $departmentinsql";

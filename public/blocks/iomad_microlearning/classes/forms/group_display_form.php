@@ -23,12 +23,10 @@
 
 namespace block_iomad_microlearning\forms;
 
-use \company_moodleform;
-use \company;
-use \iomad;
-use \context_system;
-use \context_coursecat;
-use \moodleform;
+use context_system;
+use context_coursecat;
+use moodleform;
+use local_iomad\{company, iomad};
 
 class group_display_form extends moodleform {
     protected $selectedepartmentdcompany = 0;

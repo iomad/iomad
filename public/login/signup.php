@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\company;
+
 require('../config.php');
 require_once($CFG->dirroot . '/user/editlib.php');
 require_once($CFG->libdir . '/authlib.php');

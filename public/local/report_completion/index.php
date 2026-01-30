@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, company_user, iomad, track};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
@@ -69,7 +72,7 @@ $systemcontext = context_system::instance();
 
 // Set the companyid
 $companyid = iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
 // We need to unset the companyid as we could be looking elsewhere.
@@ -241,8 +244,8 @@ if (!empty($data)) {
             foreach($data->redo_certificates as $redocertificate) {
                 if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
                     echo html_writer::start_tag('p');
-                    local_iomad\track::delete_entry($redocertificate);
-                    local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, true, false);
+                    track::delete_entry($redocertificate);
+                    track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, true, false);
                     echo html_writer::end_tag('p');
                 }
             }
@@ -274,7 +277,7 @@ if (!empty($data)) {
             iomad::require_capability('local/report_users:deleteentriesfull', $companycontext);
             echo $OUTPUT->header();
             foreach($data->purge_entries as $rowid) {
-                local_iomad\track::delete_entry($rowid, true);
+                track::delete_entry($rowid, true);
                 echo html_writer::tag('p', get_string('deletedtrackentry', 'block_iomad_company_admin', $rowid));
             }
             echo $OUTPUT->single_button(new moodle_url('/local/report_completion/index.php',
@@ -340,8 +343,8 @@ if (!empty($data)) {
 
                     // Re-generate the certificate.
                     if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $key))) {
-                        local_iomad\track::delete_entry($key);
-                        local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
+                        track::delete_entry($key);
+                        track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
                     }
                 }
             }
@@ -384,8 +387,8 @@ if (!empty($data)) {
                         }
 
                         // Re-generate the certificate.
-                        local_iomad\track::delete_entry($key);
-                        local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
+                        track::delete_entry($key);
+                        track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false);
                     }
                 }
             }
@@ -417,7 +420,7 @@ if (!empty($action)) {
                 $mycourses[$certcourses] = $certcourses;
             }
 
-            local_iomad\track::download_certs($companyid, $mycourses, $myusers);
+            track::download_certs($companyid, $mycourses, $myusers);
             die;
         } else {
             // Do nothing further.
@@ -428,8 +431,8 @@ if (!empty($action)) {
         if (!empty($confirm) && confirm_sesskey()) {
             if ($action == 'redocert' && !empty($redocertificate)) {
                 if ($trackrec = $DB->get_record('local_iomad_track', array('id' => $redocertificate))) {
-                    local_iomad\track::delete_entry($redocertificate);
-                    if (local_iomad\track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false)) {
+                    track::delete_entry($redocertificate);
+                    if (track::record_certificates($trackrec->courseid, $trackrec->userid, $trackrec->id, false, false)) {
                         redirect(new moodle_url('/local/report_completion/index.php', $params),
                                  get_string($action . "_successful", 'local_report_users'),
                                  null,
@@ -449,7 +452,7 @@ if (!empty($action)) {
                          \core\output\notification::NOTIFY_SUCCESS);
                 die;
             } else {
-                local_iomad\track::delete_entry($rowid, true);
+                track::delete_entry($rowid, true);
             }
         } else {
             echo $OUTPUT->header();
@@ -533,7 +536,7 @@ if ($viewchildren && $canseechildren) {
 $companydepartment = $parentlevel->id;
 
 // Work out where the user sits in the company department tree.
-if (\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);

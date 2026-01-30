@@ -39,8 +39,7 @@ use moodle_exception;
 use moodle_url;
 use required_capability_exception;
 use local_iomad\iomad;
-
-
+use local_iomad\custom_context\context_company;
 
 /**
  * Class for doing things with competency frameworks.
@@ -980,7 +979,7 @@ class api {
         // IOMAD - add the system context back into this.
         $companyid = iomad::get_my_companyid(\context_system::instance(), false);
         if ($companyid > 0) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
             if (has_any_capability($hasanycapability, $companycontext)) {
                 $systemcontext = \context_system::instance();
                 $contexts[$systemcontext->id] = $systemcontext;

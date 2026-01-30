@@ -23,13 +23,13 @@
 
 namespace local_iomad\output;
 
-use local_iomad\email;
-use local_iomad\iomad;
-use local_iomad\forms\email_template_edit_form;
-use html_writer;
 use core_table\output\html_table;
 use core_table\output\html_table_row;
 use core_table\output\html_table_cell;
+use html_writer;
+use local_iomad\custom_context\context_company;
+use local_iomad\{email, iomad};
+use local_iomad\forms\email_template_edit_form;
 use moodle_url;
 use plugin_renderer_base;
 
@@ -80,39 +80,14 @@ class renderer extends plugin_renderer_base {
         global $company;
 
         $ntemplates = count($configtemplates);
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
         $out ="";
 
-<<<<<<<< HEAD:public/local/email/renderer.php
-        if (iomad::has_capability('local/email:edit', $companycontext)) {
-            $stredit = get_string('edit');
-========
         if (iomad::has_capability('local/iomad:email_edit', $companycontext)) {
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/output/renderer.php
             $enable = true;
         } else {
             $enable = false;
         }
-<<<<<<<< HEAD:public/local/email/renderer.php
-        if (iomad::has_capability('local/email:add', $companycontext)) {
-            $stradd = get_string('add_template_button', 'local_email');
-        } else {
-            $stradd = null;
-        }
-        if (iomad::has_capability('local/email:delete', $companycontext)) {
-            $strdelete = get_string('delete_template_button', 'local_email');
-        } else {
-            $strdelete = null;
-        }
-        if (iomad::has_capability('local/email:send', $companycontext)) {
-            $strsend = get_string('send_button', 'local_email');
-        } else {
-            $strsend = null;
-        }
-        $stroverride = get_string('custom', 'local_email');
-        $strdefault = get_string('default');
-========
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/output/renderer.php
 
         // Deal with header sliders.
         $sliced = array_slice($configtemplates, $page * $perpage, $perpage, true);
