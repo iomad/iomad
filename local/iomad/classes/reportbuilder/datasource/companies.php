@@ -18,9 +18,9 @@ declare(strict_types=1);
 
 namespace local_iomad\reportbuilder\datasource;
 
-use lang_string;
 use core_reportbuilder\datasource;
 use core_reportbuilder\local\entities\{course, user};
+use lang_string;
 use local_iomad\reportbuilder\local\entities\{company};
 
 /**
@@ -45,7 +45,7 @@ class companies extends datasource {
      * Initialise report
      */
     protected function initialise(): void {
-        $companyentity = new local_iomad\company();
+        $companyentity = new company();
         $companyalias = $companyentity->get_table_alias('company');
 
         $this->set_main_table('company', $companyalias);

@@ -58,6 +58,8 @@ use tool_lp\external\user_competency_summary_in_plan_exporter;
 use tool_lp\external\user_evidence_summary_exporter;
 use tool_lp\output\user_competency_summary_in_course;
 use tool_lp\output\user_competency_summary_in_plan;
+use local_iomad\custom_context\context_company;
+use local_iomad\{company, iomad};
 
 /**
  * This is the external API for this tool.
@@ -883,20 +885,20 @@ class external extends external_api {
         $systemcontext = context_system::instance();
 
         // Set the companyid
-        if (\iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
             $companysql = "";
             $companyusql = "";
         } else {
             $companysql = " AND 1=2";
             $companyusql = " AND 1=2";
         }
-        $companyid = \iomad::get_my_companyid($systemcontext);
+        $companyid = iomad::get_my_companyid($systemcontext);
         if ($companyid > 0) {
-            $companycontext = \core\context\company::instance($companyid);
-            $company = new \company($companyid);
+            $companycontext = context_company::instance($companyid);
+            $company = new company($companyid);
             $userlevel = $company->get_userlevel($USER);
             $departmentid = key($userlevel);
-            $departmentusers = \company::get_recursive_department_users($departmentid);
+            $departmentusers = company::get_recursive_department_users($departmentid);
             if (!empty($departmentusers)) {
                 $departmentids = "";
                 foreach ($departmentusers as $departmentuser) {

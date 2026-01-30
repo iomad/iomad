@@ -23,13 +23,13 @@
 
 namespace local_iomad\output;
 
-use local_iomad\email;
-use local_iomad\iomad;
-use local_iomad\forms\email_template_edit_form;
-use html_writer;
 use core_table\output\html_table;
 use core_table\output\html_table_row;
 use core_table\output\html_table_cell;
+use html_writer;
+use local_iomad\custom_context\context_company;
+use local_iomad\{email, iomad};
+use local_iomad\forms\email_template_edit_form;
 use moodle_url;
 use plugin_renderer_base;
 
@@ -80,7 +80,7 @@ class renderer extends plugin_renderer_base {
         global $company;
 
         $ntemplates = count($configtemplates);
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
         $out ="";
 
         if (iomad::has_capability('local/iomad:email_edit', $companycontext)) {

@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 
@@ -39,11 +42,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:company_manager', $companycontext);
+iomad::require_capability('block/iomad_company_admin:company_manager', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -60,8 +63,8 @@ $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
 // Set up the departments stuffs.
-$parentlevel = local_iomad\company::get_company_parentnode($company->id);
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+$parentlevel = company::get_company_parentnode($company->id);
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
@@ -140,7 +143,7 @@ if ($managersform->is_cancelled()) {
     echo $output->header();
 
     // Check the department is valid.
-    if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
 
@@ -153,7 +156,7 @@ if ($managersform->is_cancelled()) {
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('div');
 
-    if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
+    if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
         $roleid == 1) {
         echo html_writer::start_tag('div', array('class' => 'iomadclear'));
         echo html_writer::start_tag('div', array('class' => 'fitem'));

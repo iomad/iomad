@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\company;
+
 require('../config.php');
 require_once($CFG->dirroot . '/user/editlib.php');
 require_once($CFG->libdir . '/authlib.php');
@@ -74,7 +76,7 @@ if (!empty($SESSION->signupuserinothercompany) || $userclashed) {
         die;
     } else {
         // User decided to add this account to the current company.
-        $company = new local_iomad\company($wantedcompanyid);
+        $company = new company($wantedcompanyid);
         $company->assign_user_to_company($SESSION->clasheduserid);
         unset($SESSION->clasheduserid);
         redirect(new moodle_url('/login/index.php'),

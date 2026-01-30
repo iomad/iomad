@@ -25,6 +25,9 @@
  * Script to let a user create course groups within a particular company.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib.php');
@@ -48,11 +51,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:edit_groups', $companycontext);
+iomad::require_capability('block/iomad_company_admin:edit_groups', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {
@@ -86,7 +89,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 // Set up the form.
 $groupsform = new \block_iomad_company_admin\forms\company_groups_form($PAGE->url, $companycontext, $companyid, $selectedcourse);
 if (!empty($selectedcourse)) {
-    $defaultgroup = local_iomad\company::get_company_group($companyid, $selectedcourse);
+    $defaultgroup = company::get_company_group($companyid, $selectedcourse);
     $mform = new \block_iomad_company_admin\forms\course_group_display_form($PAGE->url, $companyid, $selectedcourse, $output);
     $editform = new \block_iomad_company_admin\forms\group_edit_form($PAGE->url, $companyid, $selectedcourse, $groupid, $output);
 }
@@ -117,7 +120,7 @@ if (!empty($selectedcourse)) {
             } else {
                 if ($groupid != $defaultgroup->id) {
                     $course = $DB->get_record('course', array('id' => $selectedcourse));
-                    local_iomad\company::delete_company_course_group($companyid, $course, false, $groupid);
+                    company::delete_company_course_group($companyid, $course, false, $groupid);
                 } else {
                     $shownotice = true;
                     $noticestring = get_string('isdefaultgroupdelete', 'block_iomad_company_admin');
@@ -145,7 +148,7 @@ if (!empty($selectedcourse)) {
                 echo $output->header();
 
                 // Check the department is valid.
-                if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+                if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
                     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
                 }
 
@@ -156,7 +159,7 @@ if (!empty($selectedcourse)) {
             } else {
                 echo $output->header();
                 // Check the department is valid.
-                if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+                if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
                     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
                 }
 
@@ -170,7 +173,7 @@ if (!empty($selectedcourse)) {
     } else if ($createdata = $editform->get_data()) {
 
         // Create or update the department.
-        local_iomad\company::create_company_course_group($companyid,
+        company::create_company_course_group($companyid,
                                              $selectedcourse,
                                              $createdata);
 
@@ -179,7 +182,7 @@ if (!empty($selectedcourse)) {
         echo $output->header();
 
         // Check the department is valid.
-        if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+        if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
             throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
         }
 
@@ -193,7 +196,7 @@ if (!empty($selectedcourse)) {
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 

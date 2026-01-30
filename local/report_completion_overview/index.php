@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -116,24 +119,24 @@ foreach ($customfields as $customfield) {
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/report_completion_overview:view', $companycontext);
+iomad::require_capability('local/report_completion_overview:view', $companycontext);
 
 // Are we showing any child companies?
 $canseechildren = false;
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:canviewchildren', $companycontext)) {
     $canseechildren = true;
 }
 
 // Get the associated department id.
-$parentlevel = local_iomad\company::get_company_parentnode($company->id);
+$parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Get the company additional optional user parameter names.
-$foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
+$foundobj = iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
@@ -162,7 +165,7 @@ $PAGE->set_title($linktext);
 $PAGE->requires->js_call_amd('local_report_completion_overview/report_options', 'init');
 
 // Optionally add the link back to the course completion report.
-if (local_iomad\iomad::has_capability('local/report_completion:view', $companycontext)) {
+if (iomad::has_capability('local/report_completion:view', $companycontext)) {
     $buttoncaption = get_string('pluginname', 'local_report_completion');
     $buttonlink = new moodle_url($CFG->wwwroot . "/local/report_completion/index.php");
     $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
@@ -188,7 +191,7 @@ $baseurl = new moodle_url(basename(__FILE__), $params);
 $returnurl = $baseurl;
 
 // Work out where the user sits in the company department tree.
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = array($parentlevel->id => $parentlevel->id);
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -200,8 +203,8 @@ if ($departmentid == 0 ) {
 }
 
 // Deal with where we are on the department tree.
-$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
-$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
+$currentdepartment = company::get_departmentbyid($departmentid);
+$showdepartments = company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 $departmentsql = " AND d.id IN (" . implode(',', array_keys($showdepartments)) . ")";
 
@@ -291,7 +294,7 @@ $expirecourses = $courses;
 $gradelesscourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} WHERE hasgrade = 0");
 
 // Setup the user search form.
-$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 if (!$download) {
     echo $output->header();

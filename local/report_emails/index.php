@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, email, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
@@ -106,11 +109,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/report_emails:view', $companycontext);
+iomad::require_capability('local/report_emails:view', $companycontext);
 
 $fieldnames = [];
 $allfields = [];
@@ -220,8 +223,8 @@ $PAGE->requires->js_call_amd('block_iomad_company_admin/department_select',
                               optional_param('deptid', 0, PARAM_INT)]);
 
 // Work out department level.
-$company = new local_iomad\company($companyid);
-$parentlevel = local_iomad\company::get_company_parentnode($company->id);
+$company = new company($companyid);
+$parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // All companies?
@@ -236,7 +239,7 @@ if ($parentslist = $company->get_parent_companies_recursive()) {
 }
 
 // Work out where the user sits in the company department tree.
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userlevels = [$parentlevel->id => $parentlevel->id];
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -248,7 +251,7 @@ if ($departmentid == 0 ) {
 }
 
 // Get the company additional optional user parameter names.
-$foundobj = local_iomad\iomad::add_user_filter_params($params, $companyid);
+$foundobj = iomad::add_user_filter_params($params, $companyid);
 $idlist = $foundobj->idlist;
 $foundfields = $foundobj->foundfields;
 
@@ -304,7 +307,7 @@ if (!empty(get_config('local_iomad', 'report_fields'))) {
 
 // Get the appropriate list of email templates.
 $templateslist = [0 => get_string('all')];
-$templates = local_iomad\email::get_templates();
+$templates = email::get_templates();
 $templatenames = [];
 foreach (array_keys($templates) as $templatename) {
     $templateslist[] = $templatename;
@@ -321,7 +324,7 @@ $select->label = get_string('templatetype', 'local_iomad');
 $select->formid = 'choosetemplate';
 $templateselectoutput = html_writer::tag('div', $output->render($select), ['id' => 'iomad_template_selector']);
 
-$searchinfo = local_iomad\iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
+$searchinfo = iomad::get_user_sqlsearch($params, $idlist, $sort, $dir, $departmentid, true, true);
 
 // Deal with resend check.
 if ($allemails && confirm_sesskey()) {
@@ -341,8 +344,8 @@ if ($allemails && confirm_sesskey()) {
         die;
     } else {
         // Deal with where we are on the department tree.
-        $currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
-        $showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
+        $currentdepartment = company::get_departmentbyid($departmentid);
+        $showdepartments = company::get_subdepartments_list($currentdepartment);
         $showdepartments[$departmentid] = $departmentid;
         [$departmentinsql, $departmentparams] = $DB->get_in_or_equal(array_keys($showdepartments), SQL_PARAMS_NAMED, 'departid');
         $departmentsql = " AND d.id $departmentinsql";
@@ -421,7 +424,7 @@ if (!$table->is_downloading()) {
             echo $templateselectoutput;
             echo html_writer::end_tag('div');
 
-            if (local_iomad\iomad::has_capability('local/report_emails:resend', $companycontext)) {
+            if (iomad::has_capability('local/report_emails:resend', $companycontext)) {
                 $params['allemails'] = 'allemails';
                 $resendlink = new moodle_url('/local/report_emails/index.php', $params);
                 echo html_writer::start_tag('div', ['class' => 'reporttablecontrolscontrol']);
@@ -453,8 +456,8 @@ if (!$table->is_downloading()) {
 }
 
 // Deal with where we are on the department tree.
-$currentdepartment = local_iomad\company::get_departmentbyid($departmentid);
-$showdepartments = local_iomad\company::get_subdepartments_list($currentdepartment);
+$currentdepartment = company::get_departmentbyid($departmentid);
+$showdepartments = company::get_subdepartments_list($currentdepartment);
 $showdepartments[$departmentid] = $departmentid;
 [$departmentinsql, $departmentparams] = $DB->get_in_or_equal(array_keys($showdepartments), SQL_PARAMS_NAMED, 'deptids');
 $departmentsql = " AND d.id {$departmentinsql}";

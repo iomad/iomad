@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/grade/constants.php');
@@ -202,7 +204,7 @@ class block_activity_results extends block_base {
         }
 
         // IOMAD - Get the user's company details.
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
         // Get the grades for this activity.
         $sql = 'SELECT * FROM {grade_grades}
                  WHERE itemid = ? AND finalgrade is not NULL

@@ -22,12 +22,14 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 
 // IOMAD
 
-$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid) &&
             get_config('tool_mfa', 'enabled'. "_$companyid") !== false) {
     $postfix = "_$companyid";

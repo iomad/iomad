@@ -59,7 +59,7 @@ class companylicense_users extends datasource {
         $useralias = $userentity->get_table_alias('user');
         $courseentity = new course();
         $coursealias = $courseentity->get_table_alias('course');
-        $companyentity = new local_iomad\company();
+        $companyentity = new company();
         $companyalias = $companyentity->get_table_alias('company');
 
         $this->set_main_table('company', $companyalias);

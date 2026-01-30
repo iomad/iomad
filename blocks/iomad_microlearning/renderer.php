@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_iomad\iomad;
+
 /**
  * @package   block_iomad_microlearning
  * @copyright 2021 Derick Turner
@@ -39,12 +41,12 @@ class block_iomad_microlearning_renderer extends plugin_renderer_base {
         global $companycontext;
 
         $out = '<p><a class="btn btn-primary" href="'.$link.'">' . get_string('add') . '</a>';
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:import_threads', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:import_threads', $companycontext)) {
             $out .= '&nbsp<a class="btn btn-primary" href="'.$link2.'">' . get_string('import') . '</a>';
         }
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:manage_groups', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:manage_groups', $companycontext)) {
             $out .= '&nbsp<a class="btn btn-primary" href="'.$link3.'">' . get_string('learninggroups', 'block_iomad_microlearning') . '</a>';
-            if (local_iomad\iomad::has_capability('block/iomad_microlearning:importgroupfromcsv', $companycontext)) {
+            if (iomad::has_capability('block/iomad_microlearning:importgroupfromcsv', $companycontext)) {
                 $out .= '&nbsp<a class="btn btn-primary" href="'.$link4.'">' . get_string('bulkassigngroups', 'block_iomad_microlearning') . '</a>';
             }
         }

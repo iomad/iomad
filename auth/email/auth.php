@@ -22,6 +22,8 @@
  * @package auth_email
  */
 
+use local_iomad\company;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/authlib.php');
@@ -133,7 +135,7 @@ class auth_plugin_email extends auth_plugin_base {
         // IOMAD.
         if (!empty($user->companyid)) {
             
-            $company = new local_iomad\company($user->companyid);
+            $company = new company($user->companyid);
 
             // assign the user to the company.
             $company->assign_user_to_company($user->id);

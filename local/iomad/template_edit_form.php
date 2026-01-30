@@ -27,6 +27,9 @@
  * Script to let a user edit the properties of a particular email template.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.
@@ -68,11 +71,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/iomad:email_edit', $companycontext);
+iomad::require_capability('local/iomad:email_edit', $companycontext);
 
 if (empty($templatesetid)) {
     if (!$templaterecord = $DB->get_record_sql("SELECT et.*, ets.id AS templatestringid, ets.subject,ets.body, ets.signature, ets.lang

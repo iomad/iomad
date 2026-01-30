@@ -26,9 +26,8 @@ namespace block_online_users;
 
 defined('MOODLE_INTERNAL') || die();
 
-use iomad;
-use company;
 use context_system;
+use local_iomad\iomad;
 
 /**
  * Class used to list and count online users
@@ -116,12 +115,12 @@ class fetcher {
         $systemcontext = context_system::instance();
 
         // Set the companyid
-        $companyid = local_iomad\iomad::get_my_companyid($systemcontext, false);
+        $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid)) {
             $companysql = " AND u.id IN (SELECT userid FROM {company_users} WHERE companyid = :companyid) ";
             $params['companyid'] = $companyid;
         } else {
-            if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)) {
+            if (iomad::has_capability('block/iomad_company_admin:company_add', $systemcontext)) {
                 $companysql = "";
             }
         }

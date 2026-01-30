@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 require_once($CFG->libdir . '/formslib.php');
@@ -37,11 +40,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($context);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($context);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:company_license_users', $companycontext);
+iomad::require_capability('block/iomad_company_admin:company_license_users', $companycontext);
 
 $urlparams = array('companyid' => $companyid, 'licenseid' => $licenseid);
 if ($returnurl) {
@@ -82,17 +85,17 @@ $coursesform = new \block_iomad_company_admin\forms\company_users_licenses_form(
 echo $OUTPUT->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 
 // Check the userid is valid.
-if (!local_iomad\company::check_valid_user($companyid, $userid, $departmentid)) {
+if (!company::check_valid_user($companyid, $userid, $departmentid)) {
     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 
 //  Check the license is valid for this company.
-if (!empty($licenseid) && !local_iomad\company::check_valid_company_license($companyid, $licenseid)) {
+if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
     throw new moodle_exception('invalidcompanylicense', 'block_iomad_company_admin');
 }
 
@@ -109,8 +112,8 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
         // Display the license selector.
         $availablewarning = "";
         $licenselist = array();
-        if (local_iomad\iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $companycontext)) {
-            $parentlevel = local_iomad\company::get_company_parentnode($companyid);
+        if (iomad::has_capability('block/iomad_company_admin:unallocate_licenses', $companycontext)) {
+            $parentlevel = company::get_company_parentnode($companyid);
             $userhierarchylevel = $parentlevel->id;
             // Get all the licenses.
             // Are we an educator?
@@ -146,7 +149,7 @@ if ($coursesform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL))
             } else {
                 $educator = false;
             }
-            $licenses = local_iomad\company::get_recursive_departments_licenses($userhierarchylevel);
+            $licenses = company::get_recursive_departments_licenses($userhierarchylevel);
             if (!empty($licenses)) {
                 foreach ($licenses as $deptlicenseid) {
                     // Get the license record.

@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+
 require_once __DIR__ . '/../../../../config.php';
 
 global $CFG;
@@ -77,13 +79,13 @@ class tool_iomadmerge_logger {
     public function get($filter = null, $limitfrom=0, $limitnum=0, $sort = "timemodified DESC") {
         global $DB, $USER;
 
-        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:editallusers', context_system::instance())) {
+        if (!iomad::has_capability('block/iomad_company_admin:editallusers', context_system::instance())) {
             // Get the user id's which the user can see.
-            $companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
-            $company = new local_iomad\company($companyid);
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $company = new company($companyid);
             $departmentusers = array();
             foreach ($userlevels as $userlevelid => $userlevel) {
-                $departmentusers = $departmentusers + local_iomad\company::get_recursive_department_users($userlevelid);
+                $departmentusers = $departmentusers + company::get_recursive_department_users($userlevelid);
             }
             if (!empty($departmentusers)) {
                 $departmentids = "";

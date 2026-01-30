@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/../iomad_company_admin/lib.php');
 
@@ -44,9 +47,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
@@ -155,7 +158,7 @@ echo html_writer::end_tag('div');
 
 // ...***********create course list sql (includes filtering on tags)*****************.
 $typewhere = "";
-if (!local_iomad\iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
+if (!iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
     $typewhere = " AND css.allow_single_purchase = 1 ";
 }
 
@@ -214,8 +217,8 @@ if ($itemcount) {
     foreach ($items as $item) {
         $available = ($item->allow_single_purchase ||
                       $item->allow_license_blocks) &&
-                     (local_iomad\iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
-                      local_iomad\iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext));
+                     (iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
+                      iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext));
         $price = block_iomad_commerce\helper::get_lowest_price_text($item);
         if ($available) {
             if ($item->allow_single_purchase) {

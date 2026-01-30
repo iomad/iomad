@@ -24,7 +24,8 @@ use dml_exception;
 use dml_transaction_exception;
 use moodle_url;
 use stdClass;
-
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 
 /**
  *  context_iomadcustompage.php description here.
@@ -134,9 +135,9 @@ class context_iomadcustompage extends context {
                 } else {
                     // IOMAD!
                     $path = '/' . SYSCONTEXTID;
-                    $companyid = \iomad::get_my_companyid(context_system::instance());
+                    $companyid = iomad::get_my_companyid(context_system::instance());
                     if ($companyid > 0) {
-                        $companycontext = \core\context\company::instance($companyid);
+                        $companycontext = context_company::instance($companyid);
                         $path = $companycontext->path;
                     }
                     $record = context::insert_context_record(CONTEXT_CUSTOMPAGE, $iomadcustompage->id, $path, 0);

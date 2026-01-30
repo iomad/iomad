@@ -23,7 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use local_iomad\company;
 
 /**
  * Hook called by delete_course to remove iomad table references before course is deleted
@@ -55,7 +55,7 @@ function local_iomad_pre_course_delete($course) {
         $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
         // Does the license have any courses left?
         if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
-            local_iomad\company::update_license_usage($courselicense->licenseid);
+            company::update_license_usage($courselicense->licenseid);
         } else {
             // Delete the license.  It no longer is valid.
             $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));

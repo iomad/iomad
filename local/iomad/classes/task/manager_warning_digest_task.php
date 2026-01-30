@@ -23,8 +23,7 @@
 
 namespace local_iomad\task;
 
-use local_iomad\emailtemplate;
-use local_iomad\company;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Manager course not started warning digest email scheduled task.
@@ -68,7 +67,7 @@ class manager_warning_digest_task extends \core\task\scheduled_task {
             foreach ($companies as $company) {
                 mtrace("dealing with company id $company->id");
                 // Deal with parent companies as we only want manager of this company.
-                $companyobj = new local_iomad\company($company->id);
+                $companyobj = new company($company->id);
                 if ($parentslist = $companyobj->get_parent_companies_recursive()) {
                     $companyusql = " AND u.id NOT IN (
                                     SELECT userid FROM {company_users}

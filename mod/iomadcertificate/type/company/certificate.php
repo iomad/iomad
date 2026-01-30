@@ -26,6 +26,8 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from view.php
 }
 
+use local_iomad\iomad;
+
 $pdf = new PDF($iomadcertificate->orientation, 'mm', 'A4', true, 'UTF-8', false);
 
 $pdf->SetTitle(format_string($iomadcertificate->name, true));
@@ -126,7 +128,7 @@ if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'iomadcertific
 }
 
 $companyid = 0;
-if ($companyid = local_iomad\iomad::is_company_user($certuser)) {
+if ($companyid = iomad::is_company_user($certuser)) {
     if ($files = $fs->get_area_files($sitecontext->id, 'local_iomad', 'companycertificateseal', $companyid, 'sortorder DESC, id ASC', false)) {
         if (!count($files) < 1) {
             if (!empty($certificateseal)) {

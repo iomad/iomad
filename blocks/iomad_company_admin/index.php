@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once( '../../config.php');
 
 // We always require users to be logged in for this page.
@@ -39,19 +42,19 @@ $SESSION->showsuspendedcompanies = $showsuspendedcompanies;
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
 if (!empty($company)) {
-    $companycontext = \core\context\company::instance($company);
+    $companycontext = context_company::instance($company);
 }
 
 if ($companychange &&
     empty($company) &&
-    local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+    iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     // We want to unset the current company.
     $SESSION->currenteditingcompany = 0;
     unset($SESSION->company);
 }
 
 // Set the session to a user if they are editing a company other than their own.
-if (!empty($company) && ( local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)
+if (!empty($company) && ( iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)
     || $companyuser = $DB->get_record_sql("SELECT DISTINCT managertype
                                            FROM {company_users}
                                            WHERE companyid = :companyid
@@ -111,9 +114,9 @@ if (!$companycount = $DB->count_records('company')) {
 
 // If we don't have one selected pick the first of these.
 if (empty($SESSION->currenteditingcompany) &&
-    !local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
-    if (local_iomad\iomad::is_company_user()) {
-        $company = local_iomad\iomad::companyid();
+    !iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+    if (iomad::is_company_user()) {
+        $company = iomad::companyid();
         $SESSION->currenteditingcompany = $company;
     } else {
         // Otherwise, make the first (or only) company the current one
@@ -132,7 +135,7 @@ if (empty($SESSION->currenteditingcompany) &&
 
 $companycontext = $systemcontext;
 if (!empty($company)) {
-    $companycontext =  \core\context\company::instance($company);
+    $companycontext =  context_company::instance($company);
 }
 
 // Page setup stuff.
@@ -167,7 +170,7 @@ $tabs = [];
 $panes = [];
 $url = '/my';
 $selected = true;
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:companymanagement_view', $companycontext)) {
     $tabs[] = [
         'category' => 'CompanyAdmin',
         'icon' => 'fa-building',
@@ -177,7 +180,7 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:companymanageme
     $panes[1] = ['category' => 'CompanyAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:usermanagement_view', $companycontext)) {
     $tabs[] = [
         'category' => 'UserAdmin',
         'icon' => 'fa-user',
@@ -187,7 +190,7 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:usermanagement_
     $panes[2] = ['category' => 'UserAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:coursemanagement_view', $companycontext)) {
     $tabs[] = [
         'category' => 'CourseAdmin',
         'icon' => 'fa-file-text',
@@ -197,7 +200,7 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:coursemanagemen
     $panes[3] = ['category' => 'CourseAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:licensemanagement_view', $companycontext)) {
     $tabs[] = [
         'category' => 'LicenseAdmin',
         'icon' => 'fa-legal',
@@ -207,7 +210,7 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:licensemanageme
     $panes[4] = ['category' => 'LicenseAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:competencymanagement_view', $companycontext)) {
     $tabs[] = [
         'category' => 'CompetencyAdmin',
         'icon' => 'fa-cubes',
@@ -217,7 +220,7 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:competencymanag
     $panes[5] = ['category' => 'CompetencyAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_commerce:admin_view', $companycontext)) {
+if (iomad::has_capability('block/iomad_commerce:admin_view', $companycontext)) {
     $tabs[] = [
         'category' => 'ECommerceAdmin',
         'icon' => 'fa-truck',
@@ -227,7 +230,7 @@ if (local_iomad\iomad::has_capability('block/iomad_commerce:admin_view', $compan
     $panes[6] = ['category' => 'ECommerceAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_microlearning:view', $companycontext)) {
+if (iomad::has_capability('block/iomad_microlearning:view', $companycontext)) {
     $tabs[] = [
         'category' => 'MicrolearningAdmin',
         'icon' => 'fa-microchip',
@@ -237,7 +240,7 @@ if (local_iomad\iomad::has_capability('block/iomad_microlearning:view', $company
     $panes[7] = ['category' => 'MicrolearningAdmin', 'items' => [], 'selected' => $selected];
     $selected = false;
 }
-if (local_iomad\iomad::has_capability('block/iomad_reports:view', $companycontext)) {
+if (iomad::has_capability('block/iomad_reports:view', $companycontext)) {
     $tabs[] = [
         'category' => 'Reports',
         'icon' => 'fa-bar-chart-o',
@@ -269,7 +272,7 @@ foreach ($menus as $key => $menu) {
     }
 
     // If no capability then move on.
-    if (!local_iomad\iomad::has_capability($menu['cap'], $companycontext)) {
+    if (!iomad::has_capability($menu['cap'], $companycontext)) {
         continue;
     }
     $somethingtodisplay = true;
@@ -346,7 +349,7 @@ $companyselect = (object) [];
 
 // Only display if you have the correct capability, or you are not in more than one company.
 // Just display name of current company if no choice.
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
     if ($DB->count_records_sql("SELECT COUNT(DISTINCT companyid) FROM {company_users} WHERE userid = :userid", ['userid' => $USER->id]) <= 1 ) {
         $companyrecords = $DB->get_records('company_users', array('userid' => $USER->id));
         $companyuser = array_pop($companyrecords);
@@ -367,7 +370,7 @@ $content = '';
 //  Check users session and profile settings to get the current editing company.
 if (!empty($SESSION->currenteditingcompany)) {
     $selectedcompany = $SESSION->currenteditingcompany;
-} else if ($usercompany = local_iomad\company::by_userid($USER->id)) {
+} else if ($usercompany = company::by_userid($USER->id)) {
     $selectedcompany = $usercompany->id;
 } else {
     $selectedcompany = "";
@@ -382,14 +385,14 @@ if (!empty($SESSION->showsuspendedcompanies)) {
 
 // Get the company name if set.
 if (!empty($selectedcompany)) {
-    $companyname = local_iomad\company::get_companyname_byid($selectedcompany);
+    $companyname = company::get_companyname_byid($selectedcompany);
 } else {
     $companyname = "";
 }
 
 // Get a list of companies if required.
 if (!$companyselect->onecompany) {
-    $companylist = local_iomad\company::get_companies_select($showsuspendedcompanies);
+    $companylist = company::get_companies_select($showsuspendedcompanies);
     $select = new \block_iomad_company_admin\forms\iomad_company_select_form(new moodle_url('/blocks/iomad_company_admin/index.php'), $companylist, $selectedcompany);
     $select->set_data(array('company' => $selectedcompany, 'showsuspendedcompanies' => $showsuspendedcompanies));
     $companyselect->selectform = $select->render();

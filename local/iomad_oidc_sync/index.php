@@ -24,6 +24,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot."/lib/tablelib.php");
@@ -42,15 +45,15 @@ require_login();
 $systemcontext = context_system::instance();
 $companycontext = $systemcontext;
 // Set the companyid.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$company = new company($companyid);
 
 // If we are 4.3+ we use the company context for this.
 if ($CFG->branch > 402) {
-    $companycontext = \core\context\company::instance($companyid);
+    $companycontext = context_company::instance($companyid);
 }
 
-local_iomad\iomad::require_capability('local/iomad_oidc_sync:view', $companycontext);
+iomad::require_capability('local/iomad_oidc_sync:view', $companycontext);
 
 if (!empty($download)) {
     $page = 0;
@@ -91,7 +94,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 
 $url = new moodle_url('/local/iomad_oidc_sync/index.php', $params);
 
-if (!local_iomad\company::check_valid_user($companyid, $USER->id)) {
+if (!company::check_valid_user($companyid, $USER->id)) {
     throw new moodle_exception('invaliduserdepartment', 'block_iomad_company_management');
 }
 
@@ -119,13 +122,13 @@ if (!empty($approvecompanyid) && !empty($action) && confirm_sesskey()) {
 $table = new \local_iomad_oidc_sync\tables\consent_table('iomad_oidc_sync_consent');
 
 // What companies can we see?
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+if (iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
     $companysql = "";
     if (!empty($wantedcompanyid)) {
         $companysql .= " AND c.id = $wantedcompanyid";
     }
 } else {
-    $companylist = local_iomad\company::get_companies_select(false);
+    $companylist = company::get_companies_select(false);
     $companysql = " AND c.id  IN ( " . implode(',', array_keys($companylist)) . ")";
     if (!empty($wantedcompanyid)) {
         $companysql .= " AND c.id = $wantedcompanyid";

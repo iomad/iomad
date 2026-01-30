@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 require('../config.php');
 require_once("$CFG->libdir/formslib.php");
 
@@ -41,7 +43,7 @@ if (!isloggedin()) {
 }
 
 // Check if we can see this course.
-if (!local_iomad\iomad::iomad_check_course($id)) {
+if (!iomad::iomad_check_course($id)) {
 	$id = 0;
 }
 

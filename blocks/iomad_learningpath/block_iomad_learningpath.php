@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 /**
  * Iomad learning path
  *
@@ -82,7 +84,7 @@ class block_iomad_learningpath extends block_base {
 
         // IOMAD stuff.
         $sitecontext = context_system::instance();
-        $companyid = local_iomad\iomad::get_my_companyid($sitecontext, false);
+        $companyid = iomad::get_my_companyid($sitecontext, false);
         $path = new \block_iomad_learningpath\path($companyid, $sitecontext);
         $userpaths = $path->get_user_paths($USER->id);
 

@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+
 require_once("../../config.php");
 require_once($CFG->libdir."/gradelib.php");
 require_once('lib.php');
@@ -70,13 +72,13 @@ if (!$location = $DB->get_record('classroom', ['id' => $trainingevent->classroom
 }
 
 // Get my company info.
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$company = new company($companyid);
 
 // Have we been sent a userid?
 if (!empty($userid)) {
     // If so - also get the user's company.
-    $usercompany = local_iomad\company::by_userid($userid);
+    $usercompany = company::by_userid($userid);
 }
 
 // Page stuff.
@@ -87,7 +89,7 @@ $PAGE->set_context($context);
 $PAGE->requires->js_call_amd('mod_trainingevent/attendance', 'init');
 
 // Get the associated department id.
-$parentlevel = local_iomad\company::get_company_parentnode($company->id);
+$parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 if (!empty($trainingevent->coursecapacity)) {
     $maxcapacity = $trainingevent->coursecapacity;
@@ -581,7 +583,7 @@ if (!empty($buttonstring)) {
 // Output the attendees.
 if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)) {
     // Get the associated department id.
-    $parentlevel = local_iomad\company::get_company_parentnode($company->id);
+    $parentlevel = company::get_company_parentnode($company->id);
     $companydepartment = $parentlevel->id;
 
     if (has_capability('block/iomad_company_admin:edit_all_departments', $systemcontext)) {
@@ -592,7 +594,7 @@ if (!empty($view) && has_capability('mod/trainingevent:viewattendees', $context)
     }
     $departmentid = $userhierarchylevel;
 
-    $allowedusers = local_iomad\company::get_recursive_department_users($departmentid);
+    $allowedusers = company::get_recursive_department_users($departmentid);
     $allowedlist = '0';
     foreach ($allowedusers as $alloweduser) {
         if ($allowedlist == '0') {

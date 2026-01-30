@@ -33,6 +33,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 require('../config.php');
 require_once($CFG->libdir.'/authlib.php');
 require_once(__DIR__ . '/lib.php');
@@ -43,7 +45,7 @@ $token = optional_param('token', false, PARAM_ALPHANUM);
 
 // IOMAD
 
-$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";
 } else {
@@ -62,8 +64,8 @@ $PAGE->set_title($strforgotten);
 $PAGE->set_heading($COURSE->fullname);
 
 // if alternatepasswordurl is defined, then we'll just head there
-if (!empty(local_iomad\iomad::get_config('', 'forgottenpasswordurl'))) {
-    redirect(local_iomad\iomad::get_config('', 'forgottenpasswordurl'));
+if (!empty(iomad::get_config('', 'forgottenpasswordurl'))) {
+    redirect(iomad::get_config('', 'forgottenpasswordurl'));
 }
 
 // if you are logged in then you shouldn't be here!

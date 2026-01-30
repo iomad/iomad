@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
+
 /**
  * Default block class.
  */
@@ -70,11 +73,11 @@ class block_iomad_welcome extends block_base {
         $systemcontext = context_system::instance();
         $companycontext = $systemcontext;
         if (!empty($company)) {
-            $companycontext = \core\context\company::instance($company);
+            $companycontext = context_company::instance($company);
         }
 
         // Only display if you have the correct capability.
-        if (!local_iomad\iomad::has_capability('block/iomad_welcome:view', $companycontext)) {
+        if (!iomad::has_capability('block/iomad_welcome:view', $companycontext)) {
             return;
         }
 

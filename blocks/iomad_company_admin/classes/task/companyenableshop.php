@@ -27,6 +27,7 @@ namespace block_iomad_company_admin\task;
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
+use local_iomad\company;
 
 class companyenableshop extends adhoc_task {
 
@@ -48,7 +49,7 @@ class companyenableshop extends adhoc_task {
         require_once($CFG->dirroot . '/blocks/iomad_commerce/locallib.php');
 
         $data = $this->get_custom_data();
-        $company = new \company($data->companyid);
+        $company = new company($data->companyid);
         $companyrecord = $DB->get_record('company', array('id' => $data->companyid));
         \iomad_commerce::update_company($companyrecord, $companyrecord);
 

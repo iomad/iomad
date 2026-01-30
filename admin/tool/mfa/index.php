@@ -22,6 +22,7 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
 
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/lib.php');
@@ -35,7 +36,7 @@ $returnurl = get_local_referer(false);
 
 // IOMAD
 
-$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";
 } else {
@@ -81,7 +82,7 @@ switch ($action) {
             \tool_mfa\manager::set_factor_config([$enabledname => 1], 'factor_' . $factor);
             \tool_mfa\manager::do_factor_action($factor, $action);
             if (!empty($postfix)) {
-                local_iomad\company::update_plugin('factor_' . $factor, $postfix);
+                company::update_plugin('factor_' . $factor, $postfix);
             }
 
             core_plugin_manager::reset_caches();

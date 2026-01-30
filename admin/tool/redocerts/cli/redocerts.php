@@ -25,6 +25,8 @@
 
 define('CLI_SCRIPT', true);
 
+use local_iomad\track;
+
 require(__DIR__.'/../../../../config.php');
 require_once($CFG->libdir.'/clilib.php');
 require_once($CFG->libdir.'/adminlib.php');
@@ -134,7 +136,7 @@ foreach ($oldrecords as $track) {
                                   'component' => 'local_iomad']);
 
     mtrace ("adding Certificate");
-    local_iomad\track\track::record_certificates($track->courseid, $track->userid, $track->id, true, false);
+    track::record_certificates($track->courseid, $track->userid, $track->id, true, false);
 
     $count++;
 }

@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company_user, iomad};
+
 /**
  * IOMAD eCommerce block class definition.
  *
@@ -61,7 +63,7 @@ class block_iomad_commerce extends block_base {
 
         // Hide the shop content if the user's company doesn't support ecommerce
         // Always show it if the user is a siteadmin.
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
         $ecommerce = $DB->get_field_sql("SELECT ecommerce
                                          FROM {company} c
                                          WHERE c.id = :companyid",
@@ -94,7 +96,7 @@ class block_iomad_commerce extends block_base {
             $this->content->text = html_writer::end_tag_tag('p');
         } else if (!empty($CFG->commerce_enable_external)) {
             // Get and store a one time token.
-            $token = local_iomad\company_user::generate_token();
+            $token = company_user::generate_token();
             $configname = "commerce_externalshop_url_$companyid";
             if (empty($CFG->$configname)) {
                 $configname = "commerce_externalshop_url";

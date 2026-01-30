@@ -25,17 +25,17 @@
 
 namespace local_iomad\privacy;
 
-use \core_privacy\local\request\deletion_criteria;
-use \core_privacy\local\request\helper;
-use \core_privacy\local\metadata\collection;
-use \core_privacy\local\request\transform;
-use \core_privacy\local\request\contextlist;
-use \core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_contextlist;
-use \core_privacy\local\request\approved_userlist;
-use \core_privacy\local\request\writer;
-use \context_system;
-use \context_user;
+use core_privacy\local\request\deletion_criteria;
+use core_privacy\local\request\helper;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\transform;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\writer;
+use context_system;
+use context_user;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -50,7 +50,7 @@ class provider implements
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
             'company_users',
             [
@@ -88,7 +88,7 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         // System context only.
         $sql = "SELECT c.id
                   FROM {context} c

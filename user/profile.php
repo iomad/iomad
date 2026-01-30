@@ -32,6 +32,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\company;
+
 require_once(__DIR__ . '/../config.php');
 require_once($CFG->dirroot . '/my/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
@@ -77,7 +79,7 @@ $currentuser = ($user->id == $USER->id);
 $context = $usercontext = context_user::instance($userid, MUST_EXIST);
 
 // IOMAD - Check the USER can manage the user.
-if (!user_can_view_profile($user, null, $context) || !local_iomad\company::check_can_manage($user->id)) {
+if (!user_can_view_profile($user, null, $context) || !company::check_can_manage($user->id)) {
 
     // Course managers can be browsed at site level. If not forceloginforprofiles, allow access (bug #4366).
     $struser = get_string('user');

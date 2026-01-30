@@ -27,12 +27,13 @@ use auth_iomadsaml2\admin\setting_button;
 use auth_iomadsaml2\admin\setting_textonly;
 use auth_iomadsaml2\ssl_algorithms;
 use auth_iomadsaml2\user_fields;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die;
 
 // IOMAD
 
-$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";
 } else {

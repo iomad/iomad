@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
 
@@ -57,7 +59,7 @@ $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'init');
 
 // Set up the checkout data.
 $data = clone $USER;
-$companyid = local_iomad\iomad::get_my_companyid(context_system::instance());
+$companyid = iomad::get_my_companyid(context_system::instance());
 $companyrec = $DB->get_record('company', ['id' => $companyid]);
 $data->company = $companyrec->name;
 $data->address = $companyrec->address;

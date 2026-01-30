@@ -22,6 +22,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 require_once($CFG->libdir . '/formslib.php');
@@ -38,18 +41,18 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 if (empty($parentid)) {
     if (!empty($licenseid) && $company->is_child_license($licenseid)) {
-        local_iomad\iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
+        iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
     } else {
-        local_iomad\iomad::require_capability('block/iomad_company_admin:edit_licenses', $companycontext);
+        iomad::require_capability('block/iomad_company_admin:edit_licenses', $companycontext);
     }
 } else {
-    local_iomad\iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
+    iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
 }
 
 $urlparams = array('companyid' => $companyid);
@@ -228,12 +231,12 @@ if ( $mform->is_cancelled() || optional_param('cancel', false, PARAM_BOOL) ) {
     echo $OUTPUT->header();
 
     // Check the department is valid.
-    if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+    if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
         throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
     }
 
     // Check the license is valid.
-    if (!empty($licenseid) && !local_iomad\company::check_valid_company_license($companyid, $licenseid)) {
+    if (!empty($licenseid) && !company::check_valid_company_license($companyid, $licenseid)) {
         throw new moodle_exception('invalidlicense', 'block_iomad_company_admin');
     }
 

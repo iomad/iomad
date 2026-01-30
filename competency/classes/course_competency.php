@@ -24,6 +24,7 @@
 namespace core_competency;
 
 use coding_exception;
+use context_system;
 use lang_string;
 use core_course\external\course_summary_exporter;
 use local_iomad\iomad;
@@ -296,9 +297,9 @@ class course_competency extends persistent {
         $params = array($courseid);
 
         // IOMAD.  Set up the user's companyid.
-        if (!\local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', \context_system::instance())) {
-            $companyid = \local_iomad\iomad::get_my_companyid(\context_system::instance());
-            $companyframeworks = \local_iomad\iomad::get_company_frameworkids($companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $companyframeworks = iomad::get_company_frameworkids($companyid);
             if (!empty($companyframeworks)) {
                 $sql .= " AND comp.competencyframeworkid IN (" . implode(',', array_keys($companyframeworks)) . ")";
             } else {
@@ -336,9 +337,9 @@ class course_competency extends persistent {
         $params = array($courseid, $competencyid);
 
         // IOMAD.  Set up the user's companyid.
-        if (!\local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', \context_system::instance())) {
-            $companyid = \local_iomad\iomad::get_my_companyid(\context_system::instance());
-            $companyframeworks = \local_iomad\iomad::get_company_frameworkids($companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $companyframeworks = iomad::get_company_frameworkids($companyid);
             if (!empty($companyframeworks)) {
                 $sql .= " AND comp.competencyframeworkid IN (" . implode(',', array_keys($companyframeworks)) . ")";
             } else {
@@ -411,9 +412,9 @@ class course_competency extends persistent {
         $params = array($courseid);
 
         // IOMAD.  Set up the user's companyid.
-        if (!\local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', \context_system::instance())) {
-            $companyid = \local_iomad\iomad::get_my_companyid(\context_system::instance());
-            $companyframeworks = \local_iomad\iomad::get_company_frameworkids($companyid);
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', context_system::instance())) {
+            $companyid = iomad::get_my_companyid(context_system::instance());
+            $companyframeworks = iomad::get_company_frameworkids($companyid);
             if (!empty($companyframeworks)) {
                 $sql .= " AND comp.competencyframeworkid IN (" . implode(',', array_keys($companyframeworks)) . ")";
             } else {

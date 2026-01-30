@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use local_iomad\company;
+
 /**
  * List of features supported in URL module
  * @param string $feature FEATURE_xx constant for requested feature
@@ -226,7 +228,7 @@ function url_get_coursemodule_info($coursemodule) {
     $display = url_get_final_display_type($url);
 
     if ($display == RESOURCELIB_DISPLAY_POPUP) {
-        $fullurl = local_iomad\company::get_relativeurl("$CFG->wwwroot/mod/url/view.php?id=$coursemodule->id&amp;redirect=1");
+        $fullurl = company::get_relativeurl("$CFG->wwwroot/mod/url/view.php?id=$coursemodule->id&amp;redirect=1");
         $options = empty($url->displayoptions) ? [] : (array) unserialize_array($url->displayoptions);
         $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
         $height = empty($options['popupheight']) ? 450 : $options['popupheight'];
@@ -234,7 +236,7 @@ function url_get_coursemodule_info($coursemodule) {
         $info->onclick = "window.open('$fullurl', '', '$wh'); return false;";
 
     } else if ($display == RESOURCELIB_DISPLAY_NEW) {
-        $fullurl = local_iomad\company::get_relativeurl("$CFG->wwwroot/mod/url/view.php?id=$coursemodule->id&amp;redirect=1");
+        $fullurl = company::get_relativeurl("$CFG->wwwroot/mod/url/view.php?id=$coursemodule->id&amp;redirect=1");
         $info->onclick = "window.open('$fullurl'); return false;";
 
     }

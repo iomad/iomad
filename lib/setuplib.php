@@ -27,6 +27,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\{company, iomad};
+
 // Debug levels - always keep the values in ascending order!
 /** No warnings and errors at all */
 define('DEBUG_NONE', 0);
@@ -582,7 +584,7 @@ function initialise_cfg() {
         // Does this match a company hostname?
         if ($DB->get_manager()->table_exists('company') &&
             ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
-            $company = new local_iomad\company($companyrec->id);
+            $company = new company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.
             $CFG->wwwroot  = $company->get_wwwroot();
@@ -680,7 +682,7 @@ function initialise_fullme() {
         // Does this match a company hostname?
         if ($DB->get_manager()->table_exists('company') &&
             ($companyrec = $DB->get_record('company', array('hostname' => $_SERVER['SERVER_NAME'])))) {
-            $company = new local_iomad\company($companyrec->id);
+            $company = new company($companyrec->id);
 
             // Set the wwwroot to the company one using the same protocol.
             $CFG->wwwroot  = $company->get_wwwroot();
@@ -732,7 +734,7 @@ function initialise_fullme() {
             }
             
 
-            local_iomad\iomad::check_redirect($wwwroot, $rurl);
+            iomad::check_redirect($wwwroot, $rurl);
             $rfullpath = $rurl['fullpath'];
             // Check that URL is under $CFG->wwwroot.
             if (strpos($rfullpath, $wwwroot['path']) === 0) {

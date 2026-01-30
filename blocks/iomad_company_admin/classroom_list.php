@@ -21,6 +21,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+use local_iomad\forms\company_search_form;
+
 require_once( '../../config.php');
 require_once( 'lib.php');
 
@@ -38,12 +42,12 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 // Check we can actually do anything on this page.
-local_iomad\iomad::require_capability('block/iomad_company_admin:classrooms', $companycontext);
+iomad::require_capability('block/iomad_company_admin:classrooms', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -74,7 +78,7 @@ $returnurl = $baseurl;
 if ($delete and confirm_sesskey()) {
     // Delete a selected override template, after confirmation.
 
-    local_iomad\iomad::require_capability('block/iomad_company_admin:classrooms_delete', $companycontext);
+    iomad::require_capability('block/iomad_company_admin:classrooms_delete', $companycontext);
 
     $classroom = $DB->get_record('classroom', array('id' => $delete), '*', MUST_EXIST);
 
@@ -107,7 +111,7 @@ if ($delete and confirm_sesskey()) {
 }
 // Set up the page buttons.
 $buttons = "";
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
     $linkurl = new moodle_url('/blocks/iomad_company_admin/classroom_edit_form.php');
     $buttons = $OUTPUT->single_button($linkurl, get_string('classrooms_add', 'block_iomad_company_admin'), 'get');
 }
@@ -117,7 +121,7 @@ $PAGE->set_button($buttons);
 // Remove page parameter from the $baseurl variable
 $baseurl->remove_params(['page']);
 
-$searchform = new local_iomad\forms\company_search_form($baseurl, []);
+$searchform = new company_search_form($baseurl, []);
 
 
 // Set up the table
@@ -134,8 +138,8 @@ $tablecolumns = ['name',
                  'ispublic'];
 
 // Are we adding the actions buttons?
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:classrooms_delete', $companycontext) ||
-    local_iomad\iomad::has_capability('block/iomad_company_admin:classrooms_edit', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:classrooms_delete', $companycontext) ||
+    iomad::has_capability('block/iomad_company_admin:classrooms_edit', $companycontext)) {
     $tableheaders[] = "";
     $tablecolumns[] = 'actions';
 }
@@ -165,7 +169,7 @@ $table->sort_default_column = 'name DESC';
 $table->no_sorting('actions');
 $table->no_sorting('address');
 
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:classrooms_add', $companycontext)) {
     $buttonlink = new moodle_url($CFG->wwwroot . "/blocks/iomad_company_admin/classroom_edit_form.php");
     $buttoncaption =  get_string('classrooms_add', 'block_iomad_company_admin');
     $PAGE->set_button($OUTPUT->single_button($buttonlink, $buttoncaption, 'get'));

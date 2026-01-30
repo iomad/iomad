@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use renderer_base;
 use moodle_url;
+use local_iomad\iomad;
 
 /**
  * Class for exporting a course summary from an stdClass.
@@ -196,7 +197,7 @@ class course_summary_exporter extends \core\external\exporter {
         if ($image &&
             !str_starts_with($image, $CFG->wwwroot)) {
             // We don't match - fix it.
-            $image = \iomad::fix_url($image);
+            $image = iomad::fix_url($image);
         }
 
         return $image;

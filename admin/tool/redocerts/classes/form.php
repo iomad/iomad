@@ -23,6 +23,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/formslib.php");
@@ -40,11 +42,11 @@ class tool_redocerts_form extends moodleform {
     public function definition() {
         global $CFG, $DB;
         $systemcontext = context_system::instance();
-        $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+        $companyid = iomad::get_my_companyid($systemcontext);
         $hidecompanyid = false;
 
         // Gathering Companies, Courses, and Users for lists.
-        if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:company_view_all', $systemcontext)) {
             // Array of all User names identified by User ID.
             $users = $DB->get_records_sql_menu(
                                                 "SELECT

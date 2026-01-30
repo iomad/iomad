@@ -23,8 +23,7 @@
 
 namespace local_iomad\task;
 
-use local_iomad\emailtemplate;
-use local_iomad\company;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Manager user course expiring digest email scheduled task
@@ -113,7 +112,7 @@ class manager_expiring_digest_task extends \core\task\scheduled_task {
                     }
 
                     // Get their users.
-                    $departmentusers = local_iomad\company::get_recursive_department_users($manager->departmentid);
+                    $departmentusers = company::get_recursive_department_users($manager->departmentid);
                     $departmentids = "";
                     foreach ($departmentusers as $departmentuser) {
                         if (!empty($departmentids)) {

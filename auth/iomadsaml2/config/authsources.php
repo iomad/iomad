@@ -23,6 +23,7 @@
  */
 
 use auth_iomadsaml2\ssl_signing_algorithm;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -61,7 +62,7 @@ $lang = get_string('iso6391', 'core_langconfig');
 
 // IOMAD
 
-$companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+$companyid = iomad::get_my_companyid(context_system::instance(), false);
 if (!empty($companyid)) {
     $postfix = "_$companyid";
 } else {

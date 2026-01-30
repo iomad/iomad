@@ -21,14 +21,14 @@ namespace local_iomad\reportbuilder\local\entities;
 use context_course;
 use context_helper;
 use context_system;
+use core_reportbuilder\local\entities\base;
+use core_reportbuilder\local\filters\{select, text};
+use core_reportbuilder\local\helpers\format;
+use core_reportbuilder\local\report\{column, filter};
 use html_writer;
 use lang_string;
 use moodle_url;
 use stdClass;
-use core_reportbuilder\local\entities\base;
-use core_reportbuilder\local\helpers\format;
-use core_reportbuilder\local\filters\{select, text};
-use core_reportbuilder\local\report\{column, filter};
 
 defined('MOODLE_INTERNAL') or die;
 

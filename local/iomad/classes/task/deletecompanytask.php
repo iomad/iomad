@@ -29,8 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
 use core\task\manager;
-use local_iomad\company_user;
-use local_iomad\track\track;
+use local_iomad\{company_user, track};
 
 /**
  * An adhoc delete company task for local iomad

@@ -28,8 +28,8 @@ namespace auth_iomadoidc;
 use Exception;
 use moodle_exception;
 use auth_iomadoidc\event\action_failed;
-use iomad;
 use context_system;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -48,7 +48,7 @@ class utils {
         global $CFG;
 
         
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
             $this->postfix = "_$companyid";
         } else {

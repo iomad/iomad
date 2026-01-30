@@ -25,10 +25,9 @@
 
 namespace local_iomad\forms;
 
-use moodleform;
 use context_system;
-use local_iomad\emailvars;
-use local_iomad\company;
+use local_iomad\{company, emailvars};
+use moodleform;
 
 /**
  * Template edit form definition

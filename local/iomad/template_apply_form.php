@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 
 $templatesetid = required_param('templatesetid', PARAM_INTEGER);
@@ -23,11 +26,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
-
-
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 $templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid));
 
@@ -52,7 +53,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 
 // Only display if you have the correct capability, or you are not in more than one company.
 // Just display name of current company if no choice.
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_view_all',$systemcontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_view_all',$systemcontext)) {
     $companies = $DB->get_records_sql_menu("SELECT c.id, c.name
                                             FROM {company} c
                                             JOIN {company_user} cu
@@ -84,7 +85,7 @@ if ($mform->is_cancelled()) {
     $table->head = array(get_string('company', 'block_iomad_company_admin'),
                          get_string('result', 'cache'));
     foreach ($selectedcompanies as $companyid) {
-        $company = new local_iomad\company($companyid);
+        $company = new company($companyid);
         if ($company->apply_email_templates($templatesetid)) {
             $result = get_string('success');
         } else {

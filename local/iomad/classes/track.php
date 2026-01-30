@@ -25,9 +25,10 @@
 
 namespace local_iomad;
 
-use local_iomad\task\savecertificatetask;
-use context_user;
 use context_system;
+use context_user;
+use local_iomad\custom_context\context_company;
+use local_iomad\task\savecertificatetask;
 
 defined('MOODLE_INTERNAL') || die();
 if (!defined('CERTIFICATE')) {
@@ -963,7 +964,7 @@ class track {
             $companyid = iomad::get_my_companyid(context_system::instance());
         }
 
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
 
         $company = new company($companyid);
 

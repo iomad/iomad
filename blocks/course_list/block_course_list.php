@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 include_once($CFG->dirroot . '/course/lib.php');
 
 class block_course_list extends block_list {
@@ -87,7 +89,7 @@ class block_course_list extends block_list {
 
                 // IOMAD - filter out categories.
                 if (!is_siteadmin()) {
-                    $categories = local_iomad\iomad::iomad_filter_categories($categories);
+                    $categories = iomad::iomad_filter_categories($categories);
                 } else {
                     $categories = $categories;
                 }

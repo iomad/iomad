@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 /**
  * Form for editing HTML block instances.
  *
@@ -56,12 +59,12 @@ class block_iomad_html_edit_form extends block_edit_form {
             $mform->addHelpButton('config_classes', 'configclasses', 'block_iomad_html');
         }
 
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
-        $companycontext = \core\context\company::instance($companyid);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
+        $companycontext = context_company::instance($companyid);
 
-        if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+        if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
             // Deal with the companies.
-            $companylist = local_iomad\company::get_companies_select(false);
+            $companylist = company::get_companies_select(false);
             $companyselect = $mform->addElement('autocomplete',
                                                 'config_companies',
                                                 get_string('selectacompany', 'block_iomad_company_selector'),

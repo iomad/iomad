@@ -25,6 +25,9 @@
  * Script to let a user create a group for a particular company microlearnng.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib.php');
@@ -43,11 +46,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_microlearning:manage_groups', $companycontext);
+iomad::require_capability('block/iomad_microlearning:manage_groups', $companycontext);
 
 $urlparams = array();
 if ($returnurl) {

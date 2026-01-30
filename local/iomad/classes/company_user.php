@@ -30,8 +30,8 @@ use cache;
 use core\event\user_enrolment_created;
 use block_iomad_company_admin\event\user_license_assigned;
 use course_enrolment_manager;
+use local_iomad\custom_context\context_company;
 
-global $CFG;
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/enrol/locallib.php');
 
@@ -247,7 +247,7 @@ class company_user {
             $company = new company($companyid);
         }
         $systemcontext = context_system::instance();
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
 
         // Check if the user was a company manager.
         if ($DB->get_records('company_users', array('userid' => $userid, 'managertype' => 1,
@@ -290,7 +290,7 @@ class company_user {
             $company = new company($companyid);
         }
         $systemcontext = context_system::instance();
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
 
         // Get the users company record.
         $DB->set_field('company_users', 'suspended', 1, array('userid' => $userid,
@@ -784,7 +784,7 @@ class company_user {
         global $USER;
 
         $systemcontext = context_system::instance();
-        $companycontext = \core\context\company::instance($company->id);
+        $companycontext = context_company::instance($company->id);
 
         if ( !isset($company) ) {
             return true;

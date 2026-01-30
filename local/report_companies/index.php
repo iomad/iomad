@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
@@ -40,15 +43,15 @@ if ($chosencompanyid > 0) {
     $reportcompanyid = $chosencompanyid;
 } else if ($chosencompanyid == -1) {
     $reportcompanyid = 0;
-    $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+    $companyid = iomad::get_my_companyid($systemcontext);
 } else {
-    $companyid = local_iomad\iomad::get_my_companyid($systemcontext);
+    $companyid = iomad::get_my_companyid($systemcontext);
     $reportcompanyid = $companyid;
 }
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('local/report_companies:view', $companycontext);
+iomad::require_capability('local/report_companies:view', $companycontext);
 
 // Url stuff.
 $url = new moodle_url('/local/report_companies/index.php', ['companyid' => $companyid]);

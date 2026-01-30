@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once('lib.php');
 require_once($CFG->dirroot . '/blocks/iomad_company_admin/lib.php');
@@ -54,13 +57,13 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
-$parentlevel = local_iomad\company::get_company_parentnode($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
+$parentlevel = company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
-local_iomad\iomad::require_capability('block/iomad_microlearning:assign_threads', $companycontext);
+iomad::require_capability('block/iomad_microlearning:assign_threads', $companycontext);
 
 // Set the url.
 $linkurl = new moodle_url('/blocks/iomad_microlearning/users.php');
@@ -94,7 +97,7 @@ $buttonlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
 $buttons = $OUTPUT->single_button($buttonlink, $buttoncaption, 'get');
 $PAGE->set_button($buttons);
 
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments', $companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
@@ -107,7 +110,7 @@ $usersform = new block_iomad_microlearning\forms\microlearning_thread_users_form
 echo $output->header();
 
 // Check the department is valid.
-if (!empty($departmentid) && !local_iomad\company::check_valid_department($companyid, $departmentid)) {
+if (!empty($departmentid) && !company::check_valid_department($companyid, $departmentid)) {
     throw new moodle_exception('invaliddepartment', 'block_iomad_company_admin');
 }
 

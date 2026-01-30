@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 // Check that config.php exists, if not then call the install script
 if (!file_exists('../config.php')) {
     header('Location: ../install.php');
@@ -912,8 +914,8 @@ $cachewarnings = cache_helper::warnings();
 $eventshandlers = $DB->get_records_sql('SELECT DISTINCT component FROM {events_handlers}');
 $themedesignermode = !empty($CFG->themedesignermode);
 $mobileconfigured = !empty($CFG->enablemobilewebservice);
-$invalidforgottenpasswordurl = !empty(local_iomad\iomad::get_config('', 'forgottenpasswordurl')) &&
-                               empty(clean_param(local_iomad\iomad::get_config('', 'forgottenpasswordurl'), PARAM_URL));
+$invalidforgottenpasswordurl = !empty(iomad::get_config('', 'forgottenpasswordurl')) &&
+                               empty(clean_param(iomad::get_config('', 'forgottenpasswordurl'), PARAM_URL));
 
 // Check if a directory with development libraries exists.
 if (empty($CFG->disabledevlibdirscheck) && (is_dir($CFG->dirroot.'/vendor') || is_dir($CFG->dirroot.'/node_modules'))) {

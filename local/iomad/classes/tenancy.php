@@ -25,12 +25,7 @@
 
 namespace local_iomad;
 
-use iomad;
-use company;
-
 defined('MOODLE_INTERNAL') || die();
-
-
 
 class tenancy {
 
@@ -46,8 +41,8 @@ class tenancy {
 
         // Get the user's companyid - have to assume only one here as it's
         // meant to be via a WS call.
-        if ($company = local_iomad\company::by_userid($USER->id)) {
-            $myusers = local_iomad\company::get_my_users($company->id);
+        if ($company = company::by_userid($USER->id)) {
+            $myusers = company::get_my_users($company->id);
             if (!empty($myusers)) {
                 $return = " AND $sqlname IN (" . join(',', array_keys($myusers)) . ") ";
             }
@@ -68,7 +63,7 @@ class tenancy {
 
         // Get the user's companyid - have to assume only one here as it's
         // meant to be via a WS call.
-        if ($company = local_iomad\company::by_userid($USER->id)) {
+        if ($company = company::by_userid($USER->id)) {
             $mycourses = $company->get_menu_courses(true);
             if (!empty($mycourses)) {
                 $return = " AND $sqlname IN (" . join (',', array_keys($mycourses)) . ")";
@@ -90,7 +85,7 @@ class tenancy {
 
         // Get the user's companyid - have to assume only one here as it's
         // meant to be via a WS call.
-        if ($company = local_iomad\company::by_userid($USER->id)) {
+        if ($company = company::by_userid($USER->id)) {
             $mygroups = $DB->get_records('company_course_groups', ['companyid' => $company->id], '', 'groupid');
             if (!empty($mygroups)) {
                 $return = " AND $sqlname IN (" . join (',', array_keys($mygroups)) . ")";
@@ -112,7 +107,7 @@ class tenancy {
 
         // Get the user's companyid - have to assume only one here as it's
         // meant to be via a WS call.
-        if ($company = local_iomad\company::by_userid($USER->id)) {
+        if ($company = company::by_userid($USER->id)) {
             $mycourses = $company->get_menu_courses(true);
             if (!empty($mycourses)) {
                 $myenrolments = $DB->get_records_sql("SELECT id FROM {enrol}

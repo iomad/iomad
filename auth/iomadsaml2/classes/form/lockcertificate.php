@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use html_writer;
 use moodleform;
+use local_iomad\iomad;
 
 require_once($CFG->libdir . '/formslib.php');
 
@@ -49,7 +50,7 @@ class lockcertificate extends moodleform {
 
         // IOMAD
         
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
             $postfix = "_$companyid";
         } else {

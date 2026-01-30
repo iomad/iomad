@@ -29,6 +29,7 @@ use core\event\base;
 use coding_exception;
 use context_system;
 use moodle_url;
+use local_iomad\custom_context\context_company;
 
 /**
  * The block_iomad_company_admin dashboard page viewed event.
@@ -111,7 +112,7 @@ class dashboard_page_viewed extends base {
 
         // Set the appropriate context.
         if ($companyid > 0) {
-            $context = \core\context\company::instance($companyid);
+            $context = context_company::instance($companyid);
         } else {
             $context = context_system::instance();
             $companyid = -1;

@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 require_once($CFG->libdir.'/tablelib.php');
 
 /**
@@ -104,22 +106,22 @@ class block_iomad_microlearning_thread_table extends table_sql {
         $nuggetlink = new moodle_url('nuggets.php', array('threadid' => $row->id));
         $userlink = new moodle_url('users.php', array('threadid' => $row->id));
         $schedulelink = new moodle_url('thread_schedule.php', array('threadid' => $row->id));
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:edit_threads', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:edit_threads', $companycontext)) {
             $html .= '<a href="' . $editlink . '" title="' . get_string('editthread', 'block_iomad_microlearning') .'"><i class="fa fa-cog"></i></a>&nbsp';
         }
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:edit_nuggets', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:edit_nuggets', $companycontext)) {
             $html .= '<a href="' . $nuggetlink . '" title="' . get_string('learningnuggets', 'block_iomad_microlearning') .'"><i class="fa fa-microchip"></i></a>&nbsp';
         }
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:edit_threads', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:edit_threads', $companycontext)) {
             $html .= '<a href="' . $schedulelink . '" title="' . get_string('threadschedule', 'block_iomad_microlearning') .'"><i class="fa fa-list-alt"></i></a>&nbsp';
         }
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:assign_threads', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:assign_threads', $companycontext)) {
             $html .= '<a href="' . $userlink . '" title="' . get_string('learningusers', 'block_iomad_microlearning') .'"><i class="fa fa-group"></i></a>&nbsp';
         }
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:thread_clone', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:thread_clone', $companycontext)) {
             $html .= '<a href="' . $clonelink . '" title="' . get_string('clonethread', 'block_iomad_microlearning') .'"><i class="fa fa-clone"></i></a>';
         }
-        if (local_iomad\iomad::has_capability('block/iomad_microlearning:thread_delete', $companycontext)) {
+        if (iomad::has_capability('block/iomad_microlearning:thread_delete', $companycontext)) {
             $html .= '<a href="' . $deletelink . '" title="' . get_string('deletethread', 'block_iomad_microlearning') .'"><i class="fa fa-times"></i></a>';
         }
 

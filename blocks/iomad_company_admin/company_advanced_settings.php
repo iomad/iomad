@@ -25,6 +25,9 @@
  * Script to let a user import departments to a particular company.
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/auth/iomadoidc/lib.php');
@@ -38,12 +41,12 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 $postfix = "_$companyid";
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);
+iomad::require_capability('block/iomad_company_admin:companyadvancedsettings', $companycontext);
 
 $linktext = get_string('companyadvanced', 'block_iomad_company_admin');
 
@@ -65,12 +68,12 @@ $PAGE->set_heading($linktext);
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Check our capabilities.
-$candoiomadoidc = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
-$candoiomadsaml2 = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
-$candoiomadoidcsync = local_iomad\iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
-$candopolicies = local_iomad\iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
-$candoauthoptions = local_iomad\iomad::has_capability('block/iomad_company_admin:companyauthsettings', $companycontext) ? true : false;
-$candomfa = local_iomad\iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
+$candoiomadoidc = iomad::has_capability('block/iomad_company_admin:configiomadoidc', $companycontext) ? true : false;
+$candoiomadsaml2 = iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
+$candoiomadoidcsync = iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
+$candopolicies = iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
+$candoauthoptions = iomad::has_capability('block/iomad_company_admin:companyauthsettings', $companycontext) ? true : false;
+$candomfa = iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
 $candomfa = false;
 
 // Check if all of the modules are installed.

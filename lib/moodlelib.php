@@ -30,6 +30,7 @@
 
 use core\di;
 use core\hook;
+use local_iomad\{company, iomad};
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -3833,7 +3834,7 @@ function authenticate_user_login(
     if ($user = get_complete_user_data('username', $username, $CFG->mnet_localhost_id)) {
         // we have found the user
 
-    } else if (!empty(local_iomad\iomad::get_config('', 'authloginviaemail'))) {
+    } else if (!empty(iomad::get_config('', 'authloginviaemail'))) {
         if ($email = clean_param($username, PARAM_EMAIL)) {
             $select = "mnethostid = :mnethostid AND LOWER(email) = LOWER(:email) AND deleted = 0";
             $params = array('mnethostid' => $CFG->mnet_localhost_id, 'email' => $email);
@@ -3894,7 +3895,7 @@ function authenticate_user_login(
         // Check that it matches the user's actual company.
         $companysuspended = false;
         if (!empty($SESSION->currenteditingcompany)) {
-            if (local_iomad\company::check_user_suspended($SESSION->currenteditingcompany, $user->id)) {
+            if (company::check_user_suspended($SESSION->currenteditingcompany, $user->id)) {
                 $companysuspended = true;
             }
         }
@@ -4203,8 +4204,8 @@ function complete_user_login($user, array $extrauserinfo = []) {
     // IOMAD: if we have a SESSION for the company
     // Check that it matches the user's actual company.
     if (!empty($SESSION->currenteditingcompany)) {
-        if (!local_iomad\company::check_valid_user($SESSION->currenteditingcompany, $USER->id)) {
-            if ($company = local_iomad\company::by_userid($USER->id, true)) {
+        if (!company::check_valid_user($SESSION->currenteditingcompany, $USER->id)) {
+            if ($company = company::by_userid($USER->id, true)) {
                 if ($company->id != $SESSION->currenteditingcompany) {
                     $SESSION->currenteditingcompany = $company->id;
                     $SESSION->company = $company;
@@ -5521,7 +5522,7 @@ function get_mailer($action='get') {
         }
 
         // IOMAD - get company mailer settings if there are any.
-        local_iomad\company::set_company_mailer($mailer);
+        company::set_company_mailer($mailer);
 
         return $mailer;
     }
@@ -6254,8 +6255,8 @@ function email_is_not_allowed($email) {
 
     // Comparing lowercase domains.
     $email = strtolower($email);
-    if (!empty(local_iomad\iomad::get_config('', 'allowemailaddresses'))) {
-        $allowed = explode(' ', strtolower(local_iomad\iomad::get_config('', 'allowemailaddresses')));
+    if (!empty(iomad::get_config('', 'allowemailaddresses'))) {
+        $allowed = explode(' ', strtolower(iomad::get_config('', 'allowemailaddresses')));
         foreach ($allowed as $allowedpattern) {
             $allowedpattern = trim($allowedpattern);
             if (!$allowedpattern) {
@@ -6271,10 +6272,10 @@ function email_is_not_allowed($email) {
                 return false;
             }
         }
-        return get_string('emailonlyallowed', '', local_iomad\iomad::get_config('', 'allowemailaddresses'));
+        return get_string('emailonlyallowed', '', iomad::get_config('', 'allowemailaddresses'));
 
-    } else if (!empty(local_iomad\iomad::get_config('', 'denyemailaddresses'))) {
-        $denied = explode(' ', strtolower(local_iomad\iomad::get_config('', 'denyemailaddresses')));
+    } else if (!empty(iomad::get_config('', 'denyemailaddresses'))) {
+        $denied = explode(' ', strtolower(iomad::get_config('', 'denyemailaddresses')));
         foreach ($denied as $deniedpattern) {
             $deniedpattern = trim($deniedpattern);
             if (!$deniedpattern) {
@@ -6283,11 +6284,11 @@ function email_is_not_allowed($email) {
             if (strpos($deniedpattern, '.') === 0) {
                 if (strpos(strrev($email), strrev($deniedpattern)) === 0) {
                     // Subdomains are in a form ".example.com" - matches "xxx@anything.example.com".
-                    return get_string('emailnotallowed', '', local_iomad\iomad::get_config('', 'denyemailaddresses'));
+                    return get_string('emailnotallowed', '', iomad::get_config('', 'denyemailaddresses'));
                 }
 
             } else if (strpos(strrev($email), strrev('@'.$deniedpattern)) === 0) {
-                return get_string('emailnotallowed', '', local_iomad\iomad::get_config('', 'denyemailaddresses'));
+                return get_string('emailnotallowed', '', iomad::get_config('', 'denyemailaddresses'));
             }
         }
     }

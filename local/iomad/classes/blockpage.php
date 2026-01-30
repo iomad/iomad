@@ -23,10 +23,6 @@
 
 namespace local_iomad;
 
-use company;
-use company_user;
-use iomad;
-
 /**
  * helper class to minimize duplicate code
  */
@@ -110,7 +106,7 @@ class blockpage {
 
         // Make sure a company user can not retrieve pages for other companies.
         $companyid = optional_param('companyid', 0, PARAM_INTEGER);
-        if ($companyid && !local_iomad\company_user::can_see_company($companyid)) {
+        if ($companyid && !company_user::can_see_company($companyid)) {
             throw new Exception(self::get_string('notallowedtoaccessothercompaniesdata'));
         }
 

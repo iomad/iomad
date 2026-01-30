@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\iomad;
+
 /**
  * License enrolment plugin class.
  * @copyright  2011 E-Learn Design Ltd. http://www.e-learndesign.co.uk
@@ -361,7 +363,7 @@ class enrol_license_plugin extends enrol_plugin {
         }
 
         // Set the companyid
-        $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
         // Get the license information.
         $sql = "SELECT cl.* FROM {companylicense} cl
@@ -433,7 +435,7 @@ class enrol_license_plugin extends enrol_plugin {
             if (!$license = $DB->get_record_sql($sql, ['userid' => $USER->id,
                                                        'courseid' => $instance->courseid])) {
                 // Set the companyid.
-                $companyid = local_iomad\iomad::get_my_companyid(context_system::instance(), false);
+                $companyid = iomad::get_my_companyid(context_system::instance(), false);
 
                 $blanketsql = "SELECT cl.* FROM {companylicense} cl
                                JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)

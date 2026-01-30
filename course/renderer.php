@@ -27,6 +27,8 @@
 
  defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\iomad;
+
 /**
  * The core course renderer
  *
@@ -804,7 +806,7 @@ class core_course_renderer extends plugin_renderer_base {
 
         // IOMAD:  Filter out unwanted categories
         if (!is_siteadmin()) {
-            $subcategories = local_iomad\iomad::iomad_filter_categories($subcategories);
+            $subcategories = iomad::iomad_filter_categories($subcategories);
         }
 
         //$totalcount = $coursecat->get_children_count();
@@ -1385,7 +1387,7 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         //  IOMAD - deal with licensed courses
-        local_iomad\iomad::iomad_add_license_courses($courses);
+        iomad::iomad_add_license_courses($courses);
 
         if (!empty($courses) || !empty($rcourses) || !empty($rhosts)) {
 

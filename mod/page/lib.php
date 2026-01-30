@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use local_iomad\company;
+
 /**
  * List of features supported in Page module
  * @param string $feature FEATURE_xx constant for requested feature
@@ -227,7 +229,7 @@ function page_get_coursemodule_info($coursemodule) {
         return $info;
     }
 
-    $fullurl = local_iomad\company::get_relativeurl("$CFG->wwwroot/mod/page/view.php?id=$coursemodule->id&amp;inpopup=1");
+    $fullurl = company::get_relativeurl("$CFG->wwwroot/mod/page/view.php?id=$coursemodule->id&amp;inpopup=1");
     $options = empty($page->displayoptions) ? [] : (array) unserialize_array($page->displayoptions);
     $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
     $height = empty($options['popupheight']) ? 450 : $options['popupheight'];

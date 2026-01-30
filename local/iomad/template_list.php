@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, email, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
@@ -67,18 +70,18 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 // Check we can actually do anything on this page.
 if (empty($templatesetid)) {
-    local_iomad\iomad::require_capability('local/iomad:email_list', $companycontext);
+    iomad::require_capability('local/iomad:email_list', $companycontext);
 } else {
-    local_iomad\iomad::require_capability('local/iomad:email_templateset_list', $companycontext);
+    iomad::require_capability('local/iomad:email_templateset_list', $companycontext);
 }
 
-$email = local_iomad\email::get_templates();
+$email = email::get_templates();
 
 // Correct the navbar.
 // Set the name for the page.
@@ -504,7 +507,7 @@ if ($manage) {
                 'actions'];
 
     // Display the list of templates.
-    $usertemplates = local_iomad\email::get_user_templates(false);
+    $usertemplates = email::get_user_templates(false);
     $table = new local_iomad\tables\templates_table('email_templatess_table');
     $table->set_sql($selectsql, $fromsql, $wheresql, $sqlparams);
     $table->define_baseurl($baseurl);

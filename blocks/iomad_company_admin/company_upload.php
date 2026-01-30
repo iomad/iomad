@@ -25,6 +25,9 @@
  * Script to import tenants from a csv file.
  */
 
+use local_iomad\{company, company_user, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
@@ -42,19 +45,19 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 $useparentid = false;
 
 // Do we have rights to view this page?
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
-    !local_iomad\iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
+    !iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext)) {
         throw new moodle_exception(get_string('nopermissions'), 'error', new moodle_url($CFG->wwwroot .'/my'));
 }
 
 // Can I only add to my company?
-if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
     $useparentid = true;
 }
 
@@ -297,7 +300,7 @@ if (empty($iid)) {
                             $erroredcompanies[] = $line;
                             continue 2;
                         } else if ($useparentid &&
-                                   !local_iomad\company_user::can_see_company($parentrec)) {
+                                   !company_user::can_see_company($parentrec)) {
                             $upt->track('status', get_string('invalidparent', 'block_iomad_company_admin', 'parent'), 'error');
                             $upt->track('parent', $errorstr, 'error');
                             $line[] = get_string('invalidparent', 'block_iomad_company_admin', 'parent');
@@ -394,7 +397,7 @@ if (empty($iid)) {
 
             // We hit create.
             $newcompanyid = $DB->insert_record('company', $companyrec);
-            $newcompany = new local_iomad\company($newcompanyid);
+            $newcompany = new company($newcompanyid);
 
             $eventother = array('companyid' => $newcompanyid);
 
@@ -405,7 +408,7 @@ if (empty($iid)) {
             $event->trigger();
 
             // Set up default department.
-            local_iomad\company::initialise_departments($newcompanyid);
+            company::initialise_departments($newcompanyid);
 
             // Set up course category for company.
             $coursecat = new stdclass();
@@ -423,7 +426,7 @@ if (empty($iid)) {
 
             // Deal with any parent company assignments.
             if (!empty($companydetails->parentid)) {
-                $company = new local_iomad\company($companydetails->id);
+                $company = new company($companydetails->id);
                 $company->assign_parent_managers($companydetails->parentid);
             }
 

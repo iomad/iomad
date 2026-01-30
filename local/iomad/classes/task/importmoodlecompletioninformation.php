@@ -30,8 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
 use core\task\manager;
-use local_iomad\company;
-use local_iomad\track\track;
+use local_iomad\{company, track};
 
 /**
  * An adhoc task to import course completion information to

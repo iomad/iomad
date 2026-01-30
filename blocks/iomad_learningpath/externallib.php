@@ -24,8 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/externallib.php');
+use local_iomad\iomad;
 
+require_once($CFG->libdir . '/externallib.php');
 
 class block_iomad_learningpath_external extends external_api {
 
@@ -76,7 +77,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Check state
         if (($params['state'] != 0) && ($params['state'] != 1)) {
@@ -145,7 +146,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Set up the company path object.
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -219,7 +220,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Add courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -275,7 +276,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Remove courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -341,7 +342,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Get full list of courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -434,7 +435,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
 
         // Find any new ones and add them
@@ -515,7 +516,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Get full list of prospective courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -571,7 +572,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Get full list of prospective courses
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -635,7 +636,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Get lists of users
         $companypaths = new block_iomad_learningpath\companypaths($params['companyid'], $context);
@@ -691,7 +692,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Add users
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
@@ -749,7 +750,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         // Get lists of users
         $companypaths = new block_iomad_learningpath\companypaths($params['companyid'], $context);
@@ -815,7 +816,7 @@ class block_iomad_learningpath_external extends external_api {
         // Security
         $context = context_system::instance();
         self::validate_context($context);
-        local_iomad\iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
+        iomad::require_capability('block/iomad_learningpath:manage', $context, $companyid);
 
         $companypaths = new block_iomad_learningpath\companypaths($companyid, $context);
         $companypaths->delete_users($params['pathid'], $params['userids']);

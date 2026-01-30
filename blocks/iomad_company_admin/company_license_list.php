@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('lib.php');
 require_once($CFG->dirroot.'/user/profile/definelib.php');
 
@@ -39,9 +42,9 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
 // Correct the navbar.
 // Set the url.
@@ -66,8 +69,8 @@ $baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $d
 $returnurl = $baseurl;
 
 // Get the appropriate company department.
-$companydepartment = local_iomad\company::get_company_parentnode($companyid);
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+$companydepartment = company::get_company_parentnode($companyid);
+if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
     $departmentid = $companydepartment->id;
 } else {
     $userlevels = $company->get_userlevel($USER);
@@ -77,9 +80,9 @@ if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_licenses',
 if ($delete and confirm_sesskey()) {              // Delete a selected company, after confirmation.
 
     if ($company->is_child_license($delete)) {
-        local_iomad\iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
+        iomad::require_capability('block/iomad_company_admin:edit_my_licenses', $companycontext);
     } else {
-        local_iomad\iomad::require_capability('block/iomad_company_admin:edit_licenses', $companycontext);
+        iomad::require_capability('block/iomad_company_admin:edit_licenses', $companycontext);
     }
 
     $license = $DB->get_record('companylicense', array('id' => $delete), '*', MUST_EXIST);
@@ -121,7 +124,7 @@ if ($delete and confirm_sesskey()) {              // Delete a selected company, 
 echo $OUTPUT->header();
 
 // Check we can actually do anything on this page.
-local_iomad\iomad::require_capability('block/iomad_company_admin:view_licenses', $companycontext);
+iomad::require_capability('block/iomad_company_admin:view_licenses', $companycontext);
 
 flush();
 
@@ -166,7 +169,7 @@ $tablecolumns = array('name',
                       'used',
                       'actions');
 
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext) && $childcompanies = $company->get_child_companies_recursive()) {
+if (iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext) && $childcompanies = $company->get_child_companies_recursive()) {
     $tableheaders = array_merge(array($strcompany), $tableheaders);
     $tablecolumns = array_merge(array('companyname'), $tablecolumns);
     $showcompanies = true;
@@ -212,7 +215,7 @@ if ($showexpired) {
 }
 echo $OUTPUT->single_button(new moodle_url('company_license_list.php', array('showexpired' => !$showexpired)),
                                             $showexpiredstring);
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_licenses', $companycontext)) {
     echo $OUTPUT->single_button(new moodle_url('company_license_edit_form.php'),
                                                 get_string('licenseaddnew', 'block_iomad_company_admin'), 'get');
 }

@@ -31,6 +31,7 @@ use core_course\external\course_summary_exporter;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_value;
+use local_iomad\iomad;
 
 /**
  * Starred courses block external functions.
@@ -131,7 +132,7 @@ class block_starredcourses_external extends core_course_external {
         }
 
         //IOMAD filter courses to only show those available for the current company.
-        $formattedcourses = \iomad::iomad_filter_courses($formattedcourses);
+        $formattedcourses = iomad::iomad_filter_courses($formattedcourses);
 
         return $formattedcourses;
     }

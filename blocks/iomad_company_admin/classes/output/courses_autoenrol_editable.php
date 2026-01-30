@@ -23,15 +23,15 @@
 
 namespace block_iomad_company_admin\output;
 
-use context_course;
-use core_user;
-use core_external;
-use coding_exception;
-use local_iomad\company;
-use local_iomad\iomad;
-use core\output\inplace_editable;
-use render_base;
 use block_iomad_company_admin\event\company_course_updated;
+use context_course;
+use core_external;
+use core_user;
+use coding_exception;
+use core\output\inplace_editable;
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+use render_base;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -119,7 +119,7 @@ class courses_autoenrol_editable extends inplace_editable {
         $autoenrol = clean_param($autoenrol, PARAM_INT);
 
         // Check user is enrolled in the course.
-        $companycontext = \core\context\company::instance($companyid);
+        $companycontext = context_company::instance($companyid);
         core_external::validate_context($companycontext);
 
         // Check permissions.

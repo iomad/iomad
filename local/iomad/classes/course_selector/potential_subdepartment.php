@@ -23,6 +23,8 @@
 
 namespace local_iomad\course_selector;
 
+use local_iomad\company;
+
 class potential_subdepartment extends company_base {
 
     protected function get_options() {
@@ -53,7 +55,7 @@ class potential_subdepartment extends company_base {
         // Get appropriate department ids.
         $departmentids = array_keys(company::get_all_subdepartments($this->departmentid));
         // Check the top department.
-        $parentnode = local_iomad\company::get_company_parentnode($this->companyid);
+        $parentnode = company::get_company_parentnode($this->companyid);
         if (!empty($departmentids)) {
             if ($parentnode->id == $this->departmentid) {
                 $departmentselect = "AND cc.departmentid in (".implode(',', $departmentids).") ";

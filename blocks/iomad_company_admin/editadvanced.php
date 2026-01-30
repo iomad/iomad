@@ -21,6 +21,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, emailtemplate, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/gdlib.php');
 require_once($CFG->libdir.'/adminlib.php');
@@ -42,8 +45,8 @@ if ($id !== $USER->id) {
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext =  \core\context\company::instance($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext =  context_company::instance($companyid);
 
 // Correct the navbar .
 // Set the name for the page.
@@ -68,7 +71,7 @@ block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->ur
 
 if ($id == -1) {
     // Creating new user.
-    local_iomad\iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
+    iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
     $user = new stdclass();
     $user->id = -1;
     $user->auth = 'manual';
@@ -76,11 +79,11 @@ if ($id == -1) {
     $user->deleted = 0;
 } else {
     // Editing existing user.
-    local_iomad\iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
+    iomad::require_capability('block/iomad_company_admin:editusers', $companycontext);
     if (!$user = $DB->get_record('user', array('id' => $id))) {
         throw new moodle_exception('invaliduserid');
     }
-    if (!local_iomad\company::check_canedit_user($companyid, $id)) {
+    if (!company::check_canedit_user($companyid, $id)) {
         throw new moodle_exception('invaliduserid');
     }
 }
@@ -210,7 +213,7 @@ if ($usernew = $userform->get_data()) {
                 if (!$authplugin->user_update_password($usernew, $usernew->newpassword)) {
                     throw new moodle_exception('cannotupdatepasswordonextauth', '', '', $usernew->auth);
                 } else {
-                    local_iomad\emailtemplate::send('password_update', array('user' => $usernew));
+                    emailtemplate::send('password_update', array('user' => $usernew));
                 }
             }
         }
@@ -309,8 +312,8 @@ if ($user->id == -1 or ($user->id != $USER->id)) {
     $userfullname     = fullname($user, true);
 
     $link = null;
-    if (local_iomad\iomad::has_capability('moodle/course:viewparticipants', $systemcontext) ||
-        local_iomad\iomad::has_capability('moodle/site:viewparticipants', $systemcontext)) {
+    if (iomad::has_capability('moodle/course:viewparticipants', $systemcontext) ||
+        iomad::has_capability('moodle/site:viewparticipants', $systemcontext)) {
         $link = new moodle_url("/user/index.php", array('id' => $course->id));
     }
     $PAGE->navbar->add($strparticipants, $link);

@@ -23,8 +23,7 @@
 
 namespace local_iomad\task;
 
-use local_iomad\emailtemplate;
-use local_iomad\company;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Training event not selected email scheduled task

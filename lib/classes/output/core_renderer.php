@@ -52,6 +52,7 @@ use rating_manager;
 use stdClass;
 use local_iomad\iomad;
 use HTML_QuickForm_element;
+use local_iomad\custom_context\context_company;
 
 /**
  * The standard implementation of the core_renderer interface.
@@ -3502,7 +3503,7 @@ EOD;
         $systemcontext = \context_system::instance();
         $companyid = iomad::get_my_companyid($systemcontext, false);
         if (!empty($companyid) && $companyid > 0) {
-            $companycontext = \core\context\company::instance($companyid);
+            $companycontext = context_company::instance($companyid);
         } else {
             $companycontext = $systemcontext;
         }

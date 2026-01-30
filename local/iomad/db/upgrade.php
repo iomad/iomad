@@ -36,6 +36,9 @@
  * @param object $block
  */
 
+use local_iomad\custom_context\context_company;
+use local_iomad\{company, company_user};
+
 defined('MOODLE_INTERNAL') || die();
 
 function xmldb_local_iomad_upgrade($oldversion) {
@@ -787,7 +790,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                     foreach ($companymanagers as $companymanager) {
                         if ($user = $DB->get_record('user', array('id' => $companymanager->userid,
                                                                   'deleted' => 0))) {
-                            local_iomad\company_user::enrol($user, array($companycourse->courseid),
+                            company_user::enrol($user, array($companycourse->courseid),
                                                              $companycourse->companyid,
                                                              $companycoursenoneditorid);
                         }
@@ -803,10 +806,10 @@ function xmldb_local_iomad_upgrade($oldversion) {
                             array('id' => $companymanager->userid, 'deleted' => 0))) {
                             if ($companymanager->departmentmanager) {
                                 // Lowly department manager, no more than that.
-                                local_iomad\company_user::enrol($user, array($companycourse->courseid),
+                                company_user::enrol($user, array($companycourse->courseid),
                                 $companycourse->companyid, $companycoursenoneditorid);
                             } else {
-                                local_iomad\company_user::enrol($user, array($companycourse->courseid),
+                                company_user::enrol($user, array($companycourse->courseid),
                                 $companycourse->companyid, $companycourseeditorid);
                             }
                         }
@@ -1839,7 +1842,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 $DB->delete_records('companylicense_courses', array('id' => $courselicense->id));
                 // Does the license have any courses left?
                 if ($DB->get_records('companylicense_courses', array('licenseid' => $courselicense->licenseid))) {
-                    local_iomad\company::update_license_usage($courselicense->licenseid);
+                    company::update_license_usage($courselicense->licenseid);
                 } else {
                     // Delete the license.  It no longer is valid.
                     $DB->delete_records('companylicense', array('id' => $courselicense->licenseid));
@@ -1929,7 +1932,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
 
             // Update usage of affected licenses.
             foreach ($licenses as $license) {
-                local_iomad\company::update_license_usage($license);
+                company::update_license_usage($license);
             }
         }
 
@@ -2135,7 +2138,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
                 }
                 // Deal with the erroneous users.
                 foreach ($affectedusers as $affecteduser) {
-                    local_iomad\company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
+                    company::upsert_company_user($affecteduser->userid, $affecteduser->companyid, $affecteduser->departmentid, $affecteduser->managertype, false);
                 }
             }
         }
@@ -2451,7 +2454,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $progressbar = new progress_bar('assigningcompanymanagers', 500, true);
         $count = 0;
         foreach ($companymanagers as $companymanager) {
-            $companycontext = \core\context\company::instance($companymanager->companyid);
+            $companycontext = context_company::instance($companymanager->companyid);
             // Assign role at company level.
             role_assign($companymanagerrole->id, $companymanager->userid, $companycontext->id);
             // Remove role at site level.
@@ -2467,7 +2470,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $progressbar = new progress_bar('assigningdepartmentmanagers', 500, true);
         $count = 0;
         foreach ($departmentmanagers as $departmentmanager) {
-            $companycontext = \core\context\company::instance($departmentmanager->companyid);
+            $companycontext = context_company::instance($departmentmanager->companyid);
             // Assign role at company level.
             role_assign($departmentmanagerrole->id, $departmentmanager->userid, $companycontext->id);
             // Remove role at site level.
@@ -2483,7 +2486,7 @@ function xmldb_local_iomad_upgrade($oldversion) {
         $progressbar = new progress_bar('assigningcompanreporters', 500, true);
         $count = 0;
         foreach ($companyreporters as $companyreporter) {
-            $companycontext = \core\context\company::instance($companyreporter->companyid);
+            $companycontext = context_company::instance($companyreporter->companyid);
             // Assign role at company level.
             role_assign($companyreporterrole->id, $companyreporter->userid, $companycontext->id);
             // Remove role at site level.

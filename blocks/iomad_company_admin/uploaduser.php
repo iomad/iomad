@@ -24,6 +24,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, company_user, emailtemplate, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
@@ -80,11 +83,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:user_upload',$companycontext);
+iomad::require_capability('block/iomad_company_admin:user_upload',$companycontext);
 
 // Correct the navbar .
 // Set the name for the page.
@@ -114,7 +117,7 @@ $output = $PAGE->get_renderer('block_iomad_company_admin');
 
 $companyshortname = '';
 if ($companyid ) {
-    $company = new local_iomad\company($companyid);
+    $company = new company($companyid);
     $companyshortname = $company->get_shortname();
 }
 
@@ -394,7 +397,7 @@ if (!empty($cancelled)) {
                     $user->username = $perfexistinguser->username;
                 } else {
                     // No existing user matches, generate a new username.
-                    $user->username = local_iomad\company_user::generate_username($user->email);
+                    $user->username = company_user::generate_username($user->email);
                 }
                 $upt->track('username', $user->username);
             }
@@ -555,12 +558,12 @@ if (!empty($cancelled)) {
                         $deleteerrors++;
                         continue;
                     }
-                    if (!local_iomad\company::check_can_manage($existinguser->id)) {
+                    if (!company::check_can_manage($existinguser->id)) {
                         $upt->track('status', $strcantmanageuser, 'error');
                         $deleteerrors++;
                         continue;
                     }
-                    if (local_iomad\company_user::delete($existinguser->id, $companyid)) {
+                    if (company_user::delete($existinguser->id, $companyid)) {
                         $upt->track('status', $struserdeleted);
                         $deletes++;
                     } else {
@@ -598,7 +601,7 @@ if (!empty($cancelled)) {
                         $renameerrors++;
                         continue;
                     }
-                    if (!local_iomad\company::check_can_manage($olduser->id)) {
+                    if (!company::check_can_manage($olduser->id)) {
                         $upt->track('status', $strcantmanageuser, 'error');
                         $renameerrors++;
                         continue;
@@ -665,7 +668,7 @@ if (!empty($cancelled)) {
                     continue;
                 }
 
-                if (!local_iomad\company::check_can_manage($user->id)) {
+                if (!company::check_can_manage($user->id)) {
                     $upt->track('status', $strcantmanageuser, 'error');
                     $line[] = $strcantmanageuser;
                     $errornum++;
@@ -847,7 +850,7 @@ if (!empty($cancelled)) {
                             continue;
                         }
                         // Make sure the user can manage this department.
-                        if (!local_iomad\company::can_manage_department($department->id)) {
+                        if (!company::can_manage_department($department->id)) {
                             $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                             $upt->track('status', $strusernotaddederror, 'error');
                             $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
@@ -940,7 +943,7 @@ if (!empty($cancelled)) {
 
                 // Merge user with company user defaults.
                 if (!empty($companyid)) {
-                    $company = new local_iomad\company($companyid);
+                    $company = new company($companyid);
                     $user->companyid = $companyid;
                 }
 
@@ -958,7 +961,7 @@ if (!empty($cancelled)) {
                     }
 
                     // Make sure the user can manage this department.
-                    if (!local_iomad\company::can_manage_department($department->id)) {
+                    if (!company::can_manage_department($department->id)) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
                         $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
@@ -979,7 +982,7 @@ if (!empty($cancelled)) {
                         continue;
                     }
                     // Make sure the user can manage this department.
-                    if (!local_iomad\company::can_manage_department($department->id)) {
+                    if (!company::can_manage_department($department->id)) {
                         $upt->track('department', get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                         $upt->track('status', $strusernotaddederror, 'error');
                         $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
@@ -1007,7 +1010,7 @@ if (!empty($cancelled)) {
 
                 // Create the user and send the email.
                 $user->due = $duedate;
-                $user->id = local_iomad\company_user::create($user, $companyid);
+                $user->id = company_user::create($user, $companyid);
 
                 // Save the profile information.
                 profile_save_data($user);
@@ -1060,10 +1063,10 @@ if (!empty($cancelled)) {
                         }
                     }
 
-                    local_iomad\company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
+                    company_user::enrol($user, [$ccache[$shortname]->id], $companyid , $roleid);
                     $coursecontext = context_course::instance($ccache[$shortname]->id);
                     $courserec = $DB->get_record('course', ['id' => $ccache[$shortname]->id]);
-                    local_iomad\emailtemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
+                    emailtemplate::send('user_added_to_course', ['course' => $courserec, 'user' => $user, 'due' => $duedate]);
 
                     // find group to add to
                     if (!empty($user->{'group'.$i})) {
@@ -1140,7 +1143,7 @@ if (!empty($cancelled)) {
                             continue;
                         }
                         // Make sure the user can manage this department.
-                        if (!local_iomad\company::can_manage_department($department->id)) {
+                        if (!company::can_manage_department($department->id)) {
                             $upt->track('department'.$i, get_string('invaliddepartment', 'block_iomad_company_admin'), 'error');
                             $upt->track('status', $strusernotaddederror, 'error');
                             $line[] = get_string('invaliddepartment', 'block_iomad_company_admin');
@@ -1180,10 +1183,10 @@ if (!empty($cancelled)) {
                     }
                     $courseids[] = $selectedcourse;
                 }
-                local_iomad\company_user::enrol($user, $courseids, $companyid);
+                company_user::enrol($user, $courseids, $companyid);
                 foreach ($courseids as $courseid) {
                     $emailcourse = $DB->get_record('course', ['id' => $courseid]);
-                    local_iomad\emailtemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
+                    emailtemplate::send('user_added_to_course', ['course' => $emailcourse, 'user' => $user, 'due' => $duedate]);
                 }
             }
 
@@ -1239,7 +1242,7 @@ if (!empty($cancelled)) {
 
 
             // If user was set to have password generated, generate it now, so that it can be downloaded.
-            local_iomad\company_user::generate_temporary_password($user, $formdata->sendnewpasswordemails);
+            company_user::generate_temporary_password($user, $formdata->sendnewpasswordemails);
         }
 
         if (!empty($licenserecord['program'])) {
@@ -1316,10 +1319,10 @@ while ($fields = $cir->next()) {
     }
 
     if ((!isset($rowcols['profile_field_company']) || empty($rowcols['profile_field_company']))
-        && !local_iomad\company_user::is_company_user() && $companyid == 0) {
+        && !company_user::is_company_user() && $companyid == 0) {
         $errormsg['profile_field_company'] = get_string('profile_field_company_not_set', 'block_iomad_company_admin');
     }
-    if (isset($rowcols['profile_field_company']) && !local_iomad\company_user::can_see_company($rowcols['profile_field_company'])) {
+    if (isset($rowcols['profile_field_company']) && !company_user::can_see_company($rowcols['profile_field_company'])) {
         $errormsg['profile_field_company'] = get_string('invalid_company', 'block_iomad_company_admin');
     }
     if ($companyid > 0 && isset($rowcols['profile_field_company']) && !empty($rowcols['profile_field_company'])
@@ -1334,7 +1337,7 @@ while ($fields = $cir->next()) {
             $rowcols['username'] = $perfexistinguser->username;
         } else {
             // No existing user matches, generate a new username.
-            $rowcols['username'] = local_iomad\company_user::generate_username($rowcols['email']);
+            $rowcols['username'] = company_user::generate_username($rowcols['email']);
         }
     }
 

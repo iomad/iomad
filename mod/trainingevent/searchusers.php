@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');
@@ -57,8 +60,8 @@ if (!$trainingevent = $DB->get_record('trainingevent', ['id' => $eventid])) {
 }
 
 $systemcontext = context_system::instance();
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
 
 if (!$cm = get_coursemodule_from_instance('trainingevent', $trainingevent->id, $trainingevent->course)) {
     throw new moodle_exception('invalid coursemodule ID');
@@ -151,8 +154,8 @@ if (empty($trainingevent->coursecapacity)) {
 $attending = $DB->count_records('trainingevent_users', ['trainingeventid' => $trainingevent->id, 'waitlisted' => 0]);
 
 // Get the associated department id.
-$company = new local_iomad\company($location->companyid);
-$parentlevel = local_iomad\company::get_company_parentnode($company->id);
+$company = new company($location->companyid);
+$parentlevel = company::get_company_parentnode($company->id);
 $companydepartment = $parentlevel->id;
 
 // Check the department is valid.
@@ -279,7 +282,7 @@ $searchparams = [];
 $coursecontext = context_course::instance($trainingevent->course);
 if (!has_capability('mod/trainingevent:viewallattendees', $coursecontext)) {
     // Get department users.
-    $departmentusers = local_iomad\company::get_recursive_department_users($departmentid);
+    $departmentusers = company::get_recursive_department_users($departmentid);
     if ( count($departmentusers) > 0 ) {
         [$departmentsearch, $searchparams] = $DB->get_in_or_equal(array_keys($departmentusers), SQL_PARAMS_NAMED, 'depuser');
         $sqlsearch = " id $departmentsearch AND ";

@@ -23,9 +23,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 defined('MOODLE_INTERNAL') || die();
-
-
 
 /**
  * Default block class.
@@ -70,11 +71,11 @@ class block_iomad_company_selector extends block_base {
         $systemcontext = context_system::instance();
         $companycontext = $systemcontext;
         if (!empty($company)) {
-            $companycontext = \core\context\company::instance($company);
+            $companycontext = context_company::instance($company);
         }
 
         // Only display if you have the correct capability.
-        if (!local_iomad\iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
+        if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
             return;
         }
 
@@ -99,7 +100,7 @@ class block_iomad_company_selector extends block_base {
         if (!empty($SESSION->currenteditingcompany)) {
             $selectedcompany = $SESSION->currenteditingcompany;
         } else if (!empty($USER->profile->company)) {
-            $usercompany = local_iomad\company::by_userid($USER->id);
+            $usercompany = company::by_userid($USER->id);
             $selectedcompany = $usercompany->id;
         } else {
             $selectedcompany = "";
@@ -107,13 +108,13 @@ class block_iomad_company_selector extends block_base {
 
         // Get the company name if set.
         if (!empty($selectedcompany)) {
-            $companyname = local_iomad\company::get_companyname_byid($selectedcompany);
+            $companyname = company::get_companyname_byid($selectedcompany);
         } else {
             $companyname = "";
         }
 
         // Get a list of companies.
-        $companylist = local_iomad\company::get_companies_select();
+        $companylist = company::get_companies_select();
         $select = new single_select(new moodle_url($CFG->wwwroot .'/blocks/iomad_company_admin/index.php'),
                                                    'company',
                                                    $companylist,

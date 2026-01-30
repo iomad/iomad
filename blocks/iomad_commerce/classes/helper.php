@@ -28,11 +28,10 @@ namespace block_iomad_commerce;
 use moodle_url;
 use html_writer;
 use html_table;
-use local_iomad\company;
-use local_iomad\company_user;
-use local_iomad\iomad;
+use local_iomad\{company, company_user, iomad};
 use context_system;
 use core\notification;
+use local_iomad\custom_context\context_company;
 
 /**
  * Block IOMAD eCommerce helper class
@@ -379,7 +378,7 @@ class helper {
         global $DB, $CFG, $USER;
 
         $shoplink = "";
-        $companycontext = \core\context\company::instance($companyrec->id);
+        $companycontext = context_company::instance($companyrec->id);
         if (iomad::has_capability('block/iomad_commerce:buyitnow', $companycontext) ||
             iomad::has_capability('block/iomad_commerce:buyinbulk', $companycontext)) {
             if (!empty($CFG->commerce_enable_external)) {

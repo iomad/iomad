@@ -25,6 +25,9 @@
 * script for downloading of user lists
 */
 
+use local_iomad\{company, iomad};
+use local_iomad\custom_context\context_company;
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once('lib.php');
@@ -36,11 +39,11 @@ require_login();
 $systemcontext = context_system::instance();
 
 // Set the companyid
-$companyid = local_iomad\iomad::get_my_companyid($systemcontext);
-$companycontext = \core\context\company::instance($companyid);
-$company = new local_iomad\company($companyid);
+$companyid = iomad::get_my_companyid($systemcontext);
+$companycontext = context_company::instance($companyid);
+$company = new company($companyid);
 
-local_iomad\iomad::require_capability('block/iomad_company_admin:user_upload', $companycontext);
+iomad::require_capability('block/iomad_company_admin:user_upload', $companycontext);
 
 // Correct the navbar.
 // Set the name for the page.
@@ -60,10 +63,10 @@ $PAGE->set_heading($linktext);
 $return = $CFG->wwwroot.'/'.$CFG->admin.'/user/user_bulk.php';
 
 // Deal with the departments.
-$parentlevel = local_iomad\company::get_company_parentnode($companyid);
+$parentlevel = company::get_company_parentnode($companyid);
 $companydepartment = $parentlevel->id;
 
-if (local_iomad\iomad::has_capability('block/iomad_company_admin:edit_all_departments',$companycontext)) {
+if (iomad::has_capability('block/iomad_company_admin:edit_all_departments',$companycontext)) {
     $userhierarchylevel = $parentlevel->id;
 } else {
     $userlevel = $company->get_userlevel($USER);
@@ -121,7 +124,7 @@ if ($format) {
     $departmentusers = array();
     $userlevels = $company->get_userlevel($USER);
     foreach ($userlevels as $userlevelid => $userlevel) {
-        $departmentusers = local_iomad\company::get_recursive_department_users($userlevelid);
+        $departmentusers = company::get_recursive_department_users($userlevelid);
     }
     if (count($departmentusers) > 0) {
         $departmentids = "";

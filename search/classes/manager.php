@@ -24,6 +24,9 @@
 
 namespace core_search;
 
+use local_iomad\custom_context\context_company;
+use local_iomad\{company, iomad};
+
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/lib/accesslib.php');
@@ -1168,10 +1171,10 @@ class manager {
         $limitcourseids = false;
 
         // Set the companyid
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(\context_system::instance(), false);
         if ($companyid > 0) {
-            $company = new \company($companyid);
-            $companycontext = \core\context\company::instance($companyid);
+            $company = new company($companyid);
+            $companycontext = context_company::instance($companyid);
             $companycourses = array_keys($company->get_menu_courses(true, false, false, false, false, true));
         } else {
             $companycourses = [];

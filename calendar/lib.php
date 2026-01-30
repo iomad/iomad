@@ -24,6 +24,7 @@
  */
 
 use core_external\external_api;
+use local_iomad\iomad;
 
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
@@ -2481,7 +2482,7 @@ function calendar_get_default_courses($courseid = null, $fields = '*', $canmanag
     }
 
     // IOMAD - add in courses which are available to the user.
-    $courses = local_iomad\iomad::add_calendar_trainingevent_courses( $courses );
+    $courses = iomad::add_calendar_trainingevent_courses( $courses );
 
     if ($courseid && $courseid != SITEID) {
         if (empty($courses[$courseid]) && has_capability('moodle/calendar:manageentries', context_system::instance(), $userid)) {
