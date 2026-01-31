@@ -62,114 +62,7 @@ class emailtemplate {
     protected $license = null;
     protected $contextsystem;
 
-<<<<<<<< HEAD:public/local/email/lib/api.php
-    /**
-     * Send an email to (a) specified user(s)
-     *
-     * @param string $templatename Name of the template as described in
-     *                             the global $email array or overridden
-     *                             in the mdl_email_template table
-     * @param array $options array of options to pass into each email
-     * @param array $loopoptions array of array of options to pass into
-     *                           individual emails. This could for instance
-     *                           be used to send emails to multiple users
-     *                           send($tname,
-     *                                array('course' =>1 ),
-     *                                array(array('user' => 1),array('user' => 2),array('user' => 3))
-     *                           )
-     * @return bool if no $loopoptions where specified:
-     *              Returns true if mail was sent OK and false if there was an error
-     *              or in case $loopoptions were specified:
-     *              returns number of successes (ie. count of $loopoptions)
-     *              or if there was an error, those $loopoptions for which there was an error
-     */
-    public static function send($templatename, $options = array(), $loopoptions = array()) {
-        global $DB;
-
-        if (count($loopoptions)) {
-            $results = array();
-            foreach ($loopoptions as $loptions) {
-                $combinedoptions = array_merge($options, $loptions);
-                $ok = false;
-                try {
-                    $ok = self::send($templatename, $combinedoptions);
-                } catch (Exception $e) {
-                    // Something to go here.
-                }
-                if (!$ok) {
-                    $results[] = $loptions;
-                }
-            }
-
-            if (count($results)) {
-                return $results;
-            } else {
-                return count($loopoptions);
-            }
-        } else {
-            $emailtemplate = new self($templatename, $options);
-
-            // If company isn't set - can't send.
-            if (empty($emailtemplate->company)) {
-                return true;
-            }
-            //Is the template enabled for the company?
-            $company = new company($emailtemplate->company->id);
-            $managertype = 0;
-            if (strpos($templatename, 'manager')) {
-                $managertype = 1;
-            }
-            if (strpos($templatename, 'supervisor')) {
-                $managertype = 2;
-            }
-            if (!$company->email_template_is_enabled($templatename, $managertype)) {
-                return true;
-            }
-
-            // It's Ok to send, so do so.
-            return $emailtemplate->queue_for_cron();
-        }
-    }
-
-    /**
-     * Send an email to all users in a department (and it's subdepartments)
-     *
-     * @param integer $departmentid id of the department
-     * @param string $templatename Name of the template as described in
-     *                             the global $email array or overridden
-     *                             in the mdl_email_template table
-     * @param array $options array of options to pass into each email
-     * @return bool Returns true if mail was sent OK and false if there was an error
-     */
-    public static function send_to_all_users_in_department($departmentid, $templatename, $options = array()) {
-        global $DB;
-
-        $users = company::get_recursive_department_users($departmentid);
-        $useroptions = array_map('self::getuseroption', $users);
-        $result = self::send($templatename, $options, $useroptions);
-        if ($result === true) {
-            return true;
-        } else {
-            return $result == count($useroptions);
-        }
-    }
-
-    /**
-     * Gets the users options from the user reference object passed.
-     *
-     * Input $userrefobject = stdclass();
-     *
-     * Returns Array.
-     *
-     **/
-    private static function getuseroption($userrefobject) {
-        return array('user' => $userrefobject->userid);
-    }
-
-    public function __construct($templatename, $options = array()) {
-========
     public function __construct($templatename, $options = []) {
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/emailtemplate.php
         global $USER, $SESSION, $COURSE, $DB, $CFG;
 
         $user = array_key_exists('user', $options) ? $options['user'] : null;
@@ -576,11 +469,7 @@ class emailtemplate {
     static public function send_to_user($email) {
         global $USER, $CFG, $DB;
 
-<<<<<<<< HEAD:public/local/email/lib/api.php
-        $supportuser = new stdclass();
-========
         $supportuser = (object) [];
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/emailtemplate.php
         $company = new company($email->companyid);
 
         // Is this a special to id?

@@ -34,20 +34,11 @@ use moodleform;
 // Set up the template edit control form.
 class email_template_edit_form extends moodleform {
 
-<<<<<<<< HEAD:public/local/email/classes/forms/email_template_edit_form.php
-    protected $langs;
-    protected $templatesetid;
-    protected $ismodified;
-
-    public function __construct($actionurl, $companyid, $templatename, $templatesetid, $ismodified = false) {
-        global $DB;
-========
     protected $langs = [];
     protected $templatesetid = 0;
     protected $ismodified = false;
 
     public function __construct($actionurl, $templatesetid, $ismodified = false) {
->>>>>>>> c6cfae1776e (IOMAD: moved local/email classes and content into local/iomad - #2524):public/local/iomad/classes/forms/email_template_edit_form.php
 
         $this->langs = get_string_manager()->get_list_of_translations(true);
         $this->templatesetid = $templatesetid;

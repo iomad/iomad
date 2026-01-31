@@ -28,17 +28,6 @@
  */
 function local_iomad_menu() {
 
-<<<<<<<< HEAD:public/local/iomad_track/settings.php
-// Basic navigation settings
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/iomad_track/import.php' );
-$ADMIN->add( 'iomad', new admin_externalpage('importcompletionrecords',
-                               get_string('importcompletionrecords',
-                               'local_iomad_track'),
-                               $url,
-                               'local/report_attendance:view'));
-========
     return [
         'iomad_track' => [
             'category' => 'CourseAdmin',
@@ -65,4 +54,3 @@ $ADMIN->add( 'iomad', new admin_externalpage('importcompletionrecords',
         ],
     ];
 }
->>>>>>>> 9c46929fd21 (IOMAD: migrate local/iomad_track to local/iomad plugin. Created a local_iomad\task\task class and updated all core code to use this for dealing with certificates - #2524):public/local/iomad/db/iomadmenu.php
