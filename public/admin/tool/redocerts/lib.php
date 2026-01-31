@@ -33,7 +33,6 @@ use local_iomad\track;
 function do_redocerts($user = 0,
                       $course = 0,
                       $company = 0,
-                      $idnumber = 0,
                       $fromdate = null,
                       $todate = null,
                       $userid = 0,
@@ -60,9 +59,6 @@ function do_redocerts($user = 0,
     }
     if (!empty($companyid)) {
         $usersql[] = " lit.userid IN (SELECT userid FROM {company_users} WHERE companyid = $companyid) ";
-    }
-    if (!empty($idnumber)) {
-        $usersql[] = " lit.id > $idnumber ";
     }
     if ($fromdate != null) {
         $usersql[] = " lit.timecompleted > $fromdate ";
