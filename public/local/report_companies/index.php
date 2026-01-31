@@ -26,7 +26,7 @@
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once('../../config.php');
+require_once(__DIR__.'/../../config.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 
 use local_report_companies\companyrep;

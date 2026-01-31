@@ -26,7 +26,7 @@
 use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once('../../config.php');
+require_once(__DIR__.'/../../config.php');
 require_once(dirname(__FILE__) . '/../../config.php'); // Creates $PAGE.
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/user/filters/lib.php');

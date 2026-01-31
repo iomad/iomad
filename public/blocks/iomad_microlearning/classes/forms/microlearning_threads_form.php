@@ -25,7 +25,7 @@ namespace block_iomad_microlearning\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \company_moodleform;
+use block_iomad_company_admin\forms\company_moodleform;
 use local_iomad\company;
 use \microlearning;
 

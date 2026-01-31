@@ -28,7 +28,7 @@ use local_iomadcustompage\manager;
 use local_iomadcustompage\permission;
 use local_iomadcustompage\custom_context\context_iomadcustompage;
 
-require_once('../../config.php');
+require_once(__DIR__.'/../../config.php');
 require_once($CFG->dirroot . '/lib/adminlib.php');
 
 $pageid = required_param('id', PARAM_INT);

@@ -24,7 +24,7 @@
 use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
 
-require_once('../../config.php');
+require_once(__DIR__.'/../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->libdir.'/excellib.class.php');
 require_once('select_form.php');
