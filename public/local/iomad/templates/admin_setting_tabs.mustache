@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template theme_iomadboost/admin_setting_tabs
+    @template local_iomad/admin_setting_tabs
 
 
     Example context (json):
@@ -39,7 +39,7 @@
 <ul class="nav nav-tabs" role="tablist">
     {{#tabs}}
         <li class="nav-item">
-            <a href="#{{name}}" class="nav-link {{#active}}active{{/active}}" data-toggle="tab" role="tab"
+            <a href="#{{name}}" class="nav-link {{#active}}active{{/active}}" data-bs-toggle="tab" role="tab"
                 {{#active}}aria-selected="true"{{/active}}
                 {{^active}}aria-selected="false" tabindex="-1"{{/active}}>{{displayname}}</a>
         </li>
@@ -52,4 +52,3 @@
         </div>
     {{/tabs}}
 </div>
-
