@@ -45,9 +45,6 @@ class cron_task extends scheduled_task {
     public function execute() {
         global $DB, $CFG;
 
-        // We need company stuff.
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
-
         $runtime = time();
         // Are we copying Company to institution?
         if (!empty(get_config('local_iomad', 'sync_institution'))) {

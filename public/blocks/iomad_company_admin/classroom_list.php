@@ -27,7 +27,6 @@ use local_iomad\forms\company_search_form;
 
 require_once( '../../config.php');
 require_once( 'lib.php');
-require_once($CFG->dirroot . '/local/iomad/lib/user.php');
 
 $delete       = optional_param('delete', 0, PARAM_INT);
 $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   // Md5 confirmation hash.

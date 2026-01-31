@@ -25,10 +25,3 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Basic navigation settings.
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/report_license_usage/index.php' );
-$ADMIN->add('IomadReports', new admin_externalpage('replicenseusage',
-             get_string('repuserlicallocation', 'local_report_license_usage'),
-             $url, 'local/report_license_usage:view'));

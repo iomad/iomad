@@ -29,7 +29,6 @@ use local_iomad\{company, iomad};
 use local_iomad\custom_context\context_company;
 
 require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib.php');
 

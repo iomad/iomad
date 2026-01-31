@@ -23,13 +23,3 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Basic navigation settings
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/report_emails/index.php' );
-$ADMIN->add('IomadReports',
-            new admin_externalpage('repemails',
-                                   get_string('pluginname',
-                                   'local_report_emails'),
-                                   $url,
-                                   'local/report_emails:view'));

@@ -723,7 +723,6 @@ function initialise_fullme() {
                 throw new moodle_exception('requirecorrectaccess', 'error', '', null,
                     'You called ' . $calledurl .', you should have called ' . $correcturl);
             }
-            require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
             iomad::check_redirect($wwwroot, $rurl);
             $rfullpath = $rurl['fullpath'];

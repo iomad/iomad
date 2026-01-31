@@ -32,15 +32,6 @@ if (!empty($companyid)) {
     $postfix = "_$companyid";
 }
 
-
-// Basic navigation settings
-require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
-$url = new moodle_url( '/local/report_completion_overview/index.php' );
-$ADMIN->add('IomadReports', new admin_externalpage('repcompoverview',
-             get_string('pluginname', 'local_report_completion_overview'),
-             $url, 'local/report_completion_overview:view'));
-
 if ($hassiteconfig && !empty($USER->id)) {
 
     $settings = new admin_settingpage('local_report_completion_overview', get_string('pluginname', 'local_report_completion_overview'));

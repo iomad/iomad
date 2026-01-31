@@ -32,7 +32,6 @@ use local_iomad\iomad;
 use local_iomad\custom_context\context_company;
 
 require_once($CFG->libdir . '/grade/grade_scale.php');
-require_once($CFG->dirroot . '/local/iomad/lib/iomad.php');
 
 /**
  * Class for loading/storing competency frameworks from the DB.

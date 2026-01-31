@@ -33,7 +33,6 @@ use core_user;
 use context_system;
 
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
-require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
 
 /**
  * Local IOMAD emailtemplate class

@@ -80,8 +80,6 @@ class frontend extends \core_availability\frontend {
      * @return array Array of all the company objects
      */
     protected function get_all_companys($courseid) {
-        global $CFG;
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
 
         if ($courseid != $this->allcompanyscourseid) {
             $this->allcompanys = company::get_companies_select();

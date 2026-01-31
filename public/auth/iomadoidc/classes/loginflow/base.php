@@ -59,7 +59,6 @@ class base {
     public function __construct() {
         global $CFG;
 
-        require_once($CFG->dirroot . '/local/iomad/lib/company.php');
         $companyid = iomad::get_my_companyid(context_system::instance(), false);
         if (!empty($companyid)) {
             $this->postfix = "_$companyid";

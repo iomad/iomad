@@ -47,9 +47,6 @@ use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/local/iomad/lib/user.php');
-require_once($CFG->dirroot.'/local/iomad/lib/iomad.php');
-
 /**
  * Renderers to align Moodle's HTML with that expected by Bootstrap
  *

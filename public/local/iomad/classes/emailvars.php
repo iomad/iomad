@@ -27,7 +27,6 @@ use moodle_url;
 use ReflectionClass;
 
 require_once(dirname(__FILE__) . '/../../../user/profile/lib.php');
-require_once(dirname(__FILE__) . '/../../../local/iomad/lib/company.php');
 
 class emailvars {
     // Objects the vars refer to.

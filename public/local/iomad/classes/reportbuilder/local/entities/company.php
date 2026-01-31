@@ -31,9 +31,6 @@ use stdClass;
 
 defined('MOODLE_INTERNAL') or die;
 
-global $CFG;
-require_once("{$CFG->dirroot}/local/iomad/lib/iomad.php");
-
 /**
  * Company entity
  *

@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die;
 use local_iomad\{company, company_user, iomad};
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
-require_once($CFG->dirroot.'/local/iomad/lib/user.php');
 
 /**
  * Settings form for the activity.
