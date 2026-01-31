@@ -29,7 +29,7 @@ use context_system;
 use local_iomad\{company, company_user, iomad};
 use moodle_url;
 
-class company_delete_form extends \company_moodleform {
+class company_delete_form extends company_moodleform {
     protected $haschildren;
     protected $companyid;
     protected $companyrecord;

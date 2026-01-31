@@ -30,7 +30,7 @@ use moodle_url;
 use local_iomad\{company, company_user, iomad};
 use local_iomad\custom_context\context_company;
 
-class company_edit_form extends \company_moodleform {
+class company_edit_form extends company_moodleform {
     protected $firstcompany;
     protected $isadding;
     protected $title = '';
