@@ -72,7 +72,6 @@ echo $OUTPUT->box_start();
 do_redocerts($data->user,
              $data->course,
              $data->company,
-             $data->idnumber,
              $data->fromdate,
              $data->todate,
              $data->userid,
@@ -82,6 +81,6 @@ echo $OUTPUT->box_end();
 
 // Course caches are now rebuilt on the fly.
 
-echo $OUTPUT->continue_button(new moodle_url('/admin/index.php'));
+echo $OUTPUT->continue_button(new moodle_url('/blocks/iomad_company_admin/index.php'));
 
 echo $OUTPUT->footer();
