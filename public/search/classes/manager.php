@@ -1194,7 +1194,7 @@ class manager {
         }
 
         // IOMAD limit the courses to the company courses.
-        if (!\iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
+        if (!iomad::has_capability('block/iomad_company_admin:company_view_all', $companycontext)) {
             if (!empty($limitcourseids)) {
                 $limitcourseids = array_intersect($limitcourseids, $companycourses);
             } else {

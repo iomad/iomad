@@ -35,7 +35,7 @@ use renderer_base;
 use single_button;
 use templatable;
 use tool_iomadpolicy\iomadpolicy_version;
-use company;
+use local_iomad\company;
 
 /**
  * List of users and their acceptances

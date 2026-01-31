@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die;
 use renderable;
 use renderer_base;
 use templatable;
+use local_iomad\iomad;
 
 /**
  * Class contains data for company capabilties 
@@ -58,7 +59,7 @@ class capabilities implements renderable, templatable {
     public function __construct($capabilities, $roleid, $companyid, $templateid, $linkurl) {
         array_walk($capabilities, function(&$capability) use ($linkurl) {
             $capability->name = get_capability_string($capability->capability);
-            $capability->doclink = \iomad::documentation_link() . $capability->capability;
+            $capability->doclink = iomad::documentation_link() . $capability->capability;
             $capability->checked = !$capability->iomad_restriction;
         });
         $this->capabilities = $capabilities;

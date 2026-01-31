@@ -26,7 +26,7 @@ namespace block_iomad_microlearning\forms;
 defined('MOODLE_INTERNAL') || die;
 
 use \company_moodleform;
-use \company;
+use local_iomad\company;
 use \microlearning;
 
 class microlearning_threads_form extends company_moodleform {

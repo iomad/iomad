@@ -24,7 +24,7 @@
 namespace block_iomad_microlearning\forms;
 
 use \moodleform;
-use \company;
+use local_iomad\company;
 
 class group_edit_form extends moodleform {
     protected $companyid = 0;

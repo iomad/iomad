@@ -27,7 +27,7 @@ namespace block_iomad_learningpath;
 
 defined('MOODLE_INTERNAL') || die();
 
-use company;
+use local_iomad\company;
 use companypaths;
 
 class block_iomad_learningpath_observer {

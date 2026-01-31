@@ -18,7 +18,7 @@ namespace tool_mfa;
 
 use dml_exception;
 use tool_mfa\plugininfo\factor;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 /**

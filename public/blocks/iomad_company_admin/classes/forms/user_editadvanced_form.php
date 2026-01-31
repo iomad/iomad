@@ -24,7 +24,7 @@
 namespace block_iomad_company_admin\forms;
 
 use \moodleform;
-use \company;
+use local_iomad\company;
 use \coding_exception;
 use \context_user;
 use \core_user;

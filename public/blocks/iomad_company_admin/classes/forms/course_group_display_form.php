@@ -24,7 +24,7 @@
 namespace block_iomad_company_admin\forms;
 
 use \company_moodleform;
-use \company;
+use local_iomad\company;
 use \context_coursecat;
 use \context_system;
 

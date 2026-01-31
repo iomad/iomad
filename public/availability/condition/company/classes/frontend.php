@@ -25,7 +25,7 @@
 
 namespace availability_company;
 
-use company;
+use local_iomad\company;
 
 /**
  * Front-end class.

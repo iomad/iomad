@@ -26,7 +26,7 @@ namespace local_report_user_license_allocations\tables;
 use \table_sql;
 use \context_system;
 use \moodle_url;
-use \iomad;
+use local_iomad\iomad;
 
 
 defined('MOODLE_INTERNAL') || die();

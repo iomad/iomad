@@ -25,8 +25,8 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
+use local_iomad\iomad;
+use local_iomad\company;
 use \moodle_url;
 use context_system;
 use auth_iomadsaml2\admin\iomadsaml2_settings;

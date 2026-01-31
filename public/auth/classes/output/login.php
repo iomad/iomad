@@ -31,7 +31,7 @@ use renderable;
 use renderer_base;
 use stdClass;
 use templatable;
-use iomad;
+use local_iomad\iomad;
 
 /**
  * Login renderable class.

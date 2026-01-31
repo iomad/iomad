@@ -25,8 +25,8 @@ namespace local_iomad\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
+use local_iomad\iomad;
+use local_iomad\company;
 use \moodle_url;
 use \moodleform;
 use \context_system;

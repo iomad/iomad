@@ -24,7 +24,7 @@
  */
 
 namespace local_report_companies;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 /**

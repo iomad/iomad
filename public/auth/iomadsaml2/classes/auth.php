@@ -35,7 +35,7 @@ use dml_exception;
 use Exception;
 use moodle_exception;
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 
 global $CFG;
 require_once($CFG->libdir.'/authlib.php');
@@ -127,7 +127,7 @@ class auth extends \auth_plugin_base {
         global $CFG, $DB;
 
         // IOMAD
-        $companyid = \iomad::get_my_companyid(\context_system::instance(), false);
+        $companyid = iomad::get_my_companyid(\context_system::instance(), false);
         $postfix = '';
         if (!empty($companyid)) {
             $postfix = "_$companyid";

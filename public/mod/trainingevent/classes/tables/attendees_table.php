@@ -26,7 +26,7 @@
 namespace mod_trainingevent\tables;
 
 use table_sql;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 use moodle_url;
 use context_module;

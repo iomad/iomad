@@ -28,7 +28,7 @@ namespace block_iomad_microlearning\tables;
 use \table_sql;
 use \moodle_url;
 use context_system;
-use iomad;
+use local_iomad\iomad;
 
 defined('MOODLE_INTERNAL') || die();
 

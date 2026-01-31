@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_iomad\company;
+
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
 require_once($CFG->dirroot . '/user/editlib.php');
@@ -189,7 +191,7 @@ class login_signup_form extends moodleform implements renderable, templatable {
         }
 
         if (!empty($SESSION->currenteditingcompany)) {
-            $errors += \company_user::signup_validate_data($data, $files);
+            $errors += company_user::signup_validate_data($data, $files);
             if (!empty($SESSION->signupuserinothercompany)) {
                 redirect(new moodle_url("/login/signup.php"));
                 die;

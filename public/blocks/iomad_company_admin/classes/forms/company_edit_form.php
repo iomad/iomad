@@ -179,7 +179,7 @@ class company_edit_form extends \company_moodleform {
 
         if (iomad::has_capability('local/iomad:email_edit', $this->context)) {
             // Add in the company email template selector.
-            $emailtemplates = \company::get_email_templates($this->companyid);
+            $emailtemplates = company::get_email_templates($this->companyid);
             if (!empty($emailtemplates[$this->previousemailtemplateid])) {
                 $mform->addElement('select', 'emailtemplate', get_string('applyemailtemplate', 'block_iomad_company_admin', $emailtemplates[$this->previousemailtemplateid]), $emailtemplates);
             } else {
@@ -231,7 +231,7 @@ class company_edit_form extends \company_moodleform {
         $mform->setType('hostname', PARAM_NOTAGS);
 
         // Add in the company role template selector.
-        $templates = \company::get_role_templates($this->companyid);
+        $templates = company::get_role_templates($this->companyid);
         $mform->addElement('select', 'roletemplate', get_string('applyroletemplate', 'block_iomad_company_admin', $templates[$this->previousroletemplateid]), $templates);
         $mform->addHelpButton('roletemplate', 'roletemplate', 'block_iomad_company_admin');
 

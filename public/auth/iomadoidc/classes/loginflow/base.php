@@ -32,7 +32,7 @@ use auth_iomadoidc\utils;
 use core_user;
 use moodle_exception;
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 defined('MOODLE_INTERNAL') || die();

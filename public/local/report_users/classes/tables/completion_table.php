@@ -29,7 +29,7 @@ use \table_sql;
 use \moodle_url;
 use \html_writer;
 use \completion_info;
-use \iomad;
+use local_iomad\iomad;
 use \context_system;
 use \context_course;
 use \context_user;

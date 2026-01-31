@@ -17,7 +17,7 @@
 namespace tool_mfa\local\factor;
 
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 /**

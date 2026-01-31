@@ -22,7 +22,7 @@ use lbuchs\WebAuthn\WebAuthnException;
 use stdClass;
 use tool_mfa\local\factor\object_factor_base;
 use context_system;
-use iomad;
+use local_iomad\iomad;
 
 /**
  * WebAuthn factor class.

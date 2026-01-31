@@ -24,7 +24,7 @@
 
 namespace availability_trainingevent;
 
-use iomad;
+use local_iomad\iomad;
 use trainingevent;
 
 /**

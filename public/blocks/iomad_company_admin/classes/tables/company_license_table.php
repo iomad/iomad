@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/tablelib.php');
 
 use \table_sql;
-use \iomad;
+use local_iomad\iomad;
 use \moodle_url;
 
 class company_license_table extends table_sql {

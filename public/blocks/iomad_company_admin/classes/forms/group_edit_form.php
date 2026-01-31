@@ -24,7 +24,7 @@
 namespace block_iomad_company_admin\forms;
 
 use \company_moodleform;
-use \company;
+use local_iomad\company;
 
 class group_edit_form extends company_moodleform {
     protected $selectedcompany = 0;

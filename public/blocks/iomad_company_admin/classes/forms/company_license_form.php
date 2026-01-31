@@ -25,9 +25,8 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
+use local_iomad\{company, iomad};
+use moodle_url;
 
 class company_license_form extends \company_moodleform {
     protected $context = null;
@@ -68,8 +67,8 @@ class company_license_form extends \company_moodleform {
             $this->license = new \stdclass();
         }
 
-        $company = new \company($this->selectedcompany);
-        $parentlevel = \company::get_company_parentnode($company->id);
+        $company = new company($this->selectedcompany);
+        $parentlevel = company::get_company_parentnode($company->id);
         $this->companydepartment = $parentlevel->id;
         if(empty($parentid)) {
             $this->courses = $company->get_menu_courses(true, false, false, false, true);
@@ -89,8 +88,8 @@ class company_license_form extends \company_moodleform {
             $userhierarchylevel = key($userlevel);
         }
 
-        $this->subhierarchieslist = \company::get_all_subdepartments($userhierarchylevel);
-        $this->subhierarchieslist = \company::get_all_subdepartments($userhierarchylevel);
+        $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
+        $this->subhierarchieslist = company::get_all_subdepartments($userhierarchylevel);
         if ($this->departmentid == 0 ) {
             $departmentid = $userhierarchylevel;
         } else {

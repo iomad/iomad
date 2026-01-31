@@ -18,7 +18,7 @@ namespace tool_mfa\plugininfo;
 
 use moodle_url;
 use stdClass;
-use iomad;
+use local_iomad\iomad;
 use context_system;
 
 /**
