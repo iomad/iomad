@@ -27,10 +27,9 @@ use local_iomad\iomad;
 
 define('NO_OUTPUT_BUFFERING', true);
 
-require_once('../../../config.php');
+require_once(__DIR__.'/../../../config.php');
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->libdir.'/adminlib.php');
-require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
 require_once($CFG->dirroot.'/admin/tool/redocerts/lib.php');
 
 iomad::require_capability('tool/redocerts:redocertificates', context_system::instance());
