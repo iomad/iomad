@@ -41,8 +41,6 @@ function do_redocerts($user = 0,
                       $companyid = 0) {
     global $DB, $CFG;
 
-    require_once($CFG->dirroot.'/local/iomad_track/lib.php');
-
     // Build the SQL.
     $usersql = [];
     if (!empty($user)) {
