@@ -25,11 +25,10 @@ namespace local_iomad\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use local_iomad\iomad;
-use local_iomad\company;
-use \moodle_url;
-use \moodleform;
-use \context_system;
+use context_system;
+use local_iomad\{company, iomad};
+use moodle_url;
+use moodleform;
 
 /**
  * User search form used on the IOMAD pages.

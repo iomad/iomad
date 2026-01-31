@@ -24,9 +24,9 @@
  */
 
 namespace local_report_companies;
-use local_iomad\iomad;
-use local_iomad\company;
+
 use context_system;
+use local_iomad\{company, iomad};
 
 /**
  * companyrep class for local_report_companies

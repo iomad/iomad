@@ -25,7 +25,6 @@ use external_api;
 use external_function_parameters;
 use external_value;
 use invalid_parameter_exception;
-// use local_iomadcustompage\page_access_exception;
 use local_iomadcustompage\manager;
 use local_iomadcustompage\permission;
 

@@ -26,9 +26,9 @@ declare(strict_types=1);
 use local_iomadcustompage\output\renderer;
 use local_iomadcustompage\permission;
 use core_reportbuilder\system_report_factory;
-use local_iomadcustompage\reportbuilder\local\systemreports\pages_list;
 use local_iomad\custom_context\context_company;
 use local_iomad\iomad;
+use local_iomadcustompage\reportbuilder\local\systemreports\pages_list;
 
 require_once(__DIR__ . '/../../config.php');
 require_once("{$CFG->libdir}/adminlib.php");

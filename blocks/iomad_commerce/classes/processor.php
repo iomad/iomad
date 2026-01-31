@@ -25,16 +25,13 @@
 
 namespace block_iomad_commerce;
 
-use local_iomad\iomad;
-use local_iomad\company;
-use local_iomad\company_user;
-use core_user;
-use context_system;
-use context_course;
-use local_iomad\emailtemplate;
-use block_iomad_learningpaths\companypaths;
 use block_iomad_company_admin\event\user_license_assigned;
 use block_iomad_commerce\helper;
+use block_iomad_learningpaths\companypaths;
+use context_system;
+use context_course;
+use core_user;
+use local_iomad\{comany, company_user, emailtemplate, iomad};
 
 defined('MOODLE_INTERNAL') || die();
 

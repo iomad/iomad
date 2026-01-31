@@ -32,6 +32,8 @@ defined('MOODLE_INTERNAL') || die();
 
 use action_menu;
 use action_menu_link;
+use context_system;
+use local_iomad\{company, iomad};
 use moodle_url;
 use pix_icon;
 use renderable;
@@ -39,9 +41,6 @@ use renderer_base;
 use single_button;
 use templatable;
 use tool_iomadpolicy\iomadpolicy_version;
-use local_iomad\company;
-use local_iomad\iomad;
-use context_system;
 
 /**
  * Represents a management page with the list of iomadpolicy documents.

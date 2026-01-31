@@ -28,6 +28,7 @@ define('CONTEXT_CUSTOMPAGE', 75);
 
 use core\exception\moodle_exception;
 use core\output\inplace_editable;
+use local_iomad\iomad;
 use local_iomadcustompage\form\audience;
 use local_iomadcustompage\local\models\page as pagepersistent;
 use local_iomadcustompage\manager;
@@ -36,7 +37,6 @@ use local_iomadcustompage\output\page_name_editable;
 use local_iomadcustompage\output\page_title_editable;
 use local_iomadcustompage\permission;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
-use local_iomad\iomad;
 
 /**
  * Plugin inplace editable implementation

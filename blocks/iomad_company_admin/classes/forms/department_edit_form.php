@@ -23,10 +23,8 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \company_moodleform;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
+use company_moodleform;
+use local_iomad\{company, company_user, iomad};
 
 class department_edit_form extends company_moodleform {
     protected $selectedcompany = 0;

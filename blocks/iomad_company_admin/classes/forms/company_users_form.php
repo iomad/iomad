@@ -23,17 +23,13 @@
 
 namespace block_iomad_company_admin\forms;
 
-use moodleform;
-use local_iomad\user_selector\potential_company;
-use local_iomad\user_selector\current_company;
-use moodle_url;
+use block_iomad_company_admin\event\{company_user_assigned, company_user_unassigned};
 use context_system;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
 use core\event\user_updated;
-use block_iomad_company_admin\event\company_user_assigned;
-use block_iomad_company_admin\event\company_user_unassigned;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\user_selector\{current_company, potential_company};
+use moodle_url;
+use moodleform;
 
 class company_users_form extends moodleform {
     protected $context = null;

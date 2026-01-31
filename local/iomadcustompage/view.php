@@ -22,11 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_iomad\custom_context\context_company;
+use local_iomad\iomad;
 use local_iomadcustompage\manager;
 use local_iomadcustompage\permission;
 use local_iomadcustompage\custom_context\context_iomadcustompage;
-use local_iomad\custom_context\context_company;
-use local_iomad\iomad;
 
 require_once('../../config.php');
 require_once($CFG->dirroot . '/lib/adminlib.php');

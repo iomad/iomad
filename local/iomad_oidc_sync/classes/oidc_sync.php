@@ -26,11 +26,8 @@
 
 namespace local_iomad_oidc_sync;
 
-use local_iomad\company;
-use local_iomad\company_user;
-use local_iomad\iomad;
-use local_iomad\observer;
 use core\event\user_updated;
+use local_iomad\{company, company_user, iomad, observer};
 
 /**
  * Class definition

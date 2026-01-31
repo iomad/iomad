@@ -25,10 +25,8 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \moodle_url;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
+use local_iomad\{company, company_user, iomad};
+use moodle_url;
 
 class company_license_form extends \company_moodleform {
     protected $context = null;

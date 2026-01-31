@@ -26,11 +26,9 @@ namespace block_iomad_microlearning\forms;
 defined('MOODLE_INTERNAL') || die;
 
 use company_moodleform;
-use local_iomad\company;
-use \microlearning;
-use local_iomad\iomad;
-use local_iomad\user_selector\current_thread;
-use local_iomad\user_selector\potential_thread;
+use local_iomad\{company, iomad};
+use local_iomad\user_selector\{current_thread, potential_thread};
+use microlearning;
 
 class microlearning_thread_users_form extends company_moodleform {
     protected $companycontext = null;

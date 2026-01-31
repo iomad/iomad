@@ -30,13 +30,12 @@ use context_helper;
 use context_system;
 use context_user;
 use core\session\manager;
+use local_iomad\{company, iomad};
+use moodle_exception;
 use stdClass;
 use tool_iomadpolicy\event\acceptance_created;
 use tool_iomadpolicy\event\acceptance_updated;
 use user_picture;
-use local_iomad\iomad;
-use local_iomad\company;
-use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 

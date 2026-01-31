@@ -32,6 +32,7 @@ use core\output\notification;
 use core\session\manager;
 use core_user;
 use html_writer;
+use local_iomad\{company, iomad};
 use moodle_url;
 use renderable;
 use renderer_base;
@@ -39,8 +40,6 @@ use single_button;
 use templatable;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
-use local_iomad\iomad;
-use local_iomad\company;
 
 /**
  * Represents a page for showing all the iomadpolicy documents which a user has to agree to.

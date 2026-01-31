@@ -27,10 +27,9 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \context_system;
-use local_iomad\iomad;
-use local_iomad\company;
+use moodleform;
+use context_system;
+use local_iomad\{company, iomad};
 
 class classroom_edit_form extends moodleform {
     protected $isadding;
