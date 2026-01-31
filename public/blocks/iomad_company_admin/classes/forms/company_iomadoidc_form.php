@@ -25,11 +25,10 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use local_iomad\iomad;
-use local_iomad\company;
-use \moodle_url;
-use context_system;
 use auth_iomadoidc\utils;
+use context_system;
+use local_iomad\{company, company_user, iomad};
+use moodle_url;
 use moodleform;
 
 class company_iomadoidc_form extends moodleform {
@@ -159,7 +158,7 @@ class company_iomadoidc_form extends moodleform {
                             ['maxfiles' => 1,
                              'accepted_types' => ['image']]);
         $mform->addElement('static', 'customicondesc', '', get_string('cfg_customicon_desc', 'auth_iomadoidc'));
-    
+
         // Debugging heading.
         $mform->addElement('html', "<h3>" . get_string('heading_debugging', 'auth_iomadoidc') . "</h3>");
         $mform->addElement('static', 'debugging_heading_desc', '', get_string('heading_debugging_desc', 'auth_iomadoidc'));

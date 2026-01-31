@@ -23,8 +23,8 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \company_moodleform;
-use local_iomad\company;
+use company_moodleform;
+use local_iomad\{company, company_user, iomad};
 
 class company_groups_form extends company_moodleform {
     protected $context = null;

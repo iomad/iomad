@@ -28,13 +28,13 @@ define('CONTEXT_CUSTOMPAGE', 75);
 
 use core\exception\moodle_exception;
 use core\output\inplace_editable;
+use local_iomad\iomad;
 use local_iomadcustompage\form\audience;
 use local_iomadcustompage\local\models\page as page_persistent;
 use local_iomadcustompage\output\audience_heading_editable;
 use local_iomadcustompage\output\page_name_editable;
 use local_iomadcustompage\output\page_title_editable;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
-use local_iomad\iomad;
 
 /**
  * Update the editable item and return its updated state.

@@ -24,8 +24,8 @@
  */
 
 namespace local_report_companies;
-use local_iomad\iomad;
 use context_system;
+use local_iomad\{company, iomad};
 
 /**
  * companyrep class for local_report_companies
@@ -92,7 +92,7 @@ class companyrep {
         }
 
         if ($single) {
-            $topcompany = new \company($companyid);
+            $topcompany = new company($companyid);
             $companies = $companies + $topcompany->get_child_companies_recursive();
         }
 

@@ -44,7 +44,7 @@ class companypaths {
     public function __construct($companyid, $context) {
         $this->context = $context;
         $this->companyid = $companyid;
-        $this->company = new \company($companyid);
+        $this->company = new company($companyid);
     }
 
     /**

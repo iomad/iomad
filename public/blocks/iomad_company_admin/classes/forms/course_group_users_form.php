@@ -23,15 +23,12 @@
 
 namespace block_iomad_company_admin\forms;
 
-use moodleform;
-use local_iomad\user_selector\potential_group;
-use local_iomad\user_selector\current_group;
 use context_coursecat;
 use context_system;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\user_selector\{current_group, potential_group};
+use moodleform;
 use stdclass;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
 
 class course_group_users_form extends moodleform {
     protected $context = null;

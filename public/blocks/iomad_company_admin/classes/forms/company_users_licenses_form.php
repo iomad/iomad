@@ -23,14 +23,11 @@
 
 namespace block_iomad_company_admin\forms;
 
-use moodleform;
-use local_iomad\course_selector\potential_user_license;
-use local_iomad\course_selector\current_user_license;
-use context_system;
 use context_course;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
+use context_system;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\course_selector\{current_user_license, potential_user_license};
+use moodleform;
 
 class company_users_licenses_form extends moodleform {
     protected $context = null;

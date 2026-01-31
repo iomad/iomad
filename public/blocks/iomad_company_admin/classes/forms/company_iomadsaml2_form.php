@@ -25,23 +25,17 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use local_iomad\iomad;
-use local_iomad\company;
-use \moodle_url;
+use auth_iomadsaml2\admin\{iomadsaml2_settings, setting_button, setting_textonly};
+use auth_iomadsaml2\{idp_data, idp_parser, ssl_algorithms, user_fields};
 use context_system;
-use auth_iomadsaml2\admin\iomadsaml2_settings;
-use auth_iomadsaml2\admin\setting_button;
-use auth_iomadsaml2\admin\setting_textonly;
-use auth_iomadsaml2\ssl_algorithms;
-use auth_iomadsaml2\user_fields;
-use moodleform;
-use html_writer;
-use auth_iomadsaml2\idp_data;
-use auth_iomadsaml2\idp_parser;
 use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
+use html_writer;
+use local_iomad\{company, company_user, iomad};
+use moodle_url;
+use moodleform;
 
 require_once($CFG->dirroot.'/auth/iomadsaml2/locallib.php');
 

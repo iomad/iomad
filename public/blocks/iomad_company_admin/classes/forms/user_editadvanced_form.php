@@ -23,14 +23,14 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use local_iomad\company;
-use \coding_exception;
-use \context_user;
-use \core_user;
-use \core_text;
-use \core_component;
-use \webservice;
+use coding_exception;
+use context_user;
+use core_component;
+use core_text;
+use core_user;
+use local_iomad\{company, company_user, iomad};
+use moodleform;
+use webservice;
 
 class user_editadvanced_form extends moodleform {
 

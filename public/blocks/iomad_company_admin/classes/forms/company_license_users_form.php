@@ -25,14 +25,12 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \moodle_url;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
-use local_iomad\user_selector\potential_license;
-use local_iomad\user_selector\current_license;
+use local_iomad\{company, company_user, iomad};
+use local_iomad\user_selector\{current_license, potential_license};
+use moodle_url;
+use moodleform;
 
-class company_license_users_form extends \moodleform {
+class company_license_users_form extends moodleform {
     protected $context = null;
     protected $selectedcompany = 0;
     protected $potentialusers = null;

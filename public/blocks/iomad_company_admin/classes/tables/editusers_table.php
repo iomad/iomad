@@ -25,15 +25,14 @@
 
 namespace block_iomad_company_admin\tables;
 
-use \table_sql;
-use \moodle_url;
-use \action_menu_link_secondary;
-use \action_menu;
-use local_iomad\iomad;
-use \html_writer;
-use local_iomad\company;
-use \context_system;
-use \context_user;
+use action_menu_link_secondary;
+use action_menu;
+use context_system;
+use context_user;
+use html_writer;
+use local_iomad\{company, iomad};
+use moodle_url;
+use table_sql;
 
 defined('MOODLE_INTERNAL') || die();
 

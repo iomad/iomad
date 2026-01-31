@@ -25,7 +25,7 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use local_iomad\{company, iomad};
+use local_iomad\{company, company_user, iomad};
 use moodle_url;
 
 class company_license_form extends \company_moodleform {
@@ -182,7 +182,7 @@ class company_license_form extends \company_moodleform {
                                  3 => get_string('educatorreusable', 'block_iomad_company_admin'),
                                  4 => get_string('blanket', 'block_iomad_company_admin')];
             }
-            
+
             $mform->addElement('select', 'type', get_string('licensetype', 'block_iomad_company_admin'), $licensetypes);
             $mform->addHelpButton('type', 'licensetype', 'block_iomad_company_admin');
             $mform->addElement('selectyesno', 'program', get_string('licenseprogram', 'block_iomad_company_admin'));
@@ -190,7 +190,7 @@ class company_license_form extends \company_moodleform {
             $mform->addElement('selectyesno', 'instant', get_string('licenseinstant', 'block_iomad_company_admin'));
             $mform->addHelpButton('instant', 'licenseinstant', 'block_iomad_company_admin');
             $mform->addElement('date_selector', 'startdate', get_string('licensestartdate', 'block_iomad_company_admin'));
-            
+
             // Disable things depending on license type.
             $mform->disabledIf('program', 'type', 'eq', 4);
             $mform->disabledIf('instant', 'type', 'eq', 4);

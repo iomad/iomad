@@ -28,6 +28,7 @@ namespace tool_iomadpolicy\output;
 defined('MOODLE_INTERNAL') || die();
 
 use context_system;
+use local_iomad\{company, iomad};
 use moodle_url;
 use moodle_exception;
 use renderable;
@@ -36,8 +37,6 @@ use single_button;
 use templatable;
 use tool_iomadpolicy\api;
 use tool_iomadpolicy\iomadpolicy_version;
-use local_iomad\iomad;
-use local_iomad\company;
 
 /**
  * Represents a page for showing the given iomadpolicy document version.

@@ -24,8 +24,8 @@
  */
 namespace mod_trainingevent\task;
 
-use local_iomad\company;
-use local_iomad\emailtemplate;
+use core\task\scheduled_task;
+use local_iomad\{company, emailtemplate};
 
 /**
  * Send reminder emails Task
@@ -35,7 +35,7 @@ use local_iomad\emailtemplate;
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class send_reminder_emails extends \core\task\scheduled_task {
+class send_reminder_emails extends scheduled_task {
 
     /**
      * Get the name for the task.
@@ -110,3 +110,4 @@ class send_reminder_emails extends \core\task\scheduled_task {
         }
     }
 }
+

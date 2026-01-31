@@ -22,10 +22,10 @@ use context;
 use context_system;
 use core\exception\coding_exception;
 use dml_exception;
-use local_iomadcustompage\local\helpers\audience;
-use local_iomadcustompage\local\models\page;
 use local_iomad\iomad;
 use local_iomad\custom_context\context_company;
+use local_iomadcustompage\local\helpers\audience;
+use local_iomadcustompage\local\models\page;
 
 /**
  * Page permission class

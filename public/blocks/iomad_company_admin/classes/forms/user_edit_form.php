@@ -26,14 +26,11 @@ namespace block_iomad_company_admin\forms;
 defined('MOODLE_INTERNAL') || die;
 
 use context_coursecat;
-use core_user;
 use core_text;
-use local_iomad\company;
-use local_iomad\iomad;
-use local_iomad\company_user;
+use core_user;
+use local_iomad\{company, company_user, iomad};
 use moodleform;
 
-//class user_edit_form extends company_moodleform {
 class user_edit_form extends moodleform {
 
     protected $title = '';

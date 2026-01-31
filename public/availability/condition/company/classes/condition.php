@@ -25,8 +25,8 @@
 
 namespace availability_company;
 
-use iomad;
-use company;
+use context_course;
+use local_iomad\{company, iomad};
 
 /**
  * Condition main class.

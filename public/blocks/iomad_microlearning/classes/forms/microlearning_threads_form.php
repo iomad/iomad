@@ -41,7 +41,7 @@ class microlearning_threads_form extends company_moodleform {
         global $DB, $USER;
         $this->departmentid = $departmentid;
         $this->selectedcompany = $companyid;
-        $this->company = new \company($companyid);
+        $this->company = new company($companyid);
         $this->context = $context;
         $this->selectedthread = $selectedthread;
         $this->threads = \microlearning::get_menu_threads($companyid);

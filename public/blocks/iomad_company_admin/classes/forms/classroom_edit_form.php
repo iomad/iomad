@@ -27,8 +27,9 @@
 
 namespace block_iomad_company_admin\forms;
 
-use \moodleform;
-use \context_system;
+use moodleform;
+use context_system;
+use local_iomad\{company, iomad};
 
 class classroom_edit_form extends moodleform {
     protected $isadding;
@@ -99,7 +100,7 @@ class classroom_edit_form extends moodleform {
                             get_string('classroom_description', 'block_iomad_company_admin'), null, $this->editoroptions);
         $mform->addHelpButton('description_editor', 'classroom_description', 'block_iomad_company_admin');
         $mform->setType('description_editor', PARAM_RAW);
-        
+
         $mform->addElement('checkbox', 'ispublic', get_string('public', 'block_iomad_company_admin'));
         $mform->addHelpButton('ispublic', 'public', 'block_iomad_company_admin');
 

@@ -23,12 +23,11 @@
 
 namespace local_report_completion\tables;
 
-use \table_sql;
-use \moodle_url;
-use local_iomad\company;
-use local_iomad\iomad;
-use \html_writer;
-use \context_system;
+use context_system;
+use html_writer;
+use local_iomad\{company, iomad};
+use moodle_url;
+use table_sql;
 
 defined('MOODLE_INTERNAL') || die();
 
