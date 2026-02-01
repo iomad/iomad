@@ -154,7 +154,7 @@ class product_edit_form extends moodleform {
             $mform->setType('summary_editor', PARAM_RAW);
 
             // Set the license details.
-             if (get_config('local_iomad', 'autoenrol_managers')) {
+            if (get_config('local_iomad', 'autoenrol_managers')) {
                 $licensetypes = [0 => get_string('standard', 'block_iomad_company_admin'),
                                  1 => get_string('reusable', 'block_iomad_company_admin'),
                                  4 => get_string('blanket', 'block_iomad_company_admin')];
