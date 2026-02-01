@@ -30,10 +30,7 @@ use block_iomad_commerce\helper;
 use block_iomad_learningpaths\companypaths;
 use context_system;
 use context_course;
-use core_user;
-use local_iomad\{comany, company_user, emailtemplate, iomad};
-
-defined('MOODLE_INTERNAL') || die();
+use local_iomad\{company_user, emailtemplate, iomad};
 
 /**
  * Block IOMAD eCommerce processor class
@@ -147,7 +144,7 @@ class processor {
      * @return void
      */
     public static function licenseblock_onordercomplete($invoiceitem, $invoice) {
-        global $DB, $CFG;
+        global $DB;
 
         $runtime = time();
         $transaction = $DB->start_delegated_transaction();
@@ -320,7 +317,6 @@ class processor {
             // Deal with any learning paths.
             $paths = $DB->get_records('course_shopsettings_paths', ['itemid' => $iteminfo->id]);
             if (!empty($paths) || $licensecoursecount > 0) {
-                $assignpaths = [];
 
                 // Get the company id.
                 $companyid = iomad::get_my_companyid(context_system::instance());
