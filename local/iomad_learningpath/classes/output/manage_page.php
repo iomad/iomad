@@ -18,7 +18,8 @@
  * Manage page for Iomad Learning Paths
  *
  * @package    local_iomad_learninpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -30,6 +31,8 @@ use renderable;
 use renderer_base;
 use templatable;
 use stdClass;
+use iomad;
+use moodle_url;
 
 class manage_page implements renderable, templatable {
 
@@ -67,15 +70,15 @@ class manage_page implements renderable, templatable {
                     break;
                 }
             }
-            $path->linkedit = new \moodle_url('/local/iomad_learningpath/editpath.php', ['id' => $path->id]);
+            $path->linkedit = new moodle_url('/local/iomad_learningpath/editpath.php', ['id' => $path->id]);
             if ($thumb) {
-                $path->linkthumbnail = \moodle_url::make_pluginfile_url($thumb->get_contextid(), $thumb->get_component(), $thumb->get_filearea(),
+                $path->linkthumbnail = moodle_url::make_pluginfile_url($thumb->get_contextid(), $thumb->get_component(), $thumb->get_filearea(),
                     $thumb->get_itemid(), $thumb->get_filepath(), $thumb->get_filename());
             } else {
                 $path->linkthumbnail = $output->image_url('learningpath', 'local_iomad_learningpath');
             }
-            $path->linkstudents = new \moodle_url('/local/iomad_learningpath/students.php', ['id' => $path->id]);
-            $path->linkcourses = new \moodle_url('/local/iomad_learningpath/courselist.php', ['id' => $path->id]);
+            $path->linkstudents = new moodle_url('/local/iomad_learningpath/students.php', ['id' => $path->id]);
+            $path->linkcourses = new moodle_url('/local/iomad_learningpath/courselist.php', ['id' => $path->id]);
         }
     }
 
@@ -89,7 +92,9 @@ class manage_page implements renderable, templatable {
         $data = new stdClass();
         $data->paths = array_values($this->paths);
         $data->ispaths = !empty($this->paths);
-        $data->linknew = new \moodle_url('/local/iomad_learningpath/editpath.php');
+        $data->linknew = new moodle_url('/local/iomad_learningpath/editpath.php');
+        $data->canedit = iomad::has_capability('local/iomad_learningpath:manage', $this->context);
+        $data->canassign = iomad::has_capability('local/iomad_learningpath:assign', $this->context);
 
         return $data;
     }

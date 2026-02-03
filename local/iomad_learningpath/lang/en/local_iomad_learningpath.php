@@ -50,6 +50,7 @@ $string['groupname'] = 'Group name';
 $string['groupname_help'] = 'Give the group of courses a name';
 $string['groupnamesequential'] = '{$a} (Sequential)';
 $string['grouptitle'] = 'Learning path groups';
+$string['iomad_learningpath:assign'] = 'Assign users to a learning path';
 $string['iomad_learningpath:manage'] = 'Manage learning paths';
 $string['iomad_learningpath:view'] = 'View learning path';
 $string['learningpathedit'] = 'Edit learning path';
