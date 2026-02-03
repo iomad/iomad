@@ -32,6 +32,8 @@ require_once(__DIR__.'/../../config.php');
 require_once($CFG->dirroot . '/lib/adminlib.php');
 
 $pageid = required_param('id', PARAM_INT);
+$useasmy = optional_param('useasmy', false, PARAM_BOOL);
+
 $context = context_iomadcustompage::instance($pageid);
 
 // Set the companyid.
@@ -45,14 +47,24 @@ require_login(null, true);
 $page = manager::get_page_from_id($pageid);
 permission::require_can_view_page($page);
 
-$pageurl = new moodle_url('/local/iomadcustompage/view.php', ['id' => $pageid]);
-$title = get_string('pluginname', 'local_iomadcustompage');
-
 $PAGE->set_context($context);
 $PAGE->set_subpage($pageid);
-$PAGE->set_pagelayout('report');
+
+// Are we using a custom page as the dashboard?
+if (!$useasmy) {
+    $pageurl = new moodle_url('/local/iomadcustompage/view.php', ['id' => $pageid]);
+    $title = $page->get('title');
+    $pagelayout = 'report';
+} else {
+    $pageurl = new moodle_url('/my/index.php');
+    $title = get_string('myhome');
+    $pagelayout = 'mydashboard';
+    $PAGE->set_heading($title);
+}
+
+$PAGE->set_pagelayout($pagelayout);
 $PAGE->blocks->add_region('content');
-$PAGE->set_title($page->get('title'));
+$PAGE->set_title($title);
 $PAGE->set_url($pageurl);
 $PAGE->set_other_editing_capability('local/iomadcustompage:edit');
 $PAGE->set_blocks_editing_capability('local/iomadcustompage:edit');
