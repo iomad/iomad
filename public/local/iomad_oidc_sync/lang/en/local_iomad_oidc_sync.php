@@ -35,6 +35,9 @@ $string['configerror'] = 'Invalid configuration detected.';
 $string['configlogs'] = 'Config logs';
 $string['consent_title'] = 'IOMAD OIDC sync company consent';
 $string['consentlink'] = 'Submit consent with Microsoft';
+$string['graphproperties'] = 'MS Graph user select fields';
+$string['graphproperties_help'] = "By default, only a limited set of properties are returned (businessPhones, displayName, givenName, id, jobTitle, mail, mobilePhone, officeLocation, preferredLanguage, surname, userPrincipalName).<br>
+To return an alternative property set, you can specify the desired set of user properties in a comma separated list without spaces. For example, to return <b>only</b> displayName, givenName, and postalCode, set this value to <i>displayName,givenName,postalCode</i>.";
 $string['iomad_oidc_sync:manage'] = 'Manage IOMAD OIDC sync settings';
 $string['iomad_oidc_sync:view'] = 'View the IOMAD OIDC sync status';
 $string['loglink'] = 'View Config log';
