@@ -127,8 +127,8 @@ class completed_view implements renderable, templatable {
             $exportedcourse->timecompleted = userdate($completed->timecompleted, $CFG->iomad_date_format);
 
             // Does this expire anytime soon?
-            if (!empty($exportedcourse->timeexpires)) {
-                $exportedcourse->timeexpires = userdate($exportedcourse->timeexpires, $CFG->iomad_date_format);
+            if (!empty($completed->timeexpires)) {
+                $exportedcourse->timeexpires = userdate($completed->timeexpires, $CFG->iomad_date_format);
             }
 
             // Set the rest of the course details.

@@ -84,25 +84,26 @@
 </div>
 
 {{#mandatoryselectuse}}
-    <a id="flagmandatorylink"
-         class=" float-right"
-         href="{{{mandatoryselecturl}}}">
-        {{#pix}} i/flagged, core,
-            {{#mandatoryonly}}
-                {{#str}}allcourses, block_iomad_company_admin{{/str}}
-            {{/mandatoryonly}}
-            {{^mandatoryonly}}
-                {{#str}}mandatoryonly, local_report_completion{{/str}}
-            {{/mandatoryonly}}
-        {{/pix}}
+    <a
+        id="flagmandatorylink"
+        class="btn btn-outline-secondary float-right"
+        role="button"
+        href="{{{mandatoryselecturl}}}">
+        {{#mandatoryonly}}
+            {{#str}}allcourses, block_iomad_company_admin{{/str}}
+        {{/mandatoryonly}}
+        {{^mandatoryonly}}
+            {{#str}}mandatoryonly, block_mycourses{{/str}}
+        {{/mandatoryonly}}
     </a>&nbsp
 {{/mandatoryselectuse}}
 
 {{#downloadcerts}}
-  <a class="btn btn-outline-secondary float-right"
-     role="button"
-     id="downloadcourseslink"
-     href="{{{downloadcertslink}}}">
+    <a
+        class="btn btn-outline-secondary float-right"
+        role="button"
+        id="downloadcourseslink"
+        href="{{{downloadcertslink}}}">
         {{#str}}downloadcertificates, block_iomad_company_admin{{/str}}
     </a>
 {{/downloadcerts}}
