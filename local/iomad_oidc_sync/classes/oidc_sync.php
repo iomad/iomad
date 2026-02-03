@@ -60,6 +60,7 @@ class oidc_sync {
                 $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
                 $tenantid = $company->tenantnameorguid;
                 $clientsecret = get_config('auth_iomadoidc', 'clientsecret' . $postfix);
+                $graphproperties = get_config('auth_iomadoidc', 'graphproperties' . $postfix);
 
                 // Is it all configured?
                 if (!empty($clientid) && !empty($tenantid) && !empty($clientsecret)) {
@@ -67,7 +68,7 @@ class oidc_sync {
                     // Get the accesstoken.
                     if ($accesstoken = self::get_accesstoken($tenantid, $clientid, $clientsecret)) {
                         // So far so good - get the users.
-                        $users = self::get_users($accesstoken, $company->syncgroupid);
+                        $users = self::get_users($accesstoken, $company->syncgroupid, $graphproperties);
 
                         // Do we have a list of email domains?
                         $companydomains = $DB->get_records_menu('company_domains', ['companyid' => $company->id], '', 'id,domain');
@@ -407,15 +408,26 @@ class oidc_sync {
      * the accesstoken previously created.
      *
      **/
-    private static function get_users($accesstoken, $syncgroupid = "") {
+    private static function get_users($accesstoken, $syncgroupid = "", $graphproperties = "") {
 
         $userlist = [];
+        // Are we getting non standard user fields?
+        $select = '';
+        if (!empty($graphproperties)) {
+            $select = '$select=$graphproperties&'
+        }
 
         // Get the correct URL for the Microsoft Graph API call to list users.
         if (empty($syncgroupid)) {
-            $graphurl = 'https://graph.microsoft.com/v1.0/users?$expand=manager&$top=500';
+            $graphurl = 'https://graph.microsoft.com/v1.0/users?$expand=manager&' .
+                        $select .
+                        '$top=500';
         } else {
-            $graphurl = 'https://graph.microsoft.com/v1.0/groups/' . $syncgroupid . '/members?$expand=manager&$top=500';
+            $graphurl = 'https://graph.microsoft.com/v1.0/groups/' .
+                        $syncgroupid .
+                        '/members?$expand=manager&' .
+                        $select .
+                        '$top=500';
         }
 
         // Setup the HTTP headers.

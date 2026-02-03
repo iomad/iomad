@@ -71,6 +71,14 @@ class company_iomadoidc_mappings_form extends moodleform {
         $mform->addElement('html', get_string('cfg_field_mapping_desc', 'auth_iomadoidc'));
         $mform->addElement('html', html_writer::tag('p', get_string('managermapping', 'local_iomad_oidc_sync')));
 
+        // Add in custom data for MS Graph search.
+        $mform->addElement('text',
+                           "graphproperties{$postfix}",
+                           get_string('graphproperties', 'local_iomad_oidc_sync'),
+                           ['size' => 75]);
+        $mform->addHelpButton("graphproperties{$postfix}", 'graphproperties', 'local_iomad_oidc_sync');
+        $mform->setType("graphproperties{$postfix}", PARAM_TEXT);
+
         // Generate the list of options.
         $lockoptions = [
             'unlocked' => get_string('unlocked', 'auth'),
@@ -178,5 +186,24 @@ class company_iomadoidc_mappings_form extends moodleform {
         $mform->disable_form_change_checker();
 
         $this->add_action_buttons();
+    }
+
+    /**
+     * Form validation.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+        global $postfix;
+
+        $errors = parent::validation($data, $files);
+        if (!empty($data["graphproperties{$postfix}"])) {
+            if (str_contains($data["graphproperties{$postfix}"], " ")) {
+                $errors["graphproperties{$postfix}"] = get_string('invalidentry', 'error');
+            }
+        }
+        return $errors;
     }
 }
