@@ -577,5 +577,24 @@ function xmldb_block_iomad_commerce_upgrade($oldversion) {
         upgrade_block_savepoint(true, 2025070700, 'iomad_commerce');
     }
 
+    if ($oldversion < 2026013100) {
+        // One of the lang string identifiers was changed to lower case for this plugin.
+        if ($component = $DB->get_record('tool_customlang_components', ['name' => 'block_iomad_commerce'])) {
+            $stringidequal = $DB->sql_equal('stringid', ':stringid', true);
+            $sql = "componentid = :componentid
+                    AND {$stringidequal}";
+            $strings = $DB->get_records_select('tool_customlang',
+                                               $sql,
+                                               ['componentid' => $component->id,
+                                                'stringid' => 'Course']);
+            foreach ($strings as $string) {
+                $DB->set_field('tool_customlang', 'stringid', 'course', ['id' => $string->id]);
+            }
+        }
+
+        // Iomad_commerce savepoint reached.
+        upgrade_block_savepoint(true, 2026013100, 'iomad_commerce');
+    }
+
     return $result;
 }
