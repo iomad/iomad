@@ -608,37 +608,57 @@ class enrol_license_plugin extends enrol_plugin {
 
         $now = time();
 
-        // Note: the logic of license enrolment guarantees that user logged in at least once (=== u.lastaccess set)
-        // and that user accessed course at least once too (=== user_lastaccess record exists).
-
-        // First deal with users that did not log in for a really long time.
+        // Unenrol from course user did not visit for a long time.
         $sql = "SELECT e.*, ue.userid
                   FROM {user_enrolments} ue
                   JOIN {enrol} e ON (e.id = ue.enrolid AND e.enrol = 'license' AND e.customint2 > 0)
-                  JOIN {user} u ON u.id = ue.userid
-                 WHERE :now - u.lastaccess > e.customint2";
+                 WHERE :now - ue.timestart > e.customint2";
         $rs = $DB->get_recordset_sql($sql, ['now' => $now]);
         foreach ($rs as $instance) {
             $userid = $instance->userid;
             unset($instance->userid);
-            $plugin->unenrol_user($instance, $userid);
-            mtrace("unenrolling user $userid from course ".
-                   $instance->courseid.
-                   " as they have did not log in for ".
-                   $instance->customint2." days");
-        }
-        $rs->close();
+            mtrace("dealing with user $userid");
 
-        // Now unenrol from course user did not visit for a long time.
-        $sql = "SELECT e.*, ue.userid
-                  FROM {user_enrolments} ue
-                  JOIN {enrol} e ON (e.id = ue.enrolid AND e.enrol = 'license' AND e.customint2 > 0)
-                  JOIN {user_lastaccess} ul ON (ul.userid = ue.userid AND ul.courseid = e.courseid)
-                 WHERE :now - ul.timeaccess > e.customint2";
-        $rs = $DB->get_recordset_sql($sql, ['now' => $now]);
-        foreach ($rs as $instance) {
-            $userid = $instance->userid;
-            unset($instance->userid);
+            // Get the license details.
+            $license = (object) [];
+            if ($license = $DB->get_record_sql("SELECT lu.id, lu.licenseid, lu.userid, lu.isusing,
+                                                lu.timecompleted, lu.score, lu.result
+                                                FROM {companylicense_users} lu
+                                                JOIN {companylicense_courses} lc ON (
+                                                    lu.licensecourseid = lc.courseid
+                                                    AND lu.licenseid = lc.licenseid
+                                                )
+                                                WHERE lu.userid = :userid
+                                                AND lc.courseid = :courseid
+                                                AND lu.timecompleted IS NULL",
+                                               ['userid' => $userid,
+                                                'courseid' => $instance->courseid])) {
+
+
+                // Get the grade item details.
+                if ($gradeitems = $DB->get_records_sql("SELECT gg.id, gg.finalgrade, gg.feedback, gi.itemtype
+                                                        FROM {grade_grades} gg, {grade_items} gi
+                                                        WHERE gg.userid = :userid AND gi.courseid = :courseid
+                                                        AND gg.itemid = gi.id",
+                                                       ['userid' => $user->userid,
+                                                        'enrolid' => $user->enrolid,
+                                                        'courseid' => $user->courseid])) {
+                    // Delete the grade items.
+                    mtrace("Updating license record with any grade or result");
+                    foreach ($gradeitems as $gradeitem) {
+                        if ($gradeitem->itemtype == 'course' &&
+                            !empty($license)) {
+                            $license->score = $gradeitem->finalgrade;
+                            $license->result = $gradeitem->feedback;
+                        }
+                    }
+                }
+
+                // Tell the system the license is finished with.
+                $license->timecompleted = $runtime;
+                $DB->update_record('companylicense_users', (array) $license);
+            }
+
             $plugin->unenrol_user($instance, $userid);
             mtrace("unenrolling user $userid from course ".
                    $instance->courseid.
@@ -690,7 +710,8 @@ class enrol_license_plugin extends enrol_plugin {
                     // Delete the grade items.
                     mtrace("removing grade items from course $user->courseid");
                     foreach ($gradeitems as $gradeitem) {
-                        if ($gradeitem->itemtype == 'course' ) {
+                        if ($gradeitem->itemtype == 'course' &&
+                            !empty($license)) {
                             $license->score = $gradeitem->finalgrade;
                             $license->result = $gradeitem->feedback;
                         }
