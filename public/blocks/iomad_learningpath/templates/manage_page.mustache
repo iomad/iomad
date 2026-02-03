@@ -27,29 +27,75 @@
                 <div class="col-sm-4">{{ name }}</div>
                 <div class="col-sm-4"><small>{{{ description }}}</small></div>
                 <div class="col-sm-3">
-                    {{# active }}
-                        <a class="lp_active" href="" data-id="{{ id }}" data-toggle="tooltip" data-state="1" title="{{# str }}closeeye, block_iomad_learningpath{{/ str }}">
-                            <i class="fa fa-eye fa-lg"></i>
+                    {{#canedit}}
+                        {{# active }}
+                            <a
+                                class="lp_active"
+                                href=""
+                                data-id="{{ id }}"
+                                data-toggle="tooltip"
+                                data-state="1"
+                                title="{{# str }}closeeye, block_iomad_learningpath{{/ str }}">
+                                <i class="fa fa-eye fa-lg"></i>
+                            </a>
+                        {{/ active }}
+                        {{^ active }}
+                            <a
+                                class="lp_active"
+                                href=""
+                                data-id="{{ id }}"
+                                data-toggle="tooltip"
+                                data-state="0"
+                                title="{{# str }}openeye, block_iomad_learningpath{{/ str }}">
+                                <i class="fa fa-eye-slash fa-lg"></i>
+                            </a>
+                        {{/ active }}
+                        &nbsp;<a
+                            href="{{{ linkcourses }}}"
+                            data-toggle="tooltip"
+                            title="{{# str }}editcourselist, block_iomad_learningpath{{/ str }}">
+                            <i class="fa fa-list fa-lg"></i>
                         </a>
-                    {{/ active }}
-                    {{^ active }}
-                        <a class="lp_active" href="" data-id="{{ id }}" data-toggle="tooltip" data-state="0" title="{{# str }}openeye, block_iomad_learningpath{{/ str }}">
-                            <i class="fa fa-eye-slash fa-lg"></i>
+                        &nbsp;<a
+                            href="{{{ linkedit }}}"
+                            data-toggle="tooltip"
+                            title="{{# str }}editpath, block_iomad_learningpath{{/ str }}">
+                            <i class="fa fa-cog fa-lg"></i>
                         </a>
-                    {{/ active }}
-                    &nbsp;<a href="{{{ linkcourses }}}" data-toggle="tooltip" title="{{# str }}editcourselist, block_iomad_learningpath{{/ str }}"><i class="fa fa-list fa-lg"></i></a>
-                    &nbsp;<a href="{{{ linkedit }}}" data-toggle="tooltip" title="{{# str }}editpath, block_iomad_learningpath{{/ str }}"><i class="fa fa-cog fa-lg"></i></a>
-                    &nbsp;<a href="{{{ linkstudents }}}" data-toggle="tooltip" title="{{# str }}editstudents, block_iomad_learningpath{{/ str }}"><i class="fa fa-users fa-lg"></i></a>
-                    &nbsp;<a href="" class="lp_copy text-warning" data-id="{{ id }}" data-toggle="tooltip" title="{{# str }}copypath, block_iomad_learningpath{{/ str }}">
-                        <i class="fa fa-copy fa-lg"></i></a>
-                    &nbsp;<a href="" class="lp_delete text-danger" data-id="{{ id }}" data-toggle="tooltip" title="{{# str }}deletepath, block_iomad_learningpath{{/ str }}">
-                        <i class="fa fa-trash fa-lg"></i></a>
+                    {{/canedit}}
+                    {{#canassign}}
+                        &nbsp;<a
+                            href="{{{ linkstudents }}}"
+                            data-toggle="tooltip"
+                            title="{{# str }}editstudents, block_iomad_learningpath{{/ str }}">
+                            <i class="fa fa-users fa-lg"></i>
+                        </a>
+                    {{/canassign}}
+                    {{#canedit}}
+                        &nbsp;<a
+                            href=""
+                            class="lp_copy text-warning"
+                            data-id="{{ id }}"
+                            data-toggle="tooltip"
+                            title="{{# str }}copypath, block_iomad_learningpath{{/ str }}">
+                            <i class="fa fa-copy fa-lg"></i>
+                        </a>
+                        &nbsp;<a
+                            href=""
+                            class="lp_delete text-danger"
+                            data-id="{{ id }}"
+                            data-toggle="tooltip"
+                            title="{{# str }}deletepath, block_iomad_learningpath{{/ str }}">
+                            <i class="fa fa-trash fa-lg"></i>
+                        </a>
+                    {{/canedit}}
                 </div>
             </div>
         {{/ paths }}
     </div>
 {{/ ispaths }}
-
-<div class="row top-space">
-    <a href="{{{ linknew }}}" class="btn btn-success"><i class="fa fa-plus"></i> {{# str }}addpath, block_iomad_learningpath{{/ str }}</a>
-</div>
+{{#canedit}}
+    <div class="row top-space">
+        <a href="{{{ linknew }}}" class="btn btn-success"><i class="fa fa-plus"></i> {{# str }}addpath, block_iomad_learningpath{{/ str }}</a>
+    </div>
+{{/canedit}}
