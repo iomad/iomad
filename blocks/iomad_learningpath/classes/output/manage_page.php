@@ -17,9 +17,9 @@
 /**
  * Manage page for IOMAD Learning Paths
  *
- * @package    block_iomad_learningpaths
+ * @package    block_iomad_learninpath
  * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
- * @author     Derick Turner
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,6 +28,8 @@ namespace block_iomad_learningpath\output;
 use renderable;
 use renderer_base;
 use templatable;
+use stdClass;
+use local_iomad\iomad;
 use moodle_url;
 
 /**
@@ -117,6 +119,8 @@ class manage_page implements renderable, templatable {
         $data->paths = array_values($this->paths);
         $data->ispaths = !empty($this->paths);
         $data->linknew = new moodle_url('/blocks/iomad_learningpath/editpath.php');
+        $data->canedit = iomad::has_capability('local/iomad_learningpath:manage', $this->context);
+        $data->canassign = iomad::has_capability('local/iomad_learningpath:assign', $this->context);
 
         return $data;
     }

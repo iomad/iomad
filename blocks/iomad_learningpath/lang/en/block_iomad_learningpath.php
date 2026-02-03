@@ -64,6 +64,7 @@ $string['groupname_help'] = 'Give the group of courses a name';
 $string['groupnamesequential'] = '{$a} (Sequential)';
 $string['grouptitle'] = 'Learning path groups';
 $string['iomad_learningpath:addinstance'] = 'Add learning path block';
+$string['iomad_learningpath:assign'] = 'Assign users to a learning path';
 $string['iomad_learningpath:manage'] = 'Manage learning paths';
 $string['iomad_learningpath:myaddinstance'] = 'Add learning path block to Moodle Dashboard';
 $string['iomad_learningpath:view'] = 'View learning path';

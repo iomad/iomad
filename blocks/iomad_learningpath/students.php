@@ -38,7 +38,7 @@ $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
 
-iomad::require_capability('block/iomad_learningpath:manage', $companycontext);
+iomad::require_capability('block/iomad_learningpath:assign', $companycontext);
 
 // Parameters
 $id = required_param('id', PARAM_INT);

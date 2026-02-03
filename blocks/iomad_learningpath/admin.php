@@ -18,7 +18,8 @@
  * Management page for Iomad Learning Paths
  *
  * @package    local_iomadlearninpath
- * @copyright  2018 Howard Miller (howardsmiller@gmail.com)
+ * @copyright  2018 e-Learn Design Ltd. https://www.e-learndesign.co.uk
+ * @author     Howard Miller (howardsmiller@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
