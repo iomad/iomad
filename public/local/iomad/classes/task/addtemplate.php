@@ -100,8 +100,12 @@ class addtemplate extends adhoc_task {
             }
         }
 
-        // Purge the language cache to reload changes.
-        purge_caches(['lang' => true]);
+        require_once(dirname(__FILE__) . '/../../../../admin/tool/customlang/locallib.php');
+
+        // Reload the custom lang table.
+        foreach ($langs as $lang) {
+            tool_customlang_utils::checkout($lang);
+        }
 
         // Mark that we are done.
         unset_config('local_iomad_email_templates_migrating', '');
