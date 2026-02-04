@@ -95,14 +95,19 @@ class iomadoidcclient {
         if (!empty($tokenresource)) {
             $this->tokenresource = $tokenresource;
         } else {
-            if (auth_iomadoidc_is_local_365_installed()) {
-                if (\local_o365\rest\o365api::use_chinese_api() === true) {
-                    $this->tokenresource = 'https://microsoftgraph.chinacloudapi.cn';
+            $idptype = get_config('auth_iomadoidc', 'idptype' . $this->postfix);
+            if ($idptype == AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                if (auth_iomadoidc_is_local_365_installed()) {
+                    if (\local_o365\rest\o365api::use_chinese_api() === true) {
+                        $this->tokenresource = 'https://microsoftgraph.chinacloudapi.cn';
+                    } else {
+                        $this->tokenresource = 'https://graph.microsoft.com';
+                    }
                 } else {
                     $this->tokenresource = 'https://graph.microsoft.com';
                 }
             } else {
-                $this->tokenresource = 'https://graph.microsoft.com';
+                $this->tokenresource = '';
             }
 
         }
@@ -203,7 +208,9 @@ class iomadoidcclient {
         ];
 
         if (get_config('auth_iomadoidc', 'idptype' . $this->postfix) != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            $params['resource'] = $this->tokenresource;
+            if (!empty($this->tokenresource)) {
+                $params['resource'] = $this->tokenresource;
+            }
         }
 
         if ($promptlogin === true) {
@@ -332,7 +339,9 @@ class iomadoidcclient {
         ];
 
         if (get_config('auth_iomadoidc', 'idptype' . $this->postfix) != AUTH_IOMADOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            $params['resource'] = $this->tokenresource;
+            if (!empty($this->tokenresource)) {
+                $params['resource'] = $this->tokenresource;
+            }
         }
 
         try {
