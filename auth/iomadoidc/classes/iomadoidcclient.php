@@ -403,6 +403,39 @@ class iomadoidcclient {
     }
 
     /**
+     * Fetch user information from the UserInfo endpoint.
+     *
+     * @param string $accesstoken The access token to use for authentication.
+     * @return array|false User information from the UserInfo endpoint, or false on failure.
+     */
+    public function fetch_userinfo($accesstoken) {
+        if (empty($this->endpoints['userinfo'])) {
+            return false;
+        }
+
+        $options = [
+            'CURLOPT_HTTPHEADER' => [
+                'Authorization: Bearer ' . $accesstoken,
+            ],
+        ];
+
+        try {
+            $returned = $this->httpclient->get($this->endpoints['userinfo'], [], $options);
+            $userinfo = @json_decode($returned, true);
+
+            if (empty($userinfo) || !is_array($userinfo)) {
+                utils::debug('Invalid UserInfo response', __METHOD__, $returned);
+                return false;
+            }
+
+            return $userinfo;
+        } catch (\Exception $e) {
+            utils::debug('Error fetching UserInfo', __METHOD__, $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Calculate the return the assertion used in the token request in certificate connection method.
      *
      * @return string

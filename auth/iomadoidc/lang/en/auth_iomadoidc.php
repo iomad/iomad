@@ -159,6 +159,10 @@ $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect 
 $string['tokenendpoint'] = 'Token Endpoint';
 $string['tokenendpoint_help'] = 'The URI of the token endpoint from your IdP to use.<br/>
 Note if the site is to be configured to allow users from other tenants to access, tenant specific token endpoint cannot be used.';
+$string['userinfoendpoint'] = 'UserInfo Endpoint';
+$string['userinfoendpoint_help'] = 'The URI of the UserInfo endpoint from your IdP to use. This endpoint is used to retrieve additional user profile information (such as given name and family name) that may not be included in the ID token.<br/>
+This is optional but recommended for IdPs that do not include complete user profile data in the ID token. For example, Okta\'s default authorization server includes only basic claims in the ID token, and the UserInfo endpoint is needed to retrieve the full user profile.<br/>
+Leave blank to rely solely on ID token claims.';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect IdP will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
 $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
@@ -348,6 +352,7 @@ $string['settings_fieldmap_field_givenName'] = 'Given Name';
 $string['settings_fieldmap_field_jobTitle'] = 'Job Title';
 $string['settings_fieldmap_field_mail'] = 'Email';
 $string['settings_fieldmap_field_mobile'] = 'Mobile';
+$string['settings_fieldmap_field_name'] = 'Full Name';
 $string['settings_fieldmap_field_postalCode'] = 'Postal Code';
 $string['settings_fieldmap_field_preferredLanguage'] = 'Language';
 $string['settings_fieldmap_field_state'] = 'State';
