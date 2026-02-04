@@ -56,9 +56,8 @@ class company_iomadsaml2_mappings_form extends moodleform {
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
         $customfields = [];
         if (!empty($profilecategories)) {
-            $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)
-                                                  FROM {user_info_field}
-                                                  WHERE categoryid IN (" . implode(',', array_keys($profilecategories)) . ")");
+            $insql = $DB->get_in_or_equal($profilecategories);
+            $customfields = $DB->get_records_select_menu('user_info_field', 'categoryid', $insql, '', "id,concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
         
