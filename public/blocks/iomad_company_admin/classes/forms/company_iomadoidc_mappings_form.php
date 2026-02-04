@@ -53,7 +53,7 @@ class company_iomadoidc_mappings_form extends moodleform {
         $customfields = [];
 	if (!empty($profilecategories)) {
             $insql = $DB->get_in_or_equal($profilecategories);
-	    $customfields = $DB->get_records_select_menu('user_info_field', 'categoryid', $insql, '', "id,concat('profile_field_',shortname)");
+            $customfields = $DB->get_records_select_menu('user_info_field', 'categoryid', $insql, '', "id,concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
 
