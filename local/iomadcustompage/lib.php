@@ -34,7 +34,6 @@ use local_iomadcustompage\output\audience_heading_editable;
 use local_iomadcustompage\output\page_name_editable;
 use local_iomadcustompage\output\page_title_editable;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
-use iomad;
 
 /**
  * Update the editable item and return its updated state.
