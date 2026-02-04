@@ -336,7 +336,7 @@ $capabilities = array(
             'clientadministrator' => CAP_ALLOW
         ),
     ),
-    
+
     'block/iomad_company_admin:hideshowcourses' => array(
 
         'captype' => 'write',
@@ -345,7 +345,7 @@ $capabilities = array(
             'clientadministrator' => CAP_ALLOW
         ),
     ),
-    
+
     'block/iomad_company_admin:hideshowallcourses' => array(
 
         'captype' => 'write',
@@ -764,7 +764,7 @@ $capabilities = array(
             'user' => CAP_ALLOW
         ),
     ),
-    
+
     'block/iomad_company_admin:editpubliclocation' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
@@ -792,6 +792,15 @@ $capabilities = array(
             'clientadministrator' => CAP_ALLOW
         ),
     ),
+
+    'block/iomad_company_admin:companyauthsettings' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
     'block/iomad_company_admin:configiomadoidc' => array(
 

@@ -25,23 +25,19 @@ namespace block_iomad_company_admin\forms;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \iomad;
-use \company;
-use \moodle_url;
+use auth_iomadsaml2\admin\{iomadsaml2_settings, setting_button, setting_textonly};
+use auth_iomadsaml2\{idp_data, idp_parser, ssl_algorithms, user_fields};
 use context_system;
-use auth_iomadsaml2\admin\iomadsaml2_settings;
-use auth_iomadsaml2\admin\setting_button;
-use auth_iomadsaml2\admin\setting_textonly;
-use auth_iomadsaml2\ssl_algorithms;
-use auth_iomadsaml2\user_fields;
-use moodleform;
-use html_writer;
-use auth_iomadsaml2\idp_data;
-use auth_iomadsaml2\idp_parser;
 use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
+use html_writer;
+use company;
+use company_user;
+use iomad;
+use moodle_url;
+use moodleform;
 
 require_once($CFG->dirroot.'/auth/iomadsaml2/locallib.php');
 
@@ -316,10 +312,13 @@ class company_iomadsaml2_form extends moodleform {
         $mform->addElement('textarea',
             'requestedattributes' . $postfix,
             get_string('requestedattributes', 'auth_iomadsaml2'));
-        $mform->addElement('static', 'requestedattributesdesc', '', get_string('requestedattributes_help', 'auth_iomadsaml2',
-                                                                               ['example' => "<pre>
+        $mform->addElement('static', 'requestedattributesdesc', '', get_string(
+            'requestedattributes_help',
+            'auth_iomadsaml2',
+            ['example' => "<pre>
     urn:mace:dir:attribute-def:eduPersonPrincipalName
-    urn:mace:dir:attribute-def:mail *</pre>"]));
+    urn:mace:dir:attribute-def:mail *</pre>"]
+        ));
         $mform->setType('requestedattributes' . $postfix, PARAM_TEXT);
 
         // Autocreate Users.
@@ -414,10 +413,29 @@ class company_iomadsaml2_form extends moodleform {
         $mform->setDefault('flagmessage' . $postfix, get_string('flagmessage_default', 'auth_iomadsaml2'));
         $mform->setType('flagmessage' . $postfix, PARAM_TEXT);
 
+        // Show reset?
+        $mform->addElement(
+            'selectyesno',
+            'allowreset',
+            get_string('allowformreset', 'block_iomad_company_admin'),
+        );
+
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
 
-        $this->add_action_buttons();
+        $actionbuttons = [];
+        $actionbuttons[] = $mform->createElement('submit', 'submitbutton', get_string('savechanges'));
+        $actionbuttons[] = $mform->createElement('cancel');
+        $actionbuttons[] = $mform->createElement(
+            'submit',
+            'resetbutton',
+            get_string('resetdefault', 'block_iomad_company_admin'),
+            [
+                'class' => 'dangerbutton',
+            ]);
+        $mform->addGroup($actionbuttons, 'buttonar', '', ' ', false);
+
+        $mform->hideIF('resetbutton', 'allowreset', 'eq', 0);
     }
 
     public function validation($data, $files) {
