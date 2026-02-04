@@ -158,7 +158,7 @@ class company_iomadoidc_form extends moodleform {
                             ['maxfiles' => 1,
                              'accepted_types' => ['image']]);
         $mform->addElement('static', 'customicondesc', '', get_string('cfg_customicon_desc', 'auth_iomadoidc'));
-    
+
         // Debugging heading.
         $mform->addElement('html', "<h3>" . get_string('heading_debugging', 'auth_iomadoidc') . "</h3>");
         $mform->addElement('static', 'debugging_heading_desc', '', get_string('heading_debugging_desc', 'auth_iomadoidc'));
@@ -167,9 +167,28 @@ class company_iomadoidc_form extends moodleform {
         $mform->addElement('advcheckbox', 'debugmode'. $postfix, get_string('cfg_debugmode_key', 'auth_iomadoidc'));
         $mform->addElement('static', 'debugmode_desc', '', get_string('cfg_debugmode_desc', 'auth_iomadoidc'));
 
+        // Show reset?
+        $mform->addElement(
+            'selectyesno',
+            'allowreset',
+            get_string('allowformreset', 'block_iomad_company_admin'),
+        );
+
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
 
-        $this->add_action_buttons();
+        $actionbuttons = [];
+        $actionbuttons[] = $mform->createElement('submit', 'submitbutton', get_string('savechanges'));
+        $actionbuttons[] = $mform->createElement('cancel');
+        $actionbuttons[] = $mform->createElement(
+            'submit',
+            'resetbutton',
+            get_string('resetdefault', 'block_iomad_company_admin'),
+            [
+                'class' => 'dangerbutton',
+            ]);
+        $mform->addGroup($actionbuttons, 'buttonar', '', ' ', false);
+
+        $mform->hideIF('resetbutton', 'allowreset', 'eq', 0);
     }
 }

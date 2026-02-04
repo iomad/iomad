@@ -60,7 +60,7 @@ class company_iomadsaml2_mappings_form extends moodleform {
             $customfields = $DB->get_records_select_menu('user_info_field', 'categoryid', $insql, '', "id,concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
-        
+
         // Introductory explanation and help text.
         $mform->addElement('html', "<h2>" . format_string(get_string('pluginname', 'auth_iomadsaml2') . " : " .
                                                           get_string('auth_data_mapping', 'auth')) . "</h2>");
@@ -73,7 +73,7 @@ class company_iomadsaml2_mappings_form extends moodleform {
                                     'onlogin'   => get_string('update_onlogin', 'auth_iomadsaml2'));
         $updateextoptions = array('0'  => get_string('update_never', 'auth_iomadsaml2'),
                                   '1'  => get_string('update_onupdate', 'auth_iomadsaml2'));
-    
+
         // Generate the list of profile fields to allow updates / lock.
         if (!empty($customfields)) {
             $userfields = array_merge($userfields, $customfields);
@@ -145,9 +145,28 @@ class company_iomadsaml2_mappings_form extends moodleform {
             }
         }
 
+        // Show reset?
+        $mform->addElement(
+            'selectyesno',
+            'allowreset',
+            get_string('allowformreset', 'block_iomad_company_admin'),
+        );
+
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
 
-        $this->add_action_buttons();
+        $actionbuttons = [];
+        $actionbuttons[] = $mform->createElement('submit', 'submitbutton', get_string('savechanges'));
+        $actionbuttons[] = $mform->createElement('cancel');
+        $actionbuttons[] = $mform->createElement(
+            'submit',
+            'resetbutton',
+            get_string('resetdefault', 'block_iomad_company_admin'),
+            [
+                'class' => 'dangerbutton',
+            ]);
+        $mform->addGroup($actionbuttons, 'buttonar', '', ' ', false);
+
+        $mform->hideIF('resetbutton', 'allowreset', 'eq', 0);
     }
 }

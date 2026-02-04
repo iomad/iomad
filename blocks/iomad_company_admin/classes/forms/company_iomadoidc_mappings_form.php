@@ -181,10 +181,29 @@ class company_iomadoidc_mappings_form extends moodleform {
             }
         }
 
+        // Show reset?
+        $mform->addElement(
+            'selectyesno',
+            'allowreset',
+            get_string('allowformreset', 'block_iomad_company_admin'),
+        );
+
         // Disable the onchange popup.
         $mform->disable_form_change_checker();
 
-        $this->add_action_buttons();
+        $actionbuttons = [];
+        $actionbuttons[] = $mform->createElement('submit', 'submitbutton', get_string('savechanges'));
+        $actionbuttons[] = $mform->createElement('cancel');
+        $actionbuttons[] = $mform->createElement(
+            'submit',
+            'resetbutton',
+            get_string('resetdefault', 'block_iomad_company_admin'),
+            [
+                'class' => 'dangerbutton',
+            ]);
+        $mform->addGroup($actionbuttons, 'buttonar', '', ' ', false);
+
+        $mform->hideIF('resetbutton', 'allowreset', 'eq', 0);
     }
 
     /**
