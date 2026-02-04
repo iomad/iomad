@@ -25,14 +25,7 @@
  * Script to let a user import departments to a particular company.
  */
 
-use block_iomad_company_admin\forms\{
-    company_auth_options_form,
-    company_iomadoidc_form,
-    company_iomadoidc_mappings_form,
-    company_iomadsaml2_form,
-    company_iomadsaml2_mappings_form,
-    company_mfa_form,
-    company_smtp_options_form};
+use block_iomad_company_admin\forms\company_mfa_form;
 use block_iomad_company_admin\iomad_company_admin;
 use core\output\notification;
 use company;
