@@ -25,7 +25,15 @@ namespace block_iomad_company_admin;
 
 defined('MOODLE_INTERNAL') || die;
 
-use \context_system;
+use context_system;
+use block_iomad_company_admin\forms\{
+    company_auth_options_form,
+    company_iomadoidc_form,
+    company_iomadoidc_mappings_form,
+    company_iomadsaml2_form,
+    company_iomadsaml2_mappings_form,
+    company_mfa_form,
+    company_smtp_options_form};
 
 class iomad_company_admin {
 
@@ -181,4 +189,473 @@ class iomad_company_admin {
         return $mform->render();
     }
 
+    /**
+     * Function to set up the company_iomadoidc_form
+     *
+     * @return company_iomadoidc_form
+     */
+    public static function get_company_iomadoidc_form(): company_iomadoidc_form {
+        global $companyid, $PAGE, $postfix, $systemcontext;
+
+        // Set up the form.
+        $mform = new company_iomadoidc_form($PAGE->url);
+
+        // Set the form data.
+        $formdata = get_config('auth_iomadoidc');
+        $formdata->action = 'iomadoidcbasic';
+        $customicon = 'customicon' . $postfix;
+        if (!empty($formdata->$customicon)) {
+            $customiconid = file_get_submitted_draft_itemid('customicon');
+            file_prepare_draft_area(
+                $customiconid,
+                $systemcontext->id,
+                'auth_iomadoidc',
+                'customicon',
+                $companyid,
+                ['maxfiles' => 1]
+            );
+            $formdata->customicon = $customiconid;
+        }
+
+        $mform->set_data($formdata);
+
+        // Return the form.
+        return $mform;
+    }
+
+    /**
+     * Function to set up the company_iomadoidc_mappings_form
+     *
+     * @return company_iomadoidc_mappings_form
+     */
+    public static function get_company_iomadoidc_mappings_form(): company_iomadoidc_mappings_form {
+        global $PAGE;
+
+        // Set up the form.
+        $mform = new compancompany_iomadoidc_mappings_formy_iomadoidc_form($PAGE->url);
+
+        // Set the form data.
+        $formdata = get_config('auth_iomadoidc');
+        $formdata->action = 'iomadoidcmappings';
+        $mform->set_data($formdata);
+
+        // Return the form.
+        return $mform;
+    }
+
+    /**
+     * Function to set up the company_iomadsaml2_form
+     *
+     * @return company_iomadsaml2_form
+     */
+    public static function get_company_iomadsaml2_form(): company_iomadsaml2_form {
+        global $PAGE;
+
+        // Set up the form.
+        $mform = new company_iomadsaml2_form($PAGE->url);
+
+        // Set the form data.
+        $formdata = get_config('auth_iomadsaml2');
+        $formdata->action = 'iomadsaml';
+        $mform->set_data($formdata);
+
+        // Return the form.
+        return $mform;
+    }
+
+    /**
+     * Function to set up the company_iomadsaml2_mappings_form
+     *
+     * @return company_iomadsaml2_mappings_form
+     */
+    public static function get_company_iomadsaml2_mappings_form(): company_iomadsaml2_mappings_form {
+        global $PAGE;
+
+        // Set up the form.
+        $mform = new company_iomadsaml2_mappings_form($PAGE->url);
+
+        // Set the form data.
+        $formdata = get_config('auth_iomadoidc');
+        $formdata->action = 'iomadsamlmappings';
+        $mform->set_data($formdata);
+
+        // Return the form.
+        return $mform;
+    }
+
+    /**
+     * Function to set up the company_auth_options_form
+     *
+     * @return company_auth_options_form
+     */
+    public static function get_company_auth_options_form(): company_auth_options_form {
+        global $CFG, $PAGE, $postfix;
+
+        // Set the list of general auth options we support.
+        $authoptions = [
+            'registerauth',
+            'authloginviaemail',
+            'guestloginbutton',
+            'alternateloginurl',
+            'showloginform',
+            'forgottenpasswordurl',
+            'auth_instructions',
+            'allowemailaddresses',
+            'denyemailaddresses',
+            'enableloginrecaptcha',
+            'recaptchapublickey',
+            'recaptchaprivatekey',
+            'loginpasswordtoggle',
+        ];
+
+        // Set up the form.
+        $mform = new company_auth_options_form($PAGE->url);
+
+        // Set the form data.
+        $formdata = (object) [];
+        foreach ($authoptions as $authoption) {
+            // We are forcing postfix here as we don't want to get the site options if we can help it.
+            $field = $authoption . $postfix;
+            if (isset($CFG->$field)) {
+                if ($authoption == 'auth_instructions') {
+                    $formdata->$authoption = [
+                        'text' => $CFG->$field,
+                        'format' => 1
+                    ];
+                } else {
+                    $formdata->$authoption = $CFG->$field;
+                }
+            }
+        }
+
+        $formdata->action = 'companyauthoptions';
+        $mform->set_data($formdata);
+
+        // Return the form.
+        return $mform;
+    }
+
+    /**
+     * Function to set up the company_smtp_options_form
+     *
+     * @return company_smtp_options_form
+     */
+    public static function get_company_smtp_options_form(): company_smtp_options_form {
+        global $CFG, $PAGE, $postfix;
+
+        // Set the list of SMTP options we support.
+        $smtpoptions = [
+            'smtphosts',
+            'smtpsecure',
+            'smtpauthtype',
+            'smtpoauthservice',
+            'noreplyaddress',
+            'smtpuser',
+            'smtppass',
+        ];
+
+        // Get the company options for this section.
+        $formdata = (object) [];
+        foreach ($smtpoptions as $smtpoption) {
+            // We are forcing postfix here as we don't want to get the site options if we can help it.
+            $field = $smtpoption . $postfix;
+            if (isset($CFG->$field)) {
+                $formdata->$smtpoption = $CFG->$field;
+            }
+        }
+        $formdata->action = $action;
+
+        // Set up the form.
+        $mform = new company_smtp_options_form($PAGE->url);
+
+        // Set the form data
+        $mform->set_data($formdata);
+
+        // Return the form.
+        return $mform;
+    }
+
+    /**
+     * Process the company_iomadoidc_form
+     *
+     * @param object $data
+     * @return string
+     */
+    public static function process_company_iomadoidc_form(object $data): string {
+        global $companyid, $postfix, $systemcontext;
+
+        // Remove unwanted form data.
+        unset($data->action);
+        unset($data->submitbutton);
+
+        // Are we resetting everything?
+        if (!empty($data->resetbutton)) {
+            foreach ($data as $id => $value) {
+                unset_config($id, 'auth_iomadoidc');
+            }
+            return get_string('companyoidcsettingsresetok', 'block_iomad_company_admin');
+        } else {
+
+            // Process everything else.
+            foreach ($data as $id => $value) {
+                if ($id == 'customicon' . $postfix) {
+                    $fs = get_file_storage();
+                    if (!empty($value)) {
+                        file_save_draft_area_files(
+                            $value,
+                            $systemcontext->id,
+                            'auth_iomadoidc',
+                            'customicon',
+                            $companyid,
+                            ['maxfiles' => 1]
+                        );
+
+                        // Set the plugin config so it can actually be picked up.
+                        if ($files = $fs->get_area_files(
+                            $systemcontext->id,
+                            'auth_iomadoidc',
+                            'customicon',
+                            $companyid
+                        )) {
+                            foreach ($files as $file) {
+                                if ($file->get_filename() != '.') {
+                                    break;
+                                }
+                            }
+                            set_config($id, $file->get_filepath() . $file->get_filename(), 'auth_iomadoidc');
+                            auth_iomadoidc_initialize_customicon($file->get_filename());
+                        } else {
+                            set_config($id, '', 'auth_iomadoidc');
+                        }
+                    }
+                } else {
+                    set_config($id, $value, 'auth_iomadoidc');
+                }
+            }
+
+            return get_string('companysavedok', 'block_iomad_company_admin');
+        }
+    }
+
+    /**
+     * Process the company_iomadoidc_mappings_form
+     *
+     * @param object $data
+     * @return string
+     */
+    public static function process_company_iomadoidc_mappings_form(object $data): string {
+
+        // Remove unwanted fields.
+        unset($data->action);
+        unset($data->submitbutton);
+
+        // Are we resetting everything?
+        if (!empty($data->resetbutton)) {
+            foreach ($data as $id => $value) {
+                unset_config($id, 'auth_iomadoidc');
+            }
+            return get_string('companyoidcsettingsresetok', 'block_iomad_company_admin');
+        } else {
+            // Process everything else.
+            foreach ($data as $id => $value) {
+                set_config($id, $value, 'auth_iomadoidc');
+            }
+
+            return get_string('companysavedok', 'block_iomad_company_admin');
+        }
+    }
+
+    /**
+     * Process the company_iomadsaml2_form
+     *
+     * @param object $data
+     * @return string
+     */
+    public static function process_company_iomadsaml2_form(object $data): string {
+        global $postfix;
+
+        // Remove unwanted fields.
+        unset($data->action);
+        unset($data->submitbutton);
+        $idpmetadata = 'idpmetadata' . $postfix;
+        unset($data->$idpmetadata);
+
+        // Are we resetting everything?
+        if (!empty($data->resetbutton)) {
+            foreach ($data as $id => $value) {
+                unset_config($id, 'auth_iomadsaml2');
+            }
+            auth_iomadsaml2_update_sp_metadata();
+            return get_string('companysaml2settingsresetok', 'block_iomad_company_admin');
+        } else {
+
+            // We need the current config.
+            $iomadsaml2config = get_config('auth_iomadsaml2');
+
+            // Process everything else.
+            foreach ($data as $id => $value) {
+                if (
+                    $id == 'nameidpolicy' . $postfix ||
+                    $id == 'spmetadatasign' . $postfix ||
+                    $id == 'spentityid' . $postfix ||
+                    $id == 'wantassertionssigned' . $postfix ||
+                    $id == 'assertionconsumerservices' . $postfix
+                ) {
+                    if ($iomadsaml2config->$id != $value) {
+                        auth_iomadsaml2_update_sp_metadata();
+                    }
+                }
+                if ($id == 'assertionsconsumerservices' . $postfix) {
+                    $value = implode(',', $value);
+                }
+                set_config($id, $value, 'auth_iomadsaml2');
+            }
+
+            return get_string('companysavedok', 'block_iomad_company_admin');
+        }
+    }
+
+    /**
+     * Process the company_iomadsaml2_mappings_form
+     *
+     * @param object $data
+     * @return string
+     */
+    public static function process_company_iomadsaml2_mappings_form(object $data): string {
+
+        // Remove unwanted fields.
+        unset($data->action);
+        unset($data->submitbutton);
+
+        // Are we resetting everything?
+        if (!empty($data->resetbutton)) {
+            foreach ($data as $id => $value) {
+                unset_config($id, 'auth_iomadsaml2');
+            }
+            return get_string('companysaml2settingsresetok', 'block_iomad_company_admin');
+        } else {
+
+            // Process everything else.
+            foreach ($data as $id => $value) {
+                set_config($id, $value, 'auth_iomadsaml2');
+            }
+
+            return get_string('companysavedok', 'block_iomad_company_admin');
+        }
+    }
+
+    /**
+     * Process the company_auth_options_form
+     *
+     * @param object $data
+     * @return string
+     */
+    public static function process_company_auth_options_form(object $data): string {
+        global $postfix;
+
+        // Set the list of general auth options we support.
+        $authoptions = [
+            'registerauth',
+            'authloginviaemail',
+            'guestloginbutton',
+            'alternateloginurl',
+            'showloginform',
+            'forgottenpasswordurl',
+            'auth_instructions',
+            'allowemailaddresses',
+            'denyemailaddresses',
+            'enableloginrecaptcha',
+            'recaptchapublickey',
+            'recaptchaprivatekey',
+            'loginpasswordtoggle',
+        ];
+
+        // Process the changes for auth options.
+        // Are we resetting everything?
+        if (!empty($data->resetbutton)) {
+            foreach ($authoptions as $authoption) {
+                $field = $authoption . $postfix;
+                unset_config($field);
+            }
+            return get_string('companyauthsettingsresetok', 'block_iomad_company_admin');
+        } else {
+            // Remove unwanted fields.
+            unset($data->action);
+            unset($data->submitbutton);
+
+            // Process everything else.
+            foreach ($authoptions as $authoption) {
+                $field = $authoption . $postfix;
+                if ($authoption == 'auth_instructions') {
+                    if (!empty($data->$authoption['text'])) {
+                        set_config($field, $data->$authoption['text']);
+                    } else {
+                        set_config($field, '');
+                    }
+                } else {
+                    // Deal with empty form returns.
+                    if (
+                        $authoption == 'auth_instructions' ||
+                        $authoption == 'alternateloginurl' ||
+                        $authoption == 'forgottenpasswordurl' ||
+                        $authoption == 'allowemailaddresses' ||
+                        $authoption == 'denyemailaddresses' ||
+                        $authoption == 'recaptchapublickey' ||
+                        $authoption == 'recaptchaprivatekey'
+                    ) {
+                        if (empty($data->$authoption)) {
+                            $data->$authoption = '';
+                        }
+                    }
+                    set_config($field, $data->$authoption);
+                }
+            }
+            return get_string('companysavedok', 'block_iomad_company_admin');
+        }
+    }
+
+    /**
+     * Process the company_auth_options_form
+     *
+     * @param object $data
+     * @return string
+     */
+    public static function process_company_smtp_options_form(object $data): string {
+        global $postfix;
+
+        // Set the list of SMTP options we support.
+        $smtpoptions = [
+            'smtphosts',
+            'smtpsecure',
+            'smtpauthtype',
+            'smtpoauthservice',
+            'noreplyaddress',
+            'smtpuser',
+            'smtppass',
+        ];
+
+        // Process the changes for auth options.
+        // Are we resetting everything?
+        if (!empty($data->resetbutton)) {
+            foreach ($smtpoptions as $smtpoption) {
+                $field = $smtpoption . $postfix;
+                unset_config($field);
+            }
+            return get_string('companysmtpsettingsresetok', 'block_iomad_company_admin');
+        } else {
+            // Make the changes.
+            unset($data->action);
+            unset($data->submitbutton);
+
+            // Process the rest of the options.
+            foreach ($smtpoptions as $smtpoption) {
+                $field = $smtpoption . $postfix;
+                if (empty($data->$smtpoption)) {
+                    $data->$smtpoption = '';
+                }
+                set_config($field, $data->$smtpoption);
+            }
+            return get_string('companysavedok', 'block_iomad_company_admin');
+        }
+    }
 }

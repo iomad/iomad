@@ -25,6 +25,19 @@
  * Script to let a user import departments to a particular company.
  */
 
+use block_iomad_company_admin\forms\{
+    company_auth_options_form,
+    company_iomadoidc_form,
+    company_iomadoidc_mappings_form,
+    company_iomadsaml2_form,
+    company_iomadsaml2_mappings_form,
+    company_mfa_form,
+    company_smtp_options_form};
+use block_iomad_company_admin\iomad_company_admin;
+use core\output\notification;
+use company;
+use iomad;
+
 require_once('../../config.php');
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/auth/iomadoidc/lib.php');
@@ -69,13 +82,14 @@ $candoiomadoidc = iomad::has_capability('block/iomad_company_admin:configiomadoi
 $candoiomadsaml2 = iomad::has_capability('block/iomad_company_admin:configiomadsaml2', $companycontext) ? true : false;
 $candoiomadoidcsync = iomad::has_capability('block/iomad_company_admin:configiomadoidcsync', $companycontext) ? true : false;
 $candopolicies = iomad::has_capability('block/iomad_company_admin:configpolicies', $companycontext) ? true : false;
+$candoauthoptions = iomad::has_capability('block/iomad_company_admin:companyauthsettings', $companycontext) ? true : false;
 $candomfa = iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
 $candomfa = false;
 
 // Check if all of the modules are installed.
-$authmodules = \core_plugin_manager::instance()->get_plugins_of_type('auth');
-$localmodules = \core_plugin_manager::instance()->get_plugins_of_type('local');
-$toolmodules = \core_plugin_manager::instance()->get_plugins_of_type('tool');
+$authmodules = core_plugin_manager::instance()->get_plugins_of_type('auth');
+$localmodules = core_plugin_manager::instance()->get_plugins_of_type('local');
+$toolmodules = core_plugin_manager::instance()->get_plugins_of_type('tool');
 
 if (empty($authmodules['iomadoidc'])) {
     $candoiomadoidc = false;
@@ -90,6 +104,7 @@ if (empty($localmodules['iomad_oidc_sync'])) {
 if (empty($toolmodules['iomadpolicy'])) {
     $candopolicies = false;
 }
+$candosmpt = iomad::has_capability('block/iomad_company_admin:company_edit_smtp', $companycontext);
 
 // Are we showing a form?
 $mform = null;
@@ -97,48 +112,32 @@ if (!empty($action) &&
     confirm_sesskey()) {
     if ($candoiomadoidc &&
         $action == 'iomadoidcbasic') {
-        $mform = new \block_iomad_company_admin\forms\company_iomadoidc_form($PAGE->url);
-        // Set the form data
-        $companyiomadoidcdata = get_config('auth_iomadoidc');
-        $companyiomadoidcdata->action = $action;
-        $customiconid = file_get_submitted_draft_itemid('customicon');
-        file_prepare_draft_area($customiconid,
-                                $systemcontext->id,
-                                'auth_iomadoidc',
-                                'customicon', $companyid,
-                                ['maxfiles' => 1]);
-        $companyiomadoidcdata->customicon = $customiconid;
-
-        $mform->set_data($companyiomadoidcdata);
+        $mform = iomad_company_admin::get_company_iomadoidc_form();
     } else if ($candoiomadoidc &&
         $action == 'iomadoidcmappings') {
-        $companyiomadoidcdata = get_config('auth_iomadoidc');
-        $companyiomadoidcdata->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_iomadoidc_mappings_form($PAGE->url);
-        // Set the form data
-        $mform->set_data($companyiomadoidcdata);
+        $mform = iomad_company_admin::get_company_iomadoidc_mappings_form();
     } else if ($candoiomadsaml2 &&
                $action == 'iomadsaml') {
-        $companyiomadsaml2data = get_config('auth_iomadsaml2');
-        $companyiomadsaml2data->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_iomadsaml2_form($PAGE->url);
-        // Set the form data
-        $mform->set_data($companyiomadsaml2data);
+        $mform = iomad_company_admin::get_company_iomadsaml2_form();
     } else if ($candoiomadsaml2 &&
                $action == 'iomadsamlmappings') {
-        $companyiomadsaml2data = get_config('auth_iomadsaml2');
-        $companyiomadsaml2data->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_iomadsaml2_mappings_form($PAGE->url);
-        // Set the form data
-        $mform->set_data($companyiomadsaml2data);
+        $mform = iomad_company_admin::get_company_iomadsaml2_mappings_form();
     } else if ($candomfa &&
                $action == 'iomadmfasettings') {
         //$companyiomadsaml2data = get_config('auth_iomadsaml2');
         //$companyiomadsaml2data->action = $action;
-        $mform = new \block_iomad_company_admin\forms\company_mfa_form($PAGE->url);
+        $mform = new company_mfa_form($PAGE->url);
         // Set the form data
         //$mform->set_data($companyiomadsaml2data);
+    } else if ($candoauthoptions &&
+               $action == 'companyauthoptions') {
+        $mform = iomad_company_admin::get_company_auth_options_form($PAGE->url);
+    } else if ($candosmpt &&
+               $action == 'companysmtpsettings') {
+        $mform = iomad_company_admin::get_company_smtp_options_form($PAGE->url);
     }
+
+    // Process the form.
     if (!empty($mform) &&
         $mform->is_cancelled()) {
             redirect($linkurl);
@@ -147,84 +146,26 @@ if (!empty($action) &&
                $data = $mform->get_data()) {
         if ($action == 'iomadoidcbasic') {
             // Process the changes for auth_iomadoidc.
-            $companyiomadoidcdata = get_config('auth_iomadoidc');
-            unset($data->action);
-            unset($data->submitbutton);
-
-            foreach ($data as $id => $value) {
-                if ($id == "customicon") {
-                    $fs = get_file_storage();
-                    if (!empty($value)) {
-                        $field = $id . $postfix;
-                        file_save_draft_area_files($value,
-                                                   $systemcontext->id,
-                                                   'auth_iomadoidc',
-                                                   'customicon', $companyid,
-                                                   ['maxfiles' => 1]);
-
-                        // Set the plugin config so it can actually be picked up.
-                        if ($files = $fs->get_area_files($systemcontext->id, 'auth_iomadoidc', 'customicon', $companyid)) {
-                            foreach ($files as $file) {
-                                if ($file->get_filename() != '.') {
-                                    break;
-                                }
-                            }
-                            set_config($field, $file->get_filepath() . $file->get_filename(), 'auth_iomadoidc');
-                            auth_iomadoidc_initialize_customicon($file->get_filename());
-                        } else {
-                            set_config($field, "", "auth_iomadoidc");
-                        }
-                    }
-                } else {
-                    set_config($id, $value, 'auth_iomadoidc');
-                }
-            }
-            $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
+            $redirectmessage = iomad_company_admin::process_company_iomadoidc_form($data);
         } else if ($action == 'iomadoidcmappings') {
-            // Process the changes for auth_iomadoidc.
-            unset($data->action);
-            unset($data->submitbutton);
-            foreach ($data as $id => $value) {
-                set_config($id, $value, 'auth_iomadoidc');
-            }
-            $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
+            // Process the changes for auth_iomadoidc mappings.
+            $redirectmessage = iomad_company_admin::process_company_iomadoidc_mappings_form($data);
         } else if ($action == 'iomadsamlmappings') {
-            // Process the changes for auth_iomadsaml2.
-            unset($data->action);
-            unset($data->submitbutton);
-            foreach ($data as $id => $value) {
-                set_config($id, $value, 'auth_iomadsaml2');
-            }
-            $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
+            // Process the changes for auth_iomadsaml2 mappings.
+            $redirectmessage = iomad_company_admin::process_company_iomadsaml2_mappings_form($data);
         } else if ($action == 'iomadsaml') {
             // Process the changes for auth_iomadsaml2.
-            unset($data->action);
-            unset($data->submitbutton);
-            $idpmetadata = 'idpmetadata'. $postfix;
-            unset($data->idpmetadata);
-            // We need the auth plugin definition.
-            $iomadsaml2auth = new \auth_iomadsaml2\auth();
-            // We also need the current config.
-            $iomadsaml2config = get_config('auth_iomadsaml2');
-            foreach ($data as $id => $value) {
-                if ($id == "nameidpolicy" . $postfix ||
-                    $id == "spmetadatasign" . $postfix ||
-                    $id == "spentityid" > $postfix ||
-                    $id == "wantassertionssigned" . $postfix ||
-                    $id == "assertionconsumerservices" . $postfix) {
-                    if ($iomadsaml2config->$id != $value) {
-                        auth_iomadsaml2_update_sp_metadata();
-                    }
-                }
-                if ($id == 'assertionsconsumerservices' . $postfix) {
-                    $value = implode(',', $value);
-                }
-                set_config($id, $value, 'auth_iomadsaml2');
-            }
-            $redirectmessage = get_string('companysavedok' , 'block_iomad_company_admin');
+            $redirectmessage = iomad_company_admin::process_company_iomadsaml2_form($data);
+        } else if ($action == 'companyauthoptions') {
+            // Process the changes for general auth settings.
+            $redirectmessage = iomad_company_admin::process_company_auth_options_form($data);
+        } else if ($action == 'companysmtpsettings') {
+            // Process the changes for company smtp settings.
+            $redirectmessage = iomad_company_admin::process_company_smtp_options_form($data);
         }
+
         // Set redirect success.
-        redirect($linkurl, $redirectmessage, null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($linkurl, $redirectmessage, null, notification::NOTIFY_SUCCESS);
         die;
     }
 }
@@ -237,6 +178,16 @@ if ($candoiomadoidc || $candoiomadsaml2) {
     $options .= html_writer::end_tag('div');
     $options .= html_writer::start_tag('div', ['class' => 'col-sm-9']);
     $options .= html_writer::start_tag('ul', ['class' => 'list-unstyled']);
+    if ($candoauthoptions) {
+        $options .= html_writer::start_tag('li');
+        $options .= html_writer::tag('a',
+                                     get_string('commonsettings', 'admin'),
+                                     array('href' => new moodle_url('/blocks/iomad_company_admin/company_advanced_settings.php',
+                                                                    ['action' => 'companyauthoptions',
+                                                                     'sesskey' => sesskey()])));
+
+        $options .= html_writer::end_tag('li');
+    }
     if ($candoiomadoidc) {
         $options .= html_writer::tag('li', html_writer::tag('strong', get_string('pluginname', 'auth_iomadoidc')));
         $options .= html_writer::start_tag('li');
@@ -326,6 +277,35 @@ if ($candomfa || $candopolicies) {
 
         $options .= html_writer::end_tag('li');
     }
+    $options .= html_writer::end_tag('ul');
+    $options .= html_writer::end_tag('div');
+    $options .= html_writer::end_tag('div');
+}
+$options .= html_writer::end_tag('div');
+
+// SMTP Settings
+if ($candosmpt) {
+    $options .= html_writer::start_tag('div', ['class' => 'row']);
+    $options .= html_writer::start_tag('div', ['class' => 'col-sm-3']);
+    $options .= html_writer::tag('h4', get_string('categoryemail', 'admin'));
+    $options .= html_writer::end_tag('div');
+    $options .= html_writer::start_tag('div', ['class' => 'col-sm-9']);
+    $options .= html_writer::start_tag('ul', ['class' => 'list-unstyled']);
+    $options .= html_writer::start_tag('li');
+    $options .= html_writer::tag(
+        'a',
+        get_string('outgoingmailconfig', 'admin'),
+        [
+            'href' => new moodle_url(
+                '/blocks/iomad_company_admin/company_advanced_settings.php',
+                [
+                    'action' => 'companysmtpsettings',
+                    'sesskey' => sesskey(),
+                ]
+            ),
+        ]);
+
+    $options .= html_writer::end_tag('li');
     $options .= html_writer::end_tag('ul');
     $options .= html_writer::end_tag('div');
     $options .= html_writer::end_tag('div');
