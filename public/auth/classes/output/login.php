@@ -107,10 +107,8 @@ class login implements renderable, templatable {
         $this->canloginbyemail = !empty(iomad::get_config('', 'authloginviaemail'));
 
         // IOMAD - need to check our settings for signup link too.
-        $this->cansignup = (!empty(get_config('local_iomad', 'signup_showinstructions')) &&
-                           !empty(iomad::get_config('', 'registerauth')) &&
-                           (iomad::get_config('', 'registerauth') == 'email' ||
-                            !empty(iomad::get_config('', 'registerauth'))));
+        $this->cansignup = iomad::get_config('', 'registerauth') == 'email' ||
+                            !empty(iomad::get_config('', 'registerauth'));
         if ($CFG->rememberusername == 0) {
             $this->cookieshelpicon = new help_icon('cookiesenabledonlysession', 'core');
         } else {
