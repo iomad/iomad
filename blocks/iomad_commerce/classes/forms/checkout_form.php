@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,18 +25,25 @@
 
 namespace block_iomad_commerce\forms;
 
-use \moodleform;
-use \context_system;
+use moodleform;
 
+/**
+ * Block IOMAD eCommerce checkout form
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class checkout_form extends moodleform {
-    public function __construct($actionurl) {
-        global $CFG;
 
-        parent::__construct($actionurl);
-    }
-
+    /**
+     * Form definition
+     *
+     * @return void
+     */
     public function definition() {
-        global $CFG, $USER;
+        global $USER;
 
         $mform =& $this->_form;
 
@@ -73,7 +82,7 @@ class checkout_form extends moodleform {
         $mform->setType('state', PARAM_NOTAGS);
 
         $choices = get_string_manager()->get_list_of_countries();
-        $choices = array('' => get_string('selectacountry').'...') + $choices;
+        $choices = ['' => format_string(get_string('selectacountry') . '...')] + $choices;
         $mform->addElement('select', 'country', get_string('selectacountry'), $choices);
         $mform->addRule('country', $strrequired, 'required', null, 'client');
 

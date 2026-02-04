@@ -15,21 +15,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the namespace
 namespace block_iomad_commerce\event;
 
-// Ensure that this file is only accessed within Moodle
-defined('MOODLE_INTERNAL') || die();
+use core\event\base;
+use moodle_url;
+use coding_exception;
 
-// Define a class the extends \core\event\base
-class course_shoptag_created extends \core\event\base {
-    
+/**
+ * Block IOMAD eCommerce course shoptag created event class
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2025 e-Learn Design
+ * @author    Robert Tyrone Cullen
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course_shoptag_created extends base {
+
     /**
      * Init method
      * @return void
@@ -53,31 +62,34 @@ class course_shoptag_created extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id $this->userid created a shop tag for the company with id ".$this->other['companyid'].' and for the shop item with id '.$this->other['itemid'];
+        return "The user with id $this->userid created a shop tag for the company with id " .
+               $this->other['companyid'] .
+               ' and for the shop item with id ' .
+               $this->other['itemid'];
     }
 
     /**
      * Get the URL related to the action
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_commerce/manage_tags.php');
+        return new moodle_url('/blocks/iomad_commerce/manage_tags.php');
     }
 
     /**
      * Custom Validation
-     * @throws \coding_exception
+     * @throws coding_exception
      * @return void
      */
     protected function validate_data() {
         parent::validate_data();
         if (!isset($this->other['companyid'])) {
-            // Throw a coding exception if companyid is not set in other
-            throw new \coding_exception('The \'companyid\' value must be set in other');
+            // Throw a coding exception if companyid is not set in other.
+            throw new coding_exception('The \'companyid\' value must be set in other');
         }
         if (!isset($this->other['itemid'])) {
-            // Throw a coding exception if companyid is not set in other
-            throw new \coding_exception('The \'itemid\' value must be set in other');
+            // Throw a coding exception if itemid is not set in other.
+            throw new coding_exception('The \'itemid\' value must be set in other');
         }
     }
 }

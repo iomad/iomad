@@ -173,6 +173,9 @@ if (iomad::has_capability('local/report_completion:view', $companycontext)) {
 }
 $PAGE->navbar->add($linktext, $linkurl);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Get the renderer.
 $output = $PAGE->get_renderer('block_iomad_company_admin');
 

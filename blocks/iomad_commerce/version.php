@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -23,8 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name
-$plugin->version  = 2025070745;   // The (date) version of this plugin.
+$plugin->release  = '4.5.8 (Build: 20251208)'; // Human-friendly version name.
+$plugin->version  = 2026012045;   // The (date) version of this plugin.
 $plugin->requires = 2024100700;   // Requires this Moodle version.
 $plugin->component = 'block_iomad_commerce';
 $plugin->dependencies = ['local_iomad' => 2024090401];

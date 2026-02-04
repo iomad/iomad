@@ -87,6 +87,9 @@ $linktext = get_string('company_threads_for', 'block_iomad_microlearning', $comp
 $PAGE->set_title($linktext);
 $PAGE->set_heading($linktext);
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // Deal with the link back to the main microlearning page.
 $buttoncaption = get_string('threads', 'block_iomad_microlearning');
 $buttonlink = new moodle_url('/blocks/iomad_microlearning/threads.php');
@@ -160,7 +163,7 @@ if ($threadsform->is_cancelled() || $usersform->is_cancelled() ||
                     echo $output->single_button(new moodle_url($CFG->wwwroot . '/blocks/iomad_microlearning/nuggets.php',
                                                 ['threadid' => $thread->id]),
                                                 get_string('learningnuggets', 'block_iomad_microlearning'));
-    
+
                     echo $output->footer();
                     die;
                 }

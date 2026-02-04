@@ -15,18 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * IOMAD eCommerce block scheduled tasks.
+ *
  * @package   block_iomad_commerce
- * @copyright 2021 Derick Turner
+ * @category  task
+ * @copyright 2026 E-Learn Design Ltd https://www.e-learndesign.co.uk
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pp_checkout_with_paypal'] = 'Check out with PayPal';
-$string['pp_paypal_api_username'] = 'PayPal API Username';
-$string['pp_paypal_api_password'] = 'PayPal API Password';
-$string['pp_paypal_api_signature'] = 'PayPal API Signature';
-$string['pp_paypal_confirmation'] = 'Your order is now complete. Invoice #{$a->reference}.';
-$string['pp_paypal_name'] = 'PayPal';
-$string['pp_paypal_review_instructions'] = 'You are about to buy the items in your basket. Click the "confirm" button to confirm.';
-$string['pp_paypal_usesandbox'] = 'PayPal Sandbox';
-$string['pp_paypal_usesandbox_help'] = 'If selected, the payment will go through the sandbox for testing, rather than the live environment. No money changes hands.';
+defined('MOODLE_INTERNAL') || die();
+
+$tasks = [
+    [
+        'classname' => 'block_iomad_commerce\task\user_basket_cleanup_task',
+        'blocking' => 0,
+        'minute' => '15',
+        'hour' => '21',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];

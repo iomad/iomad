@@ -48,7 +48,7 @@ $company = new company($companyid);
 $useparentid = false;
 
 // Do we have rights to view this page?
-if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) ||
+if (!iomad::has_capability('block/iomad_company_admin:company_add', $companycontext) &&
     !iomad::has_capability('block/iomad_company_admin:company_add_child', $companycontext)) {
         throw new moodle_exception(get_string('nopermissions'), 'error', new moodle_url($CFG->wwwroot .'/my'));
 }
@@ -73,6 +73,9 @@ $PAGE->set_context($companycontext);
 $PAGE->set_url($linkurl);
 $PAGE->set_title($linktext);
 $PAGE->set_pagelayout('base');
+
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // Array of all valid fields for validation.
 $stdfields = ['name',

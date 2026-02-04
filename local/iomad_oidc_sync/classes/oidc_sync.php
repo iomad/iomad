@@ -62,6 +62,7 @@ class oidc_sync {
                 $clientid = get_config('auth_iomadoidc', 'clientid' . $postfix);
                 $tenantid = $company->tenantnameorguid;
                 $clientsecret = get_config('auth_iomadoidc', 'clientsecret' . $postfix);
+                $graphproperties = get_config('auth_iomadoidc', 'graphproperties' . $postfix);
 
                 // Is it all configured?
                 if (!empty($clientid) && !empty($tenantid) && !empty($clientsecret)) {
@@ -69,25 +70,18 @@ class oidc_sync {
                     // Get the accesstoken.
                     if ($accesstoken = self::get_accesstoken($tenantid, $clientid, $clientsecret)) {
                         // So far so good - get the users.
-                        // Do we have a list of email domains?
-                        if ($companydomains = $DB->get_records('company_domains', ['companyid' => $company->id])) {
-                            $users = [];
-                            foreach ($companydomains as $companydomain) {
-                                // Process these individually.
-                                $companyusers = self::get_users($accesstoken, $companydomain->domain, $company->syncgroupid);
+                        $users = self::get_users($accesstoken, $company->syncgroupid, $graphproperties);
 
-                                // Did we find any?
-                                if (!empty($companyusers)) {
-                                    // Add them to the big list of users to be processed.
-                                    $users = array_merge(array_values($users), array_values($companyusers));
-                                }
-                            }
-                        } else {
-                            $users = self::get_users($accesstoken, "",  $company->syncgroupid);
-                        }
+                        // Do we have a list of email domains?
+                        $companydomains = $DB->get_records_menu('company_domains', ['companyid' => $company->id], '', 'id,domain');
+
                         if (!empty($users)) {
                             // Process them.
-                            self::process_users($company->id, $users, $company->useroption, $company->unsuspendonsync);
+                            self::process_users($company->id,
+                                                $users,
+                                                $company->useroption,
+                                                $company->unsuspendonsync,
+                                                $companydomains);
                         }
                     } else {
                         mtrace("Failed getting the access token for companyID " . $company->id);
@@ -132,7 +126,7 @@ class oidc_sync {
      * and, if not, creates them an assigns them to the company.
      *
      **/
-    private static function process_users($companyid, $users, $useroption, $unsuspendonsync) {
+    private static function process_users($companyid, $users, $useroption, $unsuspendonsync, $companydomains) {
         global $DB, $CFG;
 
         $postfix = "_$companyid";
@@ -140,7 +134,7 @@ class oidc_sync {
         $userfields = $authplugin->userfields;
 
         // Get all of the profile field categories.
-        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'));
+        $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'), 0, $companyid);
         $customfields = [];
         if (!empty($profilecategories)) {
             $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)
@@ -161,7 +155,7 @@ class oidc_sync {
                 continue;
             }
             if (!empty($companyiomadoidcdata->$fieldname)) {
-                $mappedfields[$fieldname] = $companyiomadoidcdata->$fieldname;
+                $mappedfields[$field] = $companyiomadoidcdata->$fieldname;
             }
         }
 
@@ -187,12 +181,35 @@ class oidc_sync {
 
         // Process the users.
         foreach ($users as $aduser) {
+            if ($CFG->debug > DEBUG_NONE) {
+                mtrace("Dealing with passed data " . print_r($aduser, true));
+            }
+
+            // Are we restricting by email domain?
+            if (!empty($companydomains)) {
+                // Default set to fail.
+                $domainok = false;
+
+                // Check if the mail has the domain at the end.
+                foreach ($companydomains as $companydomain) {
+                    if (str_ends_with(strtolower($aduser['mail']), '@' . strtolower($companydomain))) {
+                        // It's a company domain.
+                        $domainok = true;
+                    }
+                }
+
+                // Did it match any of them?
+                if (!$domainok) {
+                    if ($CFG->debug > DEBUG_NONE) {
+                        mtrace("Not a company user - skipping");
+                    }
+                    continue;
+                }
+            }
+
+            // Process the user.
             $userrec = (object) [];
             $userrec->username = strtolower($aduser['userPrincipalName']);
-
-            if ($CFG->debug > DEBUG_NONE) {
-                mtrace("Dealing with username $userrec->username");
-            }
 
             // Only want to add new users.
             if (!$founduser = $DB->get_record('user', (array) $userrec)) {
@@ -231,11 +248,28 @@ class oidc_sync {
 
                 // Save custom profile fields data and fire the creation.
                 foreach ($mappedfields as $profilefield => $mapping) {
-                    if (!empty($adduser[$mapping])) {
-                        $userrec->$profilefield = $adduser[$mapping];
+                    if ($CFG->debug > DEBUG_NONE) {
+                        mtrace("Checking mapping $mapping");
+                    }
+                    // Is this a manager field?
+                    if (str_starts_with($mapping, 'manager')) {
+                        // Need to get the value from the manager sub-array.
+                        [$first, $second] = explode('.', $mapping);
+                        if (!empty($aduser[$first][$second])) {
+                            if ($CFG->debug > DEBUG_NONE) {
+                                mtrace("Setting profile field $profilefield to " . $aduser[$first][$second]);
+                            }
+                            $userrec->$profilefield = $aduser[$first][$second];
+                        }
+                    } else if (!empty($aduser[$mapping])) {
+                            if ($CFG->debug > DEBUG_NONE) {
+                                mtrace("Setting profile field $profilefield to " . $aduser[$mapping]);
+                            }
+                        $userrec->$profilefield = $aduser[$mapping];
                     }
                 }
 
+                user_update_user($userrec, false, false);
                 profile_save_data($userrec);
                 \core\event\user_updated::create_from_userid($userid)->trigger();
 
@@ -249,10 +283,18 @@ class oidc_sync {
 
                 // Sync the profile data.
                 foreach ($mappedfields as $profilefield => $mapping) {
-                    if (!empty($adduser[$mapping])) {
-                        $founduser->$profilefield = $adduser[$mapping];
+                    if (str_starts_with($mapping, 'manager')) {
+                        // Need to get the value from the manager sub-array.
+                        [$first, $second] = explode('.', $mapping);
+                        if (!empty($aduser[$first][$second])) {
+                            $founduser->$profilefield = $aduser[$first][$second];
+                        }
+                    } else if (!empty($aduser[$mapping])) {
+                        $founduser->$profilefield = $aduser[$mapping];
                     }
                 }
+
+                user_update_user($founduser, false, false);
                 profile_save_data($founduser);
 
                 // Store this for later.
@@ -368,20 +410,26 @@ class oidc_sync {
      * the accesstoken previously created.
      *
      **/
-    private static function get_users($accesstoken, $domain = "", $syncgroupid = "") {
+    private static function get_users($accesstoken, $syncgroupid = "", $graphproperties = "") {
 
         $userlist = [];
+        // Are we getting non standard user fields?
+        $select = '';
+        if (!empty($graphproperties)) {
+            $select = '$select=$graphproperties&'
+        }
 
         // Get the correct URL for the Microsoft Graph API call to list users.
         if (empty($syncgroupid)) {
-            $graphurl = 'https://graph.microsoft.com/v1.0/users?$top=500';
+            $graphurl = 'https://graph.microsoft.com/v1.0/users?$expand=manager&' .
+                        $select .
+                        '$top=500';
         } else {
-            $graphurl = 'https://graph.microsoft.com/v1.0/groups/' . $syncgroupid . '/members?$top=500';
-        }
-
-        // Deal with any email domain searches.
-        if (!empty($domain)) {
-            $graphurl .= '&$filter=endswith(mail,\'@' . $domain .'\')&$count=true';
+            $graphurl = 'https://graph.microsoft.com/v1.0/groups/' .
+                        $syncgroupid .
+                        '/members?$expand=manager&' .
+                        $select .
+                        '$top=500';
         }
 
         // Setup the HTTP headers.

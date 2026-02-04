@@ -15,21 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2025 e-Learn Design
  * @author    Robert Tyrone Cullen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Define the namespace
 namespace block_iomad_commerce\event;
 
-// Ensure that this file is only accessed within Moodle
-defined('MOODLE_INTERNAL') || die();
+use core\event\base;
+use moodle_url;
 
-// Define a class the extends \core\event\base
-class tag_name_updated extends \core\event\base {
-    
+/**
+ * Block IOMAD eCommerce tag name updated event
+ *
+ * @package   block_iomad_commerce
+ * @copyright 2025 e-Learn Design
+ * @author    Robert Tyrone Cullen
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class tag_name_updated extends base {
+
     /**
      * Init method
      * @return void
@@ -53,14 +61,17 @@ class tag_name_updated extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id $this->userid updated the shop tag with id $this->objectid";
+        return "The user with id " .
+        $this->userid .
+        " updated the shop tag with id " .
+        $this->objectid;
     }
 
     /**
      * Get the URL related to the action
-     * @return \moodle_url
+     * @return moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/blocks/iomad_commerce/manage_tags.php');
+        return new moodle_url('/blocks/iomad_commerce/manage_tags.php');
     }
 }

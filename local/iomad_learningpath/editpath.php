@@ -48,6 +48,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('managetitle', 'local_iomad_learningpath'));
 $output = $PAGE->get_renderer('local_iomad_learningpath');
 
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
+
 // IOMAD stuff
 $companypaths = new local_iomad_learningpath\companypaths($companyid, $systemcontext);
 $paths = $companypaths->get_paths();
@@ -88,7 +91,7 @@ if ($form->is_cancelled()) {
     }
     // Check if a file has been uploaded
     $fs = get_file_storage();
-    $files = $fs->get_area_files(5, 'user', 'draft', $data->picture, 'itemid', false);
+    $files = $fs->get_area_files(context_user::instance($USER->id)->id, 'user', 'draft', $data->picture, 'itemid', false);
     if (!empty($files)) {
         file_save_draft_area_files($data->picture, $systemcontext->id, 'local_iomad_learningpath', 'picture', $id,
             ['maxfiles' => 1]);

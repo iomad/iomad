@@ -65,6 +65,7 @@ $string['emailrepeatperiod'] = 'Email re-send every**';
 $string['emailrepeatperiod_help'] = 'This is how often an email is re-sent to the user.';
 $string['emailrepeatvalue'] = 'Email re-send amount**';
 $string['emailrepeatvalue_help'] = 'This is the maximum number of times that this email is re-sent.';
+$string['fixduplicatetemplatesadhoc'] = 'Ad-hoc task to remove duplicate company email templates.';
 $string['fortnightly'] = 'Fortnightly';
 $string['from'] = 'From';
 $string['fromother'] = 'Manual From address';

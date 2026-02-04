@@ -35,7 +35,7 @@ $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = \core\context\company::instance($companyid);
 $company = new company($companyid);
 
-iomad::require_capability('local/iomad_learningpath:manage', $companycontext);
+iomad::require_capability('local/iomad_learningpath:assign', $companycontext);
 
 // Parameters
 $id = required_param('id', PARAM_INT);
@@ -48,6 +48,9 @@ $PAGE->set_pagelayout('base');
 $PAGE->set_title(get_string('managetitle', 'local_iomad_learningpath'));
 $PAGE->set_heading(get_string('managestudents', 'local_iomad_learningpath'));
 $output = $PAGE->get_renderer('local_iomad_learningpath');
+
+// Log this page view.
+block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
 // IOMAD stuff
 $companypaths = new local_iomad_learningpath\companypaths($companyid, $systemcontext);

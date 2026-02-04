@@ -34,13 +34,23 @@ class iomad {
      * @param $parms - (array)
      */
     public static function register_site($data) {
-        global $CFG;
+        global $CFG, $DB;
 
         // Add in the missing data.
         $data['siteurl'] = $CFG->wwwroot;
-        $ch = curl_init('https://www.iomad.org/wp-json/contact-form-7/v1/contact-forms/4445/feedback');
+        $data['tenants'] = $DB->count_records('company');
+        $data['siteid'] = get_site_identifier();
+        $url = new moodle_url(
+            'https://www.iomad.org/wp-json/contact-form-7/v1/contact-forms/4445/feedback',
+            [
+                '_wpcf7_unit_tag' => 'wpcf7-f4445-p5646-o1',
+            ]
+            );
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'WordPress/5.6; https://www.iomad.org/');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: multipart/form-data']);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
         $response = curl_exec($ch);
@@ -68,15 +78,18 @@ class iomad {
         }
 
         // Set the companyid to bypass the company select form if possible.
+        $companyid = 0;
         if (!empty($SESSION->currenteditingcompany)) {
             $companyid = $SESSION->currenteditingcompany;
         } else if (self::is_company_user()) {
             $companyid = self::companyid();
-        } else if (self::has_capability('block/iomad_company_admin:edit_departments', $context) && $required) {
-            if (!empty($SESSION->currenteditingcompany)) {
-                return $SESSION->currenteditingcompany;
-            } else {
-                redirect(new moodle_url('/blocks/iomad_company_admin/index.php'), get_string('pleaseselect', 'block_iomad_company_admin'));
+        } else if (!self::has_capability('block/iomad_company_admin:company_view_all', $context) && $required) {
+            if (self::has_capability('block/iomad_company_admin:company_edit', $context)) {
+                if (!empty($SESSION->currenteditingcompany)) {
+                    return $SESSION->currenteditingcompany;
+                } else {
+                    redirect(new moodle_url('/blocks/iomad_company_admin/index.php'), get_string('pleaseselect', 'block_iomad_company_admin'));
+                }
             }
         } else if (!empty($CFG->foundcompanyid)) {
             // If the SESSION variable isn't set up when we initially find the company id
@@ -86,9 +99,8 @@ class iomad {
 
             // Forget this from now on.
             unset ($CFG->foundcompanyid);
-        } else {
-            $companyid = 0;
         }
+
         return $companyid;
     }
 
@@ -381,12 +393,15 @@ class iomad {
      * @param array $categories list of category objects
      * @return array filtered list of categories
      */
-    public static function iomad_filter_profile_categories( $categories, $userid = 0 ) {
+    public static function iomad_filter_profile_categories( $categories, $userid = 0, $companyid = 0 ) {
         global $DB, $USER;
 
         if (empty($userid) || $userid == -1) {
             $user = $USER;
-            $user->company = $DB->get_record('company', ['id' => self::get_my_companyid(context_system::instance(), false)]);
+            if (empty($companyid)) {
+                $companyid = self::get_my_companyid(context_system::instance(), false);
+            }
+            $user->company = $DB->get_record('company', ['id' => $companyid]);
         } else {
             $user = $DB->get_record('user', array('id' => $userid));
             $user->company = company::get_company_byuserid($userid);
@@ -776,13 +791,21 @@ class iomad {
         return true;
     }
 
-    /** IOMAD:
-     * Check if a course is attached to a company AND
-     * the user belongs to a different company.
-     * Otherwise, return true
+    /**
+     * Check if a course exists and is available to the
+     * company the user belongs to..
+     *
+     * @param integer $checkid course id
+     * @param string $name course shortname
+     * @param string $idnumber course idnumber
+     * @param boolean $checkhidden don't strip hidden courses
+     * @return boolean
      */
-    public static function iomad_check_course($courseid) {
-        global $CFG, $DB, $USER;
+    public static function iomad_check_course($checkid = 0,
+                                              $name = '',
+                                              $idnumber = '',
+                                              $checkhidden = false) {
+        global $DB, $USER;
 
         // If we are installing this will be called to build
         // the basic category tree so just say yes.
@@ -790,15 +813,46 @@ class iomad {
             return true;
         }
 
+        // Create the select SQL.
+        $sqlwhere = "1 = 2";
+        $sqlarray = [];
+        if (!empty($checkid)) {
+            $sqlwhere = "id = :courseid";
+            $sqlarray['courseid'] = $checkid;
+        } else if (!empty($name)) {
+            $sqlwhere = $DB->sql_compare_text('shortname') .
+                        " = " .
+                        $DB->sql_compare_text(':shortname');
+            $sqlarray['shortname'] = $name;
+
+        } else if (!empty($idnumber)) {
+            $sqlwhere = $DB->sql_compare_text('idnumber') .
+                        " = " .
+                        $DB->sql_compare_text(':idnumber');
+            $sqlarray['idnumber'] = $idnumber;
+        }
+
+        // Does the course exist?
+        if (!$course = $DB->get_record_select('course', $sqlwhere, $sqlarray)) {
+            return false;
+        }
+
         // Get the user company id.
         $companyid = iomad::get_my_companyid(context_system::instance());
         if ($companyid > 0) {
             $company = new company($companyid);
 
-            $companycourses = $company->get_menu_courses(true, false, false, false, false, true);
-        
-            // Check if the passed courseid is in the list.
-            if (!empty($companycourses[$courseid])) {
+            // Get the list of company courses
+            $companycourses = $company->get_menu_courses(true,
+                                                         false,
+                                                         false,
+                                                         false,
+                                                         false,
+                                                         true,
+                                                         $checkhidden);
+
+            // Check if the found courseid is in the list.
+            if (!empty($companycourses[$course->id])) {
 
                 // Course is visible.
                 return true;

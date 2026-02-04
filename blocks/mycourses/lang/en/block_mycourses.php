@@ -36,6 +36,7 @@ $string['finalscore'] = 'Final score - {$a}%';
 $string['headerconfig'] = 'Configuration for the my courses block';
 $string['headerdesc'] = 'This holds the configuration for the my courses block and controls how it is displayed';
 $string['inprogressheader'] = 'Courses in progress';
+$string['mandatoryonly'] = 'Mandatory courses';
 $string['myarchiveheader'] = 'Archived course list';
 $string['mycoursesheader'] = 'My Course Library';
 $string['mycourses:addinstance'] = 'Add a mycourses block';

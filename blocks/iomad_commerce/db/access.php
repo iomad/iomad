@@ -15,107 +15,111 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block IOMAD eCommerce
+ *
  * @package   block_iomad_commerce
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = array(
+// Ensure that it is loaded in Moodle else die.
+defined('MOODLE_INTERNAL') || die();
 
-    'block/iomad_commerce:addinstance' => array(
+$capabilities = [
 
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK,
-    ),
-
-    'block/iomad_commerce:myaddinstance' => array(
+    'block/iomad_commerce:addinstance' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_BLOCK,
-    ),
+    ],
 
-    'block/iomad_commerce:admin_view' => array(
+    'block/iomad_commerce:myaddinstance' => [
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK,
+    ],
+
+    'block/iomad_commerce:admin_view' => [
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_commerce:add_course' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_commerce:edit_course' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_commerce:hide_course' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
-
-    'block/iomad_commerce:buyitnow' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-            'companymanager' => CAP_ALLOW
-        ),
-    ),
+        ],
+    ],
 
-    'block/iomad_commerce:buyinbulk' => array(
+    'block/iomad_commerce:add_course' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
+        'archetypes' => [
             'clientadministrator' => CAP_ALLOW,
-            'companymanager' => CAP_ALLOW
-        ),
-    ),
+        ],
+    ],
 
-    'block/iomad_commerce:delete_course' => array(
+    'block/iomad_commerce:edit_course' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COMPANY,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_commerce:manage_default' => array(
+    'block/iomad_commerce:hide_course' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_commerce:buyitnow' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_commerce:buyinbulk' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+            'companymanager' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_commerce:delete_course' => [
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COMPANY,
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+
+    'block/iomad_commerce:manage_default' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    ),
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
 
-    'block/iomad_commerce:manage_tags' => array(
+    'block/iomad_commerce:manage_tags' => [
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'clientadministrator' => CAP_ALLOW
-        ),
-    )
-
-);
+        'archetypes' => [
+            'clientadministrator' => CAP_ALLOW,
+        ],
+    ],
+];
