@@ -36,7 +36,6 @@ use local_iomadcustompage\output\page_name_editable;
 use local_iomadcustompage\output\page_title_editable;
 use local_iomadcustompage\permission;
 use local_iomadcustompage\local\helpers\audience as audience_helper;
-use iomad;
 
 /**
  * Plugin inplace editable implementation
