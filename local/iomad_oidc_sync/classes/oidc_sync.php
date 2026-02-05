@@ -414,7 +414,7 @@ class oidc_sync {
         // Are we getting non standard user fields?
         $select = '';
         if (!empty($graphproperties)) {
-            $select = '$select=$graphproperties&'
+            $select = '$select=' . $graphproperties . '&';
         }
 
         // Get the correct URL for the Microsoft Graph API call to list users.
