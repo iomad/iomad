@@ -28,8 +28,6 @@
 use block_iomad_company_admin\forms\company_mfa_form;
 use block_iomad_company_admin\iomad_company_admin;
 use core\output\notification;
-use company;
-use iomad;
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/formslib.php');
@@ -78,6 +76,7 @@ $candopolicies = iomad::has_capability('block/iomad_company_admin:configpolicies
 $candoauthoptions = iomad::has_capability('block/iomad_company_admin:companyauthsettings', $companycontext) ? true : false;
 $candomfa = iomad::has_capability('block/iomad_company_admin:configmfa', $companycontext) ? true : false;
 $candomfa = false;
+$candosmpt = iomad::has_capability('block/iomad_company_admin:company_edit_smtp', $companycontext) ? true : false;
 
 // Check if all of the modules are installed.
 $authmodules = core_plugin_manager::instance()->get_plugins_of_type('auth');
@@ -97,7 +96,6 @@ if (empty($localmodules['iomad_oidc_sync'])) {
 if (empty($toolmodules['iomadpolicy'])) {
     $candopolicies = false;
 }
-$candosmpt = iomad::has_capability('block/iomad_company_admin:company_edit_smtp', $companycontext);
 
 // Are we showing a form?
 $mform = null;
@@ -295,6 +293,17 @@ if ($candosmpt) {
                     'action' => 'companysmtpsettings',
                     'sesskey' => sesskey(),
                 ]
+            ),
+        ]);
+
+    $options .= html_writer::end_tag('li');
+    $options .= html_writer::start_tag('li');
+    $options .= html_writer::tag(
+        'a',
+        get_string('testoutgoingmailconf', 'admin'),
+        [
+            'href' => new moodle_url(
+                '/blocks/iomad_company_admin/testoutgoingmailconf.php'
             ),
         ]);
 
