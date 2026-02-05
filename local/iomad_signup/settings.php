@@ -27,9 +27,6 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig && !empty($USER->id)) {
 
-    // Basic navigation settings.
-    require($CFG->dirroot . '/local/iomad/lib/basicsettings.php');
-
     $settings = new admin_settingpage('local_iomad_signup', get_string('pluginname', 'local_iomad_signup'));
     $ADMIN->add('localplugins', $settings);
 
