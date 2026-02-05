@@ -211,7 +211,7 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
 
             $files = $fs->get_area_files($context->id, 'theme_iomad', 'companylogo', $company->id );
             $count = 0;
-        
+
             foreach ($files as $file) {
                 $filerecord = new stdClass();
                 $filerecord->contextid = $context->id;
@@ -246,7 +246,7 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2023012801, 'block', 'iomad_company_admin');
     }
- 
+
     if ($oldversion < 2024112103) {
 
         $timestamp = time();
@@ -302,6 +302,42 @@ function xmldb_block_iomad_company_admin_upgrade($oldversion) {
 
         // Iomad savepoint reached.
         upgrade_plugin_savepoint(true, 2024112103, 'block', 'iomad_company_admin');
+    }
+
+    if ($oldversion < 2026020400) {
+
+        // Need to move the company config for SMTP settings to standard postfix syntax.
+        // Set the list of SMTP options we support.
+        $smtpoptions = [
+            'smtphosts',
+            'smtpsecure',
+            'smtpauthtype',
+            'smtpoauthservice',
+            'noreplyaddress',
+            'smtpuser',
+            'smtppass',
+        ];
+
+        // Get a list of all of the companies.
+        if ($companies = $DB->get_records('company', [], '', 'id')) {
+            foreach ($companies as $company) {
+                foreach ($smtpoptions as $smtpoption) {
+                    $field = $smtpoption . $company->id;
+                    if (isset($CFG->$field)) {
+                        $realfield = $smtpoption . '_' . $company->id;
+                        set_config($realfield, $CFG->$field);
+                        unset_config($field);
+                    }
+                }
+                $maxbulk = "smtpmaxbulk" . $company->id;
+                if (isset($CFG->$maxbulk)) {
+                    unset_config($maxbulk);
+                }
+            }
+        }
+
+        // Iomad savepoint reached.
+        upgrade_plugin_savepoint(true, 2026020400, 'block', 'iomad_company_admin');
     }
 
     return true;

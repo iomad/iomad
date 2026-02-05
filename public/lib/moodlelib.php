@@ -5473,37 +5473,34 @@ function get_mailer($action='get') {
 
         $counter = 1;
 
-        if ($CFG->smtphosts == 'qmail') {
+        if (iomad::get_config('', 'smtphosts') == 'qmail') {
             // Use Qmail system.
             $mailer->isQmail();
 
-        } else if (empty($CFG->smtphosts)) {
+        } else if (empty(iomad::get_config('', 'smtphosts'))) {
             // Use PHP mail() = sendmail.
             $mailer->isMail();
 
         } else {
             // Use SMTP directly.
             $mailer->isSMTP();
-            if (!empty($CFG->debugsmtp) && (!empty($CFG->debugdeveloper))) {
+            if (!empty(iomad::get_config('', 'debugsmtp')) && (!empty($CFG->debugdeveloper))) {
                 $mailer->SMTPDebug = 3;
             }
             // Specify main and backup servers.
-            $mailer->Host          = $CFG->smtphosts;
+            $mailer->Host          = iomad::get_config('', 'smtphosts');
             // Specify secure connection protocol.
-            $mailer->SMTPSecure    = $CFG->smtpsecure;
+            $mailer->SMTPSecure    = iomad::get_config('', 'smtpsecure');
             // Use previous keepalive.
             $mailer->SMTPKeepAlive = $prevkeepalive;
 
-            if ($CFG->smtpuser) {
+            if (iomad::get_config('', 'smtpuser')) {
                 // Use SMTP authentication.
                 $mailer->SMTPAuth = true;
-                $mailer->Username = $CFG->smtpuser;
-                $mailer->Password = $CFG->smtppass;
+                $mailer->Username = iomad::get_config('', 'smtpuser');
+                $mailer->Password = iomad::get_config('', 'smtppass');
             }
         }
-
-        // IOMAD - get company mailer settings if there are any.
-        company::set_company_mailer($mailer);
 
         return $mailer;
     }
@@ -5716,7 +5713,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     } else {
         // Make sure that we fall back onto some reasonable no-reply address.
         $noreplyaddressdefault = 'noreply@' . get_host_from_url($CFG->wwwroot);
-        $noreplyaddress = empty($CFG->noreplyaddress) ? $noreplyaddressdefault : $CFG->noreplyaddress;
+        $noreplyaddress = empty(iomad::get_config('', 'noreplyaddress')) ? $noreplyaddressdefault : iomad::get_config('', 'noreplyaddress');
     }
 
     if (!validate_email($noreplyaddress)) {
@@ -5971,7 +5968,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     }
 
     // IOMAD
-    $emaildkimselector = $CFG->emaildkimselector;
+    $emaildkimselector = iomad::get_config('', 'emaildkimselector');
     if (!empty($mail->emaildkimselector)) {
         $emaildkimselector = $mail->emaildkimselector;
     }
@@ -5981,7 +5978,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         if (file_exists($pempath)) {
             $mail->DKIM_domain      = $domain;
             $mail->DKIM_private     = $pempath;
-            $mail->DKIM_selector    = $CFG->emaildkimselector;
+            $mail->DKIM_selector    = $emaildkimselector;
             $mail->DKIM_identity    = $mail->From;
         } else {
             debugging("Email DKIM selector chosen due to {$mail->From} but no certificate found at $pempath", DEBUG_DEVELOPER);
