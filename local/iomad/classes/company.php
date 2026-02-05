@@ -4322,39 +4322,37 @@ class company {
 
         // Make the changes.
         foreach ($possiblesettings as $name => $possiblesetting) {
-            $settingfield = $possiblesetting . $companyid;
-            if (!empty($CFG->$settingfield)) {
-                if ($name != 'type' ) {
-                    if ($name == 'Username' && !(empty($possiblesetting) || empty($CFG->smtpuser))) {
-                        $mailer->SMTPAuth = true;
-                    }
-                    $mailer->$name = $CFG->$settingfield;
+            $value = iomad::get_config('', $possiblesetting);
+            if ($name != 'type') {
+                if ($name == 'Username' && !empty($value)) {
+                    $mailer->SMTPAuth = true;
+                }
+                $mailer->$name = $value;
+            } else {
+                if ($possiblesetting == 'qmail') {
+                    // Use Qmail system.
+                    $mailer->isQmail();
+                } else if (empty($value) && empty(iomad::get_config('', 'smpthosts'))) {
+                    // Use PHP mail() = sendmail.
+                    $mailer->isMail();
                 } else {
-                    if ($possiblesetting == 'qmail') {
-                        // Use Qmail system.
-                        $mailer->isQmail();
-
-                    } else if (empty($possiblesetting) && empty($CFG->smpthosts)) {
-                        // Use PHP mail() = sendmail.
-                        $mailer->isMail();
-
-                    } else {
-                        // Use SMTP directly.
-                        $mailer->isSMTP();
-                        if (!empty($CFG->debugsmtp) && (!empty($CFG->debugdeveloper))) {
-                            $mailer->SMTPDebug = 3;
-                        }
-
-                        // Specify mail server.
-                        $mailer->Host = $CFG->$settingfield;
+                    // Use SMTP directly.
+                    $mailer->isSMTP();
+                    if (!empty($CFG->debugsmtp) && (!empty($CFG->debugdeveloper))) {
+                        $mailer->SMTPDebug = 3;
                     }
+
+                    // Specify mail server.
+                    $mailer->Host = $value;
                 }
             }
         }
 
         if (empty($mailer->noreplyaddress)) {
             $noreplyaddressdefault = 'noreply@' . get_host_from_url($CFG->wwwroot);
-            $mailer->noreplyaddress = empty($CFG->noreplyaddress) ? $noreplyaddressdefault : $CFG->noreplyaddress;
+            $mailer->noreplyaddress = empty(iomad::get_config('', 'noreplyaddress')) ?
+                                      $noreplyaddressdefault :
+                                      iomad::get_config('', 'noreplyaddress');
         }
 
         return $mailer;

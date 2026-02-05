@@ -363,7 +363,7 @@ class iomad_company_admin {
                 $formdata->$smtpoption = $CFG->$field;
             }
         }
-        $formdata->action = $action;
+        $formdata->action = 'companysmtpsettings';
 
         // Set up the form.
         $mform = new company_smtp_options_form($PAGE->url);
