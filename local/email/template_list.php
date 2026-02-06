@@ -260,7 +260,8 @@ if ($action == 'delete' && confirm_sesskey()) {
             'templatesetid' => $templatesetid,
             'confirm' => md5($templatesetid),
             'sesskey' => sesskey(),
-            'action' => 'setdefault'.];
+            'action' => 'setdefault',
+        ];
         echo $OUTPUT->confirm(get_string('setdefaulttemplatesetfull',
                                          'local_email',
                                          "'" . $templatesetinfo->templatesetname ."'"),
