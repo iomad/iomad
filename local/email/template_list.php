@@ -196,7 +196,7 @@ if ($ajaxtemplate) {
                     AND tcc.name = :component
                     ORDER BY cl.master";
         $sqlparams = ['id' => $id,
-                      'lang' => $lang
+                      'lang' => $lang,
                       'component' => 'local_email'];
 
         // Set up the headings.
