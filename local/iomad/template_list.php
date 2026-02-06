@@ -408,7 +408,7 @@ if ($manage) {
     }
 
     // Set up the headings -- All this for the checkbox.
-    $enabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabled
+    $enabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabled, cl.master
                                               FROM $fromsql
                                               WHERE $wheresql
                                               ORDER BY cl.master",
@@ -416,14 +416,14 @@ if ($manage) {
                                               $page * $perpage,
                                               $perpage);
 
-    $manenabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabledmanager
+    $manenabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabledmanager, cl.master
                                                  FROM $fromsql
                                                  WHERE $wheresql
                                                  ORDER BY cl.master",
                                                  $sqlparams,
                                                  $page * $perpage,
                                                  $perpage);
-    $supenabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabledsupervisor
+    $supenabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabledsupervisor, cl.master
                                                  FROM $fromsql
                                                  WHERE $wheresql
                                                  ORDER BY cl.master",

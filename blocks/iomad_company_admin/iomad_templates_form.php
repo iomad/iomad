@@ -158,21 +158,14 @@ if (!empty($company)) {
             $select = $DB->sql_like('shortname', ':search', false) . " AND";
             $selectparams = ['search' => '%' . $search . '%'];
         }
-        $sql = "SELECT *
-                FROM {competency_template}
-                WHERE $select
-                id NOT IN (
-                    SELECT templateid
-                    FROM {company_comp_templates})";
+        $templates = $DB->get_records_select('competency_template', $select . " id NOT IN (SELECT templateid FROM {company_comp_templates})", $selectparams);
     } else if ($company == 'all') {
         // Get every template.
         if (!empty($search)) {
             $select = "WHERE " . $DB->sql_like('shortname', ':search', false);
             $selectparams = ['search' => '%' . $search . '%'];
         }
-        $sql = "SELECT *
-                FROM {competency_template}
-                $select";
+        $templates = $DB->get_records_select('competency_template', $select, $selectparams);
     } else {
         // Get the templates belonging to that company only.
         if (!empty($search)) {
@@ -186,8 +179,8 @@ if (!empty($company)) {
                 cct.companyid = :companyid
                 $select";
         $selectparams['companyid'] = $company;
+        $templates = $DB->get_records_sql($sql, $selectparams);
     }
-    $templates = $DB->get_records_sql($sql, $selectparams);
 }
 
 // Display the table.

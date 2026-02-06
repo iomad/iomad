@@ -106,7 +106,7 @@ class oidc_sync {
 
         // Set up the SQL.
         $selectsql = "c.*, lios.useroption, lios.tenantnameorguid, lios.syncgroupid, lios.unsuspendonsync";
-        $fromsql = "{company} c JOIN {config_plugins} cp JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid)";
+        $fromsql = "{company} c JOIN {local_iomad_oidc_sync} lios ON (c.id = lios.companyid), {config_plugins} cp";
         $wheresql = "lios.approved = 1
                      AND lios.enabled = 1
                      AND cp.plugin = 'auth_iomadoidc'
@@ -135,9 +135,11 @@ class oidc_sync {
         $profilecategories = iomad::iomad_filter_profile_categories($DB->get_records('user_info_category'), 0, $companyid);
         $customfields = [];
         if (!empty($profilecategories)) {
-            $customfields = $DB->get_records_sql_menu("SELECT id,concat('profile_field_',shortname)
-                                                  FROM {user_info_field}
-                                                  WHERE categoryid IN (" . implode(',', array_keys($profilecategories)) . ")");
+            $customfields = $DB->get_records_select_menu("user_info_field",
+	                                          "categoryid IN (" . implode(',', array_keys($profilecategories)) . ")",
+						  null,
+						  '',
+                                                  "id, concat('profile_field_',shortname)");
             $customfields = array_values($customfields);
         }
         if (!empty($customfields)) {

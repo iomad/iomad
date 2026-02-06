@@ -306,7 +306,10 @@ if (!empty($usedfields)) {
         } else {
             $fieldsql = "value = :fieldsearchvalue AND fieldid = :fieldid";
         }
-        $foundfields[] = $DB->get_records_sql("SELECT instanceid FROM {customfield_data} WHERE $fieldsql", ['fieldsearchvalue' => $fieldsearchvalue, 'fieldid' => $fieldid]);
+        $foundfields[] = $DB->get_records_select("customfield_data",
+                                               $fieldsql,
+                                               ['fieldsearchvalue' => $fieldsearchvalue, 'fieldid' => $fieldid],
+                                               '', "instanceid");
     }
 
     // Sort the keys to be unique.
