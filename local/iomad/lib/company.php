@@ -25,6 +25,39 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use block_iomad_company_admin\event\{
+    company_created,
+    company_deleted,
+    company_license_created,
+    company_license_deleted,
+    company_license_updated,
+    company_suspended,
+    company_terminated,
+    company_unsuspended,
+    company_updated,
+    company_user_assigned,
+    company_user_unassigned,
+    user_course_expired,
+    user_license_assigned,
+    user_license_unassigned,
+    user_license_used,
+};
+use core\event\{
+    competency_framework_created,
+    competency_framework_deleted,
+    competency_template_created,
+    competency_template_deleted,
+    course_completed,
+    user_created,
+    user_updated,
+    user_suspended,
+    user_unsuspended,
+    user_enrolment_created,
+    user_deleted,
+};
+use core\output\notification;
+use local_iomadcustompage\event\iomadcustompage_deleted;
+
 require_once(dirname(__FILE__) . '/iomad.php');
 require_once(dirname(__FILE__) . '/user.php');
 
@@ -55,7 +88,7 @@ class company {
      *
      * @param int $companyid
      */
-    public function __construct($companyid) {
+    public function __construct(int $companyid) {
         global $DB, $SESSION;
 
         $this->id = $companyid;
@@ -64,7 +97,7 @@ class company {
             unset($SESSION->company);
             unset($this->id);
             unset($this->context);
-            return;
+            return null;
         }
         $this->context = \core\context\company::instance($companyid);
     }
@@ -79,15 +112,15 @@ class company {
             if (isset($this->companyrecord->$fields)) {
                 return $this->companyrecord->$fields;
             } else {
-                throw new \Exception("Field not found in company record - " . $fields);
+                throw new Exception("Field not found in company record - " . $fields);
             }
         } else {
-            $result = new \stdClass;
+            $result = (object) [];
             foreach ($fields as $field) {
                 if (property_exists($this->companyrecord, $field)) {
                     $result->$field = $this->companyrecord->$field;
                 } else {
-                    throw new \Exception("Field not found in company record - " . $field);
+                    throw new Exception("Field not found in company record - " . $field);
                 }
             }
             return $result;
@@ -100,10 +133,10 @@ class company {
      * Paramters -
      *             $userid = int;
      *
-     * Returns class object.
+     * Returns class object or false
      *
      **/
-    public static function by_userid($userid, $login = false) {
+    public static function by_userid(int $userid, bool $login = false) {
         global $DB, $SESSION;
 
         if (!$login && !empty($SESSION->currenteditingcompany)) {
@@ -128,7 +161,7 @@ class company {
      * Returns text;
      *
      **/
-    public function get_name() {
+    public function get_name(): string {
         return $this->companyrecord->name;
     }
 
@@ -138,7 +171,7 @@ class company {
      * Returns text;
      *
      **/
-    public function get_payment_account() {
+    public function get_payment_account(): int {
         global $CFG;
 
         if (!empty($this->companyrecord->paymentaccount)) {
@@ -153,7 +186,7 @@ class company {
      *
      * Returns PARAM_URL.
      */
-    public function get_dashboard_url() {
+    public function get_dashboard_url(): moodle_url {
         global $CFG, $DB;
         if ($url = $DB->get_record('company_pages', ['companyid' => $this->id, 'type' => 'dashboard'])) {
             return new moodle_url($CFG->wwwroot . "/local/iomadcustompage/view.php", ['id' => $url->pageid, 'useasmy' => true]);
@@ -166,7 +199,7 @@ class company {
      * Returns [];
      *
      **/
-    public function get_managertypes($full = false) {
+    public function get_managertypes(bool $full = false): array {
         global $CFG;
 
         $returnarray = ['0' => get_string('user', 'block_iomad_company_admin')];
@@ -197,7 +230,7 @@ class company {
      * @return string;
      *
      **/
-    public function get_shortname() {
+    public function get_shortname(): string {
         return $this->companyrecord->shortname;
     }
 
@@ -207,7 +240,7 @@ class company {
      * @return string
      *
      **/
-    public function get_theme() {
+    public function get_theme(): string {
         return $this->companyrecord->theme;
     }
 
@@ -217,7 +250,7 @@ class company {
      * @return mixed
      *
      **/
-    public function get_parentid() {
+    public function get_parentid(): int {
         if (!empty($this->companyrecord->parentid)) {
             return $this->companyrecord->parentid;
         } else {
@@ -231,7 +264,7 @@ class company {
      * @return URL
      *
      **/
-    public function get_wwwroot() {
+    public function get_wwwroot(): string {
         global $CFG;
 
         // Do we have a hostname for this company?
@@ -257,7 +290,7 @@ class company {
      * @return URL
      *
      **/
-    public static function get_relativeurl($url) {
+    public static function get_relativeurl(string $url): string {
         $u = parse_url($url);
         if (empty($u["path"])) {
              $u["path"] = "";
@@ -272,7 +305,7 @@ class company {
      * @return int
      *
      **/
-    public function get_topcompanyid() {
+    public function get_topcompanyid(): int {
 
         // Set the return id to by myself initially.
         $returnid = $this->id;
@@ -291,10 +324,10 @@ class company {
     /**
      * Gets the file path for the company logo for the current instance
      *
-     * @return string
+     * @return moodle_url or false
      *
      */
-    public static function get_logo_url($companyid, $maxwidth = null, $maxheight = 200) {
+    public static function get_logo_url(int $companyid, $maxwidth = null, $maxheight = 200) {
 
         // Get the company logo config settings.
         $logo = get_config('core_admin', 'logo'.$companyid);
@@ -337,7 +370,7 @@ class company {
      * @return array
      *
      */
-    public static function get_companies_rs($page=0, $perpage=0) {
+    public static function get_companies_rs(int $page=0, int $perpage=0) {
         global $DB;
 
         return $DB->get_recordset('company', null, 'name', '*', $page, $perpage);
@@ -349,11 +382,11 @@ class company {
      * @return array
      *
      */
-    public static function get_companies_select($showsuspended=false,
-                                                $useprepend = true,
-                                                $showchildren = true,
-                                                $sort = 'name',
-                                                $search = '') {
+    public static function get_companies_select(bool $showsuspended=false,
+                                                bool $useprepend = true,
+                                                bool $showchildren = true,
+                                                string $sort = 'name',
+                                                string $search = ''): array {
         global $CFG, $DB, $USER;
 
         // Is this an admin, or a normal user?
@@ -453,10 +486,10 @@ class company {
      * @param string $prepend
      * @return array
      */
-    private static function get_formatted_child_companies_select($companyid,
-                                                                 $useprepend = true,
-                                                                 &$companyarray = [],
-                                                                 $prepend = "") {
+    private static function get_formatted_child_companies_select(int $companyid,
+                                                                 bool $useprepend = true,
+                                                                 array &$companyarray = [],
+                                                                 string $prepend = ""): array {
         global $DB;
 
         if ($children = $DB->get_records('company', ['parentid' => $companyid ], 'name', 'id,name,parentid')) {
@@ -479,12 +512,10 @@ class company {
      * @return array
      *
      */
-    public function get_child_companies() {
+    public function get_child_companies(): array {
         global $DB;
 
-        $childcompanies = $DB->get_records('company', ['parentid' => $this->id], 'name');
-
-        return $childcompanies;
+        return $DB->get_records('company', ['parentid' => $this->id], 'name');
     }
 
     /**
@@ -493,7 +524,7 @@ class company {
      * Returns array;
      *
      **/
-    public function get_child_companies_recursive() {
+    public function get_child_companies_recursive(): array {
         global $DB;
 
         $returnarray = [];
@@ -513,7 +544,7 @@ class company {
      * Returns array;
      *
      **/
-    public function get_parent_companies_recursive() {
+    public function get_parent_companies_recursive(): array {
         global $DB;
 
         $returnarray = [];
@@ -536,7 +567,7 @@ class company {
      * Returns array;
      *
      **/
-    public function get_child_companies_select() {
+    public function get_child_companies_select(): array {
         global $DB, $USER;
 
         $companyselect = [];
@@ -562,7 +593,7 @@ class company {
      * Returns text;
      *
      **/
-    public static function get_companyname_byid($companyid) {
+    public static function get_companyname_byid(int $companyid): string {
         global $DB;
         $company = $DB->get_record('company', ['id' => $companyid]);
         return $company->name;
@@ -577,14 +608,18 @@ class company {
      * Returns stdclass();
      *
      **/
-    public static function get_company_byuserid($userid) {
+    public static function get_company_byuserid(int $userid): object {
         global $DB;
-        $companies = (array) $DB->get_records_sql("SELECT c.* FROM {company_users} cu
-                                                   INNER JOIN {company} c ON cu.companyid = c.id
-                                                   WHERE cu.userid = :userid
-                                                   ORDER BY cu.id",
-                                                   ['userid' => $userid], 0, 1);
-        return array_shift($companies);
+        if ($companies = (array) $DB->get_records_sql(
+            "SELECT c.* FROM {company_users} cu
+             INNER JOIN {company} c ON cu.companyid = c.id
+             WHERE cu.userid = :userid
+             ORDER BY cu.id",
+            ['userid' => $userid], 0, 1)) {
+            return array_shift($companies);
+        } else {
+            return (object) [];
+        }
     }
 
     /**
@@ -596,13 +631,15 @@ class company {
      * Returns stdclass() or false;
      *
      **/
-    public static function get_category($companyid) {
+    public static function get_category(int $companyid) {
         global $DB;
-        if ($category = $DB->get_record_sql("SELECT uic.id, uic.name FROM
-                                             {user_info_category} uic, {company} c
-                                             WHERE c.id = ".$companyid."
-                                             AND ".$DB->sql_compare_text('c.shortname'). "=".
-                                             "'".$DB->sql_compare_text('uic.name')."'")) {
+        if ($category = $DB->get_record_sql(
+            "SELECT uic.id, uic.name FROM
+             {user_info_category} uic, {company} c
+             WHERE c.id = :companyid
+             AND " . $DB->sql_compare_text('c.shortname') .
+            " = ". $DB->sql_compare_text('uic.name'),
+            ['companyid' => $companyid])) {
             return $category;
         } else {
             return false;
@@ -613,7 +650,7 @@ class company {
      * Get company role templates
      *
      **/
-    public static function get_role_templates($companyid = 0) {
+    public static function get_role_templates(int $companyid = 0): array {
         global $DB;
 
         if (empty($companyid)) {
@@ -625,12 +662,14 @@ class company {
         if (iomad::has_capability('block/iomad_company_admin:company_add', $companycontext)) {
             $templates = $DB->get_records_menu('company_role_templates', [], 'name', 'id,name');
         } else {
-            $templates = $DB->get_records_sql_menu("SELECT crt.id,crt.name FROM {company_role_templates} crt
-                                                    JOIN {company_role_templates_ass} crta
-                                                    ON (crt.id = crta.templateid)
-                                                    WHERE crta.companyid = :companyid
-                                                    ORDEr BY crt.name",
-                                                    ['companyid' => $companyid]);
+            $templates = $DB->get_records_sql_menu(
+                "SELECT crt.id, crt.name
+                 FROM {company_role_templates} crt
+                 JOIN {company_role_templates_ass} crta
+                 ON (crt.id = crta.templateid)
+                 WHERE crta.companyid = :companyid
+                 ORDER BY crt.name",
+                ['companyid' => $companyid]);
         }
         $templates = ['i' => get_string('inherit', 'block_iomad_company_admin')] + $templates;
 
@@ -644,7 +683,7 @@ class company {
      * Apply company role templates
      *
      **/
-    public function apply_role_templates($templateid = 0) {
+    public function apply_role_templates(int $templateid = 0) {
         global $DB;
 
         if (!empty($templateid)) {
@@ -675,7 +714,7 @@ class company {
      * Assign company role templates
      *
      **/
-    public function assign_role_templates($templates = [], $clear = false) {
+    public function assign_role_templates(array $templates = [], bool $clear = false) {
         global $DB;
 
         // Deal with any children.
@@ -698,7 +737,7 @@ class company {
      * Get company email templates
      *
      **/
-    public static function get_email_templates($companyid = 0) {
+    public static function get_email_templates(int $companyid = 0): array {
         global $DB;
 
         $templates = $DB->get_records_menu('email_templateset', [], 'templatesetname', 'id,templatesetname');
@@ -713,7 +752,7 @@ class company {
      * Apply company email templates
      *
      **/
-    public function apply_email_templates($templatesetid = 0) {
+    public function apply_email_templates(int $templatesetid = 0): bool {
         global $DB;
 
         if (!empty($templatesetid)) {
@@ -760,7 +799,7 @@ class company {
      *              $own = boolean;
      *
      **/
-    public function add_course($course, $departmentid=0, $own=false, $licensed=false) {
+    public function add_course(object $course, int $departmentid=0, bool $own=false, bool $licensed=false): bool {
         global $DB, $CFG;
 
         $coursecontext = context_course::instance($course->id);
@@ -774,17 +813,17 @@ class company {
             $companydepartment = $companydepartmentnode->id;
         }
         if (!$DB->record_exists('company_course', ['companyid' => $this->id,
-                                                       'courseid' => $course->id])) {
+                                                   'courseid' => $course->id])) {
             $DB->insert_record('company_course', ['companyid' => $this->id,
-                                                      'courseid' => $course->id,
-                                                      'departmentid' => $companydepartment]);
+                                                  'courseid' => $course->id,
+                                                  'departmentid' => $companydepartment]);
         }
 
         // Set up defaults for course management.
         if (!$DB->get_record('iomad_courses', ['courseid' => $course->id])) {
             $DB->insert_record('iomad_courses', ['courseid' => $course->id,
-                                                         'licensed' => $licensed,
-                                                         'shared' => 0]);
+                                                 'licensed' => $licensed,
+                                                 'shared' => 0]);
         }
         // Set up manager roles.
         if (!$licensed) {
@@ -792,25 +831,33 @@ class company {
             $companycourseeditorrole = $DB->get_record('role', ['shortname' => 'companycourseeditor']);
             if ($CFG->iomad_autoenrol_managers) {
                 // Enrol the managers as teacher types.
-                if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
-                                                             WHERE companyid = :companyid
-                                                             AND managertype != 0", ['companyid' => $this->id])) {
+                if ($companymanagers = $DB->get_records_select(
+                    'company_users',
+                    "companyid = :companyid
+                     AND managertype != 0",
+                    ['companyid' => $this->id])) {
                     foreach ($companymanagers as $companymanager) {
                         if ($user = $DB->get_record('user', ['id' => $companymanager->userid,
-                                                                  'deleted' => 0]) ) {
+                                                             'deleted' => 0]) ) {
                             if ($DB->record_exists('course', ['id' => $course->id])) {
                                 if (!$own) {
                                     // Not created by a company manager.
-                                    company_user::enrol($user, [$course->id], $this->id,
+                                    company_user::enrol($user,
+                                                        [$course->id],
+                                                        $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
                                     if ($companymanager->managertype == 2) {
                                         // Assign the department manager course access role.
-                                        company_user::enrol($user, [$course->id], $this->id,
+                                        company_user::enrol($user,
+                                                            [$course->id],
+                                                            $this->id,
                                                             $companycoursenoneditorrole->id);
                                     } else {
                                         // Assign the company manager course access role.
-                                        company_user::enrol($user, [$course->id], $this->id,
+                                        company_user::enrol($user,
+                                                            [$course->id],
+                                                            $this->id,
                                                             $companycourseeditorrole->id);
 
                                         // Check if this is a newly delegated course?
@@ -819,7 +866,9 @@ class company {
                                             $companycoursenoneditorrole->id,
                                             $coursecontext->id
                                             )) {
-                                            role_unassign($companycoursenoneditorrole->id, $user->id, $coursecontext->id);
+                                            role_unassign($companycoursenoneditorrole->id,
+                                                          $user->id,
+                                                          $coursecontext->id);
                                         }
                                     }
                                 }
@@ -829,25 +878,35 @@ class company {
                 }
             } else {
                 // Enrol the educators as teacher types.
-                if ($educators = $DB->get_records_sql("SELECT * FROM {company_users}
-                                                             WHERE companyid = :companyid
-                                                             AND educator != 0", ['companyid' => $this->id])) {
+                if ($educators = $DB->get_records_select(
+                    'company_users',
+                    "companyid = :companyid
+                     AND educator != 0",
+                    ['companyid' => $this->id])) {
                     foreach ($educators as $educator) {
                         if ($user = $DB->get_record('user', ['id' => $educator->userid,
-                                                                  'deleted' => 0]) ) {
+                                                             'deleted' => 0]) ) {
                             if ($DB->record_exists('course', ['id' => $course->id])) {
                                 if ($DB->record_exists('iomad_courses', ['courseid' => $course->id, 'shared' => 1])) {
                                     // Not created by a company manager.
-                                    company_user::enrol($user, [$course->id], $this->id,
+                                    company_user::enrol($user,
+                                                        [$course->id],
+                                                        $this->id,
                                                         $companycoursenoneditorrole->id);
                                 } else {
                                     // Assign the company manager course access role.
-                                    company_user::enrol($user, [$course->id], $this->id,
+                                    company_user::enrol($user,
+                                                        [$course->id],
+                                                        $this->id,
                                                         $companycourseeditorrole->id);
 
                                     // Check if this is a newly delegated course?
-                                    if (user_has_role_assignment($user->id, $companycoursenoneditorrole->id, $coursecontext->id)) {
-                                        role_unassign($companycoursenoneditorrole->id, $user->id, $coursecontext->id);
+                                    if (user_has_role_assignment($user->id,
+                                                                 $companycoursenoneditorrole->id,
+                                                                 $coursecontext->id)) {
+                                        role_unassign($companycoursenoneditorrole->id,
+                                                      $user->id,
+                                                      $coursecontext->id);
                                     }
                                 }
                             }
@@ -859,9 +918,9 @@ class company {
         if ($own && $departmentid == 0) {
             // Add it to the list of company created courses.
             if (!$DB->record_exists('company_created_courses', ['companyid' => $this->id,
-                                                                     'courseid' => $course->id])) {
+                                                                'courseid' => $course->id])) {
                 $DB->insert_record('company_created_courses', ['companyid' => $this->id,
-                                                                    'courseid' => $course->id]);
+                                                               'courseid' => $course->id]);
             }
         }
 
@@ -876,7 +935,7 @@ class company {
      *              $courseid = int;
      *
      **/
-    public function remove_control_of_course($courseid) {
+    public function remove_control_of_course(int $courseid): bool {
         global $DB, $CFG;
 
         $coursecontext = context_course::instance($courseid);
@@ -887,15 +946,19 @@ class company {
 
         if ($CFG->iomad_autoenrol_managers) {
             // Enrol the managers as teacher types.
-            if ($companymanagers = $DB->get_records_sql("SELECT * FROM {company_users}
-                                                         WHERE companyid = :companyid
-                                                         AND managertype != 0", ['companyid' => $this->id])) {
+            if ($companymanagers = $DB->get_records_select(
+                'company_users',
+                "companyid = :companyid
+                 AND managertype != 0",
+                ['companyid' => $this->id])) {
                 foreach ($companymanagers as $companymanager) {
                     if ($user = $DB->get_record('user', ['id' => $companymanager->userid,
-                                                              'deleted' => 0]) ) {
+                                                         'deleted' => 0]) ) {
                         if ($DB->record_exists('course', ['id' => $courseid])) {
                             // Not created by a company manager.
-                            company_user::enrol($user, [$courseid], $this->id,
+                            company_user::enrol($user,
+                                                [$courseid],
+                                                $this->id,
                                                 $companycoursenoneditorrole->id);
 
                             // Clean up old roles.
@@ -908,14 +971,18 @@ class company {
             }
         } else {
             // Enrol the educators as teacher types.
-            if ($educators = $DB->get_records_sql("SELECT * FROM {company_users}
-                                                         WHERE companyid = :companyid
-                                                         AND educator != 0", ['companyid' => $this->id])) {
+            if ($educators = $DB->get_records_select(
+                'company_users',
+                "companyid = :companyid
+                 AND educator != 0",
+                ['companyid' => $this->id])) {
                 foreach ($educators as $educator) {
                     if ($user = $DB->get_record('user', ['id' => $educator->userid,
-                                                              'deleted' => 0]) ) {
+                                                         'deleted' => 0]) ) {
                         if ($DB->record_exists('course', ['id' => $courseid])) {
-                            company_user::enrol($user, [$courseid], $this->id,
+                            company_user::enrol($user,
+                                                [$courseid],
+                                                $this->id,
                                                 $companycoursenoneditorrole->id);
 
                             // Clean up old roles.
@@ -945,7 +1012,7 @@ class company {
      *              $departmentid = int;
      *
      **/
-    public static function remove_course($course, $companyid, $departmentid=0) {
+    public static function remove_course(object $course, int $companyid, int $departmentid=0): bool {
         global $DB, $PAGE;
 
         $errors = false;
@@ -954,7 +1021,7 @@ class company {
         if (!$course = $DB->get_record('course', ['id' => $course->id])) {
             try {
                 throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $transaction->rollback($e);
             }
             return false;
@@ -963,7 +1030,7 @@ class company {
         if (!$iomadcourse = $DB->get_record('iomad_courses', ['courseid' => $course->id])) {
             try {
                 throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $transaction->rollback($e);
             }
             return false;
@@ -975,7 +1042,7 @@ class company {
             // Check if it was a company created course and remove if it was.
             if ($companycourse = $DB->get_record('company_created_courses',
                                                  ['companyid' => $companyid,
-                                                       'courseid' => $course->id])) {
+                                                  'courseid' => $course->id])) {
                 if (!$DB->delete_records('company_created_courses', ['id' => $companycourse->id])) {
                     $errors = true;
                 }
@@ -987,12 +1054,12 @@ class company {
                 }
             }
             if (!$DB->delete_records('company_course', ['companyid' => $companyid,
-                                                       'courseid' => $course->id])) {
+                                                        'courseid' => $course->id])) {
                 $errors = true;
             }
 
             if (!$DB->delete_records('company_shared_courses', ['companyid' => $companyid,
-                                                                     'courseid' => $course->id])) {
+                                                                'courseid' => $course->id])) {
                 $errors = true;
             }
 
@@ -1005,28 +1072,31 @@ class company {
         }
 
         // Remove the course from any licenses.
-        if ($licenses = $DB->get_records_sql("SELECT cl.* FROM {companylicense} cl
-                                              JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
-                                              WHERE clc.courseid = :courseid
-                                              AND cl.companyid = :companyid",
-                                              ['courseid' => $course->id,
-                                                    'companyid' => $companyid])) {
+        if ($licenses = $DB->get_records_sql(
+            "SELECT cl.* FROM {companylicense} cl
+             JOIN {companylicense_courses} clc ON (cl.id = clc.licenseid)
+             WHERE clc.courseid = :courseid
+             AND cl.companyid = :companyid",
+            ['courseid' => $course->id,
+             'companyid' => $companyid])) {
 
             foreach ($licenses as $license) {
                 // Delete anyone using the license for that course.
-                if (!$DB->delete_records('companylicense_users', ['licenseid' => $license->id, 'licensecourseid' => $course->id])) {
+                if (!$DB->delete_records('companylicense_users', ['licenseid' => $license->id,
+                                                                  'licensecourseid' => $course->id])) {
                     $errors = true;
                 }
                 // Delete the course from the license.
-                if (!$DB->delete_records('companylicense_courses', ['licenseid' => $license->id, 'courseid' => $course->id])) {
+                if (!$DB->delete_records('companylicense_courses', ['licenseid' => $license->id,
+                                                                    'courseid' => $course->id])) {
                     $errors = true;
                 }
 
                 // Fire an event for this.
                 $eventother = ['licenseid' => $license->id,
-                                    'parentid' => $license->parentid];
+                               'parentid' => $license->parentid];
 
-                $event = \block_iomad_company_admin\event\company_license_updated::create(
+                $event = company_license_updated::create(
                     [
                         'context' => \core\context\company::instance($companyid),
                         'userid' => $USER->id,
@@ -1044,20 +1114,22 @@ class company {
 
         // We only want _our_ company users if it's shared.
         if ($iomadcourse->shared != 0) {
-            $allcompanyusers = $DB->get_records_sql("SELECT DISTINCT lit.userid
-                                                     FROM {local_iomad_track} lit
-                                                     WHERE lit.coursecleared = 0
-                                                     AND lit.courseid = :courseid
-                                                     AND lit.companyid = :companyid
-                                                     AND lit.userid NOT IN (
-                                                         SELECT lit2.userid FROM {local_iomad_track} lit2
-                                                         WHERE lit.userid = lit2.userid
-                                                         AND lit.courseid = lit2.courseid
-                                                         AND lit.coursecleared = lit2.coursecleared
-                                                         AND lit.companyid != lit2.companyid
-                                                     )",
-                                                     ['courseid' => $course->id,
-                                                      'companyid' => $companyid]);
+            $allcompanyusers = $DB->get_records_sql(
+                "SELECT DISTINCT lit.userid
+                 FROM {local_iomad_track} lit
+                 WHERE lit.coursecleared = 0
+                 AND lit.courseid = :courseid
+                 AND lit.companyid = :companyid
+                 AND lit.userid NOT IN (
+                     SELECT lit2.userid
+                     FROM {local_iomad_track} lit2
+                     WHERE lit.userid = lit2.userid
+                     AND lit.courseid = lit2.courseid
+                     AND lit.coursecleared = lit2.coursecleared
+                     AND lit.companyid != lit2.companyid
+                 )",
+                ['courseid' => $course->id,
+                 'companyid' => $companyid]);
 
             $userlist = array_intersect_key($userlist, $allcompanyusers);
 
@@ -1079,7 +1151,7 @@ class company {
         if ($errors) {
             try {
                 throw new Exception('Could not delete course');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $transaction->rollback(get_string('couldnotremovecoursefromcompany', 'block_iomad_company_admin'));
             }
             return false;
@@ -1099,7 +1171,7 @@ class company {
      *              $destroy = boolean; True removes all entries from the {local_iomad_track} table
      *
      **/
-    public static function delete_course($companyid, $courseid, $destroy = false) {
+    public static function delete_course(int $companyid, int $courseid, bool $destroy = false): bool {
         global $DB, $USER, $CFG;
 
         $errors = false;
@@ -1111,7 +1183,7 @@ class company {
         if (!$course = $DB->get_record('course', ['id' => $courseid])) {
             try {
                 throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $transaction->rollback($e);
             }
             return false;
@@ -1120,7 +1192,7 @@ class company {
         if (!$iomadcourse = $DB->get_record('iomad_courses', ['courseid' => $courseid])) {
             try {
                 throw new Exception(get_string('couldnotdeletecourse', 'block_iomad_Company_admin'));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $transaction->rollback($e);
             }
             return false;
@@ -1143,11 +1215,12 @@ class company {
             $gone = true;
         } else {
             // Check if it belongs to a company now?
-            if (!$DB->get_records_sql("SELECT id FROM {company_course}
-                                       WHERE courseid = :courseid
-                                       AND companyid != :companyid",
-                                       ['courseid' => $courseid,
-                                             'companyid' => $companyid])) {
+            if (!$DB->get_records_select(
+                'company_course',
+                "courseid = :courseid
+                 AND companyid != :companyid",
+                ['courseid' => $courseid,
+                 'companyid' => $companyid])) {
                 // Call the moodle course delete function.
                 if (!delete_course($courseid)) {
                     $errors = true;
@@ -1162,7 +1235,8 @@ class company {
         // Remove all entries from the {local_iomad_track_table} if destroy is true.
         if ($destroy) {
             if (!$gone) {
-                if (!$DB->delete_records('local_iomad_track', ['companyid' => $companyid, 'courseid' => $courseid])) {
+                if (!$DB->delete_records('local_iomad_track', ['companyid' => $companyid,
+                                                               'courseid' => $courseid])) {
                     $errors = true;
                 }
             } else {
@@ -1175,7 +1249,7 @@ class company {
         if ($errors) {
             try {
                 throw new Exception('Could not delete course');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $transaction->rollback($e);
             }
             return false;
@@ -1192,15 +1266,21 @@ class company {
      * Returns stdclass();
      *
      **/
-    public function get_user_defaults() {
+    public function get_user_defaults(): object {
         global $DB;
 
-        $companyrecord = $DB->get_record('company', ['id' => $this->id],
-                       'city, country, maildisplay, mailformat, maildigest, autosubscribe,
-                        trackforums, htmleditor, screenreader, timezone, lang',
-                        MUST_EXIST);
-
-        return $companyrecord;
+        $defaultfields = 'city,
+                          country,
+                          maildisplay,
+                          mailformat,
+                          maildigest,
+                          autosubscribe,
+                          trackforums,
+                          htmleditor,
+                          screenreader,
+                          timezone,
+                          lang';
+        return $DB->get_record('company', ['id' => $this->id], $defaultfields, MUST_EXIST);
     }
 
     /**
@@ -1210,24 +1290,25 @@ class company {
      * returns stdclass();
      *
      **/
-    public function get_user_ids() {
+    public function get_user_ids(): array {
         global $DB;
 
         // By default wherecondition retrieves all users except the
         // deleted, not confirmed and guest.
-        $params['companyid'] = $this->id;
-        $params['companyidforjoin'] = $this->id;
+        $params = [
+            'companyid' => $this->id,
+            'companyidforjoin' => $this->id,
+        ];
 
-        $sql = " SELECT u.id, u.id AS mid, u.lastname, u.firstname
-                FROM
-                    {company_users} cu
-                    INNER JOIN {user} u ON (cu.userid = u.id)
+        $sql = "SELECT u.id, u.id AS mid, u.lastname, u.firstname
+                FROM {company_users} cu
+                INNER JOIN {user} u ON (cu.userid = u.id)
                 WHERE u.deleted = 0
-                      AND cu.managertype = 0";
+                AND cu.managertype = 0";
 
         $order = ' ORDER BY u.lastname ASC, u.firstname ASC';
 
-        return $DB->get_records_sql_menu($sql . $order, $params);
+        return $DB->get_records_sql($sql . $order, $params);
     }
 
     /**
@@ -1236,18 +1317,19 @@ class company {
      * returns stdclass();
      *
      **/
-    public function get_all_user_ids() {
+    public function get_all_user_ids(): array {
         global $DB;
 
         // By default wherecondition retrieves all users except the
         // deleted, not confirmed and guest.
-        $params['companyid'] = $this->id;
-        $params['companyidforjoin'] = $this->id;
+        $params = [
+            'companyid' => $this->id,
+            'companyidforjoin' => $this->id,
+        ];
 
-        $sql = " SELECT DISTINCT u.id, u.id AS mid, u.lastname, u.firstname
-                FROM
-                    {company_users} cu
-                    INNER JOIN {user} u ON (cu.userid = u.id)
+        $sql = "SELECT DISTINCT u.id, u.id AS mid
+                FROM {company_users} cu
+                INNER JOIN {user} u ON (cu.userid = u.id)
                 WHERE u.deleted = 0
                 AND cu.companyid = :companyid";
 
@@ -1265,7 +1347,11 @@ class company {
      *              $managertype = int;
      *
      **/
-    public function assign_user_to_company($userid, $departmentid = 0, $managertype = 0, $ws = false, $import = false) {
+    public function assign_user_to_company(int $userid,
+                                           int $departmentid = 0,
+                                           int $managertype = 0,
+                                           bool $ws = false,
+                                           bool $import = false): bool {
         global $CFG, $DB;
 
         // Is the user valid?
@@ -1312,7 +1398,9 @@ class company {
         $userrecord['managertype'] = $managertype;
         $userrecord['companyid'] = $this->id;
 
-        if ($DB->get_record('company_users', ['companyid' => $this->id, 'userid' => $userid, 'departmentid' => $departmentid])) {
+        if ($DB->get_record('company_users', ['companyid' => $this->id,
+                                              'userid' => $userid,
+                                              'departmentid' => $departmentid])) {
             // Already in this company.  Nothing left to do.
             return true;
         }
@@ -1351,7 +1439,7 @@ class company {
     }
 
     /**
-     * Undocumented function
+     * Update/insert company user.
      *
      * @param int $userid
      * @param int $companyid
@@ -1362,13 +1450,13 @@ class company {
      * @param boolean $move
      * @return bool
      */
-    public static function upsert_company_user($userid,
-                                               $companyid,
-                                               $departmentid,
-                                               $managertype,
-                                               $educator=false,
-                                               $ws=false,
-                                               $move=false) {
+    public static function upsert_company_user(int $userid,
+                                               int $companyid,
+                                               int $departmentid,
+                                               int $managertype,
+                                               bool $educator=false,
+                                               bool $ws=false,
+                                               bool $move=false): bool {
         global $DB, $CFG;
 
         $assign = [
@@ -1402,19 +1490,26 @@ class company {
         $companytree = $topcompany->get_child_companies_recursive();
         $parentcompanies = $company->get_parent_companies_recursive();
         $companytree[$topcompanyid] = $topcompanyid;
+        $sqlparams = ['companyid' => $companyid];
         if (!empty($companytree)) {
-            $parentcompanysql = " AND companyid NOT IN (" . implode(',', array_keys($companytree)) . ")";
+            [$notinsql, $notinparams] = $DB->get_in_or_equal(array_keys($companytree),
+                                                             SQL_PARAMS_NAMED,
+                                                             'parentcid',
+                                                             false);
+            $parentcompanysql = " AND companyid {$notinsql}";
+            $sqlparams = $sqlparams + $notinparams;
         } else {
             $parentcompanysql = " AND companyid != :companyid";
         }
 
         // Get the list of non-licensed company courses.
-        $companyassignedcourses = $DB->get_records_sql("SELECT cc.* FROM {company_course} cc
-                                                        JOIN {iomad_courses} ic
-                                                        ON cc.courseid = ic.courseid
-                                                        WHERE cc.companyid = :companyid
-                                                        AND ic.licensed = 0",
-                                                       ['companyid' => $companyid]);
+        $companyassignedcourses = $DB->get_records_sql(
+            "SELECT cc.* FROM {company_course} cc
+             JOIN {iomad_courses} ic
+             ON cc.courseid = ic.courseid
+             WHERE cc.companyid = :companyid
+             AND ic.licensed = 0",
+            $sqlparams);
         $sharedcourses = $DB->get_records('iomad_courses', ['shared' => 1, 'licensed' => 0]);
         $companycourses = [];
         foreach ($companyassignedcourses as $companyassignedcourse) {
@@ -1439,20 +1534,24 @@ class company {
 
             // Are we moving the user?
             if ($move) {
-                $DB->delete_records_select('company_users',
-                                           'companyid = :companyid AND userid = :userid AND departmentid != :departmentid',
-                                           ['companyid' => $companyid,
-                                            'userid' => $userid,
-                                            'departmentid' => $departmentid]);
+                $selectsql = "companyid = :companyid
+                              AND userid = :userid
+                              AND departmentid != :departmentid";
+                $selectparams = [
+                    'companyid' => $companyid,
+                    'userid' => $userid,
+                    'departmentid' => $departmentid,
+                ];
+                $DB->delete_records_select('company_users', $selectsql, '', $selectparams);
             }
             if ($managertype == 0 &&
-                $DB->get_records_sql('SELECT id FROM {company_users}
-                                      WHERE
-                                      userid = :userid
-                                      AND managertype != 0
-                                      AND companyid = :companyid',
-                                      ['userid' => $userid,
-                                      'companyid' => $companyid])) {
+                $DB->get_records_select(
+                     'company_users',
+                     "userid = :userid
+                      AND managertype != 0
+                      AND companyid = :companyid",
+                     ['userid' => $userid,
+                      'companyid' => $companyid])) {
                 // We are demoting a manager type.
                 role_unassign($departmentmanagerrole->id, $userid, $companycontext->id);
                 role_unassign($companyreporterrole->id, $userid, $companycontext->id);
@@ -1474,14 +1573,14 @@ class company {
                 $DB->set_field('company_users', 'managertype', 0, ['companyid' => $companyid, 'userid' => $userid]);
 
             } else if ($managertype == 1 &&
-                       $DB->get_records_sql("SELECT id FROM {company_users}
-                                            WHERE
-                                            userid = :userid
-                                            AND managertype = :roletype
-                                            $parentcompanysql",
-                                            ['userid' => $userid,
-                                                  'roletype' => 1,
-                                                  'companyid' => $companyid])) {
+                       $DB->get_records_select(
+                        'company_users',
+                        "userid = :userid
+                         AND managertype = :roletype
+                         $parentcompanysql",
+                        $sqlparams +
+                        ['userid' => $userid,
+                         'roletype' => 1])) {
                 // We have a company manager from another company.
                 // Deal with company courses.
                 if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
@@ -1489,7 +1588,7 @@ class company {
                         if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
                             if ($DB->record_exists('company_created_courses',
                                                     ['companyid' => $companycourse->companyid,
-                                                          'courseid' => $companycourse->courseid])) {
+                                                     'courseid' => $companycourse->courseid])) {
                                 company_user::enrol($userid,
                                                     [$companycourse->courseid],
                                                     $companycourse->companyid,
@@ -1518,16 +1617,18 @@ class company {
                             // If its a company created course then assign the editor role to the user.
                             if ($DB->record_exists('company_created_courses',
                                                     ['companyid' => $companyid,
-                                                           'courseid' => $companycourse->courseid])) {
+                                                     'courseid' => $companycourse->courseid])) {
                                 company_user::unenrol($userid,
                                                       [$companycourse->courseid],
-                                                            $companycourse->companyid);
-                                company_user::enrol($userid, [$companycourse->courseid],
+                                                      $companycourse->companyid);
+                                company_user::enrol($userid,
+                                                    [$companycourse->courseid],
                                                     $companycourse->companyid,
                                                     $companycourseeditorrole->id);
 
                             } else {
-                                 company_user::enrol($userid, [$companycourse->courseid],
+                                 company_user::enrol($userid,
+                                                     [$companycourse->courseid],
                                                      $companycourse->companyid,
                                                      $companycoursenoneditorrole->id);
                             }
@@ -1535,17 +1636,19 @@ class company {
                     }
                 }
 
-                $companycount = $DB->count_records_select(
-                    'company_users',
-                    "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                    [
-                        'userid' => $userid,
-                    ]);
+                $selectsql = "userid = :userid
+                              AND managertype IN (1,2)";
+                $selectparams = ['userid' => $userid];
+                $companycount = $DB->count_records_select('company_users', $selectsql, $selectparams);
                 if ($companycount == 0) {
                     // Fire an email for this.
-                    EmailTemplate::send('user_promoted',
-                                   ['company' => $company,
-                                         'user' => $userrec]);
+                    EmailTemplate::send(
+                        'user_promoted',
+                        [
+                            'company' => $company,
+                            'user' => $userrec,
+                        ]
+                    );
                 }
             } else if ($managertype == 2) {
                 // Give them the department manager role.
@@ -1569,17 +1672,19 @@ class company {
                 // Make sure all department records in the company match this.
                 $DB->set_field('company_users', 'managertype', 2, ['companyid' => $companyid, 'userid' => $userid]);
 
-                $companycount = $DB->count_records_select(
-                    'company_users',
-                    "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                    [
-                        'userid' => $userid,
-                    ]);
+                $selectsql = "userid = :userid
+                              AND managertype IN (1,2)";
+                $selectparams = ['userid' => $userid];
+                $companycount = $DB->count_records_select('company_users', $selectsql, $selectparams);
                 if ($companycount == 0) {
                     // Fire an email for this.
-                    EmailTemplate::send('user_promoted',
-                                   ['company' => $company,
-                                         'user' => $userrec]);
+                    EmailTemplate::send(
+                        'user_promoted',
+                        [
+                            'company' => $company,
+                            'user' => $userrec,
+                        ]
+                    );
                 }
             } else if ($managertype == 4 ) {
                 // Give them the company reporter role.
@@ -1624,16 +1729,18 @@ class company {
                                 // If its a company created course then assign the editor role to the user.
                                 if ($DB->record_exists('company_created_courses',
                                                         ['companyid' => $companyid,
-                                                               'courseid' => $companycourse->courseid])) {
+                                                         'courseid' => $companycourse->courseid])) {
                                     company_user::unenrol($userid,
                                                           [$companycourse->courseid],
-                                                                $companycourse->companyid);
-                                    company_user::enrol($userid, [$companycourse->courseid],
+                                                          $companycourse->companyid);
+                                    company_user::enrol($userid,
+                                                        [$companycourse->courseid],
                                                         $companycourse->companyid,
                                                         $companycourseeditorrole->id);
 
                                 } else {
-                                     company_user::enrol($userid, [$companycourse->courseid],
+                                     company_user::enrol($userid,
+                                                         [$companycourse->courseid],
                                                          $companycourse->companyid,
                                                          $companycoursenoneditorrole->id);
                                 }
@@ -1642,17 +1749,18 @@ class company {
                     }
 
                     if ($user->managertype == 0) {
-                        $companycount = $DB->count_records_select(
-                            'company_users',
-                            "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                            [
-                                'userid' => $userid,
-                            ]);
+                        $selectsql = "userid = :userid
+                                      AND managertype IN (1,2)";
+                        $selectparams = ['userid' => $userid];
+                        $companycount = $DB->count_records_select('company_users', $selectsql, $selectparams);
                         if ($companycount == 0) {
                             // Fire an email for this.
-                            EmailTemplate::send('user_promoted',
-                                           ['company' => $company,
-                                                 'user' => $userrec]);
+                            EmailTemplate::send(
+                                'user_promoted',
+                                [
+                                    'company' => $company,
+                                    'user' => $userrec,
+                                ]);
                         }
                     }
                 } else if ($managertype == 2) {
@@ -1665,9 +1773,11 @@ class company {
                     if ($CFG->iomad_autoenrol_managers && !empty($companycourses)) {
                         foreach ($companycourses as $companycourse) {
                             if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                                company_user::unenrol($userid, [$companycourse->courseid],
+                                company_user::unenrol($userid,
+                                                      [$companycourse->courseid],
                                                       $companycourse->companyid);
-                                company_user::enrol($userid, [$companycourse->courseid],
+                                company_user::enrol($userid,
+                                                    [$companycourse->courseid],
                                                     $companycourse->companyid,
                                                     $companycoursenoneditorrole->id);
                             }
@@ -1675,9 +1785,13 @@ class company {
                     }
                     if ($user->managertype == 0) {
                         // Fire an email for this.
-                        EmailTemplate::send('user_promoted',
-                                       ['company' => $company,
-                                             'user' => $userrec]);
+                        EmailTemplate::send(
+                            'user_promoted',
+                            [
+                                'company' => $company,
+                                'user' => $userrec,
+                            ]
+                        );
                     }
                 } else if ($managertype == 3 && !$CFG->iomad_autoenrol_managers) {
                     // Deal with company course roles.
@@ -1691,13 +1805,15 @@ class company {
                                                                    'courseid' => $companycourse->courseid])) {
                                         company_user::unenrol($userid,
                                                               [$companycourse->courseid],
-                                                                    $companycourse->companyid);
-                                        company_user::enrol($userid, [$companycourse->courseid],
+                                                              $companycourse->companyid);
+                                        company_user::enrol($userid,
+                                                            [$companycourse->courseid],
                                                             $companycourse->companyid,
                                                             $companycourseeditorrole->id);
 
                                     } else {
-                                         company_user::enrol($userid, [$companycourse->courseid],
+                                         company_user::enrol($userid,
+                                                             [$companycourse->courseid],
                                                              $companycourse->companyid,
                                                              $companycoursenoneditorrole->id);
                                     }
@@ -1705,7 +1821,7 @@ class company {
                                     if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
                                         company_user::unenrol($userid,
                                                               [$companycourse->courseid],
-                                                                    $companycourse->companyid);
+                                                               $companycourse->companyid);
                                     }
                                 }
                             }
@@ -1724,7 +1840,11 @@ class company {
                     foreach ($company->get_child_companies_recursive() as $childcompany) {
                         // Get the top level department of the child company.
                         $childdepartment = self::get_company_parentnode($childcompany->id);
-                        self::upsert_company_user($userid, $childcompany->id, $childdepartment->id, $managertype, $educator);
+                        self::upsert_company_user($userid,
+                                                  $childcompany->id,
+                                                  $childdepartment->id,
+                                                  $managertype,
+                                                  $educator);
                     }
                 }
             }
@@ -1734,48 +1854,28 @@ class company {
                  && $managertype == 0) {
                 // Demoting a manager to a user.
                 // Deal with company course roles.
-                $multidepartment = $DB->get_records_sql('SELECT * FROM {company_users}
-                                                            WHERE companyid = :companyid
-                                                            AND departmentid != :departmentid',
-                                                            ['companyid' => $companyid, 'departmentid' => $departmentid]);
+                $multidepartment = $DB->get_records_select(
+                    'company_users',
+                    "companyid = :companyid
+                     AND departmentid != :departmentid",
+                    ['companyid' => $companyid,
+                     'departmentid' => $departmentid]);
                 if ($CFG->iomad_autoenrol_managers &&
                     !empty($companycourses) &&
                     empty($multidepartment)) {
                     foreach ($companycourses as $companycourse) {
                         if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
-                            company_user::unenrol($userid, [$companycourse->courseid],
-                                                  $companycourse->companyid, false);
+                            company_user::unenrol($userid,
+                                                  [$companycourse->courseid],
+                                                  $companycourse->companyid,
+                                                  false);
                         }
                     }
                 }
-                if ($DB->get_records_sql("SELECT id FROM {company_users}
-                                          WHERE userid = :userid
-                                          AND companyid NOT IN
-                                          (" . join(',', array_keys($companytree)) .")
-                                          AND managertype = 1",
-                                          ['userid' => $userid,
-                                                'companyid' => $companyid])) {
-                    // Remove the user from this company.
-                    $DB->delete_records('company_users', (array) $user);
-
-                    // Create an event for this.
-                    $eventother = ['companyname' => $company->get_name(),
-                                        'companyid' => $company->id,
-                                        'usertype' => $managertype,
-                                        'usertypename' => $managertypes[$managertype]];
-                    $event = \block_iomad_company_admin\event\company_user_unassigned::create(['context' => $companycontext,
-                                                                                                    'objectid' => $company->id,
-                                                                                                    'userid' => $userid,
-                                                                                                    'other' => $eventother]);
-
-                    $event->trigger();
-                    return true;
-                } else {
-                    if (empty($multidepartment)) {
-                        role_unassign($companymanagerrole->id, $userid, $companycontext->id);
-                        role_unassign($departmentmanagerrole->id, $userid, $companycontext->id);
-                        role_unassign($companyreporterrole->id, $userid, $companycontext->id);
-                    }
+                if (empty($multidepartment)) {
+                    role_unassign($companymanagerrole->id, $userid, $companycontext->id);
+                    role_unassign($departmentmanagerrole->id, $userid, $companycontext->id);
+                    role_unassign($companyreporterrole->id, $userid, $companycontext->id);
                 }
                 if ($user->managertype == 1) {
                     // Deal with child companies.
@@ -1789,17 +1889,19 @@ class company {
                 }
 
                 if ($user->managertype == 1 || $user->managertype == 2) {
-                    $companycount = $DB->count_records_select(
-                        'company_users',
-                        "userid = :userid AND (managertype = 1 OR managertype = 2)",
-                        [
-                            'userid' => $userid,
-                        ]);
+                    $selectsql = "userid = :userid
+                                  AND managertype IN (1,2)";
+                    $selectparams = ['userid' => $userid];
+                    $companycount = $DB->count_records_select('company_users', $selectsql, $selectparams);
                     if ($companycount == 1) {
                         // Fire an email for this.
-                        EmailTemplate::send('admin_deleted',
-                                       ['company' => $company,
-                                             'user' => $userrec]);
+                        EmailTemplate::send(
+                            'admin_deleted',
+                            [
+                                'company' => $company,
+                                'user' => $userrec,
+                            ]
+                        );
                     }
                 }
                 if (empty($multidepartment)) {
@@ -1818,13 +1920,15 @@ class company {
                                                        'courseid' => $companycourse->courseid])) {
                             company_user::unenrol($userid,
                                                   [$companycourse->courseid],
-                                                        $companycourse->companyid);
-                            company_user::enrol($userid, [$companycourse->courseid],
+                                                  $companycourse->companyid);
+                            company_user::enrol($userid,
+                                                [$companycourse->courseid],
                                                 $companycourse->companyid,
                                                 $companycourseeditorrole->id);
 
                         } else {
-                             company_user::enrol($userid, [$companycourse->courseid],
+                             company_user::enrol($userid,
+                                                 [$companycourse->courseid],
                                                  $companycourse->companyid,
                                                  $companycoursenoneditorrole->id);
                         }
@@ -1839,7 +1943,7 @@ class company {
                     if ($DB->record_exists('course', ['id' => $companycourse->courseid])) {
                         company_user::unenrol($userid,
                                               [$companycourse->courseid],
-                                                    $companycourse->companyid);
+                                              $companycourse->companyid);
                     }
                 }
             }
@@ -1855,13 +1959,15 @@ class company {
         }
 
         // Create an event for this.
-        $eventother = ['companyname' => $company->get_name(),
-                            'companyid' => $company->id,
-                            'departmentid' => $departmentid,
-                            'usertype' => $managertype,
-                            'usertypename' => $managertypes[$managertype],
-                            'moved' => $move];
-        $event = \block_iomad_company_admin\event\company_user_assigned::create(['context' => $companycontext,
+        $eventother = [
+            'companyname' => $company->get_name(),
+            'companyid' => $company->id,
+            'departmentid' => $departmentid,
+            'usertype' => $managertype,
+            'usertypename' => $managertypes[$managertype],
+            'moved' => $move,
+        ];
+        $event = company_user_assigned::create(['context' => $companycontext,
                                                                                       'objectid' => $company->id,
                                                                                       'userid' => $userid,
                                                                                       'other' => $eventother]);
@@ -1882,7 +1988,7 @@ class company {
      *              $userid = int;
      *
      **/
-    public function unassign_user_from_company($userid, $ws = false) {
+    public function unassign_user_from_company(int $userid, bool $ws = false): bool {
         global $CFG, $DB;
 
         $timestamp = time();
@@ -1901,16 +2007,17 @@ class company {
         if ($companycourses = $this->get_menu_courses(true, false, false, false)) {
             foreach ($companycourses as $courseid => $name) {
                 $coursecontext = \context_course::instance($courseid);
-                if ($licrecs = $DB->get_records_select('local_iomad_track',
-                                                       'userid = :userid
-                                                        AND courseid = :courseid
-                                                        AND companyid = :companyid
-                                                        AND coursecleared = 0
-                                                        AND timecompleted > 0',
-                                                       ['userid' => $userid,
-                                                        'companyid' => $this->id,
-                                                        'courseid' => $courseid],
-                                                        'id')) {
+                $selectsql = "userid = :userid
+                              AND courseid = :courseid
+                              AND companyid = :companyid
+                              AND coursecleared = 0
+                              AND timecompleted > 0";
+                $selectparams = [
+                    'userid' => $userid,
+                    'companyid' => $this->id,
+                    'courseid' => $courseid,
+                ];
+                if ($licrecs = $DB->get_records_select('local_iomad_track', $selectsql, $selectparams, '', 'id')) {
                     // Clear down the user from the courses.
                     foreach ($licrecs as $licrec) {
                         // Remove this specific record.
@@ -1921,23 +2028,24 @@ class company {
         }
 
         // Get licenses which are reusable and can be removed.
-        if ($reusablelicenses = $DB->get_records_sql("SELECT clu.*
-                                                      FROM {companylicense_users} clu
-                                                      JOIN {companylicense} cl ON (clu.licenseid = cl.id)
-                                                      WHERE cl.companyid = :companyid
-                                                      AND (cl.type = 1 OR cl.type = 3)
-                                                      AND cl.expirydate > :timestamp
-                                                      AND clu.userid = :userid",
-                                                      ['timestamp' => $timestamp,
-                                                            'userid' => $userid,
-                                                            'companyid' => $this->id])) {
+        if ($reusablelicenses = $DB->get_records_sql(
+            "SELECT clu.*
+             FROM {companylicense_users} clu
+             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+             WHERE cl.companyid = :companyid
+             AND (cl.type = 1 OR cl.type = 3)
+             AND cl.expirydate > :timestamp
+             AND clu.userid = :userid",
+            ['timestamp' => $timestamp,
+             'userid' => $userid,
+             'companyid' => $this->id])) {
             foreach ($reusablelicenses as $reusablelicense) {
                 $DB->delete_records('companylicense_users', ['id' => $reusablelicense->id]);
 
                 // Fire the license deleted event.
                 $eventother = ['licenseid' => $reusablelicense->licenseid,
                                     'duedate' => 0];
-                $event = \block_iomad_company_admin\event\user_license_unassigned::create([
+                $event = user_license_unassigned::create([
                     'context' => context_course::instance($reusablelicense->licensecourseid),
                     'objectid' => $reusablelicense->licenseid,
                     'courseid' => $reusablelicense->licensecourseid,
@@ -1952,25 +2060,26 @@ class company {
         }
 
         // Get licenses which are unused, non-program and can be removed.
-        if ($nonprogramlicenses = $DB->get_records_sql("SELECT clu.*
-                                                        FROM {companylicense_users} clu
-                                                        JOIN {companylicense} cl ON (clu.licenseid = cl.id)
-                                                        WHERE cl.companyid = :companyid
-                                                        AND (cl.type = 0 OR cl.type = 2)
-                                                        AND cl.program = 0
-                                                        AND clu.isusing = 0
-                                                        AND cl.expirydate > :timestamp
-                                                        AND clu.userid = :userid",
-                                                        ['timestamp' => $timestamp,
-                                                              'userid' => $userid,
-                                                              'companyid' => $this->id])) {
+        if ($nonprogramlicenses = $DB->get_records_sql(
+            "SELECT clu.*
+             FROM {companylicense_users} clu
+             JOIN {companylicense} cl ON (clu.licenseid = cl.id)
+             WHERE cl.companyid = :companyid
+             AND (cl.type = 0 OR cl.type = 2)
+             AND cl.program = 0
+             AND clu.isusing = 0
+             AND cl.expirydate > :timestamp
+             AND clu.userid = :userid",
+            ['timestamp' => $timestamp,
+             'userid' => $userid,
+             'companyid' => $this->id])) {
             foreach ($nonprogramlicenses as $nonprogramlicense) {
                 $DB->delete_records('companylicense_users', ['id' => $nonprogramlicense->id]);
 
                 // Fire the license deleted event.
                 $eventother = ['licenseid' => $nonprogramlicense->licenseid,
                                     'duedate' => 0];
-                $event = \block_iomad_company_admin\event\user_license_unassigned::create([
+                $event = user_license_unassigned::create([
                     'context' => context_course::instance($nonprogramlicense->licensecourseid),
                     'objectid' => $nonprogramlicense->licenseid,
                     'courseid' => $nonprogramlicense->licensecourseid,
@@ -1985,16 +2094,17 @@ class company {
         }
 
         // Deal with program licenses.
-        if ($programlicenses = $DB->get_records_sql("SELECT DISTINCT cl.id
-                                                     FROM {companylicense} cl
-                                                     JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
-                                                     WHERE cl.companyid = :companyid
-                                                     AND cl.program = 1
-                                                     AND clu.userid = :userid
-                                                     AND cl.expirydate > :timestamp",
-                                                     ['timestamp' => $timestamp,
-                                                           'userid' => $userid,
-                                                           'companyid' => $this->id])) {
+        if ($programlicenses = $DB->get_records_sql(
+            "SELECT DISTINCT cl.id
+             FROM {companylicense} cl
+             JOIN {companylicense_users} clu ON (cl.id = clu.licenseid)
+             WHERE cl.companyid = :companyid
+             AND cl.program = 1
+             AND clu.userid = :userid
+             AND cl.expirydate > :timestamp",
+            ['timestamp' => $timestamp,
+             'userid' => $userid,
+             'companyid' => $this->id])) {
 
             foreach ($programlicenses as $programlicense) {
                 // Check if there is a used course here.
@@ -2018,7 +2128,7 @@ class company {
                         // Fire the license deleted event.
                         $eventother = ['licenseid' => $licenserecord->licenseid,
                                             'duedate' => 0];
-                        $event = \block_iomad_company_admin\event\user_license_unassigned::create([
+                        $event = user_license_unassigned::create([
                             'context' => context_course::instance($licenserecord->licensecourseid),
                             'objectid' => $licenserecord->licenseid,
                             'courseid' => $licenserecord->licensecourseid,
@@ -2071,7 +2181,7 @@ class company {
      * @param integer $finalcompanyid
      * @return void
      */
-    public function assign_parent_managers($parentid, $finalcompanyid = 0) {
+    public function assign_parent_managers(int $parentid, int $finalcompanyid = 0) {
         global $DB;
 
         if (empty($finalcompanyid)) {
@@ -2097,7 +2207,7 @@ class company {
      * @param integer $finalcompanyid
      * @return void
      */
-    public function unassign_parent_managers($parentid, $finalcompanyid = 0) {
+    public function unassign_parent_managers(int $parentid, int $finalcompanyid = 0) {
         global $DB;
 
         if (empty($finalcompanyid)) {
@@ -2123,7 +2233,7 @@ class company {
      * @param integer $managertype
      * @return array
      */
-    public function get_company_managers($managertype=1) {
+    public function get_company_managers(int $managertype=1): array {
         global $DB;
 
         return $DB->get_records('company_users', ['companyid' => $this->id, 'managertype' => $managertype], null, 'userid');
@@ -2138,7 +2248,7 @@ class company {
      *              $companyid = int;
      *
      **/
-    public static function initialise_departments($companyid) {
+    public static function initialise_departments(int $companyid) {
         global $DB;
         $company = $DB->get_record('company', ['id' => $companyid]);
         $parentnode = [];
@@ -2172,12 +2282,15 @@ class company {
      * @param boolean $toplevel
      * @return void
      */
-    public static function import_departments($companyid, $currentdepartment, $importtree, $toplevel = false) {
+    public static function import_departments(int $companyid,
+                                              object $currentdepartment,
+                                              object $importtree,
+                                              bool $toplevel = false) {
         global $DB;
 
         if (!$toplevel) {
             // Creating a new department.
-            $newdepartment = new stdclass();
+            $newdepartment = (object) [];
             $newdepartment->name = $importtree->name;
             $newdepartment->shortname = $importtree->shortname;
             $newdepartment->company = $companyid;
@@ -2207,7 +2320,7 @@ class company {
      * Returns stdclass();
      *
      **/
-    public function get_userlevel($user) {
+    public function get_userlevel(object $user): array {
 
         global $DB;
 
@@ -2225,18 +2338,18 @@ class company {
         }
 
         // If not, get the department the user is assigned to in this company.
-        if ($userdepartments = $DB->get_records_sql(
-            "SELECT d.* FROM {department} d
-             JOIN {company_users} cu ON (d.company = cu.companyid AND d.id = cu.departmentid)
+        return $DB->get_records_sql(
+            "SELECT d.*
+             FROM {department} d
+             JOIN {company_users} cu ON (
+                 d.company = cu.companyid
+                 AND d.id = cu.departmentid
+             )
              WHERE cu.userid = :userid
              AND cu.companyid = :companyid
-             ORDER BY  d.name",
-            ['userid' => $user->id, 'companyid' => $this->id])) {
-            return $userdepartments;
-        } else {
-            // User doesn't exist in this company.
-            return [];
-        }
+             ORDER BY d.name",
+            ['userid' => $user->id,
+             'companyid' => $this->id]);
     }
 
     /**
@@ -2245,10 +2358,10 @@ class company {
      * Parameters -
      *              $user = stdclass();
      *
-     * Returns stdclass();
+     * Returns array or false;
      *
      **/
-    public static function get_usersupervisor($userid) {
+    public static function get_usersupervisor(int $userid) {
         global $DB, $CFG;
 
         // Get the company info.
@@ -2298,7 +2411,7 @@ class company {
      * Returns stdclass();
      *
      **/
-    public static function get_departmentbyid($departmentid) {
+    public static function get_departmentbyid(int $departmentid): object {
         global $DB;
         return $DB->get_record('department', ['id' => $departmentid]);
     }
@@ -2307,9 +2420,9 @@ class company {
      * Get the parent departments of the passed department
      *
      * @param object $department
-     * @return array
+     * @return object
      */
-    public static function get_parentdepartments($department) {
+    public static function get_parentdepartments(object $department): object {
         global $DB;
 
         $returnarray = $department;
@@ -2338,7 +2451,7 @@ class company {
      * Returns [];
      *
      **/
-    public static function get_subdepartments($parent, $ignorecurrentbranch = false) {
+    public static function get_subdepartments(object $parent, bool $ignorecurrentbranch = false): object {
         global $DB;
 
         // Are we trimming a current branch?
@@ -2368,7 +2481,7 @@ class company {
      * Returns [];
      *
      **/
-    public static function get_subdepartments_list($parent) {
+    public static function get_subdepartments_list(object $parent): array {
         $subdepartmentstree = self::get_subdepartments($parent);
         $subdepartmentslist = self::get_department_list($subdepartmentstree);
         $returnlist = self::array_flatten($subdepartmentslist);
@@ -2386,7 +2499,7 @@ class company {
      * Returns [];
      *
      **/
-    public static function get_department_list($tree, $path='') {
+    public static function get_department_list(object $tree, string $path=''): array {
 
         $flatlist = [];
         if (isset($tree->id)) {
@@ -2420,7 +2533,7 @@ class company {
      * Returns [];
      *
      **/
-    public static function get_parents_list($tree, &$return = []) {
+    public static function get_parents_list(object $tree, array &$return = []) {
 
         if (isset($tree->id)) {
             $return[$tree->id] = $tree->id;
@@ -2442,7 +2555,7 @@ class company {
      * Returns stdclass() || false;
      *
      **/
-    public static function get_company_parentnode($companyid) {
+    public static function get_company_parentnode(int $companyid): object {
         global $DB;
         if (!$parentnode = $DB->get_record('department', ['company' => $companyid,
                                                                'parent' => '0'])) {
@@ -2459,10 +2572,10 @@ class company {
      * Parameters -
      *              $departmentid = int;
      *
-     * Returns stdclass() || false;
+     * Returns object || false;
      *
      **/
-    public static function get_department_parentnode($departmentid) {
+    public static function get_department_parentnode(int $departmentid) {
         global $DB;
         if ($department = $DB->get_record('department', ['id' => $departmentid])) {
             $parent = $DB->get_record('department', ['id' => $department->parent]);
@@ -2481,7 +2594,7 @@ class company {
      * Returns stdclass() || false;
      *
      **/
-    public static function get_department_parentnodes($departmentid) {
+    public static function get_department_parentnodes(int $departmentid): array {
         global $DB;
 
         $parents = [];
@@ -2501,7 +2614,7 @@ class company {
      * Returns int;
      *
      **/
-    public static function get_top_department($departmentid) {
+    public static function get_top_department(int $departmentid): int {
         global $DB;
         $department = $DB->get_record('department', ['id' => $departmentid]);
         $parentnode = self::get_company_parentnode($department->company);
@@ -2517,10 +2630,10 @@ class company {
      * Returns []
      *
      **/
-    public static function get_all_departments($company) {
+    public static function get_all_departments(int $companyid): array {
 
         $parentlist = [];
-        $parentnode = self::get_company_parentnode($company);
+        $parentnode = self::get_company_parentnode($companyid);
         $parentlist[$parentnode->id] = [$parentnode->id => $parentnode->name];
         $departmenttree = self::get_subdepartments($parentnode);
         $departmentlist = self::array_flatten($parentlist +
@@ -2532,9 +2645,9 @@ class company {
      * Get array of all departments given companyid
      * Used to display select tree
      * @param int companyid
-     * @return array
+     * @return object
      */
-    public static function get_all_departments_raw($companyid) {
+    public static function get_all_departments_raw(int $companyid): object {
         $parentlist = [];
         $parentnode = self::get_company_parentnode($companyid);
         $departmenttree = self::get_subdepartments($parentnode);
@@ -2546,9 +2659,11 @@ class company {
      * Get array of all departments given companyid
      * Used to display select tree
      * @param int companyid
-     * @return array
+     * @return object or null
      */
-    public static function get_all_subdepartments_raw($departmentid, $ignorecurrentbranch = false, $addchildcompanies = false) {
+    public static function get_all_subdepartments_raw(int $departmentid,
+                                                      bool $ignorecurrentbranch = false,
+                                                      bool $addchildcompanies = false) {
 
         // Are we trimming a current branch?
         if ($departmentid == $ignorecurrentbranch) {
@@ -2582,7 +2697,7 @@ class company {
      * Returns [];
      *
      **/
-    public static function array_flatten($array, &$result=null) {
+    public static function array_flatten(array $array, &$result = null) {
 
         $r = null === $result;
         $i = 0;
@@ -2609,7 +2724,7 @@ class company {
      * Returns [];
      *
      **/
-    public static function array_flatten_children($array, &$result=null) {
+    public static function array_flatten_children(array $array, &$result = null) {
 
         $r = null === $result;
         $i = 0;
@@ -2635,7 +2750,7 @@ class company {
      * Returns []
      *
      **/
-    public static function get_all_subdepartments($parentnodeid, $addchildcompanies = false) {
+    public static function get_all_subdepartments(int $parentnodeid, bool $addchildcompanies = false): array {
         global $PAGE;
 
         // Format_string() references $PAGE context so nee to set that if it's not already set.
@@ -2664,7 +2779,6 @@ class company {
 
         $departmentlist = self::array_flatten($parentlist +
                           self::get_department_list($departmenttree));
-
         return $departmentlist;
     }
 
@@ -2678,14 +2792,16 @@ class company {
      * Returns []
      *
      **/
-    public static function get_recursive_department_users($departmentid, $addchildcompanies = false) {
+    public static function get_recursive_department_users(int $departmentid, bool $addchildcompanies = false): array {
         global $DB;
 
         $departmentlist = self::get_all_subdepartments($departmentid, $addchildcompanies);
         $userlist = [];
-        foreach ($departmentlist as $id => $value) {
-            $departmentusers = self::get_department_users($id);
-            $userlist = $userlist + $departmentusers;
+        if (!empty($departmentlist)) {
+            foreach ($departmentlist as $id => $value) {
+                $departmentusers = self::get_department_users($id);
+                $userlist = $userlist + $departmentusers;
+            }
         }
         return $userlist;
     }
@@ -2700,7 +2816,7 @@ class company {
      * Returns []
      *
      **/
-    public static function get_my_users($companyid=0, $departmentid=0) {
+    public static function get_my_users(int $companyid=0, int $departmentid=0): array {
         global $USER;
 
         if (empty($companyid)) {
@@ -2729,25 +2845,31 @@ class company {
      * Returns array of objects
      *
      **/
-    public function get_managers() {
+    public function get_managers(): array {
         global $DB;
 
         $parentsql = "";
+        $sqlparams = [];
         if ($parentslist = $this->get_parent_companies_recursive()) {
+            [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                        SQL_PARAMS_NAMED,
+                                                        'pids');
             $parentsql = "AND u.id NOT IN (
-                          SELECT userid FROM {company_users}
-                          WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
+                            SELECT userid FROM {company_users}
+                            WHERE companyid {$insql}
+                          )";
         }
+        $sqlparams['companyid'] = $this->id;
 
         // Get the managers in that list of departments.
-        $managers = $DB->get_records_sql("SELECT u.* FROM {user} u
-                                          JOIN {company_users} cu ON (u.id = cu.userid)
-                                          WHERE cu.managertype = 1
-                                          AND cu.companyid = :companyid
-                                          $parentsql",
-                                          ['companyid' => $this->id]);
-        // Return them.
-        return $managers;
+        return $DB->get_records_sql(
+            "SELECT u.*
+             FROM {user} u
+             JOIN {company_users} cu ON (u.id = cu.userid)
+             WHERE cu.managertype = 1
+             AND cu.companyid = :companyid
+             $parentsql",
+            $sqlparams);
     }
 
     /**
@@ -2756,7 +2878,7 @@ class company {
      * Returns an array to be used by a form select.
      *
      **/
-    public function get_managers_select() {
+    public function get_managers_select(): array {
 
         // Set up the initial array.
         $managerlist = ['0' => get_string('none')];
@@ -2781,7 +2903,7 @@ class company {
      * Returns string
      *
      **/
-    public function get_my_managers($userid, $managertype) {
+    public function get_my_managers(int $userid, int $managertype): array {
         global $DB, $USER;
 
         // Get the users department.
@@ -2799,11 +2921,19 @@ class company {
         }
         if (!empty($departments)) {
             // Get the managers in that list of departments.
-            $managers = $DB->get_records_sql("SELECT userid FROM {company_users}
-                                              WHERE managertype = :managertype
-                                              AND userid != :userid
-                                              AND departmentid IN (".implode(',', array_keys($departments)).")",
-                                              ['managertype' => $managertype, 'userid' => $USER->id]);
+            [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($departments),
+                                                        SQL_PARAMS_NAMED,
+                                                        'deptids');
+            $sqlparams['managertype'] = $managertype;
+            $sqlparams['userid'] = $USER->id;
+            $managers = $DB->get_records_select(
+                'company_users',
+                "managertype = :managertype
+                 AND userid != :userid
+                 AND departmentid {$insql}",
+                $sqlparams,
+                '',
+                'userid');
         }
 
         // Return them.
@@ -2820,7 +2950,7 @@ class company {
      * Returns string
      *
      **/
-    public static function get_my_users_list($companyid=0, $departmentid=0) {
+    public static function get_my_users_list(int $companyid=0, int $departmentid=0): string {
         global $USER;
 
         if (empty($companyid)) {
@@ -2843,16 +2973,12 @@ class company {
      * Returns []
      *
      **/
-    public static function get_department_users($departmentid) {
+    public static function get_department_users(int $departmentid): array {
         global $DB;
-        if ($departmentusers = $DB->get_records('company_users',
-                                                 ['departmentid' => $departmentid],
-                                                 null,
-                                                 'userid,id,companyid,managertype,departmentid,suspended')) {
-            return $departmentusers;
-        } else {
-            return [];
-        }
+        return $DB->get_records('company_users',
+                                ['departmentid' => $departmentid],
+                                null,
+                                'userid,id,companyid,managertype,departmentid,suspended');
     }
 
     /**
@@ -2863,7 +2989,10 @@ class company {
      *              $userid = int;
      *
      **/
-    public static function assign_user_to_department($departmentid, $userid, $managertype = 0, $ws = false) {
+    public static function assign_user_to_department(int $departmentid,
+                                                     int $userid,
+                                                     int $managertype = 0,
+                                                     bool $ws = false): bool {
         global $DB;
 
         $userrecord = [];
@@ -2901,13 +3030,16 @@ class company {
      *              $parentid = int;
      *
      **/
-    public static function create_department($departmentid, $companyid, $fullname,
-                                      $shortname, $parentid=0) {
+    public static function create_department(int $departmentid,
+                                             int $companyid,
+                                             string $fullname,
+                                             string $shortname,
+                                             int $parentid=0): bool {
         global $DB;
         $newdepartment = [];
         if (!empty($departmentid)) {
             if ($departmentid == $parentid) {
-                return;
+                return false;
             }
             $newdepartment['id'] = $departmentid;
         }
@@ -2939,7 +3071,7 @@ class company {
      *              $departmentid = int;
      *
      **/
-    public static function delete_department($departmentid) {
+    public static function delete_department(int $departmentid): bool {
         global $DB;
         if (!$DB->delete_records('department', ['id' => $departmentid])) {
             throw new moodle_exception(get_string('cantdeletedepartmentdb', 'blocks_iomad_company_admin'));
@@ -2955,7 +3087,7 @@ class company {
      *              $targetid = int;
      *
      **/
-    public static function delete_department_recursive($departmentid, $targetdepartment=0) {
+    public static function delete_department_recursive(int $departmentid, int $targetdepartment=0) {
         // Get all the users from here and below.
         $userlist = self::get_recursive_department_users($departmentid);
         $departmentlist = self::get_all_subdepartments($departmentid);
@@ -2981,7 +3113,7 @@ class company {
      *
      * Return boolean;
      **/
-    public static function can_manage_department($departmentid) {
+    public static function can_manage_department(int $departmentid): bool {
         global $DB, $USER;
 
         // Get the department record.
@@ -3024,7 +3156,7 @@ class company {
      * Returns []
      *
      **/
-    public static function get_recursive_department_courses($departmentid) {
+    public static function get_recursive_department_courses(int $departmentid): array {
         global $DB;
 
         $departmentlist = self::get_all_subdepartments($departmentid);
@@ -3053,14 +3185,9 @@ class company {
      * Returns []
      *
      **/
-    public static function get_department_courses($departmentid) {
+    public static function get_department_courses(int $departmentid): array {
         global $DB;
-        if ($departmentcourses = $DB->get_records('company_course',
-                                                   ['departmentid' => $departmentid])) {
-            return $departmentcourses;
-        } else {
-            return [];
-        }
+        return $DB->get_records('company_course', ['departmentid' => $departmentid]);
     }
 
     /**
@@ -3072,7 +3199,7 @@ class company {
      *              $companyid = int;
      *
      **/
-    public static function assign_course_to_department($departmentid, $courseid, $companyid) {
+    public static function assign_course_to_department(int $departmentid, int $courseid, int $companyid): bool {
         global $DB;
 
         // Moving a course.
@@ -3084,7 +3211,7 @@ class company {
             foreach ($currentcourses as $currentcourse) {
                 // Check if the found record belongs to the current company.
                 if ($DB->get_record('department', ['company' => $companyid,
-                                                        'id' => $departmentid])) {
+                                                   'id' => $departmentid])) {
                     $foundcourse = true;
                     // Update it.
                     $currentcourse->departmentid = $departmentid;
@@ -3128,10 +3255,11 @@ class company {
      *
      *  Return [];
      **/
-    public static function get_departments_by_course($courseid) {
+    public static function get_departments_by_course(int $courseid): array {
         global $DB;
         if ($depts = $DB->get_records('company_course', ['courseid' => $courseid],
-                                                                   null, 'departmentid')) {
+                                                         null,
+                                                         'departmentid')) {
             return array_keys($depts);
         } else {
             return [];
@@ -3150,7 +3278,7 @@ class company {
      * Returns []
      *
      **/
-    public static function get_recursive_departments_licenses($departmentid) {
+    public static function get_recursive_departments_licenses(int $departmentid): array {
 
         // Get all the courses for this department down.
         $courses = self::get_recursive_department_courses($departmentid);
@@ -3171,14 +3299,9 @@ class company {
      * Returns []
      *
      **/
-    public static function get_course_licenses($courseid) {
+    public static function get_course_licenses(int $courseid): array {
         global $DB;
-        if ($licenses = $DB->get_records('companylicense_courses', ['courseid' => $courseid],
-                                                                          null, 'licenseid')) {
-            return $licenses;
-        } else {
-            return [];
-        }
+        return $DB->get_records('companylicense_courses', ['courseid' => $courseid], null, 'licenseid');
     }
 
     /**
@@ -3190,38 +3313,35 @@ class company {
      * Returns []
      *
      **/
-    public static function get_courses_by_license($licenseid, $visible = true) {
+    public static function get_courses_by_license(int $licenseid, bool $visible = true): array {
         global $DB;
 
+        // Show all or only visible courses?
+        $visiblesql = "";
         if ($visible) {
             $visiblesql = " AND c.visible = 1 ";
-        } else {
-            $visiblesql = "";
         }
-        if ($courseids = $DB->get_records_sql("SELECT c.id
-                                              FROM {course} c
-                                              JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
-                                              WHERE clc.licenseid = :licenseid
-                                              $visiblesql
-                                              ORDER BY c.fullname",
-                                              ['licenseid' => $licenseid])) {
-            $sql = "SELECT id, fullname FROM {course} WHERE id IN (".
-                      implode(',', array_keys($courseids)).
-                   ") ";
-            if ($courses = $DB->get_records_sql($sql)) {
 
-                // Format multi-language course full name.
-                foreach ($courses as $key => $course) {
-                    $courses[$key]->fullname = format_string($course->fullname, true, 1);
-                }
+        // Do we have any?
+        if ($courses = $DB->get_records_sql(
+            "SELECT c.id, c.fullname
+             FROM {course} c
+             JOIN {companylicense_courses} clc ON (c.id = clc.courseid)
+             WHERE clc.licenseid = :licenseid
+             $visiblesql
+             ORDER BY c.fullname",
+            ['licenseid' => $licenseid])) {
 
-                return $courses;
-            } else {
-                return [];
+            // Format multi-language course full name.
+            foreach ($courses as $key => $course) {
+                $courses[$key]->fullname = format_string($course->fullname, true, 1);
             }
-        } else {
-            return [];
+
+            return $courses;
         }
+
+        // We don't - return an empty array.
+        return [];
     }
 
     /** Update license usage.
@@ -3230,7 +3350,7 @@ class company {
      *              $licenseid = int;
      *
      **/
-    public static function update_license_usage($licenseid) {
+    public static function update_license_usage(int $licenseid) {
         global $DB;
 
         // Get the allocation from any child licenses.
@@ -3245,16 +3365,7 @@ class company {
         }
 
         // Get the number of user assigned licenses for this license.
-        if ($userusage = $DB->get_records_sql("SELECT count(id) AS total
-                                               FROM {companylicense_users}
-                                               WHERE licenseid = :licenseid",
-                                               ['licenseid' => $licenseid])) {
-
-            $user = array_pop($userusage);
-            $usertotal = $user->total;
-        } else {
-            $usertotal = 0;
-        }
+        $usertotal = $DB->count_records('companylicense_users', ['licenseid' => $licenseid]);
 
         // If we have a license, update it.
         if ($license = $DB->get_record('companylicense', ['id' => $licenseid])) {
@@ -3271,7 +3382,7 @@ class company {
      * Returns Boolean
      *
      **/
-    public function is_child_license($licenseid) {
+    public function is_child_license(int $licenseid): bool {
         global $DB;
 
         if (!$licenseinfo = $DB->get_record('companylicense', ['id' => $licenseid])) {
@@ -3304,13 +3415,13 @@ class company {
      * @param boolean $includehidden include courses which are hidde
      * @return array
      */
-    public function get_menu_courses($shared = false,
-                                     $unlicensed = false,
-                                     $groups = false,
-                                     $default = true,
-                                     $licenseonly = false,
-                                     $noncompany = false,
-                                     $includehidden = false) {
+    public function get_menu_courses(bool $shared = false,
+                                     bool $unlicensed = false,
+                                     bool $groups = false,
+                                     bool $default = true,
+                                     bool $licenseonly = false,
+                                     bool $noncompany = false,
+                                     bool $includehidden = false): array {
         global $DB;
 
         // Set some defaults.
@@ -3426,17 +3537,17 @@ class company {
      * @param int $courseid
      * @return void
      */
-    public function get_course_groups_menu($courseid) {
+    public function get_course_groups_menu(int $courseid): array {
         global $DB;
 
         $retgroups = $DB->get_records_sql_menu("SELECT g.id, g.description
-                                                 FROM {groups} g
-                                                 JOIN {company_course_groups} ccg
-                                                 ON (g.id = ccg.groupid)
-                                                 WHERE ccg.companyid = :companyid
-                                                 AND ccg.courseid = :courseid",
-                                                 ['companyid' => $this->id,
-                                                       'courseid' => $courseid]);
+                                                FROM {groups} g
+                                                JOIN {company_course_groups} ccg
+                                                ON (g.id = ccg.groupid)
+                                                WHERE ccg.companyid = :companyid
+                                                AND ccg.courseid = :courseid",
+                                               ['companyid' => $this->id,
+                                                'courseid' => $courseid]);
 
         return ['0' => get_string('noselection', 'form')] + $retgroups;
     }
@@ -3450,7 +3561,7 @@ class company {
      *              $userid = int;
      *
      **/
-    public static function license_ok_to_use($licenseid, $courseid, $userid) {
+    public static function license_ok_to_use(int $licenseid, int $courseid, int $userid): bool {
         global $DB, $CFG;
 
         // Check if the course is associated to any learning path.
@@ -3459,21 +3570,26 @@ class company {
         }
 
         // Check if the license is associated to a learning path.
-        if (!$learningpath = $DB->get_record_sql("SELECT lp.* FROM {iomad_learningpath} lp
+        if (!$learningpath = $DB->get_record_sql("SELECT lp.*
+                                                  FROM {iomad_learningpath} lp
                                                   JOIN {iomad_learningpathuser} lpu ON (lp.id = lpu.pathid)
                                                   WHERE lp.licenseid = :licenseid
                                                   AND lpu.userid = :userid",
-                                                  ['licenseid' => $licenseid, 'userid' => $userid])) {
+                                                 ['licenseid' => $licenseid,
+                                                  'userid' => $userid])) {
             return true;
         }
 
         // Check if the group is sequenced.
-        if (!$groupinfo = $DB->get_record_sql("SELECT lpc.* FROM {iomad_learninpathcourse}
-                                 JOIN {iomad_learningpathgroup} lpg ON (lpc.groupid = lpg.id)
-                                 WHERE lpc.courseid = :courseid
-                                 AND lpc.path = :path
-                                 AND lpg.sequence = 1",
-                                 ['courseid' => $courseid, 'path' => $learningpath->id])) {
+        if (!$groupinfo = $DB->get_record_sql(
+            "SELECT lpc.*
+             FROM {iomad_learninpathcourse}
+             JOIN {iomad_learningpathgroup} lpg ON (lpc.groupid = lpg.id)
+             WHERE lpc.courseid = :courseid
+             AND lpc.path = :learningpath
+             AND lpg.sequence = 1",
+            ['courseid' => $courseid,
+             'learningpath' => $learningpath->id])) {
             return true;
         }
 
@@ -3512,14 +3628,14 @@ class company {
      * Returns int;
      *
      **/
-    public static function create_company_course_group($companyid, $courseid, $groupdata = null) {
+    public static function create_company_course_group(int $companyid, int $courseid, object $groupdata = null ): int {
         global $CFG, $DB;
         require_once($CFG->dirroot.'/group/lib.php');
 
         // Creates a company group within a shared course.
         $company = $DB->get_record('company', ['id' => $companyid]);
         if (empty($groupdata)) {
-            $data = new stdclass();
+            $data = (object) [];
             $data->timecreated  = time();
             $data->timemodified = $data->timecreated;
             $data->name = $company->shortname;
@@ -3531,7 +3647,7 @@ class company {
             $DB->set_field('groups', 'description', $groupdata->description, ['id' => $grouprecord->id]);
             return $grouprecord->id;
         } else {
-            $data = new stdclass();
+            $data = (object) [];
             $data->timecreated  = time();
             $data->timemodified = $data->timecreated;
             $data->name = $company->shortname . ' - ' . $groupdata->description;
@@ -3565,7 +3681,7 @@ class company {
      * Returns string;
      *
      **/
-    public static function get_company_groupname($companyid, $courseid) {
+    public static function get_company_groupname(int $companyid, int $courseid): string {
         global $DB;
         // Gets the company course groupname.
         $company = $DB->get_record('company', ['id' => $companyid]);
@@ -3590,24 +3706,25 @@ class company {
      * Returns stdclass();
      *
      **/
-    public static function get_company_group($companyid, $courseid) {
+    public static function get_company_group(int $companyid, int $courseid): object {
         global $DB;
 
         $company = $DB->get_record('company', ['id' => $companyid]);
 
         // Gets the company course groupname.
-        if (!$companygroup = $DB->get_record_sql("SELECT ccg.*
-                                                  FROM {company_course_groups} ccg
-                                                  JOIN {groups} g
-                                                  ON (ccg.groupid = g.id)
-                                                  WHERE ccg.companyid = :companyid
-                                                  AND ccg.courseid = :courseid
-                                                  AND g.name = :name",
-                                                  ['companyid' => $companyid,
-                                                        'courseid' => $courseid,
-                                                        'name' => $company->shortname])) {
+        if (!$companygroup = $DB->get_record_sql(
+            "SELECT ccg.*
+             FROM {company_course_groups} ccg
+             JOIN {groups} g
+             ON (ccg.groupid = g.id)
+             WHERE ccg.companyid = :companyid
+             AND ccg.courseid = :courseid
+             AND g.name = :name",
+            ['companyid' => $companyid,
+             'courseid' => $courseid,
+             'name' => $company->shortname])) {
             // Not got one, create a default.
-            $companygroup = new stdclass();
+            $companygroup = (object) [];
             $companygroup->groupid = self::create_company_course_group($companyid, $courseid);
         }
         // Get the group information.
@@ -3624,7 +3741,11 @@ class company {
      *              $companyid = int;
      *
      **/
-    public static function add_user_to_shared_course($courseid, $userid, $companyid, $groupid = 0, $clear = false) {
+    public static function add_user_to_shared_course(int $courseid,
+                                                     int $userid,
+                                                     int $companyid,
+                                                     int $groupid = 0,
+                                                     bool $clear = false) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/group/lib.php');
 
@@ -3637,16 +3758,17 @@ class company {
         if (empty($groupid)) {
             $company = $DB->get_record('company', ['id' => $companyid]);
             // Get the group id.
-            if (!$groupinfo = $DB->get_record_sql("SELECT ccg.*
-                                                  FROM {company_course_groups} ccg
-                                                  JOIN {groups} g
-                                                  ON (ccg.groupid = g.id)
-                                                  WHERE ccg.companyid = :companyid
-                                                  AND ccg.courseid = :courseid
-                                                  AND g.name = :name",
-                                                  ['companyid' => $companyid,
-                                                        'courseid' => $courseid,
-                                                        'name' => $company->shortname])) {
+            if (!$groupinfo = $DB->get_record_sql(
+                "SELECT ccg.*
+                 FROM {company_course_groups} ccg
+                 JOIN {groups} g
+                 ON (ccg.groupid = g.id)
+                 WHERE ccg.companyid = :companyid
+                 AND ccg.courseid = :courseid
+                 AND g.name = :name",
+                ['companyid' => $companyid,
+                 'courseid' => $courseid,
+                 'name' => $company->shortname])) {
                 $groupid = self::create_company_course_group($companyid, $courseid);
             } else {
                 $groupid = $groupinfo->groupid;
@@ -3666,20 +3788,21 @@ class company {
      *              $companyid = int;
      *
      **/
-    public static function remove_user_from_shared_course($courseid, $userid, $companyid) {
+    public static function remove_user_from_shared_course(int $courseid, int $userid, int $companyid) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/group/lib.php');
 
         // Removes a user from a shared course.
         // Get the group id.
-        if (!$groups = $DB->get_records_sql("SELECT gm.groupid
-                                                FROM {groups_members} gm
-                                                JOIN {groups} g
-                                                ON (gm.groupid = g.id)
-                                                WHERE g.courseid = :courseid
-                                                AND gm.userid = :userid",
-                                                ['userid' => $userid,
-                                                      'courseid' => $courseid])) {
+        if (!$groups = $DB->get_records_sql(
+            "SELECT gm.groupid
+             FROM {groups_members} gm
+             JOIN {groups} g
+             ON (gm.groupid = g.id)
+             WHERE g.courseid = :courseid
+             AND gm.userid = :userid",
+            ['userid' => $userid,
+             'courseid' => $courseid])) {
             return;  // Dont need to remove them.
         } else {
             foreach ($groups as $group) {
@@ -3698,7 +3821,10 @@ class company {
      *              $oktounenroll = boolean;
      *
      **/
-    public static function delete_company_course_group($companyid, $course, $oktounenroll=false, $groupid = 0) {
+    public static function delete_company_course_group(int $companyid,
+                                                       object $course,
+                                                       bool $oktounenroll=false,
+                                                       int $groupid = 0) {
         global $DB;
         // Removes a company group within a shared course.
         // Get the group.
@@ -3710,8 +3836,8 @@ class company {
                     // Delete the group.
                     $DB->delete_records('groups', ['id' => $group->id]);
                     $DB->delete_records('company_course_groups', ['companyid' => $companyid,
-                                                                       'groupid' => $group->id,
-                                                                       'courseid' => $course->id]);
+                                                                  'groupid' => $group->id,
+                                                                  'courseid' => $course->id]);
                     self::remove_course($course, $companyid);
                     return true;
                 } else {
@@ -3739,7 +3865,7 @@ class company {
      *              $courseid = int;
      *
      **/
-    public static function company_users_to_company_course_group($companyid, $courseid) {
+    public static function company_users_to_company_course_group(int $companyid, int $courseid) {
         global $DB, $CFG;
         // Adds all the users to a company group within a shared course.
 
@@ -3751,9 +3877,11 @@ class company {
         }
         // This is used for a course which is becoming shared.
         // All current course enrolled users to this company group.
-        if ($users = $DB->get_records_sql("SELECT userid FROM {user_enrolments}
-                                           WHERE enrolid IN (
-                                           SELECT id FROM {enrol} WHERE courseid = $courseid)")) {
+        if ($users = $DB->get_records_sql("SELECT ue.userid
+                                           FROM {user_enrolments} ue
+                                           JOIN {enrol} ON (ue.enrolid = e.id)
+                                           WHERE e.courseid = :courseid",
+                                          ['courseid' => $courseid])) {
             foreach ($users as $user) {
                 if ($DB->get_record('user', ['id' => $user->userid])) {
                     groups_add_member($groupid, $user->userid);
@@ -3770,31 +3898,46 @@ class company {
      *              $courseid = int;
      *
      **/
-    public static function unenrol_company_from_course($companyid, $courseid) {
+    public static function unenrol_company_from_course(int $companyid, int $courseid) {
         global $DB;
 
+        // Store the current time.
         $timenow = time();
+
         // Get the company users.
         $companydepartment = self::get_company_parentnode($companyid);
         $companyusers = self::get_recursive_department_users($companydepartment->id);
+
+        // Is theer a company course group?
         if ($group = self::get_company_group($companyid, $courseid)) {
             // End all enrolments now..
-            if ($users = $DB->get_records_sql("SELECT * FROM {user_enrolments}
-                                               WHERE enrolid IN (
-                                                SELECT id FROM {enrol}
-                                                WHERE courseid = $courseid)
-                                               AND userid IN (".
-                                                implode(',', array_keys($companyusers)).
-                                               ")")) {
+            [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($companyusers),
+                                                        SQL_PARAMS_NAMED,
+                                                        'compuids');
+            $sqlparams['courseid'] = $courseid;
+
+            // Do we have any users in the course?
+            if ($users = $DB->get_records_sql(
+                "SELECT *
+                 FROM {user_enrolments} ue
+                 JOIN {enrol} e ON (ue.enrolid = e.id)
+                 WHERE e.courseid = :courseid
+                 AND ue.userid {$insql}",
+                $sqlparams)) {
+
+                // End their enrolment.
                 foreach ($users as $user) {
                     $user->timeend = $timenow;
                     $DB->update_record('user_enrolments', $user);
                 }
             }
+            // Get rid of any company course groups.
             $DB->delete_records('company_course_groups', ['groupid', $group]);
         }
+
+        // Remove the shared course from the company.
         $DB->delete_records('company_shared_courses', ['courseid' => $courseid,
-                                                            'companyid' => $companyid]);
+                                                       'companyid' => $companyid]);
     }
 
     /**
@@ -3804,7 +3947,7 @@ class company {
      *              $theme = string;
      *
      **/
-    public function update_theme($theme) {
+    public function update_theme(string $theme) {
         global $DB;
 
         // Get the company users.
@@ -3826,7 +3969,7 @@ class company {
      *              $theme = string;
      *
      **/
-    public function suspend($suspend = true) {
+    public function suspend(bool $suspend = true) {
         global $DB;
 
         // Get the company users.
@@ -3840,7 +3983,9 @@ class company {
                     // Belongs to more than one company.  Skip.
                     continue;
                 }
-                if (! $DB->get_record('company_users', ['userid' => $user->id, 'companyid' => $this->id, 'suspended' => 1])) {
+                if (! $DB->get_record('company_users', ['userid' => $user->id,
+                                                        'companyid' => $this->id,
+                                                        'suspended' => 1])) {
                     $user->suspended  = $suspend;
                     $DB->update_record('user', $user);
                 }
@@ -3870,7 +4015,7 @@ class company {
      * all of their users.
      *
      **/
-    public function terminate() {
+    public function terminate(): bool {
         global $DB;
 
         $runtime = time();
@@ -3893,16 +4038,17 @@ class company {
                         continue;
                     }
                     // Terminate all of their enrolments.
-                    $usercourses = $DB->get_records_select('local_iomad_track',
-                                                           'id',
-                                                           'userid = :userid
-                                                            AND courseid = :courseid
-                                                            AND companyid = :companyid
-                                                            AND coursecleared = 0
-                                                            AND timecompleted > 0',
-                                                           ['userid' => $userid,
-                                                            'companyid' => $this->id,
-                                                            'courseid' => $courseid]);
+                    $sqlwhere = "userid = :userid
+                                 AND courseid = :courseid
+                                 AND companyid = :companyid
+                                 AND coursecleared = 0
+                                 AND timecompleted > 0";
+                    $sqlparams = [
+                        'userid' => $userid,
+                        'companyid' => $this->id,
+                        'courseid' => $courseid,
+                    ];
+                    $usercourses = $DB->get_records_select('local_iomad_track', $sqlwhere, $sqlparams, '', 'id');
                     foreach ($usercourses as $licrec) {
                         // Remove this specific record.
                         company_user::delete_user_course($userid, $courseid, 'autodelete', $licrec->id);
@@ -3934,7 +4080,7 @@ class company {
 
             // Create an event for this.  This handles the actual lifting.
             $eventother = ['companyid' => $company->id];
-            $event = \block_iomad_company_admin\event\company_terminated::create(
+            $event = company_terminated::create(
                 [
                     'context' => \core\context\company::instance($company->id),
                     'objectid' => $company->id,
@@ -3957,7 +4103,7 @@ class company {
      *              $ecommerce = booloean;
      *
      **/
-    public function ecommerce($ecommerce) {
+    public function ecommerce(bool $ecommerce) {
         global $CFG, $DB;
 
         // Set the ecommerce field for the company.
@@ -3981,11 +4127,11 @@ class company {
      * Returns boolean.
      *
      **/
-    public static function check_valid_department($companyid, $departmentid) {
+    public static function check_valid_department(int $companyid, int $departmentid): bool {
         global $DB;
 
         if ($DB->get_record('department', ['id' => $departmentid,
-                                                'company' => $companyid])) {
+                                           'company' => $companyid])) {
             return true;
         } else {
             // Is the department within a child company of the currently selected company?
@@ -3993,7 +4139,7 @@ class company {
             if ($childcompanies = $thiscompany->get_child_companies_recursive()) {
                 foreach ($childcompanies as $childid => $ignore) {
                     if ($DB->get_record('department', ['id' => $departmentid,
-                                                            'company' => $childid])) {
+                                                       'company' => $childid])) {
                         return true;
                     }
                 }
@@ -4015,7 +4161,7 @@ class company {
      * Returns boolean.
      *
      **/
-    public static function check_valid_user($companyid, $userid, $deparmentid=0) {
+    public static function check_valid_user(int $companyid, int $userid, int $deparmentid=0): bool {
         global $DB, $USER;
 
         // If current user is a site admin or they have appropriate capabilities then they can.
@@ -4024,29 +4170,36 @@ class company {
             return true;
         }
 
-        if (!empty($departmentid) && $DB->get_record('company_users', ['departmentid' => $departmentid,
-                                                                            'companyid' => $companyid,
-                                                                            'userid' => $userid])) {
-            return true;
+        // Set default result.
+        $result = false;
+
+        if (!empty($departmentid) &&
+            $DB->get_record('company_users', ['departmentid' => $departmentid,
+                                              'companyid' => $companyid,
+                                              'userid' => $userid])) {
+            $result = true;
         } else if ($DB->get_records('company_users', ['companyid' => $companyid,
-                                                           'userid' => $userid])) {
-            return true;
+                                                      'userid' => $userid])) {
+            $result = true;
         } else {
             // Is the user in a child company?
             $company = new company($companyid);
             $children = $company->get_child_companies_recursive();
-            if (!empty($children) &&
-                $DB->get_records_sql("SELECT id FROM {company_users}
-                                      WHERE userid = :userid
-                                      and companyid IN (" . join(',', array_keys($children)) . ")",
-                                      ['userid' => $userid])) {
-                return true;
-            } else {
-                return false;
+            if (!empty($children)) {
+                [$insql, $sqlparams] = $DB->get_in_or_equal(array_keys($children),
+                                                            SQL_PARAMS_NAMED,
+                                                            'cids');
+                $sqlwhere = "userid = :userid
+                             AND companyid {$insql}";
+                $sqlparams['userid'] = $userid;
+                if ($DB->get_records_select('company_users', $sqlwhere, $sqlparams, '', 'id')) {
+                    $result = true;
+                }
             }
         }
-        // Shouldn't get here.  Return a false in case.
-        return false;
+
+        // Return the result.
+        return $result;
     }
 
     /**
@@ -4059,7 +4212,7 @@ class company {
      * Returns boolean.
      *
      **/
-    public static function check_user_suspended($companyid, $userid) {
+    public static function check_user_suspended(int $companyid, int $userid): bool {
         global $DB;
 
         if ($DB->get_records('company_users', ['companyid' => $companyid,
@@ -4080,38 +4233,47 @@ class company {
      * Returns boolean.
      *
      **/
-    public function check_usercount($new = 0) {
+    public function check_usercount(int $new = 0): bool {
         global $DB, $USER;
+
+        // Set the default.
+        $result = false;
 
         // Get the company maximum.
         if (empty($this->companyrecord->maxusers)) {
-            return true;
+            $result = true;
         } else {
-            // Get the current number of users.
+        // Get the current number of users.
             // Deal with any parent companies.
             // all companies?
+            $companysql = "";
+            $sqlparams = ['companyid' => $this->id];
             if ($parentslist = $this->get_parent_companies_recursive()) {
-                $companysql = " AND u.id NOT IN (
-                                SELECT userid FROM {company_users}
-                                WHERE companyid IN (" . implode(',', array_keys($parentslist)) ."))";
-            } else {
-                $companysql = "";
+                [$insql, $inparams] = $DB->get_in_or_equal(array_keys($parentslist),
+                                                           SQL_PARAMS_NAMED,
+                                                           'pcids');
+                $companysql = "AND u.id NOT IN (
+                                   SELECT userid
+                                   FROM {company_users}
+                                   WHERE companyid {$insql}
+                               )";
+                $sqlparams = $sqlparams + $inparams;
             }
 
-            $usercount = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id) FROM
-                                                 {company_users} cu
+            $usercount = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id)
+                                                 FROM {company_users} cu
                                                  JOIN {user} u ON (cu.userid = u.id)
                                                  WHERE cu.companyid = :companyid
                                                  AND u.deleted = 0
                                                  AND u.suspended = 0
                                                  $companysql",
-                                                 ['companyid' => $this->id]);
-            if ($usercount + $new > $this->companyrecord->maxusers) {
-                return false;
-            } else {
-                return true;
+                                                $sqlparams);
+            if ($usercount + $new <= $this->companyrecord->maxusers) {
+                $result = true;
             }
         }
+
+        return $result;
     }
 
     /**
@@ -4124,7 +4286,7 @@ class company {
      * Returns boolean.
      *
      **/
-    public static function check_canedit_user($companyid, $userid) {
+    public static function check_canedit_user(int $companyid, int $userid): bool {
         global $DB, $USER;
 
         // Can't edit an admin user here.
@@ -4177,11 +4339,11 @@ class company {
      * Returns boolean.
      *
      **/
-    public static function check_valid_company_license($companyid, $licenseid) {
+    public static function check_valid_company_license(int $companyid, int $licenseid): bool {
         global $DB;
 
         if ($DB->get_record('companylicense', ['companyid' => $companyid,
-                                                    'id' => $licenseid])) {
+                                               'id' => $licenseid])) {
             return true;
         }
 
@@ -4201,7 +4363,7 @@ class company {
      * Returns boolean.
      *
      **/
-    public static function check_can_manage($userid) {
+    public static function check_can_manage(int $userid): bool {
         global $DB, $USER;
 
         // Set the companyid.
@@ -4241,7 +4403,7 @@ class company {
      * Returns int.
      *
      **/
-    public function get_auto_department($user) {
+    public function get_auto_department(object $user): int {
         global $DB;
 
         $topdepartment = self::get_company_parentnode($this->id);
@@ -4272,7 +4434,7 @@ class company {
      *              $user = stdclass();
      *
      **/
-    public function autoenrol($user, $due = 0) {
+    public function autoenrol(object $user, int $due = 0) {
         global $DB, $CFG, $SESSION, $SITE, $OUTPUT;
 
         // Did we get passed a user id?
@@ -4283,8 +4445,13 @@ class company {
 
         // Get all of the courses the company can see.
         $companycoursesql = "";
+        $sqlparams = ['companyid' => $this->id];
         if ($companycourses = $this->get_menu_courses(true, false, false, false, false)) {
-            $companycoursesql = " AND courseid IN (" . join(',', array_keys($companycourses)) . ")";
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($companycourses),
+                                                       SQL_PARAMS_NAMED,
+                                                       'cids');
+            $companycoursesql = " AND courseid {$insql}";
+            $sqlparams = $sqlparams + $inparams;
         }
 
         // Get the courses which are assigned to the company which are not licensed.
@@ -4293,27 +4460,27 @@ class company {
                                          WHERE companyid = :companyid
                                          AND autoenrol = 1
                                          $companycoursesql",
-                                         ['companyid' => $this->id]);
+                                        $sqlparams);
 
         // Get all of the licensed courses.
-        $licensecourses = $DB->get_records_sql("SELECT courseid FROM {iomad_courses} WHERE licensed = 1");
+        $licensecourses = $DB->get_records('iomad_courses', ['licensed' => 1], '', 'courseid');
 
         // Are we also enrolling to unattached courses?
         if (!empty($CFG->local_iomad_signup_autoenrol_unassigned)) {
-            $unassignedcourses = $DB->get_records_sql("SELECT id AS courseid FROM {course}
+            $unassignedcourses = $DB->get_records_sql("SELECT id AS courseid
+                                                       FROM {course}
                                                        WHERE id NOT IN (
                                                         SELECT courseid FROM {company_course}
                                                        )
                                                        AND id != :siteid",
-                                                       ['siteid' => $SITE->id]);
+                                                      ['siteid' => $SITE->id]);
             $courses = $courses + $unassignedcourses;
         }
 
         // Enrol the user onto them.
         $errors = '';
         foreach ($courses as $addcourse) {
-            if ($course = $DB->get_record_sql("SELECT id,fullname FROM {course} WHERE id = :courseid AND visible = 1",
-                                               ['courseid' => $addcourse->courseid])) {
+            if ($course = $DB->get_record('course', ['id' => $addcourse->courseid, 'visible' => 1], 'id, fullname')) {
 
                 // Check if this is a licensed course.
                 if (!empty($licensecourses[$course->id])) {
@@ -4321,9 +4488,9 @@ class company {
 
                         // Create an event.
                         $eventother = ['licenseid' => $newlicense->licenseid,
-                                            'issuedate' => time(),
-                                            'duedate' => $due];
-                        $event = \block_iomad_company_admin\event\user_license_assigned::create([
+                                       'issuedate' => time(),
+                                       'duedate' => $due];
+                        $event = user_license_assigned::create([
                             'context' => context_course::instance($course->id),
                             'objectid' => $newlicense->id,
                             'courseid' => $course->id,
@@ -4338,17 +4505,22 @@ class company {
                     company_user::enrol($user, [$course->id], $this->id, false, false, $due);
 
                     // Send an email.
-                    EmailTemplate::send('user_added_to_course', ['course' => $course,
-                                                                 'user' => $user,
-                                                                 'due' => time()]);
+                    EmailTemplate::send(
+                        'user_added_to_course',
+                        [
+                            'course' => $course,
+                            'user' => $user,
+                            'due' => time(),
+                        ]
+                    );
                 }
             }
         }
         if (!empty($errors)) {
             // We only want to be notified of this once as sometimes this gets run multiple times.
             if (empty($SESSION->autoenrolonuser) || $SESSION->autoenrolonuser != $user->id) {
-                $notify = new \core\output\notification(get_string('autoenrolmentfailed', 'block_iomad_company_admin', $errors),
-                                                        \core\output\notification::NOTIFY_WARNING);
+                $notify = new notification(get_string('autoenrolmentfailed', 'block_iomad_company_admin', $errors),
+                                           notification::NOTIFY_WARNING);
                 echo $OUTPUT->render($notify);
                 $SESSION->autoenrolonuser = $user->id;
             }
@@ -4364,13 +4536,13 @@ class company {
      *              $framework = stdclass();
      *
      **/
-    public static function add_competency_framework($companyid, $frameworkid) {
+    public static function add_competency_framework(int $companyid, int $frameworkid) {
         global $DB;
 
         if (!$DB->record_exists('company_comp_frameworks', ['companyid' => $companyid,
-                                                                 'frameworkid' => $frameworkid])) {
+                                                            'frameworkid' => $frameworkid])) {
             $DB->insert_record('company_comp_frameworks', ['companyid' => $companyid,
-                                                                'frameworkid' => $frameworkid]);
+                                                           'frameworkid' => $frameworkid]);
         }
     }
 
@@ -4383,11 +4555,11 @@ class company {
      *              $departmentid = int;
      *
      **/
-    public static function remove_competency_framework($companyid, $frameworkid) {
+    public static function remove_competency_framework(int $companyid, int $frameworkid) {
         global $DB;
 
         $DB->delete_records('company_comp_frameworks', ['companyid' => $companyid,
-                                                             'frameworkid' => $frameworkid]);
+                                                        'frameworkid' => $frameworkid]);
     }
 
     /**
@@ -4397,13 +4569,13 @@ class company {
      *              $template = stdclass();
      *
      **/
-    public static function add_competency_template($companyid, $templateid) {
+    public static function add_competency_template(int $companyid, int $templateid) {
         global $DB;
 
         if (!$DB->record_exists('company_comp_templates', ['companyid' => $companyid,
-                                                                'templateid' => $templateid])) {
+                                                           'templateid' => $templateid])) {
             $DB->insert_record('company_comp_templates', ['companyid' => $companyid,
-                                                               'templateid' => $templateid]);
+                                                          'templateid' => $templateid]);
         }
     }
 
@@ -4414,18 +4586,18 @@ class company {
      *              $template = stdclass();
      *
      **/
-    public static function remove_competency_template($companyid, $templateid) {
+    public static function remove_competency_template(int $companyid, int $templateid) {
         global $DB;
 
         $DB->delete_records('company_comp_templates', ['companyid' => $companyid,
-                                                            'templateid' => $templateid]);
+                                                       'templateid' => $templateid]);
     }
 
     /**
      * checks if it is OK use an email template.
      *
      **/
-    public function email_template_is_enabled($templatename, $managertype = 0) {
+    public function email_template_is_enabled(string $templatename, int $managertype = 0): bool {
         global $DB;
 
         if ($DB->get_records('email_template',
@@ -4484,7 +4656,7 @@ class company {
      *
      * Returns the same.
      */
-    public static function set_company_mailer($mailer, $companyid = 0) {
+    public static function set_company_mailer(object $mailer, int $companyid = 0): object {
         global $CFG;
 
         if (empty($companyid)) {
@@ -4551,9 +4723,9 @@ class company {
      * @param pluginname
      * @param postfic
      */
-    public static function update_plugin($pluginname, $postfix) {
+    public static function update_plugin(string $pluginname, string $postfix) {
         if (empty($pluginname) || empty ($postfix)) {
-            return;
+            return false;
         }
         $settings = [];
         $currentsettings = [];
@@ -4583,15 +4755,15 @@ class company {
     /**
      * Triggered via company_created event.
      *
-     * @param \core\event\company_created $event
+     * @param company_created $event
      * @return bool true on success.
      */
-    public static function company_created(\block_iomad_company_admin\event\company_created $event) {
+    public static function company_created(company_created $event): bool {
         global $CFG, $DB, $USER;
 
         $companyid = $event->other['companyid'];
         if (!$company = $DB->get_record('company', ['id' => $companyid])) {
-            return;
+            return true;
         }
 
         if ($CFG->commerce_enable_external && !empty($CFG->commerce_externalshop_url)) {
@@ -4610,16 +4782,16 @@ class company {
     /**
      * Triggered via company_suspended event.
      *
-     * @param \block_iomad_company_user\event\company_suspended $event
+     * @param company_suspended $event
      * @return bool true on success.
      */
-    public static function company_suspended(\block_iomad_company_admin\event\company_suspended $event) {
+    public static function company_suspended(company_suspended $event): bool {
         global $DB, $CFG;
 
         $companyid = $event->other['companyid'];
 
         if (empty($companyid) || !$companyrecord = $DB->get_record('company', ['id' => $companyid])) {
-            return;
+            return true;
         }
 
         $suspendcompany = new company($companyid);
@@ -4629,9 +4801,13 @@ class company {
         $managers = $DB->get_records('company_users', ['companyid' => $companyid, 'managertype' => 1]);
         foreach ($managers as $manager) {
             $user = $DB->get_record('user', ['id' => $manager->userid]);
-            EmailTemplate::send('company_suspended',
-                                 ['company' => $suspendcompany,
-                                       'user' => $user]);
+            EmailTemplate::send(
+                'company_suspended',
+                [
+                    'company' => $suspendcompany,
+                    'user' => $user,
+                ]
+            );
         }
 
         return true;
@@ -4640,16 +4816,17 @@ class company {
     /**
      * Triggered via company_unsuspended event.
      *
-     * @param \block_iomad_company_user\event\company_unsuspended $event
+     * @param company_unsuspended $event
      * @return bool true on success.
      */
-    public static function company_unsuspended(\block_iomad_company_admin\event\company_unsuspended $event) {
+    public static function company_unsuspended(company_unsuspended $event): bool {
         global $DB, $CFG;
 
         $companyid = $event->other['companyid'];
 
-        if (empty($companyid) || !$companyrecord = $DB->get_record('company', ['id' => $companyid])) {
-            return;
+        if (empty($companyid) ||
+            !$companyrecord = $DB->get_record('company', ['id' => $companyid])) {
+            return true;
         }
 
         $suspendcompany = new company($companyid);
@@ -4659,9 +4836,13 @@ class company {
         $managers = $DB->get_records('company_users', ['companyid' => $companyid, 'managertype' => 1]);
         foreach ($managers as $manager) {
             $user = $DB->get_record('user', ['id' => $manager->userid]);
-            EmailTemplate::send('company_unsuspended',
-                                 ['company' => $suspendcompany,
-                                       'user' => $user]);
+            EmailTemplate::send(
+                'company_unsuspended',
+                [
+                    'company' => $suspendcompany,
+                    'user' => $user,
+                ]
+            );
         }
 
         return true;
@@ -4670,15 +4851,15 @@ class company {
     /**
      * Triggered via company_updated event.
      *
-     * @param \core\event\company_updated $event
+     * @param company_updated $event
      * @return bool true on success.
      */
-    public static function company_updated(\block_iomad_company_admin\event\company_updated $event) {
+    public static function company_updated(company_updated $event): bool {
         global $CFG, $DB;
 
         $companyid = $event->other['companyid'];
         if (!$company = $DB->get_record('company', ['id' => $companyid])) {
-            return;
+            return true;
         }
 
         $oldcompany = json_decode( $event->other['oldcompany']);
@@ -4703,15 +4884,15 @@ class company {
     /**
      * Triggered via company_updated event.
      *
-     * @param \core\event\company_deleted $event
+     * @param company_deleted $event
      * @return bool true on success.
      */
-    public static function company_deleted(\block_iomad_company_admin\event\company_deleted $event) {
+    public static function company_deleted(company_deleted $event): bool {
         global $CFG, $DB;
 
         $companyid = $event->other['companyid'];
         if (!$company = $DB->get_record('company', ['id' => $companyid])) {
-            return;
+            return true;
         }
 
         // Update the company name to mark it that its being deleted.
@@ -4730,10 +4911,10 @@ class company {
     /**
      * Triggered via competency_framework_created event.
      *
-     * @param \core\event\competency_framework_created $event
+     * @param competency_framework_created $event
      * @return bool true on success.
      */
-    public static function competency_framework_created(\core\event\competency_framework_created $event) {
+    public static function competency_framework_created(competency_framework_created $event): bool {
         $data = $event->get_data();
         if (!empty($data['companyid'])) {
             self::add_competency_framework($data['companyid'], $event->objectid);
@@ -4744,10 +4925,10 @@ class company {
     /**
      * Triggered via competency_framework_deleted event.
      *
-     * @param \core\event\competency_framework_deleted $event
+     * @param competency_framework_deleted $event
      * @return bool true on success.
      */
-    public static function competency_framework_deleted(\core\event\competency_framework_deleted $event) {
+    public static function competency_framework_deleted(competency_framework_deleted $event): bool {
         global $DB;
         $DB->delete_records('company_comp_frameworks', ['frameworkid' => $event->objectid]);
         return true;
@@ -4756,10 +4937,10 @@ class company {
     /**
      * Triggered via competency_template_created event.
      *
-     * @param \core\event\competency_template_created $event
+     * @param competency_template_created $event
      * @return bool true on success.
      */
-    public static function competency_template_created(\core\event\competency_template_created $event) {
+    public static function competency_template_created(competency_template_created $event): bool {
 
         $data = $event->get_data();
         if (!empty($data['companyid'])) {
@@ -4771,10 +4952,10 @@ class company {
     /**
      * Triggered via competency_template_deleted event.
      *
-     * @param \core\event\competency_template_deleted $event
+     * @param competency_template_deleted $event
      * @return bool true on success.
      */
-    public static function competency_template_deleted(\core\event\competency_template_deleted $event) {
+    public static function competency_template_deleted(competency_template_deleted $event): bool {
         global $DB;
         $DB->delete_records('company_comp_templates', ['templateid' => $event->objectid]);
         return true;
@@ -4783,10 +4964,10 @@ class company {
     /**
      * Triggered via course_completed event.
      *
-     * @param \core\event\course_completed $event
+     * @param course_completed $event
      * @return bool true on success.
      */
-    public static function course_completed(\core\event\course_completed $event) {
+    public static function course_completed(course_completed $event): bool {
         global $DB, $CFG;
 
         $data = $event->get_data();
@@ -4794,28 +4975,31 @@ class company {
         $courseid = $data['courseid'];
 
         // Get the enrolment record as the completion record isn't fully formed at this point.
-        if (!$enrolrec = $DB->get_record_sql("SELECT ue.* FROM {user_enrolments} ue
-                                         JOIN {enrol} e ON (ue.enrolid = e.id)
-                                         WHERE ue.userid = :userid
-                                         AND e.courseid = :courseid
-                                         AND e.status = 0",
-                                         ['userid' => $userid,
-                                               'courseid' => $courseid])) {
+        if (!$enrolrec = $DB->get_record_sql(
+            "SELECT ue.*
+             FROM {user_enrolments} ue
+             JOIN {enrol} e ON (ue.enrolid = e.id)
+             WHERE ue.userid = :userid
+             AND e.courseid = :courseid
+             AND e.status = 0",
+            ['userid' => $userid,
+             'courseid' => $courseid])) {
             // User isn't enrolled. Not sure why we got this.
             return true;
         }
 
         // Do not send if this is already recorded.
         if (!empty($enrolrec->timestart)) {
-            if ($trackrecs = $DB->get_records_sql("SELECT * FROM {local_iomad_track}
-                                                   WHERE userid=:userid
-                                                   AND courseid = :courseid
-                                                   AND timeenrolled > :timelow
-                                                   AND timeenrolled < :timehigh",
-                                                  ['userid' => $userid,
-                                                   'courseid' => $courseid,
-                                                   'timelow' => $enrolrec->timestart - 10,
-                                                   'timehigh' => $enrolrec->timestart + 10])) {
+            if ($trackrecs = $DB->get_records_select(
+                'local_iomad_track',
+                "userid=:userid
+                 AND courseid = :courseid
+                 AND timeenrolled > :timelow
+                 AND timeenrolled < :timehigh",
+                ['userid' => $userid,
+                 'courseid' => $courseid,
+                 'timelow' => $enrolrec->timestart - 10,
+                 'timehigh' => $enrolrec->timestart + 10])) {
                 foreach ($trackrecs as $trackrec) {
                     // Check if this enrolment time has already been processed.
                     if ($trackrec->timecompleted != null &&
@@ -4851,40 +5035,49 @@ class company {
                         $DB->get_record('companylicense', ['id' => $trackrec->licenseid, 'program' => 1])) {
                         $licenses = $DB->get_records('companylicense_users', ['licenseid' => $trackrec->licenseid]);
                         foreach ($licenses as $license) {
-                            if ($license->isusing && $DB->get_record_sql("SELECT id FROM {course_completions}
-                                                                          WHERE userid = :userid
-                                                                          AND course = :courseid
-                                                                          AND timecompleted IS NOT NULL",
-                                                                          ['courseid' => $license->licensecourseid,
-                                                                                'userid' => $user->id])) {
+                            if ($license->isusing &&
+                                $DB->get_record_sql(
+                                    "SELECT id
+                                     FROM {course_completions}
+                                     WHERE userid = :userid
+                                     AND course = :courseid
+                                     AND timecompleted IS NOT NULL",
+                                    ['courseid' => $license->licensecourseid,
+                                     'userid' => $user->id])) {
                                 $complete = true;
                             }
                         }
                     }
                     if (!$complete) {
-                        EmailTemplate::send('completion_course_user',
-                        [
-                            'course' => $course,
-                            'user' => $user,
-                            'company' => $company,
-                            'attachment' => $attachment,
-                        ]);
-                        $supervisortemplate = new EmailTemplate('completion_course_supervisor',
-                        [
-                            'course' => $course,
-                            'user' => $user,
-                            'company' => $company,
-                            'attachment' => $attachment,
-                        ]);
+                        EmailTemplate::send(
+                            'completion_course_user',
+                            [
+                                'course' => $course,
+                                'user' => $user,
+                                'company' => $company,
+                                'attachment' => $attachment,
+                            ]
+                        );
+                        $supervisortemplate = new EmailTemplate(
+                            'completion_course_supervisor',
+                            [
+                                'course' => $course,
+                                'user' => $user,
+                                'company' => $company,
+                                'attachment' => $attachment,
+                            ]
+                        );
                         $supervisortemplate->email_supervisor();
                     } else {
-                        EmailTemplate::send('user_programcompleted',
-                        [
-                            'course' => $course,
-                            'user' => $user,
-                            'company' => $company,
-                            'attachment' => $attachment,
-                        ]);
+                        EmailTemplate::send(
+                            'user_programcompleted',
+                            [
+                                'course' => $course,
+                                'user' => $user,
+                                'company' => $company,
+                                'attachment' => $attachment,
+                            ]
+                        );
                     }
                 }
             }
@@ -4896,10 +5089,10 @@ class company {
     /**
      * Triggered via user_created event.
      *
-     * @param \core\event\user_created $event
+     * @param user_created $event
      * @return bool true on success.
      */
-    public static function user_created(\core\event\user_created $event) {
+    public static function user_created(user_created $event): bool {
         global $DB, $CFG;
 
         $userid = $event->objectid;
@@ -4929,10 +5122,10 @@ class company {
     /**
      * Triggered via user_updated event.
      *
-     * @param \core\event\user_updated $event
+     * @param user_updated $event
      * @return bool true on success.
      */
-    public static function user_updated(\core\event\user_updated $event) {
+    public static function user_updated(user_updated $event): bool {
         global $DB, $CFG;
 
         $userid = $event->relateduserid;
@@ -4943,7 +5136,7 @@ class company {
                                                FROM {company} c
                                                JOIN {company_users} cu ON (c.id = cu.companyid)
                                                WHERE cu.userid = :userid",
-                                               ['userid' => $userid]);
+                                              ['userid' => $userid]);
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->id);
@@ -5022,10 +5215,10 @@ class company {
     /**
      * Triggered via user_suspended event.
      *
-     * @param \core\event\user_suspended $event
+     * @param user_suspended $event
      * @return bool true on success.
      */
-    public static function user_suspended(\core\event\user_suspended $event) {
+    public static function user_suspended(user_suspended $event): bool {
         global $DB;
 
         $userid = $event->objectid;
@@ -5037,14 +5230,18 @@ class company {
         $usercompanies = $DB->get_records_sql("SELECT DISTINCT companyid
                                                FROM {company_users}
                                                WHERE userid = :userid",
-                                               ['userid' => $userid]);
+                                              ['userid' => $userid]);
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
             company_user::suspend($userid, $usercompany->companyid);
-            EmailTemplate::send('user_suspended',
-                             ['company' => $company,
-                                   'user' => $user]);
+            EmailTemplate::send(
+                'user_suspended',
+                [
+                    'company' => $company,
+                    'user' => $user,
+                ]
+            );
         }
 
         return true;
@@ -5053,10 +5250,10 @@ class company {
     /**
      * Triggered via user_suspended event.
      *
-     * @param \core\event\user_suspended $event
+     * @param user_suspended $event
      * @return bool true on success.
      */
-    public static function user_unsuspended(\core\event\user_unsuspended $event) {
+    public static function user_unsuspended(user_unsuspended $event): bool {
         global $DB;
 
         $userid = $event->objectid;
@@ -5068,14 +5265,18 @@ class company {
         $usercompanies = $DB->get_records_sql("SELECT DISTINCT companyid
                                                FROM {company_users}
                                                WHERE userid = :userid",
-                                               ['userid' => $userid]);
+                                              ['userid' => $userid]);
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
             company_user::suspend($userid, $usercompany->companyid);
-            EmailTemplate::send('user_unsuspended',
-                             ['company' => $company,
-                                   'user' => $user]);
+            EmailTemplate::send(
+                'user_unsuspended',
+                [
+                    'company' => $company,
+                    'user' => $user,
+                ]
+            );
         }
 
         return true;
@@ -5084,10 +5285,10 @@ class company {
     /**
      * Triggered via user_enrolment_created event.
      *
-     * @param \core\event\user_enrolment_created $event
+     * @param user_enrolment_created $event
      * @return bool true on success.
      */
-    public static function user_enrolment_created(\core\event\user_enrolment_created $event) {
+    public static function user_enrolment_created(user_enrolment_created $event): bool {
         global $DB, $CFG;
 
         $userid = $event->relateduserid;
@@ -5121,10 +5322,10 @@ class company {
     /**
      * Triggered via user_licensed_used event.
      *
-     * @param \block_iomad_company_admin\event\user_license_used $event
+     * @param user_license_used $event
      * @return bool true on success.
      */
-    public static function user_license_used(\block_iomad_company_admin\event\user_license_used $event) {
+    public static function user_license_used(user_license_used $event): bool {
         global $DB, $CFG;
 
         $userid = $event->userid;
@@ -5160,10 +5361,10 @@ class company {
     /**
      * Triggered via user_deleted event.
      *
-     * @param \core\event\user_deleted $event
+     * @param user_deleted $event
      * @return bool true on success.
      */
-    public static function user_deleted(\core\event\user_deleted $event) {
+    public static function user_deleted(user_deleted $event): bool {
         global $DB, $CFG;
 
         $userid = $event->objectid;
@@ -5173,16 +5374,20 @@ class company {
         $usercompanies = $DB->get_records_sql("SELECT DISTINCT companyid
                                                FROM {company_users}
                                                WHERE userid = :userid",
-                                               ['userid' => $userid]);
+                                              ['userid' => $userid]);
 
         foreach ($usercompanies as $usercompany) {
             $company = new company($usercompany->companyid);
             $company->unassign_user_from_company($userid);
 
             $user = $DB->get_record('user', ['id' => $userid]);
-            EmailTemplate::send('user_deleted',
-                                 ['company' => $company,
-                                       'user' => $user]);
+            EmailTemplate::send(
+                'user_deleted',
+                [
+                    'company' => $company,
+                    'user' => $user,
+                ]
+            );
         }
 
         return true;
@@ -5191,10 +5396,10 @@ class company {
     /**
      * Triggered via company_user_assigned event.
      *
-     * @param \block_iomad_company_user\event\company_user_assigned $event
+     * @param company_user_assigned $event
      * @return bool true on success.
      */
-    public static function company_user_assigned(\block_iomad_company_admin\event\company_user_assigned $event) {
+    public static function company_user_assigned(company_user_assigned $event): bool {
         global $DB, $CFG;
 
         $companyid = $event->objectid;
@@ -5228,10 +5433,10 @@ class company {
     /**
      * Triggered via company_user_unassigned event.
      *
-     * @param \block_iomad_company_user\event\company_user_unassigned $event
+     * @param company_user_unassigned $event
      * @return bool true on success.
      */
-    public static function company_user_unassigned(\block_iomad_company_admin\event\company_user_unassigned $event) {
+    public static function company_user_unassigned(company_user_unassigned $event): bool {
         global $DB;
 
         // We only care if its a company manager.
@@ -5255,10 +5460,10 @@ class company {
     /**
      * Triggered via user_license_assigned event.
      *
-     * @param \block_iomad_company_user\event\user_license_assigned $event
+     * @param user_license_assigned $event
      * @return bool true on success.
      */
-    public static function user_license_assigned(\block_iomad_company_admin\event\user_license_assigned $event) {
+    public static function user_license_assigned(user_license_assigned $event): bool {
         global $DB, $CFG;
 
         $userid = $event->userid;
@@ -5273,18 +5478,18 @@ class company {
         }
 
         if (!$licenserecord = $DB->get_record('companylicense', ['id' => $licenseid])) {
-            return;
+            return true;
         }
 
         if (!$course = $DB->get_record('course', ['id' => $courseid])) {
-            return;
+            return true;
         }
 
         if (!$user = $DB->get_record('user', ['id' => $userid])) {
-            return;
+            return true;
         }
 
-        $license = new stdclass();
+        $license = (object) [];
         $license->length = $licenserecord->validlength;
         $license->valid = userdate($licenserecord->expirydate, $CFG->iomad_date_format);
         $license->startdate = userdate($licenserecord->startdate, $CFG->iomad_date_format);
@@ -5292,11 +5497,16 @@ class company {
         if (!$noemail) {
             // Send out the email.
             $company = new company($licenserecord->companyid);
-            EmailTemplate::send('license_allocated', ['course' => $course,
-                                                           'company' => $company,
-                                                           'user' => $user,
-                                                           'due' => $duedate,
-                                                           'license' => $license]);
+            EmailTemplate::send(
+                'license_allocated',
+                [
+                    'course' => $course,
+                    'company' => $company,
+                    'user' => $user,
+                    'due' => $duedate,
+                    'license' => $license,
+                ]
+            );
         }
 
         // Update the license usage.
@@ -5306,19 +5516,25 @@ class company {
         $licenserec = $DB->get_record('companylicense', ['id' => $licenseid]);
         if ($licenserec->used / $licenserec->allocation * 100 > 90) {
             // Get the company managers.
-            if ($companymanagers = $DB->get_records_sql("SELECT u.*
-                                                         FROM {user} u
-                                                         JOIN {company_users} cu ON (u.id = cu.userid)
-                                                         WHERE u.deleted = 0
-                                                         AND u.suspended = 0
-                                                         AND cu.companyid = :companyid
-                                                         AND cu.managertype =1",
-                                                        ['companyid' => $company->id])) {
+            if ($companymanagers = $DB->get_records_sql(
+                "SELECT u.*
+                 FROM {user} u
+                 JOIN {company_users} cu ON (u.id = cu.userid)
+                 WHERE u.deleted = 0
+                 AND u.suspended = 0
+                 AND cu.companyid = :companyid
+                 AND cu.managertype = 1",
+                ['companyid' => $company->id])) {
                 foreach ($companymanagers as $companymanager) {
-                    EmailTemplate::send('licensepoolwarning', ['course' => $course,
-                                                                    'company' => $company,
-                                                                    'user' => $companymanager,
-                                                                    'license' => $license]);
+                    EmailTemplate::send(
+                        'licensepoolwarning',
+                        [
+                            'course' => $course,
+                            'company' => $company,
+                            'user' => $companymanager,
+                            'license' => $license,
+                        ]
+                    );
                 }
             }
         }
@@ -5356,14 +5572,14 @@ class company {
                         if (!is_enrolled(context_course::instance($instance->courseid), $user->id)) {
                             $enrol->enrol_user($instance, $user->id, $instance->roleid, $timestart, $timeend);
                         } else if ($completedrecords = $DB->get_records_select('local_iomad_track',
-                                                                                "userid = :userid
-                                                                                 AND courseid = :courseid
-                                                                                 AND timecompleted IS NOT NULL
-                                                                                 AND coursecleared = 0
-                                                                                 AND licenseallocated != :timeallocated",
-                                                                                 ['userid' => $userid,
-                                                                                 'courseid' => $course->id,
-                                                                                 'timeallocated' => $event->timecreated])) {
+                                                                               "userid = :userid
+                                                                                AND courseid = :courseid
+                                                                                AND timecompleted IS NOT NULL
+                                                                                AND coursecleared = 0
+                                                                                AND licenseallocated != :timeallocated",
+                                                                               ['userid' => $userid,
+                                                                                'courseid' => $course->id,
+                                                                                'timeallocated' => $event->timecreated])) {
                             // All previous attempts have been completed so enrol again.
                             foreach ($completedrecords as $completedrecord) {
                                 // Complete any license allocations.
@@ -5414,7 +5630,7 @@ class company {
 
                     // Fire an event to record this.
                     $eventother = ['licenseid' => $licenseid];
-                    $event = \block_iomad_company_admin\event\user_license_used::create(
+                    $event = user_license_used::create(
                         [
                             'context' => \context_course::instance($courseid),
                             'objectid' => $userlicense->id,
@@ -5434,10 +5650,10 @@ class company {
     /**
      * Triggered via user_license_unassigned event.
      *
-     * @param \block_iomad_company_user\event\user_license_unassigned $event
+     * @param user_license_unassigned $event
      * @return bool true on success.
      */
-    public static function user_license_unassigned(\block_iomad_company_admin\event\user_license_unassigned $event) {
+    public static function user_license_unassigned(user_license_unassigned $event): bool {
         global $DB, $CFG, $PAGE;
 
         require_once($CFG->dirroot . '/enrol/locallib.php');
@@ -5447,16 +5663,16 @@ class company {
         $courseid = $event->courseid;
 
         if (!$licenserecord = $DB->get_record('companylicense', ['id' => $licenseid])) {
-            return;
+            return true;
         }
 
         if (!$course = $DB->get_record('course', ['id' => $courseid])) {
-            return;
+            return true;
         }
 
         if (!$user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0, 'suspended' => 0])) {
             self::update_license_usage($licenseid);
-            return;
+            return true;
         }
 
         // Check if there is an enrolment in the course for this user/license.
@@ -5467,25 +5683,27 @@ class company {
             }
         }
 
-        $license = new stdclass();
+        $license = (object) [];
         $license->length = $licenserecord->validlength;
         $license->valid = userdate($licenserecord->expirydate, $CFG->iomad_date_format);
 
         if ($emailrecs = $DB->get_records('email', ['userid' => $user->id,
-                                                         'courseid' => $course->id,
-                                                         'templatename' => 'license_allocated',
-                                                         'sent' => null])) {
+                                                    'courseid' => $course->id,
+                                                    'templatename' => 'license_allocated',
+                                                    'sent' => null])) {
             // Delete the email as it hasn't been sent.
             foreach ($emailrecs as $emailrec) {
                 $DB->delete_records('email', ['id' => $emailrec->id]);
             }
         } else {
             // Send out the email.
-            EmailTemplate::send('license_removed', ['course' => $course,
-                                                         'user' => $user,
-                                                         'license' => $license]);
-
+            EmailTemplate::send('license_removed', [
+                'course' => $course,
+                'user' => $user,
+                'license' => $license,
+            ]);
         }
+
         // Update the license usage.
         self::update_license_usage($licenseid);
 
@@ -5495,17 +5713,17 @@ class company {
     /**
      * Triggered via company_license_created event.
      *
-     * @param \block_iomad_company_user\event\company_license_created $event
+     * @param company_license_created $event
      * @return bool true on success.
      */
-    public static function company_license_created(\block_iomad_company_admin\event\company_license_created $event) {
+    public static function company_license_created(company_license_created $event): bool {
         global $DB, $CFG;
 
         $licenseid = $event->other['licenseid'];
         $parentid = $event->other['parentid'];
 
         if (!$licenserecord = $DB->get_record('companylicense', ['id' => $licenseid])) {
-            return;
+            return true;
         }
 
         // Deal with the human allocation.
@@ -5532,8 +5750,13 @@ class company {
         $managers = $company->get_managers();
         foreach ($managers as $manager) {
             // Fire the email.
-            EmailTemplate::send('company_licenseassigned', ['user' => $manager, 'company' => $company]);
-
+            EmailTemplate::send(
+                'company_licenseassigned',
+                [
+                    'user' => $manager,
+                    'company' => $company,
+                ]
+            );
         }
 
         return true;
@@ -5542,17 +5765,17 @@ class company {
     /**
      * Triggered via company_license_updated event.
      *
-     * @param \block_iomad_company_user\event\company_license_updated $event
+     * @param company_license_updated $event
      * @return bool true on success.
      */
-    public static function company_license_updated(\block_iomad_company_admin\event\company_license_updated $event) {
+    public static function company_license_updated(company_license_updated $event): bool {
         global $DB, $CFG;
 
         $licenseid = $event->other['licenseid'];
         $parentid = $event->other['parentid'];
 
         if (!$licenserecord = $DB->get_record('companylicense', ['id' => $licenseid])) {
-            return;
+            return true;
         }
 
         if (!empty($licenserecord->program)) {
@@ -5568,8 +5791,12 @@ class company {
                 if (empty($currentcourses[$oldcourseid])) {
                     // Deal with enrolments.
                     if ($enrolments = $DB->get_records_sql(
-                        "SELECT e.id FROM {enrol} e
-                         JOIN {companylicense_courses} clc ON (e.courseid = clc.courseid AND e.status = 0)
+                        "SELECT e.id
+                         FROM {enrol} e
+                         JOIN {companylicense_courses} clc ON (
+                             e.courseid = clc.courseid
+                             AND e.status = 0
+                         )
                          WHERE clc.licenseid = :licenseid
                          AND e.courseid = :courseid",
                         ['licenseid' => $licenseid, 'courseid' => $oldcourseid]
@@ -5663,7 +5890,7 @@ class company {
 
                                         // Fire an event to record this.
                                         $eventother = ['licenseid' => $licenseid];
-                                        $event = \block_iomad_company_admin\event\user_license_used::create([
+                                        $event = user_license_used::create([
                                             'context' => \context_course::instance($currcourseid),
                                             'objectid' => $userlicense->id,
                                             'courseid' => $instance->courseid,
@@ -5726,10 +5953,17 @@ class company {
             // This is a subscription license.
             // Update the enrolment end.
             if ($enrolments = $DB->get_records_sql(
-                "SELECT ue.id FROM {enrol} e
+                "SELECT ue.id
+                 FROM {enrol} e
                  JOIN {user_enrolments} ue ON (e.id = ue.enrolid)
-                 JOIN {companylicense_courses} clc ON (e.courseid = clc.courseid AND e.status = 0)
-                 JOIN {companylicense_users} clu ON (ue.userid = clu.userid AND clu.licenseid = clc.licenseid)
+                 JOIN {companylicense_courses} clc ON (
+                     e.courseid = clc.courseid
+                     AND e.status = 0
+                 )
+                 JOIN {companylicense_users} clu ON (
+                     ue.userid = clu.userid
+                     AND clu.licenseid = clc.licenseid
+                 )
                  WHERE clc.licenseid = :licenseid",
                 ['licenseid' => $licenseid]
             )) {
@@ -5807,7 +6041,7 @@ class company {
                 $eventother['parentid'] = $licenseid;
                 $eventother['oldcourses'] = json_encode($oldcourses);
 
-                $event = \block_iomad_company_admin\event\company_license_updated::create([
+                $event = company_license_updated::create([
                     'context' => \core\context\company::instance($licenserecord->companyid),
                     'userid' => $event->userid,
                     'objectid' => $child->id,
@@ -5823,16 +6057,16 @@ class company {
     /**
      * Triggered via company_license_deleted event.
      *
-     * @param \block_iomad_company_user\event\company_license_deleted $event
+     * @param company_license_deleted $event
      * @return bool true on success.
      */
-    public static function company_license_deleted(\block_iomad_company_admin\event\company_license_deleted $event) {
+    public static function company_license_deleted(company_license_deleted $event): bool {
         global $DB, $CFG;
 
         $parentid = $event->other['parentid'];
 
         if (empty($parentid) || !$licenserecord = $DB->get_record('companylicense', ['id' => $parentid])) {
-            return;
+            return true;
         }
         $DB->delete_records('companylicense_courses', ['licenseid' => $event->other['licenseid']]);
 
@@ -5845,10 +6079,10 @@ class company {
     /**
      * Triggered via user_course_expired event.
      *
-     * @param \block_iomad_company_user\event\company_license_created $event
+     * @param company_license_created $event
      * @return bool true on success.
      */
-    public static function user_course_expired(\block_iomad_company_admin\event\user_course_expired $event) {
+    public static function user_course_expired(user_course_expired $event): bool {
         global $DB, $CFG;
 
         $userid = $event->userid;
@@ -5857,20 +6091,20 @@ class company {
 
         $companyid = $event->companyid;
         if ($DB->count_records_select('local_iomad_track',
-                                      'userid = :userid
+                                      "userid = :userid
                                        AND courseid = :courseid
                                        AND coursecleared = 0
-                                       AND timecompleted IS NULL',
+                                       AND timecompleted IS NULL",
                                       ['userid' => $userid,
                                        'courseid' => $courseid]) > 0) {
 
             // Get the specific record for this company.
             $licrecs = $DB->get_records_select('local_iomad_track',
-                                               'userid = :userid
+                                               "userid = :userid
                                                 AND courseid = :courseid
                                                 AND companyid = :companyid
                                                 AND coursecleared = 0
-                                                AND timecompleted > 0',
+                                                AND timecompleted > 0",
                                                ['userid' => $userid,
                                                 'companyid' => $companyid,
                                                 'courseid' => $courseid]);
@@ -5890,13 +6124,14 @@ class company {
     /**
      * Triggered via iomadcustompage_deleted event.
      *
-     * @param \local_iomadcustompage\event\iomadcustompage_deleted $event
+     * @param iomadcustompage_deleted $event
      * @return bool true on success.
      */
-    public static function iomadcustompage_deleted(\local_iomadcustompage\event\iomadcustompage_deleted $event) {
+    public static function iomadcustompage_deleted(iomadcustompage_deleted $event): bool {
         global $DB, $CFG;
         // Delete any company pages which match this event object id.
         $DB->delete_records('company_pages', ['pageid' => $event->objectid]);
+        return true;
     }
 
     /**
@@ -5906,12 +6141,19 @@ class company {
      * @param course object
      * @return bool true on success.
      */
-    public static function send_supervisor_warning_email($user, $course) {
+    public static function send_supervisor_warning_email(object $user, object $course): bool {
         global $DB, $CFG;
 
         $companyinfo = self::get_company_byuserid($user->id);
         $company = new company($companyinfo->id);
-        $template = new EmailTemplate('completion_warn_supervisor', ['course' => $course, 'user' => $user, 'company' => $company]);
+        $template = new EmailTemplate(
+            'completion_warn_supervisor',
+            [
+                'course' => $course,
+                'user' => $user,
+                'company' => $company,
+            ]
+        );
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('completion_warn_supervisor', 2)) {
@@ -5921,7 +6163,7 @@ class company {
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
             foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
+                $params = (object) [];
                 $params->fullname = $course->fullname;
                 $params->firstname = $user->firstname;
                 $params->lastname = $user->lastname;
@@ -5971,12 +6213,19 @@ class company {
      * @param course object
      * @return bool true on success.
      */
-    public static function send_supervisor_not_started_warning_email($user, $course) {
+    public static function send_supervisor_not_started_warning_email(object $user, object $course): bool {
         global $DB, $CFG;
 
         $companyinfo = self::get_company_byuserid($user->id);
         $company = new company($companyinfo->id);
-        $template = new EmailTemplate('course_not_started_warning', ['course' => $course, 'user' => $user, 'company' => $company]);
+        $template = new EmailTemplate(
+            'course_not_started_warning',
+            [
+                'course' => $course,
+                'user' => $user,
+                'company' => $company,
+            ]
+        );
 
         // Is this enabled for this company?
         if (!$company->email_template_is_enabled('course_not_started_warning', 2)) {
@@ -5986,7 +6235,7 @@ class company {
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
             foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
+                $params = (object) [];
                 $params->fullname = $course->fullname;
                 $params->firstname = $user->firstname;
                 $params->lastname = $user->lastname;
@@ -6035,7 +6284,7 @@ class company {
      * @param course object
      * @return bool true on success.
      */
-    public static function send_supervisor_expiry_warning_email($user, $course) {
+    public static function send_supervisor_expiry_warning_email(object $user, object $course): bool {
         global $DB, $CFG;
 
         $companyinfo = self::get_company_byuserid($user->id);
@@ -6056,7 +6305,7 @@ class company {
         // Do we have a supervisor?
         if ($supervisoremails = self::get_usersupervisor($user->id)) {
             foreach ($supervisoremails as $supervisoremail) {
-                $params = new stdclass();
+                $params = (object) [];
                 $params->fullname = $course->fullname;
                 $params->firstname = $user->firstname;
                 $params->lastname = $user->lastname;
