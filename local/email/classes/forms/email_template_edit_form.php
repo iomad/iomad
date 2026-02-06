@@ -39,7 +39,6 @@ class email_template_edit_form extends moodleform {
     protected $ismodified;
 
     public function __construct($actionurl, $companyid, $templatename, $templatesetid, $ismodified = false) {
-        global $DB;
 
         $this->langs = get_string_manager()->get_list_of_translations(true);
         $this->templatesetid = $templatesetid;
@@ -49,7 +48,7 @@ class email_template_edit_form extends moodleform {
     }
 
     public function definition() {
-        global $DB,$CFG, $USER;
+        global $USER;
 
         $mform =& $this->_form;
 
