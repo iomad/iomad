@@ -34,8 +34,11 @@ use \block_iomad_commerce\helper;
 // Set up the template edit control form.
 class email_template_edit_form extends moodleform {
 
+    protected $langs;
+    protected $templatesetid;
+    protected $ismodified;
+
     public function __construct($actionurl, $companyid, $templatename, $templatesetid, $ismodified = false) {
-        global $DB;
 
         $this->langs = get_string_manager()->get_list_of_translations(true);
         $this->templatesetid = $templatesetid;
@@ -45,7 +48,7 @@ class email_template_edit_form extends moodleform {
     }
 
     public function definition() {
-        global $DB,$CFG, $USER;
+        global $USER;
 
         $mform =& $this->_form;
 

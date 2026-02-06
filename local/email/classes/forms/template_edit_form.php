@@ -35,12 +35,13 @@ use EmailVars;
 
 class template_edit_form extends moodleform {
     protected $isadding;
-    protected $subject = '';
-    protected $body = '';
+    protected $isediting;
     protected $templateid;
     protected $templaterecord;
     protected $companyid;
-    protected $editing;
+    protected $templatesetid;
+    protected $companymanagers;
+    protected $multiplecompanymanagers;
 
     public function __construct($actionurl, $isadding, $isediting, $companyid, $templateid, $templaterecord, $templatesetid) {
         $this->isadding = $isadding;
