@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local IOMAD blockpage class - used to create standard page output
+ *
  * @package   local_iomad
  * @copyright 2021 Derick Turner
  * @author    Derick Turner
@@ -24,14 +26,27 @@
 namespace local_iomad;
 
 /**
- * helper class to minimize duplicate code
+ * Local IOMAD blockpage class - used to create standard page output
+ *
+ * @package   local_iomad
+ * @copyright 2021 Derick Turner
+ * @author    Derick Turner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class blockpage {
+    /** @var string blockname */
     public $blockname;
+
+    /** @var string blocktype */
     public $blocktype;
 
+    /** @var moodle_page class page */
     protected $page = null;
+
+    /** @var OUTPUT class output */
     protected $output = null;
+
+    /** @var string pagetitle */
     protected $pagetitle = null;
 
     /**
@@ -69,7 +84,7 @@ class blockpage {
      * returns text;
      *
      **/
-    public function get_relative_url( $urlparams=null) {
+    public function get_relative_url($urlparams=null) {
         $relpath = $_SERVER['REQUEST_URI'];
         // Create list of any parameters.
         $paramlist = "";
@@ -116,26 +131,6 @@ class blockpage {
 
         $blocktitle = self::get_string('blocktitle');
 
-        /**
-         * *Think* this bit is deprecated
-        $entryurl = optional_param('entryurl', '', PARAM_LOCALURL);
-        $entrytitle = optional_param('entrytitle', '', PARAM_TEXT);
-
-        if ( $entryurl || $entrytitle ) {
-            if ( !isset($USER->iomad) ) {
-                $USER->iomad = new stdClass();
-            }
-
-            if ( $entryurl == (new moodle_url('/')) ) {
-                unset($USER->iomad->entrypoint);
-                unset($USER->iomad->entrytitle);
-            } else {
-                $USER->iomad->entrypoint = $entryurl;
-                $USER->iomad->entrytitle = $entrytitle;
-            }
-        }
-        */
-
         $this->page->set_title($this->pagetitle);
         $this->page->set_heading($blocktitle);
     }
@@ -147,6 +142,5 @@ class blockpage {
     public function display_header() {
 
         echo $this->OUTPUT->header();
-        //echo $this->OUTPUT->heading($this->pagetitle, 2, 'headingblock header');
     }
 }
