@@ -39,17 +39,14 @@ use moodleform;
  */
 class template_edit_form extends moodleform {
     protected $isadding;
-    protected $subject = '';
-    protected $body = '';
+    protected $isediting;
     protected $templateid;
     protected $templaterecord;
     protected $companyid;
     protected $company;
+    protected $templatesetid;
     protected $companymanagers;
     protected $multiplecompanymanagers;
-    protected $editing;
-    protected $isediting;
-    protected $templatesetid;
 
     public function __construct($actionurl, $isadding, $isediting, $companyid, $templateid, $templaterecord, $templatesetid) {
         $this->isadding = $isadding;
