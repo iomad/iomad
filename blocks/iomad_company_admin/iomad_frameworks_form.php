@@ -157,21 +157,16 @@ if (!empty($company)) {
             $select = $DB->sql_like('shortname', ':search', false) . " AND";
             $selectparams = ['search' => '%' . $search . '%'];
         }
-        $sql = "SELECT *
-                FROM {competency_framework}
-                WHERE $select
-                id NOT IN (
-                    SELECT frameworkid
-                    FROM {company_comp_frameworks})";
+        $frameworks = $DB->get_records_select("competency_framework", $select . "id NOT IN (
+                                                                                     SELECT frameworkid
+                                                                                     FROM {company_comp_frameworks})", $selectparams);
     } else if ($company == 'all') {
         // Get every framework.
         if (!empty($search)) {
             $select = "WHERE " . $DB->sql_like('shortname', ':search', false);
             $selectparams = ['search' => '%' . $search . '%'];
         }
-        $sql = "SELECT *
-                FROM {competency_framework}
-                $select";
+	$frameworks = $DB->get_records_select("competency_framework", $select, $selectparams);
     } else {
         // Get the frameworks belonging to that company only.
         if (!empty($search)) {
@@ -185,10 +180,8 @@ if (!empty($company)) {
                 ccf.companyid = :companyid
                 $select";
         $selectparams['companyid'] = $company;
+        $frameworks = $DB->get_records_sql($sql, $selectparams);
     }
-
-    // Get the data.
-    $frameworks = $DB->get_records_sql($sql, $selectparams);
 }
 
 // Display the table.
