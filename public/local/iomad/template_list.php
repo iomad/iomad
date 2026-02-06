@@ -69,7 +69,7 @@ require_login();
 
 $systemcontext = context_system::instance();
 
-// Set the companyid
+// Set the companyid.
 $companyid = iomad::get_my_companyid($systemcontext);
 $companycontext = context_company::instance($companyid);
 $company = new company($companyid);
@@ -97,7 +97,7 @@ $PAGE->set_url($linkurl);
 $PAGE->set_pagelayout('base');
 $PAGE->requires->jquery();
 
-// get output renderer
+// Get output renderer.
 $output = $PAGE->get_renderer('local_iomad');
 
 // Set the page heading.
@@ -109,13 +109,13 @@ if (empty($templatesetid)) {
     }
 } else {
     if (empty($action)) {
-        if ($templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid))) {
+        if ($templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
             $linktext = get_string('email_templates_for', 'local_iomad', $templatesetinfo->templatesetname);
         } else {
             $linktext = get_string('email_templates_for', 'local_iomad', $company->get_name());
         }
     } else {
-        if ($templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid))) {
+        if ($templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
             if ($action == 'edit') {
                 $linktext = format_string(get_string('edittemplateset', 'local_iomad'). " " . $templatesetinfo->templatesetname);
             } else {
@@ -130,9 +130,9 @@ $PAGE->set_heading($linktext);
 // Log this page view.
 block_iomad_company_admin\event\dashboard_page_viewed::create_from_url($PAGE->url->out())->trigger();
 
-$baseurl = new moodle_url(basename(__FILE__), array('sort' => $sort, 'dir' => $dir,
+$baseurl = new moodle_url(basename(__FILE__), ['sort' => $sort, 'dir' => $dir,
                                                     'perpage' => $perpage,
-                                                    'lang' => $lang));
+                                                    'lang' => $lang]);
 $returnurl = $baseurl;
 
 // Are the templates being migrated?
@@ -141,12 +141,12 @@ if (!empty($CFG->local_iomad_email_templates_migrating)) {
     die;
 }
 
-// check if ajax callback
+// Check if ajax callback.
 if ($ajaxtemplate) {
     $parts = explode('.', $ajaxtemplate);
     list($type, $id, $managertype, $senttemplatename) = $parts;
 
-    // Get the new value;
+    // Get the new value.
     $newvalue = 0;
     if ($ajaxvalue == 'false') {
         $newvalue = 1;
@@ -184,14 +184,20 @@ if ($ajaxtemplate) {
                     FROM {" . $tablename . "} et
                     JOIN {" . $tablenamestrings ."} ets
                     ON et.id = ets.$stringkey
-                    JOIN {tool_customlang} cl
-                     ON (ets.lang=cl.lang
-                         AND cl.stringid = CONCAT(et.name, '_name'))
-                    WHERE et.$tablekey = :id AND ets.lang = :lang
+                    JOIN {tool_customlang} cl ON (
+                        ets.lang=cl.lang
+                        AND cl.stringid = CONCAT(et.name, '_name')
+                    )
+                    JOIN {tool_customlang_components} tcc ON (cl.componentid = tcc.id)
+                    WHERE et.$tablekey = :id
+                    AND ets.lang = :lang
+                    AND tcc.name = :component
                     ORDER BY cl.master";
-        $sqlparams = ['id' => $id, 'lang' => $lang];
+        $sqlparams = ['id' => $id,
+                      'lang' => $lang,
+                      'component' => 'local_email'];
 
-        // Set up the headings
+        // Set up the headings.
         $templatenames = $DB->get_records_sql_menu($findsql,
                                                    $sqlparams,
                                                    $senttemplatename * $perpage,
@@ -206,16 +212,21 @@ if ($ajaxtemplate) {
     die;
 }
 
-//  Deal with any deletes.
+// Deal with any deletes.
 if ($action == 'delete' && confirm_sesskey()) {
     if ($confirm != md5($templatesetid)) {
         echo $output->header();
 
-        if (!$templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid))) {
+        if (!$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
             throw new moodle_exception('templatesetnotfound', 'local_iomad');
         }
 
-        $optionsyes = array('templatesetid' => $templatesetid, 'confirm' => md5($templatesetid), 'sesskey' => sesskey(), 'action' => 'delete');
+        $optionsyes = [
+            'templatesetid' => $templatesetid,
+            'confirm' => md5($templatesetid),
+            'sesskey' => sesskey(),
+            'action' => 'delete',
+            ];
         echo $OUTPUT->confirm(get_string('deletetemplatesetfull', 'local_iomad', "'" . $templatesetinfo->templatesetname ."'"),
                               new moodle_url('/local/iomad/template_list.php', $optionsyes),
                                              '/local/iomad/template_list.php');
@@ -223,30 +234,37 @@ if ($action == 'delete' && confirm_sesskey()) {
         die;
     } else {
         // Delete the template.
-        $templatesetstrings = $DB->get_records('email_templateset_templates', array('templateset' => $templatesetid));
+        $templatesetstrings = $DB->get_records('email_templateset_templates', ['templateset' => $templatesetid]);
         foreach ($templatesetstrings as $templatesetstring) {
-            $DB->delete_records('email_templateset_template_strings', array('templatesetid' => $templatesetstring->id));
+            $DB->delete_records('email_templateset_template_strings', ['templatesetid' => $templatesetstring->id]);
         }
-        $DB->delete_records('email_templateset_templates', array('templateset' => $templatesetid));
-        $DB->delete_records('email_templateset', array('id' => $templatesetid));
+        $DB->delete_records('email_templateset_templates', ['templateset' => $templatesetid]);
+        $DB->delete_records('email_templateset', ['id' => $templatesetid]);
         if ($SESSION->currenttemplatesetid == $templatesetid) {
             unset($SESSION->currenttemplatesetid);
         }
-        redirect($manageurl,get_string('templatesetdeleted', 'local_iomad'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($manageurl, get_string('templatesetdeleted', 'local_iomad'), null, \core\output\notification::NOTIFY_SUCCESS);
         die;
     }
 } else if ($action == 'setdefault' && confirm_sesskey()) {
     if ($confirm != md5($templatesetid)) {
         echo $output->header();
 
-        if (!$templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid))) {
+        if (!$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
             throw new moodle_exception('templatesetnotfound', 'local_iomad');
         }
 
-        $optionsyes = array('templatesetid' => $templatesetid, 'confirm' => md5($templatesetid), 'sesskey' => sesskey(), 'action' => 'setdefault');
-        echo $OUTPUT->confirm(get_string('setdefaulttemplatesetfull', 'local_iomad', "'" . $templatesetinfo->templatesetname ."'"),
+        $optionsyes = [
+            'templatesetid' => $templatesetid,
+            'confirm' => md5($templatesetid),
+            'sesskey' => sesskey(),
+            'action' => 'setdefault',
+            ];
+        echo $OUTPUT->confirm(get_string('setdefaulttemplatesetfull',
+                                         'local_iomad',
+                                         "'" . $templatesetinfo->templatesetname ."'"),
                               new moodle_url('/local/iomad/template_list.php', $optionsyes),
-                                             '/local/iomad/template_list.php');
+                              '/local/iomad/template_list.php');
         echo $OUTPUT->footer();
         die;
     } else {
@@ -260,14 +278,21 @@ if ($action == 'delete' && confirm_sesskey()) {
     if ($confirm != md5($templatesetid)) {
         echo $output->header();
 
-        if (!$templatesetinfo = $DB->get_record('email_templateset', array('id' => $templatesetid))) {
+        if (!$templatesetinfo = $DB->get_record('email_templateset', ['id' => $templatesetid])) {
             throw new moodle_exception('templatesetnotfound', 'local_iomad');
         }
 
-        $optionsyes = array('templatesetid' => $templatesetid, 'confirm' => md5($templatesetid), 'sesskey' => sesskey(), 'action' => 'unsetdefault');
-        echo $OUTPUT->confirm(get_string('unsetdefaulttemplatesetfull', 'local_iomad', "'" . $templatesetinfo->templatesetname ."'"),
+        $optionsyes = [
+            'templatesetid' => $templatesetid,
+            'confirm' => md5($templatesetid),
+            'sesskey' => sesskey(),
+            'action' => 'unsetdefault',
+            ];
+        echo $OUTPUT->confirm(get_string('unsetdefaulttemplatesetfull',
+                                         'local_iomad',
+                                         "'" . $templatesetinfo->templatesetname ."'"),
                               new moodle_url('/local/iomad/template_list.php', $optionsyes),
-                                             '/local/iomad/template_list.php');
+                              '/local/iomad/template_list.php');
         echo $OUTPUT->footer();
         die;
     } else {
@@ -283,8 +308,8 @@ $mform = new local_iomad\forms\company_templateset_save_form($linkurl, $companyi
 
 if ($data = $mform->get_data()) {
     // Save the template.
-    $templatesetid = $DB->insert_record('email_templateset', array('templatesetname' => $data->templatesetname));
-    $emailtemplates = $DB->get_records('email_template', array('companyid' => $companyid));
+    $templatesetid = $DB->insert_record('email_templateset', ['templatesetname' => $data->templatesetname]);
+    $emailtemplates = $DB->get_records('email_template', ['companyid' => $companyid]);
     foreach ($emailtemplates as $emailtemplate) {
         $emailtemplate->templateset = $templatesetid;
         $templateid = $DB->insert_record('email_templateset_templates', $emailtemplate);
@@ -304,14 +329,14 @@ $buttons = "";
 // Deal with the page buttons.
 if (empty($manage)) {
     $saveurl = new moodle_url('/local/iomad/template_list.php',
-                              array('savetemplateset' => 1,
-                                    'templatesetid' => $templatesetid));
+                              ['savetemplateset' => 1,
+                                    'templatesetid' => $templatesetid]);
     $manageurl = new moodle_url('/local/iomad/template_list.php',
-                                array('manage' => 1));
+                                ['manage' => 1]);
     $backbutton = '';
     if (!empty($templatesetid)) {
-        if ($DB->get_record('email_templateset', array('id' => $templatesetid))) {
-            $backurl = new moodle_url('/local/iomad/template_list.php', array('finished' => true, 'manage' => 1));
+        if ($DB->get_record('email_templateset', ['id' => $templatesetid])) {
+            $backurl = new moodle_url('/local/iomad/template_list.php', ['finished' => true, 'manage' => 1]);
             $backbutton = $output->single_button($backurl, get_string('backtocompanytemplates', 'local_iomad'), 'get');
             $buttons .= $backbutton;
         }
@@ -329,7 +354,7 @@ echo $output->header();
 
 if (!empty($save)) {
     if (!empty($templatesetid)) {
-        $templateset = $DB->get_record('email_templateset', array('id' => $templatesetid));
+        $templateset = $DB->get_record('email_templateset', ['id' => $templatesetid]);
         $mform->set_data($templateset);
     }
 
@@ -386,25 +411,47 @@ if ($manage) {
     }
 
     // Set up the table.
-    $selectsql = "concat(et.id, concat('_', ets.id)) AS junk, et.*, ets.lang, ets.subject, ets.body, ets.signature, cl.master AS templatename, ets.id as templatestringid, :prefix AS prefix";
+    $sqlparams = [
+        'companyid' => $companyid,
+        'templatesetid' => $templatesetid,
+        'lang' => $lang,
+        'prefix' => $prefix,
+        'component' => 'local_email',
+        'templatename' => "%" . $search . "%",
+    ];
+    $selectsql = "concat(et.id, concat('_', ets.id)) AS junk,
+                  et.*,
+                  ets.lang,
+                  ets.subject,
+                  ets.body,
+                  ets.signature,
+                  cl.master AS templatename,
+                  ets.id as templatestringid,
+                  :prefix AS prefix";
     if (empty($templatesetid)) {
         $fromsql = "{email_template} et
-                    JOIN {email_template_strings} ets
-                     ON (et.id = ets.templateid)
-                    JOIN {tool_customlang} cl
-                     ON (ets.lang=cl.lang
-                         AND cl.stringid = CONCAT(et.name, '_name'))";
-        $wheresql = "et.companyid = :companyid AND ets.lang = :lang $searchsql";
-        $sqlparams = ['companyid' => $companyid, 'lang' => $lang, 'prefix' => $prefix, 'templatename' => "%" . $search . "%"];
+                    JOIN {email_template_strings} ets ON (et.id = ets.templateid)
+                    JOIN {tool_customlang} cl ON (
+                        ets.lang=cl.lang
+                        AND cl.stringid = CONCAT(et.name, '_name')
+                    )
+                    JOIN {tool_customlang_components} tcc ON (cl.componentid = tcc.id)";
+        $wheresql = "et.companyid = :companyid
+                     AND ets.lang = :lang
+                     AND tcc.name = :component
+                     $searchsql";
     } else {
         $fromsql = "{email_templateset_templates} et
-                    JOIN {email_templateset_template_strings} ets
-                     ON (et.id = ets.templatesetid)
-                    JOIN {tool_customlang} cl
-                     ON (ets.lang=cl.lang
-                         AND cl.stringid = CONCAT(et.name, '_name'))";
-        $wheresql = "et.templateset = :templatesetid AND ets.lang = :lang $searchsql";
-        $sqlparams = ['templatesetid' => $templatesetid, 'lang' => $lang, 'prefix' => $prefix, 'templatename' => "%" . $search . "%"];
+                    JOIN {email_templateset_template_strings} ets ON (et.id = ets.templatesetid)
+                    JOIN {tool_customlang} cl ON (
+                        ets.lang=cl.lang
+                        AND cl.stringid = CONCAT(et.name, '_name')
+                    )
+                    JOIN {tool_customlang_components} tcc ON (cl.componentid = tcc.id)";
+        $wheresql = "et.templateset = :templatesetid
+                     AND ets.lang = :lang
+                     AND tcc.name = :component
+                     $searchsql";
     }
 
     // Set up the headings -- All this for the checkbox.
@@ -412,41 +459,41 @@ if ($manage) {
                                               FROM $fromsql
                                               WHERE $wheresql
                                               ORDER BY cl.master",
-                                              $sqlparams,
-                                              $page * $perpage,
-                                              $perpage);
+                                             $sqlparams,
+                                             $page * $perpage,
+                                             $perpage);
 
     $manenabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabledmanager, cl.master
                                                  FROM $fromsql
                                                  WHERE $wheresql
                                                  ORDER BY cl.master",
-                                                 $sqlparams,
-                                                 $page * $perpage,
-                                                 $perpage);
+                                                $sqlparams,
+                                                $page * $perpage,
+                                                $perpage);
     $supenabledrecs = $DB->get_records_sql_menu("SELECT DISTINCT et.id, et.disabledsupervisor, cl.master
                                                  FROM $fromsql
                                                  WHERE $wheresql
                                                  ORDER BY cl.master",
-                                                 $sqlparams,
-                                                 $page * $perpage,
-                                                 $perpage);
+                                                $sqlparams,
+                                                $page * $perpage,
+                                                $perpage);
 
     // We have to process these as $array[0] and $array["0"] are not being handled properly.
-    foreach ($enabledrecs as $i => $enabledvalue ) {
+    foreach ($enabledrecs as $i => $enabledvalue) {
         if ($enabledvalue) {
             $enabledrecs[$i] = "e";
         } else {
             $enabledrecs[$i] = "d";
         }
     }
-    foreach ($manenabledrecs as $i => $enabledvalue ) {
+    foreach ($manenabledrecs as $i => $enabledvalue) {
         if ($enabledvalue) {
             $manenabledrecs[$i] = "e";
         } else {
             $manenabledrecs[$i] = "d";
         }
     }
-    foreach ($supenabledrecs as $i => $enabledvalue ) {
+    foreach ($supenabledrecs as $i => $enabledvalue) {
         if ($enabledvalue) {
             $supenabledrecs[$i] = "e";
         } else {
@@ -475,30 +522,47 @@ if ($manage) {
         $supenabledcounts["e"] = 0;
     }
     if ($enabledcounts["d"] < $enabledcounts["d"] + $enabledcounts["e"]) {
-        $echecked = "";
+        $echecked = '';
     } else {
-        $echecked = " checked ";
+        $echecked = 'checked';
     }
     if ($manenabledcounts["d"] < $manenabledcounts["d"] + $manenabledcounts["e"]) {
         $emchecked = "";
     } else {
-        $emchecked = " checked ";
+        $emchecked = "checked";
     }
     if ($supenabledcounts["d"] < $supenabledcounts["d"] + $supenabledcounts["e"]) {
         $eschecked = "";
     } else {
-        $eschecked = " checked ";
+        $eschecked = "checked";
     }
 
     $headers = [get_string('emailtemplatename', 'local_iomad'),
-                get_string('enable') . '&nbsp<label class="switch"><input class="checkbox enableallall" type="checkbox" ' . $echecked. ' value="' . "{$prefix}.e.{$page}" . '" />' .
-                                    "<span class='slider round'></span></label>",
-                get_string('enable_manager', 'local_iomad') . '&nbsp<label class="switch"><input class="checkbox enableallmanager" type="checkbox" ' . $emchecked. ' value="' . "{$prefix}.em.{$page}" . '" />' .
-                                    "<span class='slider round'></span></label>",
-                get_string('enable_supervisor', 'local_iomad') . '&nbsp<label class="switch"><input class="checkbox enableallsupervisor" type="checkbox" ' . $eschecked. ' value="' . "{$prefix}.es.{$page}" . '" />' .
-                                    "<span class='slider round'></span></label>",
+                get_string('enable') .
+                html_writer::start_tag('label', ['class' => 'switch']) .
+                html_writer::empty_tag('input', ['class' => 'checkbox enableallall',
+                                                 'type' => 'checkbox',
+                                                 $echecked => true,
+                                                 'value' => "{$prefix}.e.{$page}"]) .
+                html_writer::empty_tag('span', ['class' => 'slider round']) .
+                html_writer::end_tag('label'),
+                get_string('enable_manager', 'local_iomad') .
+                html_writer::start_tag('label', ['class' => 'switch']) .
+                html_writer::empty_tag('input', ['class' => 'checkbox enableallmanager',
+                                                 'type' => 'checkbox',
+                                                 $emchecked => true,
+                                                 'value' => "{$prefix}.em.{$page}"]) .
+                html_writer::empty_tag('span', ['class' => 'slider round']) .
+                html_writer::end_tag('label'),
+                get_string('enable_supervisor', 'local_iomad') .
+                html_writer::start_tag('label', ['class' => 'switch']) .
+                html_writer::empty_tag('input', ['class' => 'checkbox enableallsupervisor',
+                                                 'type' => 'checkbox',
+                                                 $eschecked => true,
+                                                 'value' => "{$prefix}.es.{$page}"]) .
+                html_writer::empty_tag('span', ['class' => 'slider round']) .
+                html_writer::end_tag('label'),
                 ''];
-                //get_string('controls', 'local_iomad')];
 
     $columns = ['templatename',
                 'enableuser',
