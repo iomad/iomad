@@ -25,6 +25,7 @@
 
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
+require_once($CFG->libdir.'/gradelib.php');
 require_once($CFG->dirroot.'/blocks/iomad_company_admin/lib.php');
 require_once($CFG->dirroot.'/local/iomad_track/lib.php');
 require_once($CFG->dirroot.'/local/iomad_track/db/install.php');
@@ -241,14 +242,49 @@ if (!empty($data)) {
         }
 
         // Update any data sent from the form.
+        // Handle final score updates - synchronize with Moodle's gradebook.
         if (!empty($data->finalscore)) {
             foreach ($data->finalscore as $key => $value) {
+                // Check if the score has changed from the original value.
                 if ($data->origfinalscore[$key] != $value && confirm_sesskey()) {
-                    $DB->set_field('local_iomad_track', 'finalscore', $value, ['id' => $key]);
-                    $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
-
-                    // Re-generate the certificate.
                     if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
+                        // Synchronize the updated score with Moodle's grade_grades table.
+                        // This ensures that manual score updates in IOMAD are reflected in the core gradebook.
+                        $gradeitem = grade_item::fetch(['courseid' => $trackrec->courseid, 'itemtype' => 'course']);
+                        if ($gradeitem) {
+                            $gradevalue = $value;
+                            // Create a new grade object with the updated score.
+                            $grade = new grade_grade(['itemid' => $gradeitem->id, 'userid' => $trackrec->userid], false);
+                            $grade->grade_item =& $gradeitem;
+                            $grade->rawgrade = $gradevalue;
+                            $grade->finalgrade = $gradevalue;
+                            $grade->rawgrademax = $gradeitem->grademax;
+                            $grade->rawgrademin = $gradeitem->grademin;
+                            $grade->timecreated = time();
+                            $grade->timemodified = time();
+                            $grade->information = 'Updated by local_report_users';
+                            $grade->informationformat = FORMAT_PLAIN;
+                            $grade->feedback = '';
+                            $grade->feedbackformat = FORMAT_MOODLE;
+                            $grade->usermodified = $USER->id;
+                            // Check if a grade record already exists and update it, otherwise insert new.
+                            $existing_grade = grade_grade::fetch(['itemid' => $gradeitem->id, 'userid' => $trackrec->userid]);
+                            if ($existing_grade) {
+                                $existing_grade->finalgrade = $gradevalue;
+                                $existing_grade->rawgrade = $gradevalue;
+                                $existing_grade->information = 'Updated by local_report_users';
+                                $existing_grade->timemodified = time();
+                                $existing_grade->update('local_report_users');
+                            } else {
+                                $grade->insert('local_report_users');
+                            }
+                        }
+
+                        // Update the IOMAD track table with the new score.
+                        $DB->set_field('local_iomad_track', 'finalscore', $value, ['id' => $key]);
+                        $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
+
+                        // Regenerate certificates if needed (score changes may affect certificate eligibility).
                         local_iomad_track_delete_entry($key);
                         xmldb_local_iomad_track_record_certificates(
                             $trackrec->courseid,
@@ -283,33 +319,93 @@ if (!empty($data)) {
                 }
             }
         }
+        // Handle completion date updates - synchronize with Moodle's course_completions table.
         if (!empty($data->timecompleted)) {
             foreach ($data->timecompleted as $key => $value) {
                 if ($trackrec = $DB->get_record('local_iomad_track', ['id' => $key])) {
                     $testtime = strtotime("0:00", $data->origtimecompleted[$key]);
                     $senttime = strtotime($value['year'] . "-" . $value['month'] . "-" . $value['day']);
 
+                    // Check if the completion date has changed from the original value.
                     if ($testtime != $senttime && confirm_sesskey()) {
-                        $DB->set_field('local_iomad_track', 'timecompleted', $senttime, ['id' => $key]);
-                        $DB->set_field('local_iomad_track', 'modifiedtime', time(), ['id' => $key]);
-                        if ($iomadcourseinfo = $DB->get_record('iomad_courses', ['courseid' => $trackrec->courseid])) {
-                            if (!empty($iomadcourseinfo->validlength)) {
-                                $DB->set_field(
-                                    'local_iomad_track',
-                                    'timeexpires',
-                                    $senttime + ($iomadcourseinfo->validlength * 24 * 60 * 60),
-                                    ['id' => $key]);
+                        // If a final score exists, synchronize it with Moodle's gradebook.
+                        // This ensures that when completion dates are updated, associated grades are also synced.
+                        if (!empty($trackrec->finalscore)) {
+                            $gradeitem = grade_item::fetch(['courseid' => $trackrec->courseid, 'itemtype' => 'course']);
+                            if ($gradeitem) {
+                                $gradevalue = $trackrec->finalscore;
+                                // Create a new grade object with the existing score.
+                                $grade = new grade_grade(['itemid' => $gradeitem->id, 'userid' => $trackrec->userid], false);
+                                $grade->grade_item =& $gradeitem;
+                                $grade->rawgrade = $gradevalue;
+                                $grade->finalgrade = $gradevalue;
+                                $grade->rawgrademax = $gradeitem->grademax;
+                                $grade->rawgrademin = $gradeitem->grademin;
+                                $grade->timecreated = time();
+                                $grade->timemodified = time();
+                                $grade->information = 'Updated by local_report_users';
+                                $grade->informationformat = FORMAT_PLAIN;
+                                $grade->feedback = '';
+                                $grade->feedbackformat = FORMAT_MOODLE;
+                                $grade->usermodified = $USER->id;
+
+                                // Check if a grade record already exists and update it, otherwise insert new.
+                                $existing_grade = grade_grade::fetch(['itemid' => $gradeitem->id, 'userid' => $trackrec->userid]);
+                                if ($existing_grade) {
+                                    $existing_grade->finalgrade = $gradevalue;
+                                    $existing_grade->rawgrade = $gradevalue;
+                                    $existing_grade->information = 'Updated by local_report_users';
+                                    $existing_grade->timemodified = time();
+                                    $existing_grade->update('local_report_users');
+                                } else {
+                                    $grade->insert('local_report_users');
+                                }
                             }
                         }
 
-                        // Re-generate the certificate.
-                        local_iomad_track_delete_entry($key);
-                        xmldb_local_iomad_track_record_certificates(
-                            $trackrec->courseid,
-                            $trackrec->userid,
-                            $trackrec->id,
-                            false,
-                            false);
+                        // Synchronize completion with Moodle's course_completions table.
+                        // This ensures that manual completion date updates in IOMAD are reflected in Moodle's
+                        // completion system, triggering all related functionality (reports, badges, dependencies, etc.).
+                        $params = ['userid' => $trackrec->userid, 'course' => $trackrec->courseid];
+                        $ccompletion = new completion_completion($params);
+
+                        // If this is a new completion record, set enrollment and start times.
+                        if (empty($ccompletion->id)) {
+                            if (!empty($trackrec->timeenrolled)) {
+                                $ccompletion->mark_enrolled($trackrec->timeenrolled);
+                            } else {
+                                $ccompletion->mark_enrolled($senttime);
+                            }
+
+                            if (!empty($trackrec->timestarted)) {
+                                $ccompletion->timestarted = $trackrec->timestarted;
+                            } else {
+                                $ccompletion->timestarted = $senttime;
+                            }
+                        }
+
+                        // Set the updated completion timestamp.
+                        $ccompletion->timecompleted = $senttime;
+                        $ccompletion->timemodified = time();
+
+                        // Update or insert the completion record.
+                        if ($ccompletion->id) {
+                            $DB->update_record('course_completions', $ccompletion);
+                        } else {
+                            $ccompletion->reaggregate = 0;
+                            $ccompletion->id = $DB->insert_record('course_completions', $ccompletion);
+                        }
+
+                        // Trigger the course_completed event.
+                        // This event is observed by IOMAD's local_iomad_track observer, which handles:
+                        // - Additional track table updates
+                        // - Certificate generation
+                        // - Email notifications
+                        // - Other completion-related actions
+                        // Note: The IOMAD track table is NOT manually updated here because the event
+                        // observer handles all track-related operations automatically.
+                        $completiondata = $DB->get_record('course_completions', ['id' => $ccompletion->id]);
+                        \core\event\course_completed::create_from_completion($completiondata)->trigger();
                     }
                 }
             }
